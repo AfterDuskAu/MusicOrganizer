@@ -468,7 +468,7 @@ def test_probe(samples: dict[str, Path], kind: str) -> None:
     assert info.codec == CODECS[kind]
     assert info.duration_s == pytest.approx(3.0, abs=0.1)
     assert info.sample_rate in (44100, 48000)
-    assert info.channels == 1
+    assert info.channels == (2 if kind == "ogg" else 1)  # see conftest._vorbis
     assert info.bitrate_kbps is not None and info.bitrate_kbps > 0
 
 

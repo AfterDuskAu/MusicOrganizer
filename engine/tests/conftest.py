@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
@@ -301,7 +302,7 @@ SAMPLE_ENCODINGS: dict[str, tuple[str, ...]] = {
     "mp3": MP3,
     "flac": ("-c:a", "flac"),
     "opus": ("-c:a", "libopus", "-b:a", "96k"),
-    "ogg": ("-c:a", "libvorbis", "-q:a", "4"),
+    "ogg": (),  # see _vorbis()
     "webm": ("-c:a", "libopus", "-b:a", "96k"),
     "wav": ("-c:a", "pcm_s16le"),
     "aac": ("-c:a", "aac", "-b:a", "128k", "-f", "adts"),
@@ -317,6 +318,7 @@ def samples(ffmpeg_path: Path, tmp_path_factory: pytest.TempPathFactory) -> dict
     files = {}
     for ext, encoding in SAMPLE_ENCODINGS.items():
         files[ext] = folder / f"sample.{ext}"
+        encoding = encoding or _vorbis(ffmpeg_path)
         _ffmpeg(ffmpeg_path, "-f", "lavfi", "-i", melody, *encoding, str(files[ext]))
     files["bare.mp3"] = folder / "bare.mp3"
     _ffmpeg(
@@ -333,3 +335,15 @@ def samples(ffmpeg_path: Path, tmp_path_factory: pytest.TempPathFactory) -> dict
         str(files["bare.mp3"]),
     )
     return files
+
+
+def _vorbis(ffmpeg: Path) -> tuple[str, ...]:
+    """Ogg Vorbis: libvorbis when this ffmpeg has it, else ffmpeg's own encoder, which is
+    marked experimental and only does stereo (Homebrew's ffmpeg has no libvorbis). Stereo
+    either way, so the sample is the same kind of file everywhere."""
+    encoders = subprocess.run(
+        [str(ffmpeg), "-hide_banner", "-encoders"], capture_output=True, text=True
+    ).stdout
+    if re.search(r"\slibvorbis\s", encoders):
+        return ("-c:a", "libvorbis", "-q:a", "4", "-ac", "2")
+    return ("-c:a", "vorbis", "-strict", "experimental", "-ac", "2")
