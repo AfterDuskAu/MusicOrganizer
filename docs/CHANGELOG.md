@@ -140,7 +140,8 @@
 - Compatibility check (`scripts/check_compat.py`, run on the iMac):
   - ffprobe reads every field of both files, the `MUSICORG_*` ones included, and the 600 px cover.
   - macOS's own reader (`afinfo`, AudioToolbox) reads the title with its Japanese, the artist, album, year, genre and track number from both the M4A and the ID3v2.3 MP3. It doesn't report artwork or lyrics.
-  - **Still to do by the owner:** Apple Music (artwork, lyrics, the explicit mark) and Kid3 or Picard (the `MUSICORG_*` fields), following the script's checklist. Neither app can be checked from the command line.
+  - Apple Music (Music app, checked by the owner in Get Info): both files show the right title with its Japanese, artist, album artist, album, genre, year, track and disc numbers, the artwork and the three lines of lyrics. The M4A shows the explicit (E) mark.
+  - Kid3 and Picard: not checked, as neither is installed. ffprobe's reading of every `MUSICORG_*` field, above, is the evidence for those tags.
 - Deviations and additions:
   - **Types:** the year, track and disc numbers are whole numbers, and the year is written as 4 digits (a full date in a rip reads as its year, and stays in the file unless the year is changed). `explicit` is True/False. `match_score` keeps 3 decimals. `only_copy=True` writes `1`; False removes the field, since the contract only defines `1`. `version` is a list of tokens.
   - **Empty text** counts as "not given", so it leaves a field as it is rather than erasing it; `REMOVE` erases.
@@ -161,3 +162,4 @@
   - New `samples` test fixture: 3 seconds of melody A as M4A, MP3, FLAC, Opus, Ogg Vorbis, WebM, WAV and raw AAC, plus an MP3 with no ID3 tag.
   - Homebrew's ffmpeg (the CI Macs) has no libvorbis, so the first CI run couldn't make the Ogg sample. The fixture now uses libvorbis when it's there and ffmpeg's own Vorbis encoder otherwise (marked experimental, stereo only), and the Ogg sample is stereo either way. Both paths were run on the iMac.
   - New error `AudioError`. `ENGINE_API.md`: batch kind `demo` now covers both manual-check scripts.
+- CI: green on all three runners (678 passed on each, 3 skipped), once the Ogg sample was fixed. Windows ran the file-in-use test and the link tests.
