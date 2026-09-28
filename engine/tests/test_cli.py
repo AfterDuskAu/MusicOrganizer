@@ -127,8 +127,6 @@ def test_group_needs_subcommand(capsys: pytest.CaptureFixture[str]) -> None:
         (["report", "--out", "/tmp/r"], "07"),
         (["review", "export", "r.csv", "--include-auto"], "07"),
         (["review", "import", "r.csv"], "07"),
-        (["journal", "list"], "03b"),
-        (["undo", "b_1", "--dry-run"], "03b"),
         (["plan", "replace", "--only", "auto", "--limit", "5", "--stage-only"], "09b"),
         (["plan", "adopt", "--include-not-found"], "09b"),
         (["plan", "show", "p_1"], "09b"),

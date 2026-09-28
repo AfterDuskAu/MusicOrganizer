@@ -10,10 +10,11 @@ import logging
 import sys
 import traceback
 from collections.abc import Callable, Sequence
+from datetime import datetime
 from pathlib import Path
 from typing import Any, NoReturn
 
-from musicorg import __version__, doctor, library, logging_setup, status
+from musicorg import __version__, doctor, fileops, library, logging_setup, status
 from musicorg.config import Config
 from musicorg.errors import (
     EXIT_INTERNAL,
@@ -176,11 +177,16 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("csv", type=_path)
 
     journal = group("journal", "The log of every change made to the library.")
-    add(journal, "list", "Recent batches of changes.", _not_yet("journal list", "03b"))
+    p = add(journal, "list", "Recent batches of changes.", _cmd_journal_list)
+    p.add_argument(
+        "--limit", type=int, default=20, metavar="N", help="How many batches (default 20)."
+    )
 
-    p = add(commands, "undo", "Reverse a batch of changes.", _not_yet("undo", "03b"))
+    p = add(commands, "undo", "Reverse a batch of changes.", _cmd_undo)
     p.add_argument("batch_id")
-    p.add_argument("--dry-run", action="store_true")
+    p.add_argument(
+        "--dry-run", action="store_true", help="Only show what would be undone; change nothing."
+    )
 
     plan = group("plan", "Make a dry-run plan of changes.")
     p = add(
@@ -334,6 +340,98 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     else:
         print("Everything is in place.")
     return code
+
+
+# How `journal list` describes each operation (docs/ENGINE_API.md → Journal operation).
+_OPERATION_WORDS = {
+    "commit": "added",
+    "copy_in": "copied in",
+    "supersede": "moved to _Replaced",
+    "restore": "restored",
+    "move": "moved",
+    "trash": "sent to the Trash",
+    "write_tags": "retagged",
+    "write_sidecar": "sidecars written",
+}
+
+
+def _cmd_journal_list(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=False) as lib:
+        batches = fileops.list_batches(lib, limit=args.limit)
+    if args.json:
+        _print_json({"batches": [b.to_dict() for b in batches]})
+        return EXIT_OK
+    if not batches:
+        print("No changes have been made to this library yet.")
+        return EXIT_OK
+
+    rows = [("BATCH", "STARTED", "KIND", "STATUS", "CHANGES")]
+    for b in batches:
+        changes = [f"{n} {_OPERATION_WORDS.get(op, op)}" for op, n in b.operations.items()]
+        if b.failed:
+            changes.append(f"{b.failed} failed")
+        if b.pending:
+            changes.append(f"{b.pending} interrupted")
+        status = b.status
+        if b.undo_of:
+            status += f", undo of {b.undo_of}"
+        if b.undone_by:
+            status += f", undone by {', '.join(b.undone_by)}"
+        rows.append(
+            (b.batch_id, _local_time(b.started_at), b.kind, status, ", ".join(changes) or "nothing")
+        )
+    widths = [max(len(row[i]) for row in rows) for i in range(4)]
+    for row in rows:
+        print(
+            "  ".join(cell.ljust(width) for cell, width in zip(row, widths, strict=False))
+            + "  "
+            + row[4]
+        )
+    return EXIT_OK
+
+
+def _cmd_undo(args: argparse.Namespace) -> int:
+    command = f"undo {args.batch_id}" + (" --dry-run" if args.dry_run else "")
+    with library.open(_library_root(args), write=True, command=command) as lib:
+        result = fileops.undo(lib, args.batch_id, dry_run=args.dry_run)
+    if args.json:
+        _print_json(result.to_dict())
+        return EXIT_OK
+
+    if args.dry_run:
+        print(f"Undoing batch {result.batch_id} would do this (nothing has been changed yet):")
+    else:
+        print(f"Undoing batch {result.batch_id}:")
+    marks = {"planned": "↩", "done": "↩", "skipped": "-", "manual": "!"}
+    for step in result.steps:
+        prefix = "Skipped: " if step.status == "skipped" else ""
+        print(f"  {marks.get(step.status, '?')} {prefix}{step.note}")
+    if not result.steps:
+        print("  Nothing: the batch didn't change any files.")
+    done = sum(step.status == "done" for step in result.steps)
+    if result.undo_batch_id:
+        noun = "change" if done == 1 else "changes"
+        print(f"Undid {done} {noun}. The undo itself is batch {result.undo_batch_id}.")
+    elif not args.dry_run:
+        print("Nothing needed undoing.")
+    return EXIT_OK
+
+
+def _library_root(args: argparse.Namespace) -> Path:
+    root = args.library if args.library is not None else Config.load().last_library
+    if root is None:
+        raise UserError(
+            "No library chosen yet. Pass --library <folder>, "
+            "or create one with `musicorg init <folder>`."
+        )
+    return root
+
+
+def _local_time(stamp: str) -> str:
+    try:
+        return f"{datetime.fromisoformat(stamp).astimezone():%Y-%m-%d %H:%M}"
+    except ValueError:
+        return stamp
 
 
 def _not_yet(command: str, step: str) -> Handler:

@@ -35,6 +35,7 @@ testpaths = ["tests"]
 addopts = "-ra"
 markers = [
     "live: talks to the real network; skipped unless MUSICORG_LIVE=1",
+    "integration: uses the real system Trash; skipped unless MUSICORG_INTEGRATION=1, never in CI",
 ]
 
 [tool.ruff]

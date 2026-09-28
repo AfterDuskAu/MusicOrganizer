@@ -161,6 +161,7 @@ It's written atomically (temp file, fsync, rename) after every batch and every r
    Never use `shutil.move`. Cross-volume moves (EXDEV) fail with a clear message and are never copy-then-delete. `_Staging/` must be on the same volume as `Music/`. On Windows, `PermissionError` (file open in another app) retries 5 times over ~2 s, then fails with "That file is open in another app; close it and try again", leaving the original untouched.
 5. **Supersede, don't destroy.** Upgrades and undos move the old library file to `_Replaced/<same relative path>` first.
 6. **Trash, not delete.** Removal from `Music/` goes to the system Trash via `send2trash`. The only outright deletes are regular files and empty folders inside the resolved `_Staging/` (`clean_staging`, `discard_staged`). Symlinks there are removed as links and never followed, and both functions refuse if `_Staging/` itself resolves outside the root.
+   - Two clean-ups that hold no data are also removed: an empty name a move reserved (6.4) but didn't fill, and, during undo, folders the undone batch created that are empty again apart from junk (`.DS_Store`, `._*`, `Thumbs.db`, `desktop.ini`).
 7. **Verified copies and tag writes.**
    - `copy_in` verifies that the copy's SHA-256 equals the source's before committing.
    - Tag writes hash the decoded audio **fresh** before and after: `ffmpeg -v error -i <file> -map 0:a:0 -f md5 -`. A mismatch rolls back and fails loudly.

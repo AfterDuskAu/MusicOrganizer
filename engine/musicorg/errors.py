@@ -79,3 +79,46 @@ class YouTubeBlockedError(MusicOrgError):
     """YouTube is slowing us down, or the queue is paused because of it (step 09a)."""
 
     exit_code = EXIT_YOUTUBE_BLOCKED
+
+
+# ---- fileops (step 03b) ----------------------------------------------------------------
+
+
+class OutsideLibraryError(UserError):
+    """A file operation was asked to change something outside the library's managed
+    folders (contract 6.2). Nothing was changed. `path` is the path as it was given."""
+
+    def __init__(self, message: str, path: object = None) -> None:
+        super().__init__(message)
+        self.path = path
+
+
+class CrossVolumeError(UserError):
+    """A move would cross drives. Moves are renames and never copy-then-delete (contract 6.4)."""
+
+
+class FileInUseError(UserError):
+    """Windows: another app has the file open, so it can't be moved or replaced."""
+
+
+class FileOperationError(UserError):
+    """The operating system refused a file operation, e.g. no permission. Nothing was
+    left half done."""
+
+
+class SourceChangedError(UserError):
+    """A file outside the library changed while it was being copied in."""
+
+
+class IntegrityError(MusicOrgError):
+    """A copy or a tag write didn't verify. The original was left untouched."""
+
+    exit_code = EXIT_USER_ERROR
+
+
+class NotFoundError(UserError):
+    """A batch, plan or item that doesn't exist."""
+
+
+class UndoError(UserError):
+    """An undo was refused, or stopped part way. It can be run again."""

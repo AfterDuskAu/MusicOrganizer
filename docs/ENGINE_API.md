@@ -13,6 +13,10 @@ The engine has two front doors onto the **same functions**. The CLI is for the o
 | **Job state** | `queued` · `running` · `done` · `failed` · `needs_review` · `cancelled` |
 | **Queue state** | `running` · `idle` · `paused` · `paused_by_youtube` |
 | **Plan kind** | `replace` · `adopt` · `lyrics` · `artwork` |
+| **Batch kind** | a plan kind (`replace` · `adopt` · `lyrics` · `artwork`) · `undo` · `demo` (`scripts/fileops_demo.py`) |
+| **Batch status** | `open` (running, or an open batch from `apply`) · `closed` · `interrupted` (closed by recovery after a crash) |
+| **Journal operation** | `commit` · `copy_in` · `supersede` · `restore` (back from `_Replaced/`, by undo) · `move` · `trash` · `write_tags` · `write_sidecar` |
+| **Undo step status** | `planned` (dry run) · `done` · `skipped` (already undone, or the file is gone) · `manual` (restore from the Trash by hand) |
 | **`MUSICORG_SOURCE`** | `youtube_music` · `youtube` · `rip_copy` · `bandcamp` · `cd` · `itunes` · `other` |
 | **`MUSICORG_MATCH`** | `auto_exact` (AUTO match and fingerprint pass) · `user_confirmed` (owner's decision and fingerprint pass) · `manual` (adopt using the owner's `*_fix` values). Absent for adopts without fixes. |
 
@@ -43,7 +47,7 @@ Global options:
 | `musicorg report [--out <dir>]` | Decision report, markdown and CSV | no | 07 |
 | `musicorg review export <csv> [--include-auto]` | Review CSV. Never overwrites: a ` (2)` suffix if the file exists. | no | 07 |
 | `musicorg review import <csv>` | Apply decisions (CSV decision enum) | yes | 07 |
-| `musicorg journal list` | Recent batches with counts and open/closed status | no | 03b |
+| `musicorg journal list [--limit N]` | Recent batches (default 20) with counts and open/closed status | no | 03b |
 | `musicorg undo <batch_id> [--dry-run]` | Reverse a batch | yes | 03b, extended 09b |
 | `musicorg plan replace [--only auto\|accepted\|all-eligible] [--limit N] [--stage-only]` | Dry-run plan. `--stage-only` stops after the fingerprint step for calibration. | yes | 09b |
 | `musicorg plan adopt [--include-not-found]` | Dry-run plan: copy `only_copy` items (and optionally all `not_found`) into `Music/` | yes | 09b |

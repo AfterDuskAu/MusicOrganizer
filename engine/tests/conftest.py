@@ -5,35 +5,46 @@
 - Audio fixtures are generated once per run with ffmpeg. If ffmpeg is missing the audio
   tests are skipped, unless MUSICORG_REQUIRE_TOOLS=1 (as in CI), which makes them fail.
 - Tests marked `live` talk to the real network and only run with MUSICORG_LIVE=1.
+- The system Trash is replaced by a folder for every test. The one test marked
+  `integration` uses the real Trash; it only runs with MUSICORG_INTEGRATION=1, and never
+  in CI.
 """
 
 from __future__ import annotations
 
 import os
 import subprocess
-from collections.abc import Callable
-from dataclasses import dataclass
+from collections.abc import Callable, Iterator
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
 
-from musicorg import library, tools
+from musicorg import fileops, library, state, tools
 
 REQUIRE_TOOLS = os.environ.get("MUSICORG_REQUIRE_TOOLS") == "1"
 RUN_LIVE = os.environ.get("MUSICORG_LIVE") == "1"
+RUN_INTEGRATION = os.environ.get("MUSICORG_INTEGRATION") == "1" and not os.environ.get("CI")
 
 
 def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line("markers", "live: talks to the real network; needs MUSICORG_LIVE=1")
+    config.addinivalue_line(
+        "markers",
+        "integration: uses the real system Trash; needs MUSICORG_INTEGRATION=1, never in CI",
+    )
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    if RUN_LIVE:
-        return
-    skip = pytest.mark.skip(reason="live test: set MUSICORG_LIVE=1 to run it")
+    skip_live = pytest.mark.skip(reason="live test: set MUSICORG_LIVE=1 to run it")
+    skip_integration = pytest.mark.skip(
+        reason="uses the real Trash: set MUSICORG_INTEGRATION=1 to run it (never in CI)"
+    )
     for item in items:
-        if "live" in item.keywords:
-            item.add_marker(skip)
+        if "live" in item.keywords and not RUN_LIVE:
+            item.add_marker(skip_live)
+        if "integration" in item.keywords and not RUN_INTEGRATION:
+            item.add_marker(skip_integration)
 
 
 @pytest.fixture(autouse=True)
@@ -48,6 +59,54 @@ def app_home(tmp_path_factory: pytest.TempPathFactory, monkeypatch: pytest.Monke
 def no_time_machine_probe(monkeypatch: pytest.MonkeyPatch) -> None:
     """Tests never run `tmutil`. The Time Machine warning tests supply its output."""
     monkeypatch.setattr(library, "_tmutil_destinationinfo", lambda: None)
+
+
+@dataclass
+class FakeTrash:
+    """Stands in for the system Trash: files are moved into `folder`."""
+
+    folder: Path
+    sent: list[Path] = field(default_factory=list)
+
+
+@pytest.fixture(autouse=True)
+def fake_trash(
+    request: pytest.FixtureRequest,
+    tmp_path_factory: pytest.TempPathFactory,
+    monkeypatch: pytest.MonkeyPatch,
+) -> FakeTrash:
+    """Tests never touch the real Trash, except the one marked `integration`."""
+    trash = FakeTrash(tmp_path_factory.mktemp("fake-trash"))
+    if request.node.get_closest_marker("integration"):
+        return trash
+
+    def send(path: Path) -> None:
+        os.replace(path, trash.folder / f"{len(trash.sent)}-{path.name}")
+        trash.sent.append(path)
+
+    monkeypatch.setattr(fileops, "_send_to_trash", send)
+    return trash
+
+
+@pytest.fixture(autouse=True)
+def no_disk_waits(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Flushing to the disk itself takes up to a quarter of a second on a spinning disk,
+    like the owner's iMac's, and a test can't tell the difference. So here fsync only
+    checks that its file is open, and F_FULLFSYNC is skipped. test_fileops.py checks that
+    the engine does use F_FULLFSYNC on macOS, and in what order it flushes."""
+    monkeypatch.setattr(os, "fsync", os.fstat)
+    monkeypatch.setattr(fileops, "_FULL_FSYNC", False)
+    monkeypatch.setattr(state, "_sync", os.fstat)
+
+
+@pytest.fixture
+def lib(tmp_path: Path) -> Iterator[library.Library]:
+    """A new library, open for writing."""
+    root = tmp_path / "Library"
+    library.init(root)
+    opened = library.open(root, write=True, command="pytest")
+    yield opened
+    opened.close()
 
 
 def require_tool(name: str) -> Path:
