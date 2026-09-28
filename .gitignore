@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# macOS and Windows junk
+.DS_Store
+._*
+Thumbs.db
+desktop.ini
+
+# Music and library data, anywhere in the repo
+*.mp3
+*.m4a
+*.flac
+*.wav
+*.opus
+*.ogg
+*.webm
+*.aac
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+.musicorg/
+
+# Reports and review exports, except the test data tables
+*.csv
+*.tsv
+!engine/tests/data/*.csv
+!engine/tests/data/*.tsv
