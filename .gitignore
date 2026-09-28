@@ -31,3 +31,27 @@ desktop.ini
 *.tsv
 !engine/tests/data/*.csv
 !engine/tests/data/*.tsv
+
+# Secrets: keys, passwords and logins never belong in this public repo.
+# scripts/check_secrets.py (the pre-commit hook) blocks these names too.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ecdsa*
+id_ed25519*
+.netrc
+.pypirc
+credentials.json
+client_secret*.json
+# YouTube and YouTube Music logins (yt-dlp cookie files, ytmusicapi auth files)
+cookies.txt
+*cookies*.txt
+*.cookies
+browser.json
+oauth.json
+headers_auth.json

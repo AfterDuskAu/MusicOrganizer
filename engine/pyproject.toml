@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "musicorg"
+dynamic = ["version"]
+description = "Music Organizer engine: scans, matches, downloads, tags and protects a home music library."
+requires-python = ">=3.12"
+dependencies = [
+    "yt-dlp[default]",
+    "ytmusicapi",
+    "mutagen",
+    "rapidfuzz",
+    "send2trash",
+    "platformdirs",
+    "requests",
+    "Pillow",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+[project.scripts]
+musicorg = "musicorg.cli:main"
+
+[tool.hatch.version]
+path = "musicorg/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["musicorg"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+    "live: talks to the real network; skipped unless MUSICORG_LIVE=1",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]

@@ -15,21 +15,28 @@ Python 3.12, ffmpeg (with ffprobe), fpcalc (Chromaprint) and deno 2.3 or newer.
 - **Python 3.12:** the macOS installer from python.org (universal2).
 - **deno:** `curl -fsSL https://deno.land/install.sh | sh` (installs to `~/.deno/bin`).
 - **fpcalc:** the macOS universal download from the Chromaprint releases page on GitHub.
-- **ffmpeg and ffprobe:** a static Intel macOS build, or MacPorts (`sudo port install ffmpeg`).
+- **ffmpeg and ffprobe:** a static Intel macOS build (evermeet.cx, which ffmpeg.org links to), or MacPorts (`sudo port install ffmpeg`). Put `ffmpeg`, `ffprobe` and `fpcalc` in `/usr/local/bin`.
 
 **Windows:** `winget install ffmpeg`, `winget install DenoLand.Deno`, and fpcalc from the Chromaprint releases page (it isn't on winget).
 
 ## Set up and run
 
-`engine/` is created in step 02. From then on:
-
 ```bash
+git config core.hooksPath .githooks   # once per clone: switches on the secret check
 python3.12 -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -e "engine[dev]"
 musicorg doctor                  # checks tools and folders
 pytest engine                    # runs the tests
 ```
+
+## Keeping secrets out
+
+This repository is public. Anything committed is exposed for good, even if a later commit deletes it, and bots scan GitHub for keys within minutes. So:
+
+- `git config core.hooksPath .githooks` switches on two hooks, once per clone. They refuse any commit or push containing something that looks like a key, password or login cookie (`scripts/check_secrets.py`). CI runs the same check over every file and the whole history.
+- YouTube login files (yt-dlp's `cookies.txt`, ytmusicapi's `browser.json` / `oauth.json`), `.env` files and key files are in `.gitignore`. Keep them outside the repo anyway.
+- Never skip the hooks with `--no-verify`. If the check flags something that's genuinely harmless, end that line with a `secrets-ok` comment.
 
 ## Docs
 

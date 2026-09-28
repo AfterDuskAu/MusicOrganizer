@@ -1,0 +1,7 @@
+# Lint settings for scripts/. The engine has its own in engine/pyproject.toml.
+# scripts/ runs outside the engine's venv (as git hooks), so it targets Python 3.9.
+line-length = 100
+target-version = "py39"
+
+[lint]
+select = ["E", "F", "W", "I", "UP", "B"]
