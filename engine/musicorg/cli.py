@@ -13,7 +13,7 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any, NoReturn
 
-from musicorg import __version__, doctor, logging_setup, status
+from musicorg import __version__, doctor, library, logging_setup, status
 from musicorg.config import Config
 from musicorg.errors import (
     EXIT_INTERNAL,
@@ -93,7 +93,12 @@ def build_parser() -> argparse.ArgumentParser:
             dest=f"{name}_command", metavar="COMMAND", required=True, parser_class=_Parser
         )
 
-    p = add(commands, "init", "Create a new library in an empty folder.", _not_yet("init", "03a"))
+    p = add(
+        commands,
+        "init",
+        "Create a new library, in a new folder or one with no music in it.",
+        _cmd_init,
+    )
     p.add_argument("root", type=_path)
 
     add(commands, "status", "Show the library, item counts, queue state and warnings.", _cmd_status)
@@ -227,27 +232,61 @@ def build_parser() -> argparse.ArgumentParser:
 
 # ---- command handlers ----------------------------------------------------------------
 
+# What each top-level folder is for, as `init` shows it.
+_LAYOUT = (
+    ("Music/", "your organised, tagged music"),
+    ("_Replaced/", "files replaced by upgrades or undos; never deleted automatically"),
+    ("_Staging/", "downloads and tag changes in progress"),
+    ("Reports/", "reports and spreadsheets"),
+    (".musicorg/", "the engine's own records (hidden)"),
+)
+
+
+def _cmd_init(args: argparse.Namespace) -> int:
+    result = library.init(args.root)
+    if args.json:
+        _print_json(result.to_dict())
+        return EXIT_OK
+
+    if result.already_library:
+        print(f"{result.root} is already a Music Organizer library.")
+        if result.created:
+            print("Added the missing folders:")
+            for folder in result.created:
+                print(f"  {folder}")
+        else:
+            print("Nothing needed creating.")
+    else:
+        print(f"Created a new library at {result.root}")
+        print()
+        width = max(len(name) for name, _ in _LAYOUT) + 2
+        for name, purpose in _LAYOUT:
+            print(f"  {name:<{width}}{purpose}")
+    _print_warnings(result.warnings)
+    return EXIT_OK
+
 
 def _cmd_status(args: argparse.Namespace) -> int:
-    library = args.library if args.library is not None else Config.load().last_library
-    result = status.get_status(library)
+    root = args.library if args.library is not None else Config.load().last_library
+    result = status.get_status(root)
     if args.json:
         _print_json(result)
         return EXIT_OK
 
     print(f"Music Organizer engine {result['engine_version']}")
-    if library is None:
+    if root is None:
         print(
             "Library: none chosen yet. Pass --library <folder>, "
-            "or create one with `musicorg init <folder>` (step 03a)."
+            "or create one with `musicorg init <folder>`."
         )
     elif not result["library_exists"]:
-        print(f"Library: {library} (this folder doesn't exist)")
+        print(f"Library: {root} (this folder doesn't exist)")
     elif not result["is_library"]:
-        print(f"Library: {library} (this folder isn't a Music Organizer library yet)")
+        print(f"Library: {root} (this folder isn't a Music Organizer library yet)")
     else:
-        print(f"Library: {library}")
+        print(f"Library: {root}")
     print("Item counts arrive in step 05, and the queue state in step 09a.")
+    _print_warnings(result["warnings"])
     return EXIT_OK
 
 
@@ -340,6 +379,15 @@ def _global_options(for_subcommand: bool) -> argparse.ArgumentParser:
 def _path(text: str) -> Path:
     """Path arguments. Expands a quoted "~/..." the shell left alone."""
     return Path(text).expanduser()
+
+
+def _print_warnings(warnings: list[str]) -> None:
+    if not warnings:
+        return
+    print()
+    print("Warnings:")
+    for warning in warnings:
+        print(f"  ! {warning}")
 
 
 def _print_json(data: Any) -> None:

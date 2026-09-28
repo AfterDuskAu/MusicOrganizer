@@ -163,6 +163,13 @@ class Config:
             ) from exc
 
 
+def remember_library(root: Path) -> None:
+    """Make `root` the library that commands use when --library isn't given."""
+    cfg = Config.load()
+    cfg.last_library = root
+    cfg.save()
+
+
 def _app_dir_list() -> list[Path]:
     dirs = app_dirs()
     return [dirs.config, dirs.logs, dirs.cache]

@@ -43,10 +43,26 @@ class NotImplementedYetError(UserError):
         self.step = step
 
 
+class StateError(UserError):
+    """The library's state.json can't be read or saved."""
+
+
+class PathTooLongError(UserError):
+    """A library path can't be made to fit Windows' path length limit."""
+
+
 class LibraryLockedError(MusicOrgError):
-    """Another engine process holds the library's single-writer lock (step 03a)."""
+    """Another engine process holds the library's single-writer lock.
+
+    `holder` is what the holder wrote to lock.info (pid, command, started_at, host), or
+    None if that couldn't be read.
+    """
 
     exit_code = EXIT_LOCKED
+
+    def __init__(self, message: str, holder: dict[str, object] | None = None) -> None:
+        super().__init__(message)
+        self.holder = holder
 
 
 class ToolMissingError(MusicOrgError):

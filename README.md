@@ -30,6 +30,12 @@ musicorg doctor                  # checks tools and folders
 pytest engine                    # runs the tests
 ```
 
+Create the library (not inside the folder that holds your rips):
+
+```bash
+musicorg init ~/"Music Organizer Library"
+```
+
 ## Keeping secrets out
 
 This repository is public. Anything committed is exposed for good, even if a later commit deletes it, and bots scan GitHub for keys within minutes. So:

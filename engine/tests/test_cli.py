@@ -12,9 +12,15 @@ from pathlib import Path
 
 import pytest
 
-from musicorg import __version__, cli, status
+from musicorg import __version__, cli, library, status
 from musicorg.config import Config
-from musicorg.errors import EXIT_INTERNAL, EXIT_OK, EXIT_TOOL_MISSING, EXIT_USER_ERROR
+from musicorg.errors import (
+    EXIT_INTERNAL,
+    EXIT_LOCKED,
+    EXIT_OK,
+    EXIT_TOOL_MISSING,
+    EXIT_USER_ERROR,
+)
 
 
 def run(capsys: pytest.CaptureFixture[str], *args: str) -> tuple[int, str, str]:
@@ -111,7 +117,6 @@ def test_group_needs_subcommand(capsys: pytest.CaptureFixture[str]) -> None:
 @pytest.mark.parametrize(
     ("args", "step"),
     [
-        (["init", "/tmp/lib"], "03a"),
         (["sources", "add", "/tmp/rips"], "05"),
         (["sources", "list"], "05"),
         (["sources", "remove", "s_123"], "05"),
@@ -180,6 +185,101 @@ def test_library_path_expands_home(capsys: pytest.CaptureFixture[str]) -> None:
     code, out, _ = run(capsys, "status", "--json", "--library", "~/Music Organizer Library")
     assert code == EXIT_OK
     assert json.loads(out)["library"] == str(Path.home() / "Music Organizer Library")
+
+
+# ---- init ------------------------------------------------------------------------------
+
+
+@pytest.fixture
+def plenty_of_space(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(library, "_free_bytes", lambda folder: 500 * 1000**3)
+
+
+def test_init_creates_the_library_and_prints_the_layout(
+    capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    root = tmp_path / "Music Organizer Library"
+    code, out, err = run(capsys, "init", str(root))
+    assert code == EXIT_OK, err
+    assert f"Created a new library at {root.resolve()}" in out
+    for folder in ("Music/", "_Replaced/", "_Staging/", "Reports/", ".musicorg/"):
+        assert folder in out
+    for folder in ("Music", "_Replaced", "_Staging/calibration", "Reports", ".musicorg"):
+        assert (root / folder).is_dir()
+
+
+def test_init_prints_warnings(
+    capsys: pytest.CaptureFixture[str], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(library, "_free_bytes", lambda folder: 2_500_000_000)
+    code, out, _ = run(capsys, "init", str(tmp_path / "Library"))
+    assert code == EXIT_OK
+    assert "Warnings:" in out
+    assert "Only 2.5 GB is free" in out
+
+
+def test_init_json(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
+    root = tmp_path / "Library"
+    code, out, _ = run(capsys, "init", str(root), "--json")
+    assert code == EXIT_OK
+    data = json.loads(out)
+    assert data["root"] == str(root.resolve())
+    assert data["already_library"] is False
+    assert str(root.resolve() / "Music") in data["created"]
+    assert isinstance(data["warnings"], list)
+
+
+def test_init_again_says_so(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
+    root = tmp_path / "Library"
+    run(capsys, "init", str(root))
+    code, out, _ = run(capsys, "init", str(root))
+    assert code == EXIT_OK
+    assert "is already a Music Organizer library" in out
+    assert "Nothing needed creating." in out
+
+
+def test_init_refuses_a_rips_folder(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
+    rips = tmp_path / "rips"
+    (rips / "Artist").mkdir(parents=True)
+    (rips / "Artist" / "01 Song.mp3").write_bytes(b"x")
+    code, out, err = run(capsys, "init", str(rips))
+    assert code == EXIT_USER_ERROR
+    assert "already holds music files" in err
+    assert out == ""
+    assert sorted(p.name for p in rips.iterdir()) == ["Artist"]
+
+
+def test_init_while_locked_exits_2(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
+    root = tmp_path / "Library"
+    library.init(root)
+    with library.open(root, write=True, command="queue run"):
+        code, out, err = run(capsys, "init", str(root))
+    assert code == EXIT_LOCKED
+    assert "`queue run`" in err
+    assert out == ""
+
+
+@pytest.mark.usefixtures("plenty_of_space")
+def test_status_after_init(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
+    root = tmp_path / "Library"
+    run(capsys, "init", str(root))
+    code, out, _ = run(capsys, "status", "--json")  # no --library: init remembered it
+    assert code == EXIT_OK
+    data = json.loads(out)
+    assert data["library"] == str(root.resolve())
+    assert data["is_library"] is True
+
+
+def test_status_shows_warnings(
+    capsys: pytest.CaptureFixture[str], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = tmp_path / "Library"
+    library.init(root)
+    monkeypatch.setattr(library, "_free_bytes", lambda folder: 1_000_000_000)
+    code, out, _ = run(capsys, "status", "--library", str(root))
+    assert code == EXIT_OK
+    assert "Warnings:" in out
+    assert "Only 1.0 GB is free" in out
 
 
 # ---- status ----------------------------------------------------------------------------

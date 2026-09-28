@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from musicorg import tools
+from musicorg import library, tools
 
 REQUIRE_TOOLS = os.environ.get("MUSICORG_REQUIRE_TOOLS") == "1"
 RUN_LIVE = os.environ.get("MUSICORG_LIVE") == "1"
@@ -42,6 +42,12 @@ def app_home(tmp_path_factory: pytest.TempPathFactory, monkeypatch: pytest.Monke
     home = tmp_path_factory.mktemp("app-home")
     monkeypatch.setenv("MUSICORG_HOME", str(home))
     return home
+
+
+@pytest.fixture(autouse=True)
+def no_time_machine_probe(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Tests never run `tmutil`. The Time Machine warning tests supply its output."""
+    monkeypatch.setattr(library, "_tmutil_destinationinfo", lambda: None)
 
 
 def require_tool(name: str) -> Path:
