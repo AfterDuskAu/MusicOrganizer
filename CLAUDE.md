@@ -77,8 +77,9 @@ All states, decisions and tag values are defined **once**, in `docs/ENGINE_API.m
 
 ## Secrets (this repository is public)
 
-- Never commit keys, passwords, tokens or login cookies, and never put them in tests, fixtures, docs or commit messages. Anything committed stays public even after a later commit deletes it.
-- Commits and pushes go through the `.githooks/` secret check (`scripts/check_secrets.py`). Never bypass it with `--no-verify`. If it flags something harmless, fix the line or end it with a `secrets-ok` comment, and say so.
+- Never commit keys, passwords, tokens, login cookies or personal email addresses, and never put them in tests, fixtures, docs or commit messages. Anything committed stays public even after a later commit deletes it.
+- Commits use the owner's private GitHub noreply address (`git config user.email`), never a personal email.
+- Commits and pushes go through the `.githooks/` secret check (`scripts/check_secrets.py`: files, commit messages and commit author details). Never bypass it with `--no-verify`. If it flags something harmless, fix the line or end it with a `secrets-ok` comment, and say so.
 - Tests that need a fake secret build it at runtime (e.g. `"ghp_" + "a1B2" * 10`), so the file never contains one.
 - YouTube logins (yt-dlp cookie files, ytmusicapi `browser.json` / `oauth.json`) live outside the repo, in the app's config folder.
 

@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
-"""Stop keys, passwords and login cookies from being committed.
+"""Stop keys, passwords, login cookies and email addresses from being committed.
 
 This repository is public. Anything committed is exposed for good, even if a later
 commit deletes it, and bots scan GitHub for secrets within minutes. This check runs as
 the git pre-commit and pre-push hook (.githooks/, switched on with
 `git config core.hooksPath .githooks`) and in CI.
 
-    python3 scripts/check_secrets.py --staged    what's about to be committed
+    python3 scripts/check_secrets.py --staged    what's about to be committed, and the
+                                                 email git will put on the commit
+    python3 scripts/check_secrets.py --message F commit message file (commit-msg hook)
     python3 scripts/check_secrets.py --push      commits about to be pushed (pre-push hook)
     python3 scripts/check_secrets.py --all       every tracked file
     python3 scripts/check_secrets.py --history   every commit ever made
 
 Findings are printed with the value mostly hidden, because CI logs are public too.
+Email addresses count as private too. Allowed: GitHub's private noreply addresses
+(<id>+<name>@users.noreply.github.com), no-reply senders, and example/test domains.
 If a line is a genuine false alarm, end it with a `secrets-ok` comment.
 
 Standard library only, Python 3.9+, so it runs without the engine's .venv.
@@ -104,6 +108,14 @@ _PLACEHOLDER = re.compile(
     r"(?i)^(?:<.*>|\$\{.*\}|\{.*\}|x{4,}|\*{4,}|\.{3,})$"
     r"|example|changeme|placeholder|dummy|your[_\-]|redacted"
 )
+_EMAIL = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
+# Emails that are fine to publish: GitHub's private noreply addresses, no-reply senders
+# (like Claude's co-author line), git@host SSH addresses, and reserved example domains.
+_PUBLIC_EMAIL = re.compile(
+    r"(?i)^(?:[^@]+@users\.noreply\.github\.com"
+    r"|(?:no-?reply|git)@[^@]+"
+    r"|[^@]+@(?:[a-z0-9\-]+\.)*(?:example\.(?:com|org|net)|example|invalid|test|localhost))$"
+)
 
 
 @dataclass(frozen=True)
@@ -121,6 +133,10 @@ def redact(text: str) -> str:
     if len(text) <= 8:
         return "[hidden]"
     return f"{text[:4]}…[{len(text) - 4} characters hidden]"
+
+
+def email_is_public(address: str) -> bool:
+    return bool(_PUBLIC_EMAIL.match(address))
 
 
 def check_name(path: str) -> Finding | None:
@@ -144,6 +160,9 @@ def check_line(where: str, line: str) -> list[Finding]:
                 if _PLACEHOLDER.search(value) or "{" in value:
                     continue
             findings.append(Finding(where, kind, redact(match.group(0))))
+    for match in _EMAIL.finditer(line):
+        if not email_is_public(match.group(0)):
+            findings.append(Finding(where, "email address", redact(match.group(0))))
     return findings
 
 
@@ -197,8 +216,30 @@ def _diff_args() -> list[str]:
     return ["-U0", "--no-color", "--no-ext-diff", "--diff-filter=ACMR"]
 
 
-def scan_staged() -> list[Finding]:
+def scan_identity() -> list[Finding]:
+    """The name and email git will stamp on the next commit (git config user.email)."""
     findings = []
+    for role, var in (("author", "GIT_AUTHOR_IDENT"), ("committer", "GIT_COMMITTER_IDENT")):
+        match = re.search(r"<([^>]*)>", git("var", var))
+        if match and not email_is_public(match.group(1)):
+            findings.append(
+                Finding(
+                    f"commit {role} (git config user.email)",
+                    "personal email in the commit details",
+                    redact(match.group(1)),
+                )
+            )
+    return findings
+
+
+def scan_message(path: Path) -> list[Finding]:
+    text = path.read_text(encoding="utf-8", errors="replace")
+    kept = "\n".join(line for line in text.splitlines() if not line.startswith("#"))
+    return check_text("commit message", kept)
+
+
+def scan_staged() -> list[Finding]:
+    findings = scan_identity()
     names = git("diff", "--cached", "--name-only", "--diff-filter=ACMR", "-z").split("\0")
     findings += [f for f in (check_name(n) for n in names if n) if f]
     findings += check_diff(git("diff", "--cached", *_diff_args()))
@@ -215,6 +256,15 @@ def scan_commit(sha: str) -> list[Finding]:
         if finding:
             findings.append(Finding(label + finding.where, finding.kind, finding.sample))
     findings += check_diff(git("show", "--format=", *_diff_args(), sha), label)
+    author, committer, message = git("show", "-s", "--format=%ae%x00%ce%x00%B", sha).split("\0", 2)
+    for role, address in (("author", author), ("committer", committer)):
+        if address and not email_is_public(address):
+            findings.append(
+                Finding(
+                    f"{label}commit {role}", "personal email in the commit details", redact(address)
+                )
+            )
+    findings += check_text(f"{label}commit message", message)
     return findings
 
 
@@ -267,9 +317,12 @@ def scan_all() -> list[Finding]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Refuse keys, passwords and login cookies.")
+    parser = argparse.ArgumentParser(
+        description="Refuse keys, passwords, login cookies and email addresses."
+    )
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--staged", action="store_true", help="check what's about to be committed")
+    mode.add_argument("--message", type=Path, metavar="FILE", help="commit-msg hook")
     mode.add_argument("--push", action="store_true", help="pre-push hook: read refs from stdin")
     mode.add_argument("--all", action="store_true", help="check every tracked file")
     mode.add_argument("--history", action="store_true", help="check every commit")
@@ -278,20 +331,22 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.staged:
             findings, blocked = scan_staged(), "Commit blocked"
+        elif args.message:
+            findings, blocked = scan_message(args.message), "Commit blocked"
         elif args.push:
             findings, blocked = scan_push(sys.stdin.read()), "Push blocked"
         elif args.all:
             findings, blocked = scan_all(), "Found"
         else:
             findings, blocked = scan_history(), "Found in history"
-    except RuntimeError as exc:
+    except (RuntimeError, OSError) as exc:
         print(f"Secret check couldn't run: {exc}", file=sys.stderr)
         return 2
 
     if not findings:
         return 0
     print(
-        f"Secret check: {blocked}. These look like keys, passwords or login cookies:",
+        f"Secret check: {blocked}. These look like keys, passwords, login cookies or emails:",
         file=sys.stderr,
     )
     print(file=sys.stderr)
@@ -301,6 +356,8 @@ def main(argv: list[str] | None = None) -> int:
     print(
         "This repository is public, so anything committed is exposed for good.\n"
         "Remove these, and keep secrets in files that .gitignore excludes.\n"
+        "For your commit email, use GitHub's private noreply address:\n"
+        "  git config user.email <id>+<username>@users.noreply.github.com\n"
         f"If a line is a genuine false alarm, end it with a `{ALLOW_MARKER}` comment.",
         file=sys.stderr,
     )

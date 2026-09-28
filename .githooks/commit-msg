@@ -1,0 +1,10 @@
+#!/bin/sh
+# Refuses a commit message that contains keys, passwords, login cookies or emails.
+root="$(git rev-parse --show-toplevel)"
+for py in python3 python py; do
+    if command -v "$py" >/dev/null 2>&1; then
+        exec "$py" "$root/scripts/check_secrets.py" --message "$1"
+    fi
+done
+echo "Secret check: Python wasn't found, so the check couldn't run. Commit blocked." >&2
+exit 1

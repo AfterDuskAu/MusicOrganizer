@@ -1,5 +1,6 @@
 #!/bin/sh
-# Refuses a commit that contains keys, passwords or login cookies.
+# Refuses a commit that contains keys, passwords, login cookies or emails, or that
+# would carry a personal email in its author details.
 # Switched on per clone with: git config core.hooksPath .githooks
 root="$(git rev-parse --show-toplevel)"
 for py in python3 python py; do

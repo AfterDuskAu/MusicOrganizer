@@ -34,7 +34,8 @@ pytest engine                    # runs the tests
 
 This repository is public. Anything committed is exposed for good, even if a later commit deletes it, and bots scan GitHub for keys within minutes. So:
 
-- `git config core.hooksPath .githooks` switches on two hooks, once per clone. They refuse any commit or push containing something that looks like a key, password or login cookie (`scripts/check_secrets.py`). CI runs the same check over every file and the whole history.
+- `git config core.hooksPath .githooks` switches on the hooks, once per clone. They refuse any commit or push containing something that looks like a key, password, login cookie or personal email address, in files, commit messages or the commit's author details (`scripts/check_secrets.py`). CI runs the same check over every file and the whole history.
+- Commit with your private GitHub noreply address: `git config user.email <id>+<username>@users.noreply.github.com`.
 - YouTube login files (yt-dlp's `cookies.txt`, ytmusicapi's `browser.json` / `oauth.json`), `.env` files and key files are in `.gitignore`. Keep them outside the repo anyway.
 - Never skip the hooks with `--no-verify`. If the check flags something that's genuinely harmless, end that line with a `secrets-ok` comment.
 

@@ -41,7 +41,9 @@ FAKE = {
     "Netscape cookie file": "# Netscape " + "HTTP Cookie File",
     "password in a URL": "https://" + "me:hunter2" + "@example.org/x",
     "secret written into code": "lastfm_api" + '_key = "' + "9f8e7d6c5b4a39281706" + '"',
+    "email address": "Contact: jane.doe" + "@" + "gmail.com",
 }
+PERSONAL_EMAIL = "jane.doe" + "@" + "gmail.com"
 
 
 @pytest.mark.parametrize("kind", sorted(FAKE))
@@ -68,6 +70,13 @@ def test_never_prints_the_whole_secret(kind: str) -> None:
         'print("the password was wrong")',
         "See https://github.com/acoustid/chromaprint/releases",
         "SID: short",
+        "Co-Authored-By: Claude <noreply@anthropic.com>",
+        "Author: Someone <12345+someone@users.noreply.github.com>",
+        "git clone git@github.com:owner/repo.git",
+        '"GIT_AUTHOR_EMAIL": "test@example.invalid",',
+        "@pytest.mark.live",
+        "      - uses: actions/checkout@v7",
+        "https://deno.land/x/install@v0.3.3/install.sh",
     ],
 )
 def test_ignores_ordinary_lines(line: str) -> None:
@@ -201,3 +210,54 @@ def test_all_and_history(repo: Path) -> None:
 def test_this_repository_is_clean() -> None:
     result = run_check(REPO, "--all")
     assert result.returncode == 0, result.stderr
+
+
+# ---- emails in commit details and messages ---------------------------------------------
+
+
+def test_personal_commit_email_blocks_commit(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GIT_AUTHOR_EMAIL", PERSONAL_EMAIL)
+    monkeypatch.setenv("GIT_COMMITTER_EMAIL", PERSONAL_EMAIL)
+    (repo / "a.py").write_text("x = 1\n")
+    git(repo, "add", "a.py")
+    result = run_check(repo, "--staged")
+    assert result.returncode == 1
+    assert "personal email in the commit details" in result.stderr
+    assert "users.noreply.github.com" in result.stderr  # tells you the fix
+    assert PERSONAL_EMAIL not in result.stderr
+
+
+def test_push_catches_personal_commit_email(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GIT_AUTHOR_EMAIL", PERSONAL_EMAIL)
+    (repo / "a.py").write_text("x = 1\n")
+    git(repo, "add", "a.py")
+    git(repo, "commit", "-q", "-m", "clean file, personal author")
+    head = git(repo, "rev-parse", "HEAD")
+    result = run_check(repo, "--push", stdin=f"refs/heads/main {head} refs/heads/main {'0' * 40}\n")
+    assert result.returncode == 1
+    assert "commit author" in result.stderr
+
+
+def test_history_catches_email_in_commit_message(repo: Path) -> None:
+    (repo / "a.py").write_text("x = 1\n")
+    git(repo, "add", "a.py")
+    git(repo, "commit", "-q", "-m", f"thanks to {PERSONAL_EMAIL}")
+    result = run_check(repo, "--history")
+    assert result.returncode == 1
+    assert "commit message" in result.stderr
+
+
+def test_commit_message_file(tmp_path: Path) -> None:
+    clean = tmp_path / "clean"
+    clean.write_text(
+        "Step 03a: library core\n\n"
+        "Co-Authored-By: Claude <noreply@anthropic.com>\n"
+        f"# Author: Jane <{PERSONAL_EMAIL}>  (git's own comment lines are ignored)\n"
+    )
+    assert run_check(tmp_path, "--message", str(clean)).returncode == 0
+
+    leaky = tmp_path / "leaky"
+    leaky.write_text(f"Fix login\n\nkey: {FAKE['GitHub token']}\n")
+    result = run_check(tmp_path, "--message", str(leaky))
+    assert result.returncode == 1
+    assert "GitHub token" in result.stderr
