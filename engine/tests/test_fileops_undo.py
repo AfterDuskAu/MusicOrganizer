@@ -7,16 +7,14 @@ from pathlib import Path
 
 import pytest
 from fileops_support import (
-    FakeTags,
     SimulatedCrash,
-    crash_tag_write,
+    crash_in,
     files_in,
     journal,
     lines_of,
     put,
     recover,
     staged,
-    tagged,
     tree,
 )
 
@@ -228,14 +226,15 @@ def test_a_running_batch_cant_be_undone(lib: Library, rips: list[Path]) -> None:
 def test_an_interrupted_operation_is_left_for_a_person(
     lib: Library, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    tags = FakeTags()
-    track = tagged(music(lib), {"title": "Old"})
+    original = put(music(lib), b"song")
     with monkeypatch.context() as m:
-        m.setattr(fileops, "tag_access", tags)
-        crash_tag_write(m, tags, after=True)
+        crash_in(m, "_replace")  # reserved, then died before the move
         with pytest.raises(SimulatedCrash), fileops.batch(lib, "demo") as b:
-            fileops.write_tags(b, track, {"title": "New"})
-    assert recover(lib) == []  # without tag support, recovery can't tell yet
+            fileops.move(b, original, "Elsewhere/Song.m4a")
+    reserved = music(lib, "Elsewhere/Song.m4a")
+    reserved.write_bytes(b"something else arrived")  # now nothing adds up
+    original.unlink()
+    assert recover(lib) == []  # recovery can't tell, so it leaves it
     result = fileops.undo(lib, b.batch_id)
     assert [s.status for s in result.steps] == ["skipped"]
     assert "Check this file by hand" in result.steps[0].note

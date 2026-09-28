@@ -121,3 +121,41 @@
   - New errors: `OutsideLibraryError`, `CrossVolumeError`, `FileInUseError`, `FileOperationError`, `SourceChangedError`, `IntegrityError` (exit 1), `NotFoundError` and `UndoError`.
   - **Tests:** every test gets a fake Trash. The real-Trash test is marked `integration` and runs only with `MUSICORG_INTEGRATION=1`, never in CI, so a plain `pytest` never puts files in the owner's Trash. In tests, fsync only checks that its file is open and F_FULLFSYNC is skipped: on the iMac's spinning disk F_FULLFSYNC took 0.14–0.25 s and fsync about 10 ms, which made the suite several times slower. One test checks that macOS uses F_FULLFSYNC, and another that the intent is flushed before anything changes.
   - `fileops.py` is about 2,300 lines. It stays one module, as rule 3 and the write-rule test expect, with a section per topic.
+
+### Step 04: Tags, probe and the audio-integrity check
+
+- `tags.py` (mutagen 1.48.1):
+  - `TrackTags`: every field of contract section 4, standard and `MUSICORG_*`, plus `cover` and `cover_mime`. None means absent (in a change: leave it); `REMOVE` deletes a field; `warnings` says what went wrong while reading.
+  - `read_tags`: M4A, MP3, FLAC, Ogg Vorbis and Opus. WebM, raw AAC, WAV and anything else give empty tags and a warning, and never raise. Messy MP3s read without errors: ID3v1 only, ID3v2.2, duplicate frames, broken frames, UTF-8 text in a frame that says it's Latin-1 (repaired, with a warning), and files that aren't MP3 at all.
+  - `write_tags`: changes only the fields it's given and keeps the rest (iTunSMPB and other freeform atoms, composer, comments, other TXXX frames, unknown frames in v2.3 files, back covers and other pictures). M4A provenance goes in `----:com.apple.iTunes:MUSICORG_*` atoms as UTF-8; MP3 is ID3v2.3 with the year in TYER and provenance in TXXX frames; FLAC, Ogg and Opus get plain comments and a front-cover picture block. `MUSICORG_VERSION` is joined with `; `. One mutagen save call.
+  - `probe()` (ffprobe): codec, duration, kbps, sample rate and channels. `audio_hash()` (ffmpeg): MD5 of the decoded audio, always computed fresh. No cache yet; the prompt allows one only for scan-time reporting, so step 05 can add it.
+  - `new_track_id()`: a UUIDv4.
+- `fileops.write_tags` is now the verified write (contract 6.7): hash the audio → copy the file into `_Staging/` → write the tags on the copy → hash the copy and read its tags back → journal the intent (complete before- and after-state, the audio MD5, the staged copy) → keep the old cover in `.musicorg/undo-art/` → swap the copy in with `os.replace` (with the Windows retry) → `done`. If the audio or the tags don't match: `IntegrityError`, the copy is discarded and the file is untouched.
+  - Recovery reads the file's tags: the new ones mean the swap happened (completed); the old ones mean it didn't (rolled back, the staged copy removed).
+  - Undo works from the journaled before-state: fields that were absent are removed, including a `MUSICORG_ID` the batch added, and a replaced cover comes back from `undo-art/`.
+  - A file's `MUSICORG_ID` can't be changed or removed, except by the undo of the batch that added it.
+- `scripts/check_compat.py [<folder>]`: a scratch library with a 10-second tone as M4A and MP3, tagged with every field through the real verified write, and a checklist for Apple Music and Kid3 or Picard.
+- 678 tests pass on the iMac; 3 are skipped (the real-Trash test, and two Windows-only ones). 97 are new, and step 03b's 7 tests with a fake tag store were replaced by real ones. Every field round-trips in all five formats with the audio hash unchanged; Unicode (Japanese, emoji, accents); covers in JPEG and PNG; unmanaged atoms, frames and comments survive; the messy MP3s above; files whose tags aren't read; values outside the schema refused; probe of all eight sample kinds; adding lyrics and a cover then undoing them leaves neither and the same audio; a write that changes the audio or doesn't read back is refused with the file untouched; a crash on either side of the swap is recovered; the track id rule; and, on the Windows runner only, a file held open by another handle gives `FileInUseError` with the original intact.
+- Compatibility check (`scripts/check_compat.py`, run on the iMac):
+  - ffprobe reads every field of both files, the `MUSICORG_*` ones included, and the 600 px cover.
+  - macOS's own reader (`afinfo`, AudioToolbox) reads the title with its Japanese, the artist, album, year, genre and track number from both the M4A and the ID3v2.3 MP3. It doesn't report artwork or lyrics.
+  - **Still to do by the owner:** Apple Music (artwork, lyrics, the explicit mark) and Kid3 or Picard (the `MUSICORG_*` fields), following the script's checklist. Neither app can be checked from the command line.
+- Deviations and additions:
+  - **Types:** the year, track and disc numbers are whole numbers, and the year is written as 4 digits (a full date in a rip reads as its year, and stays in the file unless the year is changed). `explicit` is True/False. `match_score` keeps 3 decimals. `only_copy=True` writes `1`; False removes the field, since the contract only defines `1`. `version` is a list of tokens.
+  - **Empty text** counts as "not given", so it leaves a field as it is rather than erasing it; `REMOVE` erases.
+  - **Checked values:** `MUSICORG_SOURCE` and `MUSICORG_MATCH` must be enum values, numbers must be in range, and the cover must be JPEG or PNG; anything else is a ValueError before a file is touched.
+  - **Several values in one field** (two ARTIST comments, duplicate TIT2 frames) read joined with `; `. Writing that field stores one value.
+  - **Covers:** the managed cover is the front cover: APIC type 3, picture type 3 in FLAC, Ogg and Opus, and M4A's `covr` (all of it: M4A has no picture types). Other pictures are kept.
+  - **Lyrics in MP3:** all USLT frames count as the lyrics; a write replaces them with one (language `eng`).
+  - **Totals:** a track or disc total isn't kept when its number is removed, because ID3 can't store a total alone.
+  - **Vorbis aliases:** TOTALTRACKS, TOTALDISCS and UNSYNCEDLYRICS are read when the usual names are missing, and replaced by the usual names on write.
+  - **Explicit:** `rtng` 1 is explicit and 0 not; iTunes' 4 also reads as explicit and 2 ("clean") as not. MP3 and Vorbis use `1`/`0`. The contract's table now says so.
+  - **ID3v2.3:** mutagen converts only when `update_to_v23()` is called first; saving with `v2_version=3` alone kept the v2.4 TDRC frame. The conversion deletes v2.4-only frames, so the ones players also read in v2.3 (sort names TSOP, TSOA, TSOT, TSST; TMOO; TPRO; RVA2 ReplayGain) are carried across, as mutagen's documentation suggests. Other v2.4-only frames (e.g. TDRL, TDTG, SIGN) are dropped, and frames mutagen doesn't know can't be kept from a v2.4 file (logged). Only the library's copies are ever written, never the owner's rips.
+  - **undo-art:** a PNG cover is kept as `<sha256>.png` (contract section 1 updated).
+  - **The verified write also** reads the tags back from the copy and compares them with what was asked, and checks the file's size and modification time just before the swap (`SourceChangedError` if another app changed it).
+  - **Journal order:** a tag write's intent is journaled once the staged copy has passed both checks, just before the swap; the library file isn't touched before then. A crash earlier leaves only the staged copy, which `clean_staging` removes.
+  - **Undo** keeps step 03b's rule: a field changed again by a later batch is left as it is and named.
+  - `REMOVE` moved from `fileops` to `tags`, and step 03b's `tag_access` placeholder is gone.
+  - **Recovery of a move** now also compares the reserved file's size with the size in its intent, so an empty reservation whose source vanished isn't taken for a finished move.
+  - New `samples` test fixture: 3 seconds of melody A as M4A, MP3, FLAC, Opus, Ogg Vorbis, WebM, WAV and raw AAC, plus an MP3 with no ID3 tag.
+  - New error `AudioError`. `ENGINE_API.md`: batch kind `demo` now covers both manual-check scripts.

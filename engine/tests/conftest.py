@@ -207,17 +207,14 @@ def melody_frequencies(pitch_classes: tuple[int, ...]) -> list[float]:
     return freqs
 
 
-def melody_filter(pitch_classes: tuple[int, ...]) -> str:
+def melody_filter(pitch_classes: tuple[int, ...], seconds: float = MELODY_SECONDS) -> str:
     """An aevalsrc source whose frequency changes every 0.5 s (piecewise on floor(2t))."""
     steps = 1 / NOTE_SECONDS
     freq = "+".join(
         f"{f:.3f}*eq(floor(t*{steps:g}),{i})"
         for i, f in enumerate(melody_frequencies(pitch_classes))
     )
-    return (
-        f"aevalsrc=exprs='0.5*sin(2*PI*t*({freq}))'"
-        f":sample_rate={SAMPLE_RATE}:duration={MELODY_SECONDS}"
-    )
+    return f"aevalsrc=exprs='0.5*sin(2*PI*t*({freq}))':sample_rate={SAMPLE_RATE}:duration={seconds}"
 
 
 def _ffmpeg(ffmpeg: Path, *args: str) -> None:
@@ -295,3 +292,44 @@ def audio(ffmpeg_path: Path, tmp_path_factory: pytest.TempPathFactory) -> AudioF
         str(fx.noise_silence_m4a),
     )
     return fx
+
+
+SAMPLE_SECONDS = 3
+# Every kind of file the engine meets. The last three are indexed but not adopted.
+SAMPLE_ENCODINGS: dict[str, tuple[str, ...]] = {
+    "m4a": AAC,
+    "mp3": MP3,
+    "flac": ("-c:a", "flac"),
+    "opus": ("-c:a", "libopus", "-b:a", "96k"),
+    "ogg": ("-c:a", "libvorbis", "-q:a", "4"),
+    "webm": ("-c:a", "libopus", "-b:a", "96k"),
+    "wav": ("-c:a", "pcm_s16le"),
+    "aac": ("-c:a", "aac", "-b:a", "128k", "-f", "adts"),
+}
+
+
+@pytest.fixture(scope="session")
+def samples(ffmpeg_path: Path, tmp_path_factory: pytest.TempPathFactory) -> dict[str, Path]:
+    """3 seconds of melody A as `sample.<ext>` for each of SAMPLE_ENCODINGS, plus
+    `bare.mp3` with no ID3 tags at all. Copy one before changing it."""
+    folder = tmp_path_factory.mktemp("samples")
+    melody = melody_filter(MELODY_A_PITCH_CLASSES, seconds=SAMPLE_SECONDS)
+    files = {}
+    for ext, encoding in SAMPLE_ENCODINGS.items():
+        files[ext] = folder / f"sample.{ext}"
+        _ffmpeg(ffmpeg_path, "-f", "lavfi", "-i", melody, *encoding, str(files[ext]))
+    files["bare.mp3"] = folder / "bare.mp3"
+    _ffmpeg(
+        ffmpeg_path,
+        "-f",
+        "lavfi",
+        "-i",
+        melody,
+        *MP3,
+        "-id3v2_version",
+        "0",
+        "-write_id3v1",
+        "0",
+        str(files["bare.mp3"]),
+    )
+    return files

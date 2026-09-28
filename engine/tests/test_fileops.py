@@ -18,11 +18,8 @@ from pathlib import Path
 
 import pytest
 from fileops_support import (
-    FakeTags,
     SimulatedCrash,
-    audio_of,
     crash_in,
-    crash_tag_write,
     files_in,
     journal,
     lines_of,
@@ -31,7 +28,6 @@ from fileops_support import (
     sha256,
     staged,
     symlink_or_skip,
-    tagged,
     tree,
 )
 
@@ -42,12 +38,12 @@ from musicorg.errors import (
     FileOperationError,
     IntegrityError,
     NotFoundError,
-    NotImplementedYetError,
     OutsideLibraryError,
     SourceChangedError,
     UserError,
 )
 from musicorg.library import Library
+from musicorg.tags import TrackTags
 
 TRACK = "Artist/Album (2020)/01 Song.m4a"
 
@@ -56,13 +52,6 @@ TRACK = "Artist/Album (2020)/01 Song.m4a"
 def rip(tmp_path: Path) -> Path:
     """One of the owner's rips, outside the library."""
     return put(tmp_path / "rips" / "Artist - Song.mp3", b"ID3" + bytes(range(256)) * 400)
-
-
-@pytest.fixture
-def tags(monkeypatch: pytest.MonkeyPatch) -> FakeTags:
-    fake = FakeTags()
-    monkeypatch.setattr(fileops, "tag_access", fake)
-    return fake
 
 
 def music(lib: Library, rel: str = TRACK) -> Path:
@@ -150,7 +139,7 @@ def test_guard_refuses_a_music_folder_that_leads_elsewhere(lib: Library, tmp_pat
 
 @pytest.mark.parametrize("operation", ["trash", "move", "supersede", "write_tags"])
 def test_operations_refuse_files_outside_the_library(
-    lib: Library, rip: Path, tags: FakeTags, operation: str
+    lib: Library, rip: Path, operation: str
 ) -> None:
     before, info = rip.read_bytes(), rip.stat()
     with fileops.batch(lib, "demo") as b, pytest.raises(OutsideLibraryError):
@@ -161,7 +150,7 @@ def test_operations_refuse_files_outside_the_library(
         elif operation == "supersede":
             fileops.supersede(b, rip)
         else:
-            fileops.write_tags(b, rip, {"title": "x"})
+            fileops.write_tags(b, rip, TrackTags(title="x"))
     assert rip.read_bytes() == before
     assert rip.stat().st_mtime_ns == info.st_mtime_ns
     assert lines_of(lib, "intent") == []
@@ -813,78 +802,6 @@ def test_trash_undo_is_by_hand(lib: Library) -> None:
     assert [(s.status, s.path) for s in result.steps] == [("manual", f"Music/{TRACK}")]
     assert "Trash by hand" in result.steps[0].note
     assert result.undo_batch_id is None  # nothing to do, so no undo batch
-
-
-# ---- write_tags (the journal side; step 04 makes the write verified) --------------------
-
-
-def test_write_tags(lib: Library, tags: FakeTags) -> None:
-    track = tagged(music(lib), {"title": "Old", "artist": "Someone"})
-    with fileops.batch(lib, "demo") as b:
-        assert fileops.write_tags(
-            b, track, {"title": "New", "album": "Album", "artist": fileops.REMOVE}
-        )
-        assert not fileops.write_tags(b, track, {"title": "New"})  # nothing to change
-    assert tags.read(track) == {"title": "New", "album": "Album"}
-    [intent] = lines_of(lib, "intent")
-    assert intent["before"] == {"title": "Old", "artist": "Someone"}
-    assert intent["after"] == {"title": "New", "album": "Album"}
-
-
-@pytest.mark.parametrize(("after", "decision"), [(False, "rolled_back"), (True, "completed")])
-def test_write_tags_crash(
-    lib: Library, tags: FakeTags, monkeypatch: pytest.MonkeyPatch, after: bool, decision: str
-) -> None:
-    track = tagged(music(lib), {"title": "Old"})
-    with monkeypatch.context() as m:
-        crash_tag_write(m, tags, after=after)
-        with pytest.raises(SimulatedCrash), fileops.batch(lib, "demo") as b:
-            fileops.write_tags(b, track, {"title": "New"})
-    assert decisions(lib) == [decision]
-    assert tags.read(track) == {"title": "New" if after else "Old"}
-
-
-def test_write_tags_undo_restores_exactly(lib: Library, tags: FakeTags) -> None:
-    track = tagged(music(lib), {"title": "Song"}, audio="the audio")
-    with fileops.batch(lib, "demo") as b:
-        fileops.write_tags(b, track, {"lyrics": "la la", "cover": "sha256-of-a-cover"})
-    fileops.undo(lib, b.batch_id)
-    assert tags.read(track) == {"title": "Song"}  # fields added by the batch are gone
-    assert audio_of(track) == "the audio"
-
-
-def test_write_tags_undo_keeps_later_changes(lib: Library, tags: FakeTags) -> None:
-    track = tagged(music(lib), {"title": "Old", "album": "A"})
-    with fileops.batch(lib, "demo") as first:
-        fileops.write_tags(first, track, {"title": "New", "album": "B"})
-    with fileops.batch(lib, "demo") as second:
-        fileops.write_tags(second, track, {"album": "C"})
-    result = fileops.undo(lib, first.batch_id)
-    assert tags.read(track) == {"title": "Old", "album": "C"}
-    assert "album" in result.steps[0].note
-
-
-def test_write_tags_waits_for_tag_support(lib: Library) -> None:
-    track = tagged(music(lib), {"title": "Song"})
-    with fileops.batch(lib, "demo") as b, pytest.raises(NotImplementedYetError, match="04"):
-        fileops.write_tags(b, track, {"title": "New"})
-    assert lines_of(lib, "intent") == []
-
-
-def test_interrupted_tag_writes_wait_for_tag_support(
-    lib: Library, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    tags = FakeTags()
-    track = tagged(music(lib), {"title": "Old"})
-    with monkeypatch.context() as m:
-        m.setattr(fileops, "tag_access", tags)
-        crash_tag_write(m, tags, after=True)
-        with pytest.raises(SimulatedCrash), fileops.batch(lib, "demo") as b:
-            fileops.write_tags(b, track, {"title": "New"})
-    assert recover(lib) == []  # can't read tags yet: left for later
-    assert fileops.read_journal(lib)[b.batch_id].ops[0].status == "pending"
-    monkeypatch.setattr(fileops, "tag_access", tags)
-    assert decisions(lib) == ["completed"]
 
 
 # ---- write_sidecar ---------------------------------------------------------------------

@@ -22,7 +22,7 @@ The engine guarantees everything in this document. It's written so that if the a
     state.json                  everything files can't carry (section 5)
     journal/YYYY-MM-DD.jsonl    append-only operation log
     plans/<plan_id>.json        dry-run plans
-    undo-art/<sha256>.jpg       cover art saved for undo
+    undo-art/<sha256>.jpg       cover art saved for undo (.png for a PNG cover)
     lock, lock.info             single-writer lock and holder details
 ```
 
@@ -83,7 +83,7 @@ Copies for devices that need another format are a separate **export** feature, w
 | Genre | `©gen` | `TCON` | `GENRE` |
 | Plain lyrics | `©lyr` | `USLT` | `LYRICS` |
 | Front cover | `covr` (JPEG) | `APIC` type 3 | `METADATA_BLOCK_PICTURE` |
-| Explicit | `rtng` (check mutagen/Picard for the value mapping) | `TXXX:ITUNESADVISORY` | `ITUNESADVISORY` |
+| Explicit | `rtng`: `1` explicit, `0` not (iTunes' `4` also reads as explicit, `2` "clean" as not) | `TXXX:ITUNESADVISORY` `1`/`0` | `ITUNESADVISORY` `1`/`0` |
 
 - MP3 is written as **ID3v2.3** (`save(v2_version=3)`), because many car stereos and older players don't read v2.4.
 - Existing tags and atoms the engine doesn't manage are **kept**, e.g. `iTunSMPB` gapless info in M4A, and unknown ID3 frames.

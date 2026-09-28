@@ -1,15 +1,18 @@
-"""Helpers for the fileops tests: simulated crashes, fake tags, and looking at the journal."""
+"""Helpers for the fileops and tags tests: simulated crashes, sample files and covers,
+and looking at the journal."""
 
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import os
-from collections.abc import Callable, Mapping
+import shutil
 from pathlib import Path
 from typing import Any
 
 import pytest
+from PIL import Image
 
 from musicorg import fileops, library
 
@@ -82,43 +85,18 @@ def recover(lib: library.Library) -> list[fileops.RecoveryDecision]:
     return fileops.recover_journal(lib.paths)
 
 
-class FakeTags:
-    """Tags kept as JSON inside the file itself: {"audio": ..., "tags": {...}}. The cover
-    is just another field here; step 04 brings the real thing."""
-
-    def read(self, path: Path) -> dict[str, Any]:
-        return dict(json.loads(path.read_text(encoding="utf-8"))["tags"])
-
-    def write(self, path: Path, changes: Mapping[str, Any]) -> None:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        for key, value in changes.items():
-            if value is fileops.REMOVE:
-                data["tags"].pop(key, None)
-            else:
-                data["tags"][key] = value
-        path.write_text(json.dumps(data), encoding="utf-8")
+def place(sample: Path, dest: Path) -> Path:
+    """A copy of a sample audio file at `dest` (folders created), as test setup."""
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(sample, dest)
+    return dest
 
 
-def tagged(path: Path, tags: dict[str, Any], audio: str = "la la la") -> Path:
-    return put(path, json.dumps({"audio": audio, "tags": tags}))
-
-
-def audio_of(path: Path) -> str:
-    return json.loads(path.read_text(encoding="utf-8"))["audio"]
-
-
-def crash_tag_write(
-    monkeypatch: pytest.MonkeyPatch, tags: FakeTags, *, after: bool
-) -> Callable[..., None]:
-    real = tags.write
-
-    def crashing(path: Path, changes: Mapping[str, Any]) -> None:
-        if after:
-            real(path, changes)
-        raise SimulatedCrash("tag write")
-
-    monkeypatch.setattr(tags, "write", crashing)
-    return crashing
+def image(kind: str = "JPEG", color: tuple[int, int, int] = (200, 30, 30), size: int = 16) -> bytes:
+    """A small cover image, made in memory."""
+    buffer = io.BytesIO()
+    Image.new("RGB", (size, size), color).save(buffer, kind)
+    return buffer.getvalue()
 
 
 def age(path: Path, hours: float) -> None:

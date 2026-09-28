@@ -57,7 +57,7 @@ import threading
 import time
 import unicodedata
 from collections import Counter
-from collections.abc import Callable, Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
@@ -66,7 +66,7 @@ from typing import Any, Protocol
 
 import send2trash
 
-from musicorg import __version__, naming
+from musicorg import __version__, naming, tags
 from musicorg.errors import (
     CrossVolumeError,
     FileInUseError,
@@ -75,7 +75,6 @@ from musicorg.errors import (
     LibraryLockedError,
     MusicOrgError,
     NotFoundError,
-    NotImplementedYetError,
     OutsideLibraryError,
     SourceChangedError,
     UndoError,
@@ -129,13 +128,6 @@ _WINDOWS_NOT_SAME_DEVICE = 17  # ERROR_NOT_SAME_DEVICE
 FILE_CHANGED = "the file changed since the plan was made"
 
 
-class _Remove:
-    def __repr__(self) -> str:
-        return "REMOVE"
-
-
-# In `write_tags`, a value of REMOVE deletes that field.
-REMOVE: Any = _Remove()
 _MISSING = object()
 
 
@@ -981,7 +973,7 @@ def copy_in(b: Batch, external_src: PurePath | str, rel_target: PurePath | str) 
                     "to the library. The original is untouched. Check the drive, then try "
                     "again."
                 )
-            _check_unchanged(src, before)
+            _check_unchanged(src, before, _CHANGED_WHILE_COPYING.format(path=src))
             final = _move_no_overwrite(b, op, staged, target, new_dirs)
         except Exception as exc:
             _discard_quietly(paths, staged)
@@ -992,7 +984,7 @@ def copy_in(b: Batch, external_src: PurePath | str, rel_target: PurePath | str) 
             raise
         op.result.update(path=_rel(paths, final), sha256=digest)
     try:
-        _check_unchanged(src, before)
+        _check_unchanged(src, before, _CHANGED_WHILE_COPYING.format(path=src))
     except SourceChangedError:
         log.error(
             "The original %s changed while it was being copied in. The library's copy is "
@@ -1036,29 +1028,22 @@ def trash(b: Batch, lib_file: PurePath | str) -> None:
             )
 
 
-class TagAccess(Protocol):
-    """Reading and writing a file's complete tags, as a JSON-safe dict (with the front
-    cover as its SHA-256). Step 04's `tags` module provides the real one; until then
-    `write_tags` has nothing to write with."""
+def write_tags(b: Batch, lib_file: PurePath | str, changes: tags.TrackTags) -> bool:
+    """Change a file's tags, verified (contract 6.7): each field set in `changes` is
+    written, REMOVE deletes it, and None leaves it as it is. Returns False, journaling
+    nothing, if nothing would change.
 
-    def read(self, path: Path) -> dict[str, Any]: ...
+    1. Hash the decoded audio, fresh.
+    2. Copy the file into `_Staging/` and write the tags on the copy.
+    3. Hash the copy's audio, and read its tags back.
+    4. If both match: journal the intent with the complete before-state, keep the old
+       cover in `.musicorg/undo-art/`, and swap the copy in with `os.replace`.
+    5. If not: the copy is discarded, IntegrityError is raised, and the file is untouched.
 
-    def write(self, path: Path, changes: Mapping[str, Any]) -> None:
-        """Set each field in `changes`; a value of REMOVE deletes the field."""
-        ...
-
-
-tag_access: TagAccess | None = None
-
-
-def write_tags(b: Batch, lib_file: PurePath | str, tags: Mapping[str, Any]) -> bool:
-    """Change a file's tags: each field in `tags` is set, and a value of REMOVE deletes
-    it. The journal keeps the complete before-state, so undo restores it exactly.
-    Returns False, journaling nothing, if nothing would change.
-
-    Step 03b is the journal and undo side only; step 04 makes the write itself verified.
+    A file's MUSICORG_ID is set once: changing or removing it is refused, except by the
+    undo of the batch that added it.
     """
-    return _write_tags(b, lib_file, tags, undoes=None)
+    return _write_tags(b, lib_file, changes, undoes=None)
 
 
 def write_sidecar(b: Batch, lib_file: PurePath | str, suffix: str, data: bytes) -> Path | None:
@@ -1181,42 +1166,95 @@ def _move_op(b: Batch, op_name: str, src: Path, target: Path, *, undoes: int | N
 
 
 def _write_tags(
-    b: Batch, lib_file: PurePath | str, changes: Mapping[str, Any], *, undoes: int | None
+    b: Batch, lib_file: PurePath | str, changes: tags.TrackTags, *, undoes: int | None
 ) -> bool:
     paths = b.paths
     path = guard(paths, lib_file, (naming.MUSIC_DIR, naming.STAGING_DIR))
     _require_file(path)
-    access = _tag_access()
-    before = _jsonable(access.read(path))
-    after = _apply_changes(before, changes)
+    tags.check_writable(path)
+    current = tags.read_tags(path)
+    before = tags.to_record(current)
+    after = tags.to_record(tags.merge(current, changes))
     if after == before:
         return False
+    old_id = before.get("musicorg_id")
+    if old_id is not None and after.get("musicorg_id") != old_id and undoes is None:
+        raise UserError(
+            f"{path.name} already has the Music Organizer id {old_id}. A track's id never "
+            "changes, so its tags were left as they are."
+        )
+
+    info = path.stat()
+    audio_md5 = tags.audio_hash(path)
+    staged = stage_path(b, path.name)
+    try:
+        _copy_file(path, staged)
+        tags.write_tags(staged, changes)
+        if tags.audio_hash(staged) != audio_md5:
+            raise IntegrityError(
+                f"Writing the tags of {path.name} would have changed its audio, so nothing "
+                "was changed. The file is untouched."
+            )
+        if tags.to_record(tags.read_tags(staged)) != after:
+            raise IntegrityError(
+                f"The new tags of {path.name} didn't read back as they were written, so "
+                "nothing was changed. The file is untouched."
+            )
+    except Exception:
+        _discard_quietly(paths, staged)
+        raise
+
     with _operation(
-        b, "write_tags", path=_rel(paths, path), before=before, after=after, undoes=undoes
+        b,
+        "write_tags",
+        path=_rel(paths, path),
+        staged=_rel(paths, staged),
+        before=before,
+        after=after,
+        audio_md5=audio_md5,
+        undoes=undoes,
     ):
-        access.write(path, changes)
+        try:
+            _check_unchanged(
+                path,
+                info,
+                f"{path} changed while its tags were being written, so they weren't. Try "
+                "again once nothing else is changing it.",
+            )
+            if current.cover is not None and before.get("cover") != after.get("cover"):
+                _keep_undo_art(paths, current.cover, str(current.cover_mime))
+            _replace(staged, path)
+        except Exception as exc:
+            _discard_quietly(paths, staged)
+            if isinstance(exc, OSError):
+                raise FileOperationError(
+                    f"Couldn't write the tags of {path.name}: {exc.strerror or exc}."
+                ) from exc
+            raise
+    _sync_folder(path.parent)
     return True
 
 
-def _tag_access() -> TagAccess:
-    if tag_access is None:
-        raise NotImplementedYetError("tag writing", "04")
-    return tag_access
+def _keep_undo_art(paths: LibraryPaths, data: bytes, mime: str) -> Path:
+    """Keep a cover that a tag write replaces or removes, so undo can put it back:
+    `.musicorg/undo-art/<sha256>.jpg` (or `.png`)."""
+    digest = hashlib.sha256(data).hexdigest()
+    folder = _ensure_folder(paths, paths.undo_art, ENGINE)
+    target = folder / f"{digest}{'.png' if mime == tags.PNG else '.jpg'}"
+    if target.is_file():
+        return target  # the same image, kept before
+    return _write_new(target, data, lambda p: _remove_placeholder(paths, p))
 
 
-def _apply_changes(before: dict[str, Any], changes: Mapping[str, Any]) -> dict[str, Any]:
-    after = dict(before)
-    for key, value in changes.items():
-        if value is REMOVE:
-            after.pop(key, None)
-        else:
-            after[key] = value
-    return _jsonable(after)
-
-
-def _jsonable(value: dict[str, Any]) -> dict[str, Any]:
-    """As it will read back from the journal (tuples become lists, and so on)."""
-    return json.loads(json.dumps(value))
+def _undo_art(paths: LibraryPaths, digest: str) -> bytes | None:
+    for suffix in (".jpg", ".png"):
+        try:
+            data = (paths.undo_art / f"{digest}{suffix}").read_bytes()
+        except OSError:
+            continue
+        if hashlib.sha256(data).hexdigest() == digest:
+            return data
+    return None
 
 
 def _send_to_trash(path: Path) -> None:
@@ -1244,16 +1282,20 @@ def _write_bytes_new(path: Path, data: bytes) -> None:
         _sync_file(f.fileno())
 
 
-def _check_unchanged(src: Path, before: os.stat_result) -> None:
+_CHANGED_WHILE_COPYING = (
+    "{path} changed while it was being copied in, so it wasn't added. Try again once "
+    "nothing else is changing it."
+)
+
+
+def _check_unchanged(path: Path, before: os.stat_result, message: str) -> None:
+    """SourceChangedError(`message`) if the file's size or modification time changed."""
     try:
-        now = os.stat(src)
+        now = os.stat(path)
     except OSError as exc:
-        raise SourceChangedError(f"{src} disappeared while it was being copied in.") from exc
+        raise SourceChangedError(message) from exc
     if (now.st_size, now.st_mtime_ns) != (before.st_size, before.st_mtime_ns):
-        raise SourceChangedError(
-            f"{src} changed while it was being copied in, so it wasn't added. Try again "
-            "once nothing else is changing it."
-        )
+        raise SourceChangedError(message)
 
 
 def _check_rel(rel_target: PurePath | str) -> PurePath:
@@ -1400,9 +1442,14 @@ def _recover_move(paths: LibraryPaths, op: OpRecord) -> RecoveryDecision | None:
         _remove_placeholder(paths, placeholder)
         return roll_back(f"{intent[src_key]} was never moved")
     if placeholder.is_file():
-        return decided(
-            "completed", f"{intent[src_key]} had already moved to {_rel(paths, placeholder)}"
-        )
+        size, expected = placeholder.stat().st_size, intent.get("size")
+        if expected is None or size == expected:
+            return decided(
+                "completed", f"{intent[src_key]} had already moved to {_rel(paths, placeholder)}"
+            )
+        if size == 0:  # still just the reserved name: the file vanished before the move
+            _remove_placeholder(paths, placeholder)
+            return roll_back(f"{intent[src_key]} disappeared before it was moved")
     log.warning(
         "Batch %s operation %d (%s): neither %s nor %s exists. Check by hand.",
         op.batch_id,
@@ -1426,21 +1473,17 @@ def _recover_trash(paths: LibraryPaths, op: OpRecord) -> RecoveryDecision:
 
 
 def _recover_tags(paths: LibraryPaths, op: OpRecord) -> RecoveryDecision | None:
-    if tag_access is None:
-        log.warning(
-            "Batch %s operation %d wrote tags and was interrupted; it can be checked once "
-            "tag support arrives (step 04).",
-            op.batch_id,
-            op.op_id,
-        )
-        return None
+    """The retagged copy either replaced the file or it didn't; the tags say which."""
     path = op.intent["path"]
-    current = _jsonable(tag_access.read(_abs(paths, path)))
+    current = tags.to_record(tags.read_tags(_abs(paths, path)))
     if current == op.intent.get("after"):
         return RecoveryDecision(
             op.batch_id, op.op_id, op.op, "completed", f"{path} has the new tags"
         )
     if current == op.intent.get("before"):
+        staged = op.intent.get("staged")
+        if isinstance(staged, str):
+            _discard_quietly(paths, _abs(paths, staged))
         return RecoveryDecision(
             op.batch_id, op.op_id, op.op, "rolled_back", f"{path} still has its old tags"
         )
@@ -1682,13 +1725,11 @@ def _plan_tag_reversal(
 ) -> _Reversal:
     rel = str(op.intent["path"])
     path = _abs(paths, rel)
-    if tag_access is None:
-        return skip(rel, "Tags can be restored once tag support arrives (step 04).")
     if not path.is_file():
         return skip(rel, f"{rel} is no longer there, so its tags can't be restored.")
     before = op.intent.get("before") or {}
     after = op.intent.get("after") or {}
-    current = _jsonable(tag_access.read(path))
+    current = tags.to_record(tags.read_tags(path))
     changes: dict[str, Any] = {}
     changed_since = []
     for key in sorted(set(before) | set(after)):
@@ -1697,9 +1738,18 @@ def _plan_tag_reversal(
             continue
         now = current.get(key, _MISSING)
         if now == new:
-            changes[key] = REMOVE if old is _MISSING else old
+            changes[key] = tags.REMOVE if old is _MISSING else old
         elif now != old:
             changed_since.append(key)
+    if "cover" not in changes:
+        changes.pop("cover_mime", None)  # a cover's type only changes with the cover
+    cover = None
+    if changes.get("cover") not in (None, tags.REMOVE):
+        cover = _undo_art(paths, changes["cover"])
+        if cover is None:
+            del changes["cover"]
+            changes.pop("cover_mime", None)
+            changed_since.append("cover (its saved copy is missing)")
     if not changes:
         if changed_since:
             return skip(
@@ -1713,11 +1763,11 @@ def _plan_tag_reversal(
         note += f" (except {', '.join(changed_since)}, changed again later)"
     return _Reversal(
         step("write_tags", rel, None, "planned", note),
-        run=lambda b: _write_tags_step(b, path, changes, op.op_id),
+        run=lambda b: _write_tags_step(b, path, tags.from_record(changes, cover), op.op_id),
     )
 
 
-def _write_tags_step(b: Batch, path: Path, changes: dict[str, Any], undoes: int) -> None:
+def _write_tags_step(b: Batch, path: Path, changes: tags.TrackTags, undoes: int) -> None:
     _write_tags(b, path, changes, undoes=undoes)
 
 

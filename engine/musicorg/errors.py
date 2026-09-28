@@ -122,3 +122,7 @@ class NotFoundError(UserError):
 
 class UndoError(UserError):
     """An undo was refused, or stopped part way. It can be run again."""
+
+
+class AudioError(UserError):
+    """ffprobe or ffmpeg couldn't read a file's audio."""

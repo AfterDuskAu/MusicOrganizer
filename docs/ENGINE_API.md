@@ -13,7 +13,7 @@ The engine has two front doors onto the **same functions**. The CLI is for the o
 | **Job state** | `queued` · `running` · `done` · `failed` · `needs_review` · `cancelled` |
 | **Queue state** | `running` · `idle` · `paused` · `paused_by_youtube` |
 | **Plan kind** | `replace` · `adopt` · `lyrics` · `artwork` |
-| **Batch kind** | a plan kind (`replace` · `adopt` · `lyrics` · `artwork`) · `undo` · `demo` (`scripts/fileops_demo.py`) |
+| **Batch kind** | a plan kind (`replace` · `adopt` · `lyrics` · `artwork`) · `undo` · `demo` (the manual-check scripts in `scripts/`) |
 | **Batch status** | `open` (running, or an open batch from `apply`) · `closed` · `interrupted` (closed by recovery after a crash) |
 | **Journal operation** | `commit` · `copy_in` · `supersede` · `restore` (back from `_Replaced/`, by undo) · `move` · `trash` · `write_tags` · `write_sidecar` |
 | **Undo step status** | `planned` (dry run) · `done` · `skipped` (already undone, or the file is gone) · `manual` (restore from the Trash by hand) |
