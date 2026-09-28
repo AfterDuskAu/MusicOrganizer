@@ -132,7 +132,7 @@ def redact(text: str) -> str:
     text = text.strip()
     if len(text) <= 8:
         return "[hidden]"
-    return f"{text[:4]}…[{len(text) - 4} characters hidden]"
+    return f"{text[:4]}...[{len(text) - 4} characters hidden]"
 
 
 def email_is_public(address: str) -> bool:
@@ -316,7 +316,17 @@ def scan_all() -> list[Finding]:
     return findings
 
 
+def _utf8_output() -> None:
+    """On Windows a pipe defaults to the old ANSI code page; always write UTF-8."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
+        except (AttributeError, ValueError):
+            pass
+
+
 def main(argv: list[str] | None = None) -> int:
+    _utf8_output()
     parser = argparse.ArgumentParser(
         description="Refuse keys, passwords, login cookies and email addresses."
     )

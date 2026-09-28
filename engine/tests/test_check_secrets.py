@@ -199,6 +199,17 @@ def test_push_catches_secret_deleted_in_a_later_commit(repo: Path) -> None:
     assert "GitHub token" in result.stderr
 
 
+def test_output_is_utf8_on_a_windows_code_page(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Windows writes pipes in the ANSI code page unless told otherwise (CI caught this)."""
+    monkeypatch.setenv("PYTHONIOENCODING", "cp1252")
+    (repo / "música.py").write_text(f"token = '{FAKE['GitHub token']}'\n", encoding="utf-8")
+    git(repo, "add", "música.py")
+    result = subprocess.run([sys.executable, str(SCRIPT), "--all"], cwd=repo, capture_output=True)
+    assert result.returncode == 1
+    text = result.stderr.decode("utf-8")  # raises if it isn't UTF-8
+    assert "música.py:1" in text
+
+
 def test_all_and_history(repo: Path) -> None:
     (repo / "a.py").write_text("x = 1\n")
     git(repo, "add", "a.py")
