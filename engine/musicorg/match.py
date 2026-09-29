@@ -35,7 +35,7 @@ from typing import Any
 
 from rapidfuzz import fuzz
 
-from musicorg import fileops, state, youtube
+from musicorg import fileops, scan, state, youtube
 from musicorg.config import Config
 from musicorg.index import Index
 from musicorg.library import Library
@@ -121,8 +121,7 @@ class Scored:
     auto: bool  # and the length and the clean/explicit rule agree too
 
     def candidate_id(self, item_id: str) -> str:
-        key = f"{item_id}/{self.candidate.video_id}".encode()
-        return "c_" + hashlib.sha1(key, usedforsecurity=False).hexdigest()[:12]
+        return candidate_id(item_id, self.candidate.video_id)
 
     def payload(self, item_id: str) -> dict[str, Any]:
         """The Candidate shape in docs/ENGINE_API.md, plus a link."""
@@ -135,6 +134,12 @@ class Scored:
             link=self.candidate.link,
         )
         return data
+
+
+def candidate_id(item_id: str, video_id: str) -> str:
+    """A candidate's stable id: `c_` + 12 hex characters of SHA-1 of `<item>/<videoId>`."""
+    key = f"{item_id}/{video_id}".encode()
+    return "c_" + hashlib.sha1(key, usedforsecurity=False).hexdigest()[:12]
 
 
 def score(
@@ -469,8 +474,7 @@ def write_sample(
     if not autos:
         return None, 0
     chosen = (rng or random.Random()).sample(autos, min(SAMPLE_SIZE, len(autos)))
-    # state.json is the record of sources; the index mirrors it.
-    sources = {**index.sources(), **state.sources(lib.load_state().data)}
+    folders = scan.source_folders(lib, index)
     out = io.StringIO()
     writer = csv.writer(out, lineterminator="\n")
     writer.writerow(["item_id", "rip", "rip_artist", "rip_title", "rip_version", "rip_duration_s",
@@ -482,10 +486,9 @@ def write_sample(
             continue
         match = best[0]["payload"]
         rip = rip_of(item)
-        folder = sources.get(item["source_id"], {}).get("path")
         writer.writerow([
             item["id"],
-            str(Path(folder) / item["rel_path"]) if folder else item["rel_path"],
+            scan.item_path(folders, item),
             rip.parsed.artist or "",
             rip.parsed.title or "",
             "; ".join(rip.parsed.version_tokens),
@@ -500,6 +503,7 @@ def write_sample(
         ])  # fmt: skip
     # UTF-8 with a byte-order mark, so Excel and Numbers read the names correctly.
     data = out.getvalue().encode("utf-8-sig")
-    folders = [Path(s["path"]) for s in sources.values() if isinstance(s.get("path"), str)]
-    path = fileops.write_export(lib, lib.paths.reports / SAMPLE_NAME, data, sources=folders)
+    path = fileops.write_export(
+        lib, lib.paths.reports / SAMPLE_NAME, data, sources=folders.values()
+    )
     return path, len(chosen)

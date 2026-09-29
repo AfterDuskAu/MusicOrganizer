@@ -400,6 +400,20 @@ class Index:
             for row in rows
         ]
 
+    def all_candidates(self) -> dict[str, list[dict[str, Any]]]:
+        """Every item's candidates, best first, by item id (one query for a report)."""
+        rows = self._rows("SELECT * FROM candidates ORDER BY item_id, score DESC, rowid")
+        found: dict[str, list[dict[str, Any]]] = {}
+        for row in rows:
+            found.setdefault(row["item_id"], []).append({
+                "id": row["id"],
+                "video_id": row["video_id"],
+                "payload": json.loads(row["payload_json"]),
+                "score": row["score"],
+                "reasons": json.loads(row["reasons_json"]),
+            })  # fmt: skip
+        return found
+
     # ---- search cache (step 06) ---------------------------------------------------------
 
     def cached_search(self, key: str, *, max_age_days: float) -> Any | None:

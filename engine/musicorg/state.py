@@ -12,7 +12,10 @@ it through `edit()` or `create_if_missing()`, never by writing the file.
 Keys (contract section 5), each written by the step named:
 - "sources": {source_id: {"path": resolved folder, "added_at": ISO time}} (step 05)
 - "decisions": {item_id: {"decision": RPC decision (docs/ENGINE_API.md → Enums),
-  "decided_at": ISO time, plus details such as "video_id"}} (step 07)
+  "decided_at": ISO time, plus details}} (step 07). The details: `accept` and
+  `candidate` carry "video_id", "candidate_id" and "title"; `url` also "url" and
+  "score"; `only_copy` any of "artist_fix", "title_fix", "album_fix". A rejection isn't
+  a decision: it goes in "rejected".
 - "superseded": {normalised rip path: MUSICORG_ID} (step 09b)
 - "rejected": {item_id: [YouTube videoId, ...]}: candidates the owner turned down, never
   proposed again (read by step 06, written by step 07)

@@ -22,6 +22,17 @@ from musicorg.errors import ConfigError
 
 APP_NAME = "MusicOrganizer"
 CONFIG_FILE_NAME = "config.json"
+# The download queue's pace (step 09a; the report's cost estimate uses it too): one
+# download at a time, a random pause between them, slower pauses at the start of a
+# session, and at most `daily_cap` in any 24 hours.
+THROTTLE_DEFAULTS = {
+    "pause_min_s": 8,
+    "pause_max_s": 25,
+    "quiet_start_downloads": 20,
+    "quiet_start_min_s": 20,
+    "quiet_start_max_s": 40,
+    "daily_cap": 300,
+}
 CONFIG_SCHEMA = 1
 HOME_ENV = "MUSICORG_HOME"
 
@@ -84,7 +95,7 @@ def default_data() -> dict[str, Any]:
         "last_library": None,
         # Paths to ffmpeg, ffprobe, fpcalc or deno, when they're somewhere unusual.
         "tools": {},
-        # Download throttle settings; step 09a fills in the defaults.
+        # Changes to the download pace (THROTTLE_DEFAULTS); empty means the defaults.
         "throttle": {},
         # When a song has both an explicit and a clean official version and the rip says
         # neither, match the explicit one (step 06).
@@ -140,6 +151,16 @@ class Config:
     def prefer_explicit(self) -> bool:
         value = self.data.get("prefer_explicit", True)
         return value if isinstance(value, bool) else True
+
+    def throttle(self) -> dict[str, int]:
+        """The download pace: the defaults, with any the owner set in config.json."""
+        values = dict(THROTTLE_DEFAULTS)
+        chosen = self.data.get("throttle")
+        if isinstance(chosen, dict):
+            for key, value in chosen.items():
+                if key in values and isinstance(value, int) and not isinstance(value, bool):
+                    values[key] = value
+        return values
 
     def tool_path(self, tool: str) -> Path | None:
         tools = self.data.get("tools")

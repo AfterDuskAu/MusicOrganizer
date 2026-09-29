@@ -54,10 +54,10 @@ def test_python_dash_m() -> None:
 
 def test_stub_through_console_script() -> None:
     result = subprocess.run(
-        [_installed_script(), "report"], capture_output=True, text=True, encoding="utf-8"
+        [_installed_script(), "queue", "status"], capture_output=True, text=True, encoding="utf-8"
     )
     assert result.returncode == EXIT_USER_ERROR
-    assert "not implemented yet (step 07)" in result.stderr
+    assert "not implemented yet (step 09a)" in result.stderr
     assert result.stdout == ""
 
 
@@ -117,9 +117,6 @@ def test_group_needs_subcommand(capsys: pytest.CaptureFixture[str]) -> None:
 @pytest.mark.parametrize(
     ("args", "step"),
     [
-        (["report", "--out", "/tmp/r"], "07"),
-        (["review", "export", "r.csv", "--include-auto"], "07"),
-        (["review", "import", "r.csv"], "07"),
         (["plan", "replace", "--only", "auto", "--limit", "5", "--stage-only"], "09b"),
         (["plan", "adopt", "--include-not-found"], "09b"),
         (["plan", "show", "p_1"], "09b"),

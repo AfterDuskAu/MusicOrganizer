@@ -15,7 +15,18 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, NoReturn
 
-from musicorg import __version__, doctor, fileops, library, logging_setup, match, scan, status
+from musicorg import (
+    __version__,
+    doctor,
+    fileops,
+    library,
+    logging_setup,
+    match,
+    report,
+    review,
+    scan,
+    status,
+)
 from musicorg.config import Config
 from musicorg.errors import (
     EXIT_INTERNAL,
@@ -153,17 +164,17 @@ def build_parser() -> argparse.ArgumentParser:
         commands,
         "report",
         "Write the decision report (markdown and CSV).",
-        _not_yet("report", "07"),
+        _cmd_report,
     )
-    p.add_argument("--out", type=_path, metavar="DIR")
+    p.add_argument(
+        "--out", type=_path, metavar="DIR", help="Folder for the report (default: Reports/)."
+    )
 
     review = group("review", "Review uncertain matches in a spreadsheet.")
-    p = add(review, "export", "Write the review CSV.", _not_yet("review export", "07"))
+    p = add(review, "export", "Write the review CSV.", _cmd_review_export)
     p.add_argument("csv", type=_path)
-    p.add_argument("--include-auto", action="store_true")
-    p = add(
-        review, "import", "Apply the decisions from a review CSV.", _not_yet("review import", "07")
-    )
+    p.add_argument("--include-auto", action="store_true", help="Also list the automatic matches.")
+    p = add(review, "import", "Apply the decisions from a review CSV.", _cmd_review_import)
     p.add_argument("csv", type=_path)
 
     journal = group("journal", "The log of every change made to the library.")
@@ -470,6 +481,63 @@ def _cmd_match(args: argparse.Namespace) -> int:
         print(f"{result.left:,} more items are waiting; run `musicorg match` again to carry on.")
     if result.sample is not None:
         print(f"Listen to {result.sample_size} of the automatic matches: {result.sample}")
+    return EXIT_OK
+
+
+def _cmd_report(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=False) as lib:
+        with open_index(lib.paths, write=False) as index:
+            files = report.write(lib, index, out_dir=args.out)
+    if args.json:
+        _print_json({"markdown": str(files.markdown), "csv": str(files.csv),
+                     **files.report.to_dict()})  # fmt: skip
+        return EXIT_OK
+    data = files.report
+    print(f"Report on {data.total:,} items:")
+    for name in report.ITEM_STATES:
+        n = data.states.get(name, 0)
+        if n:
+            print(f"  {name:<20}{n:>8,}  {data.share(n):6.1%}")
+    print()
+    for line in data.recommendations:
+        print(line)
+    print()
+    print(f"Written: {files.markdown}")
+    print(f"         {files.csv}")
+    return EXIT_OK
+
+
+def _cmd_review_export(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=False) as lib:
+        with open_index(lib.paths, write=False) as index:
+            result = review.export(lib, index, args.csv, include_auto=args.include_auto)
+    if args.json:
+        _print_json(result.to_dict())
+        return EXIT_OK
+    print(f"Wrote {result.rows:,} items to review: {result.path}")
+    print(
+        "Fill in the decision column (accept, cand:2, cand:3, url, only_copy, skip or "
+        "reject:1–3), save as CSV UTF-8, then run `musicorg review import` on it."
+    )
+    return EXIT_OK
+
+
+def _cmd_review_import(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=True) as lib:
+        with open_index(lib.paths, write=True) as index:
+            result = review.import_csv(lib, index, args.csv)
+    if args.json:
+        _print_json(result.to_dict())
+        return EXIT_OK
+    applied = sum(result.applied.values())
+    kinds = ", ".join(f"{n:,} {kind}" for kind, n in sorted(result.applied.items()))
+    print(f"Applied {applied:,} decisions" + (f": {kinds}." if kinds else "."))
+    if result.unchanged:
+        print(f"{result.unchanged:,} were already decided that way (nothing changed).")
+    if result.blank:
+        print(f"{result.blank:,} rows had no decision and were left as they are.")
+    for warning in result.warnings:
+        print(f"  ! {warning}")
     return EXIT_OK
 
 

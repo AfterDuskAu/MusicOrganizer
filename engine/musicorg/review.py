@@ -1,0 +1,408 @@
+"""The review spreadsheet (step 07): decisions made in Numbers or Excel before the app.
+
+- `export(...)` (`review export <csv>`): one row per `review` and `not_found` item (and
+  `matched_auto` ones if asked), with its top 3 candidates and empty decision columns.
+  Written through `fileops.write_export`, so it never overwrites. UTF-8 with a BOM.
+- `import_csv(...)` (`review import <csv>`): checks every row first and refuses the whole
+  file if any is wrong, listing them all. Then the decisions go to state.json (one
+  atomic save) and the index.
+
+Decisions (docs/ENGINE_API.md → CSV decision): `accept` (candidate 1), `cand:<n>`, `url`
+(a pasted link, fetched and scored: below 0.6 it stays in review as `url_low_score`),
+`only_copy` (with the `*_fix` columns), `skip`, and `reject:<n>` (never proposed again).
+
+Candidates are identified by the videoId in the row's own `candN_url`, never by position
+in the index, so a spreadsheet exported before `index rebuild` still imports correctly
+afterwards, and importing the same file twice changes nothing the second time.
+"""
+
+from __future__ import annotations
+
+import csv
+import io
+import os
+import re
+import unicodedata
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
+
+from musicorg import fileops, match, scan, state, youtube
+from musicorg.errors import UserError
+from musicorg.index import Index
+from musicorg.library import Library
+from musicorg.normalize import render_versions
+from musicorg.report import minutes
+from musicorg.youtube import Candidate
+
+CANDIDATES = 3
+COLUMNS = [
+    "item_id", "source_path", "duration", "parsed_artist", "parsed_title", "parsed_version",
+    "reasons",
+    *(f"cand{n}_{part}" for n in range(1, CANDIDATES + 1)
+      for part in ("title", "artists", "version", "duration", "score", "url")),
+    "fingerprint", "decision", "url", "artist_fix", "title_fix", "album_fix", "art_url",
+]  # fmt: skip
+REQUIRED = ["item_id", "source_path", "decision", "url", "artist_fix", "title_fix", "album_fix",
+            *(f"cand{n}_url" for n in range(1, CANDIDATES + 1))]  # fmt: skip
+_LINK = re.compile(
+    r"(?:https?://)?(?:(?:www\.|m\.|music\.)?youtube\.com/watch\?(?:[^#\s]*&)?v="
+    r"|youtu\.be/)(?P<id>[A-Za-z0-9_-]{11})(?:[&?#]\S*)?",
+    re.IGNORECASE,
+)
+_DECISION = re.compile(r"accept|url|only_copy|skip|(?:cand|reject)\s*:\s*[1-3]", re.IGNORECASE)
+
+
+# ---- export ----------------------------------------------------------------------------
+
+
+@dataclass
+class ExportResult:
+    path: Path
+    rows: int
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"path": str(self.path), "rows": self.rows}
+
+
+def export(lib: Library, index: Index, path: Path, *, include_auto: bool = False) -> ExportResult:
+    candidates = index.all_candidates()
+    folders = scan.source_folders(lib, index)
+
+    def best_score(item: dict[str, Any]) -> float:
+        found = candidates.get(item["id"])
+        return found[0]["score"] if found else 0.0
+
+    # Review first, most likely matches first; then not found; then AUTO if asked.
+    rows = sorted(index.items_in_states(["review"]), key=lambda i: -best_score(i))
+    rows += index.items_in_states(["not_found"])
+    if include_auto:
+        rows += index.items_in_states(["matched_auto"])
+
+    out = io.StringIO()
+    writer = csv.writer(out, lineterminator="\n")
+    writer.writerow(COLUMNS)
+    for item in rows:
+        cells = [
+            item["id"], scan.item_path(folders, item), minutes(item.get("duration_s")),
+            item.get("parsed_artist") or "", item.get("parsed_title") or "",
+            "; ".join(item.get("parsed_version_json") or []),
+            "; ".join(item.get("reasons_json") or []),
+        ]  # fmt: skip
+        found = candidates.get(item["id"], [])[:CANDIDATES]
+        for n in range(CANDIDATES):
+            if n < len(found):
+                payload = found[n]["payload"]
+                cells += [
+                    payload.get("title", ""), ", ".join(payload.get("artists") or []),
+                    render_versions(payload.get("version_tokens") or []),
+                    minutes(payload.get("duration_s")), f"{found[n]['score']:.3f}",
+                    Candidate.from_dict(payload).link,
+                ]  # fmt: skip
+            else:
+                cells += [""] * 6
+        cells += [""] * 7  # fingerprint (step 09b), decision, url, *_fix, art_url
+        writer.writerow(cells)
+    data = out.getvalue().encode("utf-8-sig")
+    written = fileops.write_export(lib, path, data, sources=folders.values())
+    return ExportResult(written, len(rows))
+
+
+# ---- import ----------------------------------------------------------------------------
+
+
+@dataclass
+class Planned:
+    """One row's decision, checked but not yet applied."""
+
+    row: int
+    item: dict[str, Any]
+    kind: str  # accept, candidate, url, only_copy, skip or reject
+    number: int | None = None  # the candidate, for accept/cand/reject
+    video_id: str | None = None
+    link: str | None = None  # a pasted url
+    row_candidate: dict[str, str] = field(default_factory=dict)  # the row's candN columns
+    fixes: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass
+class ImportResult:
+    applied: dict[str, int] = field(default_factory=dict)  # by decision kind
+    unchanged: int = 0  # already decided that way
+    kept_in_review: int = 0  # pasted links that scored low or aren't available
+    blank: int = 0  # rows without a decision
+    warnings: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return dict(self.__dict__)
+
+
+class ReviewImportError(UserError):
+    """A review spreadsheet was refused; nothing was imported. `problems` lists each
+    row's problem."""
+
+    def __init__(self, message: str, problems: list[str] | None = None) -> None:
+        super().__init__(message)
+        self.problems = problems or []
+
+
+def read_rows(path: Path) -> list[dict[str, str]]:
+    """The spreadsheet's rows as dicts, read strictly as UTF-8."""
+    try:
+        data = Path(path).read_bytes()
+    except OSError as exc:
+        raise UserError(f"Couldn't read {path}: {exc.strerror or exc}.") from exc
+    try:
+        text = data.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        raise ReviewImportError(
+            f"{Path(path).name} isn't saved as UTF-8 text, so names with accents or other "
+            "scripts would come out wrong. Save it as 'CSV UTF-8' in Numbers or Excel and "
+            "import again."
+        ) from None
+    reader = csv.reader(io.StringIO(text, newline=""))
+    header = [h.strip() for h in next(reader, [])]
+    missing = [c for c in REQUIRED if c not in header]
+    if missing:
+        raise ReviewImportError(
+            f"{Path(path).name} doesn't have the review columns ({', '.join(missing)} "
+            "missing). Import a file made by `musicorg review export`, saved as CSV."
+        )
+    return [dict(zip(header, [c.strip() for c in row], strict=False)) for row in reader]
+
+
+def import_csv(lib: Library, index: Index, path: Path) -> ImportResult:
+    rows = read_rows(path)
+    result = ImportResult()
+    folders = scan.source_folders(lib, index)
+    planned: list[Planned] = []
+    problems: list[str] = []
+    seen: dict[str, int] = {}
+    for number, row in enumerate(rows, start=2):  # row 1 is the header
+        if not any(row.values()):
+            continue
+        plan, problem = _check_row(number, row, index, folders, seen)
+        if problem:
+            problems.append(f"row {number}: {problem}")
+        elif plan is None:
+            result.blank += 1
+        else:
+            planned.append(plan)
+    if problems:
+        raise ReviewImportError(
+            f"Nothing was imported from {Path(path).name}. Fix these rows and import again:\n"
+            + "\n".join(f"  {p}" for p in problems),
+            problems,
+        )
+
+    # Pasted links are fetched before anything is saved, so a YouTube pause leaves the
+    # library exactly as it was.
+    tracks = {p.video_id: youtube.get_track(p.video_id) for p in planned
+              if p.kind == "url" and p.video_id}  # fmt: skip
+    now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    outcomes: list[tuple[Planned, _Outcome]] = []
+    with state.edit(lib.paths.state_file) as st:
+        decisions = st.data.setdefault("decisions", {})
+        rejected = st.data.setdefault("rejected", {})
+        for plan in planned:
+            outcome = _decide(plan, decisions, rejected, tracks.get(plan.video_id), now)
+            outcomes.append((plan, outcome))
+            if outcome.warning:
+                result.warnings.append(f"row {plan.row}: {outcome.warning}")
+                result.kept_in_review += 1
+            elif outcome.changed:
+                result.applied[plan.kind] = result.applied.get(plan.kind, 0) + 1
+            else:
+                result.unchanged += 1
+        turned_down = state.rejected(st.data)
+    # state.json is saved; now the index, which can always be rebuilt from it.
+    for plan, outcome in outcomes:
+        _update_index(index, plan, outcome, turned_down.get(plan.item["id"], set()))
+    return result
+
+
+def _check_row(
+    number: int,
+    row: dict[str, str],
+    index: Index,
+    folders: dict[str, Path],
+    seen: dict[str, int],
+) -> tuple[Planned | None, str | None]:
+    """The row's decision, or what's wrong with the row. (None, None): no decision."""
+    item_id = row.get("item_id", "")
+    item = index.item(item_id) if item_id else None
+    if item is None:
+        return None, f"unknown item_id {item_id!r}"
+    if item_id in seen:
+        return None, f"{item_id} is also on row {seen[item_id]}; keep one row per item"
+    seen[item_id] = number
+    expected = scan.item_path(folders, item)
+    if not _same_path(row.get("source_path", ""), expected):
+        return None, (f"source_path doesn't match this item (expected {expected}). "
+                      "Rows may have been moved or edited; export again.")  # fmt: skip
+    link = row.get("url", "")
+    found = _LINK.fullmatch(link) if link else None
+    if link and not found:
+        return None, (f"{link!r} isn't a YouTube link (music.youtube.com/watch?v=…, "
+                      "youtube.com/watch?v=… or youtu.be/…)")  # fmt: skip
+    text = row.get("decision", "")
+    if not text:
+        return None, None
+    if not _DECISION.fullmatch(text):
+        return None, (f"{text!r} isn't a decision; use accept, cand:2, cand:3, url, "
+                      "only_copy, skip or reject:1–3")  # fmt: skip
+    if item["state"] in ("superseded", "adopted"):
+        return None, f"this rip was already {item['state']}; there's nothing left to decide"
+    word, _, digit = text.lower().replace(" ", "").partition(":")
+    plan = Planned(row=number, item=item, kind=word)
+    if word in ("accept", "cand", "reject"):
+        plan.number = int(digit) if digit else 1
+        plan.kind = "reject" if word == "reject" else "accept" if plan.number == 1 else "candidate"
+        cell = row.get(f"cand{plan.number}_url", "")
+        chosen = _LINK.fullmatch(cell) if cell else None
+        if chosen is None:
+            return None, f"{text} but the row has no candidate {plan.number}"
+        plan.video_id = chosen.group("id")
+        plan.row_candidate = {k: row.get(f"cand{plan.number}_{k}", "")
+                              for k in ("title", "artists", "duration", "score")}  # fmt: skip
+    elif word == "url":
+        if found is None:
+            return None, "the decision is url, but the url column is empty"
+        plan.video_id, plan.link = found.group("id"), link
+    elif word == "only_copy":
+        plan.fixes = {k: row[k] for k in ("artist_fix", "title_fix", "album_fix") if row.get(k)}
+    return plan, None
+
+
+@dataclass
+class _Outcome:
+    changed: bool  # state.json changed
+    state: str | None = None  # the item's new state (None: a rejection)
+    reasons: list[str] = field(default_factory=list)
+    chosen: dict[str, Any] | None = None  # the candidate to put first
+    warning: str | None = None  # kept in review, and why
+
+
+def _decide(
+    plan: Planned,
+    decisions: dict[str, Any],
+    rejected: dict[str, Any],
+    track: Candidate | None,
+    now: str,
+) -> _Outcome:
+    """Record one decision in state.json's data, and say what the index should become."""
+    item_id = plan.item["id"]
+    if plan.kind == "reject":
+        ids = rejected.setdefault(item_id, [])
+        changed = plan.video_id not in ids
+        if changed:
+            ids.append(plan.video_id)
+        if decisions.get(item_id, {}).get("video_id") == plan.video_id:
+            del decisions[item_id]  # it was the one chosen before; that choice goes too
+            changed = True
+        return _Outcome(changed)
+
+    entry: dict[str, Any] = {"decision": plan.kind}
+    chosen: dict[str, Any] | None = None
+    if plan.kind in ("accept", "candidate"):
+        chosen = _row_candidate(plan)
+        entry.update(video_id=plan.video_id, candidate_id=chosen["id"],
+                     title=chosen["payload"]["title"])  # fmt: skip
+    elif plan.kind == "url":
+        if track is None:
+            return _Outcome(False, "review", ["video_unavailable"],
+                            warning=f"{plan.link} isn't on YouTube Music; the item stays in "
+                            "review.")  # fmt: skip
+        scored = match.assess(match.rip_of(plan.item), track)
+        chosen = _candidate_row(item_id, scored)
+        if scored.score < match.REVIEW_SCORE:
+            return _Outcome(
+                False, "review", ["url_low_score"], chosen,
+                warning=f"{track.title} — {', '.join(track.artists)} scores {scored.score:.2f} "
+                "against this rip (below 0.60), so it stays in review; it's candidate 1 on "
+                "the next export.",
+            )  # fmt: skip
+        entry.update(url=plan.link, video_id=plan.video_id, candidate_id=chosen["id"],
+                     title=track.title, score=round(scored.score, 3))  # fmt: skip
+    elif plan.kind == "only_copy":
+        entry.update(plan.fixes)
+
+    new_state = scan.DECISION_STATES[plan.kind]
+    before = {k: v for k, v in decisions.get(item_id, {}).items() if k != "decided_at"}
+    if before == entry:
+        return _Outcome(False, new_state, [], chosen)
+    decisions[item_id] = {**entry, "decided_at": now}
+    return _Outcome(True, new_state, [], chosen)
+
+
+def _update_index(index: Index, plan: Planned, outcome: _Outcome, turned_down: set[str]) -> None:
+    item_id = plan.item["id"]
+    current = [c for c in index.candidates(item_id) if c["video_id"] not in turned_down]
+    if outcome.state is None:
+        # A rejection: an undecided item is classified again from what's left, without
+        # searching; a decided one keeps its state.
+        if plan.item["state"] in set(scan.DECISION_STATES.values()):
+            index.set_match(item_id, plan.item["state"], plan.item.get("reasons_json") or [],
+                            current)  # fmt: skip
+            return
+        left = [Candidate.from_dict(c["payload"]) for c in current]
+        classified = match.classify(match.rip_of(plan.item), left, rejected=turned_down)
+        rows = [_candidate_row(item_id, s) for s in classified.top]
+        index.set_match(item_id, classified.state, classified.reasons, rows)
+        return
+    chosen = outcome.chosen
+    if chosen is not None:
+        # The index's own copy has the album and versions; the row's copy is the fallback.
+        chosen = next((c for c in current if c["video_id"] == chosen["video_id"]), chosen)
+        current = [chosen, *(c for c in current if c["video_id"] != chosen["video_id"])]
+    index.set_match(item_id, outcome.state, outcome.reasons, current)
+
+
+def _row_candidate(plan: Planned) -> dict[str, Any]:
+    """The chosen candidate as the index stores it, from the row's own columns (the
+    index may no longer hold it, e.g. after a rebuild)."""
+    cells = plan.row_candidate
+    assert plan.video_id is not None
+    try:
+        score = float(cells.get("score") or 0)
+    except ValueError:
+        score = 0.0
+    found = Candidate(
+        video_id=plan.video_id,
+        title=cells.get("title", ""),
+        artists=tuple(a.strip() for a in cells.get("artists", "").split(",") if a.strip()),
+        duration_s=_seconds(cells.get("duration", "")),
+    )
+    candidate_id = match.candidate_id(plan.item["id"], plan.video_id)
+    reasons = ["chosen in review"]
+    payload = {**found.to_dict(), "candidate_id": candidate_id, "score": score,
+               "version_tokens": [], "reasons": reasons, "link": found.link}  # fmt: skip
+    return {"id": candidate_id, "video_id": plan.video_id, "score": score,
+            "reasons": reasons, "payload": payload}  # fmt: skip
+
+
+def _candidate_row(item_id: str, scored: match.Scored) -> dict[str, Any]:
+    return {"id": scored.candidate_id(item_id), "video_id": scored.candidate.video_id,
+            "score": scored.score, "reasons": list(scored.reasons),
+            "payload": scored.payload(item_id)}  # fmt: skip
+
+
+def _seconds(text: str) -> int | None:
+    """ "3:07" → 187."""
+    parts = text.split(":")
+    if not 1 <= len(parts) <= 3 or not all(p.isdigit() for p in parts):
+        return None
+    total = 0
+    for part in parts:
+        total = total * 60 + int(part)
+    return total
+
+
+def _same_path(a: str, b: str) -> bool:
+    """The same path as text: NFC, and ignoring case where the system does (Windows)."""
+
+    def norm(text: str) -> str:
+        return os.path.normcase(unicodedata.normalize("NFC", text.strip()))
+
+    return norm(a) == norm(b)

@@ -144,6 +144,22 @@ def list_sources(lib: Library, index: Index) -> list[dict[str, Any]]:
     return result
 
 
+def source_folders(lib: Library, index: Index) -> dict[str, Path]:
+    """Each source's folder by id: state.json's record, with the index's mirror for any
+    it lacks (e.g. in tests that fill the index directly)."""
+    found = {k: Path(v["path"]) for k, v in index.sources().items() if v.get("path")}
+    for source_id, source in state.sources(lib.load_state().data).items():
+        if isinstance(source.get("path"), str):
+            found[source_id] = Path(source["path"])
+    return found
+
+
+def item_path(folders: dict[str, Path], item: dict[str, Any]) -> str:
+    """An item's full path, as reports and the review spreadsheet show it."""
+    folder = folders.get(item["source_id"])
+    return str(folder / item["rel_path"]) if folder else item["rel_path"]
+
+
 def _sync_sources(lib: Library, index: Index) -> dict[str, dict[str, Any]]:
     """Make the index's sources match state.json, which is the record."""
     wanted = state.sources(lib.load_state().data)

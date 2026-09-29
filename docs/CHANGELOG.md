@@ -257,3 +257,27 @@
   - **Recordings are trimmed:** opaque feedback tokens are removed everywhere, a watch playlist keeps only its first track, and an album drops its recommendations and description. A failed request is recorded as its error and replayed as the same error.
   - **The time-left estimate** uses the time items have actually taken so far (paced by the rate limiter), so cached searches and slow answers are counted too.
   - **auto-sample.csv** is UTF-8 with a byte-order mark (Excel and Numbers read the names correctly). It adds the album and the rip's full path, and draws its 20 from every `matched_auto` item in the index, not only this run's.
+
+### Step 07: The decision report and the review spreadsheet
+
+- `report.py`, for `musicorg report [--out <dir>]` (no lock). It writes `report-YYYY-MM-DD.md` and `.csv` through `fileops.write_export` (default `Reports/`) and prints the table, the recommendation and both paths. The markdown has:
+  - the headline table: every item state, with counts and percentages;
+  - the recommendation from the prompt's thresholds (not found ≥ 30%: adopt first; AUTO ≥ 60%: replace first), with a neutral paragraph when neither is met;
+  - why review: each reason code, as a share of review items;
+  - why not found: no results against a low score, and the 30 closest misses;
+  - the version profile, library-wide and per state;
+  - quality: the bitrate distribution, formats, `suspect_upscale` and the note on 128 kbps AAC;
+  - the cost of replacing every `matched_auto` item at the step 09a pace.
+- `review.py`, for `musicorg review export <csv> [--include-auto]` (no lock) and `musicorg review import <csv>` (lock), with the prompt's columns, checks and decisions. `accept`/`cand:n` → `matched_user`; `url` → fetched with `get_track` and scored; `only_copy` with its fixes; `skip`; `reject:n`.
+- CLI: `report`, `review export`, `review import`. `config.THROTTLE_DEFAULTS` holds the step 09a pace (8–25 s pauses, 20–40 s for the first 20, 300 per 24 h); `Config.throttle()` merges the owner's changes. New helpers: `scan.source_folders`, `scan.item_path`, `index.all_candidates`, `match.candidate_id`.
+- 979 tests pass (4 skipped). New: the report on a fixture index (exact counts, percentages, sections, files, never overwriting, the cost estimate, each recommendation) and the review round trip. The round-trip tests cover every decision; all bad rows reported with row numbers and nothing imported; commas, quotes, newlines and other scripts surviving; a cp1252 file refused; a moved row refused; a double import changing nothing; pasted links scored (high, low and unavailable); and a spreadsheet exported before `index rebuild` importing after it.
+- Deviations and additions:
+  - **Candidates are identified by the video id in the row's own `candN_url`**, never by their position in the index. That's what makes an export from before a rebuild import correctly (the rebuild drops candidates), and makes a second import of the same file change nothing, even after a `reject` has removed a candidate.
+  - **`unsupported_format`** in the report: a WebM, raw AAC or WAV rip with no official match (`not_found` or `only_copy` with the `not_adoptable` flag), as contract section 3 says. It can't be adopted in v0.1, so it's counted apart. The index state is unchanged; step 09b sets the real state.
+  - **The report's CSV** lists every item: its state, reasons, flags, format, bitrate, length, parse, and the chosen or best candidate with its link.
+  - **The cost estimate** takes the rolling 300-a-day cap as the limit on days, and adds up the pauses plus an assumed 10 s per download for the hours.
+  - **A pasted link below 0.6** (or one that isn't on YouTube Music: `video_unavailable`) is never recorded as a decision, because a rebuild would turn a recorded `url` into `matched_user`. The item stays `review` with the reason, and the link's track is shown as candidate 1 on the next export.
+  - **`reject:n`** adds the video id to state.json's `rejected` list. An undecided item is then classified again from its remaining candidates, without searching (an AUTO match whose candidate is rejected goes back to review or not found). Rejecting the candidate the owner had chosen before also removes that choice.
+  - **One decision per row**; a blank decision leaves the item alone. Decisions are case-insensitive and may have spaces (`Cand: 2`). Rows for items already `superseded` or `adopted` are refused.
+  - **Accepted spreadsheets:** a file saved by Numbers ("CSV UTF-8", no BOM) or Excel (with a BOM) both import. The header must hold the columns; any extra ones are ignored.
+  - **Order of the export:** review items with the most likely match first, then not found, then AUTO (with `--include-auto`).
