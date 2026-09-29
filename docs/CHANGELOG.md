@@ -288,6 +288,7 @@
      - Replacing the 704 AUTO items: about 3 days at the queue's pace.
      - The 8 AUTO matches carrying a version (two 2003 edits, six remixes) all name the same remix or edit, at the same length.
   3. **Stop:** the table and recommendation go back to the owner's Claude chat before steps 08–11.
+- **CI** (commit `0833b13`): green on all three runners. macOS Apple Silicon and Intel: 979 passed, 4 skipped. Windows: 978 passed, 5 skipped.
 - Deviations and additions:
   - **Candidates are identified by the video id in the row's own `candN_url`**, never by their position in the index. That's what makes an export from before a rebuild import correctly (the rebuild drops candidates), and makes a second import of the same file change nothing, even after a `reject` has removed a candidate.
   - **`unsupported_format`** in the report: a WebM, raw AAC or WAV rip with no official match (`not_found` or `only_copy` with the `not_adoptable` flag), as contract section 3 says. It can't be adopted in v0.1, so it's counted apart. The index state is unchanged; step 09b sets the real state.
