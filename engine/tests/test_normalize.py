@@ -175,6 +175,38 @@ def test_no_tags_falls_back_to_the_name() -> None:
         )
 
 
+def test_an_artist_tag_and_a_title_only_name() -> None:
+    # Apple Music shows such a file under its artist, with the file name as its name.
+    parsed = best_parse("Two Rivers", TrackTags(artist="Hippie Sabotage"))
+    assert (parsed.artist, parsed.title, parsed.band) == ("Hippie Sabotage", "Two Rivers", "high")
+    assert "artist from tags" in parsed.notes
+    repeated = best_parse("Portugal The Man Do You", TrackTags(artist="Portugal the Man"))
+    assert (repeated.artist, repeated.title) == ("Portugal the Man", "Do You")
+    featured = best_parse("Magic Stick feat. 50 Cent", TrackTags(artist="Lil' Kim"))
+    assert featured.artists == ("Lil' Kim", "50 Cent")
+
+
+def test_an_artist_tag_does_not_override_the_name() -> None:
+    for artist in ("Unknown Artist", "Y2meta.app", "Trap Nation"):
+        assert best_parse("Two Rivers", TrackTags(artist=artist)).artist is None
+    parsed = best_parse("Drake - Hotline Bling", TrackTags(artist="Someone Else"))
+    assert parsed == parse_filename("Drake - Hotline Bling")
+
+
+def test_download_sites_in_tags() -> None:
+    parsed = parse_tags(TrackTags(title="Y2meta.app - Drake - One Dance", artist="x2mate.com"))
+    assert (parsed.artist, parsed.title) == ("Drake", "One Dance")
+    entity = parse_tags(TrackTags(title="Can&#39t Stop", artist="Red Hot Chili Peppers"))
+    assert entity.title == "Can't Stop"
+
+
+def test_the_converter_video_id_is_noted() -> None:
+    parsed = parse_filename("onlymp3.to - Jake Hill - Mine-Ab3dE_6hIjK-192k-1660198157171")
+    assert (parsed.artist, parsed.title) == ("Jake Hill", "Mine")
+    assert "video id Ab3dE_6hIjK" in parsed.notes
+    assert "download site" in parsed.junk_removed
+
+
 def test_weak_tags_lose_to_a_good_name() -> None:
     parsed = best_parse("Drake - Hotline Bling", TrackTags(title="Track 01"))
     assert parsed == parse_filename("Drake - Hotline Bling")

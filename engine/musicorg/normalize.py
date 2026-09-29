@@ -18,6 +18,7 @@ reversed order, is below 0.5. "Low confidence" means below 0.5 everywhere.
 
 from __future__ import annotations
 
+import html
 import re
 import unicodedata
 from dataclasses import asdict, dataclass, field
@@ -32,6 +33,8 @@ HIGH_CONFIDENCE = 0.8
 _TAGS = 0.95
 _SPLIT = 0.9  # "Artist - Title"
 _QUOTED = 0.85  # YOASOBI「夜に駆ける」, BTS 'Dynamite'
+_TAG_ARTIST = 0.8  # an artist tag, and a file name that is only the title
+_LOOSE_SPLIT = 0.75  # "Artist- Title": a dash with a space on one side only
 _MANY_PARTS = 0.6  # "A - B - C" that couldn't be explained
 _REMIXER_FIRST = 0.6  # "Remixer - Title (Remixer Remix)": the real artist is unknown
 _PIPE = 0.45  # "Title | Artist" or "Artist | Title": can't tell
@@ -150,8 +153,20 @@ _JUNK_PHRASES = [
     r"\d{4}\s+(?:new|hit)",
     r"(?:prod(?:\.|uced)?|dir(?:\.|ected)?|shot)\s+by\s+.+|prod\.?\s+.+",
     r"(?:official\s+)?(?:performance|music)\s+video|m\s*/\s*v|mv",
+    r"supported\s+by\s+.+",  # [Supported by Timmy Trumpet]
 ]
 _JUNK = re.compile(r"(?:" + "|".join(_JUNK_PHRASES) + r")", re.IGNORECASE)
+# A group made only of these words is junk when one names the upload's form: "(Animated
+# Video)", "[FULL-HD]", "[HD UPGRADE]", "(Video Oficial)", "(Very High Audio Quality)".
+_JUNK_FORM_WORDS = frozenset({
+    "video", "videoclip", "clip", "audio", "lyric", "lyrics", "letra", "visualizer",
+    "visualiser", "mv", "hd", "hq", "uhd", "4k", "8k", "quality",
+})  # fmt: skip
+_JUNK_FILLER_WORDS = frozenset({
+    "official", "oficial", "officiel", "music", "musical", "full", "upgrade", "upgraded",
+    "animated", "very", "high", "best", "new", "with", "and", "the",
+})  # fmt: skip
+_RESOLUTION = re.compile(r"\d{3,4}p")
 # Genre tags in square brackets on Monstercat/NCS-style uploads: [Dubstep], [Trap].
 _GENRES = re.compile(
     r"(?:trap|dubstep|house|edm|dnb|drum\s*(?:and|&|n|'n')\s*bass|electro(?:nic)?|"
@@ -162,12 +177,21 @@ _GENRES = re.compile(
     r"electronic|chillout|downtempo|j-?pop|k-?pop)",
     re.IGNORECASE,
 )
-# Download-site markers anywhere in a name.
+# A web address, as download sites put their own in names: "Y2meta.app", "mp3convert.org".
+# Only these endings, so "Mr.Kitty", "E.T." and "Will.i.am" aren't taken for one.
+_DOMAIN = (
+    r"(?:www\.)?[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9-]+)*"
+    r"\.(?:com|net|org|app|to|io|cc|me|co|biz|info|tv|ws|site|online|pro|xyz|ru|fm)(?!\w)"
+)
+_DOMAIN_RE = re.compile(_DOMAIN, re.IGNORECASE)
+# Download-site names at the start or the end of a name: "Y2meta.app - ", "_(mp3convert.org)".
 _SITE_MARKERS = re.compile(
-    r"^\s*(?:y2mate\.com|ytmp3\.cc|savefrom\.net|mp3juices\.cc)\s*[-–]\s*"
-    r"|\s*[-–]?\s*\((?:y2mate\.com|ytmp3\.cc|mp3cut\.net)\)\s*$",
+    rf"^\s*[\[(]?{_DOMAIN}[\])]?\s*[-–—~|:]\s*"
+    rf"|(?:\s*[-–—~|_]\s*|\s+|(?=[\[(]))[\[(]?{_DOMAIN}[\])]?\s*$",
     re.IGNORECASE,
 )
+# onlymp3.to and others end names with "-<video id>-192k-<timestamp>".
+_CONVERTER_SUFFIX = re.compile(r"-(?P<id>[A-Za-z0-9_-]{11})-\d{2,3}k-\d{10,13}$")
 _LEADING_JUNK = re.compile(
     r"^\s*(?:premiere\s*[:|\-–]|\[?free(?:\s+(?:download|dl))?\]?\s*[:|\-–]|"
     r"out\s+now\s*[:|\-–]|new\s*[:|\-–])\s*",
@@ -186,9 +210,15 @@ def _is_junk(text: str, bracket: str = "(") -> bool:
         return True
     if bracket == "[" and _GENRES.fullmatch(text):
         return True
+    if _DOMAIN_RE.fullmatch(text):
+        return True
     # Several junk phrases together: "Official Video HD", "Audio + Lyrics".
     words = re.split(r"\s*(?:[/+&,|]|\s-\s)\s*|\s+", text)
-    return len(words) > 1 and all(_JUNK.fullmatch(w) or not w for w in words)
+    if len(words) > 1 and all(_JUNK.fullmatch(w) or not w for w in words):
+        return True
+    words = re.findall(r"[^\W_]+", text.casefold())
+    form = [w for w in words if w in _JUNK_FORM_WORDS or _RESOLUTION.fullmatch(w)]
+    return bool(form) and all(w in _JUNK_FILLER_WORDS or w in form for w in words)
 
 
 def _strip_symbols(text: str, junk: list[str]) -> str:
@@ -433,7 +463,7 @@ _FREE_TRAILING_VERSION = re.compile(
 )
 _FREE_TRAILING_JUNK = re.compile(
     r"(?:\s+|\s*[-–|]\s*)(?P<j>(?:official\s+)?(?:music\s+|lyrics?\s+)?(?:video|audio|visuali[sz]er)"
-    r"|official|lyrics|with\s+lyrics|hq|hd|4k|\d{3,4}p|\d{2,3}\s*kbps|free\s+download|out\s+now"
+    r"|official|lyrics?|with\s+lyrics|hq|hd|4k|\d{3,4}p|\d{2,3}\s*kbps|free\s+download|out\s+now"
     r"|full\s+song|m/?v)\s*$",
     re.IGNORECASE,
 )
@@ -466,24 +496,52 @@ def _take_featured_inline(text: str, found: _Found) -> str:
 
 # ---- parsing a file name ---------------------------------------------------------------
 
-_SEPARATORS = re.compile(r"\s+[-–—~_]\s+|\s+\|\s+|\s*\|\s*(?=\S)|\s[-–—]{2}\s")
+_SEPARATORS = re.compile(
+    r"\s+[-–—~_]\s+|\s+\|\s+|\s*\|\s*(?=\S)|\s[-–—]{2}\s"
+    # A dash or tilde with a space on one side only: "Artist- Title", "Artist -Title".
+    # "Jay-Z" has none, so it stays whole.
+    r"|(?<=\S)[-–—~]\s+|\s+[-–—~](?=\S)"
+)
+_UNDERSCORE_APOSTROPHE = re.compile(r"(?<=[A-Za-z])_(?=(?:t|s|ll|re|ve|m|d)(?![A-Za-z0-9]))")
+# Dashes some names use that look like a hyphen or an en dash.
+_ODD_DASHES = str.maketrans({"‐": "-", "‑": "-", "‒": "–", "―": "—", "−": "-"})
+_NAMED_ENTITY = re.compile(r"&[a-z]+;", re.IGNORECASE)
 _QUOTED_TITLE = re.compile(
     r"^(?P<artist>[^「『'‘\"“]+?)\s*(?P<open>[「『'‘\"“])(?P<title>.+?)[」』'’\"”]\s*(?P<rest>.*)$"
 )
 _CHANNEL_SUFFIX = re.compile(r"\s*(?:vevo|\s-\s?topic|official)$", re.IGNORECASE)
 
 
+def _prepare(text: str) -> str:
+    """NFC, web entities decoded ("can&#39t" → "can't", but "S&M" stays), odd dashes made
+    plain, and spaces collapsed."""
+    text = unicodedata.normalize("NFC", text)
+    if "&#" in text or _NAMED_ENTITY.search(text):
+        text = html.unescape(text)
+    return " ".join(text.translate(_ODD_DASHES).split())
+
+
 def parse_filename(stem: str) -> Parsed:
     """Parse a rip's file name (without its extension)."""
     found = _Found()
-    text = unicodedata.normalize("NFC", stem)
+    text = _prepare(stem)
+    suffix = _CONVERTER_SUFFIX.search(text)
+    if suffix and text[: suffix.start()].strip():
+        found.junk.append("download site")
+        found.notes.append(f"video id {suffix.group('id')}")
+        text = text[: suffix.start()]
+    text = _UNDERSCORE_APOSTROPHE.sub("'", text)  # "Ain_t" → "Ain't"
     if "_" in text and text.count(" ") < text.count("_"):
         text = text.replace("_", " ")
+    else:
+        text = re.sub(r"(?<!\s)_|_(?!\s)", " ", text)  # quotes and colons: "(From _Film_)"
     text = " ".join(text.split())
     marked = _SITE_MARKERS.sub(" ", text)
-    if marked != text:
+    if marked != text and marked.strip():
         found.junk.append("download site")
-        text = marked
+        text = " ".join(marked.split())
+    if " " not in text and text.count("-") >= 3:
+        text = text.replace("-", " ")  # "john-newman-love-me-again"
     text = _strip_symbols(text, found.junk)
     for pattern in (_LEADING_JUNK, _TRACK_NUMBER, _ZERO_PADDED):
         match = pattern.match(text)
@@ -503,6 +561,7 @@ def parse_filename(stem: str) -> Parsed:
     parts = [p for p in _SEPARATORS.split(skeleton)]
     separators = _SEPARATORS.findall(skeleton)
     piped = any("|" in s for s in separators)
+    loose = any("|" not in s and not (s[0].isspace() and s[-1].isspace()) for s in separators)
     parts = [p for p in parts if p.strip()]
 
     if len(parts) == 1:
@@ -536,6 +595,8 @@ def parse_filename(stem: str) -> Parsed:
 
     artist_part, title_parts = parts[0], parts[1:]
     confidence = _SPLIT if len(title_parts) == 1 else _MANY_PARTS
+    if loose:
+        confidence = min(confidence, _LOOSE_SPLIT)
     # "Title (Official Video) - Artist": junk or a version on the left means it's the
     # title, so the order is reversed.
     left = _Found()
@@ -587,13 +648,32 @@ def _quoted(match: re.Match[str], found: _Found) -> Parsed:
 
 
 def _finish_title(part: str, groups: list[_Group], found: _Found, *, last_part: bool) -> str:
-    text = _resolve(part, groups, found, last_part=last_part)
+    text = _drop_unmatched(_resolve(part, groups, found, last_part=last_part))
     text = _take_featured_inline(text, found)
     text = _strip_free_ends(" " + text, found)
     text = " ".join(text.split()).strip(" -–|:,")
     if len(text) >= 2 and text[0] in "'‘\"“" and text[-1] in "'’\"”":
         text = text[1:-1].strip()
     return text
+
+
+_CLOSERS = {closer: opener for opener, closer in _PAIRS.items()}
+
+
+def _drop_unmatched(text: str) -> str:
+    """Brackets without a partner are dropped: "Here (Lucian Remix))" leaves "Here )"."""
+    open_at: list[int] = []
+    drop: set[int] = set()
+    for i, ch in enumerate(text):
+        if ch in _PAIRS:
+            open_at.append(i)
+        elif ch in _CLOSERS:
+            if open_at and text[open_at[-1]] == _CLOSERS[ch]:
+                open_at.pop()
+            else:
+                drop.add(i)
+    drop.update(open_at)
+    return "".join(" " if i in drop else ch for i, ch in enumerate(text))
 
 
 def _finish_artist(part: str, groups: list[_Group], found: _Found) -> tuple[str, list[str]]:
@@ -686,21 +766,15 @@ _PROMO_CHANNELS = frozenset({
 def parse_tags(tags: TrackTags) -> Parsed:
     """Parse a rip's own tags. Rip converters often put the video title in the title
     and the channel in the artist; those are recognised and parsed like a file name."""
-    title = tags.title if isinstance(tags.title, str) else None
-    artist = tags.artist if isinstance(tags.artist, str) else None
+    title = _prepare(tags.title) if isinstance(tags.title, str) else None
+    artist = _prepare(tags.artist) if isinstance(tags.artist, str) else None
     if not title:
         return Parsed(None, None, source="tags")
     artist_key = compare_key(artist)
-    not_an_artist = (
-        not artist
-        or artist_key in _JUNK_ARTISTS
-        or artist_key in _PROMO_CHANNELS
-        or "://" in (artist or "")
-    )
     channel = bool(_CHANNEL_SUFFIX.search(artist or ""))  # "DrakeVEVO", "Drake - Topic"
     looks_like_name = bool(_SEPARATORS.search(title)) or bool(_QUOTED_TITLE.match(title))
     if (
-        not_an_artist
+        _not_an_artist(artist)
         or (channel and looks_like_name)
         or (looks_like_name and compare_key(title).startswith(artist_key))
     ):
@@ -717,6 +791,19 @@ def parse_tags(tags: TrackTags) -> Parsed:
     return _replace(parsed, source="tags")
 
 
+def _not_an_artist(artist: str | None) -> bool:
+    """An artist tag that names no artist: empty, "Unknown Artist", a promo channel or a
+    download site."""
+    key = compare_key(artist)
+    return (
+        not artist
+        or key in _JUNK_ARTISTS
+        or key in _PROMO_CHANNELS
+        or "://" in artist
+        or bool(_DOMAIN_RE.fullmatch(artist.strip()))
+    )
+
+
 def _replace(parsed: Parsed, **changes: Any) -> Parsed:
     return Parsed(**{**asdict(parsed), **changes})
 
@@ -728,7 +815,7 @@ def best_parse(stem: str, tags: TrackTags | None) -> Parsed:
     from_name = parse_filename(stem)
     from_tags = parse_tags(tags) if tags is not None else None
     if from_tags is None or from_tags.title is None:
-        return from_name
+        return _with_tag_artist(from_name, tags)
     if from_tags.confidence < max(from_name.confidence, LOW_CONFIDENCE):
         return from_name
     if compare_key(from_tags.title) == compare_key(from_name.title):
@@ -736,3 +823,37 @@ def best_parse(stem: str, tags: TrackTags | None) -> Parsed:
         junk = tuple(dict.fromkeys([*from_tags.junk_removed, *from_name.junk_removed]))
         return _replace(from_tags, version_tokens=versions, junk_removed=junk)
     return from_tags
+
+
+def _with_tag_artist(from_name: Parsed, tags: TrackTags | None) -> Parsed:
+    """An artist tag but no title tag, and a file name that is only the title: Apple
+    Music shows such a file under its artist, with the file name as its name. The
+    artist comes from the tag and the title from the name, without the artist repeated
+    at its start ("Portugal The Man Do You" → "Do You")."""
+    artist = _prepare(tags.artist) if tags is not None and isinstance(tags.artist, str) else None
+    if from_name.artist or not from_name.title or _not_an_artist(artist):
+        return from_name
+    found = _Found()
+    skeleton, groups = _extract_groups(artist or "")
+    credit, artists = _finish_artist(skeleton, groups, found)
+    if not artists:
+        return from_name
+    main = {compare_key(a) for a in artists}
+    featured = [a for a in (*found.featured, *from_name.artists) if compare_key(a) not in main]
+    return _replace(
+        from_name,
+        artist=artists[0],
+        credit=credit,
+        artists=tuple(dict.fromkeys([*artists, *featured])),
+        title=_without_leading(from_name.title, credit),
+        confidence=0.7 if "channel name" in found.notes else _TAG_ARTIST,
+        notes=(*from_name.notes, *found.notes, "artist from tags"),
+    )
+
+
+def _without_leading(title: str, artist: str) -> str:
+    words = title.split()
+    for n in range(1, len(words)):
+        if compare_key(" ".join(words[:n])) == compare_key(artist):
+            return " ".join(words[n:]).lstrip("-–—~:| ") or title
+    return title

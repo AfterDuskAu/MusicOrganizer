@@ -96,3 +96,25 @@ Blinding Lights | The Weeknd	Blinding Lights	The Weeknd		low	pipe: order unknown
 Hello		Hello		low	single token
 Crave You (Adventure Club Remix)		Crave You	remix:adventure club	low	title and remixer, no artist
 Title (Official Video)		Title		low	title only
+Kanye West ft. Chris Martin- Homecoming(with lyrics)	Kanye West	Homecoming		mid	dash spaced on one side only
+Rxseboy -Dying inside lyric	Rxseboy	Dying inside		mid	dash spaced on the left only, a trailing lyric
+Camila Cabello~ Shameless (lyric) (320 kbps)	Camila Cabello	Shameless		mid	tilde spaced on one side only
+The Chainsmokers ‒ Sick Boy (Lyrics)	The Chainsmokers	Sick Boy		high	figure dash
+Y2meta.app - Drake - One Dance (320 kbps)	Drake	One Dance		high	download site first
+x2mate.com - The Neighbourhood - Daddy Issues (lyrics) (128 kbps)	The Neighbourhood	Daddy Issues		high	another download site first
+onlymp3.to - Future - Low Life (Official Music Video) ft. The Weeknd-Ab3dE_6hIjK-192k-1660198157171	Future	Low Life		high	converter's video id, bitrate and timestamp at the end
+Ed_Sheeran_-_Bad_Habits_Official_Video_(mp3convert.org)	Ed Sheeran	Bad Habits		high	underscores, free junk, download site in brackets
+john-newman-love-me-again-(mp3convert.org)		john newman love me again		low	hyphens for spaces
+Kylie Minogue - Can&#39t Get You Out Of My Head	Kylie Minogue	Can't Get You Out Of My Head		high	web entity without its semicolon
+Rihanna - S&M	Rihanna	S&M		high	an ampersand that isn't a web entity
+OneRepublic - I Ain_t Worried (From _Top Gun- Maverick_) [Official Music Video]	OneRepublic	I Ain't Worried (From Top Gun- Maverick)		high	underscores for an apostrophe and quotes
+Linkin Park - Breaking the Habit (Official Music Video) [HD UPGRADE]	Linkin Park	Breaking the Habit		high	junk words together
+Imagine Dragons - Birds (Animated Video)	Imagine Dragons	Birds		high	animated video
+Cartel de Santa - Si te Vienen a Contar (Video Oficial)	Cartel de Santa	Si te Vienen a Contar		high	Spanish junk
+DragonForce - Through the Fire and Flames [HQ (Very High Audio Quality)]	DragonForce	Through the Fire and Flames		high	junk inside junk
+Masked Wolf - Astronaut in the Ocean (Josh Peters Remix) [Supported by Timmy Trumpet]	Masked Wolf	Astronaut in the Ocean	remix:josh peters	high	a DJ's support tag
+Alessia Cara - Here (Lucian Remix))	Alessia Cara	Here	remix:lucian	high	a stray bracket
+Future - Mask Off (Lyrics  Lyric Video)	Future	Mask Off		high	lyric words together
+Linkin Park - Crawling [FULL-HD]	Linkin Park	Crawling		high	hyphenated junk
+Mase-Feel So Good		Mase-Feel So Good		low	a hyphen without spaces isn't a separator
+Mr.Kitty - After Dark	Mr.Kitty	After Dark		high	a dotted name isn't a web address
