@@ -239,7 +239,8 @@
      - Every AUTO match I checked by metadata is the same artist, the same title, an official album track and within 2 s.
      - Why items went to review: a length 3–60 s off (usually a YouTube rip of the right song), a different title ("Are You Mine?" vs "R U Mine?", typos), or a different artist ("Adventure Club - Crave You", which is their remix, tagged without the word "remix").
      - Nothing was `not_found`. An exact title with the same versions already scores 0.55, so almost any same-title song reaches review at 0.60. The report in step 07 should rank review items by score.
-  3. `Reports/auto-sample.csv` written with 20 links. **Listening check: pending (the owner).**
+  3. `Reports/auto-sample.csv` written with 20 links. **Listening check: the owner listened to all 20; every one is the same recording as the rip.**
+- **CI** (commit `deff4f8`): green on all three runners. macOS Apple Silicon and Intel: 951 passed, 4 skipped. Windows: 950 passed, 5 skipped (its platform-only skips, the real-Trash test and the live search).
 - **The owner's rules** (asked after the first run):
   - **"R" means remix.** A final capital "R" or "(R)" in a rip's name or title ("Stressed Out R", "Done Wrong (R)", "Black Out Days R(slowed)"; 124 files in the library) becomes the version token `remix`. YouTube Music's own titles are left alone ("Vitamin R" stays). A bare `remix` never equals a named one (`remix:filous`), so these rips are never AUTO, but the right remix can rank first in review.
   - **Always the explicit version, unless the rip's name says clean.** "Edited", "censored" and "clean edit/mix/radio edit" now also mean clean ("uncensored" already meant explicit). A track whose own title says clean is never AUTO for a rip that doesn't say clean. That's on top of the pair rule, which already took the explicit one.
