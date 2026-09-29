@@ -8,6 +8,12 @@
 
 Under rule 3 of CLAUDE.md this module may write state.json itself. Other modules change
 it through `edit()` or `create_if_missing()`, never by writing the file.
+
+Keys (contract section 5), each written by the step named:
+- "sources": {source_id: {"path": resolved folder, "added_at": ISO time}} (step 05)
+- "decisions": {item_id: {"decision": RPC decision (docs/ENGINE_API.md → Enums),
+  "decided_at": ISO time, plus details such as "video_id"}} (step 07)
+- "superseded": {normalised rip path: MUSICORG_ID} (step 09b)
 """
 
 from __future__ import annotations
@@ -167,3 +173,25 @@ def _sync_folder(folder: Path) -> None:
         pass
     finally:
         os.close(fd)
+
+
+def sources(data: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """The registered sources, by id. Tolerates a missing or malformed key."""
+    value = data.get("sources")
+    return (
+        {k: v for k, v in value.items() if isinstance(v, dict)} if isinstance(value, dict) else {}
+    )
+
+
+def decisions(data: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """The owner's review decisions, by item id."""
+    value = data.get("decisions")
+    return (
+        {k: v for k, v in value.items() if isinstance(v, dict)} if isinstance(value, dict) else {}
+    )
+
+
+def superseded(data: dict[str, Any]) -> dict[str, str]:
+    """Rip path (normalised) → MUSICORG_ID of the library file that replaced it."""
+    value = data.get("superseded")
+    return {k: v for k, v in value.items() if isinstance(v, str)} if isinstance(value, dict) else {}

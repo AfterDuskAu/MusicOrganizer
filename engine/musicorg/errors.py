@@ -126,3 +126,8 @@ class UndoError(UserError):
 
 class AudioError(UserError):
     """ffprobe or ffmpeg couldn't read a file's audio."""
+
+
+class LibraryIndexError(UserError):
+    """The library's index (index.sqlite) can't be opened or read. It's a cache: a
+    rebuild fixes it."""

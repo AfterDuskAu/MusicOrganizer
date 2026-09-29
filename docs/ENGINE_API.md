@@ -7,6 +7,7 @@ The engine has two front doors onto the **same functions**. The CLI is for the o
 | Name | Values |
 |---|---|
 | **Item state** (external rips) | `new` · `matched_auto` · `matched_user` · `review` · `not_found` · `only_copy` · `skipped` · `unsupported_format` · `superseded` · `adopted` |
+| **Item flag** (set by `scan`) | `not_adoptable` (WebM, raw AAC or WAV: replaceable, not adoptable in v0.1) · `suspect_upscale` (an MP3 of 256 kbps or more with signs of a YouTube source; a heuristic) · `unreadable` (ffprobe couldn't read the audio) |
 | **Review reasons** (stored with `review` items) | `version_mismatch` · `duration_mismatch` · `artist_mismatch` · `title_fuzzy` · `not_official_audio` · `low_parse_confidence` · `fingerprint_mismatch` · `fingerprint_uncertain` · `format_140_unavailable` · `video_unavailable` · `file_changed` · `url_low_score` |
 | **CSV decision** (`review import`) | `accept` · `cand:<n>` · `url` · `only_copy` · `skip` · `reject:<n>` |
 | **RPC decision** (`review.decide`) | `accept` · `candidate` (+`candidate_id`) · `url` (+`url`) · `only_copy` · `skip` · `reject` (+`candidate_id`) |

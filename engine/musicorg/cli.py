@@ -8,13 +8,14 @@ import argparse
 import json
 import logging
 import sys
+import time
 import traceback
 from collections.abc import Callable, Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import Any, NoReturn
 
-from musicorg import __version__, doctor, fileops, library, logging_setup, status
+from musicorg import __version__, doctor, fileops, library, logging_setup, scan, status
 from musicorg.config import Config
 from musicorg.errors import (
     EXIT_INTERNAL,
@@ -26,6 +27,7 @@ from musicorg.errors import (
     NotImplementedYetError,
     UserError,
 )
+from musicorg.index import open_index
 
 log = logging.getLogger(__name__)
 
@@ -122,29 +124,17 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     sources = group("sources", "Manage read-only source folders (your existing rips).")
-    p = add(
-        sources, "add", "Register a folder as a read-only source.", _not_yet("sources add", "05")
-    )
+    p = add(sources, "add", "Register a folder as a read-only source.", _cmd_sources_add)
     p.add_argument("path", type=_path)
-    add(sources, "list", "List registered sources.", _not_yet("sources list", "05"))
-    p = add(
-        sources,
-        "remove",
-        "Forget a source. Its files are never touched.",
-        _not_yet("sources remove", "05"),
-    )
+    add(sources, "list", "List registered sources.", _cmd_sources_list)
+    p = add(sources, "remove", "Forget a source. Its files are never touched.", _cmd_sources_remove)
     p.add_argument("source_id")
 
-    p = add(commands, "scan", "Index sources, read-only.", _not_yet("scan", "05"))
+    p = add(commands, "scan", "Index sources, read-only.", _cmd_scan)
     p.add_argument("source_ids", nargs="*", metavar="SOURCE_ID")
 
     index = group("index", "The library's search index.")
-    add(
-        index,
-        "rebuild",
-        "Rebuild the index from the files and state.json.",
-        _not_yet("index rebuild", "05"),
-    )
+    add(index, "rebuild", "Rebuild the index from the files and state.json.", _cmd_index_rebuild)
 
     p = add(
         commands,
@@ -291,9 +281,23 @@ def _cmd_status(args: argparse.Namespace) -> int:
         print(f"Library: {root} (this folder isn't a Music Organizer library yet)")
     else:
         print(f"Library: {root}")
-    print("Item counts arrive in step 05, and the queue state in step 09a.")
+        _print_counts(result)
     _print_warnings(result["warnings"])
     return EXIT_OK
+
+
+def _print_counts(result: dict[str, Any]) -> None:
+    items, sources = result["items"], result["sources"]
+    print(f"Sources: {sources}. Library tracks: {result['tracks']:,}.")
+    if not items:
+        hint = "run `musicorg scan`" if sources else "add one with `musicorg sources add`"
+        print(f"Items: none indexed yet ({hint}).")
+        return
+    print(f"Items: {items:,}")
+    for name, count in result["items_by_state"].items():
+        print(f"  {name:<20}{count:>8,}  {count / items:6.1%}")
+    low = result["low_confidence"]
+    print(f"Low parse confidence (below 0.5): {low:,} ({low / items:.1%})")
 
 
 def _cmd_doctor(args: argparse.Namespace) -> int:
@@ -340,6 +344,105 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     else:
         print("Everything is in place.")
     return code
+
+
+def _cmd_sources_add(args: argparse.Namespace) -> int:
+    root = _library_root(args)
+    with library.open(root, write=True) as lib, open_index(lib.paths, write=True) as index:
+        source = scan.add_source(lib, index, args.path)
+    if args.json:
+        _print_json(source)
+    else:
+        print(f"Added the source {source['id']}: {source['path']}")
+        print("Its files are only ever read. Index them with `musicorg scan`.")
+    return EXIT_OK
+
+
+def _cmd_sources_list(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=False) as lib:
+        with open_index(lib.paths, write=False) as index:
+            sources = scan.list_sources(lib, index)
+    if args.json:
+        _print_json({"sources": sources})
+        return EXIT_OK
+    if not sources:
+        print("No sources yet. Add your rips folder with `musicorg sources add <folder>`.")
+    for source in sources:
+        scanned = _local_time(source["scanned_at"]) if source["scanned_at"] else "never"
+        missing = "" if source["available"] else "  (not there: is its drive connected?)"
+        print(f"{source['id']}  {source['path']}{missing}")
+        print(f"    {source['items']:,} items, last scanned {scanned}")
+    return EXIT_OK
+
+
+def _cmd_sources_remove(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=True) as lib:
+        with open_index(lib.paths, write=True) as index:
+            removed = scan.remove_source(lib, index, args.source_id)
+    if args.json:
+        _print_json(removed)
+    else:
+        print(f"Forgot the source {removed['id']} ({removed['path']}).")
+        print(f"{removed['items_forgotten']:,} items left the index. No files were touched.")
+    return EXIT_OK
+
+
+def _cmd_scan(args: argparse.Namespace) -> int:
+    progress = None if args.json else _Progress("files read")
+    with library.open(_library_root(args), write=True) as lib:
+        with open_index(lib.paths, write=True) as index:
+            result = scan.scan(lib, index, source_ids=args.source_ids or None, progress=progress)
+    if args.json:
+        _print_json(result.to_dict())
+        return EXIT_OK
+    _print_scan(result)
+    return EXIT_OK
+
+
+def _cmd_index_rebuild(args: argparse.Namespace) -> int:
+    progress = None if args.json else _Progress("files read")
+    with library.open(_library_root(args), write=True) as lib:
+        with open_index(lib.paths, write=True) as index:
+            result = scan.rebuild(lib, index, progress=progress)
+    if args.json:
+        _print_json(result.to_dict())
+        return EXIT_OK
+    print(f"Rebuilt the index: {result.library_tracks:,} library tracks.")
+    _print_scan(result.scan)
+    return EXIT_OK
+
+
+def _print_scan(result: scan.ScanResult) -> None:
+    print(
+        f"Scanned {result.files:,} audio files in {len(result.sources)} source(s) "
+        f"in {result.seconds:.0f} s: {result.new:,} new, {result.changed:,} changed, "
+        f"{result.unchanged:,} unchanged, {result.gone:,} gone."
+    )
+    if result.unreadable:
+        print(f"  {result.unreadable:,} files had audio that couldn't be read (flagged).")
+    if result.skipped_links:
+        print(f"  {result.skipped_links:,} links were skipped (never followed).")
+    for folder in result.skipped_libraries:
+        print(f"  Skipped a library inside a source: {folder}")
+    for folder in result.unreadable_folders:
+        print(f"  ! Couldn't read the folder {folder or '(the source itself)'}; see the log.")
+    for source_id in result.missing_sources:
+        print(f"  ! The source {source_id} isn't there (is its drive connected?). Its items stay.")
+
+
+class _Progress:
+    """Progress on stderr (stdout stays clean), at most every 2 seconds."""
+
+    def __init__(self, what: str) -> None:
+        self.what = what
+        self.last = 0.0
+
+    def __call__(self, done: int, total: int, current: str) -> None:
+        now = time.monotonic()
+        if done != total and now - self.last < 2:
+            return
+        self.last = now
+        print(f"  {done:,} of {total:,} {self.what}", file=sys.stderr, flush=True)
 
 
 # How `journal list` describes each operation (docs/ENGINE_API.md → Journal operation).

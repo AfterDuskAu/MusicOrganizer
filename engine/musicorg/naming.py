@@ -126,6 +126,18 @@ def is_junk(name: str) -> bool:
     return name.startswith("._") or name.lower() in _JUNK_NAMES
 
 
+def is_within(path: PurePath, folder: PurePath) -> bool:
+    """Whether `path` is `folder` or inside it, comparing as macOS and Windows do by
+    default (ignoring case and Unicode form). Pure path logic: pass resolved paths."""
+
+    def key(p: PurePath) -> str:
+        text = unicodedata.normalize("NFC", str(p)).replace("\\", "/").rstrip("/")
+        return text.casefold() if sys.platform in ("darwin", "win32") else text
+
+    target = key(folder)
+    return any(key(p) == target for p in (path, *path.parents))
+
+
 def is_audio_name(name: str) -> bool:
     """Whether a file name looks like an audio file (by its extension)."""
     return not is_junk(name) and PurePath(name).suffix.lower() in AUDIO_SUFFIXES

@@ -163,3 +163,34 @@
   - Homebrew's ffmpeg (the CI Macs) has no libvorbis, so the first CI run couldn't make the Ogg sample. The fixture now uses libvorbis when it's there and ffmpeg's own Vorbis encoder otherwise (marked experimental, stereo only), and the Ogg sample is stereo either way. Both paths were run on the iMac.
   - New error `AudioError`. `ENGINE_API.md`: batch kind `demo` now covers both manual-check scripts.
 - CI: green on all three runners (678 passed on each, 3 skipped), once the Ogg sample was fixed. Windows ran the file-in-use test and the link tests.
+
+### Step 05: Read-only scan of existing rip folders
+
+- `normalize.py`: `parse_filename`, `parse_tags`, `best_parse` and `compare_key`.
+  - Takes out junk (official video/audio/lyric video, lyrics, visualizer, audio, HQ/HD/4K/1080p, bitrates, free download, out now, premiere, full song, `[… Release]` label tags, emoji and symbols) and keeps version tokens as `kind[:detail]` (remix, radio edit, extended, VIP, bootleg, flip, live, acoustic, unplugged, remaster, instrumental, sped up, slowed, nightcore, cover, demo, clean, explicit), inside brackets, nested brackets, and as dash-separated parts.
+  - Artists split on feat./ft./featuring/with, ` x `, ` & ` and `,`, main artist first. A remixer named where the artist should be is recorded as a version token and marked uncertain.
+  - Confidence: a clean "Artist - Title" is 0.9; names from real tags 0.95; a single token 0.3; a detectably reversed order 0.4. Bands: high ≥ 0.8, mid, low < 0.5.
+- `index.py`: `index.sqlite` with the prompt's tables, `PRAGMA user_version` 1, WAL, a connection per thread, read-only connections for no-lock commands (a missing index reads as empty). Stable item ids: `i_` + 16 hex characters of SHA-1 of `<source_id>/<rel_path>` (NFC).
+- `scan.py`: sources (`add_source`, `remove_source`, `list_sources`), `scan`, `scan_library` and `rebuild`.
+  - The scan walks each source without following links, skips hidden files and folders, junk names and any folder holding a library, and indexes the audio extensions from the prompt: probe, tags, best parse, `sha1_head`. Files are only ever opened for reading.
+  - Incremental: a file with the same size and modification time isn't read again. Files that have gone are dropped from the index.
+  - Flags: `not_adoptable` for WebM, raw AAC and WAV; `suspect_upscale`; `unreadable` when ffprobe can't read the audio.
+- CLI: `sources add|list|remove`, `scan [<id>…]` (progress on stderr) and `index rebuild`. `status` now shows the sources, library tracks, item counts by state with percentages, and the low-confidence count.
+- 833 tests pass (3 skipped, as before). New: 97 file-name cases in `tests/data/filenames.tsv`, plus tests of tags parsing, name comparison, the index, the scan (incremental rescans, sources left byte-identical, links, a library inside a source, a missing source, an unreadable folder), sources, the rebuild keeping ids and decisions, and the commands.
+- **Acceptance:** pending; it needs the owner's rips folder.
+- Deviations and additions:
+  - **Parsed** also carries `artists` (everyone credited), `credit` (the artist text as credited, before splitting: "Simon & Garfunkel", "Tyler, The Creator"), `artist_uncertain`, `source` (filename or tags) and `notes`. Splitting on `&` and `,` follows the prompt but breaks up duos and names with commas; `credit` keeps the whole name, so step 06 can match either.
+  - **`compare_key`** also removes accents from Latin letters ("Beyoncé" = "Beyonce"), which rips often drop. Marks on other scripts are kept (Japanese が stays が).
+  - **Artist splitting:** ` x ` splits only in lower case, so "Lil Nas X" stays whole. `vs.` also splits.
+  - **More junk** than the prompt lists: producer and director credits ("Prod. by …"), a browser's duplicate counter "(1)" at the very end, download-site markers ("y2mate.com - "), genre tags in square brackets ("[Dubstep]") and junk tags at the start ("[MV] Artist - Title").
+  - **Words that aren't junk or a known version** stay in the title: "(Part 2)", "(Bass Boosted)", "(8D Audio)", "(Piano Version)". The last three are different recordings, so they shouldn't match the original automatically; they'll go to review.
+  - **Reversed order** is only detectable when the left side carries video junk or a version ("Blinding Lights (Official Video) - The Weeknd"). A plain "Title - Artist" can't be told apart and reads as "Artist - Title". A `|` separator gives low confidence either way.
+  - **Channel names:** a VEVO or "- Topic" channel in the artist names the artist (mid confidence). "Nightcore - …" is a version, not an artist. Promo channels (Trap Nation and the like) and junk artists ("Unknown Artist", "YouTube") mean the title is a video title, parsed like a file name.
+  - **`best_parse`:** when real tags and the file name agree on the title, version tokens from both are kept, so a remix named only in the file name is still a remix.
+  - **Index columns:** `mtime_ns` (nanoseconds, as `fileops` plans use) instead of `mtime`; `parsed_json` (the whole parse); `scanned_at` on items and sources. `library_tracks` is keyed by `rel_path` (from the library root, "Music/…"), with `musicorg_id` indexed but not unique. `raw_tags_json` holds the managed tags (cover as its SHA-256), the encoder and comment (new `tags.read_extra`), and read warnings.
+  - **The rebuild** empties and recreates the index's tables in place rather than deleting the file. `queue.sqlite` isn't created until step 09a and is never touched.
+  - **The scan** also skips file links (not only folder links) and Windows hidden files, and never treats items as gone when their source isn't connected or a folder couldn't be read. It reads with 4 worker threads and writes to the index in batches of 200, so an interrupted scan keeps its progress.
+  - **`suspect_upscale`** (a heuristic, as the report will say): an MP3 of 256 kbps or more with signs of a YouTube source — video junk in its name, an ffmpeg encoder tag (Lavf/Lavc, what online converters use) or a converter named in its name or comment.
+  - **States from state.json and the library** outrank `new`: a superseded link → `superseded`; a library file with `MUSICORG_SOURCE` `rip_copy` whose `MUSICORG_ORIGIN_PATH` is the rip → `adopted`; the owner's decision → `matched_user`, `only_copy` or `skipped`. The state.json keys (`sources`, `decisions`, `superseded`) are documented in `state.py` for steps 07 and 09b.
+  - **`sources add`** also refuses a folder overlapping another source. state.json is the record of sources; the index mirrors it.
+  - New: `ENGINE_API.md` → Enums gained the item flags; `naming.is_within`; error `LibraryIndexError`.

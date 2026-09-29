@@ -220,6 +220,45 @@ def _parse(name: str, raw: str | None) -> Any:
     return raw
 
 
+# Unmanaged fields worth knowing about a rip: which program encoded it, and its comment.
+_EXTRA = {
+    "encoder": {"id3": ("TSSE", "TENC"), "mp4": ("©too",), "vorbis": ("ENCODER", "ENCODED-BY")},
+    "comment": {"id3": ("COMM",), "mp4": ("©cmt",), "vorbis": ("COMMENT", "DESCRIPTION")},
+}
+_EXTRA_LIMIT = 300
+
+
+def read_extra(path: PurePath | str) -> dict[str, str]:
+    """A rip's encoder and comment, if it has them. Best effort: never raises for a
+    broken file, and long values are cut."""
+    path = Path(path)
+    if path.suffix.lower() not in WRITABLE_SUFFIXES:
+        return {}
+    try:
+        audio = mutagen.File(path)
+    except Exception:
+        return {}
+    if audio is None or audio.tags is None:
+        return {}
+    kind = "mp4" if isinstance(audio, MP4) else "id3" if isinstance(audio, MP3) else "vorbis"
+    extra = {}
+    for name, keys in _EXTRA.items():
+        for key in keys[kind]:
+            try:
+                if kind == "id3":
+                    frames = audio.tags.getall(key)
+                    values = [str(t) for f in frames for t in f.text] if frames else []
+                else:
+                    values = [str(v) for v in audio.tags.get(key, [])]
+            except Exception:
+                continue
+            text = " ".join(v.strip() for v in values if v.strip())
+            if text:
+                extra[name] = text[:_EXTRA_LIMIT]
+                break
+    return extra
+
+
 # ---- writing ---------------------------------------------------------------------------
 
 

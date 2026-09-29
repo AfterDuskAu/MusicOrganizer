@@ -54,10 +54,10 @@ def test_python_dash_m() -> None:
 
 def test_stub_through_console_script() -> None:
     result = subprocess.run(
-        [_installed_script(), "scan"], capture_output=True, text=True, encoding="utf-8"
+        [_installed_script(), "match"], capture_output=True, text=True, encoding="utf-8"
     )
     assert result.returncode == EXIT_USER_ERROR
-    assert "not implemented yet (step 05)" in result.stderr
+    assert "not implemented yet (step 06)" in result.stderr
     assert result.stdout == ""
 
 
@@ -117,12 +117,6 @@ def test_group_needs_subcommand(capsys: pytest.CaptureFixture[str]) -> None:
 @pytest.mark.parametrize(
     ("args", "step"),
     [
-        (["sources", "add", "/tmp/rips"], "05"),
-        (["sources", "list"], "05"),
-        (["sources", "remove", "s_123"], "05"),
-        (["scan"], "05"),
-        (["scan", "s_1", "s_2"], "05"),
-        (["index", "rebuild"], "05"),
         (["match", "--limit", "10", "--rescan"], "06"),
         (["report", "--out", "/tmp/r"], "07"),
         (["review", "export", "r.csv", "--include-auto"], "07"),
@@ -299,7 +293,11 @@ def test_status_json_shape(capsys: pytest.CaptureFixture[str]) -> None:
         "library": None,
         "library_exists": False,
         "is_library": False,
+        "sources": 0,
+        "items": 0,
         "items_by_state": {},
+        "low_confidence": 0,
+        "tracks": 0,
         "queue": None,
         "warnings": [],
     }
