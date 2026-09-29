@@ -1,0 +1,758 @@
+{
+ "kind": "search",
+ "key": "the lighthouse and the whaler venice louis the child remix",
+ "request": "The Lighthouse And The Whaler Venice louis the child remix",
+ "recorded_at": "2026-09-29T02:37:23Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Venice (Remix)",
+   "album": {
+    "name": "Venice (Remix)",
+    "id": "MPREb_vEafOvZ2C01"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "CFpyeFUvx5Y",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:09",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Lighthouse And The Whaler",
+     "id": "UCPEckVX-eypqjUeof-YHGdQ"
+    },
+    {
+     "name": "Andrey Azizov",
+     "id": "UCmB6RR4iEsEJwdgf2lZM8qw"
+    }
+   ],
+   "duration_seconds": 249,
+   "views": "55K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/3tEoIYn1PyRn8Z2OgdkEQZA45XpO0ilV9nDsOKf_MKYJhsjw57yxi-0YfWwJ-IBv2QFDzFqGyOoZ7p0=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/3tEoIYn1PyRn8Z2OgdkEQZA45XpO0ilV9nDsOKf_MKYJhsjw57yxi-0YfWwJ-IBv2QFDzFqGyOoZ7p0=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Venice (Remix feat. Chancellor Warhol) (feat. Chancellor Warhol)",
+   "album": {
+    "name": "Venice Remix EP",
+    "id": "MPREb_iDslRFp4PUo"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "XT9NGn6O2R4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:46",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Lighthouse and the Whaler",
+     "id": "UCPEckVX-eypqjUeof-YHGdQ"
+    }
+   ],
+   "duration_seconds": 226,
+   "views": "24K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2k9RA26YsvF2iSrc5sXRP0WzzW791dK6OCKCCKKphU8v5m3cCBDoMtqv24mesIHDNd8b6oMPhvnes1XU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2k9RA26YsvF2iSrc5sXRP0WzzW791dK6OCKCCKKphU8v5m3cCBDoMtqv24mesIHDNd8b6oMPhvnes1XU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Lighthouse",
+   "album": {
+    "name": "Up All Night",
+    "id": "MPREb_i3l3EkVWLbZ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "cnVrTvHU1ns",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:22",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Waifs",
+     "id": "UCxqQoDl5Axh0fEoUJiwm_iA"
+    }
+   ],
+   "duration_seconds": 202,
+   "views": "554K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/WqTrKf0zLZwpX00e5jkhKMM2xyDXDj1eyti3JRMVd_bBHSfw5b0WZoZcl-G9t6KL20Ee3BpMSYbl4Ic=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/WqTrKf0zLZwpX00e5jkhKMM2xyDXDj1eyti3JRMVd_bBHSfw5b0WZoZcl-G9t6KL20Ee3BpMSYbl4Ic=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Venice",
+   "album": {
+    "name": "This Is an Adventure",
+    "id": "MPREb_5f2xkPv9tji"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "DhC9_EKNAow",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:20",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Lighthouse And The Whaler",
+     "id": "UCPEckVX-eypqjUeof-YHGdQ"
+    }
+   ],
+   "duration_seconds": 200,
+   "views": "1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/KjG4kNaqK-qRI12bH-39d904px7jSVc4IGiA-Clw-hIjKQKclLHJs_44wYhTwIEyMjCYVD136P2BxMSh=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/KjG4kNaqK-qRI12bH-39d904px7jSVc4IGiA-Clw-hIjKQKclLHJs_44wYhTwIEyMjCYVD136P2BxMSh=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Venice (Acoustic)",
+   "album": {
+    "name": "Venice Remix EP",
+    "id": "MPREb_iDslRFp4PUo"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "wCDX0VOt-W8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:48",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Lighthouse and the Whaler",
+     "id": "UCPEckVX-eypqjUeof-YHGdQ"
+    }
+   ],
+   "duration_seconds": 228,
+   "views": "6.7K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2k9RA26YsvF2iSrc5sXRP0WzzW791dK6OCKCCKKphU8v5m3cCBDoMtqv24mesIHDNd8b6oMPhvnes1XU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2k9RA26YsvF2iSrc5sXRP0WzzW791dK6OCKCCKKphU8v5m3cCBDoMtqv24mesIHDNd8b6oMPhvnes1XU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Let Your Light Shine On Me (feat. Rose Stone & The Abbot Kinney Lighthouse Choir)",
+   "album": {
+    "name": "The Ladykillers (Music from The Motion Picture)",
+    "id": "MPREb_w845qLvNNk2"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "gQD_C4VjNTQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:44",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Venice Four",
+     "id": "UCjira43CWZ6kaEdzSiLbTzg"
+    }
+   ],
+   "duration_seconds": 404,
+   "views": "125K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/KCCfoeTiHGsgmhhJ2vLemfMu2ziI478VxLKq1KaPQTcHe9cxU7FWWYolSv82VBv1cmBowYwBtZLkSlk=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/KCCfoeTiHGsgmhhJ2vLemfMu2ziI478VxLKq1KaPQTcHe9cxU7FWWYolSv82VBv1cmBowYwBtZLkSlk=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Kinda Funny (CharlieWonder & TOBER Remix) (feat. Audrey Mika)",
+   "album": {
+    "name": "Kinda Funny Remixes",
+    "id": "MPREb_ULhYctcsP3d"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "13o8mrnjXWE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:08",
+   "year": null,
+   "artists": [
+    {
+     "name": "Young Bombs",
+     "id": "UCpZarkU5BWChBKNgZgFl3yQ"
+    }
+   ],
+   "duration_seconds": 128,
+   "views": "2.9K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/eEIINOiXz625iNih3x0fSy2uLJtyp7LV_NjoGlHqzLcxk8c7Lm3C5pkHBlDVM0BWaYMiJnSm7Uc8aba5=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/eEIINOiXz625iNih3x0fSy2uLJtyp7LV_NjoGlHqzLcxk8c7Lm3C5pkHBlDVM0BWaYMiJnSm7Uc8aba5=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Venice (Adam Snow Bootleg)",
+   "album": {
+    "name": "Venice Remix EP",
+    "id": "MPREb_iDslRFp4PUo"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "tojimz8s6qE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:10",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Lighthouse and the Whaler",
+     "id": "UCPEckVX-eypqjUeof-YHGdQ"
+    }
+   ],
+   "duration_seconds": 130,
+   "views": "225K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2k9RA26YsvF2iSrc5sXRP0WzzW791dK6OCKCCKKphU8v5m3cCBDoMtqv24mesIHDNd8b6oMPhvnes1XU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2k9RA26YsvF2iSrc5sXRP0WzzW791dK6OCKCCKKphU8v5m3cCBDoMtqv24mesIHDNd8b6oMPhvnes1XU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Lighthouse (feat. Sunni Colón)",
+   "album": {
+    "name": "Lighthouse",
+    "id": "MPREb_XiCfSgo8Dvx"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "zoxsE5OY7qE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:07",
+   "year": null,
+   "artists": [
+    {
+     "name": "WoodzSTHLM",
+     "id": "UCO48wlRJM3ZYn2lH2azMM8g"
+    }
+   ],
+   "duration_seconds": 67,
+   "views": "279",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/QKSUsfK48TwbNvKUeC8sFg3nJNcJU388UlOKeWrve3FJU3Aw5UKczq5SPHYHMFksdcSrZobbAGE7PjVf=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/QKSUsfK48TwbNvKUeC8sFg3nJNcJU388UlOKeWrve3FJU3Aw5UKczq5SPHYHMFksdcSrZobbAGE7PjVf=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Venice (Radio Single)",
+   "album": {
+    "name": "Venice Remix EP",
+    "id": "MPREb_iDslRFp4PUo"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "wydMLr2DYU4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:22",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Lighthouse and the Whaler",
+     "id": "UCPEckVX-eypqjUeof-YHGdQ"
+    }
+   ],
+   "duration_seconds": 202,
+   "views": "289K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2k9RA26YsvF2iSrc5sXRP0WzzW791dK6OCKCCKKphU8v5m3cCBDoMtqv24mesIHDNd8b6oMPhvnes1XU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2k9RA26YsvF2iSrc5sXRP0WzzW791dK6OCKCCKKphU8v5m3cCBDoMtqv24mesIHDNd8b6oMPhvnes1XU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "The Lighthouse",
+   "album": {
+    "name": "Tickets To My Downfall by AYO",
+    "id": "MPREb_QwJp7QxXT6b"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "WTdmJg6B950",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:02",
+   "year": null,
+   "artists": [
+    {
+     "name": "D'Wellerz",
+     "id": "UCm4KaDUoKvIoyhZNfLcNnEQ"
+    },
+    {
+     "name": "Kukulkan",
+     "id": null
+    }
+   ],
+   "duration_seconds": 62,
+   "views": "151",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/a_d3gfqfOvMLxrNxCGBpmVO5XCK4fxtnz6MRJE5pkOISrP-gXFzwdtn8Ab0U8hDG9wuko8RWf9aORaE=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/a_d3gfqfOvMLxrNxCGBpmVO5XCK4fxtnz6MRJE5pkOISrP-gXFzwdtn8Ab0U8hDG9wuko8RWf9aORaE=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Venice (Savoir Adore Remix)",
+   "album": {
+    "name": "Venice Remix EP",
+    "id": "MPREb_iDslRFp4PUo"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "YBK5fEEVYxo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:35",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Lighthouse and the Whaler",
+     "id": "UCPEckVX-eypqjUeof-YHGdQ"
+    }
+   ],
+   "duration_seconds": 215,
+   "views": "5.9K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2k9RA26YsvF2iSrc5sXRP0WzzW791dK6OCKCCKKphU8v5m3cCBDoMtqv24mesIHDNd8b6oMPhvnes1XU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2k9RA26YsvF2iSrc5sXRP0WzzW791dK6OCKCCKKphU8v5m3cCBDoMtqv24mesIHDNd8b6oMPhvnes1XU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Luceous (Vegaz SL Remix)",
+   "album": {
+    "name": "Luceous",
+    "id": "MPREb_J8Zxd05DPBu"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "BEf31pN84PY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "7:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bondarev",
+     "id": "UCAxIXpoPu2cxje-WYHpHgqQ"
+    }
+   ],
+   "duration_seconds": 448,
+   "views": "22K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/xPXX_wrFBNr4Retja25-cBbnuRo1cvClbRDoa9JLxUZTp0d2pqFfwQ3ubNXOs8reh444F3wA05BbTQnUwQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/xPXX_wrFBNr4Retja25-cBbnuRo1cvClbRDoa9JLxUZTp0d2pqFfwQ3ubNXOs8reh444F3wA05BbTQnUwQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Paradise (Røse X Pallace Remix) (feat. Coco Bans)",
+   "album": {
+    "name": "Paradise (Røse X Pallace Remix)",
+    "id": "MPREb_L6NyLx6IOEI"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "h3_1g0n0RGM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:08",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sara Costa",
+     "id": "UCQv1P1TT4CQ3oHv35pbgVyw"
+    }
+   ],
+   "duration_seconds": 188,
+   "views": "1.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/NWK5E6Qwn6h9W3l3qmrM0FRh7_PvAo8nLYBFQZ5ewP7X0bdrLZkTl85iyd05xd2HCDYAmtExi_joFoHF=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/NWK5E6Qwn6h9W3l3qmrM0FRh7_PvAo8nLYBFQZ5ewP7X0bdrLZkTl85iyd05xd2HCDYAmtExi_joFoHF=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "La Coca",
+   "album": {
+    "name": "The Outcast",
+    "id": "MPREb_lmJnkCwFHzp"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "wYhxziHH46g",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:06",
+   "year": null,
+   "artists": [
+    {
+     "name": "Louie Anderson",
+     "id": "UClfz9G_0OGTTYLbFB1zUjvg"
+    }
+   ],
+   "duration_seconds": 306,
+   "views": "986",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/7d9fZYwHxNHw3-BY2-xR0bfmJG89xTJbTen7mgHAaNrxCASc2mvfvy-k3FWfr1VqhzVtgKNtO0s0TD8=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/7d9fZYwHxNHw3-BY2-xR0bfmJG89xTJbTen7mgHAaNrxCASc2mvfvy-k3FWfr1VqhzVtgKNtO0s0TD8=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "The Poetic Flow Remix",
+   "album": {
+    "name": "The Poetic Flow Chill Hop Music",
+    "id": "MPREb_GevhEmfflJM"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "5Y5Lac4gzS8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "E-Styles",
+     "id": "UCuFB6dwRBekdfLel3-b8mxg"
+    }
+   ],
+   "duration_seconds": 265,
+   "views": "211",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/9qeFdOMgmIfGnCuBlpO_UQU_d6Di237FZpnBzfO3okUeFKUJPjDP4oX-sXZg9ex3xlZH7TFJgzKUil45=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/9qeFdOMgmIfGnCuBlpO_UQU_d6Di237FZpnBzfO3okUeFKUJPjDP4oX-sXZg9ex3xlZH7TFJgzKUil45=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "EMBERS",
+   "album": {
+    "name": "EMBERS",
+    "id": "MPREb_ygTmQNshK1x"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "5tR6dsDGP48",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:33",
+   "year": null,
+   "artists": [
+    {
+     "name": "Angrybaby",
+     "id": "UCmpIv10tgbBJe4bREtWq7jA"
+    }
+   ],
+   "duration_seconds": 213,
+   "views": "93K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/OSSarQwvTiWWFRLEccfNRA3jsNw3gRPsj6bELMpt7MbGht55mOQLZVGhIhQ1C2Zz2dtAJ9Htxg0IIkDnHA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/OSSarQwvTiWWFRLEccfNRA3jsNw3gRPsj6bELMpt7MbGht55mOQLZVGhIhQ1C2Zz2dtAJ9Htxg0IIkDnHA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Lighthouse (Extended Mix) (feat. RBBTS)",
+   "album": {
+    "name": "Reminders",
+    "id": "MPREb_KQGAl9f0O5v"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "4JF9hyTMuNo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:14",
+   "year": null,
+   "artists": [
+    {
+     "name": "Le Youth",
+     "id": "UCmtYFZGlKuI997uexfEfMqQ"
+    }
+   ],
+   "duration_seconds": 314,
+   "views": "680K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/iZBGAi7Kbs5TyvEh581Tl29hOY7PzyKJ0rJKuba2bK0Om1FethY-ZZci6MxsRELLzmhTBht1sTJrm4TAzw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/iZBGAi7Kbs5TyvEh581Tl29hOY7PzyKJ0rJKuba2bK0Om1FethY-ZZci6MxsRELLzmhTBht1sTJrm4TAzw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Lights (feat. 8 Graves)",
+   "album": {
+    "name": "Saturday Night Griever",
+    "id": "MPREb_3AmMSDk5Sb0"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "vzfmUhN7XMo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:06",
+   "year": null,
+   "artists": [
+    {
+     "name": "Louis La Roche",
+     "id": "UCYpdDkepsJtyrAHF-3wdJxA"
+    }
+   ],
+   "duration_seconds": 126,
+   "views": "6.5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/J2M-k_RS_iTDKzmur0wqxvcAEgXuxVwVSjbHM7dc0qHeRwZPBzGa3-tu1zpkcjLAc2JKudjimieQ1fQN=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/J2M-k_RS_iTDKzmur0wqxvcAEgXuxVwVSjbHM7dc0qHeRwZPBzGa3-tu1zpkcjLAc2JKudjimieQ1fQN=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Light House",
+   "album": {
+    "name": "Singles",
+    "id": "MPREb_i2aLsJnF2CG"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "clFzEWLrqUQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:48",
+   "year": null,
+   "artists": [
+    {
+     "name": "Future Islands",
+     "id": "UCdNPLyZ46MPYkRy2yOYsYfQ"
+    }
+   ],
+   "duration_seconds": 288,
+   "views": "3.1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/53MVw8ogMe9n87ELqvmCPwDaD7MKDjDlPm-8THpqtf7ngaM2P-9E6dgJgdSDGCUsDgWANk8hIwFjOge_0w=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/53MVw8ogMe9n87ELqvmCPwDaD7MKDjDlPm-8THpqtf7ngaM2P-9E6dgJgdSDGCUsDgWANk8hIwFjOge_0w=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

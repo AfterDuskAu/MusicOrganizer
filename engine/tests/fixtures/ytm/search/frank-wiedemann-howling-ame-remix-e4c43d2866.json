@@ -1,0 +1,770 @@
+{
+ "kind": "search",
+ "key": "frank wiedemann howling ame remix",
+ "request": "Frank Wiedemann Howling ame remix",
+ "recorded_at": "2026-09-29T02:37:25Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Howling (Âme Remix)",
+   "album": {
+    "name": "Howling (Âme Remix)",
+    "id": "MPREb_YtiF71OiHmp"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "6esSUQwO-rM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "8:06",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    },
+    {
+     "name": "RY X",
+     "id": "UC82Bk0CAl7pmO8TCz_a4r-w"
+    },
+    {
+     "name": "Frank Wiedemann",
+     "id": "UCkT7R5brJKWAoDBiYTCj1ew"
+    }
+   ],
+   "duration_seconds": 486,
+   "views": "18M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/LY9jTsdwPi9WNT4u2X5JnGUOWsp0NzMllBzasvn-xoi0d_r9q3PIrUFYy1SrTdst_qahD-WXsL4jpc4=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/LY9jTsdwPi9WNT4u2X5JnGUOWsp0NzMllBzasvn-xoi0d_r9q3PIrUFYy1SrTdst_qahD-WXsL4jpc4=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Oh Africa (Frank Wiedemann Remix)",
+   "album": {
+    "name": "Reunion Remixed",
+    "id": "MPREb_rzTlB9Nrbbv"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Ma4O76vw9mA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "7:58",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alex Barck feat. Christine Salem",
+     "id": "UC-29IOzVh7vLMUXhafcqXzw"
+    }
+   ],
+   "duration_seconds": 478,
+   "views": "73K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/1o0pIHLdzR8qa1BgrhndSGc9seAUU9UnTjpE1JRFQ1xcss3Gb6av0JzZHJBpvXpZIoBTvD4NdaWQimY=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/1o0pIHLdzR8qa1BgrhndSGc9seAUU9UnTjpE1JRFQ1xcss3Gb6av0JzZHJBpvXpZIoBTvD4NdaWQimY=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Howling",
+   "album": {
+    "name": "Dawn",
+    "id": "MPREb_6brLDn3iRSr"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "fq9HbvYDkw4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:10",
+   "year": null,
+   "artists": [
+    {
+     "name": "RY X",
+     "id": "UC82Bk0CAl7pmO8TCz_a4r-w"
+    }
+   ],
+   "duration_seconds": 310,
+   "views": "2.1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/0tDnXZUvlncbnDh4R6pHktmg5XZ_ca9D4pvfpnixjUHFoKlsweWBUK3XEO9lj4mXsq6FGhuiC0eTLUOgSw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/0tDnXZUvlncbnDh4R6pHktmg5XZ_ca9D4pvfpnixjUHFoKlsweWBUK3XEO9lj4mXsq6FGhuiC0eTLUOgSw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Hollow Town (Frank Wiedemann Remix) (feat. Tom Adams)",
+   "album": {
+    "name": "Hollow Town (Frank Wiedemann Remix)",
+    "id": "MPREb_jhulXIpOk83"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "UBrY6JtEjy8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "7:23",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Liebing",
+     "id": "UCGqNxL2ogwl3cu7nvN77AzQ"
+    },
+    {
+     "name": "Ralf Hildenbeutel",
+     "id": "UClDObzbF-LiYDwrgXEuOuyA"
+    }
+   ],
+   "duration_seconds": 443,
+   "views": "6.4K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/uHvi8oKm6YgyCQWW77qexX8XvfAnt8i6dAHhMdRPWGs7OY68bRzU6-yugbOG_1VbCve__tOkin_Li21P=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/uHvi8oKm6YgyCQWW77qexX8XvfAnt8i6dAHhMdRPWGs7OY68bRzU6-yugbOG_1VbCve__tOkin_Li21P=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Stole the Night (Oliver Koletzki Remix)",
+   "album": {
+    "name": "Remix Tales",
+    "id": "MPREb_TBbsPXQHC1o"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "LyefARFQwfI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "7:20",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 440,
+   "views": "454K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/trxZDKh-64ltNFw_nxlGixsXCYifCZNaDj4vQDBF-81QASxYx9oiinXcIpaEv7zxgQjbhZc9GdREA8kn=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/trxZDKh-64ltNFw_nxlGixsXCYifCZNaDj4vQDBF-81QASxYx9oiinXcIpaEv7zxgQjbhZc9GdREA8kn=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Choirs to Heaven (Frank Wiedemann Remix)",
+   "album": {
+    "name": "Choirs to Heaven Remixes",
+    "id": "MPREb_gIsLVUSwF2m"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "OLC_XwPPzME",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:26",
+   "year": null,
+   "artists": [
+    {
+     "name": "Lea Porcelain",
+     "id": "UCajKJMHZ7-4G0vkvnbjn5IA"
+    }
+   ],
+   "duration_seconds": 386,
+   "views": "4.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Sn0vtQ8HxEYjrEJWPmnsJFtMbmc7ZcrXbrflfJt3Qwdd1x0dg9Ae9ijqGR3XRsiN_dqoeW9YLd-ndp8=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Sn0vtQ8HxEYjrEJWPmnsJFtMbmc7ZcrXbrflfJt3Qwdd1x0dg9Ae9ijqGR3XRsiN_dqoeW9YLd-ndp8=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Signs (Rødhåd Remix)",
+   "album": {
+    "name": "Ibiza Underground 2015",
+    "id": "MPREb_WPFCTzbq0cE"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "1HaPQqcI8R4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "7:53",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 473,
+   "views": "6.2M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/xLFnkunkRNt_FmtBro60tmKhJa7U71foeL1myLi3Cuu1uT4tHqtUmXhS8cVqZ9lvjMzmRWNvGeYHT26I=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/xLFnkunkRNt_FmtBro60tmKhJa7U71foeL1myLi3Cuu1uT4tHqtUmXhS8cVqZ9lvjMzmRWNvGeYHT26I=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Body Inside",
+   "album": {
+    "name": "Colure",
+    "id": "MPREb_7KVd6KS8QMq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ClmthpzkIN4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:55",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 415,
+   "views": "200K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Need You Now",
+   "album": {
+    "name": "Colure",
+    "id": "MPREb_7KVd6KS8QMq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "0UeyQ4uE6o0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:43",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 403,
+   "views": "396K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Silence & Secrets (Frank Wiedemann Version)",
+   "album": {
+    "name": "Silence & Secrets (Frank Wiedemann Version)",
+    "id": "MPREb_GBs96XetHsQ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ZSXPV3q1HeE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:46",
+   "year": null,
+   "artists": [
+    {
+     "name": "WhoMadeWho",
+     "id": "UCIACL-r04maRF8Q1ctgVbaw"
+    }
+   ],
+   "duration_seconds": 346,
+   "views": "78K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/3ib332Imm8AtbIzpb6niLz8GMIh-GGtl6FW_ZwZUyXMMO5pINsI1gSAunH-kgCQs1reEpX5LOvwJdY0Q0A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/3ib332Imm8AtbIzpb6niLz8GMIh-GGtl6FW_ZwZUyXMMO5pINsI1gSAunH-kgCQs1reEpX5LOvwJdY0Q0A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mother Mother",
+   "album": {
+    "name": "Colure",
+    "id": "MPREb_7KVd6KS8QMq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "INkmuPM-r6c",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:08",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 368,
+   "views": "329K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Ellipses I",
+   "album": {
+    "name": "Colure",
+    "id": "MPREb_7KVd6KS8QMq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "tCtPqpsw1p4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:15",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 75,
+   "views": "29K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Phases (Toto Chiavetta Colour Zero)",
+   "album": {
+    "name": "Phases II",
+    "id": "MPREb_1nXR75eFUQl"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "yxXwLAANVcI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:45",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 405,
+   "views": "47K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/sA21r_9b4mlc38yb4D1dJK2d-lZs6vPhbjGJLMH8YsnFMbkxgqWntj_EsVVD2hvXoLC0UuhyRE-jMX8=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/sA21r_9b4mlc38yb4D1dJK2d-lZs6vPhbjGJLMH8YsnFMbkxgqWntj_EsVVD2hvXoLC0UuhyRE-jMX8=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Tears On The Dancefloor",
+   "album": {
+    "name": "Transmoderna EP",
+    "id": "MPREb_SHzlMAuoYcP"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "rU7cTnxNZis",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:00",
+   "year": null,
+   "artists": [
+    {
+     "name": "Frank Wiedemann",
+     "id": "UCkT7R5brJKWAoDBiYTCj1ew"
+    },
+    {
+     "name": "Roman Flügel",
+     "id": "UCOEtiip2zIyEDvjbhq8Kwdg"
+    }
+   ],
+   "duration_seconds": 360,
+   "views": "44K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/15mCY1SIH_rdmVArVb54EIauEIcFn5mX1FAT7qJVkt1O74_ynxE33n5qK_xQwcTLSJUWY35nAYwi8pU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/15mCY1SIH_rdmVArVb54EIauEIcFn5mX1FAT7qJVkt1O74_ynxE33n5qK_xQwcTLSJUWY35nAYwi8pU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Lover",
+   "album": {
+    "name": "Colure",
+    "id": "MPREb_7KVd6KS8QMq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "2lnKBJelhOo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 410,
+   "views": "1.7M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Moorthon II",
+   "album": {
+    "name": "Moorthon EP",
+    "id": "MPREb_H1kmVnYF900"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ajAnUYKAAf8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "8:56",
+   "year": null,
+   "artists": [
+    {
+     "name": "Frank Wiedemann",
+     "id": "UCkT7R5brJKWAoDBiYTCj1ew"
+    }
+   ],
+   "duration_seconds": 536,
+   "views": "265K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/BVO7RoWz9_aX2gtBuyg3PPnysVtaGetcKtpZiFWmt8jnjB-nXE-P_60dDc0f6nXZYIEGzIIyD7V1SwVa=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/BVO7RoWz9_aX2gtBuyg3PPnysVtaGetcKtpZiFWmt8jnjB-nXE-P_60dDc0f6nXZYIEGzIIyD7V1SwVa=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Excelsior",
+   "album": {
+    "name": "...Broad Casting",
+    "id": "MPREb_q2JwhkdixcK"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "NRXtwdhJ0gM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:22",
+   "year": null,
+   "artists": [
+    {
+     "name": "Âme",
+     "id": "UCwmRvKfxaKLsM1lJeDInqQA"
+    }
+   ],
+   "duration_seconds": 382,
+   "views": "2K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/52fhQMmjiNka0-XGp7IBpg7Iw8ew3ZFRSP23q-ym0_PnBhA9mTeRhAtdEy6dv4sGeemOiS-F6zS74mI=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/52fhQMmjiNka0-XGp7IBpg7Iw8ew3ZFRSP23q-ym0_PnBhA9mTeRhAtdEy6dv4sGeemOiS-F6zS74mI=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Light On",
+   "album": {
+    "name": "Colure",
+    "id": "MPREb_7KVd6KS8QMq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Bpw-oNXulFA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 265,
+   "views": "108K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Symphony of One",
+   "album": {
+    "name": "Symphony of Now (Original Motion Picture Soundtrack)",
+    "id": "MPREb_RDO2sv6Bu0H"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "6Cw46v7Ub3Q",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "12:46",
+   "year": null,
+   "artists": [
+    {
+     "name": "Frank Wiedemann and Roedelius",
+     "id": "UCkT7R5brJKWAoDBiYTCj1ew"
+    },
+    {
+     "name": "Roedelius",
+     "id": "UCcNLHRvK5fEHVKc3bMFr8dA"
+    }
+   ],
+   "duration_seconds": 766,
+   "views": "3.2K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-eWbWkDJ7h_PBlaCKi4OH_YsLqVdj_NfllEfAhZSB0b4rM6zOV7pEOY7MRk1V1tcMcQDDHYcy9jlb3E=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-eWbWkDJ7h_PBlaCKi4OH_YsLqVdj_NfllEfAhZSB0b4rM6zOV7pEOY7MRk1V1tcMcQDDHYcy9jlb3E=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Phases",
+   "album": {
+    "name": "Colure",
+    "id": "MPREb_7KVd6KS8QMq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ztoWGxo20zY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "8:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 511,
+   "views": "5.3M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

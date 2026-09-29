@@ -1,0 +1,754 @@
+{
+ "kind": "search",
+ "key": "the lighthouse and the whaler venice",
+ "request": "The Lighthouse And The Whaler Venice",
+ "recorded_at": "2026-09-29T02:37:21Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Venice",
+   "album": {
+    "name": "This Is an Adventure",
+    "id": "MPREb_5f2xkPv9tji"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "DhC9_EKNAow",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:20",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Lighthouse And The Whaler",
+     "id": "UCPEckVX-eypqjUeof-YHGdQ"
+    }
+   ],
+   "duration_seconds": 200,
+   "views": "1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/KjG4kNaqK-qRI12bH-39d904px7jSVc4IGiA-Clw-hIjKQKclLHJs_44wYhTwIEyMjCYVD136P2BxMSh=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/KjG4kNaqK-qRI12bH-39d904px7jSVc4IGiA-Clw-hIjKQKclLHJs_44wYhTwIEyMjCYVD136P2BxMSh=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Venice (Radio Single)",
+   "album": {
+    "name": "Venice Remix EP",
+    "id": "MPREb_iDslRFp4PUo"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "wydMLr2DYU4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:22",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Lighthouse and the Whaler",
+     "id": "UCPEckVX-eypqjUeof-YHGdQ"
+    }
+   ],
+   "duration_seconds": 202,
+   "views": "289K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2k9RA26YsvF2iSrc5sXRP0WzzW791dK6OCKCCKKphU8v5m3cCBDoMtqv24mesIHDNd8b6oMPhvnes1XU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2k9RA26YsvF2iSrc5sXRP0WzzW791dK6OCKCCKKphU8v5m3cCBDoMtqv24mesIHDNd8b6oMPhvnes1XU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Venice (Adam Snow Bootleg)",
+   "album": {
+    "name": "Venice Remix EP",
+    "id": "MPREb_iDslRFp4PUo"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "tojimz8s6qE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:10",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Lighthouse and the Whaler",
+     "id": "UCPEckVX-eypqjUeof-YHGdQ"
+    }
+   ],
+   "duration_seconds": 130,
+   "views": "225K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2k9RA26YsvF2iSrc5sXRP0WzzW791dK6OCKCCKKphU8v5m3cCBDoMtqv24mesIHDNd8b6oMPhvnes1XU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2k9RA26YsvF2iSrc5sXRP0WzzW791dK6OCKCCKKphU8v5m3cCBDoMtqv24mesIHDNd8b6oMPhvnes1XU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Venice (Remix feat. Chancellor Warhol) (feat. Chancellor Warhol)",
+   "album": {
+    "name": "Venice Remix EP",
+    "id": "MPREb_iDslRFp4PUo"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "XT9NGn6O2R4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:46",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Lighthouse and the Whaler",
+     "id": "UCPEckVX-eypqjUeof-YHGdQ"
+    }
+   ],
+   "duration_seconds": 226,
+   "views": "24K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2k9RA26YsvF2iSrc5sXRP0WzzW791dK6OCKCCKKphU8v5m3cCBDoMtqv24mesIHDNd8b6oMPhvnes1XU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2k9RA26YsvF2iSrc5sXRP0WzzW791dK6OCKCCKKphU8v5m3cCBDoMtqv24mesIHDNd8b6oMPhvnes1XU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Lighthouse",
+   "album": {
+    "name": "Up All Night",
+    "id": "MPREb_i3l3EkVWLbZ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "cnVrTvHU1ns",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:22",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Waifs",
+     "id": "UCxqQoDl5Axh0fEoUJiwm_iA"
+    }
+   ],
+   "duration_seconds": 202,
+   "views": "554K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/WqTrKf0zLZwpX00e5jkhKMM2xyDXDj1eyti3JRMVd_bBHSfw5b0WZoZcl-G9t6KL20Ee3BpMSYbl4Ic=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/WqTrKf0zLZwpX00e5jkhKMM2xyDXDj1eyti3JRMVd_bBHSfw5b0WZoZcl-G9t6KL20Ee3BpMSYbl4Ic=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "The Lighthouse's Tale",
+   "album": {
+    "name": "Nickel Creek",
+    "id": "MPREb_KbPhXs4nEnW"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Jigp5IkagOY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:02",
+   "year": null,
+   "artists": [
+    {
+     "name": "Nickel Creek",
+     "id": "UCd5GojqjGtXny427UiCTSPA"
+    }
+   ],
+   "duration_seconds": 302,
+   "views": "5.2M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/oILtiuJcBK57kQBYfkB_Eb7uyUwfAiImEWnFRLX7yCQ4equZDSCAZaNZgWVekJq7bjI2V8BBniPgD0k=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/oILtiuJcBK57kQBYfkB_Eb7uyUwfAiImEWnFRLX7yCQ4equZDSCAZaNZgWVekJq7bjI2V8BBniPgD0k=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Venice (Acoustic)",
+   "album": {
+    "name": "Venice Remix EP",
+    "id": "MPREb_iDslRFp4PUo"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "wCDX0VOt-W8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:48",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Lighthouse and the Whaler",
+     "id": "UCPEckVX-eypqjUeof-YHGdQ"
+    }
+   ],
+   "duration_seconds": 228,
+   "views": "6.7K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2k9RA26YsvF2iSrc5sXRP0WzzW791dK6OCKCCKKphU8v5m3cCBDoMtqv24mesIHDNd8b6oMPhvnes1XU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2k9RA26YsvF2iSrc5sXRP0WzzW791dK6OCKCCKKphU8v5m3cCBDoMtqv24mesIHDNd8b6oMPhvnes1XU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Venice (Remix)",
+   "album": {
+    "name": "Venice (Remix)",
+    "id": "MPREb_vEafOvZ2C01"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "CFpyeFUvx5Y",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:09",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Lighthouse And The Whaler",
+     "id": "UCPEckVX-eypqjUeof-YHGdQ"
+    },
+    {
+     "name": "Andrey Azizov",
+     "id": "UCmB6RR4iEsEJwdgf2lZM8qw"
+    }
+   ],
+   "duration_seconds": 249,
+   "views": "55K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/3tEoIYn1PyRn8Z2OgdkEQZA45XpO0ilV9nDsOKf_MKYJhsjw57yxi-0YfWwJ-IBv2QFDzFqGyOoZ7p0=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/3tEoIYn1PyRn8Z2OgdkEQZA45XpO0ilV9nDsOKf_MKYJhsjw57yxi-0YfWwJ-IBv2QFDzFqGyOoZ7p0=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "We Are Infinite",
+   "album": {
+    "name": "Mont Royal",
+    "id": "MPREb_hCB9cGjLJKa"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "-LgQihcQvDw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:06",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Lighthouse And The Whaler",
+     "id": "UCPEckVX-eypqjUeof-YHGdQ"
+    }
+   ],
+   "duration_seconds": 186,
+   "views": "586K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ZNryEVVLbpaIXv8Po4koJWsNNxDcpJSYXAuI7OvYhRTTSHKUz1lw_Q02j155bxZWkzRgp9vRpzrA7JPUvg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ZNryEVVLbpaIXv8Po4koJWsNNxDcpJSYXAuI7OvYhRTTSHKUz1lw_Q02j155bxZWkzRgp9vRpzrA7JPUvg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Venice",
+   "album": {
+    "name": "Bluebird",
+    "id": "MPREb_voDIuJT9G2k"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "FnqW-QdKbM4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:15",
+   "year": null,
+   "artists": [
+    {
+     "name": "Canyon City",
+     "id": "UCXYhxEANkB-itGNYO8-7V2w"
+    }
+   ],
+   "duration_seconds": 315,
+   "views": "169K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/8T0HkMwkV_97gWUYFwu1CsslWgj44e6GsgeCrtcnVkSIksUFql9TxdpLIXylWbCHQBlZpWTDh7Ig-3tJ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/8T0HkMwkV_97gWUYFwu1CsslWgj44e6GsgeCrtcnVkSIksUFql9TxdpLIXylWbCHQBlZpWTDh7Ig-3tJ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Pretender",
+   "album": {
+    "name": "Reassurance",
+    "id": "MPREb_q7kW5COcgII"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "tukSAqAuCRA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:53",
+   "year": null,
+   "artists": [
+    {
+     "name": "Venice",
+     "id": "UClNI02IyQGh0eyMi4cgTTcQ"
+    }
+   ],
+   "duration_seconds": 233,
+   "views": "67",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/lFe51Gh3D5_dblyfss87_jhtyTbvKwydPODJphQ13A3wYDzJon2BfSMyJYmMJs5f7xm5ZTT_qQf8COQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/lFe51Gh3D5_dblyfss87_jhtyTbvKwydPODJphQ13A3wYDzJon2BfSMyJYmMJs5f7xm5ZTT_qQf8COQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Martin Eden/Under the Lighthouse",
+   "album": {
+    "name": "Leaving the White Line",
+    "id": "MPREb_iGW4UuAPAYS"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "I3LLhYIpG_w",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "Andi Starr",
+     "id": "UCQnAdwEoTJPpQ7Z2XCAXUdw"
+    }
+   ],
+   "duration_seconds": 363,
+   "views": "359",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/xIrPvlB3FvR_fYEBO25Oc6XIOuwdIeUOXaATRagfjEncPAC5PTkJ28ip6bXfFpF2mC7OxjAnTqGF-AWW=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/xIrPvlB3FvR_fYEBO25Oc6XIOuwdIeUOXaATRagfjEncPAC5PTkJ28ip6bXfFpF2mC7OxjAnTqGF-AWW=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Venice",
+   "album": {
+    "name": "Venice",
+    "id": "MPREb_KRtHdU5ciw1"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "81bf1rRNuAk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:09",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jaisea",
+     "id": "UCH-b3fFbfvgtYOixlUxQv-g"
+    }
+   ],
+   "duration_seconds": 129,
+   "views": "602",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/xNcepVFxDRnrDCYoS63HC2mlAbXGAia_Sa8emcYQPBv2Wkjdy7KxVfT-whgoKA3c0Dk_XFGRpAsAOsG1=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/xNcepVFxDRnrDCYoS63HC2mlAbXGAia_Sa8emcYQPBv2Wkjdy7KxVfT-whgoKA3c0Dk_XFGRpAsAOsG1=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Venice (Savoir Adore Remix)",
+   "album": {
+    "name": "Venice Remix EP",
+    "id": "MPREb_iDslRFp4PUo"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "YBK5fEEVYxo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:35",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Lighthouse and the Whaler",
+     "id": "UCPEckVX-eypqjUeof-YHGdQ"
+    }
+   ],
+   "duration_seconds": 215,
+   "views": "5.9K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2k9RA26YsvF2iSrc5sXRP0WzzW791dK6OCKCCKKphU8v5m3cCBDoMtqv24mesIHDNd8b6oMPhvnes1XU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2k9RA26YsvF2iSrc5sXRP0WzzW791dK6OCKCCKKphU8v5m3cCBDoMtqv24mesIHDNd8b6oMPhvnes1XU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Naked in Venice",
+   "album": {
+    "name": "Naked in Venice",
+    "id": "MPREb_VIwFHOfThru"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "mVYqtu1ai9A",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:17",
+   "year": null,
+   "artists": [
+    {
+     "name": "Radical Something",
+     "id": "UC1VlKJKR_Us9CCoEJg8EZEw"
+    }
+   ],
+   "duration_seconds": 197,
+   "views": "344K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/tR_Fvo_Lh86ewbZohXbts0vW39I5nGjQ33j-DW9P9zznopdqj9MiDfnyom4yp19SBJE0AmTpIDczF1LF=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/tR_Fvo_Lh86ewbZohXbts0vW39I5nGjQ33j-DW9P9zznopdqj9MiDfnyom4yp19SBJE0AmTpIDczF1LF=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Venice (feat. DazBow)",
+   "album": {
+    "name": "Astro Static",
+    "id": "MPREb_trBNb3OeCjq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "g2ZMB-pTMd0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:21",
+   "year": null,
+   "artists": [
+    {
+     "name": "Deverence",
+     "id": "UChDxcfuDGbj2zzQIUx1mxVw"
+    }
+   ],
+   "duration_seconds": 201,
+   "views": "102",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/7hiLC_GWO7eNC1nu3_eiyoqmHv3wTFcj9cBz-SC4ipaxUuN6OWfvSy5foDP0KFOhkZPREwpgVD2F-lsa=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/7hiLC_GWO7eNC1nu3_eiyoqmHv3wTFcj9cBz-SC4ipaxUuN6OWfvSy5foDP0KFOhkZPREwpgVD2F-lsa=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Your Love Is a Lighthouse",
+   "album": {
+    "name": "One Plus One",
+    "id": "MPREb_8gxIohTf1KF"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "VmJMm8A6i2s",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:10",
+   "year": null,
+   "artists": [
+    {
+     "name": "Christopher Kay",
+     "id": "UC51v-BJNe4zRynLBa0nWXRA"
+    }
+   ],
+   "duration_seconds": 250,
+   "views": "155",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/SgOmBTOH0rZ8EQqZoEG45IaFDxpKFmKTBhm5zlR4dwRgghsGO36mi8kbpEZGmJaY2dTi-DsEYZXPHE6k=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/SgOmBTOH0rZ8EQqZoEG45IaFDxpKFmKTBhm5zlR4dwRgghsGO36mi8kbpEZGmJaY2dTi-DsEYZXPHE6k=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Venezia (Marco Soave Gate 2 Remix)",
+   "album": {
+    "name": "Living Venice EP",
+    "id": "MPREb_5JgVAlnZBmi"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "rR66TJ7gj70",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "7:15",
+   "year": null,
+   "artists": [
+    {
+     "name": "Freddy Parisi",
+     "id": "UCj9BcKJRmHLKR0K0oQ-saUg"
+    }
+   ],
+   "duration_seconds": 435,
+   "views": "7",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/F17OWarVqASPzV-HjjtzBZciVPPKjXNjoJdJAXeZCJNT4RwXOHlrFYOy31nvcMlh7gV8H9B0g2Cw29FJ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/F17OWarVqASPzV-HjjtzBZciVPPKjXNjoJdJAXeZCJNT4RwXOHlrFYOy31nvcMlh7gV8H9B0g2Cw29FJ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Venice",
+   "album": {
+    "name": "The Moustache EP",
+    "id": "MPREb_WKLnxdQeARk"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "9eA8iAx1ycw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:15",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ramboiage",
+     "id": "UCJvJGjBB4p9HbK5R3pL5Izw"
+    }
+   ],
+   "duration_seconds": 375,
+   "views": "239",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/3onSX_-Ml37w_EXeV7Fk-1mjctA-syIuM0p1lneBdEmeyIjJX0wb_a75HIHrNP5EWdolPN8KTwpFPDU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/3onSX_-Ml37w_EXeV7Fk-1mjctA-syIuM0p1lneBdEmeyIjJX0wb_a75HIHrNP5EWdolPN8KTwpFPDU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "sunset venice",
+   "album": {
+    "name": "sunset venice",
+    "id": "MPREb_J8Q9GLVfWtQ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "pzHduyTFKU8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:11",
+   "year": null,
+   "artists": [
+    {
+     "name": "Yuki Tanaka",
+     "id": "UCJ1lbXC2BSI3PQ5nEFw5OAQ"
+    }
+   ],
+   "duration_seconds": 251,
+   "views": "2.5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/r1P-YoOu_vY0r4kXcY6dujZS5NtpWu5RiyJXMEjT25eiUaCR045nszyT0XJ46Wnljr2olKxj6zHkcRg7qQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/r1P-YoOu_vY0r4kXcY6dujZS5NtpWu5RiyJXMEjT25eiUaCR045nszyT0XJ46Wnljr2olKxj6zHkcRg7qQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

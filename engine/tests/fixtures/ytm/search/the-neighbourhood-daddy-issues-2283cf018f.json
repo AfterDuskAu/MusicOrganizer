@@ -1,0 +1,770 @@
+{
+ "kind": "search",
+ "key": "the neighbourhood daddy issues",
+ "request": "The Neighbourhood Daddy Issues",
+ "recorded_at": "2026-09-29T02:36:21Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Daddy Issues",
+   "album": {
+    "name": "Wiped Out!",
+    "id": "MPREb_dYBlwseflPV"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "lqSgsq4Bn2c",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:21",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Neighbourhood",
+     "id": "UC1cnYMXqKdazz-gDPKaDFyg"
+    }
+   ],
+   "duration_seconds": 261,
+   "views": "687M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-kb2G0v5A95Exch1a4YJTopQoX7mnqkEOrD1PI81gCzsqgidXe-gim5dNDLVcfacX59fNcB8ruK5GUZdgA=w60-h60-s-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-kb2G0v5A95Exch1a4YJTopQoX7mnqkEOrD1PI81gCzsqgidXe-gim5dNDLVcfacX59fNcB8ruK5GUZdgA=w120-h120-s-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Daddy Issues (Remix)",
+   "album": {
+    "name": "Wiped Out! (10th Anniversary Edition)",
+    "id": "MPREb_CtztWCpTaK6"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "H2bW9xKPSCQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Neighbourhood",
+     "id": "UC1cnYMXqKdazz-gDPKaDFyg"
+    },
+    {
+     "name": "Syd",
+     "id": "UCPq7x8jeRN7J6dcOgXpFMSg"
+    }
+   ],
+   "duration_seconds": 183,
+   "views": "11M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/OGhKVGOjFGeobVveHrwhnlc3qROvpIh0ivbXyEdi0uArKUr7OR3iJnVVWoLaapljGD-uy7L0rORygCSs=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/OGhKVGOjFGeobVveHrwhnlc3qROvpIh0ivbXyEdi0uArKUr7OR3iJnVVWoLaapljGD-uy7L0rORygCSs=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Get Me So High",
+   "album": {
+    "name": "Hard To Imagine The Neighbourhood Ever Changing",
+    "id": "MPREb_edMvNe5E5s6"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "hHSm49uE9Qg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:33",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Neighbourhood",
+     "id": "UC1cnYMXqKdazz-gDPKaDFyg"
+    }
+   ],
+   "duration_seconds": 153,
+   "views": "79M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/odI3_zmQX1_ovQSm0P_MFpK5Y6RtczVXZhInX1oQ0-F3a6Q2r5_mLYC3XG7FwzKR2LScUrOHTmNH30XR=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/odI3_zmQX1_ovQSm0P_MFpK5Y6RtczVXZhInX1oQ0-F3a6Q2r5_mLYC3XG7FwzKR2LScUrOHTmNH30XR=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Daddy Issues",
+   "album": {
+    "name": "Daddy Issues",
+    "id": "MPREb_GwRKg4Oz85f"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "EOalr5sx46Y",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:26",
+   "year": null,
+   "artists": [
+    {
+     "name": "Joyce Santana",
+     "id": "UCmFOsZf5wmS4GDMXfhlN9BA"
+    },
+    {
+     "name": "Totoy El Frio",
+     "id": "UC9IFHk6kGcjXXctFQQHUIow"
+    },
+    {
+     "name": "Brray",
+     "id": "UCzdbawqAXd7nW5H9wedLcXg"
+    }
+   ],
+   "duration_seconds": 206,
+   "views": "390K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/EPST7fHKGaWrfrKHLTEAU2lB4-U7txgraggtNahtaEu39v-WMatuFpVCao9t6Hg_u8RT3IqHrSfxTxV0=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/EPST7fHKGaWrfrKHLTEAU2lB4-U7txgraggtNahtaEu39v-WMatuFpVCao9t6Hg_u8RT3IqHrSfxTxV0=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "daddy issues - slowed + reverb",
+   "album": {
+    "name": "daddy issues",
+    "id": "MPREb_s6LVM8UuvRf"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "WGsEUc30Tc8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:21",
+   "year": null,
+   "artists": [
+    {
+     "name": "omgkirby",
+     "id": "UCsi_91DfFgR5W5-eHVwt2VQ"
+    }
+   ],
+   "duration_seconds": 201,
+   "views": "334",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/p6NWcTtjcPtonQPIsWjvmEowD-js0TShlDyXZ0ccyxB4BkXx-_jEWr6rwXtkovU5sKZiIdHaIa3fWEIa=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/p6NWcTtjcPtonQPIsWjvmEowD-js0TShlDyXZ0ccyxB4BkXx-_jEWr6rwXtkovU5sKZiIdHaIa3fWEIa=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "daddy issues - sped up",
+   "album": {
+    "name": "daddy issues",
+    "id": "MPREb_s6LVM8UuvRf"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "SD9PVhIAwVs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:41",
+   "year": null,
+   "artists": [
+    {
+     "name": "omgkirby",
+     "id": "UCsi_91DfFgR5W5-eHVwt2VQ"
+    }
+   ],
+   "duration_seconds": 101,
+   "views": "571",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/p6NWcTtjcPtonQPIsWjvmEowD-js0TShlDyXZ0ccyxB4BkXx-_jEWr6rwXtkovU5sKZiIdHaIa3fWEIa=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/p6NWcTtjcPtonQPIsWjvmEowD-js0TShlDyXZ0ccyxB4BkXx-_jEWr6rwXtkovU5sKZiIdHaIa3fWEIa=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Daddy Issues",
+   "album": {
+    "name": "A Gentleman's Guide",
+    "id": "MPREb_3bsrpKDpWLZ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "sR_gb-x7k6g",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:14",
+   "year": null,
+   "artists": [
+    {
+     "name": "LOVA",
+     "id": "UC6zVfEwCaUBfBfJ36FpqF_w"
+    }
+   ],
+   "duration_seconds": 194,
+   "views": "171K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/UK4kMV5E7HjYL9vEIIWsOEvbl2vIPUlpzo8AjHHScvxI5P_TyDbQtIMPsHuhVt_rvwodo3Sv1H8_LSnrMQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/UK4kMV5E7HjYL9vEIIWsOEvbl2vIPUlpzo8AjHHScvxI5P_TyDbQtIMPsHuhVt_rvwodo3Sv1H8_LSnrMQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Daddy Issues - Slowed",
+   "album": {
+    "name": "Daddy Issues - Slowed",
+    "id": "MPREb_fBqmjFRLEzU"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "-KZpB7NLabo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "sanny",
+     "id": "UC0l3GwvwLHj5-yUGySYae7w"
+    },
+    {
+     "name": "Eser Inc.",
+     "id": "UCt0WCuegioo2BxepG2uFcbQ"
+    },
+    {
+     "name": "Sphere",
+     "id": "UCkEwvS1jb9tu8unddDUg2uw"
+    }
+   ],
+   "duration_seconds": 183,
+   "views": "28K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/_INyeeKzD5myrst9izgSziKD7wk5oQmKFc6m_koG33KbhFDczybliNQNqJDF7__0PjV_xlSE-qOsskg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/_INyeeKzD5myrst9izgSziKD7wk5oQmKFc6m_koG33KbhFDczybliNQNqJDF7__0PjV_xlSE-qOsskg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Daddy Issues",
+   "album": {
+    "name": "Daddy Issues",
+    "id": "MPREb_4LEtvAZ2eZp"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Vk9P-6dPGks",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:57",
+   "year": null,
+   "artists": [
+    {
+     "name": "Untethered",
+     "id": "UCjvh4meLN64W9P29kSQPGQg"
+    }
+   ],
+   "duration_seconds": 237,
+   "views": "984",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/_NBmFtPgEfU_Jy6PloUA6o_pRpj91adTWuVj2ZTLUzf6rmAWhfLhEWfGn7YAwGwJCS7IpL4rA_Ob4JPboQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/_NBmFtPgEfU_Jy6PloUA6o_pRpj91adTWuVj2ZTLUzf6rmAWhfLhEWfGn7YAwGwJCS7IpL4rA_Ob4JPboQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "daddy issues - lofi version",
+   "album": {
+    "name": "daddy issues",
+    "id": "MPREb_s6LVM8UuvRf"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "QpHRoqQesZI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "omgkirby",
+     "id": "UCsi_91DfFgR5W5-eHVwt2VQ"
+    }
+   ],
+   "duration_seconds": 151,
+   "views": "275",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/p6NWcTtjcPtonQPIsWjvmEowD-js0TShlDyXZ0ccyxB4BkXx-_jEWr6rwXtkovU5sKZiIdHaIa3fWEIa=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/p6NWcTtjcPtonQPIsWjvmEowD-js0TShlDyXZ0ccyxB4BkXx-_jEWr6rwXtkovU5sKZiIdHaIa3fWEIa=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Daddy Issues",
+   "album": {
+    "name": "Daddy Issues",
+    "id": "MPREb_clLVpCy5WD6"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "c1B7do1U-R4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:10",
+   "year": null,
+   "artists": [
+    {
+     "name": "Papillons The Band",
+     "id": "UC1KTeg0ualJPrI7U_xncryA"
+    }
+   ],
+   "duration_seconds": 190,
+   "views": "130K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/rE-o9aauy05RyUerdYL5FH8A1YFtWm2NQ98vyJ46Vra-WdGIwruq0tyYWWhTGdS2ZdwL0D9kvOcn2AzD=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/rE-o9aauy05RyUerdYL5FH8A1YFtWm2NQ98vyJ46Vra-WdGIwruq0tyYWWhTGdS2ZdwL0D9kvOcn2AzD=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sweater Weather",
+   "album": {
+    "name": "I Love You. (10th Anniversary Edition)",
+    "id": "MPREb_aUAFHycs7cr"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "UBUXDUtZZnI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:01",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Neighbourhood",
+     "id": "UC1cnYMXqKdazz-gDPKaDFyg"
+    }
+   ],
+   "duration_seconds": 241,
+   "views": "2.7B",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/YKLcNAuy7_744j8SSKpympgl3Thj1qcsOqvR_bRMRYWiVZQgt5v_LGYLe_Rcv9eXckDWTyPP839aiyY=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/YKLcNAuy7_744j8SSKpympgl3Thj1qcsOqvR_bRMRYWiVZQgt5v_LGYLe_Rcv9eXckDWTyPP839aiyY=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Daddy Issues",
+   "album": {
+    "name": "Sad Music Crying 2020",
+    "id": "MPREb_syuJTmblOyz"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "KSVcqh-nI7I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:34",
+   "year": null,
+   "artists": [
+    {
+     "name": "Train to Mars",
+     "id": "UCOyQSojx4UOnHmxnUJ4v3cw"
+    }
+   ],
+   "duration_seconds": 274,
+   "views": "70K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/0uQd8t-UI5b5CrHwOFBY1L5F-P0mUv3rORjWN4eLK2Dde8gqSAMk2rzZT89806ARo611e1z7aafTj5u5=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/0uQd8t-UI5b5CrHwOFBY1L5F-P0mUv3rORjWN4eLK2Dde8gqSAMk2rzZT89806ARo611e1z7aafTj5u5=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Daddy Issues",
+   "album": {
+    "name": "Rock Stars UA, Ч. 1",
+    "id": "MPREb_dcQOiUuBJnT"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "bPGr05SPtJg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sucker Punch",
+     "id": "UCXLAn1-cFDtoc3DJ-qidcbQ"
+    }
+   ],
+   "duration_seconds": 211,
+   "views": "1.2K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/cCjLhpVpO3_erJnhYScfwszA69yRAgNT1SCUE19xwy7Y88A5dOYru_eV-dLJWdTK4mIer42meSMD7ak=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/cCjLhpVpO3_erJnhYScfwszA69yRAgNT1SCUE19xwy7Y88A5dOYru_eV-dLJWdTK4mIer42meSMD7ak=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Daddy Issues",
+   "album": {
+    "name": "Daddy Issues",
+    "id": "MPREb_DdhRKuNhxNG"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "opgaaJZn76I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "Marie",
+     "id": "UC_TQNUh6B_1VYo4txa4388Q"
+    }
+   ],
+   "duration_seconds": 85,
+   "views": "75",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/4isob_v8W7OACgoZEL42QllETPVIt-NqxaZh1jEsRUY2otyj4fmW5CLlOSJT3XVrcYDEczMPwp_MbihS=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/4isob_v8W7OACgoZEL42QllETPVIt-NqxaZh1jEsRUY2otyj4fmW5CLlOSJT3XVrcYDEczMPwp_MbihS=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Daddy Issues",
+   "album": {
+    "name": "Mega Hits 2020",
+    "id": "MPREb_pGhHkVD5UK4"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "4jsaCiOOLfc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:34",
+   "year": null,
+   "artists": [
+    {
+     "name": "Train to Mars",
+     "id": "UCOyQSojx4UOnHmxnUJ4v3cw"
+    }
+   ],
+   "duration_seconds": 274,
+   "views": "70K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/3BvnS5W1wruQJKXuLmQ2gAPYFCovLi4TLopDt8zUnjC9BdtOq5d_HEjcuAV_g8zV8MSPosT338mFApl0EA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/3BvnS5W1wruQJKXuLmQ2gAPYFCovLi4TLopDt8zUnjC9BdtOq5d_HEjcuAV_g8zV8MSPosT338mFApl0EA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Glue Sniffer",
+   "album": {
+    "name": "Fuck Marry Kill",
+    "id": "MPREb_rmKkBRmyKef"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Gx7W8jFiBGQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:23",
+   "year": null,
+   "artists": [
+    {
+     "name": "Daddy Issues",
+     "id": "UCB11tD1sULV4eo2bsOsRZ_Q"
+    }
+   ],
+   "duration_seconds": 143,
+   "views": "29K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/jWpzkXAtb2QAu_X0hvJ6q2RGFGw3mEnbPOITPtsTYeGBV4xuE2TjtVbUjZCyICptzEjq_qYr1S50ufV3=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/jWpzkXAtb2QAu_X0hvJ6q2RGFGw3mEnbPOITPtsTYeGBV4xuE2TjtVbUjZCyICptzEjq_qYr1S50ufV3=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Daddy Issues",
+   "album": {
+    "name": "Daddy Issues",
+    "id": "MPREb_LhXA4QFzfXe"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "OaWJVkQTqVc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:16",
+   "year": null,
+   "artists": [
+    {
+     "name": "Summer",
+     "id": "UCO6PzXngSJpPk_BuadN26FA"
+    }
+   ],
+   "duration_seconds": 136,
+   "views": "26K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/pNXWW20Zd_23v8CZs4PmAcXWx1am_nep9yO_wwdqalX7pVdB0o8jmxeqC6-hNI1LYCtmUZZ8yNlvz8-s=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/pNXWW20Zd_23v8CZs4PmAcXWx1am_nep9yO_wwdqalX7pVdB0o8jmxeqC6-hNI1LYCtmUZZ8yNlvz8-s=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Daddy Issues (Sped Up Piano Version)",
+   "album": {
+    "name": "Sped Up Piano Covers, Vol. 10",
+    "id": "MPREb_K9pKsCpJejt"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "M7GUP38e8PQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:00",
+   "year": null,
+   "artists": [
+    {
+     "name": "Pianaura",
+     "id": "UC8o9TiDX2HWT1ntVJJ-A0PA"
+    }
+   ],
+   "duration_seconds": 120,
+   "views": "14",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/KbINHRxCqRG8Un7WJRflM8WRECN_Wb2_8VJHjVWJpGVHB3wDLt8jA1WBcw7PuILtBCsfNO5OsPtF80NQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/KbINHRxCqRG8Un7WJRflM8WRECN_Wb2_8VJHjVWJpGVHB3wDLt8jA1WBcw7PuILtBCsfNO5OsPtF80NQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Daddy Issues",
+   "album": {
+    "name": "Daddy Issues",
+    "id": "MPREb_E4WYqmD4gc4"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "GBiOlwU2zME",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:54",
+   "year": null,
+   "artists": [
+    {
+     "name": "Beleaf",
+     "id": "UCxrGzXSmPXxP2aBBGqGWyzw"
+    }
+   ],
+   "duration_seconds": 174,
+   "views": "21K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/O2iUm7aym7i0b3fozmjtT3P2W5I2VQYdGBUr5BXn8emQQJ_ecoDy_OChdrWw-05I-j4YUf7mCQ-bNWQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/O2iUm7aym7i0b3fozmjtT3P2W5I2VQYdGBUr5BXn8emQQJ_ecoDy_OChdrWw-05I-j4YUf7mCQ-bNWQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

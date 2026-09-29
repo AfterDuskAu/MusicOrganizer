@@ -1,0 +1,758 @@
+{
+ "kind": "search",
+ "key": "panic at the disco high hopes",
+ "request": "Panic At The Disco High Hopes",
+ "recorded_at": "2026-09-29T02:37:16Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "Pray for the Wicked",
+    "id": "MPREb_Th3wOugT6sg"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "GJY8OMJXRAk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:11",
+   "year": null,
+   "artists": [
+    {
+     "name": "Panic! At The Disco",
+     "id": "UC5J__UU0Y7ZAVluolcIjrbw"
+    }
+   ],
+   "duration_seconds": 191,
+   "views": "1.5B",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/XNEmm81IV32mGxlJKcXaz10bSkF0ehKGpYWk2kzh2QzGioFIUHVr9rZh0ktPybBzok9CNAKL3fWGjYWt=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/XNEmm81IV32mGxlJKcXaz10bSkF0ehKGpYWk2kzh2QzGioFIUHVr9rZh0ktPybBzok9CNAKL3fWGjYWt=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "Golden Records: The Magic Lives On",
+    "id": "MPREb_Ph8VSDvTfnT"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "WBCr-rWo1Yw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:58",
+   "year": null,
+   "artists": [
+    {
+     "name": "Neil Patrick Harris",
+     "id": "UC7VguwVayVAF3JDGubumoCQ"
+    }
+   ],
+   "duration_seconds": 118,
+   "views": "3.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/3T7VPePAKpTK4VqVcuSxAqyNBxINB0M0tQTuMIIvWc5nhFk90axUQQY1-I2tBbySn9H0p15ucoNktYae=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/3T7VPePAKpTK4VqVcuSxAqyNBxINB0M0tQTuMIIvWc5nhFk90axUQQY1-I2tBbySn9H0p15ucoNktYae=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Death of a Bachelor",
+   "album": {
+    "name": "Death of a Bachelor",
+    "id": "MPREb_7KduO7uyhzD"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Fl2OvKxMA0s",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:24",
+   "year": null,
+   "artists": [
+    {
+     "name": "Panic! At The Disco",
+     "id": "UC5J__UU0Y7ZAVluolcIjrbw"
+    }
+   ],
+   "duration_seconds": 204,
+   "views": "243M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/cy2Fb9aK3hMLiwH9YLO4RMS6ARGOmZXmV2yoZekFv6Lvtn-DDIgFpTkrDPREywHMR0oKsMlVPCdVA2nk=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/cy2Fb9aK3hMLiwH9YLO4RMS6ARGOmZXmV2yoZekFv6Lvtn-DDIgFpTkrDPREywHMR0oKsMlVPCdVA2nk=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "High Hopes",
+    "id": "MPREb_ipLSobwZFvp"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "OGdNarT90hk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:57",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bruce Springsteen",
+     "id": "UCyFqJ_5TyAeTD7rHpLikbKQ"
+    }
+   ],
+   "duration_seconds": 297,
+   "views": "3.6M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/5FatMhKJquIxEDJcuvLo3DatwSJyiJ2EkSTKXEGf0ulyPF5Cb2LTqcvAAoNLnvvdLAG5k-73jxRGNJPt=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/5FatMhKJquIxEDJcuvLo3DatwSJyiJ2EkSTKXEGf0ulyPF5Cb2LTqcvAAoNLnvvdLAG5k-73jxRGNJPt=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes (made popular by Frank Sinatra) [vocal version]",
+   "album": {
+    "name": "Standards 6 - Party Tyme (Vocal Versions)",
+    "id": "MPREb_wR66yCVOQM7"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "6L1f3maczyI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:42",
+   "year": null,
+   "artists": [
+    {
+     "name": "Party Tyme",
+     "id": "UCgHOnya3uKm1fHiHyXeQK3w"
+    }
+   ],
+   "duration_seconds": 162,
+   "views": "5.2K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/AWwVDIM1bqshfiQttFj1lAkltZn3rAzzzq-Yf5Yj4PtGRXOWzqPQlBFbcxNMiYqt2DDEiem1UpHpt1KP=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/AWwVDIM1bqshfiQttFj1lAkltZn3rAzzzq-Yf5Yj4PtGRXOWzqPQlBFbcxNMiYqt2DDEiem1UpHpt1KP=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes (feat. sad alex & DUCKWRTH)",
+   "album": {
+    "name": "High Hopes ",
+    "id": "MPREb_BF6BpLHYFFK"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "pDRPL6Yz8S8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:00",
+   "year": null,
+   "artists": [
+    {
+     "name": "pluko",
+     "id": null
+    }
+   ],
+   "duration_seconds": 180,
+   "views": "62K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/TSoZtiZloqzoHnlysS7xEEVl6GcgAxKsW5ZDudMyzYbyMXImNJfD2wSgXjvFRY-3zJ_JHt-iuiptMYwBIw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/TSoZtiZloqzoHnlysS7xEEVl6GcgAxKsW5ZDudMyzYbyMXImNJfD2wSgXjvFRY-3zJ_JHt-iuiptMYwBIw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "Sinatra 80th: All The Best",
+    "id": "MPREb_MkIqioa6IwR"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ojJ15EB0PAM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:43",
+   "year": null,
+   "artists": [
+    {
+     "name": "Frank Sinatra",
+     "id": "UC1zsfp3OD8qWQ0HfLbz2TXg"
+    }
+   ],
+   "duration_seconds": 163,
+   "views": "1.5M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/f-anh5zwWzxraY87DDoHcMmX87UNjZaiXMd2Jg2Up7Can9aaAtjgxhJb1lvjRYeVs5u4vQm-lo4ONsod2Q=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/f-anh5zwWzxraY87DDoHcMmX87UNjZaiXMd2Jg2Up7Can9aaAtjgxhJb1lvjRYeVs5u4vQm-lo4ONsod2Q=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "Upon a Different Shore",
+    "id": "MPREb_5nbWfuj9nbF"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "M6uQwrcdf_Q",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "7:44",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alexander Armstrong",
+     "id": "UCpWsFZIeuj79V7GV2swgcMQ"
+    }
+   ],
+   "duration_seconds": 464,
+   "views": "9.6K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/6EtvaL_bvDT7DTixZFKv2hnvimntxaBZ9p93rTyweYBeivloVxqxRec2safjB7z-UKSmXfwD_PYJjQ3b=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/6EtvaL_bvDT7DTixZFKv2hnvimntxaBZ9p93rTyweYBeivloVxqxRec2safjB7z-UKSmXfwD_PYJjQ3b=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "episode",
+    "id": "MPREb_eSbYzmEwo2k"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ToNG10v-uMU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "été",
+     "id": "UCVtloM1OcPV5ioLa_uKW2Ig"
+    }
+   ],
+   "duration_seconds": 328,
+   "views": "646",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/QDXv_DWW0SC24YH05e1ralOl9Y3EMXDUbO2usvuPDmTNmQOpqNurSWi0RlBXnpR38iSmxx7M2t7KZq8l=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/QDXv_DWW0SC24YH05e1ralOl9Y3EMXDUbO2usvuPDmTNmQOpqNurSWi0RlBXnpR38iSmxx7M2t7KZq8l=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes (feat. SixteenInMono)",
+   "album": {
+    "name": "Young's Old Covers (2019-2021)",
+    "id": "MPREb_MiRGW1vx508"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "zKiFCyA7LbI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:13",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jonathan Young",
+     "id": "UCR-DFuX6gcT4KXJqmOQAULA"
+    }
+   ],
+   "duration_seconds": 193,
+   "views": "597K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/4XET5Uin2m8PDmH9QrNGl3WacPq49DulspSdFRmE1sY96m_Mss1nMB6r0W4LNOPqCIvkS4IvTAK_SzA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/4XET5Uin2m8PDmH9QrNGl3WacPq49DulspSdFRmE1sY96m_Mss1nMB6r0W4LNOPqCIvkS4IvTAK_SzA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "Go Folk Yourself",
+    "id": "MPREb_hZvYtL48WM4"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "fGi_X3_jrhU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:01",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bumpin Uglies",
+     "id": "UCxk7RqKNlCbErAYRYzs_Edw"
+    }
+   ],
+   "duration_seconds": 181,
+   "views": "157K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/AtcqnnWxc3qO0L_L0RjsjuOT_WTQje-icQ1MF86WgXs7USXS1t0J3tjQp9awbzF7JXlngd82b3AfAkUopg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/AtcqnnWxc3qO0L_L0RjsjuOT_WTQje-icQ1MF86WgXs7USXS1t0J3tjQp9awbzF7JXlngd82b3AfAkUopg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes (Radio Edit)",
+   "album": {
+    "name": "High Hopes",
+    "id": "MPREb_67gzg9rAaBo"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "kk_gfQTYYXs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:16",
+   "year": null,
+   "artists": [
+    {
+     "name": "Instant Groove",
+     "id": "UCtPwAQo35DTjlj-b7nr7gFA"
+    }
+   ],
+   "duration_seconds": 196,
+   "views": "221",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/7vCA8GaedY2AoRIQH0DPDAQx1k4_sTs04azeDCnMLosNHAacadD9iXSaiEJuH2CElO3AftDYO8Og9sg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/7vCA8GaedY2AoRIQH0DPDAQx1k4_sTs04azeDCnMLosNHAacadD9iXSaiEJuH2CElO3AftDYO8Og9sg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "High Hopes",
+    "id": "MPREb_HltJL4I4tWN"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ZcggFaF3uOg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:33",
+   "year": null,
+   "artists": [
+    {
+     "name": "CityWide Panic",
+     "id": "UCKq4qgAEv3y0XW0iXXZSG0g"
+    }
+   ],
+   "duration_seconds": 213,
+   "views": "180",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/EIkXmPM_CsegC8pmZWXBXGQvdn6YFuTRQQ2waOpmv7xhRGkXKhxFPEXMUCTTABsDc_mq1mwfxZdirJM=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/EIkXmPM_CsegC8pmZWXBXGQvdn6YFuTRQQ2waOpmv7xhRGkXKhxFPEXMUCTTABsDc_mq1mwfxZdirJM=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "The Pye Jazz Albums",
+    "id": "MPREb_6b1pqlajR4W"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "_M-8obmyN3Y",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:09",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kenny Ball and His Jazzmen",
+     "id": "UCYZXkkkCydPNvfRDSXV0omA"
+    }
+   ],
+   "duration_seconds": 129,
+   "views": "1.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/0vGzpRsHQ5NDqQAdpbBiZxeSSCONo53Tb_UPT_90GIWMS_g445-aqatHKoGtBhV0Vv1uGLVB3mIlQ_IF=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/0vGzpRsHQ5NDqQAdpbBiZxeSSCONo53Tb_UPT_90GIWMS_g445-aqatHKoGtBhV0Vv1uGLVB3mIlQ_IF=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "The Art Show",
+    "id": "MPREb_s0jmlChb8WE"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ul3XRCfI4gI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:51",
+   "year": null,
+   "artists": [
+    {
+     "name": "DeVinci",
+     "id": "UCRbRwIYxbiYX6B4IbiS9u4A"
+    }
+   ],
+   "duration_seconds": 171,
+   "views": "115",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/9kwMsnEGPqP0hSyTNlNfDLoNsnlbMv8_3YenbeXlaJLmNeHDv8fXjwpp1zbp3BtR0DpPa6G3o44U7U9j1Q=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/9kwMsnEGPqP0hSyTNlNfDLoNsnlbMv8_3YenbeXlaJLmNeHDv8fXjwpp1zbp3BtR0DpPa6G3o44U7U9j1Q=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "High Hopes",
+    "id": "MPREb_W0oWfSMhdjW"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "2fw0tS8X0wE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:49",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chrismatthews",
+     "id": null
+    }
+   ],
+   "duration_seconds": 229,
+   "views": "89",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/_rNA9cAzO02HAunYlhxPLqm687I6nKn6K7n78E9BccdJcHiWVn6klbcZb7Ii3e2_ywnsy_D_vitw6VN9=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/_rNA9cAzO02HAunYlhxPLqm687I6nKn6K7n78E9BccdJcHiWVn6klbcZb7Ii3e2_ywnsy_D_vitw6VN9=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "Ultimate Sinatra: The Centennial Collection",
+    "id": "MPREb_6qk8Gm4LpFW"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "7VGUxSgvD2A",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:41",
+   "year": null,
+   "artists": [
+    {
+     "name": "Frank Sinatra",
+     "id": "UC1zsfp3OD8qWQ0HfLbz2TXg"
+    }
+   ],
+   "duration_seconds": 161,
+   "views": "1.5M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/SIIjO4ee63_fErnNW1GICuEw3keaGqKgu8Rl9VT7y79mvKXZxy4BlqXmf47EblrR50DvXlKIwz7HeLAnbQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/SIIjO4ee63_fErnNW1GICuEw3keaGqKgu8Rl9VT7y79mvKXZxy4BlqXmf47EblrR50DvXlKIwz7HeLAnbQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "We Drive",
+    "id": "MPREb_ZLTvkvG8WMb"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "2m8-dz3sguE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:24",
+   "year": null,
+   "artists": [
+    {
+     "name": "Quentin Travade",
+     "id": "UCQmnN_4MFPPmMhsTLXQlZSg"
+    },
+    {
+     "name": "Louis Horhan",
+     "id": "UCW1js_htzlCPsKjOEw0vQsQ"
+    }
+   ],
+   "duration_seconds": 144,
+   "views": "1.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/CwBXBX54hR4r2fcOoJW7m8lttsXDM7-tjE_BfXD6pBPE2q4b9Ld3K-IGZxWw-HoS8pCHueYGaPnXId3S=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/CwBXBX54hR4r2fcOoJW7m8lttsXDM7-tjE_BfXD6pBPE2q4b9Ld3K-IGZxWw-HoS8pCHueYGaPnXId3S=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "high hopes (Hypertechno)",
+   "album": {
+    "name": "high hopes (Hypertechno)",
+    "id": "MPREb_j8hCqPkuKN7"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Ic1U6YgPT5Y",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:18",
+   "year": null,
+   "artists": [
+    {
+     "name": "MODERN ART",
+     "id": "UCTILX5DL80h_w06R0Xe3Mlw"
+    }
+   ],
+   "duration_seconds": 198,
+   "views": "118K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/jvw5qantPkao5eKLiGfVMR2_imf2A0xWIuYgyt4BPQvuTa084Y07_8ThcmHbxa713_4wgVAlGnBsrzFu=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/jvw5qantPkao5eKLiGfVMR2_imf2A0xWIuYgyt4BPQvuTa084Y07_8ThcmHbxa713_4wgVAlGnBsrzFu=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes (Stripped)",
+   "album": {
+    "name": "High Hopes (Stripped)",
+    "id": "MPREb_SXdrTXYZCJ9"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "2TmqOw4zyWQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:44",
+   "year": null,
+   "artists": [
+    {
+     "name": "Otherwise Fine",
+     "id": "UCEjcvQ_0rQkLLRo02-0SAlQ"
+    },
+    {
+     "name": "Gina Livia",
+     "id": "UCDczcD47gdBcniXV8Hb21HA"
+    }
+   ],
+   "duration_seconds": 224,
+   "views": "1.4K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/IMTIamCemp2jnvAg9_ZGY_wFXbbofY4wGocRB850sS3RaAZs-xPJMOQFl8CwEyb64jWxE-0_B7pCr_dXcg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/IMTIamCemp2jnvAg9_ZGY_wFXbbofY4wGocRB850sS3RaAZs-xPJMOQFl8CwEyb64jWxE-0_B7pCr_dXcg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,770 @@
+{
+ "kind": "search",
+ "key": "mr kitty after dark",
+ "request": "Mr.Kitty After Dark",
+ "recorded_at": "2026-09-29T02:36:46Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark",
+   "album": {
+    "name": "Time",
+    "id": "MPREb_5aGkZjDicQr"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Cl5Vkd4N03Q",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:20",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mr.Kitty",
+     "id": "UCrajKr9NDZs-_1simGxgtmQ"
+    }
+   ],
+   "duration_seconds": 260,
+   "views": "832M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/b92yfjtgYeBaZDIzQViE8zlfsDwvImUJuGqwIBOQmyxrcG1cvyVdJKzuIiZLKU_aBM_X4h43rXgUkjMD=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/b92yfjtgYeBaZDIzQViE8zlfsDwvImUJuGqwIBOQmyxrcG1cvyVdJKzuIiZLKU_aBM_X4h43rXgUkjMD=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark",
+   "album": {
+    "name": "Our Ms. Brooks",
+    "id": "MPREb_n1mgrcBKmdh"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "6IJhbziCjKk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "8:01",
+   "year": null,
+   "artists": [
+    {
+     "name": "Pattie Brooks",
+     "id": "UCvFs1QIIXMq5dKhhWhTG_lQ"
+    }
+   ],
+   "duration_seconds": 481,
+   "views": "1.2M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/USV1cgjMezjk1DywJ27vL9cEx-we5NVp4LDBg8Ef-ScKUDcF0x6G2X4ZT_UvY84cuJycN3mQ1EyKcC5N2g=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/USV1cgjMezjk1DywJ27vL9cEx-we5NVp4LDBg8Ef-ScKUDcF0x6G2X4ZT_UvY84cuJycN3mQ1EyKcC5N2g=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark (SUPER SLOWED)",
+   "album": {
+    "name": "After Dark",
+    "id": "MPREb_fm7ZaS4rfKS"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Vmtmg1htxYk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:27",
+   "year": null,
+   "artists": [
+    {
+     "name": "Independent Lemon",
+     "id": "UCB63MDC2jA3UOBvc-YDpHDQ"
+    },
+    {
+     "name": "tired bunny",
+     "id": "UC52UnoHsX22y47r7UDZj2xg"
+    }
+   ],
+   "duration_seconds": 387,
+   "views": "7.6K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Jz9tl7Tc4SFkuJMdV1B-echaHxTEDej-Qb9u7AJoT5tUrQRNhJVY-A3HHNqjjQ-eLcGtv5zP3-6GT-DW=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Jz9tl7Tc4SFkuJMdV1B-echaHxTEDej-Qb9u7AJoT5tUrQRNhJVY-A3HHNqjjQ-eLcGtv5zP3-6GT-DW=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "AFTER DARK",
+   "album": {
+    "name": "Dark Night",
+    "id": "MPREb_nbXHm7e6Or2"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "GMFmdxWv_E8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:46",
+   "year": null,
+   "artists": [
+    {
+     "name": "Aura",
+     "id": null
+    }
+   ],
+   "duration_seconds": 106,
+   "views": "631",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/R8hRbWmaLn17aPZEbwQZ5x-SOf6scpnMUMhx0aTMFYflZ8I1BoNkJYkO0LKxM5It-BV6L60M0RSZ9jAXeA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/R8hRbWmaLn17aPZEbwQZ5x-SOf6scpnMUMhx0aTMFYflZ8I1BoNkJYkO0LKxM5It-BV6L60M0RSZ9jAXeA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark (slowed to perfection)",
+   "album": {
+    "name": "After Dark",
+    "id": "MPREb_KzklxCO38F1"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "VJyYTnqDPrs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:23",
+   "year": null,
+   "artists": [
+    {
+     "name": "Luke Muzzic",
+     "id": "UCpIk7RKcoOMzsH4E2pxSqpg"
+    }
+   ],
+   "duration_seconds": 323,
+   "views": "16K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/iPz_KquApkz24PCYMROR8CbPdO4UazW12YVSIfTkSoPnmd3eE3Xp3Kp9U4ccTjWVcI_0Bh_8km7w0GU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/iPz_KquApkz24PCYMROR8CbPdO4UazW12YVSIfTkSoPnmd3eE3Xp3Kp9U4ccTjWVcI_0Bh_8km7w0GU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark (feat. Static Major & Ty Dolla $ign)",
+   "album": {
+    "name": "Scorpion",
+    "id": "MPREb_rDUjHlvlUg6"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "OKudIGsHZhM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Drake",
+     "id": "UCU6cE7pdJPc6DU2jSrKEsdQ"
+    }
+   ],
+   "duration_seconds": 290,
+   "views": "11M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/zOaDpfj2eyVVe1WX6_hRirEI0DZxghCjpg-wVOebZK3FS_Q7MJKddQ2z5MGLqcUlcWN9RlJME34xpRuA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/zOaDpfj2eyVVe1WX6_hRirEI0DZxghCjpg-wVOebZK3FS_Q7MJKddQ2z5MGLqcUlcWN9RlJME34xpRuA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark - Slowed + Reverb",
+   "album": {
+    "name": "After Dark - Slowed + Reverb",
+    "id": "MPREb_6giNg6j0ni0"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "v-bXBGKFi3k",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "Atieh",
+     "id": "UCIr6YVVEt-WiKxLB0i1txdg"
+    },
+    {
+     "name": "SashaVande",
+     "id": "UCjMKobloURDr4xZWONbdL2Q"
+    },
+    {
+     "name": "Mzlznzz",
+     "id": "UCm1Cido1Y7CPvFM-YfariSQ"
+    }
+   ],
+   "duration_seconds": 325,
+   "views": "35K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Xq0bUFnGSy6QOht0lluKEKL8T06TCnpRsFkQnT6iQsfbGzs8AJMKdjjPa_PFZJ6Ol-xq0fcUt4ev_f7JsA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Xq0bUFnGSy6QOht0lluKEKL8T06TCnpRsFkQnT6iQsfbGzs8AJMKdjjPa_PFZJ6Ol-xq0fcUt4ev_f7JsA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark",
+   "album": {
+    "name": "After Dark",
+    "id": "MPREb_KzklxCO38F1"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "N5TmXa_XrlE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:18",
+   "year": null,
+   "artists": [
+    {
+     "name": "Luke Muzzic",
+     "id": "UCpIk7RKcoOMzsH4E2pxSqpg"
+    }
+   ],
+   "duration_seconds": 258,
+   "views": "31K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/iPz_KquApkz24PCYMROR8CbPdO4UazW12YVSIfTkSoPnmd3eE3Xp3Kp9U4ccTjWVcI_0Bh_8km7w0GU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/iPz_KquApkz24PCYMROR8CbPdO4UazW12YVSIfTkSoPnmd3eE3Xp3Kp9U4ccTjWVcI_0Bh_8km7w0GU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Into Nothing",
+   "album": {
+    "name": "Time",
+    "id": "MPREb_5aGkZjDicQr"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "fZFja0-XiPo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mr.Kitty",
+     "id": "UCrajKr9NDZs-_1simGxgtmQ"
+    }
+   ],
+   "duration_seconds": 270,
+   "views": "766K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/b92yfjtgYeBaZDIzQViE8zlfsDwvImUJuGqwIBOQmyxrcG1cvyVdJKzuIiZLKU_aBM_X4h43rXgUkjMD=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/b92yfjtgYeBaZDIzQViE8zlfsDwvImUJuGqwIBOQmyxrcG1cvyVdJKzuIiZLKU_aBM_X4h43rXgUkjMD=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark x Sweater Weather (slowed to perfection)",
+   "album": {
+    "name": "After Dark x Sweater Weather",
+    "id": "MPREb_Thw9wMtWX6q"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "WQT2LHf3EeM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:54",
+   "year": null,
+   "artists": [
+    {
+     "name": "TommyMuzzic",
+     "id": "UCIOzVH6F6iE_qpzIBDkJAyA"
+    }
+   ],
+   "duration_seconds": 354,
+   "views": "34M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/YTlr2H-O0j5hjC8-imLxbDbVwJx4pXo5s590Qi6YMeixWX4UhZMWDGJYNbzgwBpHV1MYNGdJ5kD-6Hq0-A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/YTlr2H-O0j5hjC8-imLxbDbVwJx4pXo5s590Qi6YMeixWX4UhZMWDGJYNbzgwBpHV1MYNGdJ5kD-6Hq0-A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark",
+   "album": {
+    "name": "After Dark",
+    "id": "MPREb_8ITiQbf5KpW"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "wy5K47eZ2to",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:42",
+   "year": null,
+   "artists": [
+    {
+     "name": "Qscape",
+     "id": null
+    }
+   ],
+   "duration_seconds": 282,
+   "views": "23",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/lFvcaUbUemzJckOg9DyPtQlUCYdm0OOiT5nl8o_h-hejSNVp7d7uXMlHWQ90vUbLs-ezS0MEfXH2jHas=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/lFvcaUbUemzJckOg9DyPtQlUCYdm0OOiT5nl8o_h-hejSNVp7d7uXMlHWQ90vUbLs-ezS0MEfXH2jHas=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark - lofi version",
+   "album": {
+    "name": "After Dark - lofi version",
+    "id": "MPREb_b4bJn365EhA"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Hiv3oujsFXY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:35",
+   "year": null,
+   "artists": [
+    {
+     "name": "Lofiline",
+     "id": "UCMAlLmLrsh9WSTEtTDg1D-A"
+    },
+    {
+     "name": "Mr Cat",
+     "id": "UCqrFJouUW4W_akoKxNb71bA"
+    }
+   ],
+   "duration_seconds": 215,
+   "views": "76K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vaAYNAJrhoOtKr7M2pW_NZdflvN4cbZo4c83ta7D7TOR14H_wIJ800HkMRGVwqbqLcCAl5FnDE8jHXLt=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vaAYNAJrhoOtKr7M2pW_NZdflvN4cbZo4c83ta7D7TOR14H_wIJ800HkMRGVwqbqLcCAl5FnDE8jHXLt=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Child of the Earth",
+   "album": {
+    "name": "Time",
+    "id": "MPREb_5aGkZjDicQr"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "HQWDQYnQupk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:14",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mr.Kitty",
+     "id": "UCrajKr9NDZs-_1simGxgtmQ"
+    }
+   ],
+   "duration_seconds": 254,
+   "views": "1.5M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/b92yfjtgYeBaZDIzQViE8zlfsDwvImUJuGqwIBOQmyxrcG1cvyVdJKzuIiZLKU_aBM_X4h43rXgUkjMD=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/b92yfjtgYeBaZDIzQViE8zlfsDwvImUJuGqwIBOQmyxrcG1cvyVdJKzuIiZLKU_aBM_X4h43rXgUkjMD=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark (slowed to perfection)",
+   "album": {
+    "name": "After Dark",
+    "id": "MPREb_Hxdpm5zGWBG"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "J3INqXVJt8Q",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:01",
+   "year": null,
+   "artists": [
+    {
+     "name": "TommyMuzzic",
+     "id": "UCIOzVH6F6iE_qpzIBDkJAyA"
+    }
+   ],
+   "duration_seconds": 301,
+   "views": "243K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Adhv-edc7SD3Q881fZTwx1vn7nKf-wV4cC7k6xLiuXl0yBbwuge4UZRXQ4o7VJCMEaXpG6AMrRnQySM=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Adhv-edc7SD3Q881fZTwx1vn7nKf-wV4cC7k6xLiuXl0yBbwuge4UZRXQ4o7VJCMEaXpG6AMrRnQySM=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark",
+   "album": {
+    "name": "After Dark",
+    "id": "MPREb_M8wPpjsFqNp"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ou6OD5r9w2I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:18",
+   "year": null,
+   "artists": [
+    {
+     "name": "TommyMuzzic",
+     "id": "UCIOzVH6F6iE_qpzIBDkJAyA"
+    }
+   ],
+   "duration_seconds": 258,
+   "views": "76K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-mSIPH95CpzcFyqV_yKzbz0VqLFg3s71w4MEvNbHxIUIgU-5LZ-JcsA93NnjFsGj8R6mwOVbO8SyieWR=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-mSIPH95CpzcFyqV_yKzbz0VqLFg3s71w4MEvNbHxIUIgU-5LZ-JcsA93NnjFsGj8R6mwOVbO8SyieWR=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark",
+   "album": {
+    "name": "After Dark",
+    "id": "MPREb_bH7CoOgekGM"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "TUvtlUoXz-A",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:51",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kapa Boy",
+     "id": "UCFgxP9v0GGPbdeji7lLccLw"
+    },
+    {
+     "name": "The Explanation",
+     "id": "UCFLyu3xoy-ivJ3mYn3bmwtQ"
+    }
+   ],
+   "duration_seconds": 231,
+   "views": "542K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/F84W0v_QYzsMMeK094Gzcs1ZwI1UyN9B43-h04WqVpwSxbmalfJ7vnLLWiEizlHkvvYx9D59n_do7ikl=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/F84W0v_QYzsMMeK094Gzcs1ZwI1UyN9B43-h04WqVpwSxbmalfJ7vnLLWiEizlHkvvYx9D59n_do7ikl=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark (8D Audio)",
+   "album": {
+    "name": "After Dark",
+    "id": "MPREb_M8wPpjsFqNp"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "zYG6BtIliDg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:20",
+   "year": null,
+   "artists": [
+    {
+     "name": "TommyMuzzic",
+     "id": "UCIOzVH6F6iE_qpzIBDkJAyA"
+    }
+   ],
+   "duration_seconds": 260,
+   "views": "3.9K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-mSIPH95CpzcFyqV_yKzbz0VqLFg3s71w4MEvNbHxIUIgU-5LZ-JcsA93NnjFsGj8R6mwOVbO8SyieWR=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-mSIPH95CpzcFyqV_yKzbz0VqLFg3s71w4MEvNbHxIUIgU-5LZ-JcsA93NnjFsGj8R6mwOVbO8SyieWR=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark x Sweater Weather",
+   "album": {
+    "name": "After Dark x Sweater Weather",
+    "id": "MPREb_3PNbQwZcEs9"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "VXmRnnAyops",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:49",
+   "year": null,
+   "artists": [
+    {
+     "name": "TommyMuzzic",
+     "id": "UCIOzVH6F6iE_qpzIBDkJAyA"
+    }
+   ],
+   "duration_seconds": 289,
+   "views": "3.1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Q3vux28lGZyYiy-7BO3tfaNzA8pehIXclMD5xGl-UTUQaGlSpn5yonLELfAdeWXx-AEdY15cYSIX5kI=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Q3vux28lGZyYiy-7BO3tfaNzA8pehIXclMD5xGl-UTUQaGlSpn5yonLELfAdeWXx-AEdY15cYSIX5kI=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark x i like the way you kiss me (sped up to perfection)",
+   "album": {
+    "name": "After Dark x i like the way you kiss me",
+    "id": "MPREb_ELqGc3gclhk"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "mY8UJsb8dyQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:35",
+   "year": null,
+   "artists": [
+    {
+     "name": "Luke Muzzic",
+     "id": "UCpIk7RKcoOMzsH4E2pxSqpg"
+    }
+   ],
+   "duration_seconds": 95,
+   "views": "129K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-Nt9JdqEqPod4tDJwXD81-Og4QuxTdp5fEJLdtVp7J5UIftrfS9jW5oPUu1TJZ2noK5dThOdnzsbiwaXow=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-Nt9JdqEqPod4tDJwXD81-Og4QuxTdp5fEJLdtVp7J5UIftrfS9jW5oPUu1TJZ2noK5dThOdnzsbiwaXow=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "AFTER DARK FUNK",
+   "album": {
+    "name": "AFTER DARK FUNK",
+    "id": "MPREb_7pHR3dN4A4m"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "95jrQFrPeCk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:13",
+   "year": null,
+   "artists": [
+    {
+     "name": "aestheqt",
+     "id": "UCAcOi4mOYwAKFZXiqxdZGXg"
+    }
+   ],
+   "duration_seconds": 133,
+   "views": "45K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/QhPr_6Y4P3xFEbe2YzK98igxshkOTBTQESiIqzbsC-YRHoTg4ZXH3NugF-n8aWnIQYph6oJ6Rmrv5Ys=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/QhPr_6Y4P3xFEbe2YzK98igxshkOTBTQESiIqzbsC-YRHoTg4ZXH3NugF-n8aWnIQYph6oJ6Rmrv5Ys=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,762 @@
+{
+ "kind": "search",
+ "key": "chris isaak wicked game",
+ "request": "Chris Isaak Wicked Game",
+ "recorded_at": "2026-09-29T02:37:18Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game",
+   "album": {
+    "name": "Heart Shaped World",
+    "id": "MPREb_iDQq6eFHwdB"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "rslMMY64BVg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 290,
+   "views": "254M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/RnCZQZ54IRYQD3JDTNmQa9Fk5oSeXSyDBUwP6ts8n015I0L4Zr29p20vf7P-fz81pLxYrBTWfYD48uQCEQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/RnCZQZ54IRYQD3JDTNmQa9Fk5oSeXSyDBUwP6ts8n015I0L4Zr29p20vf7P-fz81pLxYrBTWfYD48uQCEQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game",
+   "album": {
+    "name": "Best Of Chris Isaak",
+    "id": "MPREb_bftzw8FBZbV"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "20UpB7XwQv4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:47",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 287,
+   "views": "254M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/jO3KsaJqnEovRH7EXIcEEBz9Byvb3bXo2Fm5qMmrR8HnQ5HL2ICYhamlse8VMrt2qnJAOyyTo3D7rUQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/jO3KsaJqnEovRH7EXIcEEBz9Byvb3bXo2Fm5qMmrR8HnQ5HL2ICYhamlse8VMrt2qnJAOyyTo3D7rUQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (Live)",
+   "album": {
+    "name": "At The Bimbo's 365 Club, San Francisco 29 June '95 (Live)",
+    "id": "MPREb_9PgdTAGRZzM"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "yOUwJNgThDY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:54",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 294,
+   "views": "46K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/FrM4LRslJ0XAwXaNUhSqXGN8Oxq90MGsjjbgZ68ePVUbF4jUUn3fdt-j2HEnz_5evvo84ee2pPfWaa5_=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/FrM4LRslJ0XAwXaNUhSqXGN8Oxq90MGsjjbgZ68ePVUbF4jUUn3fdt-j2HEnz_5evvo84ee2pPfWaa5_=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (Live)",
+   "album": {
+    "name": "Live In Australia",
+    "id": "MPREb_OVeLZZQRRlY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "3P1jrJpOtg8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 303,
+   "views": "51",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/WgpTyRHGH2crE4ptor1x22k06wtXGI0n9Ucg7n27VspTwmKhZeSlqBcL3iR_2lJOyZmZOB-wqhhIfUv9=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/WgpTyRHGH2crE4ptor1x22k06wtXGI0n9Ucg7n27VspTwmKhZeSlqBcL3iR_2lJOyZmZOB-wqhhIfUv9=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "I Wonder",
+   "album": {
+    "name": "Baja Sessions",
+    "id": "MPREb_QxikkICMCsi"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "qs48JdzW-ro",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:56",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 176,
+   "views": "1.4M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/3D1M6DnV6DFO6yOTP4ARFoy3Qe8rMZRtXCBup2hstZnTS5M27SFF95spLjnnaildriutxoNQn9S_A9M=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/3D1M6DnV6DFO6yOTP4ARFoy3Qe8rMZRtXCBup2hstZnTS5M27SFF95spLjnnaildriutxoNQn9S_A9M=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Heart Shaped World",
+   "album": {
+    "name": "Heart Shaped World",
+    "id": "MPREb_iDQq6eFHwdB"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Y11Q0FeHOkM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 210,
+   "views": "209K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/RnCZQZ54IRYQD3JDTNmQa9Fk5oSeXSyDBUwP6ts8n015I0L4Zr29p20vf7P-fz81pLxYrBTWfYD48uQCEQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/RnCZQZ54IRYQD3JDTNmQa9Fk5oSeXSyDBUwP6ts8n015I0L4Zr29p20vf7P-fz81pLxYrBTWfYD48uQCEQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Life Will Go On",
+   "album": {
+    "name": "Always Got Tonight",
+    "id": "MPREb_BW3sf5lyeZ6"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "iyqA-TY0zb8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:08",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 188,
+   "views": "1.9M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/JsHDt4_BEm5NEhuX7VWf8N4FFDrDCqTsYrhwdLLknKNCvLiT5ovt0iLe5m3vMXpD1ZsAxsOsqEfpRCw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/JsHDt4_BEm5NEhuX7VWf8N4FFDrDCqTsYrhwdLLknKNCvLiT5ovt0iLe5m3vMXpD1ZsAxsOsqEfpRCw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Can’t Help Falling in Love with You",
+   "album": {
+    "name": "Beyond The Sun (The Complete Collection)",
+    "id": "MPREb_fT6nGfkYPZt"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "iE04DL-dwLM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:02",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 182,
+   "views": "111K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/JNbjIsL9tjCFSUljJPeSiYAVVgUAoYNWhAErOclpM8vMXit75jubv_SLtUOfvzQ178XS0vhYHIbnrW-Z=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/JNbjIsL9tjCFSUljJPeSiYAVVgUAoYNWhAErOclpM8vMXit75jubv_SLtUOfvzQ178XS0vhYHIbnrW-Z=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (Extended Mix)",
+   "album": {
+    "name": "Wicked Game",
+    "id": "MPREb_P1H7P0f1aYk"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "T4pI1Bm_dw4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:35",
+   "year": null,
+   "artists": [
+    {
+     "name": "Klaas",
+     "id": "UCdwyRvg87lMQlZ7A5HXlAXQ"
+    }
+   ],
+   "duration_seconds": 215,
+   "views": "58K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/RFJ2sDIZB0qIVZVAb9SWzlt3yL3WP-PAKPDb2DNjKm4dB83-jLlc23xp185qgIWApQAc9-Bs88mzPYG5=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/RFJ2sDIZB0qIVZVAb9SWzlt3yL3WP-PAKPDb2DNjKm4dB83-jLlc23xp185qgIWApQAc9-Bs88mzPYG5=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Return To Me",
+   "album": {
+    "name": "Baja Sessions",
+    "id": "MPREb_QxikkICMCsi"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "F23F9sovbC0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:18",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 138,
+   "views": "141K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/3D1M6DnV6DFO6yOTP4ARFoy3Qe8rMZRtXCBup2hstZnTS5M27SFF95spLjnnaildriutxoNQn9S_A9M=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/3D1M6DnV6DFO6yOTP4ARFoy3Qe8rMZRtXCBup2hstZnTS5M27SFF95spLjnnaildriutxoNQn9S_A9M=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Shadows In A Mirror (Remastered 2025)",
+   "album": {
+    "name": "Forever Blue (Remastered 2025)",
+    "id": "MPREb_KGpzOAQqdtQ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "orO4w6PxDs0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:00",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 240,
+   "views": "319K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Fk-2FV_3UpIOgwhU1FfVHq-xfyU9dYQ-MZExKt5jsba50LGZmL_C5kqel9Tq9Is6qEVc1OKhfrVDZYw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Fk-2FV_3UpIOgwhU1FfVHq-xfyU9dYQ-MZExKt5jsba50LGZmL_C5kqel9Tq9Is6qEVc1OKhfrVDZYw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "The End Of Everything",
+   "album": {
+    "name": "Forever Blue",
+    "id": "MPREb_v1Be10zItI5"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "_0PQTto6wFM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:06",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 186,
+   "views": "79K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/F6QDGoY041NL3mUXirxOFZLIozpK1mKnawTe60LljrmNxujvSwY_UENE2Dq49qF8c39fjH35g4eeLXrv=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/F6QDGoY041NL3mUXirxOFZLIozpK1mKnawTe60LljrmNxujvSwY_UENE2Dq49qF8c39fjH35g4eeLXrv=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (Originally Performed by Chris Isaak) (Piano Karaoke Version)",
+   "album": {
+    "name": "Wicked Game (Piano Karaoke Instrumentals)",
+    "id": "MPREb_SZ78USlcMN1"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Ex1VNlRmzYo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:21",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sing2Piano",
+     "id": null
+    }
+   ],
+   "duration_seconds": 201,
+   "views": "691K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/bARjvEiNUAXZSYSjbgKNBRI1fDIWNxi0BJvcIMtwJyAi2jMflrF5s__Z2BzJITDHMPuR00JQSco2xV9i=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/bARjvEiNUAXZSYSjbgKNBRI1fDIWNxi0BJvcIMtwJyAi2jMflrF5s__Z2BzJITDHMPuR00JQSco2xV9i=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Pretty Girls Don't Cry",
+   "album": {
+    "name": "Baja Sessions",
+    "id": "MPREb_QxikkICMCsi"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Xe2uxeARH34",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:09",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 189,
+   "views": "178K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/3D1M6DnV6DFO6yOTP4ARFoy3Qe8rMZRtXCBup2hstZnTS5M27SFF95spLjnnaildriutxoNQn9S_A9M=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/3D1M6DnV6DFO6yOTP4ARFoy3Qe8rMZRtXCBup2hstZnTS5M27SFF95spLjnnaildriutxoNQn9S_A9M=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game",
+   "album": {
+    "name": "Wicked Game",
+    "id": "MPREb_RQbIzybMzmI"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "r_sRyYJ0ltI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:41",
+   "year": null,
+   "artists": [
+    {
+     "name": "Nobody's Wolf Child",
+     "id": "UCyMtG2knxBZDOK_DRmcTaEA"
+    }
+   ],
+   "duration_seconds": 341,
+   "views": "116K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/xHFeSJa80ZNZdSnrJX7ZkjHeQPQzBHCnp1WbCXjBhVq6Tu-5TdHsb1F7IsN1TzLuO--56z-zsjeANW0c=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/xHFeSJa80ZNZdSnrJX7ZkjHeQPQzBHCnp1WbCXjBhVq6Tu-5TdHsb1F7IsN1TzLuO--56z-zsjeANW0c=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Things Go Wrong (Remastered 2025)",
+   "album": {
+    "name": "Forever Blue (Remastered 2025)",
+    "id": "MPREb_KGpzOAQqdtQ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "_lRKtDuH33s",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:02",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 182,
+   "views": "529K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Fk-2FV_3UpIOgwhU1FfVHq-xfyU9dYQ-MZExKt5jsba50LGZmL_C5kqel9Tq9Is6qEVc1OKhfrVDZYw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Fk-2FV_3UpIOgwhU1FfVHq-xfyU9dYQ-MZExKt5jsba50LGZmL_C5kqel9Tq9Is6qEVc1OKhfrVDZYw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Can't Do A Thing",
+   "album": {
+    "name": "San Francisco Days",
+    "id": "MPREb_Wu6drodmLbl"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "GWJZ2qJqU0s",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:40",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 220,
+   "views": "2.7M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/WY3s37n-q7avA-2-RASZ6oI_J4p49638FbZWKmcvKaJe9FVmTUCQkTCnmojboOANPvX-jTViyVv_ZTq4=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/WY3s37n-q7avA-2-RASZ6oI_J4p49638FbZWKmcvKaJe9FVmTUCQkTCnmojboOANPvX-jTViyVv_ZTq4=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (feat. Chris Isaak)",
+   "album": {
+    "name": "Wicked Game",
+    "id": "MPREb_NZyDCniYfuY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "hAnqv5Xnk6w",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "7:49",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hugo Castillo",
+     "id": "UCupEWMjmTvoOCIOsxRVhLrQ"
+    },
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 469,
+   "views": "89K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ECmpIaTgynLA3KUDErn3S85AtE97u80-qv7pwD3OEDxfyj7sMA8ier6iXzQvaAnKO6ofPjJSuN_5jPC-=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ECmpIaTgynLA3KUDErn3S85AtE97u80-qv7pwD3OEDxfyj7sMA8ier6iXzQvaAnKO6ofPjJSuN_5jPC-=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (Extended Mix)",
+   "album": {
+    "name": "Wicked Game",
+    "id": "MPREb_4MWpDRBqSDL"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "AY14_v_ugdw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:16",
+   "year": null,
+   "artists": [
+    {
+     "name": "Cozy Sky",
+     "id": null
+    },
+    {
+     "name": "SYMONO",
+     "id": "UCI-kqtOCMlAnNwfNikjq-RQ"
+    },
+    {
+     "name": "Simon Riemann",
+     "id": "UCHb6kQHrCq88lPn7xIoFacA"
+    }
+   ],
+   "duration_seconds": 196,
+   "views": "7.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/WbHCGof26ycS4JHFPW-F4nzVyRBs7jkj5NSQ4uoBKWyMgE4vgL6R7xmY-_mfmbRRk2e51thmhxci7nwyXw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/WbHCGof26ycS4JHFPW-F4nzVyRBs7jkj5NSQ4uoBKWyMgE4vgL6R7xmY-_mfmbRRk2e51thmhxci7nwyXw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Go Walking Down There (Remastered 2025)",
+   "album": {
+    "name": "Forever Blue (Remastered 2025)",
+    "id": "MPREb_KGpzOAQqdtQ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ELHUb0dBEa4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 170,
+   "views": "394K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Fk-2FV_3UpIOgwhU1FfVHq-xfyU9dYQ-MZExKt5jsba50LGZmL_C5kqel9Tq9Is6qEVc1OKhfrVDZYw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Fk-2FV_3UpIOgwhU1FfVHq-xfyU9dYQ-MZExKt5jsba50LGZmL_C5kqel9Tq9Is6qEVc1OKhfrVDZYw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

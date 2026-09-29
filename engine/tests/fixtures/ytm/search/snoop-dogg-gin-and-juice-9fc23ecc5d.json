@@ -1,0 +1,754 @@
+{
+ "kind": "search",
+ "key": "snoop dogg gin and juice",
+ "request": "Snoop Dogg Gin and Juice",
+ "recorded_at": "2026-09-29T02:36:43Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin and Juice",
+   "album": {
+    "name": "Doggystyle",
+    "id": "MPREb_ajgAfvebdsT"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "1TqQvCdGSPk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "Snoop Dogg",
+     "id": "UC7xz_YipuZtypOuVALNzeog"
+    }
+   ],
+   "duration_seconds": 212,
+   "views": "306M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/sheneTZmxOOxdEKWz3nkL9FfRaeegcDfUeF9cQ7sXyi6WZJIDmYvisQ8830EgK2WWWcYHk52FDsrzKfE=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/sheneTZmxOOxdEKWz3nkL9FfRaeegcDfUeF9cQ7sXyi6WZJIDmYvisQ8830EgK2WWWcYHk52FDsrzKfE=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin and Juice",
+   "album": {
+    "name": "Death Row Greatest Hits",
+    "id": "MPREb_FhEbkBo4DAN"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "AQLwmsVLoiA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "Snoop Dogg",
+     "id": "UC7xz_YipuZtypOuVALNzeog"
+    }
+   ],
+   "duration_seconds": 212,
+   "views": "25M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/D21eIlLt4oobPT7168bxq9uooKPanCEFPgRYUrv5kRr9O7l1AbbPRDJLXnYWuHGA5b9LoHTlbnKC4nU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/D21eIlLt4oobPT7168bxq9uooKPanCEFPgRYUrv5kRr9O7l1AbbPRDJLXnYWuHGA5b9LoHTlbnKC4nU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Doggy Dogg World (feat. Tha Dogg Pound & The Dramatics)",
+   "album": {
+    "name": "Death Row Greatest Hits",
+    "id": "MPREb_FhEbkBo4DAN"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "mVK_VquUvSg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:41",
+   "year": null,
+   "artists": [
+    {
+     "name": "Snoop Dogg",
+     "id": "UC7xz_YipuZtypOuVALNzeog"
+    }
+   ],
+   "duration_seconds": 281,
+   "views": "45M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/D21eIlLt4oobPT7168bxq9uooKPanCEFPgRYUrv5kRr9O7l1AbbPRDJLXnYWuHGA5b9LoHTlbnKC4nU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/D21eIlLt4oobPT7168bxq9uooKPanCEFPgRYUrv5kRr9O7l1AbbPRDJLXnYWuHGA5b9LoHTlbnKC4nU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "My Heat Goes Boom",
+   "album": {
+    "name": "No Limit Top Dogg",
+    "id": "MPREb_S3RCtSFa2HF"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "M_E8iMVAOPs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:41",
+   "year": null,
+   "artists": [
+    {
+     "name": "Snoop Dogg",
+     "id": "UC7xz_YipuZtypOuVALNzeog"
+    }
+   ],
+   "duration_seconds": 221,
+   "views": "3.4M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/tsUwYoLqVO1bp0XhYy64oS0YS3SqREy3CACjog88W1r_1OoOPSnT-fhjzX7CD2nI1wgx5kw-LOJVlLMy=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/tsUwYoLqVO1bp0XhYy64oS0YS3SqREy3CACjog88W1r_1OoOPSnT-fhjzX7CD2nI1wgx5kw-LOJVlLMy=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Ain’t No Fun (If The Homies Can’t Have None) (feat. Nate Dogg, Warren G & Kurupt)",
+   "album": {
+    "name": "Doggystyle",
+    "id": "MPREb_ajgAfvebdsT"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "h3jOkCksXo4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:07",
+   "year": null,
+   "artists": [
+    {
+     "name": "Snoop Dogg",
+     "id": "UC7xz_YipuZtypOuVALNzeog"
+    }
+   ],
+   "duration_seconds": 247,
+   "views": "78M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/sheneTZmxOOxdEKWz3nkL9FfRaeegcDfUeF9cQ7sXyi6WZJIDmYvisQ8830EgK2WWWcYHk52FDsrzKfE=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/sheneTZmxOOxdEKWz3nkL9FfRaeegcDfUeF9cQ7sXyi6WZJIDmYvisQ8830EgK2WWWcYHk52FDsrzKfE=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin & Juice",
+   "album": {
+    "name": "Dangerous Minds (Original Motion Picture Soundtrack)",
+    "id": "MPREb_D5vEZKS9Neg"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "6m-5c5AqLRs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:09",
+   "year": null,
+   "artists": [
+    {
+     "name": "DeVanté",
+     "id": "UCLiI8b7AR7E1mpZ03QSCT7w"
+    }
+   ],
+   "duration_seconds": 309,
+   "views": "841K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/1t5coFr30m-4ns764rlnRdQQ8TmNm-uUkYT0f_7vDsIr9E15V83W9k8kdMBdjOyOoaQp2EQ9rhVVvmmkrg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/1t5coFr30m-4ns764rlnRdQQ8TmNm-uUkYT0f_7vDsIr9E15V83W9k8kdMBdjOyOoaQp2EQ9rhVVvmmkrg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Xxplosive (feat. Hittman, Six-Two, Nate Dogg & Kurupt)",
+   "album": {
+    "name": "2001",
+    "id": "MPREb_6EiilRp9nkg"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "WdlyIH2DX60",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:36",
+   "year": null,
+   "artists": [
+    {
+     "name": "Dr. Dre",
+     "id": "UC1g7JmTw4Gv8W9YINg3M1FA"
+    }
+   ],
+   "duration_seconds": 216,
+   "views": "149M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/w42BmVN1uTez5YI99RhuHvk4u_Eoj6LeXg7d-HMP4c5IkZ5XJbD_04suECGSRw0a6TBdU8UgwRNlDt3lQQ=w60-h60-s-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/w42BmVN1uTez5YI99RhuHvk4u_Eoj6LeXg7d-HMP4c5IkZ5XJbD_04suECGSRw0a6TBdU8UgwRNlDt3lQQ=w120-h120-s-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin & Juice (Karaoke Version)",
+   "album": {
+    "name": "Sbi Karaoke Superstars - Snoop Dogg",
+    "id": "MPREb_0G5IM9bqqlU"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "GCoQaQX9-Yc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:49",
+   "year": null,
+   "artists": [
+    {
+     "name": "SBI Audio Karaoke",
+     "id": "UC-datJvUm6Le3lkM3dW2lSw"
+    }
+   ],
+   "duration_seconds": 229,
+   "views": "6.7K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/5dBhxTBVNKnDVTT5svC1qPOHhyPBIcPn4jJ8ohtpAb9Ev_xe8EvD8iTDAN0xHeYB0U99bNpy21B84LN7-w=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/5dBhxTBVNKnDVTT5svC1qPOHhyPBIcPn4jJ8ohtpAb9Ev_xe8EvD8iTDAN0xHeYB0U99bNpy21B84LN7-w=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin n Juice",
+   "album": {
+    "name": "Gin n Juice",
+    "id": "MPREb_sktEJysY2OP"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "OWkqxE-cI9k",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:19",
+   "year": null,
+   "artists": [
+    {
+     "name": "1nonly archive",
+     "id": "UC4XHSTHLOwFvFiZj4gFqMsA"
+    }
+   ],
+   "duration_seconds": 139,
+   "views": "48K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Q5-9qvrLq10w30BYQmOQ8MUTZsWjWRqUZ_XbJkK-ZuCizfE8Vxj7Hji2zWl5BCwN0PmL9O2aZMWRSv0=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Q5-9qvrLq10w30BYQmOQ8MUTZsWjWRqUZ_XbJkK-ZuCizfE8Vxj7Hji2zWl5BCwN0PmL9O2aZMWRSv0=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Imagine (feat. Dr. Dre & D'Angelo)",
+   "album": {
+    "name": "Tha Blue Carpet Treatment",
+    "id": "MPREb_IfQlayh4QVe"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "7yruoism8BM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:43",
+   "year": null,
+   "artists": [
+    {
+     "name": "Snoop Dogg",
+     "id": "UC7xz_YipuZtypOuVALNzeog"
+    }
+   ],
+   "duration_seconds": 283,
+   "views": "25M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/cw3zgQ20iR2I5ySn3rXTmI7hYPDELDhAE8XU9t69SZ1FK4yVnNzginiNJ0TdWel9yaU4WkBATYAV8E0=w60-h60-s-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/cw3zgQ20iR2I5ySn3rXTmI7hYPDELDhAE8XU9t69SZ1FK4yVnNzginiNJ0TdWel9yaU4WkBATYAV8E0=w120-h120-s-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "2001",
+   "album": {
+    "name": "Tha Doggfather",
+    "id": "MPREb_5FXxcf80iG1"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "NVWtdE3r0bk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:33",
+   "year": null,
+   "artists": [
+    {
+     "name": "Snoop Dogg",
+     "id": "UC7xz_YipuZtypOuVALNzeog"
+    }
+   ],
+   "duration_seconds": 213,
+   "views": "2.5M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/l1mC5LtGx-YfMbA-BiZRIzkF1s9D0NAq-IrVU4aQdRc0Ttum4IDMNmUDRlTqLXsVRTwc66PfMc-0ztA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/l1mC5LtGx-YfMbA-BiZRIzkF1s9D0NAq-IrVU4aQdRc0Ttum4IDMNmUDRlTqLXsVRTwc66PfMc-0ztA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Nuthin But a G'Thang (feat. Dr Dre)",
+   "album": {
+    "name": "Hip Hop Throwback Collection",
+    "id": "MPREb_rimBm95hmNg"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "5GRqhX-CRkM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:56",
+   "year": null,
+   "artists": [
+    {
+     "name": "Snoop Dogg",
+     "id": "UC7xz_YipuZtypOuVALNzeog"
+    }
+   ],
+   "duration_seconds": 236,
+   "views": "266M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Qk7Yy8XknVkdiLPz08nLR_2UOCSnrTUrHUQ6lHQrgcVGfulUldEqDPrMqPW79_-e72Jif4gIDTl_j2B0hg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Qk7Yy8XknVkdiLPz08nLR_2UOCSnrTUrHUQ6lHQrgcVGfulUldEqDPrMqPW79_-e72Jif4gIDTl_j2B0hg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin and Juice",
+   "album": {
+    "name": "Block Party",
+    "id": "MPREb_OpdlbLv06jE"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "_QP9JQulqD0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:42",
+   "year": null,
+   "artists": [
+    {
+     "name": "Duane Perera",
+     "id": null
+    }
+   ],
+   "duration_seconds": 102,
+   "views": "360",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/IPxuBQW9tU6Yf8JDU_hpbOzvD71jVun9yVR87ZDZ97GZv748FdXVsOCrMn1CboFIJqPcnRuhg7WkHv-F=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/IPxuBQW9tU6Yf8JDU_hpbOzvD71jVun9yVR87ZDZ97GZv748FdXVsOCrMn1CboFIJqPcnRuhg7WkHv-F=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin & Juice",
+   "album": {
+    "name": "SKITS",
+    "id": "MPREb_JJMWz13HvN9"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "6KBJ_4JQEKY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "MAJAN",
+     "id": "UC5d4DAYBJgH7olhX-DljU5Q"
+    }
+   ],
+   "duration_seconds": 150,
+   "views": "185K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Ko8Zq3BRLwa6udvm_lPDu4OJADL6q7-d0xO_EwKHHJ83RoPMal7oFkLrBZsz19G59FH4O_22gACrY3Kpcg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Ko8Zq3BRLwa6udvm_lPDu4OJADL6q7-d0xO_EwKHHJ83RoPMal7oFkLrBZsz19G59FH4O_22gACrY3Kpcg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gz and Hustlas",
+   "album": {
+    "name": "Doggystyle",
+    "id": "MPREb_ajgAfvebdsT"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "2PqQW6Vq4ic",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:36",
+   "year": null,
+   "artists": [
+    {
+     "name": "Snoop Dogg",
+     "id": "UC7xz_YipuZtypOuVALNzeog"
+    }
+   ],
+   "duration_seconds": 276,
+   "views": "14M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/sheneTZmxOOxdEKWz3nkL9FfRaeegcDfUeF9cQ7sXyi6WZJIDmYvisQ8830EgK2WWWcYHk52FDsrzKfE=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/sheneTZmxOOxdEKWz3nkL9FfRaeegcDfUeF9cQ7sXyi6WZJIDmYvisQ8830EgK2WWWcYHk52FDsrzKfE=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "GIN AND JUICE (feat. le$)",
+   "album": {
+    "name": "GIN AND JUICE",
+    "id": "MPREb_IlnYuE7BusD"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "fC-_olL4ZNQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:27",
+   "year": null,
+   "artists": [
+    {
+     "name": "DRODi",
+     "id": "UCzQAAwVxTXPTCNx2P3teBxg"
+    }
+   ],
+   "duration_seconds": 147,
+   "views": "205K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/B8zXi1yvHUN6TE3mFApjwvx7qGioNLJQBvf9ik-mceQuOBLFEPsyrVwh80rZf_ifEjW933Ll7tDrnequ3A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/B8zXi1yvHUN6TE3mFApjwvx7qGioNLJQBvf9ik-mceQuOBLFEPsyrVwh80rZf_ifEjW933Ll7tDrnequ3A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin and Juice Remix",
+   "album": {
+    "name": "Dusk Till Dawn Flow",
+    "id": "MPREb_q8oXID5Hg8b"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "LhXYaB2Niq8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:40",
+   "year": null,
+   "artists": [
+    {
+     "name": "90s G-Funk Legends",
+     "id": "UCbBHZ4h6diDkkuSkzUqIiCQ"
+    }
+   ],
+   "duration_seconds": 160,
+   "views": "242",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/fOMxtIoZ_UyKZt6Shpt_UowwHQe7InTijOEUUjgeonzWR4PNJ0DFbaHzrFraWIuU0LlGLOWOXnNYjGsb=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/fOMxtIoZ_UyKZt6Shpt_UowwHQe7InTijOEUUjgeonzWR4PNJ0DFbaHzrFraWIuU0LlGLOWOXnNYjGsb=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin And Juice (as made famous by Snoop Doggy Dogg)",
+   "album": {
+    "name": "Hip Hop Master Beats - Instrumental Versions",
+    "id": "MPREb_MPoGVrZP7Gy"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "m0LiPuPAZxE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:49",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hip Hop DJs United",
+     "id": "UCpK3RF7ZdtaIWK_4mHW3v5Q"
+    }
+   ],
+   "duration_seconds": 229,
+   "views": "8.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/6m3JGdrp9DIVp2VqbAbf5MgqVAoMPor0X7ZlpjqeRGZ4PjsvUhU0WeH2GQD4fBY1xzypeGqMMK9wOLiO=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/6m3JGdrp9DIVp2VqbAbf5MgqVAoMPor0X7ZlpjqeRGZ4PjsvUhU0WeH2GQD4fBY1xzypeGqMMK9wOLiO=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin and Juice",
+   "album": {
+    "name": "Gin and Juice",
+    "id": "MPREb_8hbK3TqYPw8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "u3SpGpwAf1I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kopy Kat",
+     "id": "UCPAnf1CFdgpLGzk3PvkTnEw"
+    },
+    {
+     "name": "Rap King",
+     "id": "UCssuP7UsFaCYIkRAc2bDURA"
+    }
+   ],
+   "duration_seconds": 151,
+   "views": "108",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/YwfOy5ttGYKz3UNiawFeCtC02GRHLPayIqjAd2a-VMBYzgkaUCEpug5rKDBGRECIiPbXxljg9kTNh1k=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/YwfOy5ttGYKz3UNiawFeCtC02GRHLPayIqjAd2a-VMBYzgkaUCEpug5rKDBGRECIiPbXxljg9kTNh1k=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin And Juice",
+   "album": {
+    "name": "Say No 2 Holidays",
+    "id": "MPREb_ndWrgM3Elf9"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "5oAa3aYKT_I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:55",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bula",
+     "id": "UCvXLULlVJARb5TzFjN7L1UA"
+    }
+   ],
+   "duration_seconds": 175,
+   "views": "141",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/T421Kqxv80rqsXR9ZMVccpvySEaCA-F7gYqGJg2dgz0Wv1ZHXMG-hV6gPHJRwSNOA5PrAZENDFytpTu6lQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/T421Kqxv80rqsXR9ZMVccpvySEaCA-F7gYqGJg2dgz0Wv1ZHXMG-hV6gPHJRwSNOA5PrAZENDFytpTu6lQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

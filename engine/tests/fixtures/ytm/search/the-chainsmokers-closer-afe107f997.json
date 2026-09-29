@@ -1,0 +1,766 @@
+{
+ "kind": "search",
+ "key": "the chainsmokers closer",
+ "request": "The Chainsmokers Closer",
+ "recorded_at": "2026-09-29T02:37:08Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Closer (feat. Halsey)",
+   "album": {
+    "name": "Collage",
+    "id": "MPREb_4jnVJ5IIw9h"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "r7zTKRonHXM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:06",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Chainsmokers",
+     "id": "UCQgUHOPJJrmzCjExg-ISupA"
+    }
+   ],
+   "duration_seconds": 246,
+   "views": "5.9B",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/jvgMIjgbvnqnwLwjtqNa0euo9WStdIxrJnpQURgbwuPazT2OpZUdYPZe1gss2fK39oC8ITofFmeGxKY=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/jvgMIjgbvnqnwLwjtqNa0euo9WStdIxrJnpQURgbwuPazT2OpZUdYPZe1gss2fK39oC8ITofFmeGxKY=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Honest",
+   "album": {
+    "name": "Memories...Do Not Open",
+    "id": "MPREb_f16tYSOZnrM"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "d74rfoJJ3Z8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Chainsmokers",
+     "id": "UCQgUHOPJJrmzCjExg-ISupA"
+    }
+   ],
+   "duration_seconds": 208,
+   "views": "37M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/LoHg5B8dq9JxwzN31tDqpFEn0e6scAHBAu3N1o1r3BkJwGjgk6YAjIcbS1d3sk4Sf5TH0T7xh-QFmNJ6=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/LoHg5B8dq9JxwzN31tDqpFEn0e6scAHBAu3N1o1r3BkJwGjgk6YAjIcbS1d3sk4Sf5TH0T7xh-QFmNJ6=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Closer",
+   "album": {
+    "name": "11:11",
+    "id": "MPREb_qyIDwXalAYq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "isyvGLFf5I0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:12",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Brown",
+     "id": "UCMXDyVR2tclKWhbqNforSyA"
+    }
+   ],
+   "duration_seconds": 132,
+   "views": "5M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Te8uJed48jKvoNWxpeRcQfBRRopznQGaPa-9uPj7B9J2Dg9AxbSIObIKB0yFu_-5uk0Hm7TkdVfE0WfD=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Te8uJed48jKvoNWxpeRcQfBRRopznQGaPa-9uPj7B9J2Dg9AxbSIObIKB0yFu_-5uk0Hm7TkdVfE0WfD=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Takeaway (feat. Lennon Stella)",
+   "album": {
+    "name": "World War Joy",
+    "id": "MPREb_wal05eWIvBs"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Ule9dFN5mxE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Chainsmokers",
+     "id": "UCQgUHOPJJrmzCjExg-ISupA"
+    },
+    {
+     "name": "Illenium",
+     "id": "UCX1RfjxgafTHW4gYocAD1lw"
+    }
+   ],
+   "duration_seconds": 210,
+   "views": "443M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/E3hiJa7ieYyoW0sRkcSIgqwwQQv4MawfTZBWvj1OBkRvFAtP3ps51VQnVSk4vIRCMVJCcsTt5TrTsYm1Cg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/E3hiJa7ieYyoW0sRkcSIgqwwQQv4MawfTZBWvj1OBkRvFAtP3ps51VQnVSk4vIRCMVJCcsTt5TrTsYm1Cg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Setting Fires",
+   "album": {
+    "name": "Collage",
+    "id": "MPREb_4jnVJ5IIw9h"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "hXm1DpOcVhU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:08",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Chainsmokers",
+     "id": "UCQgUHOPJJrmzCjExg-ISupA"
+    },
+    {
+     "name": "XYLØ",
+     "id": "UCSb4zqM7ZlvvrySnqLA3dlg"
+    }
+   ],
+   "duration_seconds": 248,
+   "views": "92M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/jvgMIjgbvnqnwLwjtqNa0euo9WStdIxrJnpQURgbwuPazT2OpZUdYPZe1gss2fK39oC8ITofFmeGxKY=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/jvgMIjgbvnqnwLwjtqNa0euo9WStdIxrJnpQURgbwuPazT2OpZUdYPZe1gss2fK39oC8ITofFmeGxKY=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Closer",
+   "album": {
+    "name": "Closer",
+    "id": "MPREb_QV0chMNFDbG"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "10bW_3RrzYw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:20",
+   "year": null,
+   "artists": [
+    {
+     "name": "Oscar & Chill",
+     "id": "UCAAJvrg7pK-BrmpAzFlhm2A"
+    }
+   ],
+   "duration_seconds": 260,
+   "views": "123K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/iiB6IljbHseDTxwxwRomC-eFoSR7_DIpx0ExbcvOh5CGlr_PCq14AsuqspP6G5wqN0vK1FKOr-gtVg4=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/iiB6IljbHseDTxwxwRomC-eFoSR7_DIpx0ExbcvOh5CGlr_PCq14AsuqspP6G5wqN0vK1FKOr-gtVg4=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Closer (Originally Performed by Chainsmokers Feat. Halsey) (Karaoke) (feat. Halsey)",
+   "album": {
+    "name": "Maximum Pop Karaoke Hits",
+    "id": "MPREb_0PPhwcPgMtG"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "yCpb7UJKf34",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:06",
+   "year": null,
+   "artists": [
+    {
+     "name": "Pop Karaoke All-Stars",
+     "id": null
+    }
+   ],
+   "duration_seconds": 246,
+   "views": "21M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/8lmBAX4pBNWGvsNbMEcLwWHfL69XYrB6GUaAP69QRjG6LX5qvUbsa1Z5XvkRc44jOrK7pFF8Q65OcgU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/8lmBAX4pBNWGvsNbMEcLwWHfL69XYrB6GUaAP69QRjG6LX5qvUbsa1Z5XvkRc44jOrK7pFF8Q65OcgU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Closer",
+   "album": {
+    "name": "Indigo",
+    "id": "MPREb_UuHy0OmZSIm"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "mJcjXjYWI6E",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:17",
+   "year": null,
+   "artists": [
+    {
+     "name": "RM",
+     "id": "UCJCAlMsCuld3v96t-9SffdA"
+    },
+    {
+     "name": "Paul Blanco",
+     "id": "UCFIo26G3nImrcvqdF48AOfQ"
+    },
+    {
+     "name": "Mahalia",
+     "id": "UCwOfHTZPlyZ98A5EiPtV4rg"
+    }
+   ],
+   "duration_seconds": 197,
+   "views": "20M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/crvXmAcxrjDv02eNxlQ2E0tFg0iTQ_KnPQEw4B7jhu8yFlGshMR1fa7dQ8UOApBo5d1V4bZV42Hx1h0=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/crvXmAcxrjDv02eNxlQ2E0tFg0iTQ_KnPQEw4B7jhu8yFlGshMR1fa7dQ8UOApBo5d1V4bZV42Hx1h0=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bloodstream",
+   "album": {
+    "name": "Memories...Do Not Open",
+    "id": "MPREb_f16tYSOZnrM"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "htPfZAowVnE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:45",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Chainsmokers",
+     "id": "UCQgUHOPJJrmzCjExg-ISupA"
+    }
+   ],
+   "duration_seconds": 225,
+   "views": "26M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/LoHg5B8dq9JxwzN31tDqpFEn0e6scAHBAu3N1o1r3BkJwGjgk6YAjIcbS1d3sk4Sf5TH0T7xh-QFmNJ6=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/LoHg5B8dq9JxwzN31tDqpFEn0e6scAHBAu3N1o1r3BkJwGjgk6YAjIcbS1d3sk4Sf5TH0T7xh-QFmNJ6=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Closer (Piano Version)",
+   "album": {
+    "name": "Closer (Piano Version)",
+    "id": "MPREb_AGCx6yXc2Xt"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "bitOC2qKh64",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:04",
+   "year": null,
+   "artists": [
+    {
+     "name": "LittleTranscriber",
+     "id": "UCPrOXTPWqzNMSMnsLlmzmYA"
+    }
+   ],
+   "duration_seconds": 244,
+   "views": "853K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vf5FSbgIVkKDCfQx0b8k4ytQ0OeyXyK8fH2U4xgcXlxp2PSjfGdnwYGES14s_BHy5dOvBsC4V7bZMHI=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vf5FSbgIVkKDCfQx0b8k4ytQ0OeyXyK8fH2U4xgcXlxp2PSjfGdnwYGES14s_BHy5dOvBsC4V7bZMHI=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Closer (feat. Uncle Austin & Buravan)",
+   "album": {
+    "name": "Closer",
+    "id": "MPREb_S97I5acYpYt"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "WMA1fxfIwsQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:20",
+   "year": null,
+   "artists": [
+    {
+     "name": "Meddy",
+     "id": "UCdX46Thh-qnz3XdiptYNthA"
+    }
+   ],
+   "duration_seconds": 200,
+   "views": "6.6M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/HkW25qMPQvU9rfFhYTTLwQn-HvD2fykcuQiKghPAvCXkOHZUHkFyVUPIz6p5jG6U2J5T_s9nF5eEKWY=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/HkW25qMPQvU9rfFhYTTLwQn-HvD2fykcuQiKghPAvCXkOHZUHkFyVUPIz6p5jG6U2J5T_s9nF5eEKWY=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Closer",
+   "album": {
+    "name": "Closer",
+    "id": "MPREb_MvkJzlI6qBp"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "sQpkQ83Inbg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:09",
+   "year": null,
+   "artists": [
+    {
+     "name": "Walk Off the Earth",
+     "id": "UCr_NjdI2AnxtefeOBC2RAqg"
+    }
+   ],
+   "duration_seconds": 249,
+   "views": "7.8K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/r1Gz1BJayiDss1g-ANRIisbWk9HP4OD-GFc3XvRMyC7axqgQ8Sg-7O8U7iD-ZlSiJvlKkQHuT4b_R3Yl=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/r1Gz1BJayiDss1g-ANRIisbWk9HP4OD-GFc3XvRMyC7axqgQ8Sg-7O8U7iD-ZlSiJvlKkQHuT4b_R3Yl=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Closer",
+   "album": {
+    "name": "Piano Dreamers Cover The Chainsmokers",
+    "id": "MPREb_5DeIwaXFl97"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "dGpcZcRjkPU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:22",
+   "year": null,
+   "artists": [
+    {
+     "name": "Piano Dreamers",
+     "id": "UCb-xnGD_My-6uKOnxRJCgrw"
+    }
+   ],
+   "duration_seconds": 202,
+   "views": "4K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/RZoUFwMkQXssOrHOdv3nCECrPfQlHBq3F5xylZj4Aev3etDWrub6eBYzjobniCxUplmxCRp-hpSXTcc=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/RZoUFwMkQXssOrHOdv3nCECrPfQlHBq3F5xylZj4Aev3etDWrub6eBYzjobniCxUplmxCRp-hpSXTcc=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Closer",
+   "album": {
+    "name": "CLOSER",
+    "id": "MPREb_czmvurnwDPA"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "mguVfQmYPu0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:29",
+   "year": null,
+   "artists": [
+    {
+     "name": "Joe Inoue",
+     "id": "UCYXAS2Nui2q1irtkJRZqJJg"
+    }
+   ],
+   "duration_seconds": 209,
+   "views": "80M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/691KrYtrLUnt3BnlkNSyaLg1xmCTMjdawXyLSeuOmLRxsreOjPG86kwHQUInLj8i_NpaQb3I127_D7g=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/691KrYtrLUnt3BnlkNSyaLg1xmCTMjdawXyLSeuOmLRxsreOjPG86kwHQUInLj8i_NpaQb3I127_D7g=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Closer (Cover)",
+   "album": {
+    "name": "Closer",
+    "id": "MPREb_bHQ66PuEhZK"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "6eVhno2VdDc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:01",
+   "year": null,
+   "artists": [
+    {
+     "name": "MusiX3",
+     "id": "UCsybkFNm-FkNvjr2EOcJwsQ"
+    }
+   ],
+   "duration_seconds": 301,
+   "views": "11",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/yyvQnc8XHrQ_UNVtlBhBfIbEoFDF8PwtsWZhnTrz1cP-nrGtmEXx4RHC9Cwm1AjNVgydlEe0EsqlKf2e1g=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/yyvQnc8XHrQ_UNVtlBhBfIbEoFDF8PwtsWZhnTrz1cP-nrGtmEXx4RHC9Cwm1AjNVgydlEe0EsqlKf2e1g=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Closer (Lower Key) [Originally Performed by The Chainsmokers & Halsey] (Piano Karaoke Version)",
+   "album": {
+    "name": "Closer (Piano Karaoke Instrumentals)",
+    "id": "MPREb_tB5ES57JEvR"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "6sSbWR_QfKI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:01",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sing2Piano",
+     "id": "UCIOnedxkKOYiwQZrbnRAcQA"
+    }
+   ],
+   "duration_seconds": 181,
+   "views": "363K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/XGxLwMFe44l1tFAkQVSpesD5bxqQa3zbaws9ia4xI0RKWEkmBjPrfBW_S3WasWz5s0IRS3-IeH6nbIc=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/XGxLwMFe44l1tFAkQVSpesD5bxqQa3zbaws9ia4xI0RKWEkmBjPrfBW_S3WasWz5s0IRS3-IeH6nbIc=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Closer (Piano Cover)",
+   "album": {
+    "name": "Closer",
+    "id": "MPREb_wRK5F1PFCv9"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "dqnb7g80Eyw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:01",
+   "year": null,
+   "artists": [
+    {
+     "name": "Solar Flare Piano",
+     "id": "UCGuTNh81fNd1tPwLlJSMlFQ"
+    }
+   ],
+   "duration_seconds": 301,
+   "views": "36",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/7jCsTpKfa4_qxw3gicjtCS6u04SFfmfROvtRvyTZHl1Etorw52cBT6XH2tMUV7P_7Hm-Hb04UGVroDH1UA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/7jCsTpKfa4_qxw3gicjtCS6u04SFfmfROvtRvyTZHl1Etorw52cBT6XH2tMUV7P_7Hm-Hb04UGVroDH1UA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Closer (Originally Performed by The Chainsmokers & Halsey) (Piano Karaoke Version)",
+   "album": {
+    "name": "Closer (Piano Karaoke Instrumentals)",
+    "id": "MPREb_tB5ES57JEvR"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "NwIX-Q4npuk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:01",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sing2Piano",
+     "id": "UCIOnedxkKOYiwQZrbnRAcQA"
+    }
+   ],
+   "duration_seconds": 181,
+   "views": "1.5M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/XGxLwMFe44l1tFAkQVSpesD5bxqQa3zbaws9ia4xI0RKWEkmBjPrfBW_S3WasWz5s0IRS3-IeH6nbIc=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/XGxLwMFe44l1tFAkQVSpesD5bxqQa3zbaws9ia4xI0RKWEkmBjPrfBW_S3WasWz5s0IRS3-IeH6nbIc=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Paris / Closer / All We Know (Mashup)",
+   "album": {
+    "name": "Paris / Closer / All We Know (Mashup)",
+    "id": "MPREb_wSngyR4MoIZ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "xUJoGIujT3Q",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:14",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Hammers",
+     "id": "UCGWgG6wJU64OqVNA0_Tsk4w"
+    }
+   ],
+   "duration_seconds": 194,
+   "views": "730",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/6R8LFrDOEq5KkoIeKcT8qU0Ry9C8K2qT4mfIEd797dt-KaSpc4KuQX-BzHG-QBFwAUt6Au4EKlbIHCo=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/6R8LFrDOEq5KkoIeKcT8qU0Ry9C8K2qT4mfIEd797dt-KaSpc4KuQX-BzHG-QBFwAUt6Au4EKlbIHCo=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Closer (Radio Instrumental Mix)",
+   "album": {
+    "name": "Closer (Special Instrumental Versions) [Tribute To The Chainsmokers feat. Halsey]",
+    "id": "MPREb_jgiEGctCF0Z"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "cWrzmj1Xpio",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:05",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kar Vogue",
+     "id": "UCIF8O_3l3eJM3RRsuoxjf4w"
+    }
+   ],
+   "duration_seconds": 245,
+   "views": "10K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/f1g_nk-TBGxqcNBEcPNSresNEJwBoCBX0t96i9hQ8NaBjoNEXJFRj694qJnvVTeYMcC9LQ-R-JUfm6oW=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/f1g_nk-TBGxqcNBEcPNSresNEJwBoCBX0t96i9hQ8NaBjoNEXJFRj694qJnvVTeYMcC9LQ-R-JUfm6oW=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

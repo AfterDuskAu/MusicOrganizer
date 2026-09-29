@@ -1,0 +1,798 @@
+{
+ "kind": "search",
+ "key": "alessia cara here",
+ "request": "Alessia Cara Here",
+ "recorded_at": "2026-09-29T02:36:37Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Here",
+   "album": {
+    "name": "Know-It-All",
+    "id": "MPREb_IOTjwwSUZvC"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "dI5JaT6gjvw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:20",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alessia Cara",
+     "id": "UCrqLG11GjSzO5bVYzXIF8CA"
+    }
+   ],
+   "duration_seconds": 200,
+   "views": "497M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Ke3emicpnXJZR4-oONWo9kJ0zj2qlxl8sZunQnwe8_AFfWqxsirgN3I-sB08FBLVqaU_H2JFb2RpwEM4=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Ke3emicpnXJZR4-oONWo9kJ0zj2qlxl8sZunQnwe8_AFfWqxsirgN3I-sB08FBLVqaU_H2JFb2RpwEM4=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Stone (feat. Sebastian Kole)",
+   "album": {
+    "name": "Know-It-All (Deluxe)",
+    "id": "MPREb_ZK8G0nbjeAd"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "H1TB0_MZhzA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:48",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alessia Cara",
+     "id": "UCrqLG11GjSzO5bVYzXIF8CA"
+    }
+   ],
+   "duration_seconds": 228,
+   "views": "9.9M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/MRm9cQZb2v8euyZYj_WdouVDj8cLSTyV5rKVFaXO2iT30f_PoaGtlgVqSC_IzZsel4EhBhrMW4l94Gk=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/MRm9cQZb2v8euyZYj_WdouVDj8cLSTyV5rKVFaXO2iT30f_PoaGtlgVqSC_IzZsel4EhBhrMW4l94Gk=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Here",
+   "album": {
+    "name": "Prizefighter",
+    "id": "MPREb_ChOeHSlXFLX"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "H4PIb3Y_tBU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:12",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mumford & Sons",
+     "id": "UCJ3Q_kExh0ZZMMT05o0FXzA"
+    },
+    {
+     "name": "Chris Stapleton",
+     "id": "UCEBTD8bc2J7wG7Fqhss7Jow"
+    }
+   ],
+   "duration_seconds": 192,
+   "views": "4.1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/4i1fJY4GOuZ-0m21Y2A9SdgB3K_vIymQR2VHoe_Q0cUQc2a8n2O3CSJKNAYZdVStpk31fHWLClJ4W42q=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/4i1fJY4GOuZ-0m21Y2A9SdgB3K_vIymQR2VHoe_Q0cUQc2a8n2O3CSJKNAYZdVStpk31fHWLClJ4W42q=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "here (hoodtrap - slowed + reverb)",
+   "album": {
+    "name": "here",
+    "id": "MPREb_wHrqI5YsWdB"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "O4whWLnol2k",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:47",
+   "year": null,
+   "artists": [
+    {
+     "name": "HOOD SAUCE",
+     "id": "UCzMLLgrafUGMsSzRmzSJazg"
+    },
+    {
+     "name": "hoodtrapie",
+     "id": "UC8653nTGzd7yIlhvSBGxzXQ"
+    },
+    {
+     "name": "mylancore",
+     "id": "UCMuV9pOHCbmqaZhe6IjTeZQ"
+    }
+   ],
+   "duration_seconds": 107,
+   "views": "2.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/LoMpz2Mr9tyOwmvmFav9rRRvsWqFvZJMzfiKsmLKvZmwWxq2wvftixvAR6C9MYTq7JTFvwQPr128RZfU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/LoMpz2Mr9tyOwmvmFav9rRRvsWqFvZJMzfiKsmLKvZmwWxq2wvftixvAR6C9MYTq7JTFvwQPr128RZfU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "here (hoodtrap - 8D sped up)",
+   "album": {
+    "name": "here",
+    "id": "MPREb_wHrqI5YsWdB"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "c5V-rR1Wixc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:16",
+   "year": null,
+   "artists": [
+    {
+     "name": "HOOD SAUCE",
+     "id": "UCzMLLgrafUGMsSzRmzSJazg"
+    },
+    {
+     "name": "hoodtrapie",
+     "id": "UC8653nTGzd7yIlhvSBGxzXQ"
+    },
+    {
+     "name": "mylancore",
+     "id": "UCMuV9pOHCbmqaZhe6IjTeZQ"
+    }
+   ],
+   "duration_seconds": 76,
+   "views": "673",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/LoMpz2Mr9tyOwmvmFav9rRRvsWqFvZJMzfiKsmLKvZmwWxq2wvftixvAR6C9MYTq7JTFvwQPr128RZfU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/LoMpz2Mr9tyOwmvmFav9rRRvsWqFvZJMzfiKsmLKvZmwWxq2wvftixvAR6C9MYTq7JTFvwQPr128RZfU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "here (8D instrumental)",
+   "album": {
+    "name": "here",
+    "id": "MPREb_ryVdVouPpT8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "CczidBrkuvU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:22",
+   "year": null,
+   "artists": [
+    {
+     "name": "brown eyed girl",
+     "id": "UCOXTTqR1glKbpFMcqdvQXgg"
+    }
+   ],
+   "duration_seconds": 202,
+   "views": "822",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vQ1niCF6FnS6pXSDhl4ugH_LyJ7-Srl6XCmbn7ko5IbEZe5DHJsCRJ1jA7Kpnd2cv4PhiR3lhQKJySd2RQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vQ1niCF6FnS6pXSDhl4ugH_LyJ7-Srl6XCmbn7ko5IbEZe5DHJsCRJ1jA7Kpnd2cv4PhiR3lhQKJySd2RQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "here",
+   "album": {
+    "name": "here",
+    "id": "MPREb_ryVdVouPpT8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "CJOp2RduyYo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:22",
+   "year": null,
+   "artists": [
+    {
+     "name": "brown eyed girl",
+     "id": "UCOXTTqR1glKbpFMcqdvQXgg"
+    }
+   ],
+   "duration_seconds": 202,
+   "views": "6.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vQ1niCF6FnS6pXSDhl4ugH_LyJ7-Srl6XCmbn7ko5IbEZe5DHJsCRJ1jA7Kpnd2cv4PhiR3lhQKJySd2RQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vQ1niCF6FnS6pXSDhl4ugH_LyJ7-Srl6XCmbn7ko5IbEZe5DHJsCRJ1jA7Kpnd2cv4PhiR3lhQKJySd2RQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "here (hoodtrap - instrumental slowed + reverb)",
+   "album": {
+    "name": "here",
+    "id": "MPREb_wHrqI5YsWdB"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "HdGOvYPwIA0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:47",
+   "year": null,
+   "artists": [
+    {
+     "name": "HOOD SAUCE",
+     "id": "UCzMLLgrafUGMsSzRmzSJazg"
+    },
+    {
+     "name": "hoodtrapie",
+     "id": "UC8653nTGzd7yIlhvSBGxzXQ"
+    },
+    {
+     "name": "mylancore",
+     "id": "UCMuV9pOHCbmqaZhe6IjTeZQ"
+    }
+   ],
+   "duration_seconds": 107,
+   "views": "199",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/LoMpz2Mr9tyOwmvmFav9rRRvsWqFvZJMzfiKsmLKvZmwWxq2wvftixvAR6C9MYTq7JTFvwQPr128RZfU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/LoMpz2Mr9tyOwmvmFav9rRRvsWqFvZJMzfiKsmLKvZmwWxq2wvftixvAR6C9MYTq7JTFvwQPr128RZfU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "here (slowed + reverb)",
+   "album": {
+    "name": "here",
+    "id": "MPREb_eioNtw2XaYP"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "1yS-sv-6EZM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:57",
+   "year": null,
+   "artists": [
+    {
+     "name": "bbygirl",
+     "id": "UC86g_QDp_8OJDExz9LTHkwQ"
+    }
+   ],
+   "duration_seconds": 237,
+   "views": "5.8K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/HM8Vxs3ZnoL9Lbn0DE4t2BSWwYUUHIOy3QSsQih0Z1xcikMU9gqDYdIlKErwwgvngSOL8cNos4ARXGHC=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/HM8Vxs3ZnoL9Lbn0DE4t2BSWwYUUHIOy3QSsQih0Z1xcikMU9gqDYdIlKErwwgvngSOL8cNos4ARXGHC=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "here (hoodtrap - 8D instrumental slowed + reverb)",
+   "album": {
+    "name": "here",
+    "id": "MPREb_wHrqI5YsWdB"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ZcDMvx-xV4I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:47",
+   "year": null,
+   "artists": [
+    {
+     "name": "HOOD SAUCE",
+     "id": "UCzMLLgrafUGMsSzRmzSJazg"
+    },
+    {
+     "name": "hoodtrapie",
+     "id": "UC8653nTGzd7yIlhvSBGxzXQ"
+    },
+    {
+     "name": "mylancore",
+     "id": "UCMuV9pOHCbmqaZhe6IjTeZQ"
+    }
+   ],
+   "duration_seconds": 107,
+   "views": "196",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/LoMpz2Mr9tyOwmvmFav9rRRvsWqFvZJMzfiKsmLKvZmwWxq2wvftixvAR6C9MYTq7JTFvwQPr128RZfU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/LoMpz2Mr9tyOwmvmFav9rRRvsWqFvZJMzfiKsmLKvZmwWxq2wvftixvAR6C9MYTq7JTFvwQPr128RZfU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "1-800-273-8255 (feat. Alessia Cara & Khalid)",
+   "album": {
+    "name": "Heartbroken",
+    "id": "MPREb_NbA7lBgNZVT"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "GaFoS-Kza8U",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:11",
+   "year": null,
+   "artists": [
+    {
+     "name": "Logic",
+     "id": "UCKC7Xqy0UXT370RvFR2kXYg"
+    }
+   ],
+   "duration_seconds": 251,
+   "views": "767M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/XNX4mtJfz8L65TvMS-i8XXqcrWySjyxgKsHAgKh3dcYZG2YDsuPpKPH4r0wV_NY35n2jn5EwIcSoIjJV7Q=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/XNX4mtJfz8L65TvMS-i8XXqcrWySjyxgKsHAgKh3dcYZG2YDsuPpKPH4r0wV_NY35n2jn5EwIcSoIjJV7Q=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Here (Cover)",
+   "album": {
+    "name": "Covers",
+    "id": "MPREb_TnOxkgFJhHu"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "BlntBAQqoW4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:16",
+   "year": null,
+   "artists": [
+    {
+     "name": "Serena Guarnero",
+     "id": "UCgADmMw8Wq5sXx2ZK10oq6A"
+    }
+   ],
+   "duration_seconds": 196,
+   "views": "101",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/rpie4DmLGlHKyFn36-y0-y--p3AFQ1iE1Q6KkJFMuisspO4KleQYd3xJrPRxyEn0dIBdB9vZgyLHUlOC=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/rpie4DmLGlHKyFn36-y0-y--p3AFQ1iE1Q6KkJFMuisspO4KleQYd3xJrPRxyEn0dIBdB9vZgyLHUlOC=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "here (sped up)",
+   "album": {
+    "name": "here",
+    "id": "MPREb_MuOIm3oAEo7"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "0ddIiOqQZD0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:08",
+   "year": null,
+   "artists": [
+    {
+     "name": "bbygirl",
+     "id": "UC86g_QDp_8OJDExz9LTHkwQ"
+    }
+   ],
+   "duration_seconds": 188,
+   "views": "4.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/fH-a8fhWdkfL4JibNB7hUM9jmZoggfvXDYmRUHjl9kzaBVWEMGDo1yDgoFsNJAlYVq_1p3Qur9WZMU9Z=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/fH-a8fhWdkfL4JibNB7hUM9jmZoggfvXDYmRUHjl9kzaBVWEMGDo1yDgoFsNJAlYVq_1p3Qur9WZMU9Z=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Let Me Down Slowly (feat. Alessia Cara)",
+   "album": {
+    "name": "Let Me Down Slowly",
+    "id": "MPREb_fFhaqDVyLp6"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "YL_iwN4dlT4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alec Benjamin",
+     "id": "UC1boV3N53rCwCGI00FugnRQ"
+    }
+   ],
+   "duration_seconds": 170,
+   "views": "2.1B",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/GByshnHtSDMkOWfU279TD7c4GBNOPufadEKbjbKtj7lTRvDbsxPy8HEdmRXfz-g4ouCMEyQKJf9Cx8BJ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/GByshnHtSDMkOWfU279TD7c4GBNOPufadEKbjbKtj7lTRvDbsxPy8HEdmRXfz-g4ouCMEyQKJf9Cx8BJ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Here",
+   "album": {
+    "name": "Here",
+    "id": "MPREb_QXQr12wFjJf"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "2BMp7mOs450",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:24",
+   "year": null,
+   "artists": [
+    {
+     "name": "JUNNA",
+     "id": "UC5y8wGAb1edv_9j2MBp3rcg"
+    }
+   ],
+   "duration_seconds": 264,
+   "views": "43M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/sKTkTmYpQHcRY6-Jm6j0O3ndkfwHmVqwy2MuxE4Fd9p6P9oqyYM-WnQtRPuzjlpZ7WeF7YQpmBgmi10=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/sKTkTmYpQHcRY6-Jm6j0O3ndkfwHmVqwy2MuxE4Fd9p6P9oqyYM-WnQtRPuzjlpZ7WeF7YQpmBgmi10=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Here (Male Cover)",
+   "album": {
+    "name": "Here",
+    "id": "MPREb_ZOs49tVDrdo"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "JBOrZXDr32U",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:33",
+   "year": null,
+   "artists": [
+    {
+     "name": "Franklaay",
+     "id": "UCGeXVFgobPjidr8CqwE9irQ"
+    },
+    {
+     "name": "Melodyz Town",
+     "id": "UCuyMfEqonKEqYdpyFOlaKYw"
+    }
+   ],
+   "duration_seconds": 213,
+   "views": "270",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vsZskLgNgeYLCGz7Genp_faGP2aDJVww_DFJrFjRUu4PR6BEsa3woFvEHdisRsY3MLq1NoAX-L4X6_60cw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vsZskLgNgeYLCGz7Genp_faGP2aDJVww_DFJrFjRUu4PR6BEsa3woFvEHdisRsY3MLq1NoAX-L4X6_60cw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "here (Nightcore)",
+   "album": {
+    "name": "here",
+    "id": "MPREb_BoXGaHc90Lp"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "qLdFimjgn_o",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "neko",
+     "id": "UCAyYJnwlUTnZolb8iUPSE9A"
+    }
+   ],
+   "duration_seconds": 172,
+   "views": "616",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/fLKAdxRmR9QH6pW-oO8513evGnggGkPO_NOnwspBGyEkZIbn4kYZB3Le5kM8-bkzmgyPiiBH1hOOSrY=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/fLKAdxRmR9QH6pW-oO8513evGnggGkPO_NOnwspBGyEkZIbn4kYZB3Le5kM8-bkzmgyPiiBH1hOOSrY=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Here",
+   "album": {
+    "name": "Piano Dreamers Cover Alessia Cara",
+    "id": "MPREb_ALEpy5f67Uc"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "p9nbV7ULywE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:35",
+   "year": null,
+   "artists": [
+    {
+     "name": "Piano Dreamers",
+     "id": "UCb-xnGD_My-6uKOnxRJCgrw"
+    }
+   ],
+   "duration_seconds": 215,
+   "views": "167",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/S8EJ7fKVh72RrLH0ueXJWvZV1xVLXWPD77Q1sWEC37utsw5VJQlPpfbChOFNZziUWYh1GPiO9fV7Mb5J=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/S8EJ7fKVh72RrLH0ueXJWvZV1xVLXWPD77Q1sWEC37utsw5VJQlPpfbChOFNZziUWYh1GPiO9fV7Mb5J=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "here (hoodtrap - sped up)",
+   "album": {
+    "name": "here",
+    "id": "MPREb_wHrqI5YsWdB"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "1C9uB1lowFU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:16",
+   "year": null,
+   "artists": [
+    {
+     "name": "HOOD SAUCE",
+     "id": "UCzMLLgrafUGMsSzRmzSJazg"
+    },
+    {
+     "name": "hoodtrapie",
+     "id": "UC8653nTGzd7yIlhvSBGxzXQ"
+    },
+    {
+     "name": "mylancore",
+     "id": "UCMuV9pOHCbmqaZhe6IjTeZQ"
+    }
+   ],
+   "duration_seconds": 76,
+   "views": "673",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/LoMpz2Mr9tyOwmvmFav9rRRvsWqFvZJMzfiKsmLKvZmwWxq2wvftixvAR6C9MYTq7JTFvwQPr128RZfU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/LoMpz2Mr9tyOwmvmFav9rRRvsWqFvZJMzfiKsmLKvZmwWxq2wvftixvAR6C9MYTq7JTFvwQPr128RZfU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "here (8D)",
+   "album": {
+    "name": "here",
+    "id": "MPREb_ryVdVouPpT8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "4_Ql9yurfr0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:22",
+   "year": null,
+   "artists": [
+    {
+     "name": "brown eyed girl",
+     "id": "UCOXTTqR1glKbpFMcqdvQXgg"
+    }
+   ],
+   "duration_seconds": 202,
+   "views": "6.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vQ1niCF6FnS6pXSDhl4ugH_LyJ7-Srl6XCmbn7ko5IbEZe5DHJsCRJ1jA7Kpnd2cv4PhiR3lhQKJySd2RQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vQ1niCF6FnS6pXSDhl4ugH_LyJ7-Srl6XCmbn7ko5IbEZe5DHJsCRJ1jA7Kpnd2cv4PhiR3lhQKJySd2RQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

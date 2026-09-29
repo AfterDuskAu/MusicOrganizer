@@ -15,7 +15,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, NoReturn
 
-from musicorg import __version__, doctor, fileops, library, logging_setup, scan, status
+from musicorg import __version__, doctor, fileops, library, logging_setup, match, scan, status
 from musicorg.config import Config
 from musicorg.errors import (
     EXIT_INTERNAL,
@@ -140,9 +140,9 @@ def build_parser() -> argparse.ArgumentParser:
         commands,
         "match",
         "Search YouTube Music for new items and score the candidates.",
-        _not_yet("match", "06"),
+        _cmd_match,
     )
-    p.add_argument("--limit", type=int, metavar="N")
+    p.add_argument("--limit", type=int, metavar="N", help="Match at most N items.")
     p.add_argument(
         "--rescan",
         action="store_true",
@@ -443,6 +443,51 @@ class _Progress:
             return
         self.last = now
         print(f"  {done:,} of {total:,} {self.what}", file=sys.stderr, flush=True)
+
+
+def _cmd_match(args: argparse.Namespace) -> int:
+    if args.limit is not None and args.limit < 1:
+        raise UserError("--limit must be 1 or more.")
+    progress = None if args.json else _MatchProgress()
+    with library.open(_library_root(args), write=True) as lib:
+        with open_index(lib.paths, write=True) as index:
+            result = match.run(lib, index, limit=args.limit, rescan=args.rescan, progress=progress)
+    if args.json:
+        _print_json(result.to_dict())
+        return EXIT_OK
+    if not result.items:
+        what = "new, review or not-found" if args.rescan else "new"
+        print(f"No {what} items to match. Scan a source first with `musicorg scan`.")
+    else:
+        minutes = result.seconds / 60
+        took = f"{minutes:.0f} min" if minutes >= 1 else f"{result.seconds:.0f} s"
+        print(
+            f"Matched {result.items:,} items in {took}: {result.matched_auto:,} automatic, "
+            f"{result.review:,} to review, {result.not_found:,} not found "
+            f"({result.searches:,} searches; the rest came from the cache)."
+        )
+    if result.left:
+        print(f"{result.left:,} more items are waiting; run `musicorg match` again to carry on.")
+    if result.sample is not None:
+        print(f"Listen to {result.sample_size} of the automatic matches: {result.sample}")
+    return EXIT_OK
+
+
+class _MatchProgress:
+    """Items matched, with an estimate of the time left, on stderr every 5 seconds."""
+
+    def __init__(self) -> None:
+        self.last = 0.0
+
+    def __call__(self, done: int, total: int, seconds_left: float | None) -> None:
+        now = time.monotonic()
+        if done != total and now - self.last < 5:
+            return
+        self.last = now
+        left = ""
+        if seconds_left and done != total:
+            left = f", about {max(1, round(seconds_left / 60))} min left"
+        print(f"  {done:,} of {total:,} items{left}", file=sys.stderr, flush=True)
 
 
 # How `journal list` describes each operation (docs/ENGINE_API.md → Journal operation).

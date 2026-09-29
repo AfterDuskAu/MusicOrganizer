@@ -1,0 +1,754 @@
+{
+ "kind": "search",
+ "key": "stevie wonder master blaster jammin",
+ "request": "Stevie Wonder Master Blaster (Jammin')",
+ "recorded_at": "2026-09-29T02:36:13Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Master Blaster (Jammin')",
+   "album": {
+    "name": "Hotter Than July",
+    "id": "MPREb_qiNAbBMhgDr"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "44F34jc7wGI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:08",
+   "year": null,
+   "artists": [
+    {
+     "name": "Stevie Wonder",
+     "id": "UCR83RRXHzXrEQbu_ZQmPMSg"
+    }
+   ],
+   "duration_seconds": 308,
+   "views": "89M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/TJ-Ia4x-VUj6_6f0QzpPn80P07xy_ApqjuLl5PPsGh_N_0z9bYkhbauCpq2C8eySqKetX5Hn3ct6SKlS=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/TJ-Ia4x-VUj6_6f0QzpPn80P07xy_ApqjuLl5PPsGh_N_0z9bYkhbauCpq2C8eySqKetX5Hn3ct6SKlS=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Master Blaster (Jammin') (12\" Version)",
+   "album": {
+    "name": "Positivity",
+    "id": "MPREb_0zWae4xd3ag"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "zU3GNWBZDyM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:13",
+   "year": null,
+   "artists": [
+    {
+     "name": "Stevie Wonder",
+     "id": "UCR83RRXHzXrEQbu_ZQmPMSg"
+    }
+   ],
+   "duration_seconds": 373,
+   "views": "89M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/48oct4YovoXK90D07rf2fb54uCpdapECYduvn8-cXTbTUIsGAXBeG1ZQI2o1Q1IzPWE9exSyvBwlZUvU=w60-h60-s-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/48oct4YovoXK90D07rf2fb54uCpdapECYduvn8-cXTbTUIsGAXBeG1ZQI2o1Q1IzPWE9exSyvBwlZUvU=w120-h120-s-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Master Blaster (Jammin') (12\" Version)",
+   "album": {
+    "name": "The Complete Stevie Wonder",
+    "id": "MPREb_1CVjj6idCNJ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "0bEa3jERELA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:14",
+   "year": null,
+   "artists": [
+    {
+     "name": "Stevie Wonder",
+     "id": "UCR83RRXHzXrEQbu_ZQmPMSg"
+    }
+   ],
+   "duration_seconds": 374,
+   "views": "89M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/yWOMTI12nGoHkvDPJPA8GIwE6LOV_NZryDOLpvTJmQEzd0hEbVmLkuJmOqpSE2SxM9zNMnw9V7BDKC3B4g=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/yWOMTI12nGoHkvDPJPA8GIwE6LOV_NZryDOLpvTJmQEzd0hEbVmLkuJmOqpSE2SxM9zNMnw9V7BDKC3B4g=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Master Blaster",
+   "album": {
+    "name": "Stevie Wonder in Jazz: A Jazz Tribute to Stevie Wonder",
+    "id": "MPREb_k65Gb92chDp"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "1Nr_tZ1mq-E",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "7:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "Lara Iacovini Band",
+     "id": null
+    }
+   ],
+   "duration_seconds": 423,
+   "views": "788",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/jOe5DCSGYonfhn3kPzsnCToS5VfEnpXAxyWIR6oU2LRA7SAV-LI87hvIYnA_XDmtklQMkYFgV70vsKzcgQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/jOe5DCSGYonfhn3kPzsnCToS5VfEnpXAxyWIR6oU2LRA7SAV-LI87hvIYnA_XDmtklQMkYFgV70vsKzcgQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Master Blaster (Jammin')",
+   "album": {
+    "name": "The Blind Auditions #3 (Seizoen 11)",
+    "id": "MPREb_SIRLeMzOyTx"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "TcnAsTPqdiM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:48",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Voice Of Holland",
+     "id": "UCRoZZxByc3ijIVtaGI1ZClA"
+    },
+    {
+     "name": "Joanne Tholel",
+     "id": null
+    }
+   ],
+   "duration_seconds": 108,
+   "views": "78",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/UoAC5rgWwAp0zrt_OAy34IpgJ3Mecnl9Iko3iEUChayhcPsyS29tQGby0ZlMOhwUFe2NM4QKLABzuBlg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/UoAC5rgWwAp0zrt_OAy34IpgJ3Mecnl9Iko3iEUChayhcPsyS29tQGby0ZlMOhwUFe2NM4QKLABzuBlg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Master Blaster (Jammin’) (The Voice Performance)",
+   "album": {
+    "name": "Master Blaster (Jammin’) (The Voice Performance)",
+    "id": "MPREb_1idMvkseRj8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "kMPhk1s-Op8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:33",
+   "year": null,
+   "artists": [
+    {
+     "name": "Brandon Royal",
+     "id": "UCFgU7nSPwnn1MAElT8lOO-w"
+    }
+   ],
+   "duration_seconds": 213,
+   "views": "1.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/z2TKARf-tT9DoccHlsM8px_PoyKY7BZUHSfHcW6HDaX-azQTQTRHvXP6h_7qWPGxRyu7TVPXwFgAHwo=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/z2TKARf-tT9DoccHlsM8px_PoyKY7BZUHSfHcW6HDaX-azQTQTRHvXP6h_7qWPGxRyu7TVPXwFgAHwo=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Master Blaster (jammin')",
+   "album": {
+    "name": "The Stevie Wonder 1970s Karaoke Songbook",
+    "id": "MPREb_twbyYfknLz8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "xK3doGydVMg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:27",
+   "year": null,
+   "artists": [
+    {
+     "name": "The 1970s Karaoke Band",
+     "id": null
+    }
+   ],
+   "duration_seconds": 267,
+   "views": "7.5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/1x5zZSebAixFA-JkAJjtAvIY3eUZCcGPutvVbubDgMAsEl152VKgGmpks2n6J4XHBX2jLqWtloHftBRL-w=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/1x5zZSebAixFA-JkAJjtAvIY3eUZCcGPutvVbubDgMAsEl152VKgGmpks2n6J4XHBX2jLqWtloHftBRL-w=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Master Blaster",
+   "album": {
+    "name": "Master Blaster",
+    "id": "MPREb_LZBjph1ypSk"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "rdoSH1okdH8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:05",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kenn Bailey",
+     "id": "UCPR3JeBTRWUuUuKPDJX0YOg"
+    }
+   ],
+   "duration_seconds": 185,
+   "views": "9",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Ssx-xOPcWj6Ez9wzJj7W8oXMZllIZ1y60u2myJbod5sh8jxR9mXlFWbGakpZwG15L3sNIuKxw5I4tms=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Ssx-xOPcWj6Ez9wzJj7W8oXMZllIZ1y60u2myJbod5sh8jxR9mXlFWbGakpZwG15L3sNIuKxw5I4tms=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Master Blaster",
+   "album": {
+    "name": "July to September 2022",
+    "id": "MPREb_iMhhVas82dt"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ybK8nSsstZI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:58",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hindley Street Country Club",
+     "id": "UCu3ZD25nzcKzvjocXGExbRQ"
+    }
+   ],
+   "duration_seconds": 298,
+   "views": "668K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/6hpV2nYpMP7kuT-5M53RiXJN0N66pZJ0WCsphD9cAdhV5TBeCmgw0Y2nrQq3AfSW-mMkcZ4kySy--Be3fA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/6hpV2nYpMP7kuT-5M53RiXJN0N66pZJ0WCsphD9cAdhV5TBeCmgw0Y2nrQq3AfSW-mMkcZ4kySy--Be3fA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Master Blaster",
+   "album": {
+    "name": "Top Hits for You and Me",
+    "id": "MPREb_MvbXUF5PKvw"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Czd1N1UYZxk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:40",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hit Machine",
+     "id": "UC_byXMGJewAeQecw4XmZvig"
+    }
+   ],
+   "duration_seconds": 280,
+   "views": "7.2K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/HAzgbpu3uvqPEWoaYKp5hTefC_4Gf2VO2zTrxNlLR59_jN70rysBqtq1YdFlhpgqAckhUXTfdm0zxOQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/HAzgbpu3uvqPEWoaYKp5hTefC_4Gf2VO2zTrxNlLR59_jN70rysBqtq1YdFlhpgqAckhUXTfdm0zxOQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Master Blaster (Jammin')",
+   "album": {
+    "name": "Hotter Than July",
+    "id": "MPREb_PCXbYouVdwc"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "c1yieTi3uBw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:09",
+   "year": null,
+   "artists": [
+    {
+     "name": "Stevie Wonder",
+     "id": "UCR83RRXHzXrEQbu_ZQmPMSg"
+    }
+   ],
+   "duration_seconds": 309,
+   "views": "89M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/AZdEU7BMuShNtZtOugsJzZilTJv2PZR7QGQBd9v_ZEGsyH4EesqI-lY23et15ayjhO8H6jnSuChsV-vD=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/AZdEU7BMuShNtZtOugsJzZilTJv2PZR7QGQBd9v_ZEGsyH4EesqI-lY23et15ayjhO8H6jnSuChsV-vD=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Master Blaster (Jammin')",
+   "album": {
+    "name": "All Out Acoustic 80s",
+    "id": "MPREb_07IJU3DajE5"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "SmxIyLf52B4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:59",
+   "year": null,
+   "artists": [
+    {
+     "name": "Twisted Flow",
+     "id": "UCMzEcoR9TN9nIUB6xazBPCg"
+    }
+   ],
+   "duration_seconds": 239,
+   "views": "568",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/E8Cy98u3RcqMa--V9sGbsjE3tOHwIp2jX6UKraSlvm7vC7UYghZqYfIPB5YdG5mRKF-w6Wm5ucBdim_b=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/E8Cy98u3RcqMa--V9sGbsjE3tOHwIp2jX6UKraSlvm7vC7UYghZqYfIPB5YdG5mRKF-w6Wm5ucBdim_b=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Master Blaster (Jammin') (Cover)",
+   "album": {
+    "name": "Master Blaster (Jammin') (Cover)",
+    "id": "MPREb_lotJFVMW1G0"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "jcbIxXvbRV8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:02",
+   "year": null,
+   "artists": [
+    {
+     "name": "Zaïna",
+     "id": "UCMjNR57o_RFICRJ_UBgJhIg"
+    }
+   ],
+   "duration_seconds": 122,
+   "views": "79",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/BdkBZtyKfoHfmlI5Ib2OzenHxyfBwpAsHWDSLDa-uSHCuYAHnFuqxayWLxSbzM7zraiR4y7GoSr5F_XpQw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/BdkBZtyKfoHfmlI5Ib2OzenHxyfBwpAsHWDSLDa-uSHCuYAHnFuqxayWLxSbzM7zraiR4y7GoSr5F_XpQw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Master Blaster Jammin' (From The Voice Of Holland 5)",
+   "album": {
+    "name": "Master Blaster Jammin' (From The Voice Of Holland 5)",
+    "id": "MPREb_rtXVlDiB0ZK"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Tvpruo-admo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:38",
+   "year": null,
+   "artists": [
+    {
+     "name": "Daisy van Lingen",
+     "id": "UCz5CyOW0RVMOPyPt_zPxGEQ"
+    }
+   ],
+   "duration_seconds": 158,
+   "views": "4.6K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/GertC7GhP4gckDQRy-ADigY57jVBXjx58CXqzHYWtboxsuioMfTueNZo8TB2dcWgenp7p6fJgtbxrn-ntA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/GertC7GhP4gckDQRy-ADigY57jVBXjx58CXqzHYWtboxsuioMfTueNZo8TB2dcWgenp7p6fJgtbxrn-ntA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Master Blaster (Jammin')",
+   "album": {
+    "name": "60s 70s and 80s Pop Covers",
+    "id": "MPREb_dfedfTBsvvz"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "qblZbEltcxQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:59",
+   "year": null,
+   "artists": [
+    {
+     "name": "Twisted Flow",
+     "id": "UCMzEcoR9TN9nIUB6xazBPCg"
+    }
+   ],
+   "duration_seconds": 239,
+   "views": "568",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/BI8Oa8BDlGncSlbs1aD75rKVyjWCOTfFSmoapaBCCYHecHuigBOl2aVu2OkP6dQQYf4mWmkg5J76MVk=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/BI8Oa8BDlGncSlbs1aD75rKVyjWCOTfFSmoapaBCCYHecHuigBOl2aVu2OkP6dQQYf4mWmkg5J76MVk=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Master Blaster (Karaoke Version) [Originally Performed By Stevie Wonder]",
+   "album": {
+    "name": "Karaoke Hits of Stevie Wonder, Vol. 1",
+    "id": "MPREb_YqQLLIcocVy"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "E_QXDcB3vjE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:27",
+   "year": null,
+   "artists": [
+    {
+     "name": "Karaoke Compilation Stars",
+     "id": null
+    }
+   ],
+   "duration_seconds": 267,
+   "views": "7.5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/RuxXmUiC_uUdCygsZHMQHnDdSKA06AxD-XzBDFYZB_-EI730m-lBZY2YNXvipWOEOgI3F7-0hskv17GJ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/RuxXmUiC_uUdCygsZHMQHnDdSKA06AxD-XzBDFYZB_-EI730m-lBZY2YNXvipWOEOgI3F7-0hskv17GJ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Master Blaster (Jammin)",
+   "album": {
+    "name": "A Tribute to the Music of Stevie Wonder",
+    "id": "MPREb_nHmMnopXbSx"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "B16gj4Zs_kk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:53",
+   "year": null,
+   "artists": [
+    {
+     "name": "Doctors Pop",
+     "id": "UCQ0B3lCU8yOujg2YNcG65Hw"
+    }
+   ],
+   "duration_seconds": 293,
+   "views": "2.8K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/UzeRo5pwjbKL_s_VH9MfNISnB862NuS7XNXzTXC8KPq4TiOn85R2WweEP9pd2cC8yJUt1xneZqNy_0hrNA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/UzeRo5pwjbKL_s_VH9MfNISnB862NuS7XNXzTXC8KPq4TiOn85R2WweEP9pd2cC8yJUt1xneZqNy_0hrNA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Master Blaster Jammin' ((Originally Performed by Stevie Wonder) [Karaoke Version])",
+   "album": {
+    "name": "Best of Stevie Wonder, Vol. 01 (Karaoke Version)",
+    "id": "MPREb_cCHyA2Gxgra"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "WgFQ1a6Pqys",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:59",
+   "year": null,
+   "artists": [
+    {
+     "name": "MIDIFine Systems",
+     "id": "UCsGQ0-mPsKAcuLGhac29hDA"
+    }
+   ],
+   "duration_seconds": 299,
+   "views": "7.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/qS7kAPeDFhIMEue2CZ2KETWdHFvh8iLq6HQFvHJe23NKqEf3oh2IyW4Ut_mMP_gsUwc9HvwK1Dz5_Vs=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/qS7kAPeDFhIMEue2CZ2KETWdHFvh8iLq6HQFvHJe23NKqEf3oh2IyW4Ut_mMP_gsUwc9HvwK1Dz5_Vs=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Master Blaster (Jammin') [Karaoke Version]",
+   "album": {
+    "name": "Karaoke (In the Style of Stevie Wonder)",
+    "id": "MPREb_DQR4nYjMK6T"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "-tTGV_hc9xE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:09",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ameritz Digital Karaoke",
+     "id": "UCBiIw0n8Z4j1P-Luc9YyKeQ"
+    }
+   ],
+   "duration_seconds": 249,
+   "views": "7.5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/o0nYD7HoNsOumb91Ed7-CftYXI6XGvtukPrjmniqSmjsqfy_aUpxir5PMZoB0jFeh1vpLgCa9nQ76vNU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/o0nYD7HoNsOumb91Ed7-CftYXI6XGvtukPrjmniqSmjsqfy_aUpxir5PMZoB0jFeh1vpLgCa9nQ76vNU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Master Blaster (Jammin') [Karaoke Version]",
+   "album": {
+    "name": "Karaoke (In the Style of Stevie Wonder)",
+    "id": "MPREb_h8kSrTtuPr7"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ABE1P9l85Z4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:09",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ameritz Karaoke World Stars",
+     "id": "UCRKXh0dGLgIOc2lbzZG2pmg"
+    }
+   ],
+   "duration_seconds": 249,
+   "views": "7.5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ZqpUuo-Q4LfEEUEY93tkFYnI7wPVRHlRN1Xe3_TM8lLqpBTtSQ-DFb-LAiKr5Xh0PQ_upsmR030Wwd-47A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ZqpUuo-Q4LfEEUEY93tkFYnI7wPVRHlRN1Xe3_TM8lLqpBTtSQ-DFb-LAiKr5Xh0PQ_upsmR030Wwd-47A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

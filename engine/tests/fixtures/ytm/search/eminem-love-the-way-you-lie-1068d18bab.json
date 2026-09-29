@@ -1,0 +1,750 @@
+{
+ "kind": "search",
+ "key": "eminem love the way you lie",
+ "request": "Eminem Love the Way You Lie",
+ "recorded_at": "2026-09-29T02:36:17Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love The Way You Lie (feat. Rihanna)",
+   "album": {
+    "name": "Recovery",
+    "id": "MPREb_UUFKiZYr3uO"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "RnkShwdXfyc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:24",
+   "year": null,
+   "artists": [
+    {
+     "name": "Eminem",
+     "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+    }
+   ],
+   "duration_seconds": 264,
+   "views": "4B",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/IUuZFSUqFLMQlejTtsnLM_cB16A0T1g-savL7DYbWz5NFh2-DOw5-v9_PREJt9keX48NSan-8yUQCPM=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/IUuZFSUqFLMQlejTtsnLM_cB16A0T1g-savL7DYbWz5NFh2-DOw5-v9_PREJt9keX48NSan-8yUQCPM=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love the Way You Lie",
+   "album": {
+    "name": "Vol. 2",
+    "id": "MPREb_OgOuAi5m24G"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "qORhB5GXc3M",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:26",
+   "year": null,
+   "artists": [
+    {
+     "name": "Walk Off the Earth",
+     "id": "UCr_NjdI2AnxtefeOBC2RAqg"
+    }
+   ],
+   "duration_seconds": 266,
+   "views": "33K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/XoymcgA_Q0nLy_kWBWrZ9Rg3DnwE8Nj3W9J8Z7CH4dfCVd7i9nrhIfmXIl3THNuSqcV5wxR6INlaIZs=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/XoymcgA_Q0nLy_kWBWrZ9Rg3DnwE8Nj3W9J8Z7CH4dfCVd7i9nrhIfmXIl3THNuSqcV5wxR6INlaIZs=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love the way you lie",
+   "album": {
+    "name": "Love the way you lie",
+    "id": "MPREb_nyN3k0QHVkP"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "sDQJ11JtY0k",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:51",
+   "year": null,
+   "artists": [
+    {
+     "name": "Made famous by Eminem",
+     "id": "UCDewClxy502izHE-StCRh5g"
+    }
+   ],
+   "duration_seconds": 291,
+   "views": "2K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vs4ftTVDD09W4Kt4UpyKWm249jP9Wy3UTiYcx8timm-zE_cTs4hQf5CFwUdm8WYfJagxYMirKvOnBBXBUA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vs4ftTVDD09W4Kt4UpyKWm249jP9Wy3UTiYcx8timm-zE_cTs4hQf5CFwUdm8WYfJagxYMirKvOnBBXBUA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love The Way You Lie (Part II) (Pt. 2) (feat. Eminem)",
+   "album": {
+    "name": "Loud (Japan Version)",
+    "id": "MPREb_uaAr9A9ESHP"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "1CozRvwZEAs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:57",
+   "year": null,
+   "artists": [
+    {
+     "name": "Rihanna",
+     "id": "UCvWtix2TtWGe9kffqnwdaMw"
+    }
+   ],
+   "duration_seconds": 297,
+   "views": "179M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/5qKDXKo8Hmm4DiKkU4OS_PZl2qVCR6wWBNd1OQCxqMYVqK8DDQY0ffKQfIzC6jLaGxrJq89f58UHUY0=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/5qKDXKo8Hmm4DiKkU4OS_PZl2qVCR6wWBNd1OQCxqMYVqK8DDQY0ffKQfIzC6jLaGxrJq89f58UHUY0=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love the Way You Lie (Extended Mix)",
+   "album": {
+    "name": "Dance Remix Diamonds Extended: Best of Rihanna Cover Collection",
+    "id": "MPREb_GotuDUdUh7n"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "L1GDbZnXGTo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "Driza Stone",
+     "id": null
+    }
+   ],
+   "duration_seconds": 331,
+   "views": "39K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/fBalFFIXW-DrijgCFRppw7rPSmOH2Sq84Y64dZHg82g9TpvOgDxoHpQpxMrFwUcYggpcaMagxZfareA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/fBalFFIXW-DrijgCFRppw7rPSmOH2Sq84Y64dZHg82g9TpvOgDxoHpQpxMrFwUcYggpcaMagxZfareA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love The Way You Lie (Made Popular By Rihanna) [Vocal Version]",
+   "album": {
+    "name": "Party Tyme Karaoke - Pop Party Pack 4 (Vocal Versions)",
+    "id": "MPREb_FCyUypM0SdM"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "oImdxrVWDUE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:08",
+   "year": null,
+   "artists": [
+    {
+     "name": "Party Tyme Karaoke",
+     "id": "UC20ZbpYgVBCMv0C6dKKjzEQ"
+    }
+   ],
+   "duration_seconds": 248,
+   "views": "225K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/paa7UlN9LAVS97w10I76RqJHfevmf3o499nsoW4QIAE8SfFGY-oTf7Gks9kfu6wWTXwfKBo_EpyxG1w=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/paa7UlN9LAVS97w10I76RqJHfevmf3o499nsoW4QIAE8SfFGY-oTf7Gks9kfu6wWTXwfKBo_EpyxG1w=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love The Way You Lie (feat. Rihanna)",
+   "album": {
+    "name": "Recovery",
+    "id": "MPREb_nsfwyAy4Uap"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "acMtKzTbAAU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:24",
+   "year": null,
+   "artists": [
+    {
+     "name": "Eminem",
+     "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+    }
+   ],
+   "duration_seconds": 264,
+   "views": "4B",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/3R6rNkEYEWHJ8Xtk1fJgTgIQs9cvEOWYv4smaNwaQ_imS4c5eJLUVoKOMmxCXCRFUks9paUXWAOzHJ8=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/3R6rNkEYEWHJ8Xtk1fJgTgIQs9cvEOWYv4smaNwaQ_imS4c5eJLUVoKOMmxCXCRFUks9paUXWAOzHJ8=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love The Way You Lie (Sped Up)",
+   "album": {
+    "name": "I Love The Way You Lie",
+    "id": "MPREb_DHxbRGlufSw"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "N79V_sRWseI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:06",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Soul Jazz Era",
+     "id": "UCAaVwzi9kN4wgIkinAcY10g"
+    }
+   ],
+   "duration_seconds": 366,
+   "views": "2K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/yq4E9Ff4tnH7up1dn2pSjrvii-ZApobsblm-2uXXvrzrX8YB-lwzaGir0Q9oONSJ7BcZ4rcEm2DSdZA3mw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/yq4E9Ff4tnH7up1dn2pSjrvii-ZApobsblm-2uXXvrzrX8YB-lwzaGir0Q9oONSJ7BcZ4rcEm2DSdZA3mw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love the Way You Lie (Made Famous by Eminem & Rihanna)",
+   "album": {
+    "name": "Big Hit Ringtones 2011",
+    "id": "MPREb_EwQcEJPN3FK"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Q9EVXZeZlmU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "0:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ringtone Masters",
+     "id": "UCmgTujYxTONP0ZFjX55S-JA"
+    }
+   ],
+   "duration_seconds": 30,
+   "views": "3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/5mg2QN5z3oyJkQgDKT_OHWQQ5RUNnjHSBhM6hmAxTuw94xHIodlxGDgo1lwic8r3n0ZK3VErQ2gAZCA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/5mg2QN5z3oyJkQgDKT_OHWQQ5RUNnjHSBhM6hmAxTuw94xHIodlxGDgo1lwic8r3n0ZK3VErQ2gAZCA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love the Way You Lie (Made Famous by Eminem & Rihanna)",
+   "album": {
+    "name": "Blockbuster Karaoke Hits",
+    "id": "MPREb_OFQQOUChkgQ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "WSzOojinIAk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:23",
+   "year": null,
+   "artists": [
+    {
+     "name": "Future Hitmakers",
+     "id": "UCsaKcP4-Qgja9-RbXCcPjkg"
+    }
+   ],
+   "duration_seconds": 263,
+   "views": "932K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ePmz824FG0fkccegIMCUA5i9cbtDBtgoAyCZFsojbqsaGFNCjLLQ0fzTtQg2v8xtnPC9o1w9EebfyEgM=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ePmz824FG0fkccegIMCUA5i9cbtDBtgoAyCZFsojbqsaGFNCjLLQ0fzTtQg2v8xtnPC9o1w9EebfyEgM=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love The Way You Lie (Pt. 2) (The Voice Performance 2015)",
+   "album": {
+    "name": "Love The Way You Lie (Part 2) (The Voice Performance)",
+    "id": "MPREb_jvU05663Haz"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "pQgNnrKpp7c",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:17",
+   "year": null,
+   "artists": [
+    {
+     "name": "Fatai V",
+     "id": "UC0HJx5yQi6ebQZaVWumq9ng"
+    }
+   ],
+   "duration_seconds": 197,
+   "views": "4.6K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vYFLzyh77q9wOGgoQUIfSvRO9zxO138ougnaaGdr6STIRgRNvgUEXGW1yFs6kyVy-rXi08d_ExDU9o1FpQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vYFLzyh77q9wOGgoQUIfSvRO9zxO138ougnaaGdr6STIRgRNvgUEXGW1yFs6kyVy-rXi08d_ExDU9o1FpQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love The Way You Lie (In The Style Of Eminem Feat. Rihanna) (feat. Rihanna)",
+   "album": {
+    "name": "Karaoke - Hip Hop Vol. 2",
+    "id": "MPREb_bKZ8EtBPiAn"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "6EYJCaG_bVY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:26",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ameritz Audio Karaoke",
+     "id": "UCyHDQp2Tg-makYOOsjb6Q_Q"
+    }
+   ],
+   "duration_seconds": 266,
+   "views": "6.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/uNFUYLgU-moEKqObK3LxZYz25egWcrRs1V0_p4eegaOP7gCNu0LGAz1JhdtSDfyDVvPZYJBR-i5AOp6xGQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/uNFUYLgU-moEKqObK3LxZYz25egWcrRs1V0_p4eegaOP7gCNu0LGAz1JhdtSDfyDVvPZYJBR-i5AOp6xGQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love the Way You Lie, Pt. 2",
+   "album": {
+    "name": "Purhythm (Tribute to Eminem)",
+    "id": "MPREb_r6DaG2EQMjX"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "9UNrEDssaUM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:20",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sparsh Shah",
+     "id": "UCcd1uo56wptZACxDiBSxwOQ"
+    }
+   ],
+   "duration_seconds": 320,
+   "views": "2.4K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/0_ibTxYcsL8tFddS1dsia7gdu8FS_hMr9hA5NCdhNxBMd5wu1gZTTTif2W7SeUotuvnvM28hx_GOD9J9=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/0_ibTxYcsL8tFddS1dsia7gdu8FS_hMr9hA5NCdhNxBMd5wu1gZTTTif2W7SeUotuvnvM28hx_GOD9J9=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love the Way You Lie (Eminem & Rihanna Karaoke Style)",
+   "album": {
+    "name": "Karaoke 2010 Karaoke #1 Hits Vol. 2",
+    "id": "MPREb_l9bPjqXNsg4"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "NGpKRs07y0I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:24",
+   "year": null,
+   "artists": [
+    {
+     "name": "Karaoke Party Players",
+     "id": null
+    }
+   ],
+   "duration_seconds": 264,
+   "views": "2.7K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/KNgMWuChlr_pq0i-jj79pELmBU4UiC0gNzYXGCEWdR76beZfcYFG4hFdKF6cBkpDTfCUpgXyGw2yGWo=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/KNgMWuChlr_pq0i-jj79pELmBU4UiC0gNzYXGCEWdR76beZfcYFG4hFdKF6cBkpDTfCUpgXyGw2yGWo=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love the Way You Lie",
+   "album": {
+    "name": "100% Top 40 - Summer 2011",
+    "id": "MPREb_IwuWIe09F4L"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "r9WutGl81W0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:24",
+   "year": null,
+   "artists": [
+    {
+     "name": "Audiogroove",
+     "id": "UC9CTVW0mtQtyYVwRUqV9LPw"
+    }
+   ],
+   "duration_seconds": 264,
+   "views": "13K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/m4nHsowejBOs_q_hKV_2dvaNbZu-R1G_aw3NpDd0MENkonM9IvIivpmzVpwBcKxcWRFhAiM0m8z8UzOu=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/m4nHsowejBOs_q_hKV_2dvaNbZu-R1G_aw3NpDd0MENkonM9IvIivpmzVpwBcKxcWRFhAiM0m8z8UzOu=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love The Way You Lie (In The Style Of Eminem Feat Rihanna) [Professional Backing Track] (feat. Rihanna)",
+   "album": {
+    "name": "Super Karaoke Hits 2011 (Professional Backing Track Version)",
+    "id": "MPREb_22wB3Ok3CHG"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "LVO04y9tKqk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:23",
+   "year": null,
+   "artists": [
+    {
+     "name": "Avid Professional Karaoke",
+     "id": null
+    }
+   ],
+   "duration_seconds": 263,
+   "views": "932K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/EZW38Kjz3nKWHGIUFPYEiClU8NqGmYqV6oIbQpERbzGSSTA38IB4g0suIFWB8DUSOf5Tjgs5gaJzU83l=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/EZW38Kjz3nKWHGIUFPYEiClU8NqGmYqV6oIbQpERbzGSSTA38IB4g0suIFWB8DUSOf5Tjgs5gaJzU83l=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love the Way You Lie (Part II) [Piano Version] [Original Performed by Rihanna with Eminem]",
+   "album": {
+    "name": "Piano Hits of Rihanna Vol. 2",
+    "id": "MPREb_d7VSGPqwMaS"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "JNzy6XG84HI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:15",
+   "year": null,
+   "artists": [
+    {
+     "name": "Piano Superstar",
+     "id": "UCtpELtZO6_sDMx7Ljg1_OcA"
+    }
+   ],
+   "duration_seconds": 195,
+   "views": "2.6K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/E3RCvJP3Mc0sRj0ZXdjyQENgkCWmhGGP5NfLO_4BM4ePfBqBn31bK6QYCZPQiUZBKuN1IxwI-I4kGXpT=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/E3RCvJP3Mc0sRj0ZXdjyQENgkCWmhGGP5NfLO_4BM4ePfBqBn31bK6QYCZPQiUZBKuN1IxwI-I4kGXpT=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love The Way You Lie [In the Style of \"Eminem / Rihanna\"] {Karaoke Version}",
+   "album": {
+    "name": "The Karaoke Channel - Pop Vol. 53",
+    "id": "MPREb_ZmAWToViRjD"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "NVNhlBINHbM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:24",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Karaoke Channel",
+     "id": "UC7y9dY4zbrBplD3SnA4xPcw"
+    }
+   ],
+   "duration_seconds": 264,
+   "views": "75K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/bPdXGb1_ve7fKKSClnJkBd2Phj7Bh1TRF5FmTL6z8tWQZezcIAxmmyqOWrClppxNWz0TtG_h7PP9NvHWMw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/bPdXGb1_ve7fKKSClnJkBd2Phj7Bh1TRF5FmTL6z8tWQZezcIAxmmyqOWrClppxNWz0TtG_h7PP9NvHWMw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love the Way You Lie (Made Famous by Eminem & Rihanna)",
+   "album": {
+    "name": "This Year's Hottest Workout Hits",
+    "id": "MPREb_mgBW3njqDnN"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "vVlELQcW3bQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:23",
+   "year": null,
+   "artists": [
+    {
+     "name": "Cardio Workout Crew",
+     "id": "UC9aae3UItHefswzZ4ua6dPw"
+    }
+   ],
+   "duration_seconds": 263,
+   "views": "201K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2sSu7jb9Qj8YdDF-WOTgsgItPVvZn3OXm9zUHxo2_9Tq_k-HJoWi-sEjXmCYrOXWwvXTp2rd6ICxzymt=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2sSu7jb9Qj8YdDF-WOTgsgItPVvZn3OXm9zUHxo2_9Tq_k-HJoWi-sEjXmCYrOXWwvXTp2rd6ICxzymt=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love the Way You Lie (Singalong)",
+   "album": {
+    "name": "Rihanna's Greatest Hits (Rihanna Tributes)",
+    "id": "MPREb_L7Crmsf2N9o"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "8KWIUU9B2rU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:27",
+   "year": null,
+   "artists": [
+    {
+     "name": "Girl Talk",
+     "id": "UCsgBCoGZpBMfAvx0_UCQbNw"
+    }
+   ],
+   "duration_seconds": 267,
+   "views": "5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/wKXsVYSwLxouL5wsQ79zvxc6ETtFkrYERLO7X5Yqi11SiiFW9HKnkpOxRMXtvV1jsw1lruYI_cHRT_sb=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/wKXsVYSwLxouL5wsQ79zvxc6ETtFkrYERLO7X5Yqi11SiiFW9HKnkpOxRMXtvV1jsw1lruYI_cHRT_sb=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

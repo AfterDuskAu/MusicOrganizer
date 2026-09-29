@@ -1,0 +1,758 @@
+{
+ "kind": "search",
+ "key": "jill scott still here acoustic",
+ "request": "Jill Scott Still Here acoustic",
+ "recorded_at": "2026-09-29T02:36:52Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Still Here",
+   "album": {
+    "name": "Still Here",
+    "id": "MPREb_YJW4mVWTYv0"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "jsIRJAuiVtc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:59",
+   "year": null,
+   "artists": [
+    {
+     "name": "Travis Greene",
+     "id": "UCPSYA8_FgsEM9tssvWKzb9w"
+    }
+   ],
+   "duration_seconds": 239,
+   "views": "953K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/PlSmPOQPC3aN85Z3ZQhDubMiLBbvjb8ALTH2rvt8y48z4l3f-hA-DEJpwBSQSTH4TV0vwT5mbhux4P4a=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/PlSmPOQPC3aN85Z3ZQhDubMiLBbvjb8ALTH2rvt8y48z4l3f-hA-DEJpwBSQSTH4TV0vwT5mbhux4P4a=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "While I'm Still Here (feat. Ingrid Jensen, Scott Robinson, Gary Versace, Matt Wilson) (feat. Scott Robinson, Gary Versace, Matt Wilson & Ingrid Jensen)",
+   "album": {
+    "name": "Light Blue",
+    "id": "MPREb_5cSHAhTc899"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "MsoqcDI3NHk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:12",
+   "year": null,
+   "artists": [
+    {
+     "name": "Martin Wind",
+     "id": "UCBMzWrzeE9vqIWP8swr4YLQ"
+    }
+   ],
+   "duration_seconds": 372,
+   "views": "538",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/w78UH-jhETf4TMo6IQQOAgWWjrYDY70b7XzgBLQ2gh66a5yK3LrhYDhd38h0TOuhNTqo13HaFht-gCQ2=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/w78UH-jhETf4TMo6IQQOAgWWjrYDY70b7XzgBLQ2gh66a5yK3LrhYDhd38h0TOuhNTqo13HaFht-gCQ2=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "I’m Still Here …",
+   "album": {
+    "name": "Last Day Of June (Original Game Soundtrack)",
+    "id": "MPREb_sVYAPzh9wAt"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "R81SYAci9qQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:36",
+   "year": null,
+   "artists": [
+    {
+     "name": "Steven Wilson",
+     "id": "UCN_yfO7km9qK5n9JlLJRdrg"
+    }
+   ],
+   "duration_seconds": 96,
+   "views": "14K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-kYxiSM_IKxtbcIo7nk93zexFvhlDyaOn-V4DSYKfX_X-nhO1DySooBlG_LebNIRq5lXF6gdPHgjOuPVjA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-kYxiSM_IKxtbcIo7nk93zexFvhlDyaOn-V4DSYKfX_X-nhO1DySooBlG_LebNIRq5lXF6gdPHgjOuPVjA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Disclaimer",
+   "album": {
+    "name": "To Whom This May Concern",
+    "id": "MPREb_mFpbiBDsJJ7"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "e7ylv_N5QDY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "0:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jill Scott",
+     "id": "UCYAoAgoEY3HPmybt1JxsT9Q"
+    }
+   ],
+   "duration_seconds": 32,
+   "views": "270K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/uIdtsFX6ANvYLic2IJOaCoIQ7qDtX33fLBZilqIRUuwleXThKtius3rP0BWpI_5RBMTKqR4eTce341d4Hw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/uIdtsFX6ANvYLic2IJOaCoIQ7qDtX33fLBZilqIRUuwleXThKtius3rP0BWpI_5RBMTKqR4eTce341d4Hw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Still Here!",
+   "album": {
+    "name": "Still Here!",
+    "id": "MPREb_Qqd1q7FRBDw"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "qVdWb-sVpXw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:09",
+   "year": null,
+   "artists": [
+    {
+     "name": "Charlesetta Hawkins",
+     "id": "UCf1bC_5Y6jVW0_EAgqgz-ag"
+    }
+   ],
+   "duration_seconds": 309,
+   "views": "2",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/XL2YjLqj66T89hQRiERusIwXSIkJq_ZWmbhp9t8smK9dLCcmd0HLsiYSwlamsiEEfkSuK0DIheW0bGI=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/XL2YjLqj66T89hQRiERusIwXSIkJq_ZWmbhp9t8smK9dLCcmd0HLsiYSwlamsiEEfkSuK0DIheW0bGI=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "I'm Still Here",
+   "album": {
+    "name": "I Want to Be Happy",
+    "id": "MPREb_1koYFT34svg"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "1oB4i6e7P0I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:06",
+   "year": null,
+   "artists": [
+    {
+     "name": "Liz Cole",
+     "id": "UCk-oHSJAGeIHMKMuM0KJOig"
+    }
+   ],
+   "duration_seconds": 246,
+   "views": "86",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/xipgW-0xt48s_eRKtYFHtkczgKk-aHKnt4AcJnvr5aMjlGr7HiCzwJR-4c-M2Ko5jBAH4llAeKLicO1v4g=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/xipgW-0xt48s_eRKtYFHtkczgKk-aHKnt4AcJnvr5aMjlGr7HiCzwJR-4c-M2Ko5jBAH4llAeKLicO1v4g=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Still Here (Praise Break)",
+   "album": {
+    "name": "HerthoughtsBlack (Unfiltered)",
+    "id": "MPREb_6aVaJVCtrPb"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "hBdLX01CZ3E",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "HerthoughtsBlack",
+     "id": "UCabroK9b_fcWpbLuLhdF8wg"
+    }
+   ],
+   "duration_seconds": 170,
+   "views": "30",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/_TLqGgOR1kSDoaJdxhaO07eDp5XRIo9bQjTbp0p001-zu2_s0IbbjOmKKyhWnskaYZUlD4t-jmgnOXok=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/_TLqGgOR1kSDoaJdxhaO07eDp5XRIo9bQjTbp0p001-zu2_s0IbbjOmKKyhWnskaYZUlD4t-jmgnOXok=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Disclaimer",
+   "album": {
+    "name": "To Whom This May Concern",
+    "id": "MPREb_8vZz06fuZXx"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "zHu7Mxy1MIo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "0:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jill Scott",
+     "id": "UCYAoAgoEY3HPmybt1JxsT9Q"
+    }
+   ],
+   "duration_seconds": 32,
+   "views": "271K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/EXmW26N2A1AFaLocajma6ZUQ_A-7nektnaK5S_VkmPEAI1hMkGgGmohM-uLsA2IeoIHqnsw1Gvebo90=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/EXmW26N2A1AFaLocajma6ZUQ_A-7nektnaK5S_VkmPEAI1hMkGgGmohM-uLsA2IeoIHqnsw1Gvebo90=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Still Here",
+   "album": {
+    "name": "Still Here",
+    "id": "MPREb_XYshQAqS1uq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "I52isY0DH1I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "Project Hilts",
+     "id": "UCAs0_Es2KEAot9UVI-elYjA"
+    }
+   ],
+   "duration_seconds": 210,
+   "views": "83",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/0RgYclanjIT5m0X-Vvyr4Xu838yxyRHKSDBaKaWhAmd4UM4LGCf5Kz6QgfanWwkxGWyvvTpb3rtUcyLr=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/0RgYclanjIT5m0X-Vvyr4Xu838yxyRHKSDBaKaWhAmd4UM4LGCf5Kz6QgfanWwkxGWyvvTpb3rtUcyLr=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Still Here",
+   "album": {
+    "name": "The Weary Blues: Drew Hemenger Songs",
+    "id": "MPREb_x7frSHsUBHv"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "D1dc4Dn43yE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:09",
+   "year": null,
+   "artists": [
+    {
+     "name": "Adrienne Danrich",
+     "id": "UCFF1soniHDfPpZp6cQWk33w"
+    },
+    {
+     "name": "Mila Henry",
+     "id": "UC4F_Nxo9nWwQF_HoHaJqzEA"
+    },
+    {
+     "name": "Eric McKeever",
+     "id": null
+    }
+   ],
+   "duration_seconds": 189,
+   "views": "1",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/uniwTYL-wlpeyfzu-cIuQSUKFprD4faXkoVzKrYNws3sre15GCr_dcX3lO5kR9tD-GHnES7OhDdYKc1F=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/uniwTYL-wlpeyfzu-cIuQSUKFprD4faXkoVzKrYNws3sre15GCr_dcX3lO5kR9tD-GHnES7OhDdYKc1F=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Still Here",
+   "album": {
+    "name": "Never Forget",
+    "id": "MPREb_zJhylwyPlYj"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ZloxdUrX3IE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:47",
+   "year": null,
+   "artists": [
+    {
+     "name": "Harley Gillespie",
+     "id": "UC0bqx_oeXK6lAGbP6yDXvBw"
+    }
+   ],
+   "duration_seconds": 167,
+   "views": "5",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/PekT74mtkbPB6OFrjzvTthXWG-k1ziIUgexnR5mwq3Oc1rm9-665iJQTq56Ek7lGxhGIbQVJnwhiNSI=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/PekT74mtkbPB6OFrjzvTthXWG-k1ziIUgexnR5mwq3Oc1rm9-665iJQTq56Ek7lGxhGIbQVJnwhiNSI=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sometimes I Wonder (feat. Jill Scott)",
+   "album": {
+    "name": "Back To Then",
+    "id": "MPREb_zTUBI6if9gl"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "KHXKQCkdc50",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:15",
+   "year": null,
+   "artists": [
+    {
+     "name": "Darius Rucker",
+     "id": "UCj2G372TIl1bdnfj26SntVA"
+    }
+   ],
+   "duration_seconds": 255,
+   "views": "232K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Z4j3DNPYVzwn8_ZrBlWPTTIi6XXIIPEEbjHjWlOEioYsbBQarLkW1-uLuhkIUceJ1PB427TxZutCo7KoyA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Z4j3DNPYVzwn8_ZrBlWPTTIi6XXIIPEEbjHjWlOEioYsbBQarLkW1-uLuhkIUceJ1PB427TxZutCo7KoyA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Here Now",
+   "album": {
+    "name": "The War Inside",
+    "id": "MPREb_EfhW3SnuqqT"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "o5_0Cd2Xod8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:12",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jill Andrews",
+     "id": "UCO_n4OPT9yzaEeIigld2vCA"
+    }
+   ],
+   "duration_seconds": 252,
+   "views": "13K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/YVoA_Z2KWSK3wIjkkLjjCDIKUe-cYbkeOsgAVNXBgRADfnKCyUh5Ms2FKeZQsDOeCHTQeWD5XoNEpdQO=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/YVoA_Z2KWSK3wIjkkLjjCDIKUe-cYbkeOsgAVNXBgRADfnKCyUh5Ms2FKeZQsDOeCHTQeWD5XoNEpdQO=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Still Here",
+   "album": {
+    "name": "Paper Skies",
+    "id": "MPREb_XhDiqbJC7d8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "W1e-yGMScP0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:45",
+   "year": null,
+   "artists": [
+    {
+     "name": "Echo Mirage",
+     "id": "UCc8qOPh9t8nQQIIWtK45-8w"
+    }
+   ],
+   "duration_seconds": 225,
+   "views": "4",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/BU4tG4asJcMTurmWotAQHAeZQI3ew60J0a9axZhL39mOzrZaMkkKXZqlAK-RwLrIlySjjkVyP5nkKK0f=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/BU4tG4asJcMTurmWotAQHAeZQI3ew60J0a9axZhL39mOzrZaMkkKXZqlAK-RwLrIlySjjkVyP5nkKK0f=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "The Roots (Interlude / Remastered)",
+   "album": {
+    "name": "Who Is Jill Scott: Words And Sounds, Vol. 1",
+    "id": "MPREb_iajZ0PLHf5C"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Iq5Q1Ebs25w",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "0:58",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jill Scott",
+     "id": "UCYAoAgoEY3HPmybt1JxsT9Q"
+    }
+   ],
+   "duration_seconds": 58,
+   "views": "362K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/XdP7ROqKATAqRJ9EAETUmgMg9yoohlEgvb76Z9FTTwvl2zStcsUt1COHob9k4E-Rnbg5Gw-L7moQTHJZ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/XdP7ROqKATAqRJ9EAETUmgMg9yoohlEgvb76Z9FTTwvl2zStcsUt1COHob9k4E-Rnbg5Gw-L7moQTHJZ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Still Here",
+   "album": {
+    "name": "Still Here",
+    "id": "MPREb_NwEqoUBxH7y"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "MltB2QI6qFA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:09",
+   "year": null,
+   "artists": [
+    {
+     "name": "Serah Blu",
+     "id": "UCrcCnYzkdkzs6x-SVPeop8g"
+    }
+   ],
+   "duration_seconds": 249,
+   "views": "6",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/E_dZwk7Lra02PiGDMuAJqHS_wxU3qWNFOHcy2YAVJnEx2P5d563-6xVauSl6wBRaAKSNBjzRRd9tmTzUBA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/E_dZwk7Lra02PiGDMuAJqHS_wxU3qWNFOHcy2YAVJnEx2P5d563-6xVauSl6wBRaAKSNBjzRRd9tmTzUBA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Still Here (In the Style of Brian Culbertson feat. Vivian Green) [Karaoke Version with Lead Vocal] (feat. Vivian Green)",
+   "album": {
+    "name": "October 2012 Urban Hits Karaoke",
+    "id": "MPREb_mLGJrecXpl0"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "g07GzHHUaXE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:20",
+   "year": null,
+   "artists": [
+    {
+     "name": "Off the Record Karaoke",
+     "id": "UCcb70gYO5-o1EsG-QhnXiTg"
+    }
+   ],
+   "duration_seconds": 260,
+   "views": "951",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/DlZmbFa_fLl7OxewuthiJXRfAtVzdQEKRqxwpm7SkBt98ZXNe1xgW39-_KJ3cJVTkbr0Qw1y-UXF7cDW=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/DlZmbFa_fLl7OxewuthiJXRfAtVzdQEKRqxwpm7SkBt98ZXNe1xgW39-_KJ3cJVTkbr0Qw1y-UXF7cDW=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Still Here",
+   "album": {
+    "name": "Porch Light",
+    "id": "MPREb_9VKyFyYVYYl"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "FHaC6WaDcN8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:39",
+   "year": null,
+   "artists": [
+    {
+     "name": "Harlan Brooks",
+     "id": "UCcuaoPT18y5yVPID-UBxpUQ"
+    }
+   ],
+   "duration_seconds": 219,
+   "views": "6",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/a12QT5OZwDGs8Xb4enO9RLf0RRsw5i0hySroI_EKpXC37UhfW2yQ49kJaIvoZ3vZo7oP1Uufl1Gtd7k=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/a12QT5OZwDGs8Xb4enO9RLf0RRsw5i0hySroI_EKpXC37UhfW2yQ49kJaIvoZ3vZo7oP1Uufl1Gtd7k=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Still Here",
+   "album": {
+    "name": "My Redeemer",
+    "id": "MPREb_3uZ0sIMIgVi"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "trU8vgvdQBY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:11",
+   "year": null,
+   "artists": [
+    {
+     "name": "Pastor Isaac Jordan and Divine Praise",
+     "id": "UCdei9c1e5YhEND3okpO1wcg"
+    }
+   ],
+   "duration_seconds": 191,
+   "views": "38",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/H3V0Zm7WIzWCdxDcaxL9R6DQc9wGrF8r3seYGUjI0Y6jE84SkjsrLY9NunE06zGXnILHSDfMU1ZFTTg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/H3V0Zm7WIzWCdxDcaxL9R6DQc9wGrF8r3seYGUjI0Y6jE84SkjsrLY9NunE06zGXnILHSDfMU1ZFTTg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Still Here (feat. Ron Aiello)",
+   "album": {
+    "name": "Wild in Bloom",
+    "id": "MPREb_BrDisb6wl2D"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "gYZE2i9iOxM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:18",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sarah Rogers",
+     "id": "UCWB7R3hhOgHbJCJApsWxNig"
+    }
+   ],
+   "duration_seconds": 258,
+   "views": "16",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/xE--hWkzRBGuQiUkw6LEpzc8SCYCcUbavVzhjs2FqiDPfKHsoDOxyd2UZKrvKB2ZrfM_83dfblbx_X9OIQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/xE--hWkzRBGuQiUkw6LEpzc8SCYCcUbavVzhjs2FqiDPfKHsoDOxyd2UZKrvKB2ZrfM_83dfblbx_X9OIQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

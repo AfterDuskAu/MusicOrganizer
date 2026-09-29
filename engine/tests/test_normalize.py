@@ -216,3 +216,39 @@ def test_bands() -> None:
     assert [normalize.confidence_band(c) for c in (0.95, 0.8, 0.79, 0.5, 0.49, 0.0)] == [
         "high", "high", "mid", "mid", "low", "low"]  # fmt: skip
     assert Parsed(None, None).band == "low"
+
+
+# ---- titles from YouTube Music ---------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("title", "clean", "versions"),
+    [
+        ("Crave You (feat. Giselle)", "Crave You", ()),
+        ("Yesterday - Remastered 2009", "Yesterday", ("remaster:2009",)),
+        ("Mr. Brightside - Jacques Lu Cont Remix", "Mr. Brightside", ("remix:jacques lu cont",)),
+        ("Song - Radio Edit", "Song", ("radio edit",)),
+        ("Love Story (Taylor's Version)", "Love Story (Taylor's Version)", ()),
+        ('I Ain\'t Worried (From "Top Gun: Maverick")', "I Ain't Worried", ()),
+        ("From Me To You", "From Me To You", ()),
+        ("Love Story - Taylor's Version", "Love Story - Taylor's Version", ()),
+    ],
+)
+def test_parse_title(title: str, clean: str, versions: tuple[str, ...]) -> None:
+    parsed = normalize.parse_title(title)
+    assert (parsed.title, parsed.version_tokens, parsed.artist) == (clean, versions, None)
+
+
+def test_featured_artists_in_a_title() -> None:
+    assert normalize.parse_title("Crave You (feat. Giselle)").artists == ("Giselle",)
+
+
+def test_versions_after_a_dash_in_tags() -> None:
+    parsed = parse_tags(TrackTags(title="Yesterday - Remastered 2009", artist="The Beatles"))
+    assert (parsed.title, parsed.version_tokens) == ("Yesterday", ("remaster:2009",))
+
+
+def test_from_dict_round_trip() -> None:
+    parsed = parse_filename("A feat. B - Title (X Remix) [Official Video]")
+    assert Parsed.from_dict(parsed.to_dict()) == parsed
+    assert Parsed.from_dict({"artist": "A", "title": "T", "unknown": 1}).title == "T"

@@ -1,0 +1,762 @@
+{
+ "kind": "search",
+ "key": "ash riser you know im no good",
+ "request": "Ash Riser You Know I'm No Good",
+ "recorded_at": "2026-09-29T02:36:57Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "YOU KNOW I'M NO GOOD",
+   "album": {
+    "name": "Rebirth",
+    "id": "MPREb_T8tymNULHVP"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "FROR7VE2IoI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:08",
+   "year": null,
+   "artists": [
+    {
+     "name": "Addlen's Phoenix",
+     "id": null
+    }
+   ],
+   "duration_seconds": 248,
+   "views": "139",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/uiUcmysXUb1wmkGJ6fDPpQ_RFWmFhmMUQtdDTPphV1ASb4t_Ju505450uT-tvcqZxbPTP_xX8N8utP2o=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/uiUcmysXUb1wmkGJ6fDPpQ_RFWmFhmMUQtdDTPphV1ASb4t_Ju505450uT-tvcqZxbPTP_xX8N8utP2o=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Know I'm No Good",
+   "album": {
+    "name": "Trauma - Chansons de la série télé (Saison No. 5)",
+    "id": "MPREb_EA57c6t9IBJ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Q5gcubBCZfA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:10",
+   "year": null,
+   "artists": [
+    {
+     "name": "Cœur de pirate",
+     "id": "UCxGpIgM_SX_V3IUBWdVV_KA"
+    }
+   ],
+   "duration_seconds": 250,
+   "views": "1.3M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/_nGnpL_5YMjuMt5p0bjX2xNrTL5Fi8qpIEW6fO_sYJlHxLIjlmPB75BIBJRvNraj6VpMEdFXDXTtd_KA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/_nGnpL_5YMjuMt5p0bjX2xNrTL5Fi8qpIEW6fO_sYJlHxLIjlmPB75BIBJRvNraj6VpMEdFXDXTtd_KA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Highest in the Room (Remix)",
+   "album": {
+    "name": "Highest in the Room",
+    "id": "MPREb_GsMTygdGhkE"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "bHAVRJrJDik",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ash Riser",
+     "id": "UCcbfSjmtIWrceKAdRk8_IAA"
+    }
+   ],
+   "duration_seconds": 172,
+   "views": "392",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/u52U9uHLwXWU0jZFiSdkyavy9o8kbJjngDGFkIsHPUoGfSEsHjl7_ooYa9ipPE6LvpGAvewAoBj9dBr-lw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/u52U9uHLwXWU0jZFiSdkyavy9o8kbJjngDGFkIsHPUoGfSEsHjl7_ooYa9ipPE6LvpGAvewAoBj9dBr-lw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Know I'm No Good",
+   "album": {
+    "name": "Drunk in Love",
+    "id": "MPREb_GBJPfXXRIx4"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "CMNGv8sof8g",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:05",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sound Eclipse",
+     "id": "UCNbJe5xQZPCz0jeeqVpUClQ"
+    }
+   ],
+   "duration_seconds": 245,
+   "views": "17K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/SDFtZ9w08zl3cRQjMnvCpwVd1WPXlvU16hgpHHSwyJj2h_gFlB9WzExqWbnoNKHeVzQnQ5zZWDj2OcIYjA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/SDFtZ9w08zl3cRQjMnvCpwVd1WPXlvU16hgpHHSwyJj2h_gFlB9WzExqWbnoNKHeVzQnQ5zZWDj2OcIYjA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Real Thing",
+   "album": {
+    "name": "On Everything",
+    "id": "MPREb_hdlwC7qLPRo"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "FRwiNDAM0RU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:11",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ash Riser",
+     "id": "UC7BLj2Uoj_J3U0EMgBS532g"
+    },
+    {
+     "name": "SAHTYRE",
+     "id": null
+    },
+    {
+     "name": "Don Alfonso",
+     "id": "UC94SR442Iz9-zD1BFvR5TCg"
+    }
+   ],
+   "duration_seconds": 251,
+   "views": "219",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/SCHyXl6o9P33NZ2qrJewOzw42D5DxQ321zv4ZbgS-wR_iPPP9Dejv1qzd-VngbWNkNjKv45lbtZFy6Im=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/SCHyXl6o9P33NZ2qrJewOzw42D5DxQ321zv4ZbgS-wR_iPPP9Dejv1qzd-VngbWNkNjKv45lbtZFy6Im=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Know I'm No Good (Lofi Version)",
+   "album": {
+    "name": "You Know I'm No Good (Lofi Version)",
+    "id": "MPREb_74avF5uF3f0"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "G4yPp7YIqGI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:29",
+   "year": null,
+   "artists": [
+    {
+     "name": "ensø",
+     "id": "UCjmwwQldJ2YSyi3lbbfSNTg"
+    }
+   ],
+   "duration_seconds": 89,
+   "views": "11",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2Wc8ZqBDbEx5zaeRbfWOjGM-3DvPS73Djc5DYBRRGLDQAh3600s2k34Z_T8H_9DVYRajmpKCySJWNv2O=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2Wc8ZqBDbEx5zaeRbfWOjGM-3DvPS73Djc5DYBRRGLDQAh3600s2k34Z_T8H_9DVYRajmpKCySJWNv2O=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Metropolis",
+   "album": {
+    "name": "Modern Medicine",
+    "id": "MPREb_ek8cWkBAyXC"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "GZ-GJwQ9vzw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:08",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ash Riser",
+     "id": "UCcbfSjmtIWrceKAdRk8_IAA"
+    }
+   ],
+   "duration_seconds": 248,
+   "views": "3.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/qH7yrzMb1SjC1YoS5ZZx45gQ6NkLi7Og4seBCVJNgvFSITMXn7Qnx_lzTeEN6lxNNwaQVnEWVroYpVD5=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/qH7yrzMb1SjC1YoS5ZZx45gQ6NkLi7Og4seBCVJNgvFSITMXn7Qnx_lzTeEN6lxNNwaQVnEWVroYpVD5=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Know I'm No Good",
+   "album": {
+    "name": "Wake Up Alone",
+    "id": "MPREb_rHgrmMnXNrC"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "MqMglDfsBzg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:54",
+   "year": null,
+   "artists": [
+    {
+     "name": "ArlenaZara",
+     "id": "UCV-X954Bhhs_QEP07J5i00g"
+    }
+   ],
+   "duration_seconds": 234,
+   "views": "6",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/5A-EIUYZMYtOVfGuF7Yt8XDCxRIMTujf3_d2U5134GQ5gkBqiUHzYiI8qVzGgtTdOG1wdeMWDQJ08rND=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/5A-EIUYZMYtOVfGuF7Yt8XDCxRIMTujf3_d2U5134GQ5gkBqiUHzYiI8qVzGgtTdOG1wdeMWDQJ08rND=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Hell's Waiting Room",
+   "album": {
+    "name": "Ghosts",
+    "id": "MPREb_xfsmwj6m5Ae"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "HoWQHsOdm2Y",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:37",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ash Riser",
+     "id": "UCcbfSjmtIWrceKAdRk8_IAA"
+    }
+   ],
+   "duration_seconds": 217,
+   "views": "1.2K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ZVSdv6rPevtwmdvHh13k9IEGKzN_g9yerouNjAPsQ9PJppE1H_at0m_SDT_vbXZ8Ixafz7RZN7mSjOmg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ZVSdv6rPevtwmdvHh13k9IEGKzN_g9yerouNjAPsQ9PJppE1H_at0m_SDT_vbXZ8Ixafz7RZN7mSjOmg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Know I'm No Good",
+   "album": {
+    "name": "Tears Dry on Their Own - A Tribute to Amy Winehouse",
+    "id": "MPREb_lKZ7GQ2Se3j"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "kuNLU2roWVY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:18",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ameritz - Tributes",
+     "id": "UCRKXh0dGLgIOc2lbzZG2pmg"
+    }
+   ],
+   "duration_seconds": 258,
+   "views": "1.4K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/3u2eYxSOlxodurSb3ysJ_85vwzB68pgNjPVuc0tcLKEgEvzqOIuQsbHPwSFU2GVqCNaWr0fdUKLNsFu9Vw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/3u2eYxSOlxodurSb3ysJ_85vwzB68pgNjPVuc0tcLKEgEvzqOIuQsbHPwSFU2GVqCNaWr0fdUKLNsFu9Vw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Beverly Hills",
+   "album": {
+    "name": "On Everything",
+    "id": "MPREb_hdlwC7qLPRo"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "cIi7f4cjFJs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:41",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ash Riser",
+     "id": "UC7BLj2Uoj_J3U0EMgBS532g"
+    },
+    {
+     "name": "Don Alfonso",
+     "id": "UC94SR442Iz9-zD1BFvR5TCg"
+    }
+   ],
+   "duration_seconds": 161,
+   "views": "23K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/SCHyXl6o9P33NZ2qrJewOzw42D5DxQ321zv4ZbgS-wR_iPPP9Dejv1qzd-VngbWNkNjKv45lbtZFy6Im=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/SCHyXl6o9P33NZ2qrJewOzw42D5DxQ321zv4ZbgS-wR_iPPP9Dejv1qzd-VngbWNkNjKv45lbtZFy6Im=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Know I'm No Good",
+   "album": {
+    "name": "The Best Songs We Never Wrote, Vol. 1",
+    "id": "MPREb_PRB7gWlGwKD"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "6Z1FRVp053M",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:29",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bonnie n Clydes",
+     "id": "UCjDwUwMahN1f-Kp3kXU2YHA"
+    }
+   ],
+   "duration_seconds": 269,
+   "views": "303",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/3lxOMRgUuzMtz3mmqrC8H7_wr85Ge_vohBaiQPLRWWqC8dioL9-vW4js5gdEx5cD0VVpkoVluf5Cry0=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/3lxOMRgUuzMtz3mmqrC8H7_wr85Ge_vohBaiQPLRWWqC8dioL9-vW4js5gdEx5cD0VVpkoVluf5Cry0=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Know I'm No Good",
+   "album": {
+    "name": "Kinda Like the Brits 2007",
+    "id": "MPREb_rqmRPJa1WNL"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "d4bLw2i-8Ng",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "PMC All-Stars",
+     "id": "UC9pQOaBYAKR_AanOtDFTTWQ"
+    }
+   ],
+   "duration_seconds": 265,
+   "views": "1.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2VH4viWNLec7hYxAYIgE_ZRW91JsSUTwrrYY0gI9DaJUqfHburthPpetIHDNUToC04AZio_sp8Ak16BV=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2VH4viWNLec7hYxAYIgE_ZRW91JsSUTwrrYY0gI9DaJUqfHburthPpetIHDNUToC04AZio_sp8Ak16BV=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You know I'm no good",
+   "album": {
+    "name": "You know I'm no good",
+    "id": "MPREb_8uFa2Mmdmv2"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "3E1-_EG3-kA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:33",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sparkle Dust",
+     "id": "UCghjsgbmdAEyWVfHi_Mn7jg"
+    }
+   ],
+   "duration_seconds": 213,
+   "views": "39",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/rgPUXizlLGepK9RqJmKxWY7Tq-n6nTdXDJTFFxv82bigFQ735O7DHWo6yKVhm5GYsKgLuOMM423e5GQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/rgPUXizlLGepK9RqJmKxWY7Tq-n6nTdXDJTFFxv82bigFQ735O7DHWo6yKVhm5GYsKgLuOMM423e5GQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You know I’m no good",
+   "album": {
+    "name": "You know I’m no good (OT Gala 2 - Operación Triunfo 2020)",
+    "id": "MPREb_izh0P9gMXiK"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ixDaMqJ5GEg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:12",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ariadna",
+     "id": "UCsVDXqYjzFy85Rb3N6ELRHQ"
+    }
+   ],
+   "duration_seconds": 132,
+   "views": "49K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/EwEuUE9Fu4UcdLjT3QTjgLnUkxtjCogR1aDGn0aJTBJ5VrPx6H7klKoZ72xLXHP3gwE0GqsjZXjHpb4=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/EwEuUE9Fu4UcdLjT3QTjgLnUkxtjCogR1aDGn0aJTBJ5VrPx6H7klKoZ72xLXHP3gwE0GqsjZXjHpb4=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Know I'm No Good",
+   "album": {
+    "name": "Fit and Cheeky",
+    "id": "MPREb_wx2MpaGUUiK"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "z_ydBF6_aAM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:26",
+   "year": null,
+   "artists": [
+    {
+     "name": "Pub Dog",
+     "id": "UCOsFCkLGdMmQ1HF5jx_cu3w"
+    }
+   ],
+   "duration_seconds": 206,
+   "views": "1.5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/xZEC-Q2QIGysRVJoQh9VP8J0FFXNrH4XO2efHAWavX7OZ8n3hgL_U2Dkk9uYPPF7OxYRJBRj4geHJADPxQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/xZEC-Q2QIGysRVJoQh9VP8J0FFXNrH4XO2efHAWavX7OZ8n3hgL_U2Dkk9uYPPF7OxYRJBRj4geHJADPxQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "I'm No Good (For Ya Baby)",
+   "album": {
+    "name": "Achin' And Shakin'",
+    "id": "MPREb_Ods9bnsurw2"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "yt9I71mq0zU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:02",
+   "year": null,
+   "artists": [
+    {
+     "name": "Laura Bell Bundy",
+     "id": "UC2n4g0DKDPy-TP6xoZOeP2g"
+    }
+   ],
+   "duration_seconds": 242,
+   "views": "42K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2sqc1iiJwC0P8xQkQt-I64x7SrhKZMRjtKHx_SowRyd0yCd_XkRcEFE49_iIIJrl6vVzZ1MXvG9SIP9K=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2sqc1iiJwC0P8xQkQt-I64x7SrhKZMRjtKHx_SowRyd0yCd_XkRcEFE49_iIIJrl6vVzZ1MXvG9SIP9K=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Know I'm No Good",
+   "album": {
+    "name": "You Know I'm No Good",
+    "id": "MPREb_AUHru7oErF7"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "5--ZiYx1qVc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:07",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ary J",
+     "id": "UCBd1_F3MlRlEFuoGKNvwdcA"
+    }
+   ],
+   "duration_seconds": 247,
+   "views": "51",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/yCmPYISFNOAfGLNANrUbkSNdWm2mLwYhOYKemxTMW_2dWuD3W-d-DnpFriVlsc540DQx9E8lvUmrV44=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/yCmPYISFNOAfGLNANrUbkSNdWm2mLwYhOYKemxTMW_2dWuD3W-d-DnpFriVlsc540DQx9E8lvUmrV44=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Know I'm No Good",
+   "album": {
+    "name": "You Know I'm No Good",
+    "id": "MPREb_lc5GNeoWJRy"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "2AxYKWpgxTQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:07",
+   "year": null,
+   "artists": [
+    {
+     "name": "Cliff Root",
+     "id": "UCQYVvqW-IUyuR_PCXlBBrDQ"
+    }
+   ],
+   "duration_seconds": 247,
+   "views": "82",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-PmBP3FK_QC-qDYLb3Eh7Fh1aytL7PJfQzMaI9Ww0xK_iFv4EH80YxYSoa3vpUILKqnXAI1siVdt-y4YFw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-PmBP3FK_QC-qDYLb3Eh7Fh1aytL7PJfQzMaI9Ww0xK_iFv4EH80YxYSoa3vpUILKqnXAI1siVdt-y4YFw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Not Today Satan",
+   "album": {
+    "name": "Not Today Satan",
+    "id": "MPREb_XsqKAdp9Ao7"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "s7SZf87piOo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ash Riser",
+     "id": "UCcbfSjmtIWrceKAdRk8_IAA"
+    }
+   ],
+   "duration_seconds": 172,
+   "views": "1.1K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/raxsomDUVb4duTWCqV77niOIz09eAtBc_mBzfztkEufE1u1-sDWPYJk3MtIu3FAcKiVbc_B7H-1gpss=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/raxsomDUVb4duTWCqV77niOIz09eAtBc_mBzfztkEufE1u1-sDWPYJk3MtIu3FAcKiVbc_B7H-1gpss=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,766 @@
+{
+ "kind": "search",
+ "key": "future mask off",
+ "request": "Future Mask Off",
+ "recorded_at": "2026-09-29T02:36:23Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mask Off",
+   "album": {
+    "name": "FUTURE",
+    "id": "MPREb_oj3xX6DIoZQ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "AMCwYdTJ_PE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "Future",
+     "id": "UC1_liDR4fRFJgH4HoJeV8cw"
+    }
+   ],
+   "duration_seconds": 205,
+   "views": "1.5B",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/OVejVpqP0cLGa4KySJCYsUVL1q9OjNf3tNUZPlZViPz_VxcxFRcAY4EmLwxfAlzvF2z_YCOj1iCC61gGjw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/OVejVpqP0cLGa4KySJCYsUVL1q9OjNf3tNUZPlZViPz_VxcxFRcAY4EmLwxfAlzvF2z_YCOj1iCC61gGjw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mask Off (Remix) (feat. Kendrick Lamar)",
+   "album": {
+    "name": "FUTURE",
+    "id": "MPREb_4FqgjbeYidp"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "SlZMDmtRnS0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:19",
+   "year": null,
+   "artists": [
+    {
+     "name": "Future",
+     "id": "UC1_liDR4fRFJgH4HoJeV8cw"
+    }
+   ],
+   "duration_seconds": 259,
+   "views": "78M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/wDsRvtKqz_WVNr9XgrRFnU22Ur3uBywEyErLCpez3hhy5vOlhvfSVpHEXgVcWKinF_9mq12pK1mqDaw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/wDsRvtKqz_WVNr9XgrRFnU22Ur3uBywEyErLCpez3hhy5vOlhvfSVpHEXgVcWKinF_9mq12pK1mqDaw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mask Off (Slowed And Reverb)",
+   "album": {
+    "name": "Mask Off (Slowed And Reverb)",
+    "id": "MPREb_sQXJan0w8fT"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "eEtXJ_j5aL0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:29",
+   "year": null,
+   "artists": [
+    {
+     "name": "Flawless Diamond",
+     "id": "UC1S3yr-eIvy3mjbstsNKoZw"
+    },
+    {
+     "name": "YYYULJA",
+     "id": "UCxHoCmP2yNbKccoPyCiJ61g"
+    }
+   ],
+   "duration_seconds": 269,
+   "views": "1.4K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/V_HhLbU03xMoZUA5ixvj6wtTzvJjpEamme7yuBnCagTdr43-wl2a2oUayaRB8kdBSU5YkVbhm5pK4Oq_=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/V_HhLbU03xMoZUA5ixvj6wtTzvJjpEamme7yuBnCagTdr43-wl2a2oUayaRB8kdBSU5YkVbhm5pK4Oq_=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Superhero (Heroes & Villains)",
+   "album": {
+    "name": "HEROES & VILLAINS",
+    "id": "MPREb_fTCogKhTvHq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "074r1TFfo0M",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "Metro Boomin",
+     "id": "UCFYaIRiUe_1hvOtXu5IiBWQ"
+    },
+    {
+     "name": "Future",
+     "id": "UC1_liDR4fRFJgH4HoJeV8cw"
+    },
+    {
+     "name": "Chris Brown",
+     "id": "UCMXDyVR2tclKWhbqNforSyA"
+    }
+   ],
+   "duration_seconds": 183,
+   "views": "330M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ii_8E4zawhW8ARpz0GAzFkLGzg9dUOmlmz4Z3skCudi_0IZ6pSKggTj_6iAtPsey7ZaCVHNLfYswhfNr=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ii_8E4zawhW8ARpz0GAzFkLGzg9dUOmlmz4Z3skCudi_0IZ6pSKggTj_6iAtPsey7ZaCVHNLfYswhfNr=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Chosen One (feat. Rocko)",
+   "album": {
+    "name": "F.B.G: The Movie",
+    "id": "MPREb_71fo90SBelg"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "G4VhHwlBSdE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:26",
+   "year": null,
+   "artists": [
+    {
+     "name": "Future",
+     "id": "UC1_liDR4fRFJgH4HoJeV8cw"
+    }
+   ],
+   "duration_seconds": 206,
+   "views": "40M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/e_LJ9FapmQhY6ll1snVeaBdBPb-OyJgOFUM0B8VRPms7-nUC-uhjfOBIybPcbWIpYf2uuIV2xXqcnfju=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/e_LJ9FapmQhY6ll1snVeaBdBPb-OyJgOFUM0B8VRPms7-nUC-uhjfOBIybPcbWIpYf2uuIV2xXqcnfju=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mask Off",
+   "album": {
+    "name": "Marriage",
+    "id": "MPREb_PO7ipm1DvWN"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "yucdsCQa9dA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "Royalty Duo",
+     "id": null
+    }
+   ],
+   "duration_seconds": 205,
+   "views": "28K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/hY8X7KU31rjCAsaDj8u2Q2MBQLTGdXjd-U_Aq8iQ70HWHNqMkGF_MiOY4hiZCyHaCtb4oWA1Mi4iOI1A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/hY8X7KU31rjCAsaDj8u2Q2MBQLTGdXjd-U_Aq8iQ70HWHNqMkGF_MiOY4hiZCyHaCtb4oWA1Mi4iOI1A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mask Off",
+   "album": {
+    "name": "Mask Off",
+    "id": "MPREb_8790OZUQ6Ht"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "m6I2RgQpKvw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:29",
+   "year": null,
+   "artists": [
+    {
+     "name": "Vüsal Namazlı",
+     "id": "UCwJkc_FlNoVcpxfq0cN2D6A"
+    }
+   ],
+   "duration_seconds": 149,
+   "views": "215K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/h7E8IXSDGxE13TTo-ONh3MuPo8wGurgVCuHSpqvZgxUape-NGMB0uTURcgfJggL91pRx7xdix4eM9l7lQA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/h7E8IXSDGxE13TTo-ONh3MuPo8wGurgVCuHSpqvZgxUape-NGMB0uTURcgfJggL91pRx7xdix4eM9l7lQA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mask Off Aesthetic",
+   "album": {
+    "name": "Mask Off Aesthetic",
+    "id": "MPREb_HUQCtwMMqRf"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "nvgywAsj_Ps",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:20",
+   "year": null,
+   "artists": [
+    {
+     "name": "Farizki",
+     "id": "UCAdepVAxQFLPuxgphMbJ75w"
+    }
+   ],
+   "duration_seconds": 140,
+   "views": "11K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/456ba1rO_nNWs-SnCcSPSV8tU3Oh6xKIGqSrjPOJ7TCI0LDrtgttmWYbgR8Dm8VzbAgm8yVrYfmHeXB0pA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/456ba1rO_nNWs-SnCcSPSV8tU3Oh6xKIGqSrjPOJ7TCI0LDrtgttmWYbgR8Dm8VzbAgm8yVrYfmHeXB0pA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mask Off (Karaoke Version) (Originally Performed by Future)",
+   "album": {
+    "name": "Mask Off (Karaoke Version) (Originally Performed by Future)",
+    "id": "MPREb_SHs2kHCJSdZ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "H1NU74M_qZ4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "Karaoke Station",
+     "id": null
+    }
+   ],
+   "duration_seconds": 212,
+   "views": "9.8K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/fUT-NYAcbtn2N4SdukKA8JP2jOhTsgWTd4kRXxzfZsYS7wnvgu4YN_HLPK3bZwRKU7gDAzJp86Z-RlMmRA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/fUT-NYAcbtn2N4SdukKA8JP2jOhTsgWTd4kRXxzfZsYS7wnvgu4YN_HLPK3bZwRKU7gDAzJp86Z-RlMmRA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mask Off (Acoustic Version)",
+   "album": {
+    "name": "Mask Off (Acoustic Version)",
+    "id": "MPREb_Y3VNH0HBrd0"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "6pLSL9Agdgw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "Tobey Rosen",
+     "id": "UC414fPszzwkOYoCTfHQwE1A"
+    }
+   ],
+   "duration_seconds": 183,
+   "views": "32K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/HTMSI8IRXjVroZAiK_NP1RB_KPVsDnCBF9t8aeEzZEpHSP7Kez2a2j2SbKIBUwnr1D_2t8TRlLfsTtXg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/HTMSI8IRXjVroZAiK_NP1RB_KPVsDnCBF9t8aeEzZEpHSP7Kez2a2j2SbKIBUwnr1D_2t8TRlLfsTtXg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mask Off (Originally Performed by Future) [Instrumental Karaoke Version]",
+   "album": {
+    "name": "Mask Off (Originally Performed by Future) [Instrumental Karaoke Version]",
+    "id": "MPREb_2TPy2HbnCZG"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "fG26tgmAwcU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:26",
+   "year": null,
+   "artists": [
+    {
+     "name": "DJ Mimic",
+     "id": null
+    }
+   ],
+   "duration_seconds": 206,
+   "views": "4.2K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Rj43YXE0sC07AbsMjNaSgNcE_hQJ1TNthAN2K9z6_1nJ5jQJF-TiC7D1s4Op5FleLkrXFK_bbVbPJurZ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Rj43YXE0sC07AbsMjNaSgNcE_hQJ1TNthAN2K9z6_1nJ5jQJF-TiC7D1s4Op5FleLkrXFK_bbVbPJurZ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "MASK OFF (TECHNO)",
+   "album": {
+    "name": "MASK OFF (TECHNO)",
+    "id": "MPREb_QGKJAS1REuN"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "r3nZKstd65w",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:11",
+   "year": null,
+   "artists": [
+    {
+     "name": "TECHNO N TEQUILLA",
+     "id": "UCeYbQhcyNU-_q67nMUR9g2w"
+    },
+    {
+     "name": "chloe evee",
+     "id": "UCoxKw3VVdS_Y04eud0WtsdA"
+    }
+   ],
+   "duration_seconds": 251,
+   "views": "916",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/oicQ4uSM58DqmuXkNhRZFj3iEg4xOnMA5pzwMpzUAtDNsJhVYRKnzT1uz83jWkbd_3lz2pNCH8nr-K03=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/oicQ4uSM58DqmuXkNhRZFj3iEg4xOnMA5pzwMpzUAtDNsJhVYRKnzT1uz83jWkbd_3lz2pNCH8nr-K03=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mask Off (Originally Performed by Future) [Instrumental]",
+   "album": {
+    "name": "Mask Off (Originally Performed by Future) [Karaoke Version]",
+    "id": "MPREb_q0WteWFWwhi"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "LmP0vPza5po",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "Singer's Edge Karaoke",
+     "id": "UCbFVydGP_lE_vfWHzb2EJsQ"
+    }
+   ],
+   "duration_seconds": 208,
+   "views": "12K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/W4IsO6-tPoYsZl5UJXKGC320unrkh2slUwazhWxL3yn3DTb6ow-iYNlk4ycrPKdZppt-0KVNj3hBBWeFKA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/W4IsO6-tPoYsZl5UJXKGC320unrkh2slUwazhWxL3yn3DTb6ow-iYNlk4ycrPKdZppt-0KVNj3hBBWeFKA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mask Off",
+   "album": {
+    "name": "Mask Off",
+    "id": "MPREb_tRahe5AAh8T"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "StVwrx-lFJU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:37",
+   "year": null,
+   "artists": [
+    {
+     "name": "Area 66",
+     "id": "UCDgsJC-vzcUpw9xtfQcmbJg"
+    }
+   ],
+   "duration_seconds": 277,
+   "views": "232",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-GAjwW68aP94eoxx9zb8bEBnTM12kgue4vNFu0OEfwBsXlBgt0oEG_3oBGwuifh4DOvPK017SnzgeMB9=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-GAjwW68aP94eoxx9zb8bEBnTM12kgue4vNFu0OEfwBsXlBgt0oEG_3oBGwuifh4DOvPK017SnzgeMB9=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mask Off (Originally Performed by Future) [Karaoke Version] (No Backing Vocals)",
+   "album": {
+    "name": "Fresh Playback Hits - 2017 - Vol. 6",
+    "id": "MPREb_U8Ef5NsxMtr"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "_C6I8Y6Qz8E",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "Backing Force",
+     "id": "UCScjra74TauEoukB5X3dlpQ"
+    }
+   ],
+   "duration_seconds": 212,
+   "views": "9.8K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/yvs5aPTVaBQCLWhJmot1jMKvyFeRtgbQ-9jxynKFd_sHqKozRlTeL1UW04ynVY74c5o3G_4BL1j2egSd=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/yvs5aPTVaBQCLWhJmot1jMKvyFeRtgbQ-9jxynKFd_sHqKozRlTeL1UW04ynVY74c5o3G_4BL1j2egSd=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mask Off (Originally Performed by Future) [Karaoke]",
+   "album": {
+    "name": "Mask Off (Originally Performed by Future) [Karaoke Version]",
+    "id": "MPREb_q0WteWFWwhi"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "967FNIy2Cq4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "Singer's Edge Karaoke",
+     "id": "UCbFVydGP_lE_vfWHzb2EJsQ"
+    }
+   ],
+   "duration_seconds": 208,
+   "views": "12K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/W4IsO6-tPoYsZl5UJXKGC320unrkh2slUwazhWxL3yn3DTb6ow-iYNlk4ycrPKdZppt-0KVNj3hBBWeFKA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/W4IsO6-tPoYsZl5UJXKGC320unrkh2slUwazhWxL3yn3DTb6ow-iYNlk4ycrPKdZppt-0KVNj3hBBWeFKA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mask Off",
+   "album": {
+    "name": "Mask Off",
+    "id": "MPREb_SXAxQvKG68I"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "lXnPY8VLpSc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:37",
+   "year": null,
+   "artists": [
+    {
+     "name": "K-Trap",
+     "id": "UCzKAerwv3JdGOexTYPr0_hg"
+    }
+   ],
+   "duration_seconds": 217,
+   "views": "1.9M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/nS3UlHULg9B4FVqHDqCXq5Cp7ujODhqWBxghyV1yx84OIM1xb5uzvzFTFt6HPpdLQ-Yp_F4mX4Iy_mk=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/nS3UlHULg9B4FVqHDqCXq5Cp7ujODhqWBxghyV1yx84OIM1xb5uzvzFTFt6HPpdLQ-Yp_F4mX4Iy_mk=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mask Off (Drill)",
+   "album": {
+    "name": "Mask Off",
+    "id": "MPREb_XwbIvBRZjFT"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "pB0BPBF_ne4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:47",
+   "year": null,
+   "artists": [
+    {
+     "name": "DrillHub_UK",
+     "id": "UCCVuCZGS9qZDOUuZQvoQuPA"
+    }
+   ],
+   "duration_seconds": 227,
+   "views": "415",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/mJy4A2Dj2bS5dgZ4exHoiezp7JCX8Acp3I-NNUbP3P0MsNXQCaXGqJ4PJusfpL65jPzz1yLb0VqxuGmvCQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/mJy4A2Dj2bS5dgZ4exHoiezp7JCX8Acp3I-NNUbP3P0MsNXQCaXGqJ4PJusfpL65jPzz1yLb0VqxuGmvCQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mask Off (Originally Performed by Future) [Karaoke Version]",
+   "album": {
+    "name": "Fresh Karaoke Hits - 2017 - Vol. 6",
+    "id": "MPREb_1taDC5O97py"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "7v4u0GmP-0E",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "Backing Force",
+     "id": "UCScjra74TauEoukB5X3dlpQ"
+    }
+   ],
+   "duration_seconds": 212,
+   "views": "9.8K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/5luUfLuwQQK52540bOz_oR1pny_CFK3PiEcAyw788bGfBhrW5poMUKwtEiAwM42mAJKykeDx51J-sg4=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/5luUfLuwQQK52540bOz_oR1pny_CFK3PiEcAyw788bGfBhrW5poMUKwtEiAwM42mAJKykeDx51J-sg4=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mask Off",
+   "album": {
+    "name": "Be Free",
+    "id": "MPREb_DGXCMcySTXp"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "BTaPh3JbolY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:49",
+   "year": null,
+   "artists": [
+    {
+     "name": "Yuki",
+     "id": "UCEYAtB63MpWlzxFD3xN65Ww"
+    }
+   ],
+   "duration_seconds": 229,
+   "views": "650",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/XaQn3WBm8tU_IL_7bNNW6-ZTxP0U6L3zYYl3ewQsDLANupGvLyauUaBSCHv_l_jL5WJ_DqXyFh7tkN5PvQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/XaQn3WBm8tU_IL_7bNNW6-ZTxP0U6L3zYYl3ewQsDLANupGvLyauUaBSCHv_l_jL5WJ_DqXyFh7tkN5PvQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

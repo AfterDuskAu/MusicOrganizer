@@ -1,0 +1,782 @@
+{
+ "kind": "search",
+ "key": "ed sheeran bad habits leahy and mack remix",
+ "request": "Ed Sheeran Bad Habits leahy and mack remix",
+ "recorded_at": "2026-09-29T02:36:36Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habit (Apexape Remix)",
+   "album": {
+    "name": "Hello, What's Your Name?",
+    "id": "MPREb_fxDORQHJolE"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "qCRiaXf1LyA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:49",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Kooks",
+     "id": "UCVnzbcX5a-xKeWfqfZ-q3-w"
+    }
+   ],
+   "duration_seconds": 289,
+   "views": "12K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/lDxjdo8l0PkUQlBXi6EjbX9mHUfgAkFobRIUQ1ARr-n263avIkeZmr8CXJfRTyXKdQcqZhcxhhzKUAnX=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/lDxjdo8l0PkUQlBXi6EjbX9mHUfgAkFobRIUQ1ARr-n263avIkeZmr8CXJfRTyXKdQcqZhcxhhzKUAnX=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_daIrZm2tTpm"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "17HQJj5Keww",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:00",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alosa",
+     "id": "UCpNqrA5f9DfpVmAEzTk5vUQ"
+    },
+    {
+     "name": "Andreea Flavia",
+     "id": "UCpO6Yq4Gu1Vdmb1DtqQa-nQ"
+    },
+    {
+     "name": "Deep Mage",
+     "id": "UCnhIvTYRrSHCSEy9Qy9slsg"
+    }
+   ],
+   "duration_seconds": 180,
+   "views": "503K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/bjUiE4Tdhb-lPoQceZjjBwc7_KSkFL2q8Um_ZEMMH34frybd0g7nCOVfXKAG1ygiQv7gnln9E3Wa5QIi=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/bjUiE4Tdhb-lPoQceZjjBwc7_KSkFL2q8Um_ZEMMH34frybd0g7nCOVfXKAG1ygiQv7gnln9E3Wa5QIi=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_aJOh5AmVDwn"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "EnAjySw2bQ0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:34",
+   "year": null,
+   "artists": [
+    {
+     "name": "Paul Arsenault",
+     "id": "UC5vWhk5EkGSDLOWr7HVVz5w"
+    }
+   ],
+   "duration_seconds": 214,
+   "views": "64",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/1tw_IDhVHspDTJePhVqKvgYXATbYLii9GkYXAqPpflhSSg3QB3Ze40CNg4kGO_ws9V1kaK3RSs2i-MmN=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/1tw_IDhVHspDTJePhVqKvgYXATbYLii9GkYXAqPpflhSSg3QB3Ze40CNg4kGO_ws9V1kaK3RSs2i-MmN=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits (Extended Mix)",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_36S2MFBeIuW"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "bTavMfhpuEc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "MELON",
+     "id": "UCbz3IWfEM5_M7Mt8oadstdA"
+    },
+    {
+     "name": "Redwood",
+     "id": "UClj9G5yYTTFJH5o6FH2dkAA"
+    }
+   ],
+   "duration_seconds": 270,
+   "views": "148K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/PI8BuyxwIjxzaTHNN8LwMcwEjNu0T6mRjISLft__-RpIuFC8VOil-KnxSgKQp3rfC9I0y1A5t3Y5U3g=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/PI8BuyxwIjxzaTHNN8LwMcwEjNu0T6mRjISLft__-RpIuFC8VOil-KnxSgKQp3rfC9I0y1A5t3Y5U3g=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits (feat. Jonah Baker)",
+   "album": {
+    "name": "Bad Habits (feat. Jonah Baker)",
+    "id": "MPREb_W5MVtL0tDiA"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "R306toS1h44",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:44",
+   "year": null,
+   "artists": [
+    {
+     "name": "Shoby, Ed Sheeran, Johnny McDaid, Fred Gibson",
+     "id": "UCb7-4oSIrJbLIR5S5yDoJlw"
+    }
+   ],
+   "duration_seconds": 164,
+   "views": "564K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/c0VzxFec1FGRjVK6Gd10WnWlK0scD2bBLD5v0ftoNFnSEn0Gy-eHsLKbpRM_jB-9ccwxxp4EnBXD-rOl=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/c0VzxFec1FGRjVK6Gd10WnWlK0scD2bBLD5v0ftoNFnSEn0Gy-eHsLKbpRM_jB-9ccwxxp4EnBXD-rOl=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_nkjqJWyzYX1"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "GaC5oOxHf2I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:58",
+   "year": null,
+   "artists": [
+    {
+     "name": "Dapa Deep",
+     "id": "UCTGkWDruIq7MMbRZWEuowog"
+    }
+   ],
+   "duration_seconds": 298,
+   "views": "971K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/HJIr7LFpj-bfJlHLaEbWwxXBd5Hm13vovY1lre62zOLARPQE7ATZV0P4Td_2ePvz-UNpPSPhkEAdOmT5=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/HJIr7LFpj-bfJlHLaEbWwxXBd5Hm13vovY1lre62zOLARPQE7ATZV0P4Td_2ePvz-UNpPSPhkEAdOmT5=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits (Cover)",
+   "album": {
+    "name": "BUZZ DANCE MIX",
+    "id": "MPREb_1qgCslwTxPn"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "5ZbgrIJcBPE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "0:45",
+   "year": null,
+   "artists": [
+    {
+     "name": "SUPER DJ MIX",
+     "id": "UCYQXY04xbuGY1evYMGZuo_w"
+    }
+   ],
+   "duration_seconds": 45,
+   "views": "56",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/BaR1UOQ4h9j7qgbkRVsGnsa_pFLqEmQSrpyw3pch3iIfhr3Uqwu_fLi-VkZsEWD2WLEy1kk0kjPE07eS=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/BaR1UOQ4h9j7qgbkRVsGnsa_pFLqEmQSrpyw3pch3iIfhr3Uqwu_fLi-VkZsEWD2WLEy1kk0kjPE07eS=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad habits",
+   "album": {
+    "name": "Bad habits",
+    "id": "MPREb_JjWkf7GAD1e"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "vKrNWgzq4Ps",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "IL MAGO DELLE COVER",
+     "id": "UCxXrK4U0g0WCi4TZau2aWlg"
+    }
+   ],
+   "duration_seconds": 92,
+   "views": "246",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/YRGQPSYVKABMsKdMErnEv7bfJl-8oca364xBB-neO-4gLAHr_tIX7UC9__wmFqy9mKQK9uIOTYO0GmU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/YRGQPSYVKABMsKdMErnEv7bfJl-8oca364xBB-neO-4gLAHr_tIX7UC9__wmFqy9mKQK9uIOTYO0GmU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_L8Wu17oBGto"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "cJW8xMX6wxs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "FSDW",
+     "id": "UCOx0bRaz0cnU_KfSaObtvsg"
+    },
+    {
+     "name": "Alex Megane",
+     "id": "UCugIOGWZXD7g8ku-t7Fu_6w"
+    },
+    {
+     "name": "Haley Klinkhammer",
+     "id": "UCjrRfZBHymWJSrLd5nNupvQ"
+    }
+   ],
+   "duration_seconds": 212,
+   "views": "44K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/BHnBFtWIPMM8kTKk3WM5lyo1KGdgtq29Ahc0w2kt3P2hXxG7dKgWOCyIa78GnI209yEh0LyRt_KE2aw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/BHnBFtWIPMM8kTKk3WM5lyo1KGdgtq29Ahc0w2kt3P2hXxG7dKgWOCyIa78GnI209yEh0LyRt_KE2aw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_JDPUXzf8oFt"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "aJ5DvmdfAiE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:55",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sans Effort",
+     "id": "UCtoKoZypyrXPG9SmnG56qBg"
+    }
+   ],
+   "duration_seconds": 235,
+   "views": "83",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/nEF-B3HJi8cJcboEE4TlHRdzyPWAYQ0mfj3wZmKzok_ntUR0ydeB2ycu0m9S5RW8BRG0P8HAF8w3kEX6=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/nEF-B3HJi8cJcboEE4TlHRdzyPWAYQ0mfj3wZmKzok_ntUR0ydeB2ycu0m9S5RW8BRG0P8HAF8w3kEX6=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits (Future Bass Mix)",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_jB8eyuO7hN0"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "e_zUlsGQyWc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:59",
+   "year": null,
+   "artists": [
+    {
+     "name": "Afishal",
+     "id": "UCTSTTVtQjOVUtU4otWl-2sQ"
+    },
+    {
+     "name": "Richie Nuzz",
+     "id": "UCd577-Qsiryv2wILDHp1PsA"
+    }
+   ],
+   "duration_seconds": 239,
+   "views": "785K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/hpm6_KfDmnOPwE5yejj0XoHH_mQP_1M508vFR5KrvMNN03qsQv3ECjCFlqYcE_bvbKGOwvIC9kNQrJM=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/hpm6_KfDmnOPwE5yejj0XoHH_mQP_1M508vFR5KrvMNN03qsQv3ECjCFlqYcE_bvbKGOwvIC9kNQrJM=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_TUSnzbr4KDV"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "9UcBNTXmfEo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:55",
+   "year": null,
+   "artists": [
+    {
+     "name": "Conan Mac",
+     "id": "UCJ7X8oMEtS4OLyCkNvu8Ziw"
+    },
+    {
+     "name": "Jay Anthony",
+     "id": null
+    }
+   ],
+   "duration_seconds": 175,
+   "views": "310",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/W6cQalvu47E0zwblyvB_vly0MOzkRG5sgnrRntVrWIi-otuNiDdGutplC1nABMYosjrzeZEkEuyiUHa6=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/W6cQalvu47E0zwblyvB_vly0MOzkRG5sgnrRntVrWIi-otuNiDdGutplC1nABMYosjrzeZEkEuyiUHa6=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits (DANCE COVER REMIX)",
+   "album": {
+    "name": "OSHARENAHITOGAKIITESOUNA TENSHONGAAGARU YOUGAKUBEST",
+    "id": "MPREb_PiWuNYYXZXg"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "lNhPrWCIkFQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:51",
+   "year": null,
+   "artists": [
+    {
+     "name": "TG",
+     "id": "UCjbEKf8gMH1Ip6zkQBREOSA"
+    }
+   ],
+   "duration_seconds": 231,
+   "views": "306K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/D-49z3O87wFn9J0XKxJoeEfvbSDTXLA79Hrf5JAv1XBgh_eGBzowJL0qjQw7v-TIwTuEBhRjY5MIqDp_=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/D-49z3O87wFn9J0XKxJoeEfvbSDTXLA79Hrf5JAv1XBgh_eGBzowJL0qjQw7v-TIwTuEBhRjY5MIqDp_=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "Top Hits Workout 2021 (105-132 BPM Unmixed Tracks - Phrased 32 Count)",
+    "id": "MPREb_d7aysuaU9B6"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "wQeH3RqzE88",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:54",
+   "year": null,
+   "artists": [
+    {
+     "name": "Love2move Music Workout",
+     "id": "UC3KbZ1xDZNU91pCsT_Ahhyg"
+    }
+   ],
+   "duration_seconds": 234,
+   "views": "46",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/sy2A7uRL4uuUNwm3I4KftLolfwqvJOxIbGCf76iDC-uGrmjTgGM-J4TLgojkxSsxc8EmGaEskk1cIP_v9w=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/sy2A7uRL4uuUNwm3I4KftLolfwqvJOxIbGCf76iDC-uGrmjTgGM-J4TLgojkxSsxc8EmGaEskk1cIP_v9w=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits (Dance Cover Remix) [mixed]",
+   "album": {
+    "name": "Work Out Kintoreyou BGM (DJ Mix)",
+    "id": "MPREb_odJBbyRUPZ3"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "CubaD4EVhqY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:42",
+   "year": null,
+   "artists": [
+    {
+     "name": "TG",
+     "id": "UCjbEKf8gMH1Ip6zkQBREOSA"
+    }
+   ],
+   "duration_seconds": 162,
+   "views": "308K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/7oxwcqvYUVFmR2K8Mluo2sN1MDcN7xC6N5PBZ2kjyfUfw-e_8BpMj1ZDcC3UzxVWlkSDKCg0D6ost9Gb=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/7oxwcqvYUVFmR2K8Mluo2sN1MDcN7xC6N5PBZ2kjyfUfw-e_8BpMj1ZDcC3UzxVWlkSDKCg0D6ost9Gb=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits (Cover)",
+   "album": {
+    "name": "Let's work out now! DJMIX",
+    "id": "MPREb_lJeYpOc0dR3"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "u74ccLGyDNg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:45",
+   "year": null,
+   "artists": [
+    {
+     "name": "WORK OUT GYM - DJ MIX",
+     "id": "UCzIbyvVbbAMvY3wcms-X6Cg"
+    }
+   ],
+   "duration_seconds": 225,
+   "views": "15K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/E-VnC6Lqc6QHKnzxckYQV-HI6jVj57pKmrFos91KHVxFDJjXvb9xG6u9zjc6YtwyUzXzba6HJOVteFl1=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/E-VnC6Lqc6QHKnzxckYQV-HI6jVj57pKmrFos91KHVxFDJjXvb9xG6u9zjc6YtwyUzXzba6HJOVteFl1=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_rvpjqFOI4zq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "tD461NWzcuM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:04",
+   "year": null,
+   "artists": [
+    {
+     "name": "PTCH",
+     "id": "UC0oBfde7m31kdSPi1C-YRWQ"
+    }
+   ],
+   "duration_seconds": 184,
+   "views": "5.5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/gLKK4CKj3wyFe02iD9h4kppf2vVSTucj4l6FQ_c3EPaDxSt6S6h1jBHtxFgI455uLDT_oFDb47YOAuAWgA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/gLKK4CKj3wyFe02iD9h4kppf2vVSTucj4l6FQ_c3EPaDxSt6S6h1jBHtxFgI455uLDT_oFDb47YOAuAWgA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits x Rad Dabbits",
+   "album": {
+    "name": "Bad Habits x Rad Dabbits",
+    "id": "MPREb_hhc0Jgj97t3"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "OOwUYWEsDAI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "DJ SMOOTH PANDA",
+     "id": "UCRn4rng_SgMc2xo5l0yqQ4A"
+    }
+   ],
+   "duration_seconds": 232,
+   "views": "635",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/6StPtUuxmpmU4BqIV3JzGQI5Ejg05UpHwUT5S7PxLUsTwBl57Ul3dd2m8hgiGfg8QNALSuWruLgCa4GqXg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/6StPtUuxmpmU4BqIV3JzGQI5Ejg05UpHwUT5S7PxLUsTwBl57Ul3dd2m8hgiGfg8QNALSuWruLgCa4GqXg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "bad habits (Remix)",
+   "album": {
+    "name": "just u",
+    "id": "MPREb_iSHnigjyUOW"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "St7nO-xNKr8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:26",
+   "year": null,
+   "artists": [
+    {
+     "name": "Cuts",
+     "id": "UChhDvh-SLJ2YJBePDgcZQ_A"
+    }
+   ],
+   "duration_seconds": 146,
+   "views": "6",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/bDC1ojXbrGaw0TM8Z8gTTqXd3UtTElrpUKe4_BY_WzrVJeDBp9WnZH-hzUyC37gevyELjpRDxVh-AJw9=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/bDC1ojXbrGaw0TM8Z8gTTqXd3UtTElrpUKe4_BY_WzrVJeDBp9WnZH-hzUyC37gevyELjpRDxVh-AJw9=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_tSLYopy9mLU"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "V_eCIOKYg10",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "EDDIE",
+     "id": "UCSRH5S-5B75Jm4oSfa_JO9w"
+    },
+    {
+     "name": "Enya Angel",
+     "id": "UC95saePTGpiz36aUNyJSxTw"
+    }
+   ],
+   "duration_seconds": 331,
+   "views": "264K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/TxD_pfQNTgqHYsXdu26u-so4gSQqztaJIrYgUO9wJNUzUTWgmG-Z7tr-U5O2nZguEzFRqYRYPp0ZCxo9=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/TxD_pfQNTgqHYsXdu26u-so4gSQqztaJIrYgUO9wJNUzUTWgmG-Z7tr-U5O2nZguEzFRqYRYPp0ZCxo9=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

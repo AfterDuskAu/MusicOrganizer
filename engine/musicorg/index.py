@@ -18,6 +18,7 @@ import threading
 import unicodedata
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import TracebackType
 from typing import Any
@@ -343,6 +344,87 @@ class Index:
             "SELECT COUNT(*) AS n FROM external_items WHERE parse_confidence < ?", (below,)
         )
         return int(rows[0]["n"]) if rows else 0
+
+    def items_in_states(self, states: Iterable[str]) -> list[dict[str, Any]]:
+        wanted = list(states)
+        marks = ", ".join("?" for _ in wanted)
+        rows = self._rows(
+            f"SELECT * FROM external_items WHERE state IN ({marks}) ORDER BY source_id, rel_path",
+            wanted,
+        )
+        return [_from_row(row) for row in rows]
+
+    # ---- match candidates (step 06) -----------------------------------------------------
+
+    def set_match(
+        self, item_id: str, state: str, reasons: list[str], candidates: list[dict[str, Any]]
+    ) -> None:
+        """An item's match result: its state and reasons, and its candidates (each a dict
+        with `id`, `video_id`, `score`, `reasons` and the `payload` to show), replacing any
+        it had. One transaction, so an interrupted run never leaves half a result."""
+        with self.transaction() as conn:
+            conn.execute("DELETE FROM candidates WHERE item_id = ?", (item_id,))
+            conn.executemany(
+                "INSERT INTO candidates (id, item_id, video_id, payload_json, score, reasons_json) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                [
+                    (
+                        c["id"],
+                        item_id,
+                        c["video_id"],
+                        json.dumps(c["payload"], ensure_ascii=False),
+                        c["score"],
+                        json.dumps(c["reasons"], ensure_ascii=False),
+                    )
+                    for c in candidates
+                ],
+            )
+            conn.execute(
+                "UPDATE external_items SET state = ?, reasons_json = ? WHERE id = ?",
+                (state, json.dumps(reasons, ensure_ascii=False), item_id),
+            )
+
+    def candidates(self, item_id: str) -> list[dict[str, Any]]:
+        """An item's candidates, best first."""
+        rows = self._rows(
+            "SELECT * FROM candidates WHERE item_id = ? ORDER BY score DESC, rowid", (item_id,)
+        )
+        return [
+            {
+                "id": row["id"],
+                "video_id": row["video_id"],
+                "payload": json.loads(row["payload_json"]),
+                "score": row["score"],
+                "reasons": json.loads(row["reasons_json"]),
+            }
+            for row in rows
+        ]
+
+    # ---- search cache (step 06) ---------------------------------------------------------
+
+    def cached_search(self, key: str, *, max_age_days: float) -> Any | None:
+        """A raw search response saved under `key`, if it's younger than `max_age_days`."""
+        rows = self._rows(
+            "SELECT fetched_at, response_json FROM search_cache WHERE query_key = ?", (key,)
+        )
+        if not rows:
+            return None
+        try:
+            fetched = datetime.fromisoformat(rows[0]["fetched_at"])
+        except ValueError:
+            return None
+        if datetime.now(UTC) - fetched > timedelta(days=max_age_days):
+            return None
+        return json.loads(rows[0]["response_json"])
+
+    def put_search(self, key: str, response: Any) -> None:
+        now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+        with self.transaction() as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO search_cache (query_key, fetched_at, response_json) "
+                "VALUES (?, ?, ?)",
+                (key, now, json.dumps(response, ensure_ascii=False)),
+            )
 
     # ---- library tracks ----------------------------------------------------------------
 

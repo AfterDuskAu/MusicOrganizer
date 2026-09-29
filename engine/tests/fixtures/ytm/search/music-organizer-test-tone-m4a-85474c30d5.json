@@ -1,0 +1,750 @@
+{
+ "kind": "search",
+ "key": "music organizer test tone m4a テスト",
+ "request": "Music Organizer Test Tone M4A — テスト",
+ "recorded_at": "2026-09-29T02:37:06Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Moon's Gentle Harmonies",
+   "album": {
+    "name": "Elevate Sleep Quality with Beautiful Piano Tones",
+    "id": "MPREb_z7s7OqS4Vjh"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "8PZSWF-EImg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "0:48",
+   "year": null,
+   "artists": [
+    {
+     "name": "Team 1/f",
+     "id": "UCQcSg73w42Ef8WOfcfk0BGA"
+    }
+   ],
+   "duration_seconds": 48,
+   "views": "0",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Uhw2K_UUkprFfygd8xNwXmP7I0h2aJwnsCy6l2lgctXT_0Eok1MtjeuDZg_bax6LU0HXs_YAdKWuUByO=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Uhw2K_UUkprFfygd8xNwXmP7I0h2aJwnsCy6l2lgctXT_0Eok1MtjeuDZg_bax6LU0HXs_YAdKWuUByO=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Pass the Test",
+   "album": {
+    "name": "デスクワークにおすすめのポジティブbgm",
+    "id": "MPREb_yIFXAQujNsh"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "suM3HXKiu8M",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:20",
+   "year": null,
+   "artists": [
+    {
+     "name": "Moody Swing",
+     "id": "UCQFUTy3yaoRygTP2XwpKl9w"
+    }
+   ],
+   "duration_seconds": 80,
+   "views": "9",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/TtaJqHszQurd3e3dlVEl8y91RrcFbMU_vymvYu_PG2iny8qPke1-29vkSj2gXlo6ohdrEHGp4r1uO1qM3w=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/TtaJqHszQurd3e3dlVEl8y91RrcFbMU_vymvYu_PG2iny8qPke1-29vkSj2gXlo6ohdrEHGp4r1uO1qM3w=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Passing the Test",
+   "album": {
+    "name": "仕事の効率化BGM",
+    "id": "MPREb_vxEsYsfJNwr"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "up-_YoTJdio",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:16",
+   "year": null,
+   "artists": [
+    {
+     "name": "Black Box Standards",
+     "id": "UC2oQQ9CUdKXiOzsCsJwZg1g"
+    }
+   ],
+   "duration_seconds": 76,
+   "views": "8",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/BnK_PCxHsgUutlFWOYfdutE7UvusaYCB9mMylG0aJ2B2BoYZcPMNjhmkhqbGhiSnU2m06hmLshSQZYKUsA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/BnK_PCxHsgUutlFWOYfdutE7UvusaYCB9mMylG0aJ2B2BoYZcPMNjhmkhqbGhiSnU2m06hmLshSQZYKUsA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Pass the Test",
+   "album": {
+    "name": "集中力を高めるための作業BGM",
+    "id": "MPREb_XBI8983JAnl"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "8xlNQbuLAq0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:00",
+   "year": null,
+   "artists": [
+    {
+     "name": "Another Cool Ensemble",
+     "id": "UCVbqDm0KcM7iaCg9u5qy_8Q"
+    }
+   ],
+   "duration_seconds": 120,
+   "views": "1",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/G8lNXbeZ2QOJIJ7Vut-Dx6ODRYGEHPpvlEVyrtOUzXf0LbxILdGj6OOWWOjDibugWDjXlKvWX3yhBNrt5Q=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/G8lNXbeZ2QOJIJ7Vut-Dx6ODRYGEHPpvlEVyrtOUzXf0LbxILdGj6OOWWOjDibugWDjXlKvWX3yhBNrt5Q=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Audio Tune",
+   "album": {
+    "name": "A Chapter to Rest",
+    "id": "MPREb_6AoGdzksfbp"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "EwBpftnko2Y",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "Lectures of Intelligence",
+     "id": "UCQMDkLBOV0yKAF3Vlt9T-Ig"
+    }
+   ],
+   "duration_seconds": 90,
+   "views": "3",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/hO8_5iQqAoAu0Z5tFBYfCLcO0Cmk1en-Z01kHUSgN1cNUiXektkiSXLSg9Aqjl-RPaMg1oi402bodUCJ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/hO8_5iQqAoAu0Z5tFBYfCLcO0Cmk1en-Z01kHUSgN1cNUiXektkiSXLSg9Aqjl-RPaMg1oi402bodUCJ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "ステレオチャンネルテスト：左右オーディオチェック",
+   "album": {
+    "name": "ステレオチャンネルテスト：左右オーディオチェック",
+    "id": "MPREb_3fUZCLW9UrX"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "PrxtVGWrC4w",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:33",
+   "year": null,
+   "artists": [
+    {
+     "name": "Napora",
+     "id": "UCUohqix5DImC6jdjSC7sB5g"
+    }
+   ],
+   "duration_seconds": 393,
+   "views": "1.5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/galxF4odbWW1llvvtXjTUF7ma9bUgTM1hfTkfTWBnbiO1FhJQ_L82_4lLU8tQR-2koODptzaXErvKA6z=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/galxF4odbWW1llvvtXjTUF7ma9bUgTM1hfTkfTWBnbiO1FhJQ_L82_4lLU8tQR-2koODptzaXErvKA6z=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "A New Approach to the Music",
+   "album": {
+    "name": "いつも仕事に集中するための音楽",
+    "id": "MPREb_zasDw3vyfd2"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "_WiT3HoFoc4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:54",
+   "year": null,
+   "artists": [
+    {
+     "name": "Black Box Standards",
+     "id": "UC2oQQ9CUdKXiOzsCsJwZg1g"
+    }
+   ],
+   "duration_seconds": 114,
+   "views": "7",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/o5FB9zlUHzexTQoGepYDNEqNTAnXaO0evM7j2ld7wo-UWfDii-2ZWXU95W38sW3AXQzByhQwAo_iE2U=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/o5FB9zlUHzexTQoGepYDNEqNTAnXaO0evM7j2ld7wo-UWfDii-2ZWXU95W38sW3AXQzByhQwAo_iE2U=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Passing the Test",
+   "album": {
+    "name": "ワークスペースに最適なサクサクはかどるジャズBGM - Beats at Work",
+    "id": "MPREb_exuyJwNEKnP"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "hH7E81cArA0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:05",
+   "year": null,
+   "artists": [
+    {
+     "name": "Blue Moon Swing",
+     "id": "UCSn_ZZ4F1LbAFciV6j2WxLQ"
+    }
+   ],
+   "duration_seconds": 125,
+   "views": "25",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/dKqT3evXsPQLRt8dl5QtO7q2gjtpl_8BgVJjTOpAo7xElTGvqYkTfvF3lx0NtbfurseQ5X8QruU3HP8mDg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/dKqT3evXsPQLRt8dl5QtO7q2gjtpl_8BgVJjTOpAo7xElTGvqYkTfvF3lx0NtbfurseQ5X8QruU3HP8mDg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Analytical Riff",
+   "album": {
+    "name": "午後の仕事におすすめのBGM",
+    "id": "MPREb_z9VouHPlH18"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "OvR7C1FsxkE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:58",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Golden Key",
+     "id": "UCfedCjAwnUBxisdogywPmsA"
+    }
+   ],
+   "duration_seconds": 118,
+   "views": "24",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/kRV2U0FsBhueH4xhI8HGgfMWk-FkMhsnWrAgxRbuwLx29EvBu4AF23JYDWzK5RmPIZWt3Ll6FO49yZnP=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/kRV2U0FsBhueH4xhI8HGgfMWk-FkMhsnWrAgxRbuwLx29EvBu4AF23JYDWzK5RmPIZWt3Ll6FO49yZnP=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Memorize the Music",
+   "album": {
+    "name": "集中力アップさせる音楽",
+    "id": "MPREb_SQBF96pRSDe"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ld0CfUz6UrA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:54",
+   "year": null,
+   "artists": [
+    {
+     "name": "Black Box Standards",
+     "id": "UC2oQQ9CUdKXiOzsCsJwZg1g"
+    }
+   ],
+   "duration_seconds": 114,
+   "views": "3",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/gKboQimPrNiRaWk5DFi-cHRVvbUUDXxAIIWX_n9gU0wUWdSyIhZ6qDQNK9MQBSZ3Tf8y2dynwfGZBaAUMQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/gKboQimPrNiRaWk5DFi-cHRVvbUUDXxAIIWX_n9gU0wUWdSyIhZ6qDQNK9MQBSZ3Tf8y2dynwfGZBaAUMQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Examining the Music",
+   "album": {
+    "name": "集中して働くための音楽",
+    "id": "MPREb_ra0LVVWnTYm"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "rGvuU5uDIjA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:56",
+   "year": null,
+   "artists": [
+    {
+     "name": "Melody Chain",
+     "id": "UCrGS06v_F_OGtgs-OH7MgBQ"
+    }
+   ],
+   "duration_seconds": 116,
+   "views": "5",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/yRbbLIBiKgAI9T8goWfNC8SSrTuXKDbAgl0oI-Xk455HO_Mj94GTKpL1UWvXifQzgFDfnNODhivC-BKnFQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/yRbbLIBiKgAI9T8goWfNC8SSrTuXKDbAgl0oI-Xk455HO_Mj94GTKpL1UWvXifQzgFDfnNODhivC-BKnFQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mindful Resonance for Efficiency (Key E Ver.)",
+   "album": {
+    "name": "Themes to Impress",
+    "id": "MPREb_y3lEWa4VUvu"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "IFdQITQUjOI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:48",
+   "year": null,
+   "artists": [
+    {
+     "name": "Aqua Muse",
+     "id": "UC9XQtfXG9mhfsiCsG323-yg"
+    }
+   ],
+   "duration_seconds": 168,
+   "views": "0",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/DWxQXYwJ8VCohSA1LAOttMeoEc5xehmkd1hJJKfE21ac2HIj4tz7EwFbrM6UFtwXjZoaSBuDtuXB9zs_=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/DWxQXYwJ8VCohSA1LAOttMeoEc5xehmkd1hJJKfE21ac2HIj4tz7EwFbrM6UFtwXjZoaSBuDtuXB9zs_=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Re-testing the Concerto",
+   "album": {
+    "name": "デスクワークのBGM",
+    "id": "MPREb_x7pvkqu2fHU"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "2Z9lMWYrRwg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:38",
+   "year": null,
+   "artists": [
+    {
+     "name": "Swinging Mix",
+     "id": "UCIuGZN4SNnVFWM8qT3boctQ"
+    }
+   ],
+   "duration_seconds": 98,
+   "views": "7",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/v0XstDi7DqntoVgJzxBAQlEArNBga-37sX27A10-GCqsyH1cPWwS81O5VHElqHITyLEIqtsaJm_JzdGN=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/v0XstDi7DqntoVgJzxBAQlEArNBga-37sX27A10-GCqsyH1cPWwS81O5VHElqHITyLEIqtsaJm_JzdGN=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "美容師を目指す学生におすすめのBGM - Recommended background music for students who want to become cosmetologists",
+   "album": {
+    "name": "A music list dedicated to beautiful skin that makes you feel confident",
+    "id": "MPREb_e5DP3rztXoJ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "G92AURCU-RQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "0:45",
+   "year": null,
+   "artists": [
+    {
+     "name": "FM STAR",
+     "id": "UCuiuzsv7CVaFilxpiCmg97w"
+    }
+   ],
+   "duration_seconds": 45,
+   "views": "316",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/DHe5iKTF2yovXBvXxJ6NyEH1yu33PBZV7HE0Oi7Xjq_O5C8PA2djRu9bEk3XpdzpThysveMlLpy4e7C0QQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/DHe5iKTF2yovXBvXxJ6NyEH1yu33PBZV7HE0Oi7Xjq_O5C8PA2djRu9bEk3XpdzpThysveMlLpy4e7C0QQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Test Tone",
+   "album": {
+    "name": "Test Tone",
+    "id": "MPREb_ID10CszR4EY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "hD99NBnjU0g",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:13",
+   "year": null,
+   "artists": [
+    {
+     "name": "Liam Singer",
+     "id": "UC3KBU7g8Q-7WwoFuj_ksA8Q"
+    }
+   ],
+   "duration_seconds": 313,
+   "views": "3.9K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/hhIfIatzE4zq6HwTrH3DYKjE-m7v-96BLTTQQA_2spYS6WDzy4D5qWDwZ2v-hYeyu-tvgR3Or56HANZo=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/hhIfIatzE4zq6HwTrH3DYKjE-m7v-96BLTTQQA_2spYS6WDzy4D5qWDwZ2v-hYeyu-tvgR3Or56HANZo=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Guitar Quartet Soundtrack for Study Tools",
+   "album": {
+    "name": "まずはコーヒー",
+    "id": "MPREb_sjh1GKDpOfW"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "qhVBdlOORYI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:42",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hotel Lounge Musik",
+     "id": "UCERhe6uDjHdXJEQlB2jGXng"
+    }
+   ],
+   "duration_seconds": 102,
+   "views": "1",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/mxcsOS8-rvX-6D1pSo7bTXiJDNPBA6tAni_8GgvL-fabV1VgD4Sr3mggbWbHz9G_esO-uFhyCFeb_FEY=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/mxcsOS8-rvX-6D1pSo7bTXiJDNPBA6tAni_8GgvL-fabV1VgD4Sr3mggbWbHz9G_esO-uFhyCFeb_FEY=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "4-Alpha",
+   "album": {
+    "name": "The fort left behind [Four]",
+    "id": "MPREb_n6caHlOcbVg"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "00XCvfxftLU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:34",
+   "year": null,
+   "artists": [
+    {
+     "name": "MUNYOT SOUNDS",
+     "id": "UCdKaz0VIzSDcvwx3WgXKd_g"
+    }
+   ],
+   "duration_seconds": 214,
+   "views": "43",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/JIonWauS0OTa7kw79RDfdfLw-JF1teBKdzJveNBfU4tNCsuaihZbvztN1w_6HS0iYbwxBYiztwlfi5A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/JIonWauS0OTa7kw79RDfdfLw-JF1teBKdzJveNBfU4tNCsuaihZbvztN1w_6HS0iYbwxBYiztwlfi5A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Guitar Quartet Soundtrack for Study Tools",
+   "album": {
+    "name": "お仕事中のリフレッシュ",
+    "id": "MPREb_u9GcNvfP7bB"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ZhjHTrobtjc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:05",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jazz for Work",
+     "id": "UCX5Mrt-yjVhWp5y5B-QRKtg"
+    }
+   ],
+   "duration_seconds": 125,
+   "views": "9",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/6kue6aM0KU25xUxaTYeiBEju6FGhm1M_Y6FTODgb9UhI6MwZNsuVzY-6O0YRTeuXJfRcWE6zSUxKb6A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/6kue6aM0KU25xUxaTYeiBEju6FGhm1M_Y6FTODgb9UhI6MwZNsuVzY-6O0YRTeuXJfRcWE6zSUxKb6A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Determined Strides Melody (Key Gb Ver.)",
+   "album": {
+    "name": "Themes to Impress",
+    "id": "MPREb_y3lEWa4VUvu"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ZFapmE9trAg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:42",
+   "year": null,
+   "artists": [
+    {
+     "name": "Aqua Muse",
+     "id": "UC9XQtfXG9mhfsiCsG323-yg"
+    }
+   ],
+   "duration_seconds": 162,
+   "views": "0",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/DWxQXYwJ8VCohSA1LAOttMeoEc5xehmkd1hJJKfE21ac2HIj4tz7EwFbrM6UFtwXjZoaSBuDtuXB9zs_=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/DWxQXYwJ8VCohSA1LAOttMeoEc5xehmkd1hJJKfE21ac2HIj4tz7EwFbrM6UFtwXjZoaSBuDtuXB9zs_=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Music for beauty stores to improve operational efficiency",
+   "album": {
+    "name": "Collection of music to listen to until pore care is effective",
+    "id": "MPREb_9iJzjIOpCfO"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "BCP6d5Uv_Mc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "0:37",
+   "year": null,
+   "artists": [
+    {
+     "name": "FM STAR",
+     "id": "UCuiuzsv7CVaFilxpiCmg97w"
+    }
+   ],
+   "duration_seconds": 37,
+   "views": "168",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/G6xrAUDRaVuEVY3oW1HenNEy14IrPURTUzQdwnVISoRvywjLyUVe1NGccYafQeFy8aIPX8ZV5VhkxeWKWQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/G6xrAUDRaVuEVY3oW1HenNEy14IrPURTUzQdwnVISoRvywjLyUVe1NGccYafQeFy8aIPX8ZV5VhkxeWKWQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

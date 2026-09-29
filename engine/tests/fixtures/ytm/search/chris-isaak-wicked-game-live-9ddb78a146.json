@@ -1,0 +1,763 @@
+{
+ "kind": "search",
+ "key": "chris isaak wicked game live",
+ "request": "Chris Isaak Wicked Game live",
+ "recorded_at": "2026-09-29T02:45:17Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "error": null,
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game",
+   "album": {
+    "name": "Heart Shaped World",
+    "id": "MPREb_iDQq6eFHwdB"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "rslMMY64BVg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 290,
+   "views": "254M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/RnCZQZ54IRYQD3JDTNmQa9Fk5oSeXSyDBUwP6ts8n015I0L4Zr29p20vf7P-fz81pLxYrBTWfYD48uQCEQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/RnCZQZ54IRYQD3JDTNmQa9Fk5oSeXSyDBUwP6ts8n015I0L4Zr29p20vf7P-fz81pLxYrBTWfYD48uQCEQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game",
+   "album": {
+    "name": "Best Of Chris Isaak",
+    "id": "MPREb_bftzw8FBZbV"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "20UpB7XwQv4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:47",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 287,
+   "views": "254M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/jO3KsaJqnEovRH7EXIcEEBz9Byvb3bXo2Fm5qMmrR8HnQ5HL2ICYhamlse8VMrt2qnJAOyyTo3D7rUQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/jO3KsaJqnEovRH7EXIcEEBz9Byvb3bXo2Fm5qMmrR8HnQ5HL2ICYhamlse8VMrt2qnJAOyyTo3D7rUQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (Live)",
+   "album": {
+    "name": "Live at the Fillmore",
+    "id": "MPREb_7rkdd74rsw9"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "UPDHl0EypT8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:45",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 285,
+   "views": "3.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/dtp209J1qavQ6CnTIBG21ORcURycG0wXYDTO4R1VZQ_peRsncpJid_vsgOcKKN7o3g5l5EdfDO1mvUtk1Q=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/dtp209J1qavQ6CnTIBG21ORcURycG0wXYDTO4R1VZQ_peRsncpJid_vsgOcKKN7o3g5l5EdfDO1mvUtk1Q=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (Live 1995)",
+   "album": {
+    "name": "Lonely Dream",
+    "id": "MPREb_JVvHUVrjT87"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "kEqM4UeLFys",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:54",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 294,
+   "views": "46K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/o0Bvm_DreL8qdBKsNpuyCUmsXfeSdDWpSdgZF4SsLrDTBOJztgnCPvz6E8Bb_qJpbqzK_9m0-bdwzAby=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/o0Bvm_DreL8qdBKsNpuyCUmsXfeSdDWpSdgZF4SsLrDTBOJztgnCPvz6E8Bb_qJpbqzK_9m0-bdwzAby=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (Acoustic) [Live] (Acoustic; Live)",
+   "album": {
+    "name": "Come What(ever) May (10th Anniversary Edition)",
+    "id": "MPREb_gpn6ZvkxgcM"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "j1IKW7A0knc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "Stone Sour",
+     "id": "UC4Hkv4VoHUOfZy8n3dzARsw"
+    }
+   ],
+   "duration_seconds": 268,
+   "views": "46M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2aBGx_xQ5V4_94lgjQ4wAITMdIBS1TVzqqk2XjIN7dF0_skBsK6q5PsobiIORMl0iTywcbd1TDSsF6A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2aBGx_xQ5V4_94lgjQ4wAITMdIBS1TVzqqk2XjIN7dF0_skBsK6q5PsobiIORMl0iTywcbd1TDSsF6A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (Live)",
+   "album": {
+    "name": "Grill & Chill BBQ Music",
+    "id": "MPREb_A8FjIVdGICb"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "LZpbjS73rZY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:54",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 294,
+   "views": "46K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/PmcQM_Id9s_wnZ0MIevWqSMKNp9SjS028esvkpAbxVnOSiF9KhrB61AlEihPL1fG0HBZUbtIrOz_u2jB=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/PmcQM_Id9s_wnZ0MIevWqSMKNp9SjS028esvkpAbxVnOSiF9KhrB61AlEihPL1fG0HBZUbtIrOz_u2jB=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (Live)",
+   "album": {
+    "name": "At The Bimbo's 365 Club, San Francisco 29 June '95 (Live)",
+    "id": "MPREb_9PgdTAGRZzM"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "yOUwJNgThDY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:54",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 294,
+   "views": "46K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/FrM4LRslJ0XAwXaNUhSqXGN8Oxq90MGsjjbgZ68ePVUbF4jUUn3fdt-j2HEnz_5evvo84ee2pPfWaa5_=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/FrM4LRslJ0XAwXaNUhSqXGN8Oxq90MGsjjbgZ68ePVUbF4jUUn3fdt-j2HEnz_5evvo84ee2pPfWaa5_=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (Live)",
+   "album": {
+    "name": "Live In Australia",
+    "id": "MPREb_OVeLZZQRRlY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "3P1jrJpOtg8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 303,
+   "views": "51",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/WgpTyRHGH2crE4ptor1x22k06wtXGI0n9Ucg7n27VspTwmKhZeSlqBcL3iR_2lJOyZmZOB-wqhhIfUv9=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/WgpTyRHGH2crE4ptor1x22k06wtXGI0n9Ucg7n27VspTwmKhZeSlqBcL3iR_2lJOyZmZOB-wqhhIfUv9=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (Acoustic Live)",
+   "album": {
+    "name": "Pretty Little Fool Acoustic Live session",
+    "id": "MPREb_I1G5KO7XHaV"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "_nUxJ-2d9F8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:35",
+   "year": null,
+   "artists": [
+    {
+     "name": "Aya",
+     "id": null
+    }
+   ],
+   "duration_seconds": 155,
+   "views": "42",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/jsgLOdrF3JOvb4faQhvnbb91-EiTUwm2unfsJq7pW7gsl8i-9VEwQekzPtiN68g-Mf0Ysl_KuT9Nibc5ag=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/jsgLOdrF3JOvb4faQhvnbb91-EiTUwm2unfsJq7pW7gsl8i-9VEwQekzPtiN68g-Mf0Ysl_KuT9Nibc5ag=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game",
+   "album": {
+    "name": "Wicked Game",
+    "id": "MPREb_b2mWV5rk5tm"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "pDjrK0wy61s",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Lusaint",
+     "id": "UCV6HCumWR_KrxjusDyq9KHA"
+    }
+   ],
+   "duration_seconds": 230,
+   "views": "64M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-MDmrXmHU4SGAc4qDXVKP7yj_RKZ6hMEuLn8pFlwFWPGrFLFCD9v8kmWvPzYHMWxHI2rmxu5uIrBwj5q=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-MDmrXmHU4SGAc4qDXVKP7yj_RKZ6hMEuLn8pFlwFWPGrFLFCD9v8kmWvPzYHMWxHI2rmxu5uIrBwj5q=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (Live)",
+   "album": {
+    "name": "Left To Stay",
+    "id": "MPREb_jQP8L1UCR1E"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "qQ6zX0TVXNk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:51",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 291,
+   "views": "46K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/F7Sdtzz65uHnJcud2l6w3QOtBUYoYwy4RL-QTAN79JNTJeZWTliSrCUdCiciATk2rruudn_OHy4Crqs=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/F7Sdtzz65uHnJcud2l6w3QOtBUYoYwy4RL-QTAN79JNTJeZWTliSrCUdCiciATk2rruudn_OHy4Crqs=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (Live)",
+   "album": {
+    "name": "The Voice 2022: Blind Auditions 2 (Live)",
+    "id": "MPREb_3izsLfUBTBd"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "5foJQxLPsyY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:57",
+   "year": null,
+   "artists": [
+    {
+     "name": "Goda Levickaite",
+     "id": null
+    }
+   ],
+   "duration_seconds": 117,
+   "views": "2.4K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/RZn78USlkno32UsMbeA6_3m4XcXMK-WlGeZeu3VvrixfFdhbVSzkjgPHunI0LV_Nt3vjLEhFkM4qeqPGWw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/RZn78USlkno32UsMbeA6_3m4XcXMK-WlGeZeu3VvrixfFdhbVSzkjgPHunI0LV_Nt3vjLEhFkM4qeqPGWw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Waiting (Live)",
+   "album": {
+    "name": "Live In Australia",
+    "id": "MPREb_OVeLZZQRRlY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "JG7--0qqn9Q",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:05",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 185,
+   "views": "58",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/WgpTyRHGH2crE4ptor1x22k06wtXGI0n9Ucg7n27VspTwmKhZeSlqBcL3iR_2lJOyZmZOB-wqhhIfUv9=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/WgpTyRHGH2crE4ptor1x22k06wtXGI0n9Ucg7n27VspTwmKhZeSlqBcL3iR_2lJOyZmZOB-wqhhIfUv9=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (Live)",
+   "album": {
+    "name": "Reconnecting LIVE",
+    "id": "MPREb_KPskXPM3MOY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "pURXlLxSCPs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "Maria Vegas",
+     "id": "UCULPwL391_v90-i6uCmyM9g"
+    }
+   ],
+   "duration_seconds": 271,
+   "views": "670",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/aWPx52TTOc9JBOtJf2EeLM2LVk2RB48DtPJgSWEZIs0PfQ-q449PDsLG8QQGtKjy9IgZagFeKunUM0cf=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/aWPx52TTOc9JBOtJf2EeLM2LVk2RB48DtPJgSWEZIs0PfQ-q449PDsLG8QQGtKjy9IgZagFeKunUM0cf=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game",
+   "album": {
+    "name": "Wicked Game",
+    "id": "MPREb_JqtqRtYdxXU"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "6G944qwQ1Hw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:41",
+   "year": null,
+   "artists": [
+    {
+     "name": "Daisy Gray",
+     "id": "UCV5UGLq4icaYtdI4Ol0bpnQ"
+    }
+   ],
+   "duration_seconds": 221,
+   "views": "52M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Q8ibW2PpeEcnP-RujqOvw5LbnRU2A6xykZyVelIJsZE3kmFCBhVSdjf-OAwXExsk_kn2fcZlzORpNc02=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Q8ibW2PpeEcnP-RujqOvw5LbnRU2A6xykZyVelIJsZE3kmFCBhVSdjf-OAwXExsk_kn2fcZlzORpNc02=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (Acoustic Live Session)",
+   "album": {
+    "name": "Wicked Game (Acoustic Live Session)",
+    "id": "MPREb_k0mDRuic6wr"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "xY00NRditkE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:09",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sam Ali",
+     "id": null
+    },
+    {
+     "name": "STABAL",
+     "id": "UCcn3K3l4jIuZ8_EuEByyPRg"
+    }
+   ],
+   "duration_seconds": 189,
+   "views": "718",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/RAqdoUSJvwmsDsfz67J-MgsdSySUv5eOPilKCzmU8ZTSq1ulvaE_t7VX0Q-bCmIBKjwgcH0Z55WA0uXR=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/RAqdoUSJvwmsDsfz67J-MgsdSySUv5eOPilKCzmU8ZTSq1ulvaE_t7VX0Q-bCmIBKjwgcH0Z55WA0uXR=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (Live)",
+   "album": {
+    "name": "The Voice 2025: Blind Auditions 2 (Live)",
+    "id": "MPREb_dpfERDLC6vr"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "kb2MCLbskqw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:18",
+   "year": null,
+   "artists": [
+    {
+     "name": "Herman Lie",
+     "id": null
+    }
+   ],
+   "duration_seconds": 138,
+   "views": "77K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/EKoNv7xoRS3taZwZjE0Qnl4-5EwOSILFZjr401OHBeXJkP1gjFxE0gLRoQmfr5YtU_ZrBv0u00IZ8mPr=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/EKoNv7xoRS3taZwZjE0Qnl4-5EwOSILFZjr401OHBeXJkP1gjFxE0gLRoQmfr5YtU_ZrBv0u00IZ8mPr=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (Live 1995)",
+   "album": {
+    "name": "Take A Ride",
+    "id": "MPREb_m3eRuAmkguq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "a17pbVwu2EU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:51",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 291,
+   "views": "10K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/F56TbjOf8bv1ngvKF97maJz2zHUmDiCnZrrh0G87zguOFvnsP2V2W3t51YgzuOWlkXBJ9OrR0oAXgzQcpw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/F56TbjOf8bv1ngvKF97maJz2zHUmDiCnZrrh0G87zguOFvnsP2V2W3t51YgzuOWlkXBJ9OrR0oAXgzQcpw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (feat. Chris Isaak)",
+   "album": {
+    "name": "Wicked Game",
+    "id": "MPREb_NZyDCniYfuY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "hAnqv5Xnk6w",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "7:49",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hugo Castillo",
+     "id": "UCupEWMjmTvoOCIOsxRVhLrQ"
+    },
+    {
+     "name": "Chris Isaak",
+     "id": "UCR1yd7JFrY7agCcYU1Ddzew"
+    }
+   ],
+   "duration_seconds": 469,
+   "views": "89K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ECmpIaTgynLA3KUDErn3S85AtE97u80-qv7pwD3OEDxfyj7sMA8ier6iXzQvaAnKO6ofPjJSuN_5jPC-=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ECmpIaTgynLA3KUDErn3S85AtE97u80-qv7pwD3OEDxfyj7sMA8ier6iXzQvaAnKO6ofPjJSuN_5jPC-=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wicked Game (Live)",
+   "album": {
+    "name": "Vocea României: Audiții pe nevăzute #8 (Sezonul 10) (Live)",
+    "id": "MPREb_FMSicOXXLOS"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Vfv3fx12vsM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:54",
+   "year": null,
+   "artists": [
+    {
+     "name": "Irem Ilgin",
+     "id": null
+    },
+    {
+     "name": "Vocea României",
+     "id": "UCsLz6JXyG7V0wDmy7DQHEHw"
+    }
+   ],
+   "duration_seconds": 114,
+   "views": "753",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/RhDcNnlonQZBam40qSVbJ-kqoEd0lbEnA9EhHnRYVqP5dI3VZaE5Sztic5ws2Qp-hNEuGZVm4i-AIYfwXg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/RhDcNnlonQZBam40qSVbJ-kqoEd0lbEnA9EhHnRYVqP5dI3VZaE5Sztic5ws2Qp-hNEuGZVm4i-AIYfwXg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

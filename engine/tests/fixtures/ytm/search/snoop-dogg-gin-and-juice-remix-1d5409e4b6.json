@@ -1,0 +1,766 @@
+{
+ "kind": "search",
+ "key": "snoop dogg gin and juice remix",
+ "request": "Snoop Dogg Gin and Juice remix",
+ "recorded_at": "2026-09-29T02:36:45Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin and Juice (Remix) (feat. Daz Dillinger)",
+   "album": {
+    "name": "Death Row Greatest Hits",
+    "id": "MPREb_FhEbkBo4DAN"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ZRzui1RDGSU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:02",
+   "year": null,
+   "artists": [
+    {
+     "name": "Snoop Dogg",
+     "id": "UC7xz_YipuZtypOuVALNzeog"
+    }
+   ],
+   "duration_seconds": 302,
+   "views": "841K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/D21eIlLt4oobPT7168bxq9uooKPanCEFPgRYUrv5kRr9O7l1AbbPRDJLXnYWuHGA5b9LoHTlbnKC4nU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/D21eIlLt4oobPT7168bxq9uooKPanCEFPgRYUrv5kRr9O7l1AbbPRDJLXnYWuHGA5b9LoHTlbnKC4nU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin and Juice",
+   "album": {
+    "name": "Gin and Juice",
+    "id": "MPREb_uUYycHfW8iF"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "eWL9CgbcFqg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:05",
+   "year": null,
+   "artists": [
+    {
+     "name": "Charlie Mockler",
+     "id": "UCyhS0u-oM1oPVG73Jph-zhA"
+    }
+   ],
+   "duration_seconds": 245,
+   "views": "351K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/DfwurmfsXKqNdq39vzoAiPtve5DKOa6s585_F6IEcrj5p_DvWemMy6NZ6csyJ6C_HPX5GDtrafmXDOvV=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/DfwurmfsXKqNdq39vzoAiPtve5DKOa6s585_F6IEcrj5p_DvWemMy6NZ6csyJ6C_HPX5GDtrafmXDOvV=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin & Juice (Originally by Snoop Doggy Dogg)",
+   "album": {
+    "name": "Sub Urban",
+    "id": "MPREb_FDfCWeOmca8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Zp3eUZ-C23o",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:09",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jaymz Bee & The Deep Lounge Coalition",
+     "id": "UCiUC-KVKBqrQileKWSxzuuw"
+    }
+   ],
+   "duration_seconds": 249,
+   "views": "784",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/1zpAO_6NZTmtYiPtpb5H3slcPaoiHHRuE7BszZwVdv_TfYvA4UDX6Bifmbvw45qpkoc1fqBpNC09P0E=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/1zpAO_6NZTmtYiPtpb5H3slcPaoiHHRuE7BszZwVdv_TfYvA4UDX6Bifmbvw45qpkoc1fqBpNC09P0E=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin and Juice",
+   "album": {
+    "name": "Doggystyle",
+    "id": "MPREb_ajgAfvebdsT"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "1TqQvCdGSPk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "Snoop Dogg",
+     "id": "UC7xz_YipuZtypOuVALNzeog"
+    }
+   ],
+   "duration_seconds": 212,
+   "views": "306M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/sheneTZmxOOxdEKWz3nkL9FfRaeegcDfUeF9cQ7sXyi6WZJIDmYvisQ8830EgK2WWWcYHk52FDsrzKfE=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/sheneTZmxOOxdEKWz3nkL9FfRaeegcDfUeF9cQ7sXyi6WZJIDmYvisQ8830EgK2WWWcYHk52FDsrzKfE=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Heavy Hittas (Remix) (feat. P. Street)",
+   "album": {
+    "name": "DLK Remixes",
+    "id": "MPREb_0r0BeG3pU0P"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "OKok0v-EzyI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:36",
+   "year": null,
+   "artists": [
+    {
+     "name": "Snoop Dogg",
+     "id": "UC7xz_YipuZtypOuVALNzeog"
+    },
+    {
+     "name": "V-Town",
+     "id": "UCaDYNsbM4ecZPZpiLsj4Cgw"
+    },
+    {
+     "name": "Frisco GO",
+     "id": "UCd8DE1NtdXnarq6xSV6-aHA"
+    }
+   ],
+   "duration_seconds": 216,
+   "views": "29K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Fcfyqz6hCvkG5IM1fRSX-LmzT7MiTZpj9COHF0nfOfUI3F4VdaRf6DT6ACmX9vRexb1vnfoQm0OJR1U0UA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Fcfyqz6hCvkG5IM1fRSX-LmzT7MiTZpj9COHF0nfOfUI3F4VdaRf6DT6ACmX9vRexb1vnfoQm0OJR1U0UA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin and Juice (Funny Indian Remix)",
+   "album": {
+    "name": "Funny Indian Hip Hop Songs",
+    "id": "MPREb_uuc5EmYZaRh"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "FohYrWMEpCo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:16",
+   "year": null,
+   "artists": [
+    {
+     "name": "Vindaloo Singh",
+     "id": "UCaarczRjjP5ahEdiSJby2cA"
+    }
+   ],
+   "duration_seconds": 76,
+   "views": "10K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/X2QqIgVHhLHfcX5Be9GqOiVQZG1qO709qdQyTWN0XBMfjLWbUF1aGprTzjzGw05oEDmMeKAGUIlqvjc=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/X2QqIgVHhLHfcX5Be9GqOiVQZG1qO709qdQyTWN0XBMfjLWbUF1aGprTzjzGw05oEDmMeKAGUIlqvjc=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Who Am I (What’s My Name)? [Remix]",
+   "album": {
+    "name": "Death Row Greatest Hits",
+    "id": "MPREb_FhEbkBo4DAN"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "5it9-G2ESdI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:10",
+   "year": null,
+   "artists": [
+    {
+     "name": "Snoop Dogg",
+     "id": "UC7xz_YipuZtypOuVALNzeog"
+    }
+   ],
+   "duration_seconds": 250,
+   "views": "980K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/D21eIlLt4oobPT7168bxq9uooKPanCEFPgRYUrv5kRr9O7l1AbbPRDJLXnYWuHGA5b9LoHTlbnKC4nU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/D21eIlLt4oobPT7168bxq9uooKPanCEFPgRYUrv5kRr9O7l1AbbPRDJLXnYWuHGA5b9LoHTlbnKC4nU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin & Juice",
+   "album": {
+    "name": "SKITS",
+    "id": "MPREb_JJMWz13HvN9"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "6KBJ_4JQEKY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "MAJAN",
+     "id": "UC5d4DAYBJgH7olhX-DljU5Q"
+    }
+   ],
+   "duration_seconds": 150,
+   "views": "185K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Ko8Zq3BRLwa6udvm_lPDu4OJADL6q7-d0xO_EwKHHJ83RoPMal7oFkLrBZsz19G59FH4O_22gACrY3Kpcg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Ko8Zq3BRLwa6udvm_lPDu4OJADL6q7-d0xO_EwKHHJ83RoPMal7oFkLrBZsz19G59FH4O_22gACrY3Kpcg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin N Juice X CloudRap",
+   "album": {
+    "name": "DOGGYSTYLE X CLOUDRAP",
+    "id": "MPREb_eFOVTSQ7rAO"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "pDa6mKcBXrg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:05",
+   "year": null,
+   "artists": [
+    {
+     "name": "$iNISTA",
+     "id": "UC03IABzQVbSkZG-QVava2aQ"
+    }
+   ],
+   "duration_seconds": 185,
+   "views": "9",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/4138F3SNo5Wx4_I8EsdEGaS2BbS1oOqzC_eMn45LIenOlN21-HtE4y8-6knVkLD_n41zopB8NFzh-js=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/4138F3SNo5Wx4_I8EsdEGaS2BbS1oOqzC_eMn45LIenOlN21-HtE4y8-6knVkLD_n41zopB8NFzh-js=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Imagine (feat. Dr. Dre & D'Angelo)",
+   "album": {
+    "name": "Tha Blue Carpet Treatment",
+    "id": "MPREb_IfQlayh4QVe"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "7yruoism8BM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:43",
+   "year": null,
+   "artists": [
+    {
+     "name": "Snoop Dogg",
+     "id": "UC7xz_YipuZtypOuVALNzeog"
+    }
+   ],
+   "duration_seconds": 283,
+   "views": "25M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/cw3zgQ20iR2I5ySn3rXTmI7hYPDELDhAE8XU9t69SZ1FK4yVnNzginiNJ0TdWel9yaU4WkBATYAV8E0=w60-h60-s-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/cw3zgQ20iR2I5ySn3rXTmI7hYPDELDhAE8XU9t69SZ1FK4yVnNzginiNJ0TdWel9yaU4WkBATYAV8E0=w120-h120-s-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Doin' Time (Snoop Time Remix)",
+   "album": {
+    "name": "Everything Under The Sun",
+    "id": "MPREb_6grQl1e0Upq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "V2Q6Xe57z3Q",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:39",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sublime",
+     "id": "UCPu227hd28pLRBC-S6i5e6g"
+    }
+   ],
+   "duration_seconds": 279,
+   "views": "220K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vxHRAHe5gRDrxq7qI_qjsv_4apx9Mcr0dJlTx4IgIxDP4peKeQlpjseQT3ogPuhYcywi9P_Q2jKYhp0=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vxHRAHe5gRDrxq7qI_qjsv_4apx9Mcr0dJlTx4IgIxDP4peKeQlpjseQT3ogPuhYcywi9P_Q2jKYhp0=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin and Juice",
+   "album": {
+    "name": "Gin and Juice",
+    "id": "MPREb_ZJ6l5W4DMFi"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "sO4-ebHlZ9M",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "7:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "Tim McGovern",
+     "id": "UCwhwdXyq4Yzo8cauC303DMg"
+    }
+   ],
+   "duration_seconds": 448,
+   "views": "626",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vIA0TRZp3XA0-x0Mfpo3itVYna2LNB-_2V05CS7Q6BhyTzmjXL14XqvZ_sgcfeG9pNBe21SZoqzvk28W=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vIA0TRZp3XA0-x0Mfpo3itVYna2LNB-_2V05CS7Q6BhyTzmjXL14XqvZ_sgcfeG9pNBe21SZoqzvk28W=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin & Juice",
+   "album": {
+    "name": "Chérie",
+    "id": "MPREb_XgsXo2wmaeP"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "HhDsmC3aQs8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:58",
+   "year": null,
+   "artists": [
+    {
+     "name": "JIGGO [feat. Ben-E]",
+     "id": "UC-KSoO6F_rSVBEjOls0ofrg"
+    }
+   ],
+   "duration_seconds": 178,
+   "views": "1.3M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/HMevCkVY9_CMNKgIZa8vFfAh48ff8mSPMgKm1hip4AfA9JRkexUOIfKthGAmeXB_3OQcWG_ufvfyy38_=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/HMevCkVY9_CMNKgIZa8vFfAh48ff8mSPMgKm1hip4AfA9JRkexUOIfKthGAmeXB_3OQcWG_ufvfyy38_=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "2001",
+   "album": {
+    "name": "Tha Doggfather",
+    "id": "MPREb_5FXxcf80iG1"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "NVWtdE3r0bk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:33",
+   "year": null,
+   "artists": [
+    {
+     "name": "Snoop Dogg",
+     "id": "UC7xz_YipuZtypOuVALNzeog"
+    }
+   ],
+   "duration_seconds": 213,
+   "views": "2.5M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/l1mC5LtGx-YfMbA-BiZRIzkF1s9D0NAq-IrVU4aQdRc0Ttum4IDMNmUDRlTqLXsVRTwc66PfMc-0ztA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/l1mC5LtGx-YfMbA-BiZRIzkF1s9D0NAq-IrVU4aQdRc0Ttum4IDMNmUDRlTqLXsVRTwc66PfMc-0ztA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Snoop Bounce (feat. Charlie Wilson)",
+   "album": {
+    "name": "Tha Doggfather",
+    "id": "MPREb_5FXxcf80iG1"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "mJiGrzyTSUw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:04",
+   "year": null,
+   "artists": [
+    {
+     "name": "Snoop Dogg",
+     "id": "UC7xz_YipuZtypOuVALNzeog"
+    }
+   ],
+   "duration_seconds": 244,
+   "views": "3.2M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/l1mC5LtGx-YfMbA-BiZRIzkF1s9D0NAq-IrVU4aQdRc0Ttum4IDMNmUDRlTqLXsVRTwc66PfMc-0ztA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/l1mC5LtGx-YfMbA-BiZRIzkF1s9D0NAq-IrVU4aQdRc0Ttum4IDMNmUDRlTqLXsVRTwc66PfMc-0ztA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin & Juice",
+   "album": {
+    "name": "Gin & Juice",
+    "id": "MPREb_ELX3nuetNX1"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "UO41io1AQhk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kaozi",
+     "id": "UCn_lXBegH19e5fYkhv4AchQ"
+    }
+   ],
+   "duration_seconds": 145,
+   "views": "581",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Vdh9NQKxm_IkSpRaG9SWNG3Chnb12hmz01XA-I4uTFaasgkgKfrmnKRM6LA9ZT7V2RG27jBHt0i5WRq6OA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Vdh9NQKxm_IkSpRaG9SWNG3Chnb12hmz01XA-I4uTFaasgkgKfrmnKRM6LA9ZT7V2RG27jBHt0i5WRq6OA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Lil’ Ghetto Boy (Remix) (feat. Snoop Dogg & Daz Dillinger)",
+   "album": {
+    "name": "Death Row Greatest Hits",
+    "id": "MPREb_FhEbkBo4DAN"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "scrrATZSq4E",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:53",
+   "year": null,
+   "artists": [
+    {
+     "name": "Dr. Dre",
+     "id": "UC1g7JmTw4Gv8W9YINg3M1FA"
+    }
+   ],
+   "duration_seconds": 293,
+   "views": "591K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/D21eIlLt4oobPT7168bxq9uooKPanCEFPgRYUrv5kRr9O7l1AbbPRDJLXnYWuHGA5b9LoHTlbnKC4nU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/D21eIlLt4oobPT7168bxq9uooKPanCEFPgRYUrv5kRr9O7l1AbbPRDJLXnYWuHGA5b9LoHTlbnKC4nU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin & Juice (Frey Radio Mix)",
+   "album": {
+    "name": "Gin & Juice",
+    "id": "MPREb_5jGTUTcYUSX"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "DGrm1kznLjk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:21",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jerome Robins",
+     "id": "UCQ_ZNiwOVvDOCc6soFMQPoQ"
+    },
+    {
+     "name": "Chris Vench",
+     "id": "UCHhM9yr2nkJs8CE--MF_Ppg"
+    }
+   ],
+   "duration_seconds": 201,
+   "views": "2.6K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/4oo1QuOZsq9LKFMadzao5BvD1t6nP5CSshS1dQ69rqpajzcJr4U-Tk_PDwG7CTwvyCG-8cbjjzbbXjUZ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/4oo1QuOZsq9LKFMadzao5BvD1t6nP5CSshS1dQ69rqpajzcJr4U-Tk_PDwG7CTwvyCG-8cbjjzbbXjUZ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gin & Juice",
+   "album": {
+    "name": "Gin & Juice",
+    "id": "MPREb_1TCmdNOPyyu"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "isyBxJYxKQo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:27",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jerome Robins",
+     "id": "UCQ_ZNiwOVvDOCc6soFMQPoQ"
+    },
+    {
+     "name": "Chris Vench",
+     "id": "UCHhM9yr2nkJs8CE--MF_Ppg"
+    }
+   ],
+   "duration_seconds": 327,
+   "views": "1.9K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/rllPlo0CKgbu78a5kjeMyvswI8rOVQSwx6dK3KX6bOA1oU3g-DTx-6rb8qnBJVESbu9vx0kaFGpqsI_U=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/rllPlo0CKgbu78a5kjeMyvswI8rOVQSwx6dK3KX6bOA1oU3g-DTx-6rb8qnBJVESbu9vx0kaFGpqsI_U=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "110% Juice (feat. Boo Love)",
+   "album": {
+    "name": "110% Juice",
+    "id": "MPREb_Mk89H1OHyjg"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "N1CtoLBe968",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "Snoop Dogg",
+     "id": "UC7xz_YipuZtypOuVALNzeog"
+    }
+   ],
+   "duration_seconds": 152,
+   "views": "503K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/QfXFXL2ZerRhf2_o73oHZf_hAh1Prt-GnKnFnFY2E8P18Ko0TYyZmxhEI9Va5Zl8WeoqRO1Tz_A8tBs=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/QfXFXL2ZerRhf2_o73oHZf_hAh1Prt-GnKnFnFY2E8P18Ko0TYyZmxhEI9Va5Zl8WeoqRO1Tz_A8tBs=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

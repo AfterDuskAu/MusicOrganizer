@@ -1,0 +1,762 @@
+{
+ "kind": "search",
+ "key": "mase feel so good",
+ "request": "Mase-Feel So Good",
+ "recorded_at": "2026-09-29T02:37:04Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Feel so Good",
+   "album": {
+    "name": "Harlem World",
+    "id": "MPREb_mcTEmRZ3mhC"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "FFkook9g6U8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mase",
+     "id": "UC5gdSVYYBOKPgOdVdRG-Vdg"
+    }
+   ],
+   "duration_seconds": 205,
+   "views": "44M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/CwlnirbUUcHv-6pkdxHX85YwcTMbZMKxFJV9_gn36qBleH3fCtrJWqtmBCOvvTecW571PNA9ISNX-UiB=w60-h60-s-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/CwlnirbUUcHv-6pkdxHX85YwcTMbZMKxFJV9_gn36qBleH3fCtrJWqtmBCOvvTecW571PNA9ISNX-UiB=w120-h120-s-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Another Story to Tell",
+   "album": {
+    "name": "Feel So Good",
+    "id": "MPREb_dv8KQSjf1kd"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "yrYMnXIXc0I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:08",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mase",
+     "id": "UC5gdSVYYBOKPgOdVdRG-Vdg"
+    }
+   ],
+   "duration_seconds": 188,
+   "views": "174K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/W2xHNniSFUIWiRm8e6ZijhfnZpI7gh6Nft57mE-NpQpJzmuPS2tQCFPto5RKemmQd0_CRGLUWWtfj14=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/W2xHNniSFUIWiRm8e6ZijhfnZpI7gh6Nft57mE-NpQpJzmuPS2tQCFPto5RKemmQd0_CRGLUWWtfj14=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Only You [Bad Boy Remix] (feat. The Notorious B.I.G. & Ma$e)",
+   "album": {
+    "name": "112",
+    "id": "MPREb_ukGavoHKNxq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Sg_nz1n2zeU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:46",
+   "year": null,
+   "artists": [
+    {
+     "name": "112",
+     "id": "UCouQztNVI51U1I_urVmuHXw"
+    }
+   ],
+   "duration_seconds": 286,
+   "views": "80M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/XPYRJnBCQYwXHehq-qaPKHJBpxykmMsXh3eYEiB4Cq2LcN3YhNco-nC-IxEPi3V-k5_GusBPCvR6nzA=w60-h60-s-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/XPYRJnBCQYwXHehq-qaPKHJBpxykmMsXh3eYEiB4Cq2LcN3YhNco-nC-IxEPi3V-k5_GusBPCvR6nzA=w120-h120-s-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Stay Out of My Way (feat. Total)",
+   "album": {
+    "name": "Feel So Good",
+    "id": "MPREb_dv8KQSjf1kd"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "_k95AenHkU4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mase",
+     "id": "UC5gdSVYYBOKPgOdVdRG-Vdg"
+    }
+   ],
+   "duration_seconds": 230,
+   "views": "319K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/W2xHNniSFUIWiRm8e6ZijhfnZpI7gh6Nft57mE-NpQpJzmuPS2tQCFPto5RKemmQd0_CRGLUWWtfj14=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/W2xHNniSFUIWiRm8e6ZijhfnZpI7gh6Nft57mE-NpQpJzmuPS2tQCFPto5RKemmQd0_CRGLUWWtfj14=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Keep It On",
+   "album": {
+    "name": "Welcome Back",
+    "id": "MPREb_aTGZFPoO7cn"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "hgRtQvnnjTI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:34",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mase",
+     "id": "UC5gdSVYYBOKPgOdVdRG-Vdg"
+    }
+   ],
+   "duration_seconds": 214,
+   "views": "1.3M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/zpI81Q2yRj2eRmiaNcfafgMS7AY0HcnuWZ9x_0Fj9-OESrRXqPbLjms_S6_yKAE_hUNm2WIX_RSfw_F0uQ=w60-h60-s-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/zpI81Q2yRj2eRmiaNcfafgMS7AY0HcnuWZ9x_0Fj9-OESrRXqPbLjms_S6_yKAE_hUNm2WIX_RSfw_F0uQ=w120-h120-s-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Jail Visit (Interlude)",
+   "album": {
+    "name": "Feel So Good",
+    "id": "MPREb_dv8KQSjf1kd"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "TtmgoGjdMDw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:04",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mase",
+     "id": "UC5gdSVYYBOKPgOdVdRG-Vdg"
+    }
+   ],
+   "duration_seconds": 124,
+   "views": "74K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/W2xHNniSFUIWiRm8e6ZijhfnZpI7gh6Nft57mE-NpQpJzmuPS2tQCFPto5RKemmQd0_CRGLUWWtfj14=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/W2xHNniSFUIWiRm8e6ZijhfnZpI7gh6Nft57mE-NpQpJzmuPS2tQCFPto5RKemmQd0_CRGLUWWtfj14=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Do It Again (feat. Diddy)",
+   "album": {
+    "name": "Feel So Good",
+    "id": "MPREb_dv8KQSjf1kd"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "4qFxsWfQUG8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:22",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mase",
+     "id": "UC5gdSVYYBOKPgOdVdRG-Vdg"
+    }
+   ],
+   "duration_seconds": 202,
+   "views": "169K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/W2xHNniSFUIWiRm8e6ZijhfnZpI7gh6Nft57mE-NpQpJzmuPS2tQCFPto5RKemmQd0_CRGLUWWtfj14=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/W2xHNniSFUIWiRm8e6ZijhfnZpI7gh6Nft57mE-NpQpJzmuPS2tQCFPto5RKemmQd0_CRGLUWWtfj14=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Gettin' It (feat. Funkmaster Flex)",
+   "album": {
+    "name": "Feel So Good",
+    "id": "MPREb_dv8KQSjf1kd"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "WoDJhmqZOfI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:53",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mase",
+     "id": "UC5gdSVYYBOKPgOdVdRG-Vdg"
+    }
+   ],
+   "duration_seconds": 233,
+   "views": "122K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/W2xHNniSFUIWiRm8e6ZijhfnZpI7gh6Nft57mE-NpQpJzmuPS2tQCFPto5RKemmQd0_CRGLUWWtfj14=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/W2xHNniSFUIWiRm8e6ZijhfnZpI7gh6Nft57mE-NpQpJzmuPS2tQCFPto5RKemmQd0_CRGLUWWtfj14=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "What You Want (Instrumental)",
+   "album": {
+    "name": "What You Want",
+    "id": "MPREb_krooUXwanAo"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "nJd67dj5tqM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:37",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mase",
+     "id": "UC5gdSVYYBOKPgOdVdRG-Vdg"
+    }
+   ],
+   "duration_seconds": 277,
+   "views": "374K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-GtL97VpPwTU6HAjl_GB6usbRv4d3D3pqa5Fs1BhwRwdJkbOji7bnyujStorGFB3vhmzseDT7-Dpr1n6=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-GtL97VpPwTU6HAjl_GB6usbRv4d3D3pqa5Fs1BhwRwdJkbOji7bnyujStorGFB3vhmzseDT7-Dpr1n6=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Can't Nobody Hold Me Down (feat. Mase)",
+   "album": {
+    "name": "Bad Boy 20th Anniversary Box Set Edition",
+    "id": "MPREb_DOF545WEMDE"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "sTxvXmsPEDU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:58",
+   "year": null,
+   "artists": [
+    {
+     "name": "Puff Daddy & The Family",
+     "id": "UCa7UEhon5aHfncjkOWgwRDA"
+    }
+   ],
+   "duration_seconds": 298,
+   "views": "45M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/UyAZ5fLbIGNfz_BLrt-nxcqp4e-CuPFU9YUpgyVq6cGJiYPXzLbQVn7Co-dbOEoS94_NiaUldYe7Z8zx=w60-h60-s-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/UyAZ5fLbIGNfz_BLrt-nxcqp4e-CuPFU9YUpgyVq6cGJiYPXzLbQVn7Co-dbOEoS94_NiaUldYe7Z8zx=w120-h120-s-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "It Feels So Good",
+   "album": {
+    "name": "It Feels So Good",
+    "id": "MPREb_JGxMo8Hugxm"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "BsfZjIrvObI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:41",
+   "year": null,
+   "artists": [
+    {
+     "name": "Matt Sassari",
+     "id": "UCwgpcS--EV4JNC6wz91rKYg"
+    },
+    {
+     "name": "HUGEL",
+     "id": "UCO1o6IjIVBcbr_DS1tmarhQ"
+    },
+    {
+     "name": "Sonique",
+     "id": "UCY0k-_rdXmhnBjm5ZVUo4Rw"
+    }
+   ],
+   "duration_seconds": 161,
+   "views": "11M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/_RmMvl-jrgHldW90jLq6ft-dMVCprVCErcVayNx-OkgBCsUJBoJCDNCwGkc_PSFw0Dn_BzvjAQWiPXtJ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/_RmMvl-jrgHldW90jLq6ft-dMVCprVCErcVayNx-OkgBCsUJBoJCDNCwGkc_PSFw0Dn_BzvjAQWiPXtJ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "The Player Way (feat. 8Ball & MJG)",
+   "album": {
+    "name": "Harlem World",
+    "id": "MPREb_mcTEmRZ3mhC"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "IZEQLqMw2GI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:14",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mase",
+     "id": "UC5gdSVYYBOKPgOdVdRG-Vdg"
+    }
+   ],
+   "duration_seconds": 254,
+   "views": "1.6M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/CwlnirbUUcHv-6pkdxHX85YwcTMbZMKxFJV9_gn36qBleH3fCtrJWqtmBCOvvTecW571PNA9ISNX-UiB=w60-h60-s-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/CwlnirbUUcHv-6pkdxHX85YwcTMbZMKxFJV9_gn36qBleH3fCtrJWqtmBCOvvTecW571PNA9ISNX-UiB=w120-h120-s-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Feel So Good",
+   "album": {
+    "name": "Bad Boy 20th Anniversary Box Set Edition",
+    "id": "MPREb_DOF545WEMDE"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Rx9VE7AW_Mc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mase",
+     "id": "UC5gdSVYYBOKPgOdVdRG-Vdg"
+    }
+   ],
+   "duration_seconds": 205,
+   "views": "44M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/UyAZ5fLbIGNfz_BLrt-nxcqp4e-CuPFU9YUpgyVq6cGJiYPXzLbQVn7Co-dbOEoS94_NiaUldYe7Z8zx=w60-h60-s-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/UyAZ5fLbIGNfz_BLrt-nxcqp4e-CuPFU9YUpgyVq6cGJiYPXzLbQVn7Co-dbOEoS94_NiaUldYe7Z8zx=w120-h120-s-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Feels So Good (feat. A$AP Rocky, A$AP Ferg, A$AP Nast & A$AP Twelvyy)",
+   "album": {
+    "name": "Cozy Tapes Vol. 2: Too Cozy",
+    "id": "MPREb_yEY3D0abibj"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Zzkf_qlO_wg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:26",
+   "year": null,
+   "artists": [
+    {
+     "name": "A$AP Mob",
+     "id": "UCaMXFCQMOS0pNxJsOoShTgA"
+    }
+   ],
+   "duration_seconds": 206,
+   "views": "26M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-BP4aDy8n13o0dh5nC_916ySLEnD5UXmWQZ85aJXU08prHBlPQTZnTHsnLBrImVHHfaF7zaTK7r5j9U=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-BP4aDy8n13o0dh5nC_916ySLEnD5UXmWQZ85aJXU08prHBlPQTZnTHsnLBrImVHHfaF7zaTK7r5j9U=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Feels So Good (feat. A$AP Rocky, A$AP Ferg, A$AP Nast & A$AP Twelvyy)",
+   "album": {
+    "name": "Feels So Good",
+    "id": "MPREb_rGbvIpf3gok"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "SOw0hQid3b0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:26",
+   "year": null,
+   "artists": [
+    {
+     "name": "A$AP Mob",
+     "id": "UCaMXFCQMOS0pNxJsOoShTgA"
+    }
+   ],
+   "duration_seconds": 206,
+   "views": "26M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/arbL5qXYN7YBgxiCRpXwAJc9NJ7b4NhXM3KI0x4nULid_GDzExioLZUBeLsP04VJUFd8ePPyGuuHwZQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/arbL5qXYN7YBgxiCRpXwAJc9NJ7b4NhXM3KI0x4nULid_GDzExioLZUBeLsP04VJUFd8ePPyGuuHwZQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Feel So Good (feat. Fabe)",
+   "album": {
+    "name": "3423 The EP",
+    "id": "MPREb_KnBVENEmyvE"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "pJJ-wGZdq_o",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:39",
+   "year": null,
+   "artists": [
+    {
+     "name": "F.U.S.E",
+     "id": null
+    }
+   ],
+   "duration_seconds": 219,
+   "views": "189",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/9HMF0IiHpi2-aR_ldfiS5ZSgEZGhDkiTUQKrSkt-UtnRiwsyI0vmedcYPL3TbqfT47pio6iwlVRZb3Ih=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/9HMF0IiHpi2-aR_ldfiS5ZSgEZGhDkiTUQKrSkt-UtnRiwsyI0vmedcYPL3TbqfT47pio6iwlVRZb3Ih=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Feel So Good (Karaoke-Version) As Made Famous By: Melanie B",
+   "album": {
+    "name": "Karaoke Pop: All About You",
+    "id": "MPREb_6CVBS2PeVJF"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "x4EOh_spWZ0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:05",
+   "year": null,
+   "artists": [
+    {
+     "name": "Studio Group",
+     "id": "UCm3sIwpVd68pKYXnQse8bYA"
+    }
+   ],
+   "duration_seconds": 305,
+   "views": "7.7K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/xOYgUxB7mY2-hgXtW2BWdc3anT_LBrYUNFug1ctKmxtX8J6NI_2ic8gt2RSDQIz2Qx4zmaPCoeeQBM7G=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/xOYgUxB7mY2-hgXtW2BWdc3anT_LBrYUNFug1ctKmxtX8J6NI_2ic8gt2RSDQIz2Qx4zmaPCoeeQBM7G=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Don't (It) Feel So Good",
+   "album": {
+    "name": "That's the World",
+    "id": "MPREb_NJe5QHyqeiN"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "0B_5dJ1_tzM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:57",
+   "year": null,
+   "artists": [
+    {
+     "name": "Anti Lilly",
+     "id": "UCVFNHu5zvfpJT0lR11xPX1g"
+    },
+    {
+     "name": "Phoniks",
+     "id": "UCwYC7pGTtUXs73AjxDmaH5Q"
+    }
+   ],
+   "duration_seconds": 177,
+   "views": "18K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ZJTFDKIdpWFVWUQFIujaUgqxmvbZbpF7F3Fh-Cw6M0DVrVuAW5StVaB8AnBnM64hL879OiAT0pmYTXYe=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ZJTFDKIdpWFVWUQFIujaUgqxmvbZbpF7F3Fh-Cw6M0DVrVuAW5StVaB8AnBnM64hL879OiAT0pmYTXYe=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Feel so Good",
+   "album": {
+    "name": "Now or Never",
+    "id": "MPREb_B0lDhBrrgmv"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "XRCuKxCONWQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:23",
+   "year": null,
+   "artists": [
+    {
+     "name": "Big Squeeze",
+     "id": "UCn6hwe3vtlVi5H35-M3ozmA"
+    }
+   ],
+   "duration_seconds": 203,
+   "views": "676",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-DxHqeOJ9YiEb7S-paQ8mLpFY6XK0UoFs4L7NhxMOa-v8gmcn4PlBFJ4a4DA_2ldgaTkSvmD-xQtxEY=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-DxHqeOJ9YiEb7S-paQ8mLpFY6XK0UoFs4L7NhxMOa-v8gmcn4PlBFJ4a4DA_2ldgaTkSvmD-xQtxEY=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Do You Wanna Get $ (feat. Puff Daddy)",
+   "album": {
+    "name": "Harlem World",
+    "id": "MPREb_mcTEmRZ3mhC"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Zgw6EkbM4VA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mase",
+     "id": "UC5gdSVYYBOKPgOdVdRG-Vdg"
+    }
+   ],
+   "duration_seconds": 230,
+   "views": "1.2M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/CwlnirbUUcHv-6pkdxHX85YwcTMbZMKxFJV9_gn36qBleH3fCtrJWqtmBCOvvTecW571PNA9ISNX-UiB=w60-h60-s-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/CwlnirbUUcHv-6pkdxHX85YwcTMbZMKxFJV9_gn36qBleH3fCtrJWqtmBCOvvTecW571PNA9ISNX-UiB=w120-h120-s-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

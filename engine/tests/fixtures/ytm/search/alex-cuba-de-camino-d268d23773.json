@@ -1,0 +1,766 @@
+{
+ "kind": "search",
+ "key": "alex cuba de camino",
+ "request": "Alex Cuba De Camino",
+ "recorded_at": "2026-09-29T02:36:29Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "De Camino",
+   "album": {
+    "name": "Agua Del Pozo",
+    "id": "MPREb_yrrHKLDP5u4"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Z5mpHudKQTY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:27",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alex Cuba",
+     "id": "UC3BJwqaBftEfi6mCzezVYoQ"
+    }
+   ],
+   "duration_seconds": 207,
+   "views": "45K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/WERCmGC395IEFSo0-kVXy9cuwHt2Zmzl8RQxiAfbV1zOx1eIU2y62SBgoD_VMXdoNN8cNmLPNM1w3Yky=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/WERCmGC395IEFSo0-kVXy9cuwHt2Zmzl8RQxiAfbV1zOx1eIU2y62SBgoD_VMXdoNN8cNmLPNM1w3Yky=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Ni Forma Ni Colores",
+   "album": {
+    "name": "Healer",
+    "id": "MPREb_jH4EJL9tmE7"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "yWUZ372K2AU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:11",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alex Cuba",
+     "id": "UC3BJwqaBftEfi6mCzezVYoQ"
+    }
+   ],
+   "duration_seconds": 191,
+   "views": "9.6K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/b6MQsUtxlMB_gnVJRNdTCZrvmRks2byXyg2oCRygyWlYe5oUlz2q5AcGZH-EbWz6kQIio86boPi9sFs=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/b6MQsUtxlMB_gnVJRNdTCZrvmRks2byXyg2oCRygyWlYe5oUlz2q5AcGZH-EbWz6kQIio86boPi9sFs=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mundo Nuevo (Remix)",
+   "album": {
+    "name": "Mundo Nuevo (Remix)",
+    "id": "MPREb_T70hjgIiz8h"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "E23CPc360jU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:15",
+   "year": null,
+   "artists": [
+    {
+     "name": "MLNGA CLUB, Alex Cuba & Lila Downs",
+     "id": null
+    }
+   ],
+   "duration_seconds": 255,
+   "views": "1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/D_847ATSUTJoDnBq6SSByYB9ISTeh8BS84dSm7nVgU8QSJisGceg2S5_bOPZKV-qnYpWoh3v0Te8MpQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/D_847ATSUTJoDnBq6SSByYB9ISTeh8BS84dSm7nVgU8QSJisGceg2S5_bOPZKV-qnYpWoh3v0Te8MpQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Que Pasa Lola",
+   "album": {
+    "name": "Alex Cuba",
+    "id": "MPREb_W7WnBTyofmz"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "JEgZlvpQj1w",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:57",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alex Cuba",
+     "id": "UC3BJwqaBftEfi6mCzezVYoQ"
+    }
+   ],
+   "duration_seconds": 177,
+   "views": "4.8K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/23EPpCTpLNUVRNthLQdljyHw-8u4iCmg5EFnj0-gpyQSf6Bx1OZdjEwFvDWpigki8Q5v93fDWST_ivsw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/23EPpCTpLNUVRNthLQdljyHw-8u4iCmg5EFnj0-gpyQSf6Bx1OZdjEwFvDWpigki8Q5v93fDWST_ivsw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Lógica",
+   "album": {
+    "name": "Healer",
+    "id": "MPREb_jH4EJL9tmE7"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "s8mBUELUZmo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alex Cuba",
+     "id": "UC3BJwqaBftEfi6mCzezVYoQ"
+    }
+   ],
+   "duration_seconds": 212,
+   "views": "25K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/b6MQsUtxlMB_gnVJRNdTCZrvmRks2byXyg2oCRygyWlYe5oUlz2q5AcGZH-EbWz6kQIio86boPi9sFs=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/b6MQsUtxlMB_gnVJRNdTCZrvmRks2byXyg2oCRygyWlYe5oUlz2q5AcGZH-EbWz6kQIio86boPi9sFs=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "De Camino a la Vereda",
+   "album": {
+    "name": "Buena Vista Social Club (Original Broadway Cast Recording)",
+    "id": "MPREb_SVDNYavzwV1"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "-kj3esac2GA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "Original Broadway Cast of Buena Vista Social Club",
+     "id": null
+    },
+    {
+     "name": "Renesito Avich",
+     "id": null
+    },
+    {
+     "name": "Julio Monge",
+     "id": null
+    },
+    {
+     "name": "Buena Vista Social Club Original Broadway Band",
+     "id": null
+    }
+   ],
+   "duration_seconds": 91,
+   "views": "159K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-LLBPvR4BhHf7i8tx1boksEFc4zw_Y6vJPegoGvogvF-VnaS0QBGVsuPbrVuZf-PpOsjKz3e2S923Mg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-LLBPvR4BhHf7i8tx1boksEFc4zw_Y6vJPegoGvogvF-VnaS0QBGVsuPbrVuZf-PpOsjKz3e2S923Mg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "El Mismo Dolor",
+   "album": {
+    "name": "Lo Único Constante",
+    "id": "MPREb_ncKKfqksofX"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "J5t_wJ3Aj2Y",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:10",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alex Cuba",
+     "id": "UC3BJwqaBftEfi6mCzezVYoQ"
+    }
+   ],
+   "duration_seconds": 190,
+   "views": "13K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/gvGZbrZdoY6_Mi6vSk-sEIu7hGC9cD6GgPr440ThOML-WqHljB4Me3On-Df8Ro8U1AI7uiW1IdAu9SY=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/gvGZbrZdoY6_Mi6vSk-sEIu7hGC9cD6GgPr440ThOML-WqHljB4Me3On-Df8Ro8U1AI7uiW1IdAu9SY=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "El Día de Hoy",
+   "album": {
+    "name": "Lo Único Constante",
+    "id": "MPREb_ncKKfqksofX"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Rpu80Vy7dFQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:36",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alex Cuba",
+     "id": "UC3BJwqaBftEfi6mCzezVYoQ"
+    }
+   ],
+   "duration_seconds": 216,
+   "views": "61K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/gvGZbrZdoY6_Mi6vSk-sEIu7hGC9cD6GgPr440ThOML-WqHljB4Me3On-Df8Ro8U1AI7uiW1IdAu9SY=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/gvGZbrZdoY6_Mi6vSk-sEIu7hGC9cD6GgPr440ThOML-WqHljB4Me3On-Df8Ro8U1AI7uiW1IdAu9SY=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Me Queda Este Grito",
+   "album": {
+    "name": "Lo Único Constante",
+    "id": "MPREb_ncKKfqksofX"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "oOWDuzGH7sE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:55",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alex Cuba",
+     "id": "UC3BJwqaBftEfi6mCzezVYoQ"
+    }
+   ],
+   "duration_seconds": 235,
+   "views": "14K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/gvGZbrZdoY6_Mi6vSk-sEIu7hGC9cD6GgPr440ThOML-WqHljB4Me3On-Df8Ro8U1AI7uiW1IdAu9SY=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/gvGZbrZdoY6_Mi6vSk-sEIu7hGC9cD6GgPr440ThOML-WqHljB4Me3On-Df8Ro8U1AI7uiW1IdAu9SY=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Contigo",
+   "album": {
+    "name": "Healer",
+    "id": "MPREb_jH4EJL9tmE7"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "PEsb5vM492w",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alex Cuba",
+     "id": "UC3BJwqaBftEfi6mCzezVYoQ"
+    }
+   ],
+   "duration_seconds": 272,
+   "views": "269K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/b6MQsUtxlMB_gnVJRNdTCZrvmRks2byXyg2oCRygyWlYe5oUlz2q5AcGZH-EbWz6kQIio86boPi9sFs=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/b6MQsUtxlMB_gnVJRNdTCZrvmRks2byXyg2oCRygyWlYe5oUlz2q5AcGZH-EbWz6kQIio86boPi9sFs=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Te Llevo Adentro",
+   "album": {
+    "name": "Te Llevo Adentro",
+    "id": "MPREb_x55f7XcXFEm"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "UGTstYle2G0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:42",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alex Cuba",
+     "id": "UC3BJwqaBftEfi6mCzezVYoQ"
+    },
+    {
+     "name": "Chabuco",
+     "id": "UCLAoOL2qIfLuTnUnvTScflw"
+    }
+   ],
+   "duration_seconds": 222,
+   "views": "63K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ZjfvcAdJEwchZTAOIsxV3fgeKe83sLKW-8QzqhbpLSrbYePquBajx2yIzVgPariXMuxIt45yINQQyOKr=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ZjfvcAdJEwchZTAOIsxV3fgeKe83sLKW-8QzqhbpLSrbYePquBajx2yIzVgPariXMuxIt45yINQQyOKr=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Si Pero No",
+   "album": {
+    "name": "Agua Del Pozo",
+    "id": "MPREb_yrrHKLDP5u4"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "UB3u_y4Xhxs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:23",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alex Cuba",
+     "id": "UC3BJwqaBftEfi6mCzezVYoQ"
+    }
+   ],
+   "duration_seconds": 203,
+   "views": "478K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/WERCmGC395IEFSo0-kVXy9cuwHt2Zmzl8RQxiAfbV1zOx1eIU2y62SBgoD_VMXdoNN8cNmLPNM1w3Yky=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/WERCmGC395IEFSo0-kVXy9cuwHt2Zmzl8RQxiAfbV1zOx1eIU2y62SBgoD_VMXdoNN8cNmLPNM1w3Yky=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "De los Dos",
+   "album": {
+    "name": "Sublime",
+    "id": "MPREb_OHqGuazRPxt"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "TUeNLqlfmbY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:01",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alex Cuba",
+     "id": "UC3BJwqaBftEfi6mCzezVYoQ"
+    }
+   ],
+   "duration_seconds": 241,
+   "views": "723K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/dPP3ycKVWxQ3CQ2h-iYowuszQiRUEsaH4JubgJzM8d4a3RTposnJkzuUqnZLOw6tL3Elcgfc2VBJnIBW=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/dPP3ycKVWxQ3CQ2h-iYowuszQiRUEsaH4JubgJzM8d4a3RTposnJkzuUqnZLOw6tL3Elcgfc2VBJnIBW=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Tu Boca Lo Quita",
+   "album": {
+    "name": "Agua Del Pozo",
+    "id": "MPREb_yrrHKLDP5u4"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "LkkzZQJdBos",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:59",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alex Cuba",
+     "id": "UC3BJwqaBftEfi6mCzezVYoQ"
+    }
+   ],
+   "duration_seconds": 179,
+   "views": "357K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/WERCmGC395IEFSo0-kVXy9cuwHt2Zmzl8RQxiAfbV1zOx1eIU2y62SBgoD_VMXdoNN8cNmLPNM1w3Yky=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/WERCmGC395IEFSo0-kVXy9cuwHt2Zmzl8RQxiAfbV1zOx1eIU2y62SBgoD_VMXdoNN8cNmLPNM1w3Yky=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Lo Mismo Que Yo",
+   "album": {
+    "name": "Humo De Tabaco",
+    "id": "MPREb_gRDqxJc5Wit"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "PcJ5-5gl_sM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alex Cuba",
+     "id": "UC3BJwqaBftEfi6mCzezVYoQ"
+    }
+   ],
+   "duration_seconds": 210,
+   "views": "61K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Itt3Tv5c2WWPrK_kCNHp7E0gnQlb1eV3Zab787Fb_NvZTi7GT1QtfkBYcRVOFwJEl2H41s5iKiDGB0Q=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Itt3Tv5c2WWPrK_kCNHp7E0gnQlb1eV3Zab787Fb_NvZTi7GT1QtfkBYcRVOFwJEl2H41s5iKiDGB0Q=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Vampiro",
+   "album": {
+    "name": "Agua Del Pozo",
+    "id": "MPREb_yrrHKLDP5u4"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "pLKvlciMnF8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:11",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alex Cuba",
+     "id": "UC3BJwqaBftEfi6mCzezVYoQ"
+    }
+   ],
+   "duration_seconds": 191,
+   "views": "20K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/WERCmGC395IEFSo0-kVXy9cuwHt2Zmzl8RQxiAfbV1zOx1eIU2y62SBgoD_VMXdoNN8cNmLPNM1w3Yky=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/WERCmGC395IEFSo0-kVXy9cuwHt2Zmzl8RQxiAfbV1zOx1eIU2y62SBgoD_VMXdoNN8cNmLPNM1w3Yky=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Las Mujeres",
+   "album": {
+    "name": "Sublime",
+    "id": "MPREb_OHqGuazRPxt"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "U_LdB7gIdsc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alex Cuba",
+     "id": "UC3BJwqaBftEfi6mCzezVYoQ"
+    }
+   ],
+   "duration_seconds": 211,
+   "views": "157K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/dPP3ycKVWxQ3CQ2h-iYowuszQiRUEsaH4JubgJzM8d4a3RTposnJkzuUqnZLOw6tL3Elcgfc2VBJnIBW=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/dPP3ycKVWxQ3CQ2h-iYowuszQiRUEsaH4JubgJzM8d4a3RTposnJkzuUqnZLOw6tL3Elcgfc2VBJnIBW=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Dime Si Despues",
+   "album": {
+    "name": "Humo De Tabaco",
+    "id": "MPREb_gRDqxJc5Wit"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "NCwoODN0Hhk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:59",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alex Cuba",
+     "id": "UC3BJwqaBftEfi6mCzezVYoQ"
+    }
+   ],
+   "duration_seconds": 299,
+   "views": "226K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Itt3Tv5c2WWPrK_kCNHp7E0gnQlb1eV3Zab787Fb_NvZTi7GT1QtfkBYcRVOFwJEl2H41s5iKiDGB0Q=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Itt3Tv5c2WWPrK_kCNHp7E0gnQlb1eV3Zab787Fb_NvZTi7GT1QtfkBYcRVOFwJEl2H41s5iKiDGB0Q=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Hoy Para Siempre",
+   "album": {
+    "name": "Alex Cuba",
+    "id": "MPREb_W7WnBTyofmz"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "GB-LthvInmA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:21",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alex Cuba",
+     "id": "UC3BJwqaBftEfi6mCzezVYoQ"
+    }
+   ],
+   "duration_seconds": 201,
+   "views": "8K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/23EPpCTpLNUVRNthLQdljyHw-8u4iCmg5EFnj0-gpyQSf6Bx1OZdjEwFvDWpigki8Q5v93fDWST_ivsw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/23EPpCTpLNUVRNthLQdljyHw-8u4iCmg5EFnj0-gpyQSf6Bx1OZdjEwFvDWpigki8Q5v93fDWST_ivsw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Ciudad Hembra (La Habana) (feat. Kelvis Ochoa)",
+   "album": {
+    "name": "Ciudad Hembra (La Habana)",
+    "id": "MPREb_HLTJywLj11p"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "iOX-sgPHwD8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:33",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alex Cuba",
+     "id": "UC3BJwqaBftEfi6mCzezVYoQ"
+    }
+   ],
+   "duration_seconds": 213,
+   "views": "925K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/IRpfBdFY-hc7zJo4Sy_lDWFaN6LauBzlrF74mNe0S2qzLjBQhRBQmSiLGGPQCB-yKvZd-C346GpIu5f1=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/IRpfBdFY-hc7zJo4Sy_lDWFaN6LauBzlrF74mNe0S2qzLjBQhRBQmSiLGGPQCB-yKvZd-C346GpIu5f1=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

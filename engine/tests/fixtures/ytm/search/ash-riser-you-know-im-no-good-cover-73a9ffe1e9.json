@@ -1,0 +1,758 @@
+{
+ "kind": "search",
+ "key": "ash riser you know im no good cover",
+ "request": "Ash Riser You Know I'm No Good cover",
+ "recorded_at": "2026-09-29T02:36:59Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Know I'm No Good",
+   "album": {
+    "name": "Trauma - Chansons de la série télé (Saison No. 5)",
+    "id": "MPREb_EA57c6t9IBJ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Q5gcubBCZfA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:10",
+   "year": null,
+   "artists": [
+    {
+     "name": "Cœur de pirate",
+     "id": "UCxGpIgM_SX_V3IUBWdVV_KA"
+    }
+   ],
+   "duration_seconds": 250,
+   "views": "1.3M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/_nGnpL_5YMjuMt5p0bjX2xNrTL5Fi8qpIEW6fO_sYJlHxLIjlmPB75BIBJRvNraj6VpMEdFXDXTtd_KA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/_nGnpL_5YMjuMt5p0bjX2xNrTL5Fi8qpIEW6fO_sYJlHxLIjlmPB75BIBJRvNraj6VpMEdFXDXTtd_KA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Know I'm No Good",
+   "album": {
+    "name": "Kinda Like the Brits 2007",
+    "id": "MPREb_rqmRPJa1WNL"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "d4bLw2i-8Ng",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "PMC All-Stars",
+     "id": "UC9pQOaBYAKR_AanOtDFTTWQ"
+    }
+   ],
+   "duration_seconds": 265,
+   "views": "1.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2VH4viWNLec7hYxAYIgE_ZRW91JsSUTwrrYY0gI9DaJUqfHburthPpetIHDNUToC04AZio_sp8Ak16BV=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2VH4viWNLec7hYxAYIgE_ZRW91JsSUTwrrYY0gI9DaJUqfHburthPpetIHDNUToC04AZio_sp8Ak16BV=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Know I’m No Good (Arr. for Guitar)",
+   "album": {
+    "name": "Classical Pop and Rock: New Classical Arrangements of Pop and Rock Hits",
+    "id": "MPREb_YAuRd0ye4sI"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "1SQfV6MykCI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:00",
+   "year": null,
+   "artists": [
+    {
+     "name": "Zack Rupert",
+     "id": "UCLM4sQds_r31d10CDk3szvw"
+    }
+   ],
+   "duration_seconds": 240,
+   "views": "225",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/o7w64G6sfbpaN8jnRCIjEKTeR5SoBu1FeozbOoErNCatvZj3lKCs8GJsCIVAG6Iy_itvHPx9Ihl7p7Nf=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/o7w64G6sfbpaN8jnRCIjEKTeR5SoBu1FeozbOoErNCatvZj3lKCs8GJsCIVAG6Iy_itvHPx9Ihl7p7Nf=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Know I'm No Good",
+   "album": {
+    "name": "The Best Songs We Never Wrote, Vol. 1",
+    "id": "MPREb_PRB7gWlGwKD"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "6Z1FRVp053M",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:29",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bonnie n Clydes",
+     "id": "UCjDwUwMahN1f-Kp3kXU2YHA"
+    }
+   ],
+   "duration_seconds": 269,
+   "views": "303",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/3lxOMRgUuzMtz3mmqrC8H7_wr85Ge_vohBaiQPLRWWqC8dioL9-vW4js5gdEx5cD0VVpkoVluf5Cry0=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/3lxOMRgUuzMtz3mmqrC8H7_wr85Ge_vohBaiQPLRWWqC8dioL9-vW4js5gdEx5cD0VVpkoVluf5Cry0=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Know Im No Good",
+   "album": {
+    "name": "Cover It up, Top of the Pop-Outs, Vol. 8",
+    "id": "MPREb_ZqDlnOPYc1m"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "EAxSTtrYSHs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:14",
+   "year": null,
+   "artists": [
+    {
+     "name": "Cover It Up",
+     "id": "UCJNfvFBaF-aDobd1Rz3mHTg"
+    }
+   ],
+   "duration_seconds": 254,
+   "views": "508",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-SOqrWvUpaYh4mXZBDoFj2S9s2Ot7VENI5Mv9tpodP7IuVgb6lrDeBmqfkS0j8bOh_tm7dj8zTSe-DRN=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-SOqrWvUpaYh4mXZBDoFj2S9s2Ot7VENI5Mv9tpodP7IuVgb6lrDeBmqfkS0j8bOh_tm7dj8zTSe-DRN=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "She's No Good",
+   "album": {
+    "name": "Now I Know",
+    "id": "MPREb_rEaJC7c5NAV"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "_h6kLQQEw8M",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:07",
+   "year": null,
+   "artists": [
+    {
+     "name": "Tania Silversen",
+     "id": "UCe0rIIyS_JlR5-Yr3CluUJQ"
+    }
+   ],
+   "duration_seconds": 187,
+   "views": "26",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Pff6UUZVhkgvnJkl7ksqyCRF_JDIXlB_TDjBdnnLjcQaQgnJFaqKDv98jwedD-ZxXbt9kvbJ0XVV3c6C=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Pff6UUZVhkgvnJkl7ksqyCRF_JDIXlB_TDjBdnnLjcQaQgnJFaqKDv98jwedD-ZxXbt9kvbJ0XVV3c6C=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You know i'm good",
+   "album": {
+    "name": "Chill Out Amy Winehouse",
+    "id": "MPREb_jDHzCd8e6Wk"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Ix6teSEg6Wo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:44",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chill Out Tribute",
+     "id": "UC55bMG3VlfVVIvsrzaO5S-A"
+    }
+   ],
+   "duration_seconds": 164,
+   "views": "1.8K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/6HNyjInsunZYwoDXpV_h62icco8QRulTWG4e2kfYgKdg5ASQSCeA7HVoFUgFS_iGZgQoNZPVudN1Bb4h_Q=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/6HNyjInsunZYwoDXpV_h62icco8QRulTWG4e2kfYgKdg5ASQSCeA7HVoFUgFS_iGZgQoNZPVudN1Bb4h_Q=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "I'm No Good (For Ya Baby)",
+   "album": {
+    "name": "Achin' And Shakin'",
+    "id": "MPREb_Ods9bnsurw2"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "yt9I71mq0zU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:02",
+   "year": null,
+   "artists": [
+    {
+     "name": "Laura Bell Bundy",
+     "id": "UC2n4g0DKDPy-TP6xoZOeP2g"
+    }
+   ],
+   "duration_seconds": 242,
+   "views": "42K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2sqc1iiJwC0P8xQkQt-I64x7SrhKZMRjtKHx_SowRyd0yCd_XkRcEFE49_iIIJrl6vVzZ1MXvG9SIP9K=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2sqc1iiJwC0P8xQkQt-I64x7SrhKZMRjtKHx_SowRyd0yCd_XkRcEFE49_iIIJrl6vVzZ1MXvG9SIP9K=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Know I'm No Good",
+   "album": {
+    "name": "Fit and Cheeky",
+    "id": "MPREb_wx2MpaGUUiK"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "z_ydBF6_aAM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:26",
+   "year": null,
+   "artists": [
+    {
+     "name": "Pub Dog",
+     "id": "UCOsFCkLGdMmQ1HF5jx_cu3w"
+    }
+   ],
+   "duration_seconds": 206,
+   "views": "1.5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/xZEC-Q2QIGysRVJoQh9VP8J0FFXNrH4XO2efHAWavX7OZ8n3hgL_U2Dkk9uYPPF7OxYRJBRj4geHJADPxQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/xZEC-Q2QIGysRVJoQh9VP8J0FFXNrH4XO2efHAWavX7OZ8n3hgL_U2Dkk9uYPPF7OxYRJBRj4geHJADPxQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Real Thing",
+   "album": {
+    "name": "On Everything",
+    "id": "MPREb_hdlwC7qLPRo"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "FRwiNDAM0RU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:11",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ash Riser",
+     "id": "UC7BLj2Uoj_J3U0EMgBS532g"
+    },
+    {
+     "name": "SAHTYRE",
+     "id": null
+    },
+    {
+     "name": "Don Alfonso",
+     "id": "UC94SR442Iz9-zD1BFvR5TCg"
+    }
+   ],
+   "duration_seconds": 251,
+   "views": "219",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/SCHyXl6o9P33NZ2qrJewOzw42D5DxQ321zv4ZbgS-wR_iPPP9Dejv1qzd-VngbWNkNjKv45lbtZFy6Im=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/SCHyXl6o9P33NZ2qrJewOzw42D5DxQ321zv4ZbgS-wR_iPPP9Dejv1qzd-VngbWNkNjKv45lbtZFy6Im=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Highest in the Room (Remix)",
+   "album": {
+    "name": "Highest in the Room",
+    "id": "MPREb_GsMTygdGhkE"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "bHAVRJrJDik",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ash Riser",
+     "id": "UCcbfSjmtIWrceKAdRk8_IAA"
+    }
+   ],
+   "duration_seconds": 172,
+   "views": "392",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/u52U9uHLwXWU0jZFiSdkyavy9o8kbJjngDGFkIsHPUoGfSEsHjl7_ooYa9ipPE6LvpGAvewAoBj9dBr-lw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/u52U9uHLwXWU0jZFiSdkyavy9o8kbJjngDGFkIsHPUoGfSEsHjl7_ooYa9ipPE6LvpGAvewAoBj9dBr-lw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You're No Good",
+   "album": {
+    "name": "Girl to Gorilla",
+    "id": "MPREb_dmUwaG8envB"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "LHmxRRPW9ok",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:10",
+   "year": null,
+   "artists": [
+    {
+     "name": "Girl to Gorilla",
+     "id": "UCvmMShs2_tbjIspaumenvAw"
+    }
+   ],
+   "duration_seconds": 190,
+   "views": "57",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/S3ckZneJ4yrf3e9kajdbMnT4X9IxvTpbB9238Q7ELOlZ5zSyvy3jCAzRAa6T2thz32mYVI3inKKP-2U=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/S3ckZneJ4yrf3e9kajdbMnT4X9IxvTpbB9238Q7ELOlZ5zSyvy3jCAzRAa6T2thz32mYVI3inKKP-2U=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Us & Ours (feat. Ash Riser, Niko Is & Theez)",
+   "album": {
+    "name": "Us & Ours",
+    "id": "MPREb_87AsNbGiQyJ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "y5K6pu1BATI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:04",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kap Kallous",
+     "id": "UCciiOVgVwU2R6qeoaqj9Aig"
+    }
+   ],
+   "duration_seconds": 244,
+   "views": "1.1K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/jYY8snCihILKsLEf8mdBPH07VInBm4gegXpQufpg_OMwouip-LzPkpvGPXB0rlvS-hVDMlCr0szhAdD6=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/jYY8snCihILKsLEf8mdBPH07VInBm4gegXpQufpg_OMwouip-LzPkpvGPXB0rlvS-hVDMlCr0szhAdD6=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Rehab",
+   "album": {
+    "name": "Back To Black",
+    "id": "MPREb_tzu0uaSBSSB"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "t2TKqJ2FXGM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:34",
+   "year": null,
+   "artists": [
+    {
+     "name": "Amy Winehouse",
+     "id": "UCMRsEwcN5cXdvqNP-UBup_A"
+    }
+   ],
+   "duration_seconds": 214,
+   "views": "515M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/cuGStBIsXgVSN_aJdhFPQE8atY1Q5Vi7dkTkZJwkCYWYMqXMwqFmTlxcbsQY3USokdEaF_IKB2vLpT11=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/cuGStBIsXgVSN_aJdhFPQE8atY1Q5Vi7dkTkZJwkCYWYMqXMwqFmTlxcbsQY3USokdEaF_IKB2vLpT11=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Know I'm No Good",
+   "album": {
+    "name": "Back To Black",
+    "id": "MPREb_tzu0uaSBSSB"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Pr3g9TPPuH4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:17",
+   "year": null,
+   "artists": [
+    {
+     "name": "Amy Winehouse",
+     "id": "UCMRsEwcN5cXdvqNP-UBup_A"
+    }
+   ],
+   "duration_seconds": 257,
+   "views": "643M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/cuGStBIsXgVSN_aJdhFPQE8atY1Q5Vi7dkTkZJwkCYWYMqXMwqFmTlxcbsQY3USokdEaF_IKB2vLpT11=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/cuGStBIsXgVSN_aJdhFPQE8atY1Q5Vi7dkTkZJwkCYWYMqXMwqFmTlxcbsQY3USokdEaF_IKB2vLpT11=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "No Good For Me",
+   "album": {
+    "name": "No Good For Me",
+    "id": "MPREb_iTj7OktxFoA"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "gcdhzepRI_A",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:51",
+   "year": null,
+   "artists": [
+    {
+     "name": "Caitlin",
+     "id": "UC3bQhemfY2CogkIDMUoB_dw"
+    }
+   ],
+   "duration_seconds": 231,
+   "views": "8.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/jf387fNXLxyL33C08a5KAKP_Kln7rIkileOB8WY0QTpi2fvjAe_1KWqLmPF0lKZK2J8IzS11Qhg4cUk=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/jf387fNXLxyL33C08a5KAKP_Kln7rIkileOB8WY0QTpi2fvjAe_1KWqLmPF0lKZK2J8IzS11Qhg4cUk=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "I'm No Good At All",
+   "album": {
+    "name": "Live from Brixton Hill Studios",
+    "id": "MPREb_zBSfxIusYhI"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "sFjtjrxkupQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sister Aggie",
+     "id": "UCGYKItICyFvvrdfdAmHOOAQ"
+    }
+   ],
+   "duration_seconds": 232,
+   "views": "12",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/sYD--jy_AIHrZMmN4ozrKDR2i_GiSw9C7jl_AagpZ7caik_wtj7CneJgWvR8-Sjl_suCSDQqv20fKqc=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/sYD--jy_AIHrZMmN4ozrKDR2i_GiSw9C7jl_AagpZ7caik_wtj7CneJgWvR8-Sjl_suCSDQqv20fKqc=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Not Today Satan",
+   "album": {
+    "name": "Not Today Satan",
+    "id": "MPREb_XsqKAdp9Ao7"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "s7SZf87piOo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ash Riser",
+     "id": "UCcbfSjmtIWrceKAdRk8_IAA"
+    }
+   ],
+   "duration_seconds": 172,
+   "views": "1.1K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/raxsomDUVb4duTWCqV77niOIz09eAtBc_mBzfztkEufE1u1-sDWPYJk3MtIu3FAcKiVbc_B7H-1gpss=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/raxsomDUVb4duTWCqV77niOIz09eAtBc_mBzfztkEufE1u1-sDWPYJk3MtIu3FAcKiVbc_B7H-1gpss=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "I’m No Good",
+   "album": {
+    "name": "Cards On The Table - All In",
+    "id": "MPREb_cxX4cRmoOl4"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "b-XGwIV4rdE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:40",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jason Charles Miller",
+     "id": "UCV2vI28urjNexMhyUIBRt7g"
+    }
+   ],
+   "duration_seconds": 220,
+   "views": "611",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/fd_DMZ3E3IOam8tiRp-ATsvSRxbzbIdC4eMxdpaPklW6D_E0qe3ZRkfzyySyVhI2XJL5gzuLm1EIZtOk=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/fd_DMZ3E3IOam8tiRp-ATsvSRxbzbIdC4eMxdpaPklW6D_E0qe3ZRkfzyySyVhI2XJL5gzuLm1EIZtOk=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "I'm No Good for You (feat. Emily Heart)",
+   "album": {
+    "name": "I'm No Good for You",
+    "id": "MPREb_bg0MCAHu4lC"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "_fN63XjKFyY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:36",
+   "year": null,
+   "artists": [
+    {
+     "name": "Uncle Sam's Blues",
+     "id": "UCga1sodUB4F9OFxeMw0cI0A"
+    }
+   ],
+   "duration_seconds": 276,
+   "views": "16K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/mdnRE5E-yNUHNK12My_vdJQyyaa8tK5yJKRIV3pHx6tckKLKgTYC9OEXWqR-bL2Fq86-UkjqFfIBKZ3t=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/mdnRE5E-yNUHNK12My_vdJQyyaa8tK5yJKRIV3pHx6tckKLKgTYC9OEXWqR-bL2Fq86-UkjqFfIBKZ3t=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

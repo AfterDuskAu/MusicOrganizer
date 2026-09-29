@@ -1,0 +1,758 @@
+{
+ "kind": "search",
+ "key": "night lovell polozhenie night drive extended",
+ "request": "Night Lovell Polozhenie (Night Drive) extended",
+ "recorded_at": "2026-09-29T02:36:56Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Nightdrive",
+   "album": {
+    "name": "Nightdrive",
+    "id": "MPREb_uC0zKqgjVgT"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "DD3sYLAwNT8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "Young Mask",
+     "id": "UC4d_6rBs0YfPBQR3uuJivbg"
+    },
+    {
+     "name": "Vayne",
+     "id": "UCkIQILgm0SCrHpVGrj2fmHg"
+    }
+   ],
+   "duration_seconds": 172,
+   "views": "1M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/TCZOiUa7fljjiX1dmCTOp36fYuNWnoLxBmOiuXYjuChErZNPmz3zQFfUBCbMia0NYLpR-P4JyMPW3TUD=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/TCZOiUa7fljjiX1dmCTOp36fYuNWnoLxBmOiuXYjuChErZNPmz3zQFfUBCbMia0NYLpR-P4JyMPW3TUD=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Night Drive (Slowed + Reverb)",
+   "album": {
+    "name": "Night Drive (Slowed + Reverb)",
+    "id": "MPREb_GWEEgJyVQuA"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "uWqjZwUd4v4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:18",
+   "year": null,
+   "artists": [
+    {
+     "name": "Wilee",
+     "id": "UCYTcpi4tI8bJvs4H9lRDPVg"
+    }
+   ],
+   "duration_seconds": 138,
+   "views": "34M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/oL42svW666JfVzc9Kca1hziLjRoRO9bvEZdZSVphGpO0CpGAKxfUEjUjDD6qVqVySx4efVc86RWlZsFy=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/oL42svW666JfVzc9Kca1hziLjRoRO9bvEZdZSVphGpO0CpGAKxfUEjUjDD6qVqVySx4efVc86RWlZsFy=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Night Drive",
+   "album": {
+    "name": "Night Drive",
+    "id": "MPREb_VSjP01tI4lP"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "d5AZVfH2plU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:16",
+   "year": null,
+   "artists": [
+    {
+     "name": "7vvch",
+     "id": "UCJUW1qmCBp7CSvkdclgm9Zg"
+    }
+   ],
+   "duration_seconds": 196,
+   "views": "1.3M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/5kYi4lbLtHfwk7assZpGavztMMHi-_ybmxRRPuGZ02iPrAmJVh3TMFC6PGjhbEE1lx0GFnxKOZWmPkRP=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/5kYi4lbLtHfwk7assZpGavztMMHi-_ybmxRRPuGZ02iPrAmJVh3TMFC6PGjhbEE1lx0GFnxKOZWmPkRP=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Night Drive",
+   "album": {
+    "name": "Night Drive",
+    "id": "MPREb_QqxUIs1balx"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "JTWiPmAYP0M",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:21",
+   "year": null,
+   "artists": [
+    {
+     "name": "Butch U",
+     "id": "UCXQUZnwDYwIOyR4GL4qPk4w"
+    }
+   ],
+   "duration_seconds": 201,
+   "views": "25M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Gbhs4BetUbMhDnwW0vYJwkYzoFa_LMMgxef7ldzE8zhj4B9ivFVwrqqmsbSfuEnF3eqIbPzdUI4djjk=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Gbhs4BetUbMhDnwW0vYJwkYzoFa_LMMgxef7ldzE8zhj4B9ivFVwrqqmsbSfuEnF3eqIbPzdUI4djjk=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "LOVELL",
+   "album": {
+    "name": "LOVELL",
+    "id": "MPREb_mpUqF5s3KNp"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "7lLBBY58rJU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:33",
+   "year": null,
+   "artists": [
+    {
+     "name": "GXNRC",
+     "id": "UCGURUXYwWMuIpTcfFpwtnWg"
+    }
+   ],
+   "duration_seconds": 213,
+   "views": "1.6K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/O03thMA6oiLFhvOlVLymV8ANykTnOyZzUwJEs14wUsuvqwbKGCUiZ5JT5A96OXQBiGlZJVnsvR2IjoharA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/O03thMA6oiLFhvOlVLymV8ANykTnOyZzUwJEs14wUsuvqwbKGCUiZ5JT5A96OXQBiGlZJVnsvR2IjoharA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Late night drive (Slowed)",
+   "album": {
+    "name": "Shiloh's Melodies Slowed",
+    "id": "MPREb_6Mtx4kxRyIG"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "nzlaV_1ZHMY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:40",
+   "year": null,
+   "artists": [
+    {
+     "name": "Apologi0",
+     "id": "UCYw5odckk0BZJOdwg7LAnng"
+    }
+   ],
+   "duration_seconds": 160,
+   "views": "15",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/DUC4IqbJXGaE4qqbSpITdECu6v7ROTzLaDuL_ijD1SdFeTRHxUkXsxQYzmLDaPleeqD7PU0pfDqYb8Y=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/DUC4IqbJXGaE4qqbSpITdECu6v7ROTzLaDuL_ijD1SdFeTRHxUkXsxQYzmLDaPleeqD7PU0pfDqYb8Y=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "DARK NIGHT DRIVE",
+   "album": {
+    "name": "DARK NIGHT DRIVE",
+    "id": "MPREb_RSR8ORWzm3N"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "4cdO8Wo3Awg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:38",
+   "year": null,
+   "artists": [
+    {
+     "name": "AM NATION",
+     "id": "UC95dmMhb-9wWw5WrHyLz01Q"
+    }
+   ],
+   "duration_seconds": 218,
+   "views": "693",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/hOTzqpepzmrUP6YGNKVyEKcBCiBtT3FvsLRe8LoTevlC8JMWKkGfCru43lXIX3qIF7YMSdyLxAj_aiUuQA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/hOTzqpepzmrUP6YGNKVyEKcBCiBtT3FvsLRe8LoTevlC8JMWKkGfCru43lXIX3qIF7YMSdyLxAj_aiUuQA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Underworld",
+   "album": {
+    "name": "Underworld",
+    "id": "MPREb_vZBgMbNl3gd"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "DCPU5YWHffM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:29",
+   "year": null,
+   "artists": [
+    {
+     "name": "Unaverage Gang",
+     "id": "UC8PmIKCaf7alLR0xbwutE8Q"
+    }
+   ],
+   "duration_seconds": 209,
+   "views": "90M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/G1mDYK_FwuY92e1Oww6FWjQ8RYj8russqvD0_1BBbTjX2ttpoXuXJ86_REsGboQyYT2jYTAwQRzbfRI=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/G1mDYK_FwuY92e1Oww6FWjQ8RYj8russqvD0_1BBbTjX2ttpoXuXJ86_REsGboQyYT2jYTAwQRzbfRI=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "NIGHT RIDE",
+   "album": {
+    "name": "NIGHT RIDE",
+    "id": "MPREb_gs429fiG7Zm"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "lLK2EZ734uE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:13",
+   "year": null,
+   "artists": [
+    {
+     "name": "KUTE",
+     "id": "UCybmgMmznPQV94AnxtLsQJA"
+    },
+    {
+     "name": "BLESSED MANE",
+     "id": "UCwGv0PYXMCTIbkM-ZLqeZ_g"
+    }
+   ],
+   "duration_seconds": 193,
+   "views": "7.9M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/7PB_4ovasdCuB3odWdAfT6KnF6ZgDA-zhVAlSaeMf6et34_KWuGzQBLLrv51U0X6c0V5q86GyhNt84Lp=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/7PB_4ovasdCuB3odWdAfT6KnF6ZgDA-zhVAlSaeMf6et34_KWuGzQBLLrv51U0X6c0V5q86GyhNt84Lp=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Nightdrive",
+   "album": {
+    "name": "Nightdrive",
+    "id": "MPREb_5mlhIZuEFj1"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "yfg_wCsOzIA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:10",
+   "year": null,
+   "artists": [
+    {
+     "name": "Nightdrive",
+     "id": "UCv7VJBrPNg3wZX8MoM1fP6Q"
+    }
+   ],
+   "duration_seconds": 310,
+   "views": "144",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/t7Au7ZZ9Kw0y0wx_NOJBjwV9T6-vHndgqLvn7dAQfUoc7JpoqbR7XJ4_cYM8YSTXfrVAGDhLrDtHQwib=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/t7Au7ZZ9Kw0y0wx_NOJBjwV9T6-vHndgqLvn7dAQfUoc7JpoqbR7XJ4_cYM8YSTXfrVAGDhLrDtHQwib=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Night Drive Phonk for Late Night Rides",
+   "album": {
+    "name": "Phonk House Sessions",
+    "id": "MPREb_cgdfXcUGpDK"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "QPjktOxf_vI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "RØLLYX",
+     "id": "UCdA0wD-v-U8SH3egw4fpeow"
+    }
+   ],
+   "duration_seconds": 170,
+   "views": "0",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Lw42hpi8n5LWm0gs06xsAceGRdwDuFBJ_1kngq3CymY4Bv-EGhmz7ZEv3nIoT2CzJWcmW8dC4J5eAxGj=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Lw42hpi8n5LWm0gs06xsAceGRdwDuFBJ_1kngq3CymY4Bv-EGhmz7ZEv3nIoT2CzJWcmW8dC4J5eAxGj=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Night Drive in Paradise (Slowed version)",
+   "album": {
+    "name": "Night Drive in Paradise",
+    "id": "MPREb_MoCttEEZ2g5"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "FU7jPgkdXiQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "SVLERA",
+     "id": "UC2Ct5BlrxWyWngf7XP-0ozw"
+    }
+   ],
+   "duration_seconds": 148,
+   "views": "185",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/HdB2VW7Kl1RdNYrixJd0h9YQdhee8BY5wkdqpw9E_81hd-GdgYOh7z_mOr8oPUSI5_nMGSyfgFcMSSlj=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/HdB2VW7Kl1RdNYrixJd0h9YQdhee8BY5wkdqpw9E_81hd-GdgYOh7z_mOr8oPUSI5_nMGSyfgFcMSSlj=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Night Drive",
+   "album": {
+    "name": "Night Drive",
+    "id": "MPREb_juwmTZVmE9W"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "MEpp01D6wVI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:38",
+   "year": null,
+   "artists": [
+    {
+     "name": "$uLTANR$",
+     "id": "UC0-Omx7hAkOhNwZIhUI1RvQ"
+    }
+   ],
+   "duration_seconds": 158,
+   "views": "745K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Gv8Nr69B3gn6ZTSBsj8enik4p9LiqdldP7fUeFZiWI_2wRFO-TLvYF2krpoYT0mHauLZBg8wBKnS4xI7=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Gv8Nr69B3gn6ZTSBsj8enik4p9LiqdldP7fUeFZiWI_2wRFO-TLvYF2krpoYT0mHauLZBg8wBKnS4xI7=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Polozhenie (feat. SXZDU & Lythx)",
+   "album": {
+    "name": "Polozhenie",
+    "id": "MPREb_Qig1KqilZYa"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "8C0VvNbWb80",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:26",
+   "year": null,
+   "artists": [
+    {
+     "name": "Audereus",
+     "id": "UCv5nXg5M5d9XSR__QvmTwTA"
+    }
+   ],
+   "duration_seconds": 146,
+   "views": "13K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/rM-ArbsA-QpJEYQIyuNp1w9LDfdyU_UPL-xSkCPqyiF4cZgZUxJxekeMWxvMHwgSC5xF91k36h0emsU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/rM-ArbsA-QpJEYQIyuNp1w9LDfdyU_UPL-xSkCPqyiF4cZgZUxJxekeMWxvMHwgSC5xF91k36h0emsU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Night Ridin'",
+   "album": {
+    "name": "Chapter 2 : Where Am I ?",
+    "id": "MPREb_GRVLiOj5DUt"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "82p077RD9cg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "Rogue Dave",
+     "id": "UCQ-5qfm8yzQKGDRxWQPqLsA"
+    }
+   ],
+   "duration_seconds": 123,
+   "views": "2.5K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/VdxMgE-ZCzKbXTQ3wqoV2OYOwqKODFFSmFAvXRPPI52AogcijP1B8rTMNR12qjNoX92pyBTr2KrYtLc=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/VdxMgE-ZCzKbXTQ3wqoV2OYOwqKODFFSmFAvXRPPI52AogcijP1B8rTMNR12qjNoX92pyBTr2KrYtLc=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "NIGHT HIGHWAY (Slowed + Reverb)",
+   "album": {
+    "name": "NIGHT HIGHWAY (Slowed + Reverb)",
+    "id": "MPREb_crV6k1vvOZ7"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "cap5Kg4icFw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:40",
+   "year": null,
+   "artists": [
+    {
+     "name": "GXNRC",
+     "id": "UCGURUXYwWMuIpTcfFpwtnWg"
+    }
+   ],
+   "duration_seconds": 220,
+   "views": "8.1K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/fkA1p1qQHupAA9wryKb0xnD-oppwV3rCLg0HULU7S56KMgVOjzAiLy9Bn_Ai6ruogsJs599tvaOw1-5Q-w=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/fkA1p1qQHupAA9wryKb0xnD-oppwV3rCLg0HULU7S56KMgVOjzAiLy9Bn_Ai6ruogsJs599tvaOw1-5Q-w=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Night Drive",
+   "album": {
+    "name": "Night Drive",
+    "id": "MPREb_L8k0OCU4gsZ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "VGX8ogLlpo8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:07",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bass Boosted",
+     "id": "UCYGOpPfcoXtfP6FF7qESqDQ"
+    }
+   ],
+   "duration_seconds": 67,
+   "views": "14K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-htT561FgPPhXJJ7I7bK8YdU2_7wLVAZf-oL0ZacqzhpWD0zxTydpHg4PQG-8XX18gckKaTRkcvVJIg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-htT561FgPPhXJJ7I7bK8YdU2_7wLVAZf-oL0ZacqzhpWD0zxTydpHg4PQG-8XX18gckKaTRkcvVJIg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Night Drive",
+   "album": {
+    "name": "Night Drive",
+    "id": "MPREb_UKR8gmpdlFZ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "pPQSjeFUuqw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:29",
+   "year": null,
+   "artists": [
+    {
+     "name": "OdinMann",
+     "id": "UCfRjE2cTtjYDOO6uLjJh4BA"
+    }
+   ],
+   "duration_seconds": 149,
+   "views": "1.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/lUwXC4lUIjh4Vh8se9LYbQAphx6TxkoQQ3nAkYjT9M-0hbeaZg6LWuH-c4QnMStDlZ3WQejxG2-8-GU-=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/lUwXC4lUIjh4Vh8se9LYbQAphx6TxkoQQ3nAkYjT9M-0hbeaZg6LWuH-c4QnMStDlZ3WQejxG2-8-GU-=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Nightdrive",
+   "album": {
+    "name": "Shadows EP",
+    "id": "MPREb_nAf3GbjTiVb"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "VBJ5i6dqA0M",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "8:00",
+   "year": null,
+   "artists": [
+    {
+     "name": "Li-Polymer",
+     "id": "UCcBtyYXPeaR6FVUa9yd3oSA"
+    }
+   ],
+   "duration_seconds": 480,
+   "views": "65",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/N_StC0EveYlax_vjR0tuKnMfdR_nEWkCkb-fVuv0nJ29sg-lK5NtY7sNtb0bukS3UT1NZmqWbOFdOfXw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/N_StC0EveYlax_vjR0tuKnMfdR_nEWkCkb-fVuv0nJ29sg-lK5NtY7sNtb0bukS3UT1NZmqWbOFdOfXw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Polozhenie (Lovell)",
+   "album": {
+    "name": "Polozhenie (Lovell)",
+    "id": "MPREb_0hnmNOD21qr"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "xpTBo6rsguE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Combee Prod",
+     "id": "UCwAIEV15BwwTS-XFDI9NGFg"
+    }
+   ],
+   "duration_seconds": 170,
+   "views": "656K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/L36-hlmjgkJegb_d98IJbpkPk3E0N0lxZolSCk3F9-XYvrMv0v_glgwc56HDBHg7koOg2F0ljQ6cpQjc=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/L36-hlmjgkJegb_d98IJbpkPk3E0N0lxZolSCk3F9-XYvrMv0v_glgwc56HDBHg7koOg2F0ljQ6cpQjc=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

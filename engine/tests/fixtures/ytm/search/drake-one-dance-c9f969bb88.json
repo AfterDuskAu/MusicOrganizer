@@ -1,0 +1,762 @@
+{
+ "kind": "search",
+ "key": "drake one dance",
+ "request": "Drake One Dance",
+ "recorded_at": "2026-09-29T02:36:20Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "one dance (speed)",
+   "album": {
+    "name": "one dance",
+    "id": "MPREb_Jlkm0ZsVo4e"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ChUqVvlZVZM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:59",
+   "year": null,
+   "artists": [
+    {
+     "name": "xxxd1or",
+     "id": "UCAjFEYcs5YvA8FhAPzhRyPw"
+    }
+   ],
+   "duration_seconds": 119,
+   "views": "1.2K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/6psHV-NIQwPRtsLdGZlvLwdDzv6BTzqsGEzsTaoTsHs0jtwaHZAqvhWUDzzUvyAOK4A5Y5I7tfZ4_8wzJQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/6psHV-NIQwPRtsLdGZlvLwdDzv6BTzqsGEzsTaoTsHs0jtwaHZAqvhWUDzzUvyAOK4A5Y5I7tfZ4_8wzJQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "One Dance (sped up to perfection)",
+   "album": {
+    "name": "One Dance",
+    "id": "MPREb_fmDiHOoAsuu"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "9ZgE2pRmJ08",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:19",
+   "year": null,
+   "artists": [
+    {
+     "name": "TommyMuzzic",
+     "id": "UCIOzVH6F6iE_qpzIBDkJAyA"
+    }
+   ],
+   "duration_seconds": 139,
+   "views": "2.5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/KLQqUKh5Uw2rssj23dOp3l_g8o4hEYVF07iUfivljC3AKIn-js_KkTM20tVB6p63INeqGQ9vz_j6XuM=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/KLQqUKh5Uw2rssj23dOp3l_g8o4hEYVF07iUfivljC3AKIn-js_KkTM20tVB6p63INeqGQ9vz_j6XuM=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Classic",
+   "album": {
+    "name": "HABIBTI",
+    "id": "MPREb_GWWjnNXaOtU"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "yqn4Yyux7_Y",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:00",
+   "year": null,
+   "artists": [
+    {
+     "name": "Drake",
+     "id": "UCU6cE7pdJPc6DU2jSrKEsdQ"
+    }
+   ],
+   "duration_seconds": 180,
+   "views": "8.4M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Kep2UuK9sxzkdrpCoIsqbZ0LzTDtCmnSpruUNny1WeqQpyRHMkbOXEb1Csp4Plx0YZZnAAlSzqV0pVLN=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Kep2UuK9sxzkdrpCoIsqbZ0LzTDtCmnSpruUNny1WeqQpyRHMkbOXEb1Csp4Plx0YZZnAAlSzqV0pVLN=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "One Dance (Lower Key & Shortened) [Originally Performed by Drake, WizKid & Kyla]",
+   "album": {
+    "name": "One Dance (Lower Key & Shortened) [Originally Performed by Drake, WizKid & Kyla]",
+    "id": "MPREb_s0afUiKc0TQ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "rAKzH56hWGU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:33",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sing2Piano",
+     "id": "UCIOnedxkKOYiwQZrbnRAcQA"
+    }
+   ],
+   "duration_seconds": 153,
+   "views": "490K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ycmmCW_sO88CJ6dPzO3iL-Tzl64L4SoeelCIVpuM2eyvI3hsJY0Edm8tYp51NjcPbNyTFz-aYc7E9Jme=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ycmmCW_sO88CJ6dPzO3iL-Tzl64L4SoeelCIVpuM2eyvI3hsJY0Edm8tYp51NjcPbNyTFz-aYc7E9Jme=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Fancy (feat. T.I. & Swizz Beatz)",
+   "album": {
+    "name": "Thank Me Later (Int'l Version)",
+    "id": "MPREb_mGCf3tbhIUK"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "XXr8fnKffq8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:20",
+   "year": null,
+   "artists": [
+    {
+     "name": "Drake",
+     "id": "UCU6cE7pdJPc6DU2jSrKEsdQ"
+    }
+   ],
+   "duration_seconds": 320,
+   "views": "83M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vq2tQM0lP8YEa34DMt4vgwlHqKllRjR2VduG-760CWIvDf074QCc-PeqyfF6qwZLB5Mc92N_rWp6Omo=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vq2tQM0lP8YEa34DMt4vgwlHqKllRjR2VduG-760CWIvDf074QCc-PeqyfF6qwZLB5Mc92N_rWp6Omo=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "One Dance (Drake Wizkid Kyla Cover Version)",
+   "album": {
+    "name": "Acoustic & Guitar Session Vol.2 Covers",
+    "id": "MPREb_vj3LHSJpKI8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "mgmABqpm8CQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:12",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jason Gordon",
+     "id": "UCqWEW9kMYu7N8imBQjTpsTA"
+    }
+   ],
+   "duration_seconds": 192,
+   "views": "391",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/HuNiufdY3TNcT9Y9sxUv4Wu2sbEqtgG8pLCGbJCko5OudHH3e0wWmU40EufP2zgdpzg7Tw_mCpiqOdSK=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/HuNiufdY3TNcT9Y9sxUv4Wu2sbEqtgG8pLCGbJCko5OudHH3e0wWmU40EufP2zgdpzg7Tw_mCpiqOdSK=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "one dance",
+   "album": {
+    "name": "love and pain",
+    "id": "MPREb_Dy7GWY3Lww9"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "WOyVKMKF_UA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:48",
+   "year": null,
+   "artists": [
+    {
+     "name": "Axleh",
+     "id": "UCANMQI3EgTb4_KLajMgTwHw"
+    },
+    {
+     "name": "Shiloh Dynasty",
+     "id": "UC_1uKFtloL04fUniGATpSzA"
+    }
+   ],
+   "duration_seconds": 228,
+   "views": "10K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/RQLnFGzibDj5Ea_digLUGX8kch1zqz6VFRXtZHcxpLT1-tAy_eWOJn0U_DTbfmSIgluRgZ_o4kfrcv0=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/RQLnFGzibDj5Ea_digLUGX8kch1zqz6VFRXtZHcxpLT1-tAy_eWOJn0U_DTbfmSIgluRgZ_o4kfrcv0=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "One Dance",
+   "album": {
+    "name": "New Year's Eve Party Mix 2017",
+    "id": "MPREb_D2DpNyGdc0f"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "pu5Dvh1NpXc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:55",
+   "year": null,
+   "artists": [
+    {
+     "name": "NYE Party Band",
+     "id": "UCXpedlsYe8QeDWv6L-tWzsg"
+    }
+   ],
+   "duration_seconds": 175,
+   "views": "18K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/XJRS1rhWSZu6E-QO-2ral3WTkr_YuAMyhATVhty7IipV0yIPL3wFA_xMgg85ye2eCx1oyeUhHirPhrg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/XJRS1rhWSZu6E-QO-2ral3WTkr_YuAMyhATVhty7IipV0yIPL3wFA_xMgg85ye2eCx1oyeUhHirPhrg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "One Dance (Instrumental Slowed)",
+   "album": {
+    "name": "One Dance",
+    "id": "MPREb_9H7iWxgULEb"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "qwnz6IzQw7A",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:13",
+   "year": null,
+   "artists": [
+    {
+     "name": "Softkarma",
+     "id": "UCse8EqS-xSsnq0BBdIVKYNw"
+    }
+   ],
+   "duration_seconds": 253,
+   "views": "481",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/NMHlKkC1eNhT_0oAaTgyU2bWLKS65FtxuJRgeiLCfjO1CSEvV6GYoMukzxAf7mPCE0jOfrtw_3jrhwJF=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/NMHlKkC1eNhT_0oAaTgyU2bWLKS65FtxuJRgeiLCfjO1CSEvV6GYoMukzxAf7mPCE0jOfrtw_3jrhwJF=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "One Dance (Karaoke Version) [In the Style of Drake feat. Wizkid & Kyla] (feat. Wizkid & Kyla)",
+   "album": {
+    "name": "Karaoke Hits of Early 2016 Vol 2 (Karaoke Track)",
+    "id": "MPREb_d3Ed7ZgVBV6"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "LRXZjsr4FgM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:49",
+   "year": null,
+   "artists": [
+    {
+     "name": "Karaoke Carpool",
+     "id": null
+    }
+   ],
+   "duration_seconds": 169,
+   "views": "5.7K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ecQ93cp3vIDzyGEXlj-xaoKPkZ6eOdhNAgN0klUkBrjKMmED6jDsBONAAnVw6aeFZbuyAXLwRYq_ZP_4=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ecQ93cp3vIDzyGEXlj-xaoKPkZ6eOdhNAgN0klUkBrjKMmED6jDsBONAAnVw6aeFZbuyAXLwRYq_ZP_4=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "One Dance (In the Style of Drake, Wizkid & Kyla) [Karaoke Version]",
+   "album": {
+    "name": "One Dance (In the Style of Drake, Wizkid & Kyla) [Karaoke Version]",
+    "id": "MPREb_OS692SEM4al"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "g76TQW-VbuE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:55",
+   "year": null,
+   "artists": [
+    {
+     "name": "Global Karaoke",
+     "id": "UChzPGd2UU_WhiF5m_viesGg"
+    }
+   ],
+   "duration_seconds": 175,
+   "views": "4.2K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/l6U64PGQSDG7FWuM4Pc6P1zHCmUsHn9l_vq0ox0GOZbMhf2qAnm_IGJdOIjRW6Bk6TxO3orAHkqLMK0K=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/l6U64PGQSDG7FWuM4Pc6P1zHCmUsHn9l_vq0ox0GOZbMhf2qAnm_IGJdOIjRW6Bk6TxO3orAHkqLMK0K=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "One Dance (Remix)",
+   "album": {
+    "name": "One Dance (Remix)",
+    "id": "MPREb_2pjPY7zqhGy"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Vc2ZbQybF0s",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:41",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kevin Giraldo",
+     "id": "UCa8nxbK2ahx-Z9qeVCcPzDg"
+    }
+   ],
+   "duration_seconds": 221,
+   "views": "16K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/OmHI2ec9prYQbxP3Mf7A3B3NyWNT1gfOKVHFgzI4iBS30saHV4naoMjbO5otE71Rdk0nq9QLqkGeORtT=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/OmHI2ec9prYQbxP3Mf7A3B3NyWNT1gfOKVHFgzI4iBS30saHV4naoMjbO5otE71Rdk0nq9QLqkGeORtT=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "One Dance",
+   "album": {
+    "name": "One Dance",
+    "id": "MPREb_2IxogdCvUjA"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "-iHs8R9Pwn4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:36",
+   "year": null,
+   "artists": [
+    {
+     "name": "eyeroze",
+     "id": "UCkeYWEq4frovDpE82DU1jxA"
+    },
+    {
+     "name": "Melodyz Town",
+     "id": "UCuyMfEqonKEqYdpyFOlaKYw"
+    }
+   ],
+   "duration_seconds": 216,
+   "views": "956",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/MfZbV2bDlzvCOkNHPV7keMyNi0epkES7aE6ciKyIZJEOPJvXY4O6nBLaxK1uLanXHcRF3X9Q5uFNGX8=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/MfZbV2bDlzvCOkNHPV7keMyNi0epkES7aE6ciKyIZJEOPJvXY4O6nBLaxK1uLanXHcRF3X9Q5uFNGX8=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "One Dance (Cover)",
+   "album": {
+    "name": "WORK OUT DJ MIX VOL.4",
+    "id": "MPREb_lj3EJHej9MM"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "7c2o4LzrcQY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:48",
+   "year": null,
+   "artists": [
+    {
+     "name": "DJ MIX PROJECT",
+     "id": "UCclOy5s9WwRtvnXOtwVCIlA"
+    }
+   ],
+   "duration_seconds": 168,
+   "views": "76K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/azsLKgwR2PYABmbSUjwZus7JcIJKRY-ni5-xk0QsvBvzzz5TFg3YrbNh5S2qxTw9dUCjU3BMAEfIELK6=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/azsLKgwR2PYABmbSUjwZus7JcIJKRY-ni5-xk0QsvBvzzz5TFg3YrbNh5S2qxTw9dUCjU3BMAEfIELK6=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "One Dance (Originally Performed by Drake, Wizkid and Kyla) [Karaoke Instrumental]",
+   "album": {
+    "name": "One Dance (Originally Performed by Drake, Wizkid and Kyla) [Karaoke Instrumental]",
+    "id": "MPREb_q5tlFWSEQPy"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "-eIn7UjKc3o",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:56",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sing Like The Famous",
+     "id": "UC0fV7UK9y70SwOKfn60N6TA"
+    }
+   ],
+   "duration_seconds": 176,
+   "views": "41K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/e_31BW6t63lBVP-xIQoq1Iz7WAVSYz0Kl31VyrXefQFLArxJRyWmtUKnV8IWBloH8jekjwQMbxpudTX07A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/e_31BW6t63lBVP-xIQoq1Iz7WAVSYz0Kl31VyrXefQFLArxJRyWmtUKnV8IWBloH8jekjwQMbxpudTX07A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "One Dance (Cover)",
+   "album": {
+    "name": "PUMP UP TRAINNING BGM",
+    "id": "MPREb_90mVmfM4xA7"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "sbse-Sn6Nvo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:55",
+   "year": null,
+   "artists": [
+    {
+     "name": "MUSIC LAB JPN",
+     "id": "UCxdU6tPoSLPSHGq-cchTEwQ"
+    }
+   ],
+   "duration_seconds": 175,
+   "views": "76K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/EBPhV7YMS5xw5aOZt5blUQZpe_1T6aKjShXsO-3VtAT6xR8CZzXiPfp4FipDRlNdfvXvy4cSWhBEs1_g5w=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/EBPhV7YMS5xw5aOZt5blUQZpe_1T6aKjShXsO-3VtAT6xR8CZzXiPfp4FipDRlNdfvXvy4cSWhBEs1_g5w=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "One Dance (Originally Performed by Drake) (Instrumental Version)",
+   "album": {
+    "name": "One Dance (Originally Performed by Drake) [Instrumental Version]",
+    "id": "MPREb_MmnhzXQbniY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "P0jMdC43rfo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:54",
+   "year": null,
+   "artists": [
+    {
+     "name": "Karaoke Pro",
+     "id": "UCoRam_qVNnWbkEu0EjorC6Q"
+    }
+   ],
+   "duration_seconds": 174,
+   "views": "76K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/V849zPnposGyk5qunFsffPaGUqMnEy09q6wf6w9dkDsQsoVopPqvNz4JZQKDRoe-KloJBEGf7-h1MYM35A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/V849zPnposGyk5qunFsffPaGUqMnEy09q6wf6w9dkDsQsoVopPqvNz4JZQKDRoe-KloJBEGf7-h1MYM35A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "One Dance (Cover)",
+   "album": {
+    "name": "GORGEOUS PARTY MUSIC - DJ MIX - ALL TIME BEST",
+    "id": "MPREb_bKSqGKsg1jl"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "KVipgUl9p3w",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:48",
+   "year": null,
+   "artists": [
+    {
+     "name": "GORGEOUS PARTY MUSIC",
+     "id": "UC72bbfqwiBOmX3uaWSG6o2w"
+    }
+   ],
+   "duration_seconds": 168,
+   "views": "76K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/wfU19xb0jnbVo4uh9Krfg6ZyVdMkSjE6jF-yy3GHkMy8RrNmw6fDjO0fD0qa1jEkg-SEO9h4dsfgADDF=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/wfU19xb0jnbVo4uh9Krfg6ZyVdMkSjE6jF-yy3GHkMy8RrNmw6fDjO0fD0qa1jEkg-SEO9h4dsfgADDF=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "One Dance (Karaoke Version) (Originally Performed By Drake, Wizkid & Kyla)",
+   "album": {
+    "name": "One Dance (Karaoke Version)",
+    "id": "MPREb_jA8hvupLxaf"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Y-fYP7C32E8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:01",
+   "year": null,
+   "artists": [
+    {
+     "name": "La-Le-Lu",
+     "id": "UCPWAQ1MC0kp9DYXrANrZ24Q"
+    }
+   ],
+   "duration_seconds": 181,
+   "views": "166",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-BwFBFps0biBZI1jGNt9ItEfeLx2jRqUvc_f6AEfjmBPzYaGLASPMmwGmt8S9yXKzcFZDPBT1oP_PXB2lA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-BwFBFps0biBZI1jGNt9ItEfeLx2jRqUvc_f6AEfjmBPzYaGLASPMmwGmt8S9yXKzcFZDPBT1oP_PXB2lA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "One Dance",
+   "album": {
+    "name": "One Dance",
+    "id": "MPREb_eR4hCtgAGOx"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "dP_OnPtcaQg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:35",
+   "year": null,
+   "artists": [
+    {
+     "name": "eyeroze",
+     "id": "UCkeYWEq4frovDpE82DU1jxA"
+    },
+    {
+     "name": "Melodyz Town",
+     "id": "UCuyMfEqonKEqYdpyFOlaKYw"
+    }
+   ],
+   "duration_seconds": 215,
+   "views": "1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/LxFFIqYh_eSbiLkAO1Ug-R7rJwDGJEGcJ4PgBqQIjIV-akUaYShyoYLBGiRMiaqz4jjKj9S5x2VKme7S=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/LxFFIqYh_eSbiLkAO1Ug-R7rJwDGJEGcJ4PgBqQIjIV-akUaYShyoYLBGiRMiaqz4jjKj9S5x2VKme7S=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

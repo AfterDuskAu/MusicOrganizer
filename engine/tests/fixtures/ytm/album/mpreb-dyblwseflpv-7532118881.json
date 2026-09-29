@@ -1,0 +1,345 @@
+{
+ "kind": "album",
+ "key": "MPREb_dYBlwseflPV",
+ "request": "MPREb_dYBlwseflPV",
+ "recorded_at": "2026-09-29T02:40:32Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [
+  "related_recommendations",
+  "description",
+  "descriptionRuns",
+  "feedback tokens"
+ ],
+ "response": {
+  "title": "Wiped Out!",
+  "type": "Album",
+  "thumbnails": [
+   {
+    "url": "https://yt3.googleusercontent.com/-kb2G0v5A95Exch1a4YJTopQoX7mnqkEOrD1PI81gCzsqgidXe-gim5dNDLVcfacX59fNcB8ruK5GUZdgA=w60-h60-s-l90-rj",
+    "width": 60,
+    "height": 60
+   },
+   {
+    "url": "https://yt3.googleusercontent.com/-kb2G0v5A95Exch1a4YJTopQoX7mnqkEOrD1PI81gCzsqgidXe-gim5dNDLVcfacX59fNcB8ruK5GUZdgA=w120-h120-s-l90-rj",
+    "width": 120,
+    "height": 120
+   },
+   {
+    "url": "https://yt3.googleusercontent.com/-kb2G0v5A95Exch1a4YJTopQoX7mnqkEOrD1PI81gCzsqgidXe-gim5dNDLVcfacX59fNcB8ruK5GUZdgA=w226-h226-s-l90-rj",
+    "width": 226,
+    "height": 226
+   },
+   {
+    "url": "https://yt3.googleusercontent.com/-kb2G0v5A95Exch1a4YJTopQoX7mnqkEOrD1PI81gCzsqgidXe-gim5dNDLVcfacX59fNcB8ruK5GUZdgA=w544-h544-s-l90-rj",
+    "width": 544,
+    "height": 544
+   }
+  ],
+  "isExplicit": false,
+  "year": "2015",
+  "artists": [
+   {
+    "name": "The Neighbourhood",
+    "id": "UC1cnYMXqKdazz-gDPKaDFyg"
+   }
+  ],
+  "trackCount": 11,
+  "duration": "45 minutes",
+  "audioPlaylistId": "OLAK5uy_n5nwI1mtsc4bG4-QDm7iHspPRKDoH-F3k",
+  "likeStatus": "INDIFFERENT",
+  "tracks": [
+   {
+    "videoId": "X_MJi2JZT9Y",
+    "title": "A Moment of Silence",
+    "artists": [
+     {
+      "name": "The Neighbourhood",
+      "id": "UC1cnYMXqKdazz-gDPKaDFyg"
+     }
+    ],
+    "album": "Wiped Out!",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "1.9M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 1,
+    "duration": "0:31",
+    "duration_seconds": 31,
+    "creditsBrowseId": "MPTCX_MJi2JZT9Y"
+   },
+   {
+    "videoId": "2IE3T9mcqyM",
+    "title": "Prey",
+    "artists": [
+     {
+      "name": "The Neighbourhood",
+      "id": "UC1cnYMXqKdazz-gDPKaDFyg"
+     }
+    ],
+    "album": "Wiped Out!",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "74M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 2,
+    "duration": "4:43",
+    "duration_seconds": 283,
+    "creditsBrowseId": "MPTC2IE3T9mcqyM"
+   },
+   {
+    "videoId": "r4LGe12tNR8",
+    "title": "Cry Baby",
+    "artists": [
+     {
+      "name": "The Neighbourhood",
+      "id": "UC1cnYMXqKdazz-gDPKaDFyg"
+     }
+    ],
+    "album": "Wiped Out!",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "121M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 3,
+    "duration": "3:56",
+    "duration_seconds": 236,
+    "creditsBrowseId": "MPTCr4LGe12tNR8"
+   },
+   {
+    "videoId": "Z3UCVQIjAJ8",
+    "title": "Wiped Out!",
+    "artists": [
+     {
+      "name": "The Neighbourhood",
+      "id": "UC1cnYMXqKdazz-gDPKaDFyg"
+     }
+    ],
+    "album": "Wiped Out!",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "28M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 4,
+    "duration": "6:14",
+    "duration_seconds": 374,
+    "creditsBrowseId": "MPTCmL_eky_nMaM"
+   },
+   {
+    "videoId": "DujKJ1OaLQE",
+    "title": "The Beach",
+    "artists": [
+     {
+      "name": "The Neighbourhood",
+      "id": "UC1cnYMXqKdazz-gDPKaDFyg"
+     }
+    ],
+    "album": "Wiped Out!",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "134M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 5,
+    "duration": "4:16",
+    "duration_seconds": 256,
+    "creditsBrowseId": "MPTCbShFqyt6Ad8"
+   },
+   {
+    "videoId": "_lMlsPQJs6U",
+    "title": "Daddy Issues",
+    "artists": [
+     {
+      "name": "The Neighbourhood",
+      "id": "UC1cnYMXqKdazz-gDPKaDFyg"
+     }
+    ],
+    "album": "Wiped Out!",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "687M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 6,
+    "duration": "4:21",
+    "duration_seconds": 261,
+    "creditsBrowseId": "MPTClqSgsq4Bn2c"
+   },
+   {
+    "videoId": "Y1INLCftBko",
+    "title": "Baby Came Home 2 / Valentines",
+    "artists": [
+     {
+      "name": "The Neighbourhood",
+      "id": "UC1cnYMXqKdazz-gDPKaDFyg"
+     }
+    ],
+    "album": "Wiped Out!",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "23M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 7,
+    "duration": "6:31",
+    "duration_seconds": 391,
+    "creditsBrowseId": "MPTCY1INLCftBko"
+   },
+   {
+    "videoId": "IH0Jb2yWpDA",
+    "title": "Greetings from Califournia",
+    "artists": [
+     {
+      "name": "The Neighbourhood",
+      "id": "UC1cnYMXqKdazz-gDPKaDFyg"
+     }
+    ],
+    "album": "Wiped Out!",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "11M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 8,
+    "duration": "4:05",
+    "duration_seconds": 245,
+    "creditsBrowseId": "MPTCIH0Jb2yWpDA"
+   },
+   {
+    "videoId": "Nbi7CXHzbrQ",
+    "title": "Ferrari",
+    "artists": [
+     {
+      "name": "The Neighbourhood",
+      "id": "UC1cnYMXqKdazz-gDPKaDFyg"
+     }
+    ],
+    "album": "Wiped Out!",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "8M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 9,
+    "duration": "3:05",
+    "duration_seconds": 185,
+    "creditsBrowseId": "MPTCNbi7CXHzbrQ"
+   },
+   {
+    "videoId": "jbmftUwstS8",
+    "title": "Single",
+    "artists": [
+     {
+      "name": "The Neighbourhood",
+      "id": "UC1cnYMXqKdazz-gDPKaDFyg"
+     }
+    ],
+    "album": "Wiped Out!",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "33M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 10,
+    "duration": "4:23",
+    "duration_seconds": 263,
+    "creditsBrowseId": "MPTCjbmftUwstS8"
+   },
+   {
+    "videoId": "vKH-rcO6PA8",
+    "title": "R.I.P. 2 My Youth",
+    "artists": [
+     {
+      "name": "The Neighbourhood",
+      "id": "UC1cnYMXqKdazz-gDPKaDFyg"
+     }
+    ],
+    "album": "Wiped Out!",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "64M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 11,
+    "duration": "3:26",
+    "duration_seconds": 206,
+    "creditsBrowseId": "MPTCK9AAD-3Xpds"
+   }
+  ],
+  "other_versions": [
+   {
+    "title": "Wiped Out! (10th Anniversary Edition)",
+    "artists": [
+     {
+      "id": "UC1cnYMXqKdazz-gDPKaDFyg",
+      "name": "The Neighbourhood"
+     }
+    ],
+    "browseId": "MPREb_CtztWCpTaK6",
+    "audioPlaylistId": "OLAK5uy_l3VNwi6ZAV_nE0ljMWprRiXJgv7LHiuX0",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/OGhKVGOjFGeobVveHrwhnlc3qROvpIh0ivbXyEdi0uArKUr7OR3iJnVVWoLaapljGD-uy7L0rORygCSs=w226-h226-l90-rj",
+      "width": 226,
+      "height": 226
+     },
+     {
+      "url": "https://yt3.googleusercontent.com/OGhKVGOjFGeobVveHrwhnlc3qROvpIh0ivbXyEdi0uArKUr7OR3iJnVVWoLaapljGD-uy7L0rORygCSs=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ],
+    "isExplicit": true,
+    "type": "Album"
+   }
+  ],
+  "duration_seconds": 2731
+ }
+}

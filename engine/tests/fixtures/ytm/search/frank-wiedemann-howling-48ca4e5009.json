@@ -1,0 +1,770 @@
+{
+ "kind": "search",
+ "key": "frank wiedemann howling",
+ "request": "Frank Wiedemann Howling",
+ "recorded_at": "2026-09-29T02:37:24Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Howling",
+   "album": {
+    "name": "Sacred Ground",
+    "id": "MPREb_B9jnerbd55A"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "YTYQA6WEbHQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "7:10",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    },
+    {
+     "name": "Ry X",
+     "id": "UC82Bk0CAl7pmO8TCz_a4r-w"
+    },
+    {
+     "name": "Frank Wiedemann",
+     "id": "UCkT7R5brJKWAoDBiYTCj1ew"
+    }
+   ],
+   "duration_seconds": 430,
+   "views": "3.8M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/D5rYoGCTqbb-j-ilH1Eie7iT17ZaH45EkPcy7Fk1zEKmqe84ajVx-oEvzsnozdAW00cux7p5tIbb9ShRjA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/D5rYoGCTqbb-j-ilH1Eie7iT17ZaH45EkPcy7Fk1zEKmqe84ajVx-oEvzsnozdAW00cux7p5tIbb9ShRjA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Howling (Âme Remix)",
+   "album": {
+    "name": "Howling (Âme Remix)",
+    "id": "MPREb_YtiF71OiHmp"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "6esSUQwO-rM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "8:06",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    },
+    {
+     "name": "RY X",
+     "id": "UC82Bk0CAl7pmO8TCz_a4r-w"
+    },
+    {
+     "name": "Frank Wiedemann",
+     "id": "UCkT7R5brJKWAoDBiYTCj1ew"
+    }
+   ],
+   "duration_seconds": 486,
+   "views": "18M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/LY9jTsdwPi9WNT4u2X5JnGUOWsp0NzMllBzasvn-xoi0d_r9q3PIrUFYy1SrTdst_qahD-WXsL4jpc4=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/LY9jTsdwPi9WNT4u2X5JnGUOWsp0NzMllBzasvn-xoi0d_r9q3PIrUFYy1SrTdst_qahD-WXsL4jpc4=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Howling",
+   "album": {
+    "name": "Blue Lagoon Soundtrack 3 by Margeir",
+    "id": "MPREb_sl6RlXZrE0F"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "qc4Oo4BaBEE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "7:08",
+   "year": null,
+   "artists": [
+    {
+     "name": "Frank Wiedemann",
+     "id": "UCkT7R5brJKWAoDBiYTCj1ew"
+    },
+    {
+     "name": "Ry X",
+     "id": null
+    }
+   ],
+   "duration_seconds": 428,
+   "views": "380K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/RvkluZulyifCAVGzihk0qH18DTQsqoX_apayoeLwsoW7KWVRdcfzwtxovmhdk49cnVyv0MY1NIMmBeo=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/RvkluZulyifCAVGzihk0qH18DTQsqoX_apayoeLwsoW7KWVRdcfzwtxovmhdk49cnVyv0MY1NIMmBeo=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Phases",
+   "album": {
+    "name": "Colure",
+    "id": "MPREb_7KVd6KS8QMq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ztoWGxo20zY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "8:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 511,
+   "views": "5.3M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Mother Mother",
+   "album": {
+    "name": "Colure",
+    "id": "MPREb_7KVd6KS8QMq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "INkmuPM-r6c",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:08",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 368,
+   "views": "329K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Pieces",
+   "album": {
+    "name": "Colure",
+    "id": "MPREb_7KVd6KS8QMq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "gK-2E5enHIc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:06",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 306,
+   "views": "110K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Light On",
+   "album": {
+    "name": "Colure",
+    "id": "MPREb_7KVd6KS8QMq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Bpw-oNXulFA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 265,
+   "views": "108K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bind (Rampa Remix)",
+   "album": {
+    "name": "Bind (Remixes)",
+    "id": "MPREb_DJ6Khwgf7xx"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "KnfTlidgPuI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:19",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 379,
+   "views": "1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ZwKOESsMrbIoichLNjtRPZu7K8uCY5Fg63N84jVe0-pHIv1BF_18rIDxnnI5arxxDEe_5NuJFFEz-80Utw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ZwKOESsMrbIoichLNjtRPZu7K8uCY5Fg63N84jVe0-pHIv1BF_18rIDxnnI5arxxDEe_5NuJFFEz-80Utw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bind",
+   "album": {
+    "name": "Colure",
+    "id": "MPREb_7KVd6KS8QMq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "J44_53GdgP0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:13",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 253,
+   "views": "443K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Howling",
+   "album": {
+    "name": "Eighty-Eight",
+    "id": "MPREb_39jAvxfZ6CY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "KWF_wRVBhwk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:56",
+   "year": null,
+   "artists": [
+    {
+     "name": "Wild Rivers",
+     "id": "UCwxusuuV2LyisF1h4y1TY7Q"
+    }
+   ],
+   "duration_seconds": 176,
+   "views": "149K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Scg_3qMk39na0Ig31qyXo-GLVosPdNC-Dtp267CZGf6GkaaHfMx1epswedNS8eZLFqS_FOK80C6NLZrN=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Scg_3qMk39na0Ig31qyXo-GLVosPdNC-Dtp267CZGf6GkaaHfMx1epswedNS8eZLFqS_FOK80C6NLZrN=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Howling",
+   "album": {
+    "name": "Bushido Geisha",
+    "id": "MPREb_VCi4aDI1d5a"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "K5NdjZ5Mdr0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:04",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ry & Frank Wiedemann",
+     "id": null
+    }
+   ],
+   "duration_seconds": 364,
+   "views": "31K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/YJWfUun8wbJpxxes1gUhgMtGvJi7lwh_Khpd9ToS6hfo9qGttNkQzPAej9V_YzjWniyCcUHkqIWXGks=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/YJWfUun8wbJpxxes1gUhgMtGvJi7lwh_Khpd9ToS6hfo9qGttNkQzPAej9V_YzjWniyCcUHkqIWXGks=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Phases (Toto Chiavetta Colour Zero)",
+   "album": {
+    "name": "Phases II",
+    "id": "MPREb_1nXR75eFUQl"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "yxXwLAANVcI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:45",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 405,
+   "views": "47K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/sA21r_9b4mlc38yb4D1dJK2d-lZs6vPhbjGJLMH8YsnFMbkxgqWntj_EsVVD2hvXoLC0UuhyRE-jMX8=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/sA21r_9b4mlc38yb4D1dJK2d-lZs6vPhbjGJLMH8YsnFMbkxgqWntj_EsVVD2hvXoLC0UuhyRE-jMX8=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Stole the Night (Midland Remix)",
+   "album": {
+    "name": "Stole the Night",
+    "id": "MPREb_CoBe4cIPUAe"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "vuHCvLMSUt4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "7:02",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 422,
+   "views": "29K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/87A7qEuxvumdcic908iSPlzGH6boxWc0h4Kg0tYJIlpGU8FxvDlooshonmWTyFEkHln8-dOnw1IrzhFN=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/87A7qEuxvumdcic908iSPlzGH6boxWc0h4Kg0tYJIlpGU8FxvDlooshonmWTyFEkHln8-dOnw1IrzhFN=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Howling",
+   "album": {
+    "name": "Dawn",
+    "id": "MPREb_6brLDn3iRSr"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "fq9HbvYDkw4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:10",
+   "year": null,
+   "artists": [
+    {
+     "name": "RY X",
+     "id": "UC82Bk0CAl7pmO8TCz_a4r-w"
+    }
+   ],
+   "duration_seconds": 310,
+   "views": "2.1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/0tDnXZUvlncbnDh4R6pHktmg5XZ_ca9D4pvfpnixjUHFoKlsweWBUK3XEO9lj4mXsq6FGhuiC0eTLUOgSw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/0tDnXZUvlncbnDh4R6pHktmg5XZ_ca9D4pvfpnixjUHFoKlsweWBUK3XEO9lj4mXsq6FGhuiC0eTLUOgSw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Phases (Alex.Do Remix)",
+   "album": {
+    "name": "Phases II",
+    "id": "MPREb_1nXR75eFUQl"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "PZONTXJJRBU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "8:04",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 484,
+   "views": "60K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/sA21r_9b4mlc38yb4D1dJK2d-lZs6vPhbjGJLMH8YsnFMbkxgqWntj_EsVVD2hvXoLC0UuhyRE-jMX8=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/sA21r_9b4mlc38yb4D1dJK2d-lZs6vPhbjGJLMH8YsnFMbkxgqWntj_EsVVD2hvXoLC0UuhyRE-jMX8=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Lover (Jimi Jules Space Remix)",
+   "album": {
+    "name": "Lover (Remixes)",
+    "id": "MPREb_JeeRAVnXMq4"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ww4vK-pN1IA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:21",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 261,
+   "views": "11K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vAgB4712FI9Qnh4wFz-4L0bVXn6cGScc5A3bRD1gmoZcTCK9qth-c93pC6iFDS-EJSV_sENA8q4aVqyb=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vAgB4712FI9Qnh4wFz-4L0bVXn6cGScc5A3bRD1gmoZcTCK9qth-c93pC6iFDS-EJSV_sENA8q4aVqyb=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Ellipses II",
+   "album": {
+    "name": "Colure",
+    "id": "MPREb_7KVd6KS8QMq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "_w0XcwzPNV0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:24",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 84,
+   "views": "9.9K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/in-jWREou6LnD9XSyQQhJ1i2N73FmjE6lDE02ntnu0znoJmmAnMWWxhYaaBvLNi5iNWAMFQAcJdzgUU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Signs (Kalabrese Remix)",
+   "album": {
+    "name": "Signs (Remixes)",
+    "id": "MPREb_bYMRE4OIdV5"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "RGZEj-r57Xw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "8:35",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 515,
+   "views": "31K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/kV-I-d8AnnFUiAWoHb-wyel38EbSbGPG14xZEpriu5Aj75ikw9rNiO0Oho-qUliAxgOkQ9iN41UJRgh0eQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/kV-I-d8AnnFUiAWoHb-wyel38EbSbGPG14xZEpriu5Aj75ikw9rNiO0Oho-qUliAxgOkQ9iN41UJRgh0eQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Your Love (Frank Wiedemann Remix)",
+   "album": {
+    "name": "Blood Moon (Remixes)",
+    "id": "MPREb_Lfg6p6mrGHz"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "wBMM1-CCb_s",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "7:12",
+   "year": null,
+   "artists": [
+    {
+     "name": "RY X",
+     "id": "UC82Bk0CAl7pmO8TCz_a4r-w"
+    }
+   ],
+   "duration_seconds": 432,
+   "views": "54K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/DCxzVRngtALV_4YbbU4iTQ7Ao4Y0M9yDVZ9OFpFpHGu3dz7N7v46SWRw9nKffrJ5jAnyTQHiaCaITjA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/DCxzVRngtALV_4YbbU4iTQ7Ao4Y0M9yDVZ9OFpFpHGu3dz7N7v46SWRw9nKffrJ5jAnyTQHiaCaITjA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Phases (Toto Chiavetta Colour Two)",
+   "album": {
+    "name": "In Too Deep - Armada Music",
+    "id": "MPREb_ODZcPXcd1Dt"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "206_M9fBLWM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howling",
+     "id": "UCiC5LH4opOfuGZ43aW_b-jg"
+    }
+   ],
+   "duration_seconds": 332,
+   "views": "27K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/OB-3eUupiKRJZ4rh20hvWpMn27SvpWtHZEtTEezON_FNxX95hhsuvAbU9-jag7nIFJezgRt_A3kgv0TH=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/OB-3eUupiKRJZ4rh20hvWpMn27SvpWtHZEtTEezON_FNxX95hhsuvAbU9-jag7nIFJezgRt_A3kgv0TH=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

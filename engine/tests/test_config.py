@@ -156,3 +156,9 @@ def test_writable_problem_reports_blocked_folder(
     problem = config.writable_problem(config.app_dirs().logs)
     assert problem is not None
     assert "Couldn't create the folder" in problem
+
+
+def test_prefer_explicit() -> None:
+    assert Config().prefer_explicit is True
+    assert Config({"prefer_explicit": False}).prefer_explicit is False
+    assert Config({"prefer_explicit": "no"}).prefer_explicit is True  # not a yes/no: default

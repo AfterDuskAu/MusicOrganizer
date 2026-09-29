@@ -1,0 +1,754 @@
+{
+ "kind": "search",
+ "key": "bob marley punky reggae party long version",
+ "request": "Bob Marley Punky Reggae Party (Long Version)",
+ "recorded_at": "2026-09-29T02:36:15Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Punky Reggae Party (12\" Version)",
+   "album": {
+    "name": "Exodus",
+    "id": "MPREb_RSEz4GCWNTw"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "BsEDIc8-wcs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:53",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bob Marley & The Wailers",
+     "id": "UCBfv87kvVXyNi88URZ1zvCA"
+    }
+   ],
+   "duration_seconds": 413,
+   "views": "12M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/O3KRSpZx94it2aVPz1nw8Ox3zgysFoY6DA1u3ZEirrcVVASXRS7Oj-SUdFkCom3RUPIghsADXaplH-r4=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/O3KRSpZx94it2aVPz1nw8Ox3zgysFoY6DA1u3ZEirrcVVASXRS7Oj-SUdFkCom3RUPIghsADXaplH-r4=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Punky Reggae Party (Dub / Jamaican 12\" Version)",
+   "album": {
+    "name": "Exodus (Deluxe Edition)",
+    "id": "MPREb_JvnsB2tcqHT"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "HuQ75_oc1lw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "8:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bob Marley & The Wailers",
+     "id": "UCBfv87kvVXyNi88URZ1zvCA"
+    }
+   ],
+   "duration_seconds": 530,
+   "views": "1.8M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/NMc7ZW6Y7VuXAGZVTtUZSnkNS0KD1mbbqq-v7QkjtUiu2MGMviAkwU-AvBzuH0I07HF1fqvUYyJKc8A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/NMc7ZW6Y7VuXAGZVTtUZSnkNS0KD1mbbqq-v7QkjtUiu2MGMviAkwU-AvBzuH0I07HF1fqvUYyJKc8A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Punky Reggae Party (Live At The Pavillon De Paris, 1977)",
+   "album": {
+    "name": "Babylon By Bus",
+    "id": "MPREb_hqAzGKZlzyK"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "fc2IeBWmXGE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bob Marley & The Wailers",
+     "id": "UCBfv87kvVXyNi88URZ1zvCA"
+    }
+   ],
+   "duration_seconds": 352,
+   "views": "3.5M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/HNteiXiayde6UktRgVHAHaLrFYhJ4aY9ZCpuaF1BmvEpVrnuijc1m1DaC4JDhyTLwJpM-qpDl0q-aRg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/HNteiXiayde6UktRgVHAHaLrFYhJ4aY9ZCpuaF1BmvEpVrnuijc1m1DaC4JDhyTLwJpM-qpDl0q-aRg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Rastaman Chant (Live 1973)",
+   "album": {
+    "name": "Come Alive Today",
+    "id": "MPREb_FYotEp6qUbF"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "xa2NBoilVyY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:17",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bob Marley & The Wailers",
+     "id": "UCBfv87kvVXyNi88URZ1zvCA"
+    }
+   ],
+   "duration_seconds": 377,
+   "views": "1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/w7RyCB6fvFthJENNt5UrMLAvUc-hjAziVaFYIuJJQQcUsOfnYe1GevCQ3uBlH2OSToeqwLIjMjv-L7Y=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/w7RyCB6fvFthJENNt5UrMLAvUc-hjAziVaFYIuJJQQcUsOfnYe1GevCQ3uBlH2OSToeqwLIjMjv-L7Y=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Fussin'  & Fightin'",
+   "album": {
+    "name": "Bob Marley, Vol. 1",
+    "id": "MPREb_6DEa3Hr9pRm"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "zciguPb4zos",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:27",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bob Marley",
+     "id": "UCBfv87kvVXyNi88URZ1zvCA"
+    }
+   ],
+   "duration_seconds": 147,
+   "views": "1.2M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/yxTqtbN2DVj8fi2D2heTrJweq6Ob9oevgsnHU_9LIoqPnH2FCd79k29g_D7XtkoFvGbEgT6BnjozUNAt=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/yxTqtbN2DVj8fi2D2heTrJweq6Ob9oevgsnHU_9LIoqPnH2FCd79k29g_D7XtkoFvGbEgT6BnjozUNAt=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Keep On Moving",
+   "album": {
+    "name": "Keep On Moving: Trilogy",
+    "id": "MPREb_hbkVPGdgJmA"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "FijyGEpiPFA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:07",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bob Marley and The Wailers",
+     "id": "UCBfv87kvVXyNi88URZ1zvCA"
+    }
+   ],
+   "duration_seconds": 187,
+   "views": "1.7M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/lJeiBKBlBUDeBJqi9Jq7sgI7IAkXmBdLm2ThbrJril8alkSYaUFvvzxLpRoZcGs3K1AV_tDs3QESmw0v=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/lJeiBKBlBUDeBJqi9Jq7sgI7IAkXmBdLm2ThbrJril8alkSYaUFvvzxLpRoZcGs3K1AV_tDs3QESmw0v=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Stop That Train (Jamaican Version)",
+   "album": {
+    "name": "Catch A Fire",
+    "id": "MPREb_qlOSR2r9mrI"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "DNq3ROdGUxs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:54",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bob Marley & The Wailers",
+     "id": "UCBfv87kvVXyNi88URZ1zvCA"
+    }
+   ],
+   "duration_seconds": 234,
+   "views": "403K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/l4fjYsBIOtJFwoSyxGzkJNZ2m4eDQB9eTFLCTl8Z2Mnblkd0D8IB0hQN7St863jykV5zkgY1F_cE52jZ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/l4fjYsBIOtJFwoSyxGzkJNZ2m4eDQB9eTFLCTl8Z2Mnblkd0D8IB0hQN7St863jykV5zkgY1F_cE52jZ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Exodus (Radio Advertisement)",
+   "album": {
+    "name": "Exodus (Deluxe Edition)",
+    "id": "MPREb_JvnsB2tcqHT"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "EdLyQrWQKe0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:09",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bob Marley & The Wailers",
+     "id": "UCBfv87kvVXyNi88URZ1zvCA"
+    }
+   ],
+   "duration_seconds": 69,
+   "views": "14K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/NMc7ZW6Y7VuXAGZVTtUZSnkNS0KD1mbbqq-v7QkjtUiu2MGMviAkwU-AvBzuH0I07HF1fqvUYyJKc8A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/NMc7ZW6Y7VuXAGZVTtUZSnkNS0KD1mbbqq-v7QkjtUiu2MGMviAkwU-AvBzuH0I07HF1fqvUYyJKc8A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Punkie (Español Version)",
+   "album": {
+    "name": "Dutty Rock (20th Anniversary)",
+    "id": "MPREb_NrFhaYOQi3w"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "A9UABUUyKss",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:36",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sean Paul",
+     "id": "UCnCNNA05VZcH8wVJYtC-6ew"
+    }
+   ],
+   "duration_seconds": 216,
+   "views": "21M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/KSVwGU4SITBPG4Zb4F-mnDyG0XLEyO2LCy3TsnNjNeM3sAn0s45JfzCqKcYbfopJ6pYhHjs2bAjenUVcyg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/KSVwGU4SITBPG4Zb4F-mnDyG0XLEyO2LCy3TsnNjNeM3sAn0s45JfzCqKcYbfopJ6pYhHjs2bAjenUVcyg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Memphis",
+   "album": {
+    "name": "Lee \"Scratch\" Perry Masters (Remixed & Remastered Version)",
+    "id": "MPREb_Ker8xbrjArZ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "wlOBEtrp4zk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:05",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bob Marley",
+     "id": "UCBfv87kvVXyNi88URZ1zvCA"
+    }
+   ],
+   "duration_seconds": 125,
+   "views": "5.7K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/W14M_Z3PFy_KVx_afCpmroNGRJDTjyC5-bfefCGqkovaZ27krjmeqTvw3Upnz4ZhCrc-rnd_yVmifP0i=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/W14M_Z3PFy_KVx_afCpmroNGRJDTjyC5-bfefCGqkovaZ27krjmeqTvw3Upnz4ZhCrc-rnd_yVmifP0i=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Running Away (Kaya 40 Mix)",
+   "album": {
+    "name": "Kaya (40th Anniversary Edition)",
+    "id": "MPREb_ZY227y0xxHZ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "4fuw0t0DN3I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:21",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bob Marley",
+     "id": "UCBfv87kvVXyNi88URZ1zvCA"
+    },
+    {
+     "name": "The Wailers",
+     "id": "UCbZgXjkSwdh5sK0Fwi82YLQ"
+    }
+   ],
+   "duration_seconds": 261,
+   "views": "1.3M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/yVBmfAPu2abDgGOmp-2vVq9ltuPCQcg70hYOvhirS_N9ecZxG5FUglYoCZQ_cwigGxFFHDj5YzEQWKM7=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/yVBmfAPu2abDgGOmp-2vVq9ltuPCQcg70hYOvhirS_N9ecZxG5FUglYoCZQ_cwigGxFFHDj5YzEQWKM7=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "How Many Times (A Lovers Version)",
+   "album": {
+    "name": "Mystic Mixes - An Exclusive Remix Collection",
+    "id": "MPREb_gHJeISlZTUP"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "AtKd2NsPQr4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:14",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bob Marley & The Wailers",
+     "id": "UCBfv87kvVXyNi88URZ1zvCA"
+    }
+   ],
+   "duration_seconds": 194,
+   "views": "4.5M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/qsc793RqcY3LZFHGEvWJaXszuKXL71fUOVPF5MFsr0h1TzMrWe9y55zBWMMAP-diAjPSW5C168xeyEfL=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/qsc793RqcY3LZFHGEvWJaXszuKXL71fUOVPF5MFsr0h1TzMrWe9y55zBWMMAP-diAjPSW5C168xeyEfL=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Who The Cap Fit",
+   "album": {
+    "name": "Rastaman Vibration",
+    "id": "MPREb_tfGgGtxcaSo"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Nvw9Skg2sN0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:44",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bob Marley & The Wailers",
+     "id": "UCBfv87kvVXyNi88URZ1zvCA"
+    }
+   ],
+   "duration_seconds": 284,
+   "views": "86M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/EqwGhQ4jrdk2DUyuscMk0fhSJxpHjbPHuKOS3LScStovuy6tuxBcQa4ldasJDFTTHtroLDLj_eYhx-8EjA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/EqwGhQ4jrdk2DUyuscMk0fhSJxpHjbPHuKOS3LScStovuy6tuxBcQa4ldasJDFTTHtroLDLj_eYhx-8EjA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Duppy Conqueror",
+   "album": {
+    "name": "Back To Back",
+    "id": "MPREb_Sk61SzGxWoj"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "e3AAF0J18o4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:23",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bob Marley",
+     "id": "UCBfv87kvVXyNi88URZ1zvCA"
+    }
+   ],
+   "duration_seconds": 203,
+   "views": "260K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/IYtzborfUjKAVo3HuszCEU_jd_80GLQXYIXGlwp8Wz9AdXrbAKr5BpNgJRoTaLfPrDmlFsDOMMYA36kN=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/IYtzborfUjKAVo3HuszCEU_jd_80GLQXYIXGlwp8Wz9AdXrbAKr5BpNgJRoTaLfPrDmlFsDOMMYA36kN=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Concrete Jungle",
+   "album": {
+    "name": "Concrete Jungle: The Trilogy CD1",
+    "id": "MPREb_BEdwVgSuJBV"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "2B6SUl5kdtA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:13",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bob Marley and The Wailers",
+     "id": "UCBfv87kvVXyNi88URZ1zvCA"
+    }
+   ],
+   "duration_seconds": 193,
+   "views": "450K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/oGDhph5zFE2snPQcNagRzwpQjG1oIiT7SW7ZEGn3YBRDE3fspZgQvnmaMApDhiB-auft17f7BkvU5Yo=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/oGDhph5zFE2snPQcNagRzwpQjG1oIiT7SW7ZEGn3YBRDE3fspZgQvnmaMApDhiB-auft17f7BkvU5Yo=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Punky Reggae Party",
+   "album": {
+    "name": "THE EXPLOSIONS AND 6 VOICES",
+    "id": "MPREb_oO302YDRSwO"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "-uLpA29W9-I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:01",
+   "year": null,
+   "artists": [
+    {
+     "name": "THE EXPLOSIONS feat. MARRR",
+     "id": null
+    }
+   ],
+   "duration_seconds": 301,
+   "views": "50",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/YPC8TfHaqX9RZIIkVPHXrJXVwIFRvV49g3os1D1qt2iYHDBElM6JXtMbMDkOb6ItaviW7p5Jr2_Ip54=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/YPC8TfHaqX9RZIIkVPHXrJXVwIFRvV49g3os1D1qt2iYHDBElM6JXtMbMDkOb6ItaviW7p5Jr2_Ip54=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Rebel Music (feat. Krayzie Bone)",
+   "album": {
+    "name": "Chant Down Babylon",
+    "id": "MPREb_0xCubVvB0LZ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "hTLDHbFGE8A",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bob Marley",
+     "id": "UCBfv87kvVXyNi88URZ1zvCA"
+    }
+   ],
+   "duration_seconds": 210,
+   "views": "9.4M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/maRyEk1HPIHHNtwzYMDyfVPrk_S3DA3NrIztJ49YKTdIOka4I836ke9OjG0HjZmrMv5K56ni1dwY5IUq=w60-h60-s-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/maRyEk1HPIHHNtwzYMDyfVPrk_S3DA3NrIztJ49YKTdIOka4I836ke9OjG0HjZmrMv5K56ni1dwY5IUq=w120-h120-s-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Duppy Conqueror",
+   "album": {
+    "name": "Greatest Hits & Classic Remixes",
+    "id": "MPREb_5DdDhmnYzHg"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "07kESkUrp4A",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:23",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bob Marley",
+     "id": "UCBfv87kvVXyNi88URZ1zvCA"
+    }
+   ],
+   "duration_seconds": 203,
+   "views": "260K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/kTiDuWzNFHLIeU0bs1tx6kPiO6eBOQ5inq3cC4_ku7L5RgAd6SkylduXwPlmVksMY5uue-sF0gTliOuNgw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/kTiDuWzNFHLIeU0bs1tx6kPiO6eBOQ5inq3cC4_ku7L5RgAd6SkylduXwPlmVksMY5uue-sF0gTliOuNgw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "So Much Things To Say",
+   "album": {
+    "name": "Exodus",
+    "id": "MPREb_RSEz4GCWNTw"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "n46d4QxXnPw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:09",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bob Marley & The Wailers",
+     "id": "UCBfv87kvVXyNi88URZ1zvCA"
+    }
+   ],
+   "duration_seconds": 189,
+   "views": "9.5M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/O3KRSpZx94it2aVPz1nw8Ox3zgysFoY6DA1u3ZEirrcVVASXRS7Oj-SUdFkCom3RUPIghsADXaplH-r4=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/O3KRSpZx94it2aVPz1nw8Ox3zgysFoY6DA1u3ZEirrcVVASXRS7Oj-SUdFkCom3RUPIghsADXaplH-r4=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "So Jah S'eh (From \"Bob Marley: One Love\" Soundtrack)",
+   "album": {
+    "name": "One Love (Original Motion Picture Soundtrack)",
+    "id": "MPREb_CpW2ZRX8VeR"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "NkybJsjTBwk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "7:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bob Marley & The Wailers",
+     "id": "UCBfv87kvVXyNi88URZ1zvCA"
+    }
+   ],
+   "duration_seconds": 452,
+   "views": "2.1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/5mmwumxA1t3rlEWNKtUwvwXy2Gg8Z0YSKj0D2uz4tIQ_x4MtRP8fQwLBPuFHmy3U6ikQo1LqJsN-Ztmv=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/5mmwumxA1t3rlEWNKtUwvwXy2Gg8Z0YSKj0D2uz4tIQ_x4MtRP8fQwLBPuFHmy3U6ikQo1LqJsN-Ztmv=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

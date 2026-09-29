@@ -205,3 +205,9 @@ def test_different_folders_get_different_ids(tmp_path: Path) -> None:
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows paths ignore case")
 def test_source_id_ignores_case_on_windows(tmp_path: Path) -> None:
     assert state.source_id(tmp_path / "Rips") == state.source_id(tmp_path / "RIPS")
+
+
+def test_rejected_candidates() -> None:
+    data = {"rejected": {"i_1": ["a", "b", 3], "i_2": "not a list"}}
+    assert state.rejected(data) == {"i_1": {"a", "b"}}
+    assert state.rejected({}) == {}

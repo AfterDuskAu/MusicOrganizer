@@ -1,0 +1,750 @@
+{
+ "kind": "search",
+ "key": "michael franti and spearhead bomb the world",
+ "request": "Michael Franti & Spearhead Bomb The World",
+ "recorded_at": "2026-09-29T02:37:12Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bomb the World (Armageddon Version)",
+   "album": {
+    "name": "Everyone Deserves Music",
+    "id": "MPREb_An5Uj0USKqe"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "AEHegMubZ74",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:45",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Franti & Spearhead",
+     "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+    }
+   ],
+   "duration_seconds": 285,
+   "views": "104K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/VbKddzwC9CgOYAEPsF2-tts1__E_dbk5Vl0trKuCiaqIUnDBFnkDYzAk6ciGSmjmNNqqjJ5h70OUeo-j=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/VbKddzwC9CgOYAEPsF2-tts1__E_dbk5Vl0trKuCiaqIUnDBFnkDYzAk6ciGSmjmNNqqjJ5h70OUeo-j=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bomb the World",
+   "album": {
+    "name": "Everyone Deserves Music",
+    "id": "MPREb_An5Uj0USKqe"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "SpTYh-uYgQs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:29",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Franti & Spearhead",
+     "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+    }
+   ],
+   "duration_seconds": 269,
+   "views": "218K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/VbKddzwC9CgOYAEPsF2-tts1__E_dbk5Vl0trKuCiaqIUnDBFnkDYzAk6ciGSmjmNNqqjJ5h70OUeo-j=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/VbKddzwC9CgOYAEPsF2-tts1__E_dbk5Vl0trKuCiaqIUnDBFnkDYzAk6ciGSmjmNNqqjJ5h70OUeo-j=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Is It Worth a Penny to You",
+   "album": {
+    "name": "Work Hard and Be Nice",
+    "id": "MPREb_fEnS3QD6wN9"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "xWru0eyubuM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:13",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Franti & Spearhead",
+     "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+    }
+   ],
+   "duration_seconds": 193,
+   "views": "151K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/zyInyhFJ_4nrD7DyAGdfXP-7Mt5DNCmX1rGKJdp1TZlRPaJOK2xu-uyhs4XHCtTt_FNGZZp5IuBFuQJcdA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/zyInyhFJ_4nrD7DyAGdfXP-7Mt5DNCmX1rGKJdp1TZlRPaJOK2xu-uyhs4XHCtTt_FNGZZp5IuBFuQJcdA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Be Who You Are",
+   "album": {
+    "name": "Be Who You Are",
+    "id": "MPREb_7T18CjnpkCW"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "PxQ3UwnTlu4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:04",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Franti & Spearhead",
+     "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+    }
+   ],
+   "duration_seconds": 184,
+   "views": "315K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Inq0WireSgWm7ekomdfBdUq2I9eK-kvD2sQDK_YIQ5MBu0uZGH8SztFe-m67AiqG6BBTU91uJWGwyc-T=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Inq0WireSgWm7ekomdfBdUq2I9eK-kvD2sQDK_YIQ5MBu0uZGH8SztFe-m67AiqG6BBTU91uJWGwyc-T=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "One Step Closer to You",
+   "album": {
+    "name": "Yell Fire!",
+    "id": "MPREb_QIVH0kWnNpQ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "UvZHRAOO3ZE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:42",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Franti & Spearhead",
+     "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+    }
+   ],
+   "duration_seconds": 282,
+   "views": "502K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ZoPn5yend9BxN3pvqtmqHggFrFxrO_O5JIJdXHWVQnacz2tD1UfyQ9jXq1n-tVoVJyZigt6svBAICIrA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ZoPn5yend9BxN3pvqtmqHggFrFxrO_O5JIJdXHWVQnacz2tD1UfyQ9jXq1n-tVoVJyZigt6svBAICIrA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Anybody Seen My Mind",
+   "album": {
+    "name": "Songs from the Front Porch: An Acoustic Collection",
+    "id": "MPREb_FKifofqITkh"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "8pQONPEXG1c",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:00",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Franti & Spearhead",
+     "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+    }
+   ],
+   "duration_seconds": 240,
+   "views": "179K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/jCYvm7C03NXOVZZrS3IiLCn9AWUFgiWyn5I2BFj0SOUpSWFfTQaVZaSKoT_90EbcVifWvJBg4D_Z_M75Aw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/jCYvm7C03NXOVZZrS3IiLCn9AWUFgiWyn5I2BFj0SOUpSWFfTQaVZaSKoT_90EbcVifWvJBg4D_Z_M75Aw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Welcome To The Family",
+   "album": {
+    "name": "Welcome To The Family",
+    "id": "MPREb_XsMOd0kOUit"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "M9W3mytsBbA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Franti & Spearhead",
+     "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+    }
+   ],
+   "duration_seconds": 232,
+   "views": "10K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/v9O54dCtcNTIfUVd5HLIPJ4X-LevhhW-qi5_eaPznfKTCi93-SKPu6arADLqv7DdF8LgxQxtE_OYVk13=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/v9O54dCtcNTIfUVd5HLIPJ4X-LevhhW-qi5_eaPznfKTCi93-SKPu6arADLqv7DdF8LgxQxtE_OYVk13=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Life Is Better With You",
+   "album": {
+    "name": "Thanksgiving Dinner Party",
+    "id": "MPREb_femM793dTnK"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "d2d9wQIYcAY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:19",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Franti & Spearhead",
+     "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+    }
+   ],
+   "duration_seconds": 199,
+   "views": "6.4M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/1kHqUVe_oFrO1JAyoZ8g7fmba3EoQ084LuUjBGDiA65QwTVfVYMt3c-z7KSwmxXShZV4oDOe4sJtmVTR=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/1kHqUVe_oFrO1JAyoZ8g7fmba3EoQ084LuUjBGDiA65QwTVfVYMt3c-z7KSwmxXShZV4oDOe4sJtmVTR=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sometimes (Live)",
+   "album": {
+    "name": "Yell Fire! (Live)",
+    "id": "MPREb_bKVyGkWva41"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "QXaVjek8pLQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:53",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Franti & Spearhead",
+     "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+    }
+   ],
+   "duration_seconds": 113,
+   "views": "939",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/KD8Yjbj-Bh8D6LWvinzma36GPDvkKf1zePQg4BJb7AtDAzdxG75_BLe8s_44iTbx-Yvzq46-U5ZSb0A7=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/KD8Yjbj-Bh8D6LWvinzma36GPDvkKf1zePQg4BJb7AtDAzdxG75_BLe8s_44iTbx-Yvzq46-U5ZSb0A7=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Everyday's Saturday",
+   "album": {
+    "name": "Welcome To The Family",
+    "id": "MPREb_XsMOd0kOUit"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "bqiPr5EpStE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:38",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Franti & Spearhead",
+     "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+    }
+   ],
+   "duration_seconds": 218,
+   "views": "4K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/v9O54dCtcNTIfUVd5HLIPJ4X-LevhhW-qi5_eaPznfKTCi93-SKPu6arADLqv7DdF8LgxQxtE_OYVk13=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/v9O54dCtcNTIfUVd5HLIPJ4X-LevhhW-qi5_eaPznfKTCi93-SKPu6arADLqv7DdF8LgxQxtE_OYVk13=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Crime To Be Broke In America",
+   "album": {
+    "name": "Home",
+    "id": "MPREb_gBplRPmbdpL"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "7r6i_hTIn_U",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "Spearhead",
+     "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+    }
+   ],
+   "duration_seconds": 292,
+   "views": "155K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/G9CLo8lRZwpZbRZ5963UAYQooSpbwuozBy47G8E7zSQaYyeOVN_fec41aeLmX45xiRpw2JZ14WSkLIvmuw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/G9CLo8lRZwpZbRZ5963UAYQooSpbwuozBy47G8E7zSQaYyeOVN_fec41aeLmX45xiRpw2JZ14WSkLIvmuw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Low (feat. Zap Mama)",
+   "album": {
+    "name": "All Rebel Rockers",
+    "id": "MPREb_isKAZKTGGVe"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "o_ddbnn123A",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:02",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Franti & Spearhead",
+     "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+    }
+   ],
+   "duration_seconds": 242,
+   "views": "16K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/QYKaJ0pXRMF5PlD1Zgw0RZXhlQ4mxtl1wrD1uoWI0matuZjVNyd-GpEmzDafwx8l2xWIb7xm5hUFT71s=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/QYKaJ0pXRMF5PlD1Zgw0RZXhlQ4mxtl1wrD1uoWI0matuZjVNyd-GpEmzDafwx8l2xWIb7xm5hUFT71s=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sweet Little Lies (Live)",
+   "album": {
+    "name": "Yell Fire! (Live)",
+    "id": "MPREb_bKVyGkWva41"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "DloBgHZnBPY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:42",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Franti & Spearhead",
+     "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+    }
+   ],
+   "duration_seconds": 222,
+   "views": "1.4K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/KD8Yjbj-Bh8D6LWvinzma36GPDvkKf1zePQg4BJb7AtDAzdxG75_BLe8s_44iTbx-Yvzq46-U5ZSb0A7=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/KD8Yjbj-Bh8D6LWvinzma36GPDvkKf1zePQg4BJb7AtDAzdxG75_BLe8s_44iTbx-Yvzq46-U5ZSb0A7=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sex And Drugs And Rock & Roll",
+   "album": {
+    "name": "Sex And Drugs And Rock & Roll",
+    "id": "MPREb_eTeiPJ2lAD4"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "XgRSvaiS3S4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Franti & Spearhead",
+     "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+    }
+   ],
+   "duration_seconds": 172,
+   "views": "107K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/RZl_iAJgJdsAP4RtV58kNeI-6gVP5X1B7slpx4vWZcyopTKOIPlpvHv2L15eD6y7DOECtEfh2OjA6yWR=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/RZl_iAJgJdsAP4RtV58kNeI-6gVP5X1B7slpx4vWZcyopTKOIPlpvHv2L15eD6y7DOECtEfh2OjA6yWR=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Dream Team",
+   "album": {
+    "name": "Home",
+    "id": "MPREb_gBplRPmbdpL"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "53KvRtFr55Y",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:44",
+   "year": null,
+   "artists": [
+    {
+     "name": "Spearhead",
+     "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+    }
+   ],
+   "duration_seconds": 284,
+   "views": "120K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/G9CLo8lRZwpZbRZ5963UAYQooSpbwuozBy47G8E7zSQaYyeOVN_fec41aeLmX45xiRpw2JZ14WSkLIvmuw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/G9CLo8lRZwpZbRZ5963UAYQooSpbwuozBy47G8E7zSQaYyeOVN_fec41aeLmX45xiRpw2JZ14WSkLIvmuw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Why Oh Why",
+   "album": {
+    "name": "Chocolate Supa Highway",
+    "id": "MPREb_LsTosOfi9Ix"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "tBaziOjnlF0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:51",
+   "year": null,
+   "artists": [
+    {
+     "name": "Spearhead",
+     "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+    }
+   ],
+   "duration_seconds": 291,
+   "views": "143K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/1k512hNX6FJY6LwkfRGLUqaWSpoB3xesrAQd3_QPzk12vAk43Czs7d-mxEY_WzT3MdeL1qaxZ_Srbmjqew=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/1k512hNX6FJY6LwkfRGLUqaWSpoB3xesrAQd3_QPzk12vAk43Czs7d-mxEY_WzT3MdeL1qaxZ_Srbmjqew=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Long Ride Home",
+   "album": {
+    "name": "All People",
+    "id": "MPREb_cAqGihzFEWV"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ksu8CAUBl3Y",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Franti & Spearhead",
+     "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+    }
+   ],
+   "duration_seconds": 230,
+   "views": "32K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vSnUUEpNjg_LxEI47Z7W8D9OLhLfRm7rOOeXxCQCMD4Ih_a8xMJ8lR2sOivk-A5Ac3N6ZIFd5wmRSTYi=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vSnUUEpNjg_LxEI47Z7W8D9OLhLfRm7rOOeXxCQCMD4Ih_a8xMJ8lR2sOivk-A5Ac3N6ZIFd5wmRSTYi=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sunny Lemonade",
+   "album": {
+    "name": "Welcome To The Family",
+    "id": "MPREb_XsMOd0kOUit"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Y2rhY21ZkQM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:40",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Franti & Spearhead",
+     "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+    }
+   ],
+   "duration_seconds": 160,
+   "views": "9.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/v9O54dCtcNTIfUVd5HLIPJ4X-LevhhW-qi5_eaPznfKTCi93-SKPu6arADLqv7DdF8LgxQxtE_OYVk13=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/v9O54dCtcNTIfUVd5HLIPJ4X-LevhhW-qi5_eaPznfKTCi93-SKPu6arADLqv7DdF8LgxQxtE_OYVk13=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "I’m Alive (Life Sounds Like)",
+   "album": {
+    "name": "Feeling Happy",
+    "id": "MPREb_aCvbyHM9Ld7"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "DPyUi0w3pUs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:54",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Franti & Spearhead",
+     "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+    }
+   ],
+   "duration_seconds": 234,
+   "views": "7.3M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/XmS4MZr6SIXxqWz1BJ7QMVYZBrPqBsNuIi71unKjtSKPpelbRnFb9Tj203f6BOgpUgoyhvKLcOfZjwsU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/XmS4MZr6SIXxqWz1BJ7QMVYZBrPqBsNuIi71unKjtSKPpelbRnFb9Tj203f6BOgpUgoyhvKLcOfZjwsU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Shine",
+   "album": {
+    "name": "Welcome To The Family",
+    "id": "MPREb_XsMOd0kOUit"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "rj9buW_fi1k",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:12",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Franti & Spearhead",
+     "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+    }
+   ],
+   "duration_seconds": 192,
+   "views": "69K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/v9O54dCtcNTIfUVd5HLIPJ4X-LevhhW-qi5_eaPznfKTCi93-SKPu6arADLqv7DdF8LgxQxtE_OYVk13=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/v9O54dCtcNTIfUVd5HLIPJ4X-LevhhW-qi5_eaPznfKTCi93-SKPu6arADLqv7DdF8LgxQxtE_OYVk13=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

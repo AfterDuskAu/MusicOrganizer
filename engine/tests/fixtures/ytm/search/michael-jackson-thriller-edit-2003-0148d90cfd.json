@@ -1,0 +1,762 @@
+{
+ "kind": "search",
+ "key": "michael jackson thriller edit 2003",
+ "request": "Michael Jackson Thriller edit 2003",
+ "recorded_at": "2026-09-29T02:36:50Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Thriller (2003 Edit)",
+   "album": {
+    "name": "Number Ones",
+    "id": "MPREb_blrjqA5PY0E"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "-e-y-1VRZ3I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:12",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 312,
+   "views": "408M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/qdDPq4fcsWCsoRVcORCxn-BU6gB74XC3X7M_EqjSQfEX96dIvjGo_Q6qnrB8R8SpNy0ywAV2SCXor04X=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/qdDPq4fcsWCsoRVcORCxn-BU6gB74XC3X7M_EqjSQfEX96dIvjGo_Q6qnrB8R8SpNy0ywAV2SCXor04X=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Immortal Megamix: Can You Feel It / Don't Stop 'Til You Get Enough / Billie Jean/Black or White (Immortal Version)",
+   "album": {
+    "name": "Immortal (Deluxe Edition) [Original Motion Picture Soundtrack]",
+    "id": "MPREb_zUEjG7GbW0J"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "iHYToamu8Jo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "9:09",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    },
+    {
+     "name": "The Jacksons",
+     "id": "UCimf1nPr_Wc0ddnienWKGdg"
+    }
+   ],
+   "duration_seconds": 549,
+   "views": "5.5M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2ZG_eSA11UcbaM45o29k-CWOflyIyENAHcysd7XhxVJEKYiM0KxVH2sBSs6RLGQcB1TML2-YZBGF3_Hr=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2ZG_eSA11UcbaM45o29k-CWOflyIyENAHcysd7XhxVJEKYiM0KxVH2sBSs6RLGQcB1TML2-YZBGF3_Hr=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Beat It / State of Shock (Immortal Version)",
+   "album": {
+    "name": "Immortal (Deluxe Edition) [Original Motion Picture Soundtrack]",
+    "id": "MPREb_zUEjG7GbW0J"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "u6w7MI_bPlw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:10",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    },
+    {
+     "name": "The Jacksons",
+     "id": "UCimf1nPr_Wc0ddnienWKGdg"
+    },
+    {
+     "name": "Mick Jagger",
+     "id": "UC2Mq-PgTFrWtwPY8cxThIqQ"
+    }
+   ],
+   "duration_seconds": 190,
+   "views": "2.7M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2ZG_eSA11UcbaM45o29k-CWOflyIyENAHcysd7XhxVJEKYiM0KxVH2sBSs6RLGQcB1TML2-YZBGF3_Hr=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2ZG_eSA11UcbaM45o29k-CWOflyIyENAHcysd7XhxVJEKYiM0KxVH2sBSs6RLGQcB1TML2-YZBGF3_Hr=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Carousel",
+   "album": {
+    "name": "Thriller 40",
+    "id": "MPREb_RmQFPjKjIPm"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "b4BXAmbq3f0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:40",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 220,
+   "views": "7.1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/pu5bdluXWwddUM6NTdcSraCxnlj2HMMYC5meaHCBVAT6lJoGE2wSq439hmVJJcYGmzPvrxo5N1Afz9t-=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/pu5bdluXWwddUM6NTdcSraCxnlj2HMMYC5meaHCBVAT6lJoGE2wSq439hmVJJcYGmzPvrxo5N1Afz9t-=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Thriller",
+   "album": {
+    "name": "Thriller",
+    "id": "MPREb_7hwyYIWaMo1"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "RFYaaiTTR18",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "Monkey D. KyLe",
+     "id": "UCrGio98JmasG60b74tKUeAA"
+    }
+   ],
+   "duration_seconds": 145,
+   "views": "24K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/jnRUHDH9QkFaJGdXXbujKGRBTrfvZIJd9SWZZScOhwd-QSGfeu92U-qZ0_vHLIf2aVWpNzv8v0nvsUE9=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/jnRUHDH9QkFaJGdXXbujKGRBTrfvZIJd9SWZZScOhwd-QSGfeu92U-qZ0_vHLIf2aVWpNzv8v0nvsUE9=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Are Not Alone (Radio Edit)",
+   "album": {
+    "name": "Number Ones",
+    "id": "MPREb_blrjqA5PY0E"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Tk8MkQClqr0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:34",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 274,
+   "views": "672M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/qdDPq4fcsWCsoRVcORCxn-BU6gB74XC3X7M_EqjSQfEX96dIvjGo_Q6qnrB8R8SpNy0ywAV2SCXor04X=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/qdDPq4fcsWCsoRVcORCxn-BU6gB74XC3X7M_EqjSQfEX96dIvjGo_Q6qnrB8R8SpNy0ywAV2SCXor04X=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Thriller 7\" (Special Edit)",
+   "album": {
+    "name": "Thriller 40",
+    "id": "MPREb_RmQFPjKjIPm"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "0JFbiCg-8n4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:39",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 279,
+   "views": "40M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/pu5bdluXWwddUM6NTdcSraCxnlj2HMMYC5meaHCBVAT6lJoGE2wSq439hmVJJcYGmzPvrxo5N1Afz9t-=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/pu5bdluXWwddUM6NTdcSraCxnlj2HMMYC5meaHCBVAT6lJoGE2wSq439hmVJJcYGmzPvrxo5N1Afz9t-=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Threatened",
+   "album": {
+    "name": "Invincible",
+    "id": "MPREb_fg6gHhdC0qT"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "n3G_VQ4ZuiY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:19",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 259,
+   "views": "8.8M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/L0nwBz3JF8kFa1-1PAOiLC6pB49lsRc3QRCbj1gvU3uCNf4SXnLUGtAFBha1CZ02mhQzMJrcl-rJ0pSG=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/L0nwBz3JF8kFa1-1PAOiLC6pB49lsRc3QRCbj1gvU3uCNf4SXnLUGtAFBha1CZ02mhQzMJrcl-rJ0pSG=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Speed Demon",
+   "album": {
+    "name": "Bad",
+    "id": "MPREb_Y5ebh1nnQs5"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "MCE5MfEnVXw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 243,
+   "views": "36M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/LjzTyOPVIWPWb1jNKky5hVKh8pCPcX0WfCqeMpJ93PyPEEgrFuqEF7wHMt-NDXCZYo1T7o8La0pPMxCl=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/LjzTyOPVIWPWb1jNKky5hVKh8pCPcX0WfCqeMpJ93PyPEEgrFuqEF7wHMt-NDXCZYo1T7o8La0pPMxCl=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Thriller",
+   "album": {
+    "name": "Captive Audience",
+    "id": "MPREb_NKaJgQsbLnN"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "IDxbgwSeIvg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:11",
+   "year": null,
+   "artists": [
+    {
+     "name": "Toxic Audio",
+     "id": "UCb-UabgdpwaIbG91m_r3ztg"
+    }
+   ],
+   "duration_seconds": 311,
+   "views": "376",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/IkOUuLNyG-peWwyoSoVzDIxR5W_52s3wAz5Gdln8sDDYVdwpp_XYw2SZLtokSDyWxHNloSS37ZAkhw0t=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/IkOUuLNyG-peWwyoSoVzDIxR5W_52s3wAz5Gdln8sDDYVdwpp_XYw2SZLtokSDyWxHNloSS37ZAkhw0t=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Thriller (Single Version)",
+   "album": {
+    "name": "The Essential Michael Jackson",
+    "id": "MPREb_lrzGImeeSWk"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "BsuEjAw5hg0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:13",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 313,
+   "views": "408M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/N3dO2K1MIFWJtEqZNpQ4yfISUC3gDaIIZNYCs6kwcX5G46AHtK6W_fxfHeQ30sdBdRgyyqXkbbqzPuI=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/N3dO2K1MIFWJtEqZNpQ4yfISUC3gDaIIZNYCs6kwcX5G46AHtK6W_fxfHeQ30sdBdRgyyqXkbbqzPuI=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Liberian Girl (2012 Remastered Version)",
+   "album": {
+    "name": "Bad",
+    "id": "MPREb_Y5ebh1nnQs5"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "7UoONw5ABpE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:53",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 233,
+   "views": "125M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/LjzTyOPVIWPWb1jNKky5hVKh8pCPcX0WfCqeMpJ93PyPEEgrFuqEF7wHMt-NDXCZYo1T7o8La0pPMxCl=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/LjzTyOPVIWPWb1jNKky5hVKh8pCPcX0WfCqeMpJ93PyPEEgrFuqEF7wHMt-NDXCZYo1T7o8La0pPMxCl=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Smooth Criminal (Remastered Radio Edit)",
+   "album": {
+    "name": "Michael Jackson's This Is It",
+    "id": "MPREb_OX2kF7i9pwq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "mWGNEHGhkn4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:18",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 258,
+   "views": "317M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/uU9qXOeDiSd6G-vUgi-z8gAleLLwKVRde8TKUWU8ijmkj5mo3BtytRHElbZkD76GJrvvXl5WDC9QKasd=w60-h60-s-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/uU9qXOeDiSd6G-vUgi-z8gAleLLwKVRde8TKUWU8ijmkj5mo3BtytRHElbZkD76GJrvvXl5WDC9QKasd=w120-h120-s-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "The Way You Make Me Feel (Single Version)",
+   "album": {
+    "name": "The Essential Michael Jackson",
+    "id": "MPREb_lrzGImeeSWk"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "hlA-HLmEqfM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:27",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 267,
+   "views": "822M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/N3dO2K1MIFWJtEqZNpQ4yfISUC3gDaIIZNYCs6kwcX5G46AHtK6W_fxfHeQ30sdBdRgyyqXkbbqzPuI=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/N3dO2K1MIFWJtEqZNpQ4yfISUC3gDaIIZNYCs6kwcX5G46AHtK6W_fxfHeQ30sdBdRgyyqXkbbqzPuI=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Who Do You Know (Demo)",
+   "album": {
+    "name": "Thriller 40",
+    "id": "MPREb_RmQFPjKjIPm"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "OTrd-yM8Qko",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:23",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 323,
+   "views": "2.2M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/pu5bdluXWwddUM6NTdcSraCxnlj2HMMYC5meaHCBVAT6lJoGE2wSq439hmVJJcYGmzPvrxo5N1Afz9t-=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/pu5bdluXWwddUM6NTdcSraCxnlj2HMMYC5meaHCBVAT6lJoGE2wSq439hmVJJcYGmzPvrxo5N1Afz9t-=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Thriller (Metal Cover)",
+   "album": {
+    "name": "Thriller (Metal Cover)",
+    "id": "MPREb_0U6V709NhNs"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "67jl780MF4U",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:01",
+   "year": null,
+   "artists": [
+    {
+     "name": "Massive Metal Covers",
+     "id": "UCWsI5--ilmL2dNHKxQO1T0A"
+    }
+   ],
+   "duration_seconds": 301,
+   "views": "9.4K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/WxnOuszijwV0fal8K3csGrBBhbHP_TAjn4Wxj-kThSU1UUaqTPyZ86FU4s_ljA0FW7gIGobZareU1Son=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/WxnOuszijwV0fal8K3csGrBBhbHP_TAjn4Wxj-kThSU1UUaqTPyZ86FU4s_ljA0FW7gIGobZareU1Son=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Ben (Single Version)",
+   "album": {
+    "name": "Ben",
+    "id": "MPREb_RNAVgrQqZeM"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "fEeWqU5p93U",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:48",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 168,
+   "views": "37M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Md5zk7tGaqEq5EkIV5EzviOB2noevJwPYoOzrMa17-rj2y3czWNMRyF523hS8ZNBDg7CwUzYWzGt1uHdgw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Md5zk7tGaqEq5EkIV5EzviOB2noevJwPYoOzrMa17-rj2y3czWNMRyF523hS8ZNBDg7CwUzYWzGt1uHdgw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Thriller (Radio Edit)",
+   "album": {
+    "name": "Thriller",
+    "id": "MPREb_jOq5mFN6os0"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "I5enDHRYoqQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:05",
+   "year": null,
+   "artists": [
+    {
+     "name": "Forever 80",
+     "id": "UCDFnVd56b4ABkFm5eUHAYAA"
+    }
+   ],
+   "duration_seconds": 185,
+   "views": "1.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-kH-Qie1OQoe5r_SyHzUecQjDgxg0IgJE-ToHvcvTPbYEUmR1zFvRa_Ifs5DKTPyart6ilEOmqja0FyOBw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-kH-Qie1OQoe5r_SyHzUecQjDgxg0IgJE-ToHvcvTPbYEUmR1zFvRa_Ifs5DKTPyart6ilEOmqja0FyOBw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Thriller",
+   "album": {
+    "name": "I'll Be There - A Smooth Jazz Tribute To Michael Jackson",
+    "id": "MPREb_08tTZvau7Ra"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "jFxU-m5jYQE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:17",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson Tribute",
+     "id": "UCVhGb-o-Mj-yJIgRhrYzeVA"
+    }
+   ],
+   "duration_seconds": 257,
+   "views": "853",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/QwOGVpMzQrQDa0AbCHkuI1uSNa5SjctF9weSdaJ5HK_JwI0RMp5kczn55PBwHnW-QK0kQTJ1jmYoYS58=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/QwOGVpMzQrQDa0AbCHkuI1uSNa5SjctF9weSdaJ5HK_JwI0RMp5kczn55PBwHnW-QK0kQTJ1jmYoYS58=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Hollywood Tonight",
+   "album": {
+    "name": "Michael",
+    "id": "MPREb_TXi62iB7kP8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "_Cy4O-ZCE0I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 271,
+   "views": "7.6M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-DE1fXN4FdvCXTfQz9N6TMX1qhjyIOYO5rRlFpWpZxBPWLH2un4Ia_yAuuZwXgtNEJPdeWvW5cBfL_ct=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-DE1fXN4FdvCXTfQz9N6TMX1qhjyIOYO5rRlFpWpZxBPWLH2un4Ia_yAuuZwXgtNEJPdeWvW5cBfL_ct=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

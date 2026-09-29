@@ -1,0 +1,750 @@
+{
+ "kind": "search",
+ "key": "imagine dragons birds",
+ "request": "Imagine Dragons Birds",
+ "recorded_at": "2026-09-29T02:36:28Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Birds",
+   "album": {
+    "name": "Origins (Deluxe)",
+    "id": "MPREb_D9808srSbf3"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Sa-dxgZt4rY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:40",
+   "year": null,
+   "artists": [
+    {
+     "name": "Imagine Dragons",
+     "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+    }
+   ],
+   "duration_seconds": 220,
+   "views": "651M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/oCN13vvhWWwEfD3aOS6NEmhh32em-I7wQKUvXJWEm6AJygqkJ5YpeZfpcmPiKbKJ72Dek_FTdUlnmlMm=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/oCN13vvhWWwEfD3aOS6NEmhh32em-I7wQKUvXJWEm6AJygqkJ5YpeZfpcmPiKbKJ72Dek_FTdUlnmlMm=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Not Today",
+   "album": {
+    "name": "Me Before You (Original Motion Picture Soundtrack)",
+    "id": "MPREb_2cefBF8kBFa"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Vru_aslySBI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:22",
+   "year": null,
+   "artists": [
+    {
+     "name": "Imagine Dragons",
+     "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+    }
+   ],
+   "duration_seconds": 262,
+   "views": "244M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/9FhxF5_JZHBJ8CtXMQyPMfe8-f6_G5qA7LPb2fx27iukLHl_5WJ_qL6fGWt1NfOo7jwolpsBAbHXGw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/9FhxF5_JZHBJ8CtXMQyPMfe8-f6_G5qA7LPb2fx27iukLHl_5WJ_qL6fGWt1NfOo7jwolpsBAbHXGw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Children of the Sky (a Starfield song)",
+   "album": {
+    "name": "Children of the Sky (a Starfield song)",
+    "id": "MPREb_RZVopNe6F6w"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "yDZ4YM6zooQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "Imagine Dragons",
+     "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+    }
+   ],
+   "duration_seconds": 208,
+   "views": "29M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2nrDUL9cYLMtdg_MTbu6yXjCMHFvbzMD4bwDCkLVIVB-am92OJzjqzCSHw6vqLMGJ2Ul_qADjmOs1MXB=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2nrDUL9cYLMtdg_MTbu6yXjCMHFvbzMD4bwDCkLVIVB-am92OJzjqzCSHw6vqLMGJ2Ul_qADjmOs1MXB=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Roots",
+   "album": {
+    "name": "Roots",
+    "id": "MPREb_WjuWnq6jp79"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "dWznTIKG26k",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:55",
+   "year": null,
+   "artists": [
+    {
+     "name": "Imagine Dragons",
+     "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+    }
+   ],
+   "duration_seconds": 175,
+   "views": "125M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/SB2hBTDK6mLdVBr1wRe3aL0qw4IIjeyQ25Hm5uTuSog-6vTro2v6XTk0KxEj-Fw4qMHaTLMvPSCBrqM=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/SB2hBTDK6mLdVBr1wRe3aL0qw4IIjeyQ25Hm5uTuSog-6vTro2v6XTk0KxEj-Fw4qMHaTLMvPSCBrqM=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Younger",
+   "album": {
+    "name": "Mercury : Acts 1 & 2",
+    "id": "MPREb_jxlYOZ4o4gA"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "QdNfX32nBVQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:12",
+   "year": null,
+   "artists": [
+    {
+     "name": "Imagine Dragons",
+     "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+    }
+   ],
+   "duration_seconds": 192,
+   "views": "4.8M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/NzpxsXd1zYI-wjKRtdOlS3XCJK7mslbm2UFiU83vg4Vq_S-gQAF5otMl94-HzVmLuovwXdGzBeB29Uw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/NzpxsXd1zYI-wjKRtdOlS3XCJK7mslbm2UFiU83vg4Vq_S-gQAF5otMl94-HzVmLuovwXdGzBeB29Uw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Burn Out",
+   "album": {
+    "name": "Origins (Deluxe)",
+    "id": "MPREb_D9808srSbf3"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "AcJ6Vv9pMeA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:34",
+   "year": null,
+   "artists": [
+    {
+     "name": "Imagine Dragons",
+     "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+    }
+   ],
+   "duration_seconds": 274,
+   "views": "22M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/oCN13vvhWWwEfD3aOS6NEmhh32em-I7wQKUvXJWEm6AJygqkJ5YpeZfpcmPiKbKJ72Dek_FTdUlnmlMm=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/oCN13vvhWWwEfD3aOS6NEmhh32em-I7wQKUvXJWEm6AJygqkJ5YpeZfpcmPiKbKJ72Dek_FTdUlnmlMm=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Walking The Wire",
+   "album": {
+    "name": "Evolve",
+    "id": "MPREb_q16Gzaa1WK8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "oB8nNlBkcEo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:53",
+   "year": null,
+   "artists": [
+    {
+     "name": "Imagine Dragons",
+     "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+    }
+   ],
+   "duration_seconds": 233,
+   "views": "184M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/weYQWfEwWNPOuAm34geXN1LkSYPlsJay78NnQgHC3PKsyZcdvBHIsMtqoFh3rioA4XgMdHMQd3h6vH6mbA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/weYQWfEwWNPOuAm34geXN1LkSYPlsJay78NnQgHC3PKsyZcdvBHIsMtqoFh3rioA4XgMdHMQd3h6vH6mbA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Only",
+   "album": {
+    "name": "Origins",
+    "id": "MPREb_lSgNEp7L10m"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "xAn9O9oZG7U",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:01",
+   "year": null,
+   "artists": [
+    {
+     "name": "Imagine Dragons",
+     "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+    }
+   ],
+   "duration_seconds": 181,
+   "views": "16M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/oCN13vvhWWwEfD3aOS6NEmhh32em-I7wQKUvXJWEm6AJygqkJ5YpeZfpcmPiKbKJ72Dek_FTdUlnmlMm=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/oCN13vvhWWwEfD3aOS6NEmhh32em-I7wQKUvXJWEm6AJygqkJ5YpeZfpcmPiKbKJ72Dek_FTdUlnmlMm=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Believer",
+   "album": {
+    "name": "Evolve",
+    "id": "MPREb_q16Gzaa1WK8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Kx7B-XvmFtE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "Imagine Dragons",
+     "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+    }
+   ],
+   "duration_seconds": 205,
+   "views": "7B",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/weYQWfEwWNPOuAm34geXN1LkSYPlsJay78NnQgHC3PKsyZcdvBHIsMtqoFh3rioA4XgMdHMQd3h6vH6mbA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/weYQWfEwWNPOuAm34geXN1LkSYPlsJay78NnQgHC3PKsyZcdvBHIsMtqoFh3rioA4XgMdHMQd3h6vH6mbA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Whatever It Takes (Live in Vegas)",
+   "album": {
+    "name": "Imagine Dragons (Live in Vegas)",
+    "id": "MPREb_OnwBl6oBRyS"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "1ltOQYwcDaY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:24",
+   "year": null,
+   "artists": [
+    {
+     "name": "Imagine Dragons",
+     "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+    }
+   ],
+   "duration_seconds": 324,
+   "views": "8.4M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/aeYwpdYu_rtvBbucDbsKGdUTBSKCXTXd2ktK_EzTr6O16pLSSyBkOKMcSm7QkF_n9TfviGBt17ZWTFaA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/aeYwpdYu_rtvBbucDbsKGdUTBSKCXTXd2ktK_EzTr6O16pLSSyBkOKMcSm7QkF_n9TfviGBt17ZWTFaA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Higher Ground",
+   "album": {
+    "name": "Mercury : Acts 1 & 2",
+    "id": "MPREb_jxlYOZ4o4gA"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "5JCy0iwzkLk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:42",
+   "year": null,
+   "artists": [
+    {
+     "name": "Imagine Dragons",
+     "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+    }
+   ],
+   "duration_seconds": 162,
+   "views": "10M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/NzpxsXd1zYI-wjKRtdOlS3XCJK7mslbm2UFiU83vg4Vq_S-gQAF5otMl94-HzVmLuovwXdGzBeB29Uw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/NzpxsXd1zYI-wjKRtdOlS3XCJK7mslbm2UFiU83vg4Vq_S-gQAF5otMl94-HzVmLuovwXdGzBeB29Uw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Wrecked",
+   "album": {
+    "name": "Wrecked",
+    "id": "MPREb_nt0rELYssNe"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "0Y8Bk7qEyYE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:05",
+   "year": null,
+   "artists": [
+    {
+     "name": "Imagine Dragons",
+     "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+    }
+   ],
+   "duration_seconds": 245,
+   "views": "365M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/9e8wA35fhJpjwBN4IzZiyco4rS252tyxz8VA_Y7k5R4c-35tgKgl94ZF_eK7N817qi0dMofd5hRIL6Bg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/9e8wA35fhJpjwBN4IzZiyco4rS252tyxz8VA_Y7k5R4c-35tgKgl94ZF_eK7N817qi0dMofd5hRIL6Bg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Round And Round",
+   "album": {
+    "name": "Night Visions (Deluxe)",
+    "id": "MPREb_HWYwoMPetk7"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "op5Nzr-17Lk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:17",
+   "year": null,
+   "artists": [
+    {
+     "name": "Imagine Dragons",
+     "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+    }
+   ],
+   "duration_seconds": 197,
+   "views": "6.5M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/q5PWa2JVJApX31A7QU2vE4RY8i5S_ofYbfpxgDjhz5fagMAxv8ROkEpUr2OAYgYrhzYqJpv0bV94DRCb=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/q5PWa2JVJApX31A7QU2vE4RY8i5S_ofYbfpxgDjhz5fagMAxv8ROkEpUr2OAYgYrhzYqJpv0bV94DRCb=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Thief",
+   "album": {
+    "name": "Smoke + Mirrors (Deluxe)",
+    "id": "MPREb_u79IUIq1Jbi"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "U0UqAwtiLBg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:48",
+   "year": null,
+   "artists": [
+    {
+     "name": "Imagine Dragons",
+     "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+    }
+   ],
+   "duration_seconds": 228,
+   "views": "3.8M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/7ovSCLhJzoJ_CMbj3tlb5lVNKQFDIdFMVNmj4Q0TBsD3nMzGYqmkz5BoQ-RvuC9tfme4M-MfAqQx-ST5=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/7ovSCLhJzoJ_CMbj3tlb5lVNKQFDIdFMVNmj4Q0TBsD3nMzGYqmkz5BoQ-RvuC9tfme4M-MfAqQx-ST5=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Giants",
+   "album": {
+    "name": "Mercury : Acts 1 & 2",
+    "id": "MPREb_jxlYOZ4o4gA"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ZqhSfKzoO94",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "Imagine Dragons",
+     "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+    }
+   ],
+   "duration_seconds": 211,
+   "views": "9.9M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/NzpxsXd1zYI-wjKRtdOlS3XCJK7mslbm2UFiU83vg4Vq_S-gQAF5otMl94-HzVmLuovwXdGzBeB29Uw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/NzpxsXd1zYI-wjKRtdOlS3XCJK7mslbm2UFiU83vg4Vq_S-gQAF5otMl94-HzVmLuovwXdGzBeB29Uw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "I Wish",
+   "album": {
+    "name": "Mercury : Acts 1 & 2",
+    "id": "MPREb_jxlYOZ4o4gA"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "IMzoinmVeEw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "Imagine Dragons",
+     "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+    }
+   ],
+   "duration_seconds": 208,
+   "views": "3M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/NzpxsXd1zYI-wjKRtdOlS3XCJK7mslbm2UFiU83vg4Vq_S-gQAF5otMl94-HzVmLuovwXdGzBeB29Uw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/NzpxsXd1zYI-wjKRtdOlS3XCJK7mslbm2UFiU83vg4Vq_S-gQAF5otMl94-HzVmLuovwXdGzBeB29Uw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Zero (From the Original Motion Picture \"Ralph Breaks The Internet\")",
+   "album": {
+    "name": "Origins (Deluxe)",
+    "id": "MPREb_D9808srSbf3"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Du1-glzUBZk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "Imagine Dragons",
+     "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+    }
+   ],
+   "duration_seconds": 211,
+   "views": "194M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/oCN13vvhWWwEfD3aOS6NEmhh32em-I7wQKUvXJWEm6AJygqkJ5YpeZfpcmPiKbKJ72Dek_FTdUlnmlMm=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/oCN13vvhWWwEfD3aOS6NEmhh32em-I7wQKUvXJWEm6AJygqkJ5YpeZfpcmPiKbKJ72Dek_FTdUlnmlMm=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "#1",
+   "album": {
+    "name": "Mercury : Acts 1 & 2",
+    "id": "MPREb_jxlYOZ4o4gA"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "C3AGbtAnFLA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:26",
+   "year": null,
+   "artists": [
+    {
+     "name": "Imagine Dragons",
+     "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+    }
+   ],
+   "duration_seconds": 206,
+   "views": "9.3M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/NzpxsXd1zYI-wjKRtdOlS3XCJK7mslbm2UFiU83vg4Vq_S-gQAF5otMl94-HzVmLuovwXdGzBeB29Uw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/NzpxsXd1zYI-wjKRtdOlS3XCJK7mslbm2UFiU83vg4Vq_S-gQAF5otMl94-HzVmLuovwXdGzBeB29Uw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Cutthroat",
+   "album": {
+    "name": "Follow You / Cutthroat",
+    "id": "MPREb_T8ND4eXPjaD"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "95z8zJjzS6k",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Imagine Dragons",
+     "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+    }
+   ],
+   "duration_seconds": 170,
+   "views": "18M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/krvRz3aki_iMlbH-waFCq8JJExuysHvDcs6YFDRSDBOAQ58pPYK9bzgRURVei6QxgkB2cDbYL4-_-3no=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/krvRz3aki_iMlbH-waFCq8JJExuysHvDcs6YFDRSDBOAQ58pPYK9bzgRURVei6QxgkB2cDbYL4-_-3no=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "I’m So Sorry",
+   "album": {
+    "name": "Smoke + Mirrors",
+    "id": "MPREb_44oEVsBkAlc"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "MzK09EuJnwE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:51",
+   "year": null,
+   "artists": [
+    {
+     "name": "Imagine Dragons",
+     "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+    }
+   ],
+   "duration_seconds": 231,
+   "views": "251M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/nKzUyGxMddXNZsWq-pyHg-49HVU4H4PL7P69DTihi3DWlqUtn5LNkLF0gae7qVhqUW7Ez7fyhakSZAfO=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/nKzUyGxMddXNZsWq-pyHg-49HVU4H4PL7P69DTihi3DWlqUtn5LNkLF0gae7qVhqUW7Ez7fyhakSZAfO=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

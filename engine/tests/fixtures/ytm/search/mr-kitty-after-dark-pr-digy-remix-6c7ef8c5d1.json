@@ -1,0 +1,774 @@
+{
+ "kind": "search",
+ "key": "mr kitty after dark prødigy remix",
+ "request": "Mr.Kitty After Dark prødigy remix",
+ "recorded_at": "2026-09-29T02:36:47Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark",
+   "album": {
+    "name": "After Dark",
+    "id": "MPREb_Klf8PAOV1HM"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "SLWiTSYngEg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:18",
+   "year": null,
+   "artists": [
+    {
+     "name": "TommyMuzzic",
+     "id": "UCIOzVH6F6iE_qpzIBDkJAyA"
+    }
+   ],
+   "duration_seconds": 258,
+   "views": "76K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/jmUboqgl7qUwv5e3rUekzlUjCsatPUPIG7Kn7wYRYpW5_ksrb7s8WEJybeEzKqz1E8UTmK9am3fpK5XPNw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/jmUboqgl7qUwv5e3rUekzlUjCsatPUPIG7Kn7wYRYpW5_ksrb7s8WEJybeEzKqz1E8UTmK9am3fpK5XPNw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark (Rock Version)",
+   "album": {
+    "name": "After Dark (Rock Version)",
+    "id": "MPREb_kNCsmXinY1H"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "1Fzdau2SUpE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:13",
+   "year": null,
+   "artists": [
+    {
+     "name": "Little V.",
+     "id": "UCtMg5SM5QU6OEZOsowt8hog"
+    }
+   ],
+   "duration_seconds": 253,
+   "views": "4.6M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/kN4NcNjTW1QGANn8TyiwEPWL6CCD4cK7NEmM0Uo0cSV--QUnn7XONohVcH5pPFGlgncJwW7crlvUvqXV=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/kN4NcNjTW1QGANn8TyiwEPWL6CCD4cK7NEmM0Uo0cSV--QUnn7XONohVcH5pPFGlgncJwW7crlvUvqXV=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "AFTER DARK X SWEATER WEATHER - PHONK",
+   "album": {
+    "name": "AFTER DARK X SWEATER WEATHER - PHONK",
+    "id": "MPREb_2T3Q93QWdSh"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "CId7ur7B1Fc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:13",
+   "year": null,
+   "artists": [
+    {
+     "name": "DRIFTMANE",
+     "id": "UCWjh7331SFICHUxaIEnxTvw"
+    },
+    {
+     "name": "PHXNTOM",
+     "id": "UCbPIegkabwlL7Hzhk2J4gEA"
+    },
+    {
+     "name": "Tazzy",
+     "id": "UCZ52JkVq3a5VUHcY0i0sE0w"
+    }
+   ],
+   "duration_seconds": 133,
+   "views": "51K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/8WmMql5dxxqR2-bOR_xk7QK1UULccGn03lWX_GOC15Fb-OjwzsIT1y8VtGt4u-R2dxeuafnvAvWkQ6x1=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/8WmMql5dxxqR2-bOR_xk7QK1UULccGn03lWX_GOC15Fb-OjwzsIT1y8VtGt4u-R2dxeuafnvAvWkQ6x1=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark",
+   "album": {
+    "name": "After Dark",
+    "id": "MPREb_lAS7iorROEv"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "X25Aad0M2DI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:54",
+   "year": null,
+   "artists": [
+    {
+     "name": "NEAR DEATH",
+     "id": "UCIqh0meDPDD_4-BxqZNL_0Q"
+    }
+   ],
+   "duration_seconds": 174,
+   "views": "4.6K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/sDgwhY3NquR43O8lJ8OReNOkeDCwQASx646Qu38KUSac2hb838lTPEYKuAAKJPt8IjzAG5HtAKM4JeeH=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/sDgwhY3NquR43O8lJ8OReNOkeDCwQASx646Qu38KUSac2hb838lTPEYKuAAKJPt8IjzAG5HtAKM4JeeH=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark",
+   "album": {
+    "name": "Done By Design",
+    "id": "MPREb_bu78E44H8aw"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "25b9z4JGTto",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:36",
+   "year": null,
+   "artists": [
+    {
+     "name": "Matrefakt",
+     "id": "UCu3g895Pjjyhdru-GQ-n3NA"
+    }
+   ],
+   "duration_seconds": 336,
+   "views": "399",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/W8nko0v2YYwvlhor3hgV5-Brjo2rMhicGRyFvHCz8opFQpteUWP4F1rAV3q6uZL8VD2PPzCKbcC8PoI=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/W8nko0v2YYwvlhor3hgV5-Brjo2rMhicGRyFvHCz8opFQpteUWP4F1rAV3q6uZL8VD2PPzCKbcC8PoI=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark x Sweater Weather - Instrumental",
+   "album": {
+    "name": "Instrumental Pop Songs | Instrumental Pop Covers, Instrumental TikTok Songs, Instrumental TikTok Virals, Instrumental Pop Music VOL 2",
+    "id": "MPREb_jDjKhZ5IWBm"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "OeTA8cao4vg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Instrumental Covers Tazzy",
+     "id": "UCuB0NFG3ivueLTd5aJR6Xqw"
+    },
+    {
+     "name": "Tazzy",
+     "id": "UCZ52JkVq3a5VUHcY0i0sE0w"
+    }
+   ],
+   "duration_seconds": 290,
+   "views": "189K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-5wA4XSZKZ_A5bMLsEMjsYyVPVnmz3MsRMal57qpfhxwmkAH_KVqUNPA6iBysXQNTZLtFdyO-0dZ4F7W=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-5wA4XSZKZ_A5bMLsEMjsYyVPVnmz3MsRMal57qpfhxwmkAH_KVqUNPA6iBysXQNTZLtFdyO-0dZ4F7W=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark",
+   "album": {
+    "name": "Viral Covers",
+    "id": "MPREb_Awqrqnhda3g"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Xqmzn_owjM8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:16",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sable",
+     "id": "UCrGMK1_bsiKq5o285VUeP7A"
+    }
+   ],
+   "duration_seconds": 196,
+   "views": "1.1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/zWSFK-Qhdhms-nKvUScqvegvT8tKGx28lKnzBQ2i9wRWSZXqis89P3MUYAuNrZisLPELURcaZgiNcn0=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/zWSFK-Qhdhms-nKvUScqvegvT8tKGx28lKnzBQ2i9wRWSZXqis89P3MUYAuNrZisLPELURcaZgiNcn0=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark Retrowave PBH",
+   "album": {
+    "name": "After Dark Retrowave PBH",
+    "id": "MPREb_NE06WQC97pI"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "_F-yxZilvqc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:14",
+   "year": null,
+   "artists": [
+    {
+     "name": "PBH",
+     "id": "UCu72OK3IbpQAm5I0FMlyTFQ"
+    }
+   ],
+   "duration_seconds": 254,
+   "views": "942K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/gZxpMcGigTNS7Abm7C43d_8bKlPq0dGkoEQ5aODEfab4fTmks7VR0_tx2T3SryrNb_zvRJ53baWmbp03=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/gZxpMcGigTNS7Abm7C43d_8bKlPq0dGkoEQ5aODEfab4fTmks7VR0_tx2T3SryrNb_zvRJ53baWmbp03=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "AFTER DARK - PHONK",
+   "album": {
+    "name": "AFTER DARK - PHONK",
+    "id": "MPREb_txnyRMwpbOY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "BrCY4lv_Hgo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:47",
+   "year": null,
+   "artists": [
+    {
+     "name": "deadboy",
+     "id": "UCe9RoSDDcc_hjGsAd0dP4aQ"
+    }
+   ],
+   "duration_seconds": 227,
+   "views": "418K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/j71_Okt-yJ9D9KVjk86ccOegbXBOTWIV8Ubkt0dV2PXl9cEyRs7YPUu0gt64XmCv6AXtcsADJ1knO5U3=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/j71_Okt-yJ9D9KVjk86ccOegbXBOTWIV8Ubkt0dV2PXl9cEyRs7YPUu0gt64XmCv6AXtcsADJ1knO5U3=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark",
+   "album": {
+    "name": "After Dark",
+    "id": "MPREb_XmTpFuLjmbe"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Mh7jY9MhG-Y",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:43",
+   "year": null,
+   "artists": [
+    {
+     "name": "Yxung Lxrd",
+     "id": "UCNrppiHyQGbj84Myx1HDu2g"
+    }
+   ],
+   "duration_seconds": 163,
+   "views": "3.7K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ivbJnwp8Jdd8ETbWYAh8EowhB7gNbLYEsTH-jafb06DK-Tso68hE9nBHzGFxh3KkjqFpQXd8lRGqM5E=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ivbJnwp8Jdd8ETbWYAh8EowhB7gNbLYEsTH-jafb06DK-Tso68hE9nBHzGFxh3KkjqFpQXd8lRGqM5E=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark",
+   "album": {
+    "name": "After Dark",
+    "id": "MPREb_9lPeARiWpSk"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "vZ-8hHR2TYU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:54",
+   "year": null,
+   "artists": [
+    {
+     "name": "Trap Nation (US)",
+     "id": "UCVwBPGsYC-vq7RBeLa2JLIA"
+    }
+   ],
+   "duration_seconds": 114,
+   "views": "503",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/4J6UhEninG1PVmOA_fU0QrO7CAYQ6Q8qzsv77hLms77sw0MBbb-m9sWkeuRD1naUL5fBuBSN0kfmrDI2=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/4J6UhEninG1PVmOA_fU0QrO7CAYQ6Q8qzsv77hLms77sw0MBbb-m9sWkeuRD1naUL5fBuBSN0kfmrDI2=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark (Erhan Yilmaz Remix)",
+   "album": {
+    "name": "After Dark",
+    "id": "MPREb_9p2iaCCZ5x4"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ISGT1GZbv-k",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "7:38",
+   "year": null,
+   "artists": [
+    {
+     "name": "Roni Iron",
+     "id": "UCKo-y-qNGrR89uL2cJB0XPQ"
+    }
+   ],
+   "duration_seconds": 458,
+   "views": "17K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/STMwqGg9tx8vFAXJtuPTJTGywlIGOPGdOgJlnKHWycAdKHYo764RtOnfTGjrsqfUxr8IZAr6KPMk9EmZ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/STMwqGg9tx8vFAXJtuPTJTGywlIGOPGdOgJlnKHWycAdKHYo764RtOnfTGjrsqfUxr8IZAr6KPMk9EmZ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark X Sweater Weather",
+   "album": {
+    "name": "After Dark X Sweater Weather",
+    "id": "MPREb_f3joPUZp4Uf"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "DD1Pn1Wzzv0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:45",
+   "year": null,
+   "artists": [
+    {
+     "name": "DJ Track",
+     "id": "UC4sOS4b7VTQgpr_h4ccmnDg"
+    },
+    {
+     "name": "Dxrk",
+     "id": "UC8D8bv3Dd4Ad5cwe3YKxyQg"
+    },
+    {
+     "name": "Tazzy",
+     "id": "UCZ52JkVq3a5VUHcY0i0sE0w"
+    }
+   ],
+   "duration_seconds": 285,
+   "views": "16K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/KsFrVMkow5XCm7tysoKjzUnCpfNtpsjz6mil1oYGYq0zVYcd8EAhCMd3RP0mgJIoqjJZGkimmQbgDQTm=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/KsFrVMkow5XCm7tysoKjzUnCpfNtpsjz6mil1oYGYq0zVYcd8EAhCMd3RP0mgJIoqjJZGkimmQbgDQTm=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark (Mystique & Amro Mix)",
+   "album": {
+    "name": "After Dark (Mystique & Amro Mix)",
+    "id": "MPREb_XqgoXucGaxb"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ShMDspovp3c",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:19",
+   "year": null,
+   "artists": [
+    {
+     "name": "Lazy Jay",
+     "id": "UCQjm93XzCf0KYz6hNd1JRCg"
+    }
+   ],
+   "duration_seconds": 379,
+   "views": "117",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Fbc5wrlDWw0JlP30S2BtwzYBuH7zuKrfGGO_GK10vGddF829wCWq0RwtaHRk63L5RXcOB7g4OYKbZT3UjQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Fbc5wrlDWw0JlP30S2BtwzYBuH7zuKrfGGO_GK10vGddF829wCWq0RwtaHRk63L5RXcOB7g4OYKbZT3UjQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark",
+   "album": {
+    "name": "After Dark",
+    "id": "MPREb_fNehjYnOI61"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "_RLwVHzxfnA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:41",
+   "year": null,
+   "artists": [
+    {
+     "name": "NXVXRMXSS",
+     "id": "UCRt31kRnArufzMKcMX6zTPA"
+    }
+   ],
+   "duration_seconds": 161,
+   "views": "727",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/YIYpREpFkNVlHBsYG0V8sY50XkZDcsqAb7U2e6KI-kBxe5FafCDG1VdXfNTZJbwP54TWtoECUjnawwGvGA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/YIYpREpFkNVlHBsYG0V8sY50XkZDcsqAb7U2e6KI-kBxe5FafCDG1VdXfNTZJbwP54TWtoECUjnawwGvGA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark x Somebody That I Used To Know - Nightcore",
+   "album": {
+    "name": "After Dark x Somebody That I Used To Know - Nightcore",
+    "id": "MPREb_Rd6R8TkqCVk"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "WM0T5dGzOPI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:27",
+   "year": null,
+   "artists": [
+    {
+     "name": "neko",
+     "id": "UCAyYJnwlUTnZolb8iUPSE9A"
+    }
+   ],
+   "duration_seconds": 207,
+   "views": "1.9K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/w8J4L4JoYpo4VrWYalSh9n0NjSgUWS03CAoUPxS-yB-VFtiyJl3gNA9_BbDAHwctpnKtOsAoQ9dWRLbHHQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/w8J4L4JoYpo4VrWYalSh9n0NjSgUWS03CAoUPxS-yB-VFtiyJl3gNA9_BbDAHwctpnKtOsAoQ9dWRLbHHQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark x Somebody That I Used To Know - 8D Audio",
+   "album": {
+    "name": "After Dark x Somebody That I Used To Know - 8D Audio",
+    "id": "MPREb_90frSxq7wv8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "w-q_DfmfosM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "(((())))",
+     "id": null
+    },
+    {
+     "name": "surround.",
+     "id": "UCvDtSRXv3EzzP9zc7UqOMWg"
+    }
+   ],
+   "duration_seconds": 290,
+   "views": "3.7K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/KNTH-0pgK2gqG5yFo0M_O5tge-YIeowyvN94EWZPvBVxPrVR-uPkXF2DuCsj2KWgGjV07Uvw_Zhk0Q0MAg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/KNTH-0pgK2gqG5yFo0M_O5tge-YIeowyvN94EWZPvBVxPrVR-uPkXF2DuCsj2KWgGjV07Uvw_Zhk0Q0MAg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark",
+   "album": {
+    "name": "Titans EP",
+    "id": "MPREb_5ZbJpYyoVFN"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "1SH6Sg_dkHY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:51",
+   "year": null,
+   "artists": [
+    {
+     "name": "Wraz",
+     "id": "UCEcur9LzBQwTvMRqB448Gdw"
+    }
+   ],
+   "duration_seconds": 351,
+   "views": "650",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-rL1X9v15jrzLoosX92oLY5E60rHUUBBsUXuW9u7r2UXnWUh7qDOv45D62RUueEP4Wn1HDZt_bj2ABg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-rL1X9v15jrzLoosX92oLY5E60rHUUBBsUXuW9u7r2UXnWUh7qDOv45D62RUueEP4Wn1HDZt_bj2ABg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark x i like the way you kiss me (slowed to perfection)",
+   "album": {
+    "name": "After Dark x i like the way you kiss me",
+    "id": "MPREb_ELqGc3gclhk"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "lXQjQao26ZY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "Luke Muzzic",
+     "id": "UCpIk7RKcoOMzsH4E2pxSqpg"
+    }
+   ],
+   "duration_seconds": 148,
+   "views": "2.7M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-Nt9JdqEqPod4tDJwXD81-Og4QuxTdp5fEJLdtVp7J5UIftrfS9jW5oPUu1TJZ2noK5dThOdnzsbiwaXow=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-Nt9JdqEqPod4tDJwXD81-Og4QuxTdp5fEJLdtVp7J5UIftrfS9jW5oPUu1TJZ2noK5dThOdnzsbiwaXow=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark (Piano Version)",
+   "album": {
+    "name": "The Collective, Vol. 2 (Piano Versions)",
+    "id": "MPREb_2OcQhttkXnI"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ufUPCWIDYHw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:00",
+   "year": null,
+   "artists": [
+    {
+     "name": "ROR",
+     "id": "UCS0RAixxe_kWGFxN_M207Cw"
+    }
+   ],
+   "duration_seconds": 240,
+   "views": "1.5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/lJVvMAS98oihB_6Jt7vmEta0sbX8DlEG7YF6ETCt3o-vSOBsK6MQLftsPhju1Q7GS5vtapNpz1FayqEjPw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/lJVvMAS98oihB_6Jt7vmEta0sbX8DlEG7YF6ETCt3o-vSOBsK6MQLftsPhju1Q7GS5vtapNpz1FayqEjPw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

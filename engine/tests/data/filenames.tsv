@@ -107,7 +107,7 @@ Ed_Sheeran_-_Bad_Habits_Official_Video_(mp3convert.org)	Ed Sheeran	Bad Habits		h
 john-newman-love-me-again-(mp3convert.org)		john newman love me again		low	hyphens for spaces
 Kylie Minogue - Can&#39t Get You Out Of My Head	Kylie Minogue	Can't Get You Out Of My Head		high	web entity without its semicolon
 Rihanna - S&M	Rihanna	S&M		high	an ampersand that isn't a web entity
-OneRepublic - I Ain_t Worried (From _Top Gun- Maverick_) [Official Music Video]	OneRepublic	I Ain't Worried (From Top Gun- Maverick)		high	underscores for an apostrophe and quotes
+OneRepublic - I Ain_t Worried (From _Top Gun- Maverick_) [Official Music Video]	OneRepublic	I Ain't Worried		high	underscores for an apostrophe and quotes; a soundtrack note is junk
 Linkin Park - Breaking the Habit (Official Music Video) [HD UPGRADE]	Linkin Park	Breaking the Habit		high	junk words together
 Imagine Dragons - Birds (Animated Video)	Imagine Dragons	Birds		high	animated video
 Cartel de Santa - Si te Vienen a Contar (Video Oficial)	Cartel de Santa	Si te Vienen a Contar		high	Spanish junk
@@ -118,3 +118,4 @@ Future - Mask Off (Lyrics  Lyric Video)	Future	Mask Off		high	lyric words togeth
 Linkin Park - Crawling [FULL-HD]	Linkin Park	Crawling		high	hyphenated junk
 Mase-Feel So Good		Mase-Feel So Good		low	a hyphen without spaces isn't a separator
 Mr.Kitty - After Dark	Mr.Kitty	After Dark		high	a dotted name isn't a web address
+The Beatles - From Me To You	The Beatles	From Me To You		high	a title starting with From isn't a soundtrack note

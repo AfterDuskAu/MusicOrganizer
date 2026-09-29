@@ -1,0 +1,778 @@
+{
+ "kind": "search",
+ "key": "ed sheeran bad habits",
+ "request": "Ed Sheeran Bad Habits",
+ "recorded_at": "2026-09-29T02:36:34Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_917r4nW96j5"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "hJWSZDJb-W4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:51",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ed Sheeran",
+     "id": "UClmXPfaYhXOYsNn_QUyheWQ"
+    }
+   ],
+   "duration_seconds": 231,
+   "views": "1.3B",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/3xN5Rqah_iSMqbl3ZMCr9MjnEBVyBLmLng0f-MCvFFdfPNhK619ikGwAD0iOBkzCOXIlucWE0lLLXJA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/3xN5Rqah_iSMqbl3ZMCr9MjnEBVyBLmLng0f-MCvFFdfPNhK619ikGwAD0iOBkzCOXIlucWE0lLLXJA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits (feat. Bring Me The Horizon)",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_EgeBXGLpMGc"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "wGNFzQeVrJI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:11",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ed Sheeran",
+     "id": "UClmXPfaYhXOYsNn_QUyheWQ"
+    }
+   ],
+   "duration_seconds": 251,
+   "views": "47M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/5BIb8pR1gnYL6Uce1dIXf_qfbhaflt8b6jqtglcDBTMGAMHNRXRXmetct588qPO8_ES7PKyQ4Ooaf6e5=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/5BIb8pR1gnYL6Uce1dIXf_qfbhaflt8b6jqtglcDBTMGAMHNRXRXmetct588qPO8_ES7PKyQ4Ooaf6e5=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habit",
+   "album": {
+    "name": "Smash",
+    "id": "MPREb_87HJirZa1Nw"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "U43XOSiKfqM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:44",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Offspring",
+     "id": "UCQVUXQu8RpxhihAMla6ke5A"
+    }
+   ],
+   "duration_seconds": 224,
+   "views": "15M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/keeuvKzOV2txna9HZe56mzlbDbAVzlwBU6zujElouxDvU-vlcyNuEGetXHDpweAuvZkfauFpUNj1HSlqlg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/keeuvKzOV2txna9HZe56mzlbDbAVzlwBU6zujElouxDvU-vlcyNuEGetXHDpweAuvZkfauFpUNj1HSlqlg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "2step (feat. Lil Baby)",
+   "album": {
+    "name": "= (Tour Edition)",
+    "id": "MPREb_c6dypycVZIv"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "OePtCSw1BB8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:44",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ed Sheeran",
+     "id": "UClmXPfaYhXOYsNn_QUyheWQ"
+    }
+   ],
+   "duration_seconds": 164,
+   "views": "152M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/zaPwAoxQeYeEC-yp_wzqcwr-jb0dBtdyG_25S13kJdHQ_fHqvGBHa5GMt_f2oR8yfg4oiw19i_AHito=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/zaPwAoxQeYeEC-yp_wzqcwr-jb0dBtdyG_25S13kJdHQ_fHqvGBHa5GMt_f2oR8yfg4oiw19i_AHito=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits (Originally Performed By Ed Sheeran) (Karaoke Version)",
+   "album": {
+    "name": "Bad Habits (Originally Performed By Ed Sheeran) (Karaoke Version)",
+    "id": "MPREb_7YEkFsJVWJs"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "uP2mp2YBP8s",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:51",
+   "year": null,
+   "artists": [
+    {
+     "name": "Golden Karaoke",
+     "id": null
+    }
+   ],
+   "duration_seconds": 231,
+   "views": "90",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/MzKA-hguKGa_p5PFtjOVHI0YVK4PiumCZLYj6gO2AGo3MJFqlBEM2LEGZZQviqzY7C-aW3X-dWkqKfjpbg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/MzKA-hguKGa_p5PFtjOVHI0YVK4PiumCZLYj6gO2AGo3MJFqlBEM2LEGZZQviqzY7C-aW3X-dWkqKfjpbg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_dWTsErC3Qc9"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "9AeJOfSvI2M",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "Cour",
+     "id": null
+    },
+    {
+     "name": "Onda Norte",
+     "id": null
+    }
+   ],
+   "duration_seconds": 152,
+   "views": "1.5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/n1XoIBHg3_lgpTc6rKe5appWmPoTlXwgs85XuevEj2s9-qroaPFm7ko43FEqfKYp83jJG2hXls9hW6EF=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/n1XoIBHg3_lgpTc6rKe5appWmPoTlXwgs85XuevEj2s9-qroaPFm7ko43FEqfKYp83jJG2hXls9hW6EF=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits x Insomnia",
+   "album": {
+    "name": "Bad Habits x Insomnia",
+    "id": "MPREb_S0bMwl6WgCg"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "m8G5UeX7wUI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:39",
+   "year": null,
+   "artists": [
+    {
+     "name": "T3NZU",
+     "id": "UC6P_K8zNDMbJiDCbefk-vJw"
+    }
+   ],
+   "duration_seconds": 159,
+   "views": "178K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/CO2nLwE4Nti-FubfUSASjdOL59Xwxu5EHza1vEfI-8aYwyWEobPnDAlxHfTqIntMdugq2AkgGUJHWSOuPw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/CO2nLwE4Nti-FubfUSASjdOL59Xwxu5EHza1vEfI-8aYwyWEobPnDAlxHfTqIntMdugq2AkgGUJHWSOuPw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits (Sax Remix)",
+   "album": {
+    "name": "Bad Habits (Sax Remix)",
+    "id": "MPREb_iHGHuX6G9v8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "SfMp1Isusgw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "Daniele Vitale Sax",
+     "id": "UCIHs-cLU8-7w0mhLnrOfqqg"
+    }
+   ],
+   "duration_seconds": 183,
+   "views": "2.2K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/AL7zGxSlKRkxHBkyrQjisLJm-ZszznnKNIgkfTiTfOuTQ7Wf7Ql0cOzbh5Z9e7vVZfwXOCn21tOV-NrZ9g=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/AL7zGxSlKRkxHBkyrQjisLJm-ZszznnKNIgkfTiTfOuTQ7Wf7Ql0cOzbh5Z9e7vVZfwXOCn21tOV-NrZ9g=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_mpKSdQoV1KL"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "hrbjw2_iHDM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:48",
+   "year": null,
+   "artists": [
+    {
+     "name": "ERIICE",
+     "id": "UC_UfHPIgPd5sI3O74fai43Q"
+    }
+   ],
+   "duration_seconds": 168,
+   "views": "743",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/X40bWShjj2SMMSlTYVHSDE9mfBzTXQX7YBH2H51rKnPoYieO1JwCOwWt7nXWV1GE8EBfcC_KkRjGxfv2=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/X40bWShjj2SMMSlTYVHSDE9mfBzTXQX7YBH2H51rKnPoYieO1JwCOwWt7nXWV1GE8EBfcC_KkRjGxfv2=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_QSboOmuIMSz"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "fpndanNF4vA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:37",
+   "year": null,
+   "artists": [
+    {
+     "name": "SUD",
+     "id": "UCTWmzUZWV-bT4GENMHU19OA"
+    },
+    {
+     "name": "LIM3",
+     "id": "UCnwWRoHHkOlBWekQ32_ZnzA"
+    }
+   ],
+   "duration_seconds": 217,
+   "views": "34K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/gsxyli3TFdDOibtVafoi3LCQo1wkbLoNte55ry2BfS3o1hLDYGhR_uVa1nSHXj7kj7YXmGnKlIAFCqI=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/gsxyli3TFdDOibtVafoi3LCQo1wkbLoNte55ry2BfS3o1hLDYGhR_uVa1nSHXj7kj7YXmGnKlIAFCqI=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_FpOO7VqKQsp"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "QDybO1AVqko",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:35",
+   "year": null,
+   "artists": [
+    {
+     "name": "Luca Testa",
+     "id": "UCt51qxv2ROp4u9MsuWY_9Xg"
+    }
+   ],
+   "duration_seconds": 215,
+   "views": "4.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/EQGWATV76jq-s2a1fJ72l-wZkXZIiLhllXe8jDIZEzRsLgFlgiBxE_eq-b1nJRWnYqIVr0mF8CPEqIOE=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/EQGWATV76jq-s2a1fJ72l-wZkXZIiLhllXe8jDIZEzRsLgFlgiBxE_eq-b1nJRWnYqIVr0mF8CPEqIOE=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_36S2MFBeIuW"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "1LcEQ4amijM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:45",
+   "year": null,
+   "artists": [
+    {
+     "name": "MELON",
+     "id": "UCbz3IWfEM5_M7Mt8oadstdA"
+    },
+    {
+     "name": "Redwood",
+     "id": "UClj9G5yYTTFJH5o6FH2dkAA"
+    }
+   ],
+   "duration_seconds": 165,
+   "views": "148K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/PI8BuyxwIjxzaTHNN8LwMcwEjNu0T6mRjISLft__-RpIuFC8VOil-KnxSgKQp3rfC9I0y1A5t3Y5U3g=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/PI8BuyxwIjxzaTHNN8LwMcwEjNu0T6mRjISLft__-RpIuFC8VOil-KnxSgKQp3rfC9I0y1A5t3Y5U3g=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "KIDZ BOP Ultimate Playlist",
+    "id": "MPREb_Z7kAyHjMyok"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ObbKpPBkGVo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:51",
+   "year": null,
+   "artists": [
+    {
+     "name": "KIDZ BOP Kids",
+     "id": "UClOpZVfE5v-fFtM8vqFud-g"
+    }
+   ],
+   "duration_seconds": 231,
+   "views": "2.2M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/1ng-jsQxkZItupI3ZDBbRGiXYe-eM-A14w0sigJ9lI7eND1PTilXcPsoSjP5r0oexOvBY-Tjw95HReOu=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/1ng-jsQxkZItupI3ZDBbRGiXYe-eM-A14w0sigJ9lI7eND1PTilXcPsoSjP5r0oexOvBY-Tjw95HReOu=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits (Originally Performed by Ed Sheeran) (Piano Karaoke Version)",
+   "album": {
+    "name": "Bad Habits (Originally Performed by Ed Sheeran) (Piano Karaoke Version)",
+    "id": "MPREb_DwM9gbpbVl2"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ISWzkhh364s",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:27",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sing2Piano",
+     "id": "UCIOnedxkKOYiwQZrbnRAcQA"
+    }
+   ],
+   "duration_seconds": 207,
+   "views": "175K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/5_bWfi7DA2ClYoaWLeUmrfmv0ZsI_lbh9cCd9pCL3NKYjB6VOMRKmyIs6aTDjJPvWxNjqe8UvwWr9QU9wQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/5_bWfi7DA2ClYoaWLeUmrfmv0ZsI_lbh9cCd9pCL3NKYjB6VOMRKmyIs6aTDjJPvWxNjqe8UvwWr9QU9wQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_nkjqJWyzYX1"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "GaC5oOxHf2I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:58",
+   "year": null,
+   "artists": [
+    {
+     "name": "Dapa Deep",
+     "id": "UCTGkWDruIq7MMbRZWEuowog"
+    }
+   ],
+   "duration_seconds": 298,
+   "views": "971K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/HJIr7LFpj-bfJlHLaEbWwxXBd5Hm13vovY1lre62zOLARPQE7ATZV0P4Td_2ePvz-UNpPSPhkEAdOmT5=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/HJIr7LFpj-bfJlHLaEbWwxXBd5Hm13vovY1lre62zOLARPQE7ATZV0P4Td_2ePvz-UNpPSPhkEAdOmT5=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_1OYb2LTZ652"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "28yaRWX-mao",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:13",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kilian K",
+     "id": "UCCLno-s1rkviVtnb-Vs4J1g"
+    },
+    {
+     "name": "Blaikz",
+     "id": "UCRhlt7jq4LkaKUL9fMBuY7Q"
+    },
+    {
+     "name": "Max Fail",
+     "id": "UCzaja1daplBsqiRn-yDMZcA"
+    }
+   ],
+   "duration_seconds": 133,
+   "views": "130K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/HoXKYsx66lfLtgk9jlAe9cier60srgMclX-X3nwsMJ1U_Lg-AJf-s3wc_mGOlwn8NjaiXPsscOQwnepzzQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/HoXKYsx66lfLtgk9jlAe9cier60srgMclX-X3nwsMJ1U_Lg-AJf-s3wc_mGOlwn8NjaiXPsscOQwnepzzQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_Hw3Lgjg2tzo"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "fjMArieQHWw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sunseekers",
+     "id": "UCWzAPmO1H04vlB1AookupLg"
+    },
+    {
+     "name": "SIQUE",
+     "id": "UCVkKj_OD6EvnY0bq62a_QUg"
+    }
+   ],
+   "duration_seconds": 112,
+   "views": "28K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2Wq6J-Yu93PpsMm9PHV2IJc4szZLxieHbOuNyhtbbibxveoNaLtcldHofHyWSpZ8JMLaIPfkpuf9wexZ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2Wq6J-Yu93PpsMm9PHV2IJc4szZLxieHbOuNyhtbbibxveoNaLtcldHofHyWSpZ8JMLaIPfkpuf9wexZ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits (In the Style of Ed Sheeran) [Karaoke Version]",
+   "album": {
+    "name": "Bad Habits (In the Style of Ed Sheeran) [Karaoke Version]",
+    "id": "MPREb_n2uFVPvKvjG"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "K2DDJPoc7P0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:44",
+   "year": null,
+   "artists": [
+    {
+     "name": "Instrumental Legends",
+     "id": "UC5Qa2DLhJwW4TgprVSxaoHQ"
+    }
+   ],
+   "duration_seconds": 164,
+   "views": "218",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/8lL4QfJ1Re14nwcu6TE0ZRxnzaJUOnF3WgGlJvnJemuw00cNIu14IXHDuRDX5dMt0U3CKXuxlKeZaJ_0=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/8lL4QfJ1Re14nwcu6TE0ZRxnzaJUOnF3WgGlJvnJemuw00cNIu14IXHDuRDX5dMt0U3CKXuxlKeZaJ_0=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_duA8aljWOPR"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "hG88-WvrbJw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:59",
+   "year": null,
+   "artists": [
+    {
+     "name": "George Chronas",
+     "id": "UCJ9A-P4jQwbTrKck4_eo0MQ"
+    }
+   ],
+   "duration_seconds": 239,
+   "views": "179",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/be2KOrIY3FN8x6tUur7f0DMwVtoUbgJH9rU5XikyfDVbZJAqgVkTJpNJR0udKqejXJQ_ER8snx-Wrr5cCA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/be2KOrIY3FN8x6tUur7f0DMwVtoUbgJH9rU5XikyfDVbZJAqgVkTJpNJR0udKqejXJQ_ER8snx-Wrr5cCA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bad Habits",
+   "album": {
+    "name": "Bad Habits",
+    "id": "MPREb_J9gOlxNRA1C"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "zwYscK0iM88",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:23",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sarvinarck",
+     "id": "UCLrerplbmrUj2qLvnLFwi0Q"
+    },
+    {
+     "name": "Doja Kehlani Smith",
+     "id": "UCl_1CYEidFEa-GoAasTBJJw"
+    }
+   ],
+   "duration_seconds": 263,
+   "views": "262",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/aESlWqgQOrwlsEEO91_aKtgmdqzWNHkVIXu7z1lkJ4DQURWbmiI8I52d3Vt7PqPD7P1bayXw0mBoiYo=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/aESlWqgQOrwlsEEO91_aKtgmdqzWNHkVIXu7z1lkJ4DQURWbmiI8I52d3Vt7PqPD7P1bayXw0mBoiYo=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

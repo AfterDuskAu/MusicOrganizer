@@ -1,0 +1,486 @@
+{
+ "kind": "album",
+ "key": "MPREb_blrjqA5PY0E",
+ "request": "MPREb_blrjqA5PY0E",
+ "recorded_at": "2026-09-29T02:40:29Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [
+  "related_recommendations",
+  "description",
+  "descriptionRuns",
+  "feedback tokens"
+ ],
+ "response": {
+  "title": "Number Ones",
+  "type": "Album",
+  "thumbnails": [
+   {
+    "url": "https://yt3.googleusercontent.com/qdDPq4fcsWCsoRVcORCxn-BU6gB74XC3X7M_EqjSQfEX96dIvjGo_Q6qnrB8R8SpNy0ywAV2SCXor04X=w60-h60-l90-rj",
+    "width": 60,
+    "height": 60
+   },
+   {
+    "url": "https://yt3.googleusercontent.com/qdDPq4fcsWCsoRVcORCxn-BU6gB74XC3X7M_EqjSQfEX96dIvjGo_Q6qnrB8R8SpNy0ywAV2SCXor04X=w120-h120-l90-rj",
+    "width": 120,
+    "height": 120
+   },
+   {
+    "url": "https://yt3.googleusercontent.com/qdDPq4fcsWCsoRVcORCxn-BU6gB74XC3X7M_EqjSQfEX96dIvjGo_Q6qnrB8R8SpNy0ywAV2SCXor04X=w226-h226-l90-rj",
+    "width": 226,
+    "height": 226
+   },
+   {
+    "url": "https://yt3.googleusercontent.com/qdDPq4fcsWCsoRVcORCxn-BU6gB74XC3X7M_EqjSQfEX96dIvjGo_Q6qnrB8R8SpNy0ywAV2SCXor04X=w544-h544-l90-rj",
+    "width": 544,
+    "height": 544
+   }
+  ],
+  "isExplicit": false,
+  "year": "2003",
+  "artists": [
+   {
+    "name": "Michael Jackson",
+    "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+   }
+  ],
+  "trackCount": 18,
+  "duration": "1 hour, 18 minutes",
+  "audioPlaylistId": "OLAK5uy_lE6B4oEoDe7a1l8gTH5elOf5ZddXV5mcI",
+  "likeStatus": "INDIFFERENT",
+  "tracks": [
+   {
+    "videoId": "yURRmWtbTbo",
+    "title": "Don't Stop 'Til You Get Enough (2003 Edit)",
+    "artists": [
+     {
+      "name": "Michael Jackson",
+      "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+     }
+    ],
+    "album": "Number Ones",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "844M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 1,
+    "duration": "3:57",
+    "duration_seconds": 237,
+    "creditsBrowseId": "MPTCm_O25dOQpCQ"
+   },
+   {
+    "videoId": "5X-Mrc2l1d0",
+    "title": "Rock with You (Single Version)",
+    "artists": [
+     {
+      "name": "Michael Jackson",
+      "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+     }
+    ],
+    "album": "Number Ones",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "717M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 2,
+    "duration": "3:41",
+    "duration_seconds": 221,
+    "creditsBrowseId": "MPTCzdfo13dnp-U"
+   },
+   {
+    "videoId": "Zi_XLOBDo_Y",
+    "title": "Billie Jean",
+    "artists": [
+     {
+      "name": "Michael Jackson",
+      "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+     }
+    ],
+    "album": "Number Ones",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "3.4B plays",
+    "communityVoteStatus": null,
+    "trackNumber": 3,
+    "duration": "4:54",
+    "duration_seconds": 294,
+    "creditsBrowseId": "MPTCA9pd3M1Sxe8"
+   },
+   {
+    "videoId": "oRdxUFDoQe0",
+    "title": "Beat It",
+    "artists": [
+     {
+      "name": "Michael Jackson",
+      "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+     }
+    ],
+    "album": "Number Ones",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "2.2B plays",
+    "communityVoteStatus": null,
+    "trackNumber": 4,
+    "duration": "4:18",
+    "duration_seconds": 258,
+    "creditsBrowseId": "MPTCPhsGfffU9Qw"
+   },
+   {
+    "videoId": "-e-y-1VRZ3I",
+    "title": "Thriller (2003 Edit)",
+    "artists": [
+     {
+      "name": "Michael Jackson",
+      "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+     }
+    ],
+    "album": "Number Ones",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "408M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 5,
+    "duration": "5:12",
+    "duration_seconds": 312,
+    "creditsBrowseId": "MPTC-e-y-1VRZ3I"
+   },
+   {
+    "videoId": "GAmVuYEeSSg",
+    "title": "I Just Can't Stop Loving You (feat. Siedah Garrett)",
+    "artists": [
+     {
+      "name": "Michael Jackson",
+      "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+     }
+    ],
+    "album": "Number Ones",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "61M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 6,
+    "duration": "4:12",
+    "duration_seconds": 252,
+    "creditsBrowseId": "MPTClNPVS2v4-PE"
+   },
+   {
+    "videoId": "dIQmcwSg0nU",
+    "title": "Bad",
+    "artists": [
+     {
+      "name": "Michael Jackson",
+      "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+     }
+    ],
+    "album": "Number Ones",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "332M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 7,
+    "duration": "4:07",
+    "duration_seconds": 247,
+    "creditsBrowseId": "MPTCdIQmcwSg0nU"
+   },
+   {
+    "videoId": "_mMyPJSx8RU",
+    "title": "Smooth Criminal (Radio Edit)",
+    "artists": [
+     {
+      "name": "Michael Jackson",
+      "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+     }
+    ],
+    "album": "Number Ones",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "224M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 8,
+    "duration": "4:18",
+    "duration_seconds": 258,
+    "creditsBrowseId": "MPTC_mMyPJSx8RU"
+   },
+   {
+    "videoId": "HzZ_urpj4As",
+    "title": "The Way You Make Me Feel",
+    "artists": [
+     {
+      "name": "Michael Jackson",
+      "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+     }
+    ],
+    "album": "Number Ones",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "822M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 9,
+    "duration": "4:57",
+    "duration_seconds": 297,
+    "creditsBrowseId": "MPTCm1w92hV5gRk"
+   },
+   {
+    "videoId": "PivWY9wn5ps",
+    "title": "Man in the Mirror (2003 Edit)",
+    "artists": [
+     {
+      "name": "Michael Jackson",
+      "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+     }
+    ],
+    "album": "Number Ones",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "535M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 10,
+    "duration": "5:04",
+    "duration_seconds": 304,
+    "creditsBrowseId": "MPTCSJvieYKlVI0"
+   },
+   {
+    "videoId": "yUi_S6YWjZw",
+    "title": "Dirty Diana",
+    "artists": [
+     {
+      "name": "Michael Jackson",
+      "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+     }
+    ],
+    "album": "Number Ones",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "505M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 11,
+    "duration": "4:41",
+    "duration_seconds": 281,
+    "creditsBrowseId": "MPTCaUD0juRwb3I"
+   },
+   {
+    "videoId": "F2AitTPI5U0",
+    "title": "Black or White (Single Version)",
+    "artists": [
+     {
+      "name": "Michael Jackson",
+      "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+     }
+    ],
+    "album": "Number Ones",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "751M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 12,
+    "duration": "3:19",
+    "duration_seconds": 199,
+    "creditsBrowseId": "MPTCYP3W-E0OamU"
+   },
+   {
+    "videoId": "pAyKJAtDNCw",
+    "title": "You Are Not Alone (Radio Edit)",
+    "artists": [
+     {
+      "name": "Michael Jackson",
+      "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+     }
+    ],
+    "album": "Number Ones",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "672M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 13,
+    "duration": "4:34",
+    "duration_seconds": 274,
+    "creditsBrowseId": "MPTCTk8MkQClqr0"
+   },
+   {
+    "videoId": "XAi3VTSdTxU",
+    "title": "Earth Song (Radio Edit)",
+    "artists": [
+     {
+      "name": "Michael Jackson",
+      "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+     }
+    ],
+    "album": "Number Ones",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "707M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 14,
+    "duration": "5:01",
+    "duration_seconds": 301,
+    "creditsBrowseId": "MPTCf9PVVArt5Wk"
+   },
+   {
+    "videoId": "g4tpuu-Up90",
+    "title": "You Rock My World (Radio Edit)",
+    "artists": [
+     {
+      "name": "Michael Jackson",
+      "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+     }
+    ],
+    "album": "Number Ones",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "293M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 15,
+    "duration": "4:26",
+    "duration_seconds": 266,
+    "creditsBrowseId": "MPTCyBA53l_InJQ"
+   },
+   {
+    "videoId": "O8ELJ_Eh8A0",
+    "title": "Break of Dawn",
+    "artists": [
+     {
+      "name": "Michael Jackson",
+      "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+     }
+    ],
+    "album": "Number Ones",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "37M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 16,
+    "duration": "5:30",
+    "duration_seconds": 330,
+    "creditsBrowseId": "MPTCfo4mK3wEvss"
+   },
+   {
+    "videoId": "-owpIWQMd80",
+    "title": "One More Chance",
+    "artists": [
+     {
+      "name": "Michael Jackson",
+      "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+     }
+    ],
+    "album": "Number Ones",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "37M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 17,
+    "duration": "3:49",
+    "duration_seconds": 229,
+    "creditsBrowseId": "MPTCbKYtMIJYaiQ"
+   },
+   {
+    "videoId": "w-5xyBF4MF0",
+    "title": "Ben (2003 Live Edit)",
+    "artists": [
+     {
+      "name": "Michael Jackson",
+      "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+     }
+    ],
+    "album": "Number Ones",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "1.3M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 18,
+    "duration": "2:59",
+    "duration_seconds": 179,
+    "creditsBrowseId": "MPTCw-5xyBF4MF0"
+   }
+  ],
+  "duration_seconds": 4739
+ }
+}

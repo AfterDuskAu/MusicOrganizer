@@ -14,6 +14,8 @@ Keys (contract section 5), each written by the step named:
 - "decisions": {item_id: {"decision": RPC decision (docs/ENGINE_API.md → Enums),
   "decided_at": ISO time, plus details such as "video_id"}} (step 07)
 - "superseded": {normalised rip path: MUSICORG_ID} (step 09b)
+- "rejected": {item_id: [YouTube videoId, ...]}: candidates the owner turned down, never
+  proposed again (read by step 06, written by step 07)
 """
 
 from __future__ import annotations
@@ -195,3 +197,15 @@ def superseded(data: dict[str, Any]) -> dict[str, str]:
     """Rip path (normalised) → MUSICORG_ID of the library file that replaced it."""
     value = data.get("superseded")
     return {k: v for k, v in value.items() if isinstance(v, str)} if isinstance(value, dict) else {}
+
+
+def rejected(data: dict[str, Any]) -> dict[str, set[str]]:
+    """Item id → the videoIds the owner rejected for it."""
+    value = data.get("rejected")
+    if not isinstance(value, dict):
+        return {}
+    return {
+        k: {v for v in ids if isinstance(v, str)}
+        for k, ids in value.items()
+        if isinstance(ids, list)
+    }

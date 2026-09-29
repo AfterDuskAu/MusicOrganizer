@@ -1,0 +1,342 @@
+{
+ "kind": "album",
+ "key": "MPREb_An5Uj0USKqe",
+ "request": "MPREb_An5Uj0USKqe",
+ "recorded_at": "2026-09-29T02:40:34Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [
+  "related_recommendations",
+  "description",
+  "descriptionRuns",
+  "feedback tokens"
+ ],
+ "response": {
+  "title": "Everyone Deserves Music",
+  "type": "Album",
+  "thumbnails": [
+   {
+    "url": "https://yt3.googleusercontent.com/VbKddzwC9CgOYAEPsF2-tts1__E_dbk5Vl0trKuCiaqIUnDBFnkDYzAk6ciGSmjmNNqqjJ5h70OUeo-j=w60-h60-l90-rj",
+    "width": 60,
+    "height": 60
+   },
+   {
+    "url": "https://yt3.googleusercontent.com/VbKddzwC9CgOYAEPsF2-tts1__E_dbk5Vl0trKuCiaqIUnDBFnkDYzAk6ciGSmjmNNqqjJ5h70OUeo-j=w120-h120-l90-rj",
+    "width": 120,
+    "height": 120
+   },
+   {
+    "url": "https://yt3.googleusercontent.com/VbKddzwC9CgOYAEPsF2-tts1__E_dbk5Vl0trKuCiaqIUnDBFnkDYzAk6ciGSmjmNNqqjJ5h70OUeo-j=w226-h226-l90-rj",
+    "width": 226,
+    "height": 226
+   },
+   {
+    "url": "https://yt3.googleusercontent.com/VbKddzwC9CgOYAEPsF2-tts1__E_dbk5Vl0trKuCiaqIUnDBFnkDYzAk6ciGSmjmNNqqjJ5h70OUeo-j=w544-h544-l90-rj",
+    "width": 544,
+    "height": 544
+   }
+  ],
+  "isExplicit": false,
+  "year": "2003",
+  "artists": [
+   {
+    "name": "Michael Franti & Spearhead",
+    "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+   }
+  ],
+  "trackCount": 12,
+  "duration": "52 minutes",
+  "audioPlaylistId": "OLAK5uy_nH_Ad-SZdm7mLDDViqVIfXDI3XM33FXSU",
+  "likeStatus": "INDIFFERENT",
+  "tracks": [
+   {
+    "videoId": "Hkz27J-dlw8",
+    "title": "What I Be",
+    "artists": [
+     {
+      "name": "Michael Franti & Spearhead",
+      "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+     }
+    ],
+    "album": "Everyone Deserves Music",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "453K plays",
+    "communityVoteStatus": null,
+    "trackNumber": 1,
+    "duration": "4:46",
+    "duration_seconds": 286,
+    "creditsBrowseId": "MPTCHkz27J-dlw8"
+   },
+   {
+    "videoId": "j7iNU-FZakA",
+    "title": "We Don't Stop",
+    "artists": [
+     {
+      "name": "Michael Franti & Spearhead",
+      "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+     }
+    ],
+    "album": "Everyone Deserves Music",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "252K plays",
+    "communityVoteStatus": null,
+    "trackNumber": 2,
+    "duration": "4:37",
+    "duration_seconds": 277,
+    "creditsBrowseId": "MPTCj7iNU-FZakA"
+   },
+   {
+    "videoId": "4v2Cy8gOSdM",
+    "title": "Everyone Deserves Music",
+    "artists": [
+     {
+      "name": "Michael Franti & Spearhead",
+      "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+     }
+    ],
+    "album": "Everyone Deserves Music",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "370K plays",
+    "communityVoteStatus": null,
+    "trackNumber": 3,
+    "duration": "4:37",
+    "duration_seconds": 277,
+    "creditsBrowseId": "MPTC4v2Cy8gOSdM"
+   },
+   {
+    "videoId": "xlhL6uCdspM",
+    "title": "Never Too Late",
+    "artists": [
+     {
+      "name": "Michael Franti & Spearhead",
+      "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+     }
+    ],
+    "album": "Everyone Deserves Music",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "286K plays",
+    "communityVoteStatus": null,
+    "trackNumber": 4,
+    "duration": "4:51",
+    "duration_seconds": 291,
+    "creditsBrowseId": "MPTCxlhL6uCdspM"
+   },
+   {
+    "videoId": "SpTYh-uYgQs",
+    "title": "Bomb the World",
+    "artists": [
+     {
+      "name": "Michael Franti & Spearhead",
+      "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+     }
+    ],
+    "album": "Everyone Deserves Music",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "218K plays",
+    "communityVoteStatus": null,
+    "trackNumber": 5,
+    "duration": "4:29",
+    "duration_seconds": 269,
+    "creditsBrowseId": "MPTCSpTYh-uYgQs"
+   },
+   {
+    "videoId": "51t5lL0p77o",
+    "title": "Pray for Grace",
+    "artists": [
+     {
+      "name": "Michael Franti & Spearhead",
+      "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+     }
+    ],
+    "album": "Everyone Deserves Music",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "204K plays",
+    "communityVoteStatus": null,
+    "trackNumber": 6,
+    "duration": "4:53",
+    "duration_seconds": 293,
+    "creditsBrowseId": "MPTC51t5lL0p77o"
+   },
+   {
+    "videoId": "vAFo7Ub__-A",
+    "title": "Love Why Did You Go Away",
+    "artists": [
+     {
+      "name": "Michael Franti & Spearhead",
+      "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+     }
+    ],
+    "album": "Everyone Deserves Music",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "57K plays",
+    "communityVoteStatus": null,
+    "trackNumber": 7,
+    "duration": "4:30",
+    "duration_seconds": 270,
+    "creditsBrowseId": "MPTCvAFo7Ub__-A"
+   },
+   {
+    "videoId": "Jow-IGhZIj8",
+    "title": "Yes I Will",
+    "artists": [
+     {
+      "name": "Michael Franti & Spearhead",
+      "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+     }
+    ],
+    "album": "Everyone Deserves Music",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "131K plays",
+    "communityVoteStatus": null,
+    "trackNumber": 8,
+    "duration": "4:02",
+    "duration_seconds": 242,
+    "creditsBrowseId": "MPTCJow-IGhZIj8"
+   },
+   {
+    "videoId": "6MCjzfHDMvw",
+    "title": "Feelin' Free",
+    "artists": [
+     {
+      "name": "Michael Franti & Spearhead",
+      "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+     }
+    ],
+    "album": "Everyone Deserves Music",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "88K plays",
+    "communityVoteStatus": null,
+    "trackNumber": 9,
+    "duration": "3:55",
+    "duration_seconds": 235,
+    "creditsBrowseId": "MPTC6MCjzfHDMvw"
+   },
+   {
+    "videoId": "3VgkbQZIIEg",
+    "title": "Love Invincible",
+    "artists": [
+     {
+      "name": "Michael Franti & Spearhead",
+      "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+     }
+    ],
+    "album": "Everyone Deserves Music",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "125K plays",
+    "communityVoteStatus": null,
+    "trackNumber": 10,
+    "duration": "3:51",
+    "duration_seconds": 231,
+    "creditsBrowseId": "MPTC3VgkbQZIIEg"
+   },
+   {
+    "videoId": "AEHegMubZ74",
+    "title": "Bomb the World (Armageddon Version)",
+    "artists": [
+     {
+      "name": "Michael Franti & Spearhead",
+      "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+     }
+    ],
+    "album": "Everyone Deserves Music",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "104K plays",
+    "communityVoteStatus": null,
+    "trackNumber": 11,
+    "duration": "4:45",
+    "duration_seconds": 285,
+    "creditsBrowseId": "MPTCAEHegMubZ74"
+   },
+   {
+    "videoId": "QeskWG7giXs",
+    "title": "Crazy, Crazy, Crazy",
+    "artists": [
+     {
+      "name": "Michael Franti & Spearhead",
+      "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+     }
+    ],
+    "album": "Everyone Deserves Music",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "110K plays",
+    "communityVoteStatus": null,
+    "trackNumber": 12,
+    "duration": "3:29",
+    "duration_seconds": 209,
+    "creditsBrowseId": "MPTCQeskWG7giXs"
+   }
+  ],
+  "duration_seconds": 3165
+ }
+}

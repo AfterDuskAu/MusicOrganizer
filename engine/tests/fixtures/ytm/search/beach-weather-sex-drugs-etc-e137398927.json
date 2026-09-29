@@ -1,0 +1,766 @@
+{
+ "kind": "search",
+ "key": "beach weather sex drugs etc",
+ "request": "Beach Weather sex, drugs, etc.",
+ "recorded_at": "2026-09-29T02:36:22Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sex, Drugs, Etc.",
+   "album": {
+    "name": "Pineapple Sunrise",
+    "id": "MPREb_0DyrbH4hfdu"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Tzj9eKrkmFA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:17",
+   "year": null,
+   "artists": [
+    {
+     "name": "Beach Weather",
+     "id": "UCUMQU8zVcwgj5EoHx3Jp7BQ"
+    }
+   ],
+   "duration_seconds": 197,
+   "views": "331M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/sRIjrc1teImRCaoi9sC5ZgjyrETZwRpoyTsNOaOcXI3sMHp2TSBHvmWCr--kJ3btOY_i_WSQ9-tpXJVl=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/sRIjrc1teImRCaoi9sC5ZgjyrETZwRpoyTsNOaOcXI3sMHp2TSBHvmWCr--kJ3btOY_i_WSQ9-tpXJVl=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sweater Weather",
+   "album": {
+    "name": "I Love You.",
+    "id": "MPREb_0uvucD0LWSQ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "cULQhvuq1Zc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:01",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Neighbourhood",
+     "id": "UC1cnYMXqKdazz-gDPKaDFyg"
+    }
+   ],
+   "duration_seconds": 241,
+   "views": "2.7B",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/rcGbeinqN-Z-9fLWpGlxeZlvH6tQZGDubHqEPDk91Wp3XKkWNuhNUQQnFWnaZHn9LPeaikxQlUE3O3ZBXg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/rcGbeinqN-Z-9fLWpGlxeZlvH6tQZGDubHqEPDk91Wp3XKkWNuhNUQQnFWnaZHn9LPeaikxQlUE3O3ZBXg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Unlovable",
+   "album": {
+    "name": "Pineapple Sunrise",
+    "id": "MPREb_0DyrbH4hfdu"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "BaxDQ9TkMYY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "Beach Weather",
+     "id": "UCUMQU8zVcwgj5EoHx3Jp7BQ"
+    }
+   ],
+   "duration_seconds": 211,
+   "views": "1.6M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/sRIjrc1teImRCaoi9sC5ZgjyrETZwRpoyTsNOaOcXI3sMHp2TSBHvmWCr--kJ3btOY_i_WSQ9-tpXJVl=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/sRIjrc1teImRCaoi9sC5ZgjyrETZwRpoyTsNOaOcXI3sMHp2TSBHvmWCr--kJ3btOY_i_WSQ9-tpXJVl=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sex, Drugs, Etc. (Sped Up Version)",
+   "album": {
+    "name": "Sex, Drugs, Etc. (Sped Up Version)",
+    "id": "MPREb_oaSbgbMKvpj"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "w4jOhmwZVAE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:57",
+   "year": null,
+   "artists": [
+    {
+     "name": "Beach Weather",
+     "id": "UCUMQU8zVcwgj5EoHx3Jp7BQ"
+    }
+   ],
+   "duration_seconds": 177,
+   "views": "42M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/mPy9NJFJYnje4qC7BBFEpb5AIesxcH_nxaQ0oXvZ4mrfS1KU5m1y09qMb2gt5nV_NwwqDeQwXHGVOG_s=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/mPy9NJFJYnje4qC7BBFEpb5AIesxcH_nxaQ0oXvZ4mrfS1KU5m1y09qMb2gt5nV_NwwqDeQwXHGVOG_s=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Swoon",
+   "album": {
+    "name": "What A Drag",
+    "id": "MPREb_0zVidBmsY0d"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "qsgiw9NeU_s",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:42",
+   "year": null,
+   "artists": [
+    {
+     "name": "Beach Weather",
+     "id": "UCUMQU8zVcwgj5EoHx3Jp7BQ"
+    }
+   ],
+   "duration_seconds": 222,
+   "views": "2M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/KezUQQhKu2SHhAcTPgPxhH99RFzLISlCakgMwYmsX3d4SMuUd3ntQ_YDOJyQxi4aGz2MI99ylijGy6i5fw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/KezUQQhKu2SHhAcTPgPxhH99RFzLISlCakgMwYmsX3d4SMuUd3ntQ_YDOJyQxi4aGz2MI99ylijGy6i5fw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Hard Feelings",
+   "album": {
+    "name": "Pineapple Sunrise",
+    "id": "MPREb_0DyrbH4hfdu"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ppOhE0rHwmQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:55",
+   "year": null,
+   "artists": [
+    {
+     "name": "Beach Weather",
+     "id": "UCUMQU8zVcwgj5EoHx3Jp7BQ"
+    }
+   ],
+   "duration_seconds": 175,
+   "views": "402K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/sRIjrc1teImRCaoi9sC5ZgjyrETZwRpoyTsNOaOcXI3sMHp2TSBHvmWCr--kJ3btOY_i_WSQ9-tpXJVl=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/sRIjrc1teImRCaoi9sC5ZgjyrETZwRpoyTsNOaOcXI3sMHp2TSBHvmWCr--kJ3btOY_i_WSQ9-tpXJVl=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sex, Drive",
+   "album": {
+    "name": "Жизнь по вызову II (Original Motion Picture Soundtrack)",
+    "id": "MPREb_cSEFx9XZRsB"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "yhC0_d3QMUc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:05",
+   "year": null,
+   "artists": [
+    {
+     "name": "OWEEK",
+     "id": "UCiWWAWz3cAfBbzEWZ2b1fIA"
+    }
+   ],
+   "duration_seconds": 185,
+   "views": "359K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/la3Rgd1h52oOymsePUM9UpM-CfCEFk9t579l2xaMVRO2ZnN_a22U49h9T8MCPWpR7v9kx34XaO5_Bei8bQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/la3Rgd1h52oOymsePUM9UpM-CfCEFk9t579l2xaMVRO2ZnN_a22U49h9T8MCPWpR7v9kx34XaO5_Bei8bQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Silent Type",
+   "album": {
+    "name": "Pineapple Sunrise",
+    "id": "MPREb_0DyrbH4hfdu"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "bVbM_h9umUU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "Beach Weather",
+     "id": "UCUMQU8zVcwgj5EoHx3Jp7BQ"
+    }
+   ],
+   "duration_seconds": 210,
+   "views": "192K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/sRIjrc1teImRCaoi9sC5ZgjyrETZwRpoyTsNOaOcXI3sMHp2TSBHvmWCr--kJ3btOY_i_WSQ9-tpXJVl=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/sRIjrc1teImRCaoi9sC5ZgjyrETZwRpoyTsNOaOcXI3sMHp2TSBHvmWCr--kJ3btOY_i_WSQ9-tpXJVl=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sex, Drugs, Alcohol",
+   "album": {
+    "name": "Mouth Music",
+    "id": "MPREb_OGv3MHltwaK"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "oIzTAsueZqo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:56",
+   "year": null,
+   "artists": [
+    {
+     "name": "Black V Neck",
+     "id": "UCroDsgj8tb5mNK7GJy7vrgQ"
+    }
+   ],
+   "duration_seconds": 236,
+   "views": "1.7M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ZtfXrBSUhfzxRt-1kDAH3lENpEaSxXW5k3B2u4TYHjUFPoqLXBz6wcnyxwIh0kSO6Dh_PmgFtQsN5gtc=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ZtfXrBSUhfzxRt-1kDAH3lENpEaSxXW5k3B2u4TYHjUFPoqLXBz6wcnyxwIh0kSO6Dh_PmgFtQsN5gtc=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "sex, drug, etc.",
+   "album": {
+    "name": "Lofi Covers, Vol. 2",
+    "id": "MPREb_Mg8EjyqYPXe"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "GOmmgRIEYr0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:13",
+   "year": null,
+   "artists": [
+    {
+     "name": "(a)way.",
+     "id": null
+    },
+    {
+     "name": "fiar",
+     "id": null
+    }
+   ],
+   "duration_seconds": 133,
+   "views": "74",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-kQy6l8VKMAhv5h6OnsQAKDXjR6STeOudKzaRKdpc4a8lv-53F_G-RUkLF6qR24uWNiHmgTzxU6YSf4=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-kQy6l8VKMAhv5h6OnsQAKDXjR6STeOudKzaRKdpc4a8lv-53F_G-RUkLF6qR24uWNiHmgTzxU6YSf4=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "sex, drugs, etc (slowed + reverb)",
+   "album": {
+    "name": "sex, drugs, etc (slowed + reverb)",
+    "id": "MPREb_v5PezjTHBSC"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "gcj64kpM2YU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:48",
+   "year": null,
+   "artists": [
+    {
+     "name": "slo",
+     "id": "UC3bYjM1MS1XYMsnISEWGQBQ"
+    },
+    {
+     "name": "Twilight",
+     "id": "UCOrkwQACtky11RKcEXzXXjw"
+    },
+    {
+     "name": "Tazzy",
+     "id": "UCziDnTmy5PrnvRWVhrPfnTw"
+    }
+   ],
+   "duration_seconds": 228,
+   "views": "160K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/CInEHaRO_dK2OEsgiuRWTmQe1OTYA-TtXbAVDHIAfV3_nvXMfQhTqj-RzIcIfqsaBF-bTdxZ9TO6iDb0=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/CInEHaRO_dK2OEsgiuRWTmQe1OTYA-TtXbAVDHIAfV3_nvXMfQhTqj-RzIcIfqsaBF-bTdxZ9TO6iDb0=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Hardcore Romance",
+   "album": {
+    "name": "Melt",
+    "id": "MPREb_pt0r2cG9p1A"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "8Q-fjHOliIE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:20",
+   "year": null,
+   "artists": [
+    {
+     "name": "Beach Weather",
+     "id": "UCUMQU8zVcwgj5EoHx3Jp7BQ"
+    }
+   ],
+   "duration_seconds": 200,
+   "views": "1.2M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/L70KdWmhLhAmjtqjOCi0hj7yS6Lb2I48he0_NG2BHQCuEYUL0CCqXJIMCE30RQtaQSabzdE3ZlaSsbKC=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/L70KdWmhLhAmjtqjOCi0hj7yS6Lb2I48he0_NG2BHQCuEYUL0CCqXJIMCE30RQtaQSabzdE3ZlaSsbKC=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Drugs/Hoes/Money/Etc.",
+   "album": {
+    "name": "7th or St. Tammany",
+    "id": "MPREb_gEQf1f558C9"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ElKAextmUoo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "$uicideboy$",
+     "id": "UC0PsqWsDU7JJKqztI8V6spA"
+    }
+   ],
+   "duration_seconds": 145,
+   "views": "12M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/6Qx3aNK9eboTEG8vZthip0wutYuKTatkjO2ogeFR0V1sVsXGKJLZDm9H4uHZSqSchZwsIObc2aJHt2_G6g=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/6Qx3aNK9eboTEG8vZthip0wutYuKTatkjO2ogeFR0V1sVsXGKJLZDm9H4uHZSqSchZwsIObc2aJHt2_G6g=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sex & Drugs & House (Stage Edit)",
+   "album": {
+    "name": "Dance With the Devil",
+    "id": "MPREb_5PbiUnd5mbw"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "BTKMkBizEzA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:42",
+   "year": null,
+   "artists": [
+    {
+     "name": "D-Devils",
+     "id": "UCrzGBTnI_YnOPqdeADJ2voA"
+    }
+   ],
+   "duration_seconds": 222,
+   "views": "4.3M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/98hLVZaHM0Jy8i0KJBxqT8vkdL4QNUYUtMfqjakcSybIzWR5p9Z9n5G5v0vRGyG5oyaVLhjLx6sfuqI=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/98hLVZaHM0Jy8i0KJBxqT8vkdL4QNUYUtMfqjakcSybIzWR5p9Z9n5G5v0vRGyG5oyaVLhjLx6sfuqI=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "sex, drugs, etc. (Extended Mix)",
+   "album": {
+    "name": "sex, drugs, etc.",
+    "id": "MPREb_MkakXULNDDS"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "H499lVE16GA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:17",
+   "year": null,
+   "artists": [
+    {
+     "name": "Lost Ways",
+     "id": "UCTW8wjPjelYpqhTz7wU3tuQ"
+    }
+   ],
+   "duration_seconds": 197,
+   "views": "184",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/IoUd5WNhqW8UhikUHoDaMj7dI4Rs_zSuL5EDV_Bu-DjemDmGh7suiMszuxIo45J9jYiCjMV8I8t6-YFK=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/IoUd5WNhqW8UhikUHoDaMj7dI4Rs_zSuL5EDV_Bu-DjemDmGh7suiMszuxIo45J9jYiCjMV8I8t6-YFK=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sex Drugs Goa Trance",
+   "album": {
+    "name": "The crocodile come alive",
+    "id": "MPREb_kDsQsIMfssu"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "GWFJtrXch-c",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "8:42",
+   "year": null,
+   "artists": [
+    {
+     "name": "Crocoloko",
+     "id": "UCua_OCPVFyG9MWMDVtBgHKA"
+    }
+   ],
+   "duration_seconds": 522,
+   "views": "1.5M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/b0VXEGlM_kGnc9O1VR8ojIwMT_nQIbxAbZhDmZ8tWx68jyQvjOHYMGFS-Fi_W__n9oLsNLnf7dM8OCfnPw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/b0VXEGlM_kGnc9O1VR8ojIwMT_nQIbxAbZhDmZ8tWx68jyQvjOHYMGFS-Fi_W__n9oLsNLnf7dM8OCfnPw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Tremors",
+   "album": {
+    "name": "Chit Chat",
+    "id": "MPREb_2ZKkL24lLtm"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Hl6GUotvdrY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:29",
+   "year": null,
+   "artists": [
+    {
+     "name": "Beach Weather",
+     "id": "UCUMQU8zVcwgj5EoHx3Jp7BQ"
+    }
+   ],
+   "duration_seconds": 209,
+   "views": "162K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2NT4DB4A67cFkLeKcN7Qy9C0JF2CrjpbeSQwU2oeKwI_OXaaLIGSvL_G2kOpxmspWXpnhIFLpmqFpsw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2NT4DB4A67cFkLeKcN7Qy9C0JF2CrjpbeSQwU2oeKwI_OXaaLIGSvL_G2kOpxmspWXpnhIFLpmqFpsw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "SEX, DRUGS, ETC. - (TECHNO SPED UP)",
+   "album": {
+    "name": "SEX, DRUGS, ETC. - (TECHNO SPED UP)",
+    "id": "MPREb_Lvp4JnU4sAb"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "5bAvqRJSI98",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:40",
+   "year": null,
+   "artists": [
+    {
+     "name": "FAST BASSTON",
+     "id": "UCtqq24XH_2GAxXam6uCXWTQ"
+    },
+    {
+     "name": "Tazzy",
+     "id": "UCZ52JkVq3a5VUHcY0i0sE0w"
+    }
+   ],
+   "duration_seconds": 100,
+   "views": "399",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/cLMP2HD_7Zs6PwvJE5pSeWKyXq-s10bWND5pYnjEWOZW8GyEJOzMobMAKVaNqyRD9EqXUfGrVpTKI7Hg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/cLMP2HD_7Zs6PwvJE5pSeWKyXq-s10bWND5pYnjEWOZW8GyEJOzMobMAKVaNqyRD9EqXUfGrVpTKI7Hg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sex, Drugs, Etc. (but it's slowed and muffled)",
+   "album": {
+    "name": "Sex, Drugs, Etc.",
+    "id": "MPREb_QlZTPjlnbQH"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "DLRPH_GvLtE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "TommyMuzzic",
+     "id": "UCIOzVH6F6iE_qpzIBDkJAyA"
+    }
+   ],
+   "duration_seconds": 243,
+   "views": "902",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/tJsLw2GwcUTAskq6dPEM7PnMSv3cYbY8ZAmp0oQt0Y62eQYFGbQcWP1VRAFfK73CPqN9NVy8XTTW9QnO=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/tJsLw2GwcUTAskq6dPEM7PnMSv3cYbY8ZAmp0oQt0Y62eQYFGbQcWP1VRAFfK73CPqN9NVy8XTTW9QnO=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sex, Drugs, Etc. (Slowed + Reverb) - Romanticize the Life, Floating on My Lowkey Vibe",
+   "album": {
+    "name": "Sex, Drugs, Etc. (Slowed + Reverb) - Romanticize the Life, Floating on My Lowkey Vibe",
+    "id": "MPREb_I4cTmR3YqL8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "L5ur1gUjDgE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:22",
+   "year": null,
+   "artists": [
+    {
+     "name": "3slow2",
+     "id": "UCzzh8fcJXSJCoHdIrbEyOcw"
+    }
+   ],
+   "duration_seconds": 202,
+   "views": "1.7K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/tRKhhEmGcHPf0vAlEKjachLFgfAs_zf0LWyPDN3H_h8d2PwQs6GNwT9JHFT3qaBs8aHtfv3TAx8eLrr8=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/tRKhhEmGcHPf0vAlEKjachLFgfAs_zf0LWyPDN3H_h8d2PwQs6GNwT9JHFT3qaBs8aHtfv3TAx8eLrr8=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

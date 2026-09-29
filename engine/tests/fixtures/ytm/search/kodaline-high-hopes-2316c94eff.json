@@ -1,0 +1,762 @@
+{
+ "kind": "search",
+ "key": "kodaline high hopes",
+ "request": "Kodaline High Hopes",
+ "recorded_at": "2026-09-29T02:37:13Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "In A Perfect World (Expanded Edition)",
+    "id": "MPREb_zlzzvgcFSTf"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "xzupsArmEAE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:51",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kodaline",
+     "id": "UC0cymQddFci7e31o7EIznYw"
+    }
+   ],
+   "duration_seconds": 231,
+   "views": "184M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Cl3O9d2_49W9wMm07HAjfHYeI3PLVODXWiE3_hD9DbpzyA828pB-w6MrtMy0gYlpuPo1KHqmZ7PQGLQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Cl3O9d2_49W9wMm07HAjfHYeI3PLVODXWiE3_hD9DbpzyA828pB-w6MrtMy0gYlpuPo1KHqmZ7PQGLQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Head Held High",
+   "album": {
+    "name": "Politics of Living",
+    "id": "MPREb_7hzNiLtAAnp"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "HU29k58Ofuo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:35",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kodaline",
+     "id": "UC0cymQddFci7e31o7EIznYw"
+    }
+   ],
+   "duration_seconds": 215,
+   "views": "6.2M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/l4-1iO8OFdHPmk6KqtYRSOaePnN4H5kjD84XVGKs_2Sp09eCoyQzUkjA3IKsfK0MhKG_2dLxBsKFSOU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/l4-1iO8OFdHPmk6KqtYRSOaePnN4H5kjD84XVGKs_2Sp09eCoyQzUkjA3IKsfK0MhKG_2dLxBsKFSOU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes (Live in Dublin / 2022)",
+   "album": {
+    "name": "High Hopes",
+    "id": "MPREb_mz8gxUTp7Oc"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "0prvjYtfC8o",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:43",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kodaline",
+     "id": "UC0cymQddFci7e31o7EIznYw"
+    }
+   ],
+   "duration_seconds": 343,
+   "views": "13M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/z9d_rtTrIwjWIpbaE6r0LfCEnu-J8TToCXfM5tVe6yHbSRvtAx8dxZVfT4pnTmfFreJJu1QddT8_bHdj=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/z9d_rtTrIwjWIpbaE6r0LfCEnu-J8TToCXfM5tVe6yHbSRvtAx8dxZVfT4pnTmfFreJJu1QddT8_bHdj=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "High Hopes",
+    "id": "MPREb_cblgxH50myR"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "41oJ3G6iHoA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "8:46",
+   "year": null,
+   "artists": [
+    {
+     "name": "Symbolic & Outsiders",
+     "id": null
+    }
+   ],
+   "duration_seconds": 526,
+   "views": "27K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/DGUauQ9Eywnk_RVrmtBOzYY5Ol0JAtjWvgsdFQkyk-DAuAJIZMWB5RrqqsqfvewKFyG1yOAEF8Bs-OAW=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/DGUauQ9Eywnk_RVrmtBOzYY5Ol0JAtjWvgsdFQkyk-DAuAJIZMWB5RrqqsqfvewKFyG1yOAEF8Bs-OAW=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes (Today FM Live version)",
+   "album": {
+    "name": "In A Perfect World (Collection)",
+    "id": "MPREb_Wyjoh88Kqh6"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "vmDAlfLFgOY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kodaline",
+     "id": "UC0cymQddFci7e31o7EIznYw"
+    }
+   ],
+   "duration_seconds": 232,
+   "views": "55K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/sA2yRwrOlr2GXWq6Iysr6l7m3xNqcchiBztsj8XKyA9bGKIKue9MHxiFER8uc9FVmuDeuxtIl407Snw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/sA2yRwrOlr2GXWq6Iysr6l7m3xNqcchiBztsj8XKyA9bGKIKue9MHxiFER8uc9FVmuDeuxtIl407Snw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "Cold Water Music",
+    "id": "MPREb_yqRnR53YbhU"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "C-g7O9j8YN4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:55",
+   "year": null,
+   "artists": [
+    {
+     "name": "Howl",
+     "id": "UCjrjGyIrnZRJSVOJX-41AZg"
+    }
+   ],
+   "duration_seconds": 235,
+   "views": "2.5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/pizuXMxaf4bUEQneHfZFxCbyr_BeRk1znMmw5JQmPWtocGBrrmvJSUvhhShqDt_AEh3mbcl5p8h6fjkY=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/pizuXMxaf4bUEQneHfZFxCbyr_BeRk1znMmw5JQmPWtocGBrrmvJSUvhhShqDt_AEh3mbcl5p8h6fjkY=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes (8D Audio)",
+   "album": {
+    "name": "High Hopes (8D Audio)",
+    "id": "MPREb_wAnb9AafUsI"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "BnXMvo4uZ6M",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:55",
+   "year": null,
+   "artists": [
+    {
+     "name": "untrusted",
+     "id": "UCbjaKFbWud6Mx1FkJm2x3Wg"
+    }
+   ],
+   "duration_seconds": 175,
+   "views": "24K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/skdBO6VOn9St96oYHNgrAFgQV1PCh_nMt3dk6BgANvweVek1Qb3SnK2dzxUaELlMrH-nzOhTN6mXLqD_=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/skdBO6VOn9St96oYHNgrAFgQV1PCh_nMt3dk6BgANvweVek1Qb3SnK2dzxUaELlMrH-nzOhTN6mXLqD_=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "High Hopes",
+    "id": "MPREb_b6akH5Qntdm"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "l7Cr8ek68B0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:02",
+   "year": null,
+   "artists": [
+    {
+     "name": "One Voice Children's Choir",
+     "id": "UCB4EIqKQu8g7h5tSJPbuSFA"
+    }
+   ],
+   "duration_seconds": 182,
+   "views": "8.1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/EkJqCKEDSa4q_c822z_-IAZcHjwuFpjpylDAxk1-twaKE-QAWB52JNtZjbZWx0H2j97eK2DEBjqUotg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/EkJqCKEDSa4q_c822z_-IAZcHjwuFpjpylDAxk1-twaKE-QAWB52JNtZjbZWx0H2j97eK2DEBjqUotg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "All I Want",
+   "album": {
+    "name": "In A Perfect World (Expanded Edition)",
+    "id": "MPREb_zlzzvgcFSTf"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "3AUtk1wJJBc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:06",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kodaline",
+     "id": "UC0cymQddFci7e31o7EIznYw"
+    }
+   ],
+   "duration_seconds": 306,
+   "views": "886M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Cl3O9d2_49W9wMm07HAjfHYeI3PLVODXWiE3_hD9DbpzyA828pB-w6MrtMy0gYlpuPo1KHqmZ7PQGLQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Cl3O9d2_49W9wMm07HAjfHYeI3PLVODXWiE3_hD9DbpzyA828pB-w6MrtMy0gYlpuPo1KHqmZ7PQGLQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes Original Mix",
+   "album": {
+    "name": "Universal Religion, Vol. 2: The Awakening (Compiled by V Society)",
+    "id": "MPREb_K0VT98voaWG"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "SGjmwaK7M7w",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "8:49",
+   "year": null,
+   "artists": [
+    {
+     "name": "Outsiders,Symbolic",
+     "id": "UCcJJtcU6OEmFV8v8q2lnW1g"
+    }
+   ],
+   "duration_seconds": 529,
+   "views": "364K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/k177xeH-gBNyyqia-QYvFXABnk9SnMkZ0LlHxcdna0OS_yiDkbDeTGSNZSdMRxLVS9mIxsCd1_LDjKA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/k177xeH-gBNyyqia-QYvFXABnk9SnMkZ0LlHxcdna0OS_yiDkbDeTGSNZSdMRxLVS9mIxsCd1_LDjKA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes (Acoustic)",
+   "album": {
+    "name": "High Hopes (Acoustic)",
+    "id": "MPREb_jDCwJFB7cgH"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "gmnocjfBweE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:54",
+   "year": null,
+   "artists": [
+    {
+     "name": "Charlotte Haining",
+     "id": "UCWW3Wm6qov24Z0cL8_9r0uA"
+    },
+    {
+     "name": "goddard.",
+     "id": "UC5GonYKBUTcLTAk0JUhch-Q"
+    }
+   ],
+   "duration_seconds": 174,
+   "views": "4.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/mgetYs9A4eWBdTHD9S3b3WaG0xfbk-oZRrms50pBuXCLMaIy4fj5hEJzj1vF4PQjKg5zsMXqqm3kjgOb=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/mgetYs9A4eWBdTHD9S3b3WaG0xfbk-oZRrms50pBuXCLMaIy4fj5hEJzj1vF4PQjKg5zsMXqqm3kjgOb=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "High Hopes",
+    "id": "MPREb_PXMuuBntmyF"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "8bBkNLXTf8w",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:38",
+   "year": null,
+   "artists": [
+    {
+     "name": "Postmodern Jukebox",
+     "id": "UCyFFkOUbrDLpigb56-3koEw"
+    }
+   ],
+   "duration_seconds": 278,
+   "views": "3.4M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/o99o0gStamRUSgKmYPjwOfky4TjQ45toYYxokQryl4gNLPPdXDcTSha5SF-AUa7f_mKhKId-ht11PDgA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/o99o0gStamRUSgKmYPjwOfky4TjQ45toYYxokQryl4gNLPPdXDcTSha5SF-AUa7f_mKhKId-ht11PDgA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes (feat. Stage Piece & Nc Nhaytz)",
+   "album": {
+    "name": "Unlove",
+    "id": "MPREb_S9pwFxFPKTr"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "B-8y4FfgIrs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Saii Kay",
+     "id": "UClnvoZt0pVeKB-uE63S216w"
+    }
+   ],
+   "duration_seconds": 230,
+   "views": "918K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/bAqA1kAxcaXRs3Q10X0dIgbZmpHI4BvJe5gytEWoIxVA1h0DpGiQa8-62gzcxHz3u2-lTJN4gu2n-Bc=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/bAqA1kAxcaXRs3Q10X0dIgbZmpHI4BvJe5gytEWoIxVA1h0DpGiQa8-62gzcxHz3u2-lTJN4gu2n-Bc=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "Atlas",
+    "id": "MPREb_suAcIWEqwJS"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "2ZSMPPcAD2A",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:23",
+   "year": null,
+   "artists": [
+    {
+     "name": "Natalie Ceva",
+     "id": "UCj-S588Ccwd6AL3u3jf5eWQ"
+    }
+   ],
+   "duration_seconds": 203,
+   "views": "24",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/eVE5xMyRJYO0m8RPqIk5nB4xwJ051SSrB-8gM8qF1y8d-JRF5V3an3ajXfDR0GxwDtPk2VHktIOysqZ3Yg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/eVE5xMyRJYO0m8RPqIk5nB4xwJ051SSrB-8gM8qF1y8d-JRF5V3an3ajXfDR0GxwDtPk2VHktIOysqZ3Yg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "With You",
+    "id": "MPREb_7h0S9BiBVwM"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "G6-__0nB2IY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jamie Donaldson",
+     "id": "UCcHy0wQm_s44wx0i8oV6ZtA"
+    }
+   ],
+   "duration_seconds": 270,
+   "views": "23",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/kYEEajjRbYKJfJzjJiqvWBW87sQ2GKMBSfEi6uA-ix5tp_h8JIuz8ma0FhfFPNzSxGNMdHWuIZV7zZfFyg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/kYEEajjRbYKJfJzjJiqvWBW87sQ2GKMBSfEi6uA-ix5tp_h8JIuz8ma0FhfFPNzSxGNMdHWuIZV7zZfFyg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes (feat. JAM)",
+   "album": {
+    "name": "24",
+    "id": "MPREb_5YOISCaxDjg"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "vvHi_PZv7p4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:34",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sha Mendoza",
+     "id": "UCXW5cqx5GFyVOCyBPVki6RQ"
+    }
+   ],
+   "duration_seconds": 274,
+   "views": "213",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/mx31y4zQPfDkRNoQqzlYiztr2Tf3d0NYDOUl6G1Wf4H9dwUmu02r2kLnmgXQAfZ0yk9yR3GhvCLjsd7Erw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/mx31y4zQPfDkRNoQqzlYiztr2Tf3d0NYDOUl6G1Wf4H9dwUmu02r2kLnmgXQAfZ0yk9yR3GhvCLjsd7Erw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "High Hopes",
+    "id": "MPREb_HZzgIBOuCgW"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "-UrncWKx34g",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:56",
+   "year": null,
+   "artists": [
+    {
+     "name": "Edward & Graham",
+     "id": "UCzgl7WM86jDMg5D1qstubrQ"
+    }
+   ],
+   "duration_seconds": 176,
+   "views": "821",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/0oH_LXaqxMdWLZX99R2NYgPIwFjhweufsyxLod36rX6AiEHPiaMGZrJcYCWgZsRX_6qcK2bFvvnrjZU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/0oH_LXaqxMdWLZX99R2NYgPIwFjhweufsyxLod36rX6AiEHPiaMGZrJcYCWgZsRX_6qcK2bFvvnrjZU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "High Hopes",
+    "id": "MPREb_bNH6BSh41N7"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ouRYjYq2wl8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:14",
+   "year": null,
+   "artists": [
+    {
+     "name": "elija",
+     "id": "UCBeaOuAuUvWdH2-5eJ0SJ9g"
+    },
+    {
+     "name": "luciferslegacy",
+     "id": "UCZzjkkS1AOrIRnreZRqFFvg"
+    },
+    {
+     "name": "Shorty 5",
+     "id": "UC2citAKvpWYa5sZzWXuMQrg"
+    }
+   ],
+   "duration_seconds": 194,
+   "views": "53",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/GX4pc5WN7GUiqphBkwefOouMnWJz6KgCTZsB9BXArjs2nuTQ8crI0Pd9N6u0CAzApp7DeM_FgkkeQ4A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/GX4pc5WN7GUiqphBkwefOouMnWJz6KgCTZsB9BXArjs2nuTQ8crI0Pd9N6u0CAzApp7DeM_FgkkeQ4A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "X Factor 11 Compilation",
+    "id": "MPREb_6yUGOfr9H8O"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "c4pQLDYDPms",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:05",
+   "year": null,
+   "artists": [
+    {
+     "name": "Lorenzo Bonamano",
+     "id": "UC4frTsWkjUTvdHjLMDtWXXQ"
+    }
+   ],
+   "duration_seconds": 185,
+   "views": "2K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ACAYc2iG4ntWwd--pAERmx4Q_pTCeG1GD2wTTMYYIenPmIe4ZMXvmPg6xYYEjoYj9gxWpqHSxg7M80bSNg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ACAYc2iG4ntWwd--pAERmx4Q_pTCeG1GD2wTTMYYIenPmIe4ZMXvmPg6xYYEjoYj9gxWpqHSxg7M80bSNg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "Who Is Sozay",
+    "id": "MPREb_mOm3wGwWgey"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "e3PwGsRCgVM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:18",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sozay",
+     "id": "UC7zhsb3_WgjIK-m-fICYQTg"
+    }
+   ],
+   "duration_seconds": 258,
+   "views": "638",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/bn1Z1d4Z_L-fKeeDpEtwacaP0pQ1hN1l4HPgDcdWhPodHL1s6lL_8ynFfqQox0pQFDYZ7V7kr_PNYwrp=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/bn1Z1d4Z_L-fKeeDpEtwacaP0pQ1hN1l4HPgDcdWhPodHL1s6lL_8ynFfqQox0pQFDYZ7V7kr_PNYwrp=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

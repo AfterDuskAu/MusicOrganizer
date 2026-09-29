@@ -1,0 +1,754 @@
+{
+ "kind": "search",
+ "key": "cold play a sky full of stars",
+ "request": "Cold Play A Sky Full Of Stars",
+ "recorded_at": "2026-09-29T02:36:30Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "A Sky Full of Stars",
+   "album": {
+    "name": "Ghost Stories",
+    "id": "MPREb_5wvzVEEfD79"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "KWuyx6yZ21U",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "Coldplay",
+     "id": "UCIaFw5VBEK8qaW6nRpx_qnw"
+    }
+   ],
+   "duration_seconds": 268,
+   "views": "1.7B",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/FrPId047QbNpFZfEtUJQDTC2-MGkgo4JPzasmIkdvFLjbQGNppcmRdOFXo6c3swTP_iP-ozTXhu8OBRSOw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/FrPId047QbNpFZfEtUJQDTC2-MGkgo4JPzasmIkdvFLjbQGNppcmRdOFXo6c3swTP_iP-ozTXhu8OBRSOw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "The Scientist",
+   "album": {
+    "name": "A Rush of Blood to the Head",
+    "id": "MPREb_U4m9ZEeYxdi"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "gm-Y9idMMQ4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:10",
+   "year": null,
+   "artists": [
+    {
+     "name": "Coldplay",
+     "id": "UCIaFw5VBEK8qaW6nRpx_qnw"
+    }
+   ],
+   "duration_seconds": 310,
+   "views": "2.4B",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-5tnsyG-BDCZj2gipRW710kLtHWPDVmlvt2BMwJ4StWqrfMxRUYvLsirYPClRDg1qnDU3avAgVn66eS20A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-5tnsyG-BDCZj2gipRW710kLtHWPDVmlvt2BMwJ4StWqrfMxRUYvLsirYPClRDg1qnDU3avAgVn66eS20A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Clocks",
+   "album": {
+    "name": "A Rush of Blood to the Head",
+    "id": "MPREb_U4m9ZEeYxdi"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "8Xv_Hg8o1fw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:08",
+   "year": null,
+   "artists": [
+    {
+     "name": "Coldplay",
+     "id": "UCIaFw5VBEK8qaW6nRpx_qnw"
+    }
+   ],
+   "duration_seconds": 308,
+   "views": "999M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-5tnsyG-BDCZj2gipRW710kLtHWPDVmlvt2BMwJ4StWqrfMxRUYvLsirYPClRDg1qnDU3avAgVn66eS20A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-5tnsyG-BDCZj2gipRW710kLtHWPDVmlvt2BMwJ4StWqrfMxRUYvLsirYPClRDg1qnDU3avAgVn66eS20A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "A Sky Full of Stars (Tabata)",
+   "album": {
+    "name": "A Sky Full of Stars (Tabata)",
+    "id": "MPREb_UJvBHBeZiX7"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "oshYQGLTxTI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "Tabata Songs",
+     "id": "UCPN5HjAIHuz0s8RE-1CUBEw"
+    }
+   ],
+   "duration_seconds": 243,
+   "views": "646K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/aLxddGrM0V2WlfsZk2ypkAl4gsNqJgtuu3CZGRxRLxc2xvgq2iaqakHemJg6QNQNWOTq3nt0jlW-qUI1=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/aLxddGrM0V2WlfsZk2ypkAl4gsNqJgtuu3CZGRxRLxc2xvgq2iaqakHemJg6QNQNWOTq3nt0jlW-qUI1=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "All Your Friends",
+   "album": {
+    "name": "A Sky Full of Stars",
+    "id": "MPREb_FMvINvQfhzJ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "5B4ZPnzSfVA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "Coldplay",
+     "id": "UCIaFw5VBEK8qaW6nRpx_qnw"
+    }
+   ],
+   "duration_seconds": 212,
+   "views": "5.8M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/IKRduX-yYs_htjnfD6AH1eITjj_ySYIpB_uLW4fXv93hgskNQ9trIqKZ9L2VnNokZWkJnhXCTDZxBW1m=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/IKRduX-yYs_htjnfD6AH1eITjj_ySYIpB_uLW4fXv93hgskNQ9trIqKZ9L2VnNokZWkJnhXCTDZxBW1m=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "A Sky Full of Stars",
+   "album": {
+    "name": "French Hits, Vol. 6",
+    "id": "MPREb_wLdfUuYqtXe"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "DH1MSD0xvYA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:26",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hits Variété Pop",
+     "id": "UCofZwgD2Nbw9nduV6uHy9Ew"
+    }
+   ],
+   "duration_seconds": 266,
+   "views": "155K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Akf7pbw07oftRnsAgPEKBOAmrGCJc0XVoC_8HjB_TLRiCLGPTkE4C8dhkRiF5Sktr9j8lb2E5kX9Jr5ChA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Akf7pbw07oftRnsAgPEKBOAmrGCJc0XVoC_8HjB_TLRiCLGPTkE4C8dhkRiF5Sktr9j8lb2E5kX9Jr5ChA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "A Sky Full of Stars (Arabic Version)",
+   "album": {
+    "name": "A Sky Full of Stars (Arabic Version)",
+    "id": "MPREb_aN0PcHixdKF"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "bBWAb01afnE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "YAD Oud",
+     "id": "UCzWNXnlXv0wugA4xvtR40Iw"
+    }
+   ],
+   "duration_seconds": 211,
+   "views": "94K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/32a_wmeJ2BY5GchhzvyUmPsjZdzI0lbbtUZl4h0sZt0-a4yTKBioTyQgizl0g2w89FCjdqpOGyII_Bhh6g=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/32a_wmeJ2BY5GchhzvyUmPsjZdzI0lbbtUZl4h0sZt0-a4yTKBioTyQgizl0g2w89FCjdqpOGyII_Bhh6g=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "A Sky Full of Stars (Nightcore) (feat. Marin Hoxha, Seum Dero & Rachel Philipp)",
+   "album": {
+    "name": "Nightcore Best Of Gaming, Vol. 1",
+    "id": "MPREb_IXFkPmLFeet"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "AA1ZKgG0YF8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:56",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sinnon Nightcore",
+     "id": "UCe5ISqba2uUcHjoZHn1HlPA"
+    }
+   ],
+   "duration_seconds": 176,
+   "views": "1.1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/OdZCWw_O2sVal4WlSUlYnPFhtGkxqCR9XC-XJKcweOG8v3b0m9qIY6SObwpkItN6sO-I7AyqsQmiRKWU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/OdZCWw_O2sVal4WlSUlYnPFhtGkxqCR9XC-XJKcweOG8v3b0m9qIY6SObwpkItN6sO-I7AyqsQmiRKWU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sky Full of Stars (Originally Performed By Coldplay) [Full Vocal Version]",
+   "album": {
+    "name": "Karaoke Hits 2014, Vol. 5",
+    "id": "MPREb_AC4YuPlGsif"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "zh8JRuhmCDg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "Paris Music",
+     "id": "UCyr7TDS-H_BsONY5m_GkwxQ"
+    }
+   ],
+   "duration_seconds": 270,
+   "views": "113K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/t6dW626fixfibsOOgkDs_J3_-bdREUI9JWCkN2qLh4sAD0auPC6C0ZRMBhmC1Sh8LkmSWMBxfxS0jCh1pA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/t6dW626fixfibsOOgkDs_J3_-bdREUI9JWCkN2qLh4sAD0auPC6C0ZRMBhmC1Sh8LkmSWMBxfxS0jCh1pA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "A Sky Full of Stars",
+   "album": {
+    "name": "In a Jazzy Mood",
+    "id": "MPREb_AvBXABYgYoW"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "-_4dZXjX5VU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:20",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Cooltrane Quartet",
+     "id": "UCr3Tq58z2nM24M8eM7J8JPQ"
+    }
+   ],
+   "duration_seconds": 260,
+   "views": "851K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Sg57VBj_o2GVdCnF-4VW1IPw88NFGp_m5MysslazKT56jAUSxVjjUA3Nh4m6lFbCFDdWZ4o8-aD6o1df=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Sg57VBj_o2GVdCnF-4VW1IPw88NFGp_m5MysslazKT56jAUSxVjjUA3Nh4m6lFbCFDdWZ4o8-aD6o1df=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "A Sky Full of Stars (Acoustic Guitar)",
+   "album": {
+    "name": "A Sky Full of Stars (Acoustic Guitar)",
+    "id": "MPREb_oZzIHqsSPRT"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "w41lwAx4jcQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Iqbal Gumilar",
+     "id": "UCKVaYyfWYnckJ5MyZ5qvp9Q"
+    }
+   ],
+   "duration_seconds": 110,
+   "views": "86K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/pEB8HYdcFofmQ4LtQo6qcoHl4bmcfSME-MPYRS7jR9oQJ2aZE-S2RwWPhGSrddHMwakgSUBR_NAvabG8=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/pEB8HYdcFofmQ4LtQo6qcoHl4bmcfSME-MPYRS7jR9oQJ2aZE-S2RwWPhGSrddHMwakgSUBR_NAvabG8=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sky Full Of Stars (Acoustic Version)",
+   "album": {
+    "name": "Sky Full Of Stars (Acoustic Version)",
+    "id": "MPREb_2TZwt10sWFv"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "CKUTXciP3uo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:35",
+   "year": null,
+   "artists": [
+    {
+     "name": "Matt Johnson",
+     "id": "UClyN8C-5ae0Zh79usFdYStg"
+    }
+   ],
+   "duration_seconds": 215,
+   "views": "50K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-kK8BkGWlgosYvtbKhEKbHxav4AVnr51pdp4TMlT4lO4UrydJRxXAQX3sn2J3T08tTneasTAcCwUdC2T=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-kK8BkGWlgosYvtbKhEKbHxav4AVnr51pdp4TMlT4lO4UrydJRxXAQX3sn2J3T08tTneasTAcCwUdC2T=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "A Sky Full of Stars (Instrumental)",
+   "album": {
+    "name": "Pop on Strings, Vol. 3 (Instrumental)",
+    "id": "MPREb_9fA5hsbwP7a"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "N93YYU2i6jc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:34",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Muses",
+     "id": "UCOIR03jYNje8xMlzxTyWp-g"
+    }
+   ],
+   "duration_seconds": 214,
+   "views": "145K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/VLKMA0rEVd2VVQkFzERd2_4FJneXWGO7B7PWgAitoRShFdDIT5jZGGui0Uj-R3JFHF4np4zDWU42pfyzUg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/VLKMA0rEVd2VVQkFzERd2_4FJneXWGO7B7PWgAitoRShFdDIT5jZGGui0Uj-R3JFHF4np4zDWU42pfyzUg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "A Sky Full Of Stars (Cello Version)",
+   "album": {
+    "name": "A Sky Full Of Stars (Cello Version)",
+    "id": "MPREb_xvfhqQ2664G"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Lu3OMHV9eI0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:38",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jodok Cello",
+     "id": "UCtXrysa8BWoh5e4A7W5eznA"
+    }
+   ],
+   "duration_seconds": 278,
+   "views": "399K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/bFhnvLUuMWEvUxUc7nd01dIEtdfeo5G2zkjdCRgFr248UBlq8o3uOUtscTPBvqVLUMi4GfsMtENFAG57=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/bFhnvLUuMWEvUxUc7nd01dIEtdfeo5G2zkjdCRgFr248UBlq8o3uOUtscTPBvqVLUMi4GfsMtENFAG57=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "A Sky Full of Stars (Celtic Version)",
+   "album": {
+    "name": "The Very Best of Celtic Coldplay",
+    "id": "MPREb_41CJ4eOorlr"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "zXeZv6QUqew",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:36",
+   "year": null,
+   "artists": [
+    {
+     "name": "Celtic Angels",
+     "id": "UCcVp5xdiBNqsCzb0nElBdog"
+    }
+   ],
+   "duration_seconds": 276,
+   "views": "16K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/89QFjrejcvpa167OoLPt6KElScUMsE48iulLLZIIafN1Jn0Kfgg4Kjq34Zg_3q7kwHsU2UbK7UOcTQdm=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/89QFjrejcvpa167OoLPt6KElScUMsE48iulLLZIIafN1Jn0Kfgg4Kjq34Zg_3q7kwHsU2UbK7UOcTQdm=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "A Sky Full of Stars",
+   "album": {
+    "name": "Cover Sessions, Vol. 3",
+    "id": "MPREb_cMyncrqqt2p"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "UNeCGQCBGe8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:49",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hannah Trigwell",
+     "id": "UC-mcBfgW3NEkDmXS514wVIw"
+    }
+   ],
+   "duration_seconds": 169,
+   "views": "571K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/s2PmbKl7LTPpg0_bj31SwlGmGMKKljr0sXJLcPpkuSekG9zMI3xLXOsX-TA0dFO7BfZwFnq2O9fE73s=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/s2PmbKl7LTPpg0_bj31SwlGmGMKKljr0sXJLcPpkuSekG9zMI3xLXOsX-TA0dFO7BfZwFnq2O9fE73s=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sky Full of Stars",
+   "album": {
+    "name": "Aviii",
+    "id": "MPREb_A6mpYNU3qwJ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "mxs_vape61g",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:55",
+   "year": null,
+   "artists": [
+    {
+     "name": "Aviii",
+     "id": "UC88dq9kstzlDfO37Q31zJRQ"
+    }
+   ],
+   "duration_seconds": 235,
+   "views": "1.5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Pd9ELk3-lKzrgghl33V730Zi0qFzlvAAH0CZtDKLhXibsaXw8UtYW_yEr1G2tIsOwmkhGzUJM8NsvklS=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Pd9ELk3-lKzrgghl33V730Zi0qFzlvAAH0CZtDKLhXibsaXw8UtYW_yEr1G2tIsOwmkhGzUJM8NsvklS=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "A Sky Full of Stars",
+   "album": {
+    "name": "Pop Violin Covers, Vol.1",
+    "id": "MPREb_B40OijwztFj"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "pR9eGj8u8zY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alexandra Babakhanov",
+     "id": "UCpMYD43swQNp3TIQhkQ9e1Q"
+    }
+   ],
+   "duration_seconds": 268,
+   "views": "350K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/3OCRCTL17hiaQ2AQeG5R0_HL5CtQuKdZCIoHSlTDPGPD2nzLC2yQpwU7hx2IKna0igQVAJA0wMifZfZU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/3OCRCTL17hiaQ2AQeG5R0_HL5CtQuKdZCIoHSlTDPGPD2nzLC2yQpwU7hx2IKna0igQVAJA0wMifZfZU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "A Sky Full of Stars",
+   "album": {
+    "name": "Lullaby Versions of Coldplay V2",
+    "id": "MPREb_GMFLOhoECKC"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "nDUrP-adsKw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:40",
+   "year": null,
+   "artists": [
+    {
+     "name": "Twinkle Twinkle Little Rock Star",
+     "id": "UCNseZOCieGO3mVz_-kcP4nQ"
+    }
+   ],
+   "duration_seconds": 280,
+   "views": "4K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/XzpHHrXvGDl3PEgUr-RvKUaqfb43vqA33iN2Onn349GvVnRSnHc8zPuT7B13CDwgK31arKE2f3Fr-dQB=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/XzpHHrXvGDl3PEgUr-RvKUaqfb43vqA33iN2Onn349GvVnRSnHc8zPuT7B13CDwgK31arKE2f3Fr-dQB=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sky Full Of Stars (slowed + reverb)",
+   "album": {
+    "name": "Sky Full Of Stars",
+    "id": "MPREb_3caufsW8YHb"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "QJxtSujsP_k",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:23",
+   "year": null,
+   "artists": [
+    {
+     "name": "Luke Muzzic",
+     "id": "UCpIk7RKcoOMzsH4E2pxSqpg"
+    },
+    {
+     "name": "TommyMuzzic",
+     "id": "UCIOzVH6F6iE_qpzIBDkJAyA"
+    }
+   ],
+   "duration_seconds": 323,
+   "views": "24K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/KrYlBMXJkTIaS4adb6QxLLtfKW-Gxd2rqZmIArQnqU7VdXMbh-xYX6gefI0E6bfCgLOale_pIOSOPJYc=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/KrYlBMXJkTIaS4adb6QxLLtfKW-Gxd2rqZmIArQnqU7VdXMbh-xYX6gefI0E6bfCgLOale_pIOSOPJYc=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

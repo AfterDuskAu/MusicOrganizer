@@ -1,0 +1,428 @@
+{
+ "kind": "album",
+ "key": "MPREb_d8g28l4HU1r",
+ "request": "MPREb_d8g28l4HU1r",
+ "recorded_at": "2026-09-29T02:40:29Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [
+  "related_recommendations",
+  "description",
+  "descriptionRuns",
+  "feedback tokens"
+ ],
+ "response": {
+  "title": "Down To Earth",
+  "type": "Album",
+  "thumbnails": [
+   {
+    "url": "https://yt3.googleusercontent.com/Ql0MF1H8yRgmcMlNo6o2kcTLsjcUS5-kQHFG0qK14WMqyBH9bKtv_AxxsPkRJWGR6Io2RjPsQcZK4bs=w60-h60-l90-rj",
+    "width": 60,
+    "height": 60
+   },
+   {
+    "url": "https://yt3.googleusercontent.com/Ql0MF1H8yRgmcMlNo6o2kcTLsjcUS5-kQHFG0qK14WMqyBH9bKtv_AxxsPkRJWGR6Io2RjPsQcZK4bs=w120-h120-l90-rj",
+    "width": 120,
+    "height": 120
+   },
+   {
+    "url": "https://yt3.googleusercontent.com/Ql0MF1H8yRgmcMlNo6o2kcTLsjcUS5-kQHFG0qK14WMqyBH9bKtv_AxxsPkRJWGR6Io2RjPsQcZK4bs=w226-h226-l90-rj",
+    "width": 226,
+    "height": 226
+   },
+   {
+    "url": "https://yt3.googleusercontent.com/Ql0MF1H8yRgmcMlNo6o2kcTLsjcUS5-kQHFG0qK14WMqyBH9bKtv_AxxsPkRJWGR6Io2RjPsQcZK4bs=w544-h544-l90-rj",
+    "width": 544,
+    "height": 544
+   }
+  ],
+  "isExplicit": false,
+  "year": "2013",
+  "artists": [
+   {
+    "name": "Flight Facilities",
+    "id": "UC_C5okdXzTAzv6o92KOA6Bg"
+   }
+  ],
+  "trackCount": 14,
+  "duration": "1 hour, 3 minutes",
+  "audioPlaylistId": "OLAK5uy_m1RL1Gq77fRLWpkLyoucitN0O9_6NldFQ",
+  "likeStatus": "INDIFFERENT",
+  "tracks": [
+   {
+    "videoId": "PO0rHyLZKCg",
+    "title": "Intro",
+    "artists": [
+     {
+      "name": "Flight Facilities",
+      "id": "UC_C5okdXzTAzv6o92KOA6Bg"
+     }
+    ],
+    "album": "Down To Earth",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "501K plays",
+    "communityVoteStatus": null,
+    "trackNumber": 1,
+    "duration": "1:50",
+    "duration_seconds": 110
+   },
+   {
+    "videoId": "WmUvFMJpLZU",
+    "title": "Two Bodies (feat. Emma Louise)",
+    "artists": [
+     {
+      "name": "Flight Facilities",
+      "id": "UC_C5okdXzTAzv6o92KOA6Bg"
+     }
+    ],
+    "album": "Down To Earth",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "5.1M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 2,
+    "duration": "6:09",
+    "duration_seconds": 369
+   },
+   {
+    "videoId": "zXUWso_uZ64",
+    "title": "Sunshine (feat. Reggie Watts)",
+    "artists": [
+     {
+      "name": "Flight Facilities",
+      "id": "UC_C5okdXzTAzv6o92KOA6Bg"
+     }
+    ],
+    "album": "Down To Earth",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "4.2M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 3,
+    "duration": "4:26",
+    "duration_seconds": 266
+   },
+   {
+    "videoId": "Q7kKg_gHyx0",
+    "title": "Waking Bliss",
+    "artists": [
+     {
+      "name": "Flight Facilities",
+      "id": "UC_C5okdXzTAzv6o92KOA6Bg"
+     }
+    ],
+    "album": "Down To Earth",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "725K plays",
+    "communityVoteStatus": null,
+    "trackNumber": 4,
+    "duration": "4:01",
+    "duration_seconds": 241
+   },
+   {
+    "videoId": "GgJ-pSmC6Eg",
+    "title": "Stand Still (feat. Micky Green)",
+    "artists": [
+     {
+      "name": "Flight Facilities",
+      "id": "UC_C5okdXzTAzv6o92KOA6Bg"
+     }
+    ],
+    "album": "Down To Earth",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "6.4M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 5,
+    "duration": "4:20",
+    "duration_seconds": 260
+   },
+   {
+    "videoId": "YkugcUqGDYQ",
+    "title": "Apollo",
+    "artists": [
+     {
+      "name": "Flight Facilities",
+      "id": "UC_C5okdXzTAzv6o92KOA6Bg"
+     }
+    ],
+    "album": "Down To Earth",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "909K plays",
+    "communityVoteStatus": null,
+    "trackNumber": 6,
+    "duration": "3:52",
+    "duration_seconds": 232
+   },
+   {
+    "videoId": "Jcu1AHaTchM",
+    "title": "Claire de Lune (feat. Christine Hoberg)",
+    "artists": [
+     {
+      "name": "Flight Facilities",
+      "id": "UC_C5okdXzTAzv6o92KOA6Bg"
+     }
+    ],
+    "album": "Down To Earth",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "32M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 7,
+    "duration": "7:40",
+    "duration_seconds": 460
+   },
+   {
+    "videoId": "SJnJANr30SM",
+    "title": "Hold Me Down (feat. Stee Downes)",
+    "artists": [
+     {
+      "name": "Flight Facilities",
+      "id": "UC_C5okdXzTAzv6o92KOA6Bg"
+     }
+    ],
+    "album": "Down To Earth",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "598K plays",
+    "communityVoteStatus": null,
+    "trackNumber": 8,
+    "duration": "4:44",
+    "duration_seconds": 284
+   },
+   {
+    "videoId": "zFaUOHe2UDY",
+    "title": "Heart Attack (feat. Owl Eyes)",
+    "artists": [
+     {
+      "name": "Flight Facilities",
+      "id": "UC_C5okdXzTAzv6o92KOA6Bg"
+     }
+    ],
+    "album": "Down To Earth",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "1.9M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 9,
+    "duration": "6:29",
+    "duration_seconds": 389
+   },
+   {
+    "videoId": "90luQzm_Pdo",
+    "title": "Merimbula",
+    "artists": [
+     {
+      "name": "Flight Facilities",
+      "id": "UC_C5okdXzTAzv6o92KOA6Bg"
+     }
+    ],
+    "album": "Down To Earth",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "782K plays",
+    "communityVoteStatus": null,
+    "trackNumber": 10,
+    "duration": "6:28",
+    "duration_seconds": 388
+   },
+   {
+    "videoId": "HBK9TejcZZk",
+    "title": "Why Do You Feel (feat. Bishop Nehru)",
+    "artists": [
+     {
+      "name": "Flight Facilities",
+      "id": "UC_C5okdXzTAzv6o92KOA6Bg"
+     }
+    ],
+    "album": "Down To Earth",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "814K plays",
+    "communityVoteStatus": null,
+    "trackNumber": 11,
+    "duration": "4:07",
+    "duration_seconds": 247
+   },
+   {
+    "videoId": "IH5L4qTVsTk",
+    "title": "Down To Earth",
+    "artists": [
+     {
+      "name": "Flight Facilities",
+      "id": "UC_C5okdXzTAzv6o92KOA6Bg"
+     }
+    ],
+    "album": "Down To Earth",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "5.5M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 12,
+    "duration": "4:32",
+    "duration_seconds": 272
+   },
+   {
+    "videoId": "6BG4V6y4Y1s",
+    "title": "Crave You (Reprise)",
+    "artists": [
+     {
+      "name": "Flight Facilities",
+      "id": "UC_C5okdXzTAzv6o92KOA6Bg"
+     }
+    ],
+    "album": "Down To Earth",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "16K plays",
+    "communityVoteStatus": null,
+    "trackNumber": 13,
+    "duration": "1:13",
+    "duration_seconds": 73
+   },
+   {
+    "videoId": "r0bS-YnLf4s",
+    "title": "Crave You (feat. Giselle)",
+    "artists": [
+     {
+      "name": "Flight Facilities",
+      "id": "UC_C5okdXzTAzv6o92KOA6Bg"
+     }
+    ],
+    "album": "Down To Earth",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "67M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 14,
+    "duration": "3:55",
+    "duration_seconds": 235
+   }
+  ],
+  "other_versions": [
+   {
+    "title": "Down To Earth",
+    "artists": [
+     {
+      "id": "UC_C5okdXzTAzv6o92KOA6Bg",
+      "name": "Flight Facilities"
+     }
+    ],
+    "browseId": "MPREb_0TMzOHjrQSa",
+    "audioPlaylistId": "OLAK5uy_lGYcqAcwUX4M9KKRvqdZsVkDYPjOjNcS0",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/LC0DViCvCwaHdY28zLzxtfDADSxJTbyQ-0jc_ctBf_2F0Bx9EOs7-PkUTf9VbGmoeG5BDfZ8xQYn8dym0w=w226-h226-l90-rj",
+      "width": 226,
+      "height": 226
+     },
+     {
+      "url": "https://yt3.googleusercontent.com/LC0DViCvCwaHdY28zLzxtfDADSxJTbyQ-0jc_ctBf_2F0Bx9EOs7-PkUTf9VbGmoeG5BDfZ8xQYn8dym0w=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ],
+    "isExplicit": false,
+    "type": "Album"
+   },
+   {
+    "title": "Down to Earth",
+    "artists": [
+     {
+      "id": "UC_C5okdXzTAzv6o92KOA6Bg",
+      "name": "Flight Facilities"
+     }
+    ],
+    "browseId": "MPREb_aYCVAYQ5jjJ",
+    "audioPlaylistId": "OLAK5uy_ny1lpI6WD6nZtg_23ZUEywpbhzYciFiI4",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/T7bGx6NM_skDQ-uD6E5gdEhb7GmpQYiMSVM_jHEihlKbujKlq9YnLRXuIhoQMTEXFAzfz6eOOw6YrtZT8g=w226-h226-l90-rj",
+      "width": 226,
+      "height": 226
+     },
+     {
+      "url": "https://yt3.googleusercontent.com/T7bGx6NM_skDQ-uD6E5gdEhb7GmpQYiMSVM_jHEihlKbujKlq9YnLRXuIhoQMTEXFAzfz6eOOw6YrtZT8g=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ],
+    "isExplicit": false,
+    "type": "Album"
+   }
+  ],
+  "duration_seconds": 3826
+ }
+}

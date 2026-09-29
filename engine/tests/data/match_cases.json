@@ -1,0 +1,1036 @@
+{
+ "note": "Hand-labelled matcher cases (step 06), replayed from tests/fixtures/ytm/ by test_match_harness.py. Parsed rips come from the owner's scanned library, except the ones marked made_up. expected_video_ids lists every upload of the same recording; empty means the right recording isn't in the results. Labelled from each candidate's artist, title, album, length and explicit flag.",
+ "cases": [
+  {
+   "id": "wiz-young-wild-free",
+   "what": "explicit tag on the rip",
+   "parsed": {
+    "artist": "Wiz Khalifa",
+    "title": "Young, Wild & Free",
+    "version_tokens": [],
+    "confidence": 0.95,
+    "artists": [
+     "Wiz Khalifa"
+    ],
+    "credit": "Wiz Khalifa",
+    "artist_uncertain": false
+   },
+   "duration_s": 207.4,
+   "explicit_tag": true,
+   "expected_state": "matched_auto",
+   "expected_video_ids": [
+    "tdwDYpWsktc"
+   ],
+   "why": "The explicit album track; the rip's advisory tag says explicit. Karaoke and 'DJ Tribute' versions in the results must not win.",
+   "made_up": false
+  },
+  {
+   "id": "stevie-master-blaster",
+   "what": "brackets that are part of the title",
+   "parsed": {
+    "artist": "Stevie Wonder",
+    "title": "Master Blaster (Jammin')",
+    "version_tokens": [],
+    "confidence": 0.95,
+    "artists": [
+     "Stevie Wonder"
+    ],
+    "credit": "Stevie Wonder",
+    "artist_uncertain": false
+   },
+   "duration_s": 289.3,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [],
+   "why": "The rip is 4:49, the single edit; the results have the 5:08 album version and 12\" versions, which are other edits.",
+   "made_up": false
+  },
+  {
+   "id": "jayz-psa",
+   "what": "(Interlude) in the title",
+   "parsed": {
+    "artist": "Jay-Z",
+    "title": "Public Service Announcement (Interlude)",
+    "version_tokens": [],
+    "confidence": 0.95,
+    "artists": [
+     "Jay-Z"
+    ],
+    "credit": "Jay-Z",
+    "artist_uncertain": false
+   },
+   "duration_s": 173.0,
+   "explicit_tag": null,
+   "expected_state": "matched_auto",
+   "expected_video_ids": [
+    "gA2I9Nkn-7Y",
+    "0GOt4blrsu0"
+   ],
+   "why": "The Black Album comes explicit (twice) and clean; the rip says neither, so explicit is preferred. YouTube Music spells the artist JAŸ-Z.",
+   "made_up": false
+  },
+  {
+   "id": "marley-punky-reggae",
+   "what": "(Long Version) in the title",
+   "parsed": {
+    "artist": "Bob Marley",
+    "title": "Punky Reggae Party (Long Version)",
+    "version_tokens": [],
+    "confidence": 0.95,
+    "artists": [
+     "Bob Marley"
+    ],
+    "credit": "Bob Marley",
+    "artist_uncertain": false
+   },
+   "duration_s": 412.0,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [
+    "BsEDIc8-wcs"
+   ],
+   "why": "The 12\" version is the long version (6:53 both), but credited to Bob Marley & The Wailers, so not AUTO.",
+   "made_up": false
+  },
+  {
+   "id": "eminem-love-the-way",
+   "what": "explicit/clean pair, rip says neither",
+   "parsed": {
+    "artist": "Eminem",
+    "title": "Love the Way You Lie",
+    "version_tokens": [],
+    "confidence": 0.95,
+    "artists": [
+     "Eminem"
+    ],
+    "credit": "Eminem",
+    "artist_uncertain": false
+   },
+   "duration_s": 263.4,
+   "explicit_tag": null,
+   "expected_state": "matched_auto",
+   "expected_video_ids": [
+    "RnkShwdXfyc"
+   ],
+   "why": "Explicit and clean Recovery tracks; explicit preferred. 'Made famous by' and karaoke versions must lose.",
+   "made_up": false
+  },
+  {
+   "id": "eminem-space-bound",
+   "what": "album track",
+   "parsed": {
+    "artist": "Eminem",
+    "title": "Space Bound",
+    "version_tokens": [],
+    "confidence": 0.95,
+    "artists": [
+     "Eminem"
+    ],
+    "credit": "Eminem",
+    "artist_uncertain": false
+   },
+   "duration_s": 278.7,
+   "explicit_tag": null,
+   "expected_state": "matched_auto",
+   "expected_video_ids": [
+    "BDrG1q-9rTY"
+   ],
+   "why": "Explicit and clean Recovery tracks; explicit preferred.",
+   "made_up": false
+  },
+  {
+   "id": "drake-one-dance",
+   "what": "download-site name",
+   "parsed": {
+    "artist": "Drake",
+    "title": "One Dance",
+    "version_tokens": [],
+    "confidence": 0.9,
+    "artists": [
+     "Drake"
+    ],
+    "credit": "Drake",
+    "artist_uncertain": false
+   },
+   "duration_s": 174.7,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [],
+   "why": "Drake's One Dance isn't in YouTube Music's song results for this search; the covers there must not be matched.",
+   "made_up": false
+  },
+  {
+   "id": "neighbourhood-daddy-issues",
+   "what": "download-site name",
+   "parsed": {
+    "artist": "The Neighbourhood",
+    "title": "Daddy Issues",
+    "version_tokens": [],
+    "confidence": 0.9,
+    "artists": [
+     "The Neighbourhood"
+    ],
+    "credit": "The Neighbourhood",
+    "artist_uncertain": false
+   },
+   "duration_s": 260.2,
+   "explicit_tag": null,
+   "expected_state": "matched_auto",
+   "expected_video_ids": [
+    "lqSgsq4Bn2c"
+   ],
+   "why": "The album track; the Syd remix and same-title songs by others must lose.",
+   "made_up": false
+  },
+  {
+   "id": "beach-weather",
+   "what": "band name that looks like a title",
+   "parsed": {
+    "artist": "Beach Weather",
+    "title": "sex, drugs, etc.",
+    "version_tokens": [],
+    "confidence": 0.9,
+    "artists": [
+     "Beach Weather"
+    ],
+    "credit": "Beach Weather",
+    "artist_uncertain": false
+   },
+   "duration_s": 195.1,
+   "explicit_tag": null,
+   "expected_state": "matched_auto",
+   "expected_video_ids": [
+    "Tzj9eKrkmFA"
+   ],
+   "why": "The album track (1.9 s apart); the sped-up version must lose.",
+   "made_up": false
+  },
+  {
+   "id": "future-mask-off",
+   "what": "converter name with video id",
+   "parsed": {
+    "artist": "Future",
+    "title": "Mask Off",
+    "version_tokens": [],
+    "confidence": 0.9,
+    "artists": [
+     "Future"
+    ],
+    "credit": "Future",
+    "artist_uncertain": false
+   },
+   "duration_s": 204.1,
+   "explicit_tag": null,
+   "expected_state": "matched_auto",
+   "expected_video_ids": [
+    "AMCwYdTJ_PE"
+   ],
+   "why": "The album track; only an explicit version is listed. The Kendrick Lamar remix must lose.",
+   "made_up": false
+  },
+  {
+   "id": "kenya-grace-strangers",
+   "what": "lyrics junk",
+   "parsed": {
+    "artist": "Kenya Grace",
+    "title": "Strangers",
+    "version_tokens": [],
+    "confidence": 0.9,
+    "artists": [
+     "Kenya Grace"
+    ],
+    "credit": "Kenya Grace",
+    "artist_uncertain": false
+   },
+   "duration_s": 173.2,
+   "explicit_tag": null,
+   "expected_state": "matched_auto",
+   "expected_video_ids": [
+    "RCaoGyIXI6Y"
+   ],
+   "why": "The single; the sad acoustic version must lose.",
+   "made_up": false
+  },
+  {
+   "id": "hippie-sabotage-two-rivers",
+   "what": "artist from the tag, title from the name",
+   "parsed": {
+    "artist": "Hippie Sabotage",
+    "title": "Two Rivers",
+    "version_tokens": [],
+    "confidence": 0.8,
+    "artists": [
+     "Hippie Sabotage"
+    ],
+    "credit": "Hippie Sabotage",
+    "artist_uncertain": false
+   },
+   "duration_s": 201.6,
+   "explicit_tag": null,
+   "expected_state": "matched_auto",
+   "expected_video_ids": [
+    "LJhN7Uc2Atw"
+   ],
+   "why": "The album track.",
+   "made_up": false
+  },
+  {
+   "id": "imagine-dragons-birds",
+   "what": "animated video junk",
+   "parsed": {
+    "artist": "Imagine Dragons",
+    "title": "Birds",
+    "version_tokens": [],
+    "confidence": 0.9,
+    "artists": [
+     "Imagine Dragons"
+    ],
+    "credit": "Imagine Dragons",
+    "artist_uncertain": false
+   },
+   "duration_s": 222.6,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [
+    "Sa-dxgZt4rY"
+   ],
+   "why": "The right track, but the video rip runs 2.6 s longer, over the 2 s AUTO limit.",
+   "made_up": false
+  },
+  {
+   "id": "alex-cuba-de-camino",
+   "what": "Spanish title, clean tag",
+   "parsed": {
+    "artist": "Alex Cuba",
+    "title": "De Camino",
+    "version_tokens": [],
+    "confidence": 0.95,
+    "artists": [
+     "Alex Cuba"
+    ],
+    "credit": "Alex Cuba",
+    "artist_uncertain": false
+   },
+   "duration_s": 206.9,
+   "explicit_tag": false,
+   "expected_state": "matched_auto",
+   "expected_video_ids": [
+    "Z5mpHudKQTY"
+   ],
+   "why": "The album track; the rip's advisory tag says clean and so does YouTube Music.",
+   "made_up": false
+  },
+  {
+   "id": "coldplay-sky-full",
+   "what": "artist tag spelt 'Cold Play'",
+   "parsed": {
+    "artist": "Cold Play",
+    "title": "A Sky Full Of Stars",
+    "version_tokens": [],
+    "confidence": 0.95,
+    "artists": [
+     "Cold Play"
+    ],
+    "credit": "Cold Play",
+    "artist_uncertain": false
+   },
+   "duration_s": 274.7,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [
+    "KWuyx6yZ21U"
+   ],
+   "why": "The right track, but the rip runs 6.7 s longer (a video rip).",
+   "made_up": false
+  },
+  {
+   "id": "audioslave-like-a-stone",
+   "what": "artist tag spelt 'Audio Slave'",
+   "parsed": {
+    "artist": "Audio Slave",
+    "title": "Like a Stone",
+    "version_tokens": [],
+    "confidence": 0.95,
+    "artists": [
+     "Audio Slave"
+    ],
+    "credit": "Audio Slave",
+    "artist_uncertain": false
+   },
+   "duration_s": 301.7,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [
+    "Wo7qhT7lBXw"
+   ],
+   "why": "The right track, but the rip runs 7.7 s longer. Covers of the same title must lose.",
+   "made_up": false
+  },
+  {
+   "id": "kanye-homecoming",
+   "what": "dash spaced on one side, feat. in the artist",
+   "parsed": {
+    "artist": "Kanye West",
+    "title": "Homecoming",
+    "version_tokens": [],
+    "confidence": 0.75,
+    "artists": [
+     "Kanye West",
+     "Chris Martin"
+    ],
+    "credit": "Kanye West",
+    "artist_uncertain": false
+   },
+   "duration_s": 203.3,
+   "explicit_tag": null,
+   "expected_state": "matched_auto",
+   "expected_video_ids": [
+    "YOzAdMs5dEc"
+   ],
+   "why": "Explicit and clean Graduation tracks; explicit preferred.",
+   "made_up": false
+  },
+  {
+   "id": "ed-sheeran-bad-habits-remix",
+   "what": "remix",
+   "parsed": {
+    "artist": "Ed Sheeran",
+    "title": "Bad Habits",
+    "version_tokens": [
+     "remix:leahy and mack"
+    ],
+    "confidence": 0.9,
+    "artists": [
+     "Ed Sheeran"
+    ],
+    "credit": "Ed Sheeran",
+    "artist_uncertain": false
+   },
+   "duration_s": 162.0,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [],
+   "why": "The Leahy & Mack remix isn't on YouTube Music; the original must not be matched.",
+   "made_up": false
+  },
+  {
+   "id": "alessia-cara-here-remix",
+   "what": "remix",
+   "parsed": {
+    "artist": "Alessia Cara",
+    "title": "Here",
+    "version_tokens": [
+     "remix:lucian"
+    ],
+    "confidence": 0.95,
+    "artists": [
+     "Alessia Cara"
+    ],
+    "credit": "Alessia Cara",
+    "artist_uncertain": false
+   },
+   "duration_s": 186.8,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [],
+   "why": "The Lucian remix isn't in the results; the original and a same-title song by Lucian must not be matched.",
+   "made_up": false
+  },
+  {
+   "id": "masked-wolf-josh-peters",
+   "what": "remix",
+   "parsed": {
+    "artist": "Masked Wolf",
+    "title": "Astronaut in the Ocean",
+    "version_tokens": [
+     "remix:josh peters"
+    ],
+    "confidence": 0.9,
+    "artists": [
+     "Masked Wolf"
+    ],
+    "credit": "Masked Wolf",
+    "artist_uncertain": false
+   },
+   "duration_s": 197.8,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [],
+   "why": "The Josh Peters remix isn't on YouTube Music. MaR5HaY's remix (feat. Masked Wolf) is a different remix: fine to show in review, never AUTO.",
+   "made_up": false
+  },
+  {
+   "id": "snoop-gin-and-juice-remix",
+   "what": "remix with no remixer named",
+   "parsed": {
+    "artist": "Snoop Dogg",
+    "title": "Gin and Juice",
+    "version_tokens": [
+     "remix"
+    ],
+    "confidence": 0.9,
+    "artists": [
+     "Snoop Dogg"
+    ],
+    "credit": "Snoop Dogg",
+    "artist_uncertain": false
+   },
+   "duration_s": 238.8,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [],
+   "why": "Unsure which remix the rip is: the Death Row remix listed runs 5:02, the rip 3:59.",
+   "made_up": false
+  },
+  {
+   "id": "mr-kitty-after-dark-remix",
+   "what": "remix, non-English letter",
+   "parsed": {
+    "artist": "Mr.Kitty",
+    "title": "After Dark",
+    "version_tokens": [
+     "remix:prødigy"
+    ],
+    "confidence": 0.9,
+    "artists": [
+     "Mr.Kitty"
+    ],
+    "credit": "Mr.Kitty",
+    "artist_uncertain": false
+   },
+   "duration_s": 276.6,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [],
+   "why": "The Prødigy remix isn't on YouTube Music; the original must not be matched.",
+   "made_up": false
+  },
+  {
+   "id": "mj-thriller-2003-edit",
+   "what": "edit version",
+   "parsed": {
+    "artist": "Michael Jackson",
+    "title": "Thriller",
+    "version_tokens": [
+     "edit:2003"
+    ],
+    "confidence": 0.95,
+    "artists": [
+     "Michael Jackson"
+    ],
+    "credit": "Michael Jackson",
+    "artist_uncertain": false
+   },
+   "duration_s": 311.8,
+   "explicit_tag": null,
+   "expected_state": "matched_auto",
+   "expected_video_ids": [
+    "-e-y-1VRZ3I"
+   ],
+   "why": "Thriller (2003 Edit) from Number Ones, the same length; the 5:58 album version must lose.",
+   "made_up": false
+  },
+  {
+   "id": "jill-scott-still-here-acoustic",
+   "what": "acoustic version",
+   "parsed": {
+    "artist": "Jill Scott",
+    "title": "Still Here",
+    "version_tokens": [
+     "acoustic"
+    ],
+    "confidence": 0.95,
+    "artists": [
+     "Jill Scott"
+    ],
+    "credit": "Jill Scott",
+    "artist_uncertain": false
+   },
+   "duration_s": 243.9,
+   "explicit_tag": null,
+   "expected_state": "not_found",
+   "expected_video_ids": [],
+   "why": "No acoustic version (or original) in the results.",
+   "made_up": false
+  },
+  {
+   "id": "night-lovell-extended",
+   "what": "extended version",
+   "parsed": {
+    "artist": "Night Lovell",
+    "title": "Polozhenie (Night Drive)",
+    "version_tokens": [
+     "extended"
+    ],
+    "confidence": 0.9,
+    "artists": [
+     "Night Lovell"
+    ],
+    "credit": "Night Lovell",
+    "artist_uncertain": false
+   },
+   "duration_s": 434.2,
+   "explicit_tag": null,
+   "expected_state": "not_found",
+   "expected_video_ids": [],
+   "why": "Not on YouTube Music.",
+   "made_up": false
+  },
+  {
+   "id": "ash-riser-cover",
+   "what": "cover with the same title as the original",
+   "parsed": {
+    "artist": "Ash Riser",
+    "title": "You Know I'm No Good",
+    "version_tokens": [
+     "cover"
+    ],
+    "confidence": 0.95,
+    "artists": [
+     "Ash Riser"
+    ],
+    "credit": "Ash Riser",
+    "artist_uncertain": false
+   },
+   "duration_s": 261.5,
+   "explicit_tag": null,
+   "expected_state": "not_found",
+   "expected_video_ids": [],
+   "why": "Ash Riser's cover isn't on YouTube Music; an Amy Winehouse tribute album with the same title must not be matched.",
+   "made_up": false
+  },
+  {
+   "id": "run-this-town-wrong-artist",
+   "what": "wrong artist in the name (it's Jay-Z's)",
+   "parsed": {
+    "artist": "Eminem",
+    "title": "Run This Town",
+    "version_tokens": [
+     "explicit"
+    ],
+    "confidence": 0.9,
+    "artists": [
+     "Eminem",
+     "Rihanna"
+    ],
+    "credit": "Eminem & Rihanna",
+    "artist_uncertain": false
+   },
+   "duration_s": 359.1,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [
+    "EeE7CfNs7Js"
+   ],
+   "why": "The file name credits Eminem & Rihanna, but it's JAY-Z's song (feat. Rihanna & Kanye West). The rip runs 1:31 longer, probably a video version, so never AUTO.",
+   "made_up": false
+  },
+  {
+   "id": "slowed-outta-my-head",
+   "what": "slowed, title only",
+   "parsed": {
+    "artist": null,
+    "title": "I just can't get you outta my head (slowed-بطيء)",
+    "version_tokens": [],
+    "confidence": 0.3,
+    "artists": [],
+    "credit": null,
+    "artist_uncertain": false
+   },
+   "duration_s": 213.4,
+   "explicit_tag": null,
+   "expected_state": "not_found",
+   "expected_video_ids": [],
+   "why": "A slowed version; none in the results.",
+   "made_up": false
+  },
+  {
+   "id": "gigi-bla-bla-bla",
+   "what": "artist inside a title-only name",
+   "parsed": {
+    "artist": null,
+    "title": "Gigi D'Agostino Bla Bla Bla",
+    "version_tokens": [],
+    "confidence": 0.3,
+    "artists": [],
+    "credit": null,
+    "artist_uncertain": false
+   },
+   "duration_s": 193.5,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [],
+   "why": "The results have the 4:16 album version; the rip is a 3:13 edit.",
+   "made_up": false
+  },
+  {
+   "id": "mase-feel-so-good",
+   "what": "hyphen without spaces, title only",
+   "parsed": {
+    "artist": null,
+    "title": "Mase-Feel So Good",
+    "version_tokens": [],
+    "confidence": 0.3,
+    "artists": [],
+    "credit": null,
+    "artist_uncertain": false
+   },
+   "duration_s": 207.0,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [
+    "FFkook9g6U8"
+   ],
+   "why": "The right track, but the name has no separable artist, so it can't be AUTO.",
+   "made_up": false
+  },
+  {
+   "id": "test-tone",
+   "what": "a file that isn't a real song",
+   "parsed": {
+    "artist": "Music Organizer",
+    "title": "Test Tone M4A — テスト",
+    "version_tokens": [],
+    "confidence": 0.95,
+    "artists": [
+     "Music Organizer"
+    ],
+    "credit": "Music Organizer",
+    "artist_uncertain": false
+   },
+   "duration_s": 10.0,
+   "explicit_tag": true,
+   "expected_state": "not_found",
+   "expected_video_ids": [],
+   "why": "Not a song (the step 04 test tone, imported into Apple Music).",
+   "made_up": false
+  },
+  {
+   "id": "chainsmokers-closer",
+   "what": "tribute and karaoke versions in the results",
+   "parsed": {
+    "artist": "The Chainsmokers",
+    "title": "Closer",
+    "version_tokens": [],
+    "confidence": 0.9,
+    "artists": [
+     "The Chainsmokers",
+     "Halsey"
+    ],
+    "credit": "The Chainsmokers",
+    "artist_uncertain": false
+   },
+   "duration_s": 244.9,
+   "explicit_tag": null,
+   "expected_state": "matched_auto",
+   "expected_video_ids": [
+    "r7zTKRonHXM"
+   ],
+   "why": "The album track; same-title songs by others must lose.",
+   "made_up": true
+  },
+  {
+   "id": "unknown-band-closer",
+   "what": "the tribute trap: an unknown band's song called Closer",
+   "parsed": {
+    "artist": "The Glass Harbour",
+    "title": "Closer",
+    "version_tokens": [],
+    "confidence": 0.9,
+    "artists": [
+     "The Glass Harbour"
+    ],
+    "credit": "The Glass Harbour",
+    "artist_uncertain": false
+   },
+   "duration_s": 212.0,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [],
+   "why": "Made up: an unknown band's 'Closer'. Same-title songs by other artists must never be AUTO.",
+   "made_up": true
+  },
+  {
+   "id": "franti-bomb-the-world",
+   "what": "(Armageddon Version) in the title",
+   "parsed": {
+    "artist": "Michael Franti",
+    "title": "Bomb The World (Armageddon Version)",
+    "version_tokens": [],
+    "confidence": 0.95,
+    "artists": [
+     "Michael Franti",
+     "Spearhead"
+    ],
+    "credit": "Michael Franti & Spearhead",
+    "artist_uncertain": false
+   },
+   "duration_s": 284.2,
+   "explicit_tag": null,
+   "expected_state": "matched_auto",
+   "expected_video_ids": [
+    "AEHegMubZ74"
+   ],
+   "why": "The Armageddon Version from the same album; the plain version must lose.",
+   "made_up": false
+  },
+  {
+   "id": "franti-bomb-the-world-plain",
+   "what": "album track; another version exists",
+   "parsed": {
+    "artist": "Michael Franti",
+    "title": "Bomb The World",
+    "version_tokens": [],
+    "confidence": 0.95,
+    "artists": [
+     "Michael Franti",
+     "Spearhead"
+    ],
+    "credit": "Michael Franti & Spearhead",
+    "artist_uncertain": false
+   },
+   "duration_s": 268.8,
+   "explicit_tag": null,
+   "expected_state": "matched_auto",
+   "expected_video_ids": [
+    "SpTYh-uYgQs"
+   ],
+   "why": "The plain version; the Armageddon Version must lose.",
+   "made_up": false
+  },
+  {
+   "id": "kodaline-high-hopes-remix",
+   "what": "remix",
+   "parsed": {
+    "artist": "Kodaline",
+    "title": "High Hopes",
+    "version_tokens": [
+     "remix:filous"
+    ],
+    "confidence": 0.95,
+    "artists": [
+     "Kodaline"
+    ],
+    "credit": "Kodaline",
+    "artist_uncertain": false
+   },
+   "duration_s": 282.4,
+   "explicit_tag": null,
+   "expected_state": "matched_auto",
+   "expected_video_ids": [
+    "hFKFm-rjnEc"
+   ],
+   "why": "The Filous remix, the same length; the original and live versions must lose.",
+   "made_up": false
+  },
+  {
+   "id": "panic-high-hopes",
+   "what": "artist tag without the exclamation mark",
+   "parsed": {
+    "artist": "Panic At The Disco",
+    "title": "High Hopes",
+    "version_tokens": [],
+    "confidence": 0.95,
+    "artists": [
+     "Panic At The Disco"
+    ],
+    "credit": "Panic At The Disco",
+    "artist_uncertain": false
+   },
+   "duration_s": 196.6,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [
+    "GJY8OMJXRAk"
+   ],
+   "why": "The right track, but the rip runs 5.6 s longer.",
+   "made_up": false
+  },
+  {
+   "id": "chris-isaak-wicked-game-remix",
+   "what": "remix",
+   "parsed": {
+    "artist": "Chris Isaak",
+    "title": "Wicked Game",
+    "version_tokens": [
+     "remix:sonny alven"
+    ],
+    "confidence": 0.9,
+    "artists": [
+     "Chris Isaak"
+    ],
+    "credit": "Chris Isaak",
+    "artist_uncertain": false
+   },
+   "duration_s": 266.1,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [],
+   "why": "The Sonny Alven remix isn't in the results; the original and live versions must not be matched.",
+   "made_up": false
+  },
+  {
+   "id": "lighthouse-venice-remix",
+   "what": "remix, artist in the name only",
+   "parsed": {
+    "artist": "The Lighthouse And The Whaler",
+    "title": "Venice",
+    "version_tokens": [
+     "remix:louis the child"
+    ],
+    "confidence": 0.9,
+    "artists": [
+     "The Lighthouse And The Whaler"
+    ],
+    "credit": "The Lighthouse And The Whaler",
+    "artist_uncertain": false
+   },
+   "duration_s": 220.1,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [],
+   "why": "The Louis the Child remix isn't in the results; the acoustic version and other remixes must not be matched.",
+   "made_up": false
+  },
+  {
+   "id": "wiedemann-howling-ame",
+   "what": "remix, accented remixer, remixer tagged as the artist",
+   "parsed": {
+    "artist": "Frank Wiedemann",
+    "title": "Howling",
+    "version_tokens": [
+     "remix:ame"
+    ],
+    "confidence": 0.95,
+    "artists": [
+     "Frank Wiedemann"
+    ],
+    "credit": "Frank Wiedemann",
+    "artist_uncertain": false
+   },
+   "duration_s": 486.0,
+   "explicit_tag": null,
+   "expected_state": "matched_auto",
+   "expected_video_ids": [
+    "6esSUQwO-rM"
+   ],
+   "why": "The Âme remix, the same length.",
+   "made_up": false
+  },
+  {
+   "id": "ryx-howling",
+   "what": "the original of a remix in the library",
+   "parsed": {
+    "artist": "RY X",
+    "title": "Howling",
+    "version_tokens": [],
+    "confidence": 0.95,
+    "artists": [
+     "RY X"
+    ],
+    "credit": "RY X",
+    "artist_uncertain": false
+   },
+   "duration_s": 220.1,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [],
+   "why": "The rip is 3:40; the results have the 5:10 album version and the 7:10 Frank Wiedemann version.",
+   "made_up": false
+  },
+  {
+   "id": "phantogram-slowed",
+   "what": "slowed version",
+   "parsed": {
+    "artist": "Phantogram",
+    "title": "Black Out Days R",
+    "version_tokens": [
+     "slowed"
+    ],
+    "confidence": 0.95,
+    "artists": [
+     "Phantogram"
+    ],
+    "credit": "Phantogram",
+    "artist_uncertain": false
+   },
+   "duration_s": 279.5,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [],
+   "why": "A slowed version; the only slowed one listed is of a remix.",
+   "made_up": false
+  },
+  {
+   "id": "kodaline-high-hopes-live-dublin",
+   "what": "live version with a venue",
+   "parsed": {
+    "artist": "Kodaline",
+    "title": "High Hopes",
+    "version_tokens": [
+     "live:dublin 2022"
+    ],
+    "confidence": 0.9,
+    "artists": [
+     "Kodaline"
+    ],
+    "credit": "Kodaline",
+    "artist_uncertain": false
+   },
+   "duration_s": 343.0,
+   "explicit_tag": null,
+   "expected_state": "matched_auto",
+   "expected_video_ids": [
+    "0prvjYtfC8o"
+   ],
+   "why": "The live-in-Dublin track, the same length; the studio version and the Today FM live version must lose.",
+   "made_up": true
+  },
+  {
+   "id": "chris-isaak-live-same-length",
+   "what": "live rip exactly as long as the studio version",
+   "parsed": {
+    "artist": "Chris Isaak",
+    "title": "Wicked Game",
+    "version_tokens": [
+     "live"
+    ],
+    "confidence": 0.9,
+    "artists": [
+     "Chris Isaak"
+    ],
+    "credit": "Chris Isaak",
+    "artist_uncertain": false
+   },
+   "duration_s": 290.0,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [],
+   "why": "Made up: a live rip as long as the studio track. The studio track must never match it, and neither live recording listed is within 2 s.",
+   "made_up": true
+  },
+  {
+   "id": "chris-isaak-wicked-game",
+   "what": "studio version; live versions in the results",
+   "parsed": {
+    "artist": "Chris Isaak",
+    "title": "Wicked Game",
+    "version_tokens": [],
+    "confidence": 0.9,
+    "artists": [
+     "Chris Isaak"
+    ],
+    "credit": "Chris Isaak",
+    "artist_uncertain": false
+   },
+   "duration_s": 290.0,
+   "explicit_tag": null,
+   "expected_state": "matched_auto",
+   "expected_video_ids": [
+    "rslMMY64BVg"
+   ],
+   "why": "The Heart Shaped World track, the same length; live versions must lose.",
+   "made_up": true
+  }
+ ]
+}

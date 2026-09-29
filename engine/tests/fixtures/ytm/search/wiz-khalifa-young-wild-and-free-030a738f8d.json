@@ -1,0 +1,754 @@
+{
+ "kind": "search",
+ "key": "wiz khalifa young wild and free",
+ "request": "Wiz Khalifa Young, Wild & Free",
+ "recorded_at": "2026-09-29T02:36:12Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Young, Wild & Free (feat. Bruno Mars)",
+   "album": {
+    "name": "Young, Wild & Free",
+    "id": "MPREb_yd8Yaq4mmth"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "tdwDYpWsktc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "Snoop Dogg",
+     "id": "UC7xz_YipuZtypOuVALNzeog"
+    },
+    {
+     "name": "Wiz Khalifa",
+     "id": "UC3QmG1Jn9cE5fTMt14DLuZw"
+    }
+   ],
+   "duration_seconds": 208,
+   "views": "1.5B",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/nuKRb1LVgTaQnFkquDy6xt3zEHT8grvbH4v4iHBrrYld97BARxAnyU5Q3A9aJpN5ZuJ1Rt7_Cs_2on2N=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/nuKRb1LVgTaQnFkquDy6xt3zEHT8grvbH4v4iHBrrYld97BARxAnyU5Q3A9aJpN5ZuJ1Rt7_Cs_2on2N=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Young, Wild & Free",
+   "album": {
+    "name": "Dance Playlist",
+    "id": "MPREb_I1QPrpc5tY4"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "9c9SBx_uk70",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jimmy Jones",
+     "id": "UCfD5YunOjul7MJsunPEUCfw"
+    }
+   ],
+   "duration_seconds": 212,
+   "views": "21K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/zlhHfIsMa_KJ66A-E32usvHErgSl4en081PjBBfFDENOxlsHfVcxjnCr9O6s8elP_rj_O2D4CUBE0oF3tw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/zlhHfIsMa_KJ66A-E32usvHErgSl4en081PjBBfFDENOxlsHfVcxjnCr9O6s8elP_rj_O2D4CUBE0oF3tw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Young, Wild & Free (Originally Performed By Snoop Dogg & Wiz Khalifa feat. Bruno Mars) (feat. Bruno Mars)",
+   "album": {
+    "name": "New Karaoke Hits 2012",
+    "id": "MPREb_cInC3gkiiz6"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "doT-svjuR60",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "Future Hitmakers",
+     "id": "UCsaKcP4-Qgja9-RbXCcPjkg"
+    }
+   ],
+   "duration_seconds": 211,
+   "views": "12K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2NP77oKuwiOFLc1v7__YxCqbiCOH79QS2-1H7H-sJAyBAGeMC7I3sRE8nHm33LGUyzIxJUimrWd4xv-Z=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2NP77oKuwiOFLc1v7__YxCqbiCOH79QS2-1H7H-sJAyBAGeMC7I3sRE8nHm33LGUyzIxJUimrWd4xv-Z=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Young Wild And Free (Originally Performed By Snoop Dogg & Wiz Khalifa feat. Bruno Mars) [Karaoke Instrumental Version] (feat. Bruno Mars)",
+   "album": {
+    "name": "Young Wild And Free (Originally Performed By Snoop Dogg & Wiz Khalifa feat. Bruno Mars) [Karaoke Instrumental Version]",
+    "id": "MPREb_vcMBDE43zsx"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "1Zpkg9eg7jo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:35",
+   "year": null,
+   "artists": [
+    {
+     "name": "Karaoke All Hits",
+     "id": "UCRNzif-l1WBKTNayl0z16SA"
+    }
+   ],
+   "duration_seconds": 215,
+   "views": "6.9K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Ofk9H8drAiQ7Z-cu7BhYlc7kIwBV9t87kFn3JUEBE4PxvedhYhAHxMbRgIZsIR9yug2cW5w5JFi8cRs=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Ofk9H8drAiQ7Z-cu7BhYlc7kIwBV9t87kFn3JUEBE4PxvedhYhAHxMbRgIZsIR9yug2cW5w5JFi8cRs=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Young, Wild & Free (Originally By Snoop Dogg & Wiz Khalifa Feat. Bruno Mars)",
+   "album": {
+    "name": "Young, Wild & Free (Originally By Snoop Dogg & Wiz Khalifa Feat. Bruno Mars) [Instrumental]",
+    "id": "MPREb_Kk9xf1SmAjt"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "sbbjd0AmsG4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "0:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "HOT 100",
+     "id": "UCPR1bcTA7IBFE3rALprjimg"
+    }
+   ],
+   "duration_seconds": 31,
+   "views": "1.5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/S-IxI7IDrYzt7P78Ya7mDvtyKBCygHmFbg4vV46DirsIVTU-RCWmlkfJDitllusMSMMdiuLl47p8b9miIw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/S-IxI7IDrYzt7P78Ya7mDvtyKBCygHmFbg4vV46DirsIVTU-RCWmlkfJDitllusMSMMdiuLl47p8b9miIw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Young, Wild & Free (Originally Performed By Snoop Dogg & Wiz Khalifa feat. Bruno Mars) (feat. Bruno Mars)",
+   "album": {
+    "name": "Top Karaoke Hits Now! 2012",
+    "id": "MPREb_MSNTEBYBjmn"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "BUbdsKCf8MY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "Future Hitmakers",
+     "id": "UCsaKcP4-Qgja9-RbXCcPjkg"
+    }
+   ],
+   "duration_seconds": 211,
+   "views": "12K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Xbm2Z5ByA5DSA6BFOe3z3RIv9YRmvkgOtSZV4sn0s4qkcoSJAPwOcO5xTk5u8WNIaMtORjc-est_KHAr=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Xbm2Z5ByA5DSA6BFOe3z3RIv9YRmvkgOtSZV4sn0s4qkcoSJAPwOcO5xTk5u8WNIaMtORjc-est_KHAr=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Young, Wild & Free (Synth & Vox DJ Tribute 95 BPM)",
+   "album": {
+    "name": "Young, Wild & Free (Multitrack DJ Tribute to Snoop Dogg, Wiz Khalifa & Bruno Mars)",
+    "id": "MPREb_FtK9TQc3Hsx"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "yQQuW9uwBio",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "DJ Multitrack",
+     "id": "UCB9rjYmyx1wLpi9kHel5pQQ"
+    }
+   ],
+   "duration_seconds": 210,
+   "views": "13K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2xKIx78cgqaLv-7dk4HZN9_TezEqHqZtKeq0guUbhYxKvJYILn-xDOlr59tnbXdc-MQypEvAUFL0-Sr8=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2xKIx78cgqaLv-7dk4HZN9_TezEqHqZtKeq0guUbhYxKvJYILn-xDOlr59tnbXdc-MQypEvAUFL0-Sr8=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Young, Wild & Free (Originally By Snoop Dogg & Wiz Khalifa Feat. Bruno Mars)",
+   "album": {
+    "name": "Young, Wild & Free (Originally By Snoop Dogg & Wiz Khalifa Feat. Bruno Mars) [Instrumental]",
+    "id": "MPREb_pOKlXsPUkkh"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Lpr2KJwlKFA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "0:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "DJ Covers",
+     "id": "UCR7wFSBZtG_MzXJidbC6rmA"
+    }
+   ],
+   "duration_seconds": 31,
+   "views": "653",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/6E2YjzU2i1Njny1sjPw3P8rBP2hruQCo1UAKi7i2srKXITtLegmREKQ0n26OuQqXgPqt4Zm4Xwy2JSqH=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/6E2YjzU2i1Njny1sjPw3P8rBP2hruQCo1UAKi7i2srKXITtLegmREKQ0n26OuQqXgPqt4Zm4Xwy2JSqH=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Young, Wild & Free (In the Style of Snoop Dogg, Wiz Khalifa & Bruno Mars) [Karaoke Instrumental Version]",
+   "album": {
+    "name": "Pop Instrumentals: Twenty Tens Classics, Vol. 41",
+    "id": "MPREb_O5o7G4hZWYu"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "4cSBrFqUO_M",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:35",
+   "year": null,
+   "artists": [
+    {
+     "name": "All Hits Gold",
+     "id": "UCbcHNl916B5oQtLr9eFUagA"
+    }
+   ],
+   "duration_seconds": 215,
+   "views": "1.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/cpfwpks8pBdngoDH8LZsvxMXueXTtZh1aw91aWfXnAN1nQECSuaGhWMb9o8sNOrgMx6e2J_uDy47K8tO5w=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/cpfwpks8pBdngoDH8LZsvxMXueXTtZh1aw91aWfXnAN1nQECSuaGhWMb9o8sNOrgMx6e2J_uDy47K8tO5w=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Young, wild & free (In the style of Snoop Dogg ft. Bruno Mars - Wiz Khalifa) (feat. Bruno Mars - Wiz Khalifa)",
+   "album": {
+    "name": "Karaoke Hits November",
+    "id": "MPREb_dEKeEfN025a"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "bLqa1bRTVyc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Original (Karaoke)",
+     "id": "UCJ6l4FGEy5VjZhzRM7UOIlA"
+    }
+   ],
+   "duration_seconds": 208,
+   "views": "3.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/5k8kUmtDI2GM_d0WoY3EUMIVYaG8aoDNLdIr3_OOiXxLa0gWVnFHcaGSluhCdutmwRYsxUeN8pZswAzY=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/5k8kUmtDI2GM_d0WoY3EUMIVYaG8aoDNLdIr3_OOiXxLa0gWVnFHcaGSluhCdutmwRYsxUeN8pZswAzY=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Snoop Dogg & Wiz Khalifa feat. Bruno Mars - Young, Wild & Free (Instrumental Version) (feat. Bruno Mars - Young, Wild & Free)",
+   "album": {
+    "name": "Snoop Dogg & Wiz Khalifa feat. Bruno Mars - Young, Wild & Free (Instrumental Version)",
+    "id": "MPREb_z0qyvwmAYGJ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "6RhESGrKHVc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:29",
+   "year": null,
+   "artists": [
+    {
+     "name": "Tribute Stars",
+     "id": "UC1vM4AHADyr_Z0gfRCAMJQg"
+    }
+   ],
+   "duration_seconds": 209,
+   "views": "1.9K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/yOVk0qXWxBkQFWa4MxQRiTTeDsScNI3F8ccmZ0EXDZw61iZe5F5mDfUTy86QhauZoy6nWHjevJC-U7E=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/yOVk0qXWxBkQFWa4MxQRiTTeDsScNI3F8ccmZ0EXDZw61iZe5F5mDfUTy86QhauZoy6nWHjevJC-U7E=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Young, Wild & Free (Originally Performed By Snoop Dogg & Wiz Khalifa Feat. Bruno Mars) (feat. Bruno Mars)",
+   "album": {
+    "name": "The Hottest Karaoke Hits Now!",
+    "id": "MPREb_MZPdUdHzM2z"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "bGdYN-8cwE8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "Future Hitmakers",
+     "id": "UCsaKcP4-Qgja9-RbXCcPjkg"
+    }
+   ],
+   "duration_seconds": 211,
+   "views": "12K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/mRd4sqXfJP0ZgBcZ6gFt9drAiPXeKIPKRLu7xIFM4jgwRMGqayY4JMJMMoDKvFJNht6zOQ6pY70wnoI=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/mRd4sqXfJP0ZgBcZ6gFt9drAiPXeKIPKRLu7xIFM4jgwRMGqayY4JMJMMoDKvFJNht6zOQ6pY70wnoI=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Young, Wild & Free",
+   "album": {
+    "name": "Young, Wild & Free (a Bruno Mars Tribute)",
+    "id": "MPREb_PbGDLXJxklj"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "59iqfu46f34",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jimmy Jones",
+     "id": "UCLCpIwnv5-7N9SjXsOTmvYg"
+    }
+   ],
+   "duration_seconds": 211,
+   "views": "21K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/iRIcciHAOQMeA3TcwQJUPxB0wSRf18bnG9KpQ5ogtupzHqPh2axMxrSN5HG4SAPXJol2QSq0BFuM_Sm8hg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/iRIcciHAOQMeA3TcwQJUPxB0wSRf18bnG9KpQ5ogtupzHqPh2axMxrSN5HG4SAPXJol2QSq0BFuM_Sm8hg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Young, Wild & Free (Originally Performed By Snoop Dogg and Wiz Khalifa Feat Bruno Mars) [Karaoke Instrumental] (feat. Bruno Mars)",
+   "album": {
+    "name": "2012 Hip Hop Hits (Originally Performed By Wiz Khalifa) [Karaoke Instrumentals]",
+    "id": "MPREb_9FQRubVuAVZ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "87J2IR7TreQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:35",
+   "year": null,
+   "artists": [
+    {
+     "name": "Karaoke All Hits",
+     "id": "UCRNzif-l1WBKTNayl0z16SA"
+    }
+   ],
+   "duration_seconds": 215,
+   "views": "6.9K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/5N70vV0_o4dBeUs6VagrB0WFCX9HZE2fzWl3IFlsCwIC2NTJYRCfRgTlkdhJp6QvkzAdNqWzSQux8gI=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/5N70vV0_o4dBeUs6VagrB0WFCX9HZE2fzWl3IFlsCwIC2NTJYRCfRgTlkdhJp6QvkzAdNqWzSQux8gI=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Young, Wild & Free (Bruno Mars, Snoop Dogg & Wiz Khalifa Instrumental Cover)",
+   "album": {
+    "name": "R&B Hits, Vol. 1",
+    "id": "MPREb_GsMcbwKUSEv"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "EU0W75JySok",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "Instrumentals",
+     "id": "UCYJ44H5hgTOsnJGBEirPQ3A"
+    }
+   ],
+   "duration_seconds": 208,
+   "views": "2.1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/7limOE_liuS2954kdYVKPxYcI9fH7QF0L1eE9jlf5z4XoYFNd2pUBb17u7zYXjqA_Fe9-U09EOg0te0=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/7limOE_liuS2954kdYVKPxYcI9fH7QF0L1eE9jlf5z4XoYFNd2pUBb17u7zYXjqA_Fe9-U09EOg0te0=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Young, Wild and Free (Originally Performed by Snoop Dog and Wiz Khalifa feat Bruno Mars) [Karaoke Instrumental] (feat. Bruno Mars)",
+   "album": {
+    "name": "2012 R & B Karaoke Classics Volume 2",
+    "id": "MPREb_dCuhMyGdlps"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "q4Wi8sCdiNE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:35",
+   "year": null,
+   "artists": [
+    {
+     "name": "Karaoke All Hits",
+     "id": "UCRNzif-l1WBKTNayl0z16SA"
+    }
+   ],
+   "duration_seconds": 215,
+   "views": "6.9K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/qNrqsvKFPUeS_CpNenN3SBBS3yVRaOidXlFSp1upYQBrpyZ_Ul5wKrET-bHD10QL7vWxjrO1aZWV3Bg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/qNrqsvKFPUeS_CpNenN3SBBS3yVRaOidXlFSp1upYQBrpyZ_Ul5wKrET-bHD10QL7vWxjrO1aZWV3Bg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Young, Wild & Free (Originally Performed By Snoop Dogg & Wiz Khalifa Feat. Bruno Mars) (feat. Bruno Mars)",
+   "album": {
+    "name": "New Smash Hits 2012 - Karaoke",
+    "id": "MPREb_BGtFyqnUYpQ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "-vRt1VzCUV4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "Future Hitmakers",
+     "id": "UCsaKcP4-Qgja9-RbXCcPjkg"
+    }
+   ],
+   "duration_seconds": 211,
+   "views": "12K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/d4JP6oiqvwmR3Trg83Z7mGusPM89SZA5J6_MZhjFGH1_2xOT75VPmozepUj-coTzJkotixZ0R-EPOSM=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/d4JP6oiqvwmR3Trg83Z7mGusPM89SZA5J6_MZhjFGH1_2xOT75VPmozepUj-coTzJkotixZ0R-EPOSM=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Young, Wild & Free (In the style of Snoop Dogg & Wiz Khalifa ft. Bruno Mars) [Karaoke Version] (feat. Bruno Mars)",
+   "album": {
+    "name": "Young, Wild & Free",
+    "id": "MPREb_zrqLL0YSfHq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "famx_tQgS38",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chart Top Karaoke",
+     "id": "UCjIRd27zl_H2TKaXPkpOuYA"
+    }
+   ],
+   "duration_seconds": 205,
+   "views": "261",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/UlGACQaZh6NhgELjoBSPxaBzm7GKni2qaR9IbGIdCuVstT0eXAwh-X0zwJWqTQNfCMrpah-9vjCX0wIc=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/UlGACQaZh6NhgELjoBSPxaBzm7GKni2qaR9IbGIdCuVstT0eXAwh-X0zwJWqTQNfCMrpah-9vjCX0wIc=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Young, Wild and Free (Originally Performed By Snoop Dog and Wiz Khalifa feat Bruno Mars) [Karaoke Audio Instrumental] (feat. Bruno Mars)",
+   "album": {
+    "name": "Karaoke Pop Hits 2010s (Originally Performed By Bruno Mars) [Karaoke Audio Instrumentals]",
+    "id": "MPREb_REy3jWj8BwV"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "qNIvwZEtkww",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:35",
+   "year": null,
+   "artists": [
+    {
+     "name": "Karaoke All Hits",
+     "id": "UCRNzif-l1WBKTNayl0z16SA"
+    }
+   ],
+   "duration_seconds": 215,
+   "views": "6.9K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/GYM3VouDmO0m2Ilt-GO8HuxzPrzlBD1y2tP7H5YthrTadZ56OwKBCBSE-MY0tkkcEqJ-wBfzd5cuVW3g=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/GYM3VouDmO0m2Ilt-GO8HuxzPrzlBD1y2tP7H5YthrTadZ56OwKBCBSE-MY0tkkcEqJ-wBfzd5cuVW3g=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Young Wild and Free (Originally Performed by Snoop Dogg & Wiz Khalifa feat. Bruno Mars) [Karaoke Audio Version] (feat. Bruno Mars)",
+   "album": {
+    "name": "2012 Hip Hop Karaoke Classics Volume 1",
+    "id": "MPREb_IQ9IO7PBmyz"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "dnv6dnQ6Sgo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:35",
+   "year": null,
+   "artists": [
+    {
+     "name": "2010s Karaoke Band",
+     "id": "UC89gVkHYaFXZkD6INio3-aA"
+    }
+   ],
+   "duration_seconds": 215,
+   "views": "6.9K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/CFs77i5QPvyzE-3tufC7gJ5_3oX6u1bgZyT6_rPT5HikvJnJn1NJW2Un2mSBXDLljL5qk7FJ2y47o1_-=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/CFs77i5QPvyzE-3tufC7gJ5_3oX6u1bgZyT6_rPT5HikvJnJn1NJW2Un2mSBXDLljL5qk7FJ2y47o1_-=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

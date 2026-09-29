@@ -1,0 +1,782 @@
+{
+ "kind": "search",
+ "key": "masked wolf astronaut in the ocean",
+ "request": "Masked Wolf Astronaut in the Ocean",
+ "recorded_at": "2026-09-29T02:36:40Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Astronaut in the Ocean (Extended Mix)",
+   "album": {
+    "name": "Astronaut in the Ocean",
+    "id": "MPREb_TjEwWyTrJiC"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "UnMql7ko-Ws",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:09",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mario Eddie",
+     "id": "UCIYRbwDepVUfasM0Lpnvjng"
+    },
+    {
+     "name": "Viktor Apostolovski",
+     "id": null
+    }
+   ],
+   "duration_seconds": 189,
+   "views": "37K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/_mjI5MCNHO-qU9zBbH39AyzYhq93dyXvMPHq65pf-ZYUR0iBnawT8Ik3uDhNR34NlH9FOOMy1UWhICuZ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/_mjI5MCNHO-qU9zBbH39AyzYhq93dyXvMPHq65pf-ZYUR0iBnawT8Ik3uDhNR34NlH9FOOMy1UWhICuZ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Astronaut In The Ocean (Remix) (feat. Masked Wolf)",
+   "album": {
+    "name": "Astronaut In The Ocean (Remix)",
+    "id": "MPREb_MXVNCpv16Qf"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "GDirHJgrNQA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:29",
+   "year": null,
+   "artists": [
+    {
+     "name": "MaR5HaY",
+     "id": "UC_fK_xIRzBUDv4racPPpySw"
+    }
+   ],
+   "duration_seconds": 209,
+   "views": "2K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/p8jA_PDiBUGSAlf59S39WPg7mhX_JcFzhp2W7BOBe1Lw9z9v3xj-gz1FVTbZcdQFQEuBmZXHnE__sua0=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/p8jA_PDiBUGSAlf59S39WPg7mhX_JcFzhp2W7BOBe1Lw9z9v3xj-gz1FVTbZcdQFQEuBmZXHnE__sua0=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Astronaut In The Ocean",
+   "album": {
+    "name": "Astronaut In The Ocean",
+    "id": "MPREb_5e3dKA10Auj"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "JAvxAFxNShU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:13",
+   "year": null,
+   "artists": [
+    {
+     "name": "ANALOGY",
+     "id": "UCTmEYcEx-v7P33CvasT5S1Q"
+    }
+   ],
+   "duration_seconds": 133,
+   "views": "2.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/lVXJx2siDl-QD5EvBr7B6TgvTKPA-SlbEWMJzuEYVXIEocSfpDUR7KgVFqYoRLzQYRRGAbLm5DUMg1QoSg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/lVXJx2siDl-QD5EvBr7B6TgvTKPA-SlbEWMJzuEYVXIEocSfpDUR7KgVFqYoRLzQYRRGAbLm5DUMg1QoSg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Astronaut in the Ocean (Extended)",
+   "album": {
+    "name": "Astronaut in the Ocean",
+    "id": "MPREb_zkShfAqWcoa"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "9BA0SaLr6w4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "JUNAR",
+     "id": "UCbnGO3OpH094kxYZau0GXLg"
+    }
+   ],
+   "duration_seconds": 230,
+   "views": "25K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/0WvgosrQIyneLS-XujUGj8bIeHcGkT8gF2lX3RjNgpgEbRygOfQSnXoJm_7b7WkNKeCPMJMVMGQ3yhvkLA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/0WvgosrQIyneLS-XujUGj8bIeHcGkT8gF2lX3RjNgpgEbRygOfQSnXoJm_7b7WkNKeCPMJMVMGQ3yhvkLA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Astronaut In The Ocean (HEDEGAARD & KEAN DYSSO Remix)",
+   "album": {
+    "name": "HEDEGAARD Remix Vol. 1",
+    "id": "MPREb_HA2cLgFIx6s"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "j3wW6F9CEr4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:22",
+   "year": null,
+   "artists": [
+    {
+     "name": "HEDEGAARD",
+     "id": "UCJeLbwLISMkhq-yrOwaIChQ"
+    },
+    {
+     "name": "KEAN DYSSO",
+     "id": "UCj3vKHDCz9VMnpJj_SamThA"
+    }
+   ],
+   "duration_seconds": 142,
+   "views": "353K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-ocWC6NReU6MC--HUYKa2-h8_oqxlA4HzlbpmXfVsbpwlswIukoqZ6YpvaxeJT5WlQ5Zvuntma5Bjos=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-ocWC6NReU6MC--HUYKa2-h8_oqxlA4HzlbpmXfVsbpwlswIukoqZ6YpvaxeJT5WlQ5Zvuntma5Bjos=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Astronaut In The Ocean (Remix)",
+   "album": {
+    "name": "Astronaut In The Ocean (Remix)",
+    "id": "MPREb_TEEhijCo0Jq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "CgeuBHmgm48",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:51",
+   "year": null,
+   "artists": [
+    {
+     "name": "Decker Mopa",
+     "id": "UCfGK_RZbz0PPZza-g1_1h9w"
+    },
+    {
+     "name": "Elementary",
+     "id": "UCh2dBEmhSQQ50yQINtWvjyQ"
+    },
+    {
+     "name": "Vorteg",
+     "id": "UCW6JkE3Gln0f-h5ChFDWCxQ"
+    }
+   ],
+   "duration_seconds": 231,
+   "views": "6.6K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/l3sQReBcY1YXGepQVQlXnseAK2aPj7baZ1VkGpT6oNhujUv1nnSI9IKVvOPXAAO0aCaC9Dumnkqmbhda=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/l3sQReBcY1YXGepQVQlXnseAK2aPj7baZ1VkGpT6oNhujUv1nnSI9IKVvOPXAAO0aCaC9Dumnkqmbhda=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Astronaut in the Ocean (Originally Performed by Masked Wolf) (Instrumental Version)",
+   "album": {
+    "name": "Pristine Karaoke, Vol. 35",
+    "id": "MPREb_c5bplrbwB14"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "HX9Pe7o5rXk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:08",
+   "year": null,
+   "artists": [
+    {
+     "name": "Backing Business",
+     "id": "UCIrAOEc1KI_YOAOAtXXPgzQ"
+    }
+   ],
+   "duration_seconds": 128,
+   "views": "72",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/r6FlaH0QCGWaHAqlZbdRrQytig4SxDyIfoqrDFSRWLREhxKVd90I_lmEpG6A3XeKUrQDfIUVCYR8ndA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/r6FlaH0QCGWaHAqlZbdRrQytig4SxDyIfoqrDFSRWLREhxKVd90I_lmEpG6A3XeKUrQDfIUVCYR8ndA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Astronaut In The Ocean",
+   "album": {
+    "name": "DJ Don’s Dance Party Mix – 20 Great Kids Dance Hits Vol. 1",
+    "id": "MPREb_x8fwvIU3GK3"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "8EoAppY95WM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:14",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Jagged Edges",
+     "id": "UCgi3t8LvY9BHaw7ArB4NAdg"
+    }
+   ],
+   "duration_seconds": 134,
+   "views": "169",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/7_6Y0fwjOMAvN1y7DpYPTOm-NQSzUHz6usqF4-fVVs5p41Z49_PjP6RZA3Sn8Xmk8eRoTVry3Uu4_dFIng=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/7_6Y0fwjOMAvN1y7DpYPTOm-NQSzUHz6usqF4-fVVs5p41Z49_PjP6RZA3Sn8Xmk8eRoTVry3Uu4_dFIng=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Astronaut In The Ocean (Originally Perfomed By Masked Wolf)",
+   "album": {
+    "name": "ZZang KARAOKE Greatest POP Vol.60",
+    "id": "MPREb_NAofEAsrJz1"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "HqHsAH2jC2Q",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:17",
+   "year": null,
+   "artists": [
+    {
+     "name": "ZZang KARAOKE",
+     "id": null
+    }
+   ],
+   "duration_seconds": 137,
+   "views": "20K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/J3vHQTuxCtL2hldvhB0ak-RJjdB-1HMKliUiHEcD4k0bmiFkDvbY4CLpbZM0f8ZdmCUKnTbluc28FuyN=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/J3vHQTuxCtL2hldvhB0ak-RJjdB-1HMKliUiHEcD4k0bmiFkDvbY4CLpbZM0f8ZdmCUKnTbluc28FuyN=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Astronaut In The Ocean (Made Popular By Masked Wolf) [Instrumental Version]",
+   "album": {
+    "name": "Party Tyme Karaoke - Instrumentals 2",
+    "id": "MPREb_Emz9VHJguZ9"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "NTRc5uB8e-I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:14",
+   "year": null,
+   "artists": [
+    {
+     "name": "Party Tyme Karaoke",
+     "id": null
+    }
+   ],
+   "duration_seconds": 134,
+   "views": "8.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/DTIo7rrmtZdh0VmKAya3wbENScLTn0gDwsJrjNizuI-oKWmKGLabvMRv3WG7qR3qXEZ2WcjplMTyYvUb=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/DTIo7rrmtZdh0VmKAya3wbENScLTn0gDwsJrjNizuI-oKWmKGLabvMRv3WG7qR3qXEZ2WcjplMTyYvUb=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Astrounaut In The Ocean (Sistem Remix)",
+   "album": {
+    "name": "Astrounaut In The Ocean (Sistem Remix)",
+    "id": "MPREb_ingwuRjy5GR"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "h8N7VrPMI9c",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "V0RT3X",
+     "id": "UCZzJ1oOsl2frCECLrcKST0g"
+    }
+   ],
+   "duration_seconds": 172,
+   "views": "59",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-aCgfeqXebhrAESRLImdQCCaB3hXwmuihzXO66qJjVTgvIXlcOQRu-T9fzusmacDx92ivf8IaPDKxlKr=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-aCgfeqXebhrAESRLImdQCCaB3hXwmuihzXO66qJjVTgvIXlcOQRu-T9fzusmacDx92ivf8IaPDKxlKr=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Astronaut In The Ocean (Sped Up)",
+   "album": {
+    "name": "BEATS & DRIFTS, Vol. 4",
+    "id": "MPREb_h4wfHyrzNeC"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "HNgMYZ7Pns0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:49",
+   "year": null,
+   "artists": [
+    {
+     "name": "FASTKID",
+     "id": "UCosVbL8_CpdD860jAfZPhTg"
+    }
+   ],
+   "duration_seconds": 109,
+   "views": "984",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/h0JXkI-QimDlVDmk8fGsHphFnmxb6spwruFudX--vpkwi8Hswtgd82W3Ks4HSimbltTWTljVwjYkrjbB=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/h0JXkI-QimDlVDmk8fGsHphFnmxb6spwruFudX--vpkwi8Hswtgd82W3Ks4HSimbltTWTljVwjYkrjbB=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "90's Rapper in a Trap Game (Masked Wolf Astronaut in the ocean remix)",
+   "album": {
+    "name": "90's Rapper in a Trap Game (Masked Wolf Astronaut in the ocean remix)",
+    "id": "MPREb_pak11SG7JsF"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "toreJBtb1a4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:27",
+   "year": null,
+   "artists": [
+    {
+     "name": "Nicky Rewind",
+     "id": "UCm275pCtGPCBDYXuMa5YzqQ"
+    }
+   ],
+   "duration_seconds": 147,
+   "views": "1.9K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/zZz9bbWPbVWPrqdv9xUPGQaclWlDPi1ohDox5owlvv5OuKgwOxxxa70-Dnmx7zbr2gbZ6i6E1mPGydVdcg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/zZz9bbWPbVWPrqdv9xUPGQaclWlDPi1ohDox5owlvv5OuKgwOxxxa70-Dnmx7zbr2gbZ6i6E1mPGydVdcg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Astronaut In The Ocean",
+   "album": {
+    "name": "Astronaut In The Ocean",
+    "id": "MPREb_220o3kPLEK3"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "EqjNH6I7hZ0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:26",
+   "year": null,
+   "artists": [
+    {
+     "name": "Abyss Walker",
+     "id": "UCUMuJNUh2vGINwZHj4kvq6A"
+    },
+    {
+     "name": "AconRiffs",
+     "id": "UCA1uiRb-B72FJ1B1RBenyKg"
+    },
+    {
+     "name": "Sammy SlamDance",
+     "id": "UCCitl9gn0rfrMxKawghiGLQ"
+    }
+   ],
+   "duration_seconds": 146,
+   "views": "22K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ZfqiB4jp86tR2X8x9m43SqVEcJw4LjWHA4ddbepubZ_iiI5vCBMwdR8-TJMdn2hFRmuu81Zr5zREcTj7=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ZfqiB4jp86tR2X8x9m43SqVEcJw4LjWHA4ddbepubZ_iiI5vCBMwdR8-TJMdn2hFRmuu81Zr5zREcTj7=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Astronaut In The Ocean (Techno)",
+   "album": {
+    "name": "Astronaut In The Ocean",
+    "id": "MPREb_J7OCzGlQvQs"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "XVbGCAojiKo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:56",
+   "year": null,
+   "artists": [
+    {
+     "name": "DJ Tekket",
+     "id": "UCRbmygx8Vly9rT_DeSgZ_-g"
+    }
+   ],
+   "duration_seconds": 176,
+   "views": "485",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/B9agTD9lmwKz0DcknZpLogqnRmVBv8D38PFLmJWVLZ6sKMinFrQC90Y__0QSEIQAi84g-1c-RnDcfLY=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/B9agTD9lmwKz0DcknZpLogqnRmVBv8D38PFLmJWVLZ6sKMinFrQC90Y__0QSEIQAi84g-1c-RnDcfLY=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Astronaut in the Ocean",
+   "album": {
+    "name": "Astronaut in the Ocean",
+    "id": "MPREb_TJbkKRjYTxc"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "b61jdzkU-Ho",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:23",
+   "year": null,
+   "artists": [
+    {
+     "name": "BETASTIC",
+     "id": "UC-fJJsHDt0DVRkSz1LHj70w"
+    },
+    {
+     "name": "FRG",
+     "id": null
+    }
+   ],
+   "duration_seconds": 143,
+   "views": "463",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/rm6ZSUyGOqhEFCF18W9vYFxS1RaEFfJ2Pzm8z6JRsHgcTyG0KMQgpjZxz01Cg9nPvYS6Nsf_0DVHwNU9KA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/rm6ZSUyGOqhEFCF18W9vYFxS1RaEFfJ2Pzm8z6JRsHgcTyG0KMQgpjZxz01Cg9nPvYS6Nsf_0DVHwNU9KA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Astronaut in the Ocean",
+   "album": {
+    "name": "Astronaut in the Ocean",
+    "id": "MPREb_WhNnFbhDL3T"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "cJXziZwbKS8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:17",
+   "year": null,
+   "artists": [
+    {
+     "name": "Foxx",
+     "id": "UCvj_zQMUuEmThUeFGTDtlmA"
+    }
+   ],
+   "duration_seconds": 137,
+   "views": "383",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/aQ_h2w3j3b88p-RU4uxgIgETpFZgCiMEDlRyF-ymmaiuk5zDRfucjRtjm-MKkktO8PxXGsVW8LGYkNeMxw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/aQ_h2w3j3b88p-RU4uxgIgETpFZgCiMEDlRyF-ymmaiuk5zDRfucjRtjm-MKkktO8PxXGsVW8LGYkNeMxw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Astronaut In The Ocean (sped up + reverb)",
+   "album": {
+    "name": "Sped Up Lofi Covers Vol. 7",
+    "id": "MPREb_bCb6Ba8eGU8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "1kGv3eTpi30",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:26",
+   "year": null,
+   "artists": [
+    {
+     "name": "Covers Unplugged",
+     "id": "UCmp2ZlGRQGJdcbjgpXJPBCw"
+    },
+    {
+     "name": "Wild Issues",
+     "id": "UCmdG-HzZDJFtK7iY47joLvg"
+    }
+   ],
+   "duration_seconds": 86,
+   "views": "939",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/7GpVIN05xoY63nH2qDKhFUmZVlU_LU9BFKU-hCvK2JJAfMdOgs2XclmlMyGeEgqBNv5iEDugD0ZvnU43=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/7GpVIN05xoY63nH2qDKhFUmZVlU_LU9BFKU-hCvK2JJAfMdOgs2XclmlMyGeEgqBNv5iEDugD0ZvnU43=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Astronaut in the Ocean (Nightcore)",
+   "album": {
+    "name": "Nightcore Covers",
+    "id": "MPREb_H5yGJ3D7P8q"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "y91NCF5dqLY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:36",
+   "year": null,
+   "artists": [
+    {
+     "name": "BiBi Bluebird",
+     "id": "UCmZRxGOv5F8r3SlQybijcsQ"
+    }
+   ],
+   "duration_seconds": 96,
+   "views": "398",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/eS17Vk21tP-v8ClY3brR5OgY1vKzlfJFnOBDHhaCN808IQi3W0NWc5Te-iajeM_qgaIVBDcTFTvx2Bug=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/eS17Vk21tP-v8ClY3brR5OgY1vKzlfJFnOBDHhaCN808IQi3W0NWc5Te-iajeM_qgaIVBDcTFTvx2Bug=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Astronaut In The Ocean (slowed down + reverb)",
+   "album": {
+    "name": "LOFI POP HITS VOL. 2 (Slowed & Reverbed)",
+    "id": "MPREb_IJ43D2dYmrM"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Hu1QL8NgT7s",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "Covers Unplugged",
+     "id": "UCmp2ZlGRQGJdcbjgpXJPBCw"
+    }
+   ],
+   "duration_seconds": 112,
+   "views": "561",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/yr1SC4dqy667MhPq48bEDuVLi0ewQtbJyVPrFwABVob4AxqiZJaly4IfXcI_pZsbncKlWhjXQObea5KZ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/yr1SC4dqy667MhPq48bEDuVLi0ewQtbJyVPrFwABVob4AxqiZJaly4IfXcI_pZsbncKlWhjXQObea5KZ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

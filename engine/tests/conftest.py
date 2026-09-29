@@ -5,6 +5,8 @@
 - Audio fixtures are generated once per run with ffmpeg. If ffmpeg is missing the audio
   tests are skipped, unless MUSICORG_REQUIRE_TOOLS=1 (as in CI), which makes them fail.
 - Tests marked `live` talk to the real network and only run with MUSICORG_LIVE=1.
+  Every other test runs YouTube Music in replay mode (MUSICORG_REPLAY_DIR set to
+  tests/fixtures/ytm), so a request that wasn't recorded fails instead of going online.
 - The system Trash is replaced by a folder for every test. The one test marked
   `integration` uses the real Trash; it only runs with MUSICORG_INTEGRATION=1, and never
   in CI.
@@ -54,6 +56,18 @@ def app_home(tmp_path_factory: pytest.TempPathFactory, monkeypatch: pytest.Monke
     home = tmp_path_factory.mktemp("app-home")
     monkeypatch.setenv("MUSICORG_HOME", str(home))
     return home
+
+
+YTM_FIXTURES = Path(__file__).parent / "fixtures" / "ytm"
+
+
+@pytest.fixture(autouse=True)
+def replay_youtube(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> None:
+    """No test reaches YouTube except `live` ones: answers come from recordings."""
+    if "live" in request.keywords:
+        monkeypatch.delenv("MUSICORG_REPLAY_DIR", raising=False)
+    else:
+        monkeypatch.setenv("MUSICORG_REPLAY_DIR", str(YTM_FIXTURES))
 
 
 @pytest.fixture(autouse=True)

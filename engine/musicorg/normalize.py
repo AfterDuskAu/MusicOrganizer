@@ -21,7 +21,7 @@ from __future__ import annotations
 import html
 import re
 import unicodedata
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields
 from typing import Any
 
 from musicorg.tags import TrackTags
@@ -76,6 +76,16 @@ class Parsed:
         for key in ("version_tokens", "junk_removed", "artists", "notes"):
             data[key] = list(data[key])
         return data
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Parsed:
+        """The inverse of `to_dict` (e.g. the index's `parsed_json`). Unknown keys are
+        ignored, so an index from an older engine still reads."""
+        known = {f.name for f in fields(cls)}
+        values = {k: v for k, v in data.items() if k in known}
+        for key in ("version_tokens", "junk_removed", "artists", "notes"):
+            values[key] = tuple(values.get(key) or ())
+        return cls(**values)
 
 
 def confidence_band(confidence: float) -> str:
@@ -167,6 +177,9 @@ _JUNK_FILLER_WORDS = frozenset({
     "animated", "very", "high", "best", "new", "with", "and", "the",
 })  # fmt: skip
 _RESOLUTION = re.compile(r"\d{3,4}p")
+# "(From "Top Gun: Maverick")", "- From the Motion Picture ...": the same recording, so
+# junk, but only in brackets or after a title's " - " ("From Me to You" is a title).
+_SOUNDTRACK = re.compile(r"(?:music\s+)?from\s+\S.*|.*\b(?:soundtrack|ost)\b.*", re.IGNORECASE)
 # Genre tags in square brackets on Monstercat/NCS-style uploads: [Dubstep], [Trap].
 _GENRES = re.compile(
     r"(?:trap|dubstep|house|edm|dnb|drum\s*(?:and|&|n|'n')\s*bass|electro(?:nic)?|"
@@ -431,7 +444,11 @@ def _classify(group: _Group, found: _Found, *, is_last: bool) -> str | None:
     content = " ".join(content.split())
     if not content:
         return None
-    if _is_junk(content, group.opener) or (is_last and _BARE_COUNTER.fullmatch(content)):
+    if (
+        _is_junk(content, group.opener)
+        or _SOUNDTRACK.fullmatch(content)
+        or (is_last and _BARE_COUNTER.fullmatch(content))
+    ):
         found.junk.append(content.casefold())
         return None
     featured = _featured(content)
@@ -783,8 +800,7 @@ def parse_tags(tags: TrackTags) -> Parsed:
         return _replace(parsed, source="tags", confidence=confidence)
 
     found = _Found()
-    skeleton, groups = _extract_groups(title)
-    clean_title = _finish_title(skeleton, groups, found, last_part=True)
+    clean_title = _title_with_versions(title, found)
     artist_skeleton, artist_groups = _extract_groups(artist or "")
     credit, artists = _finish_artist(artist_skeleton, artist_groups, found)
     parsed = _result(credit, clean_title, found, _TAGS, artists=artists)
@@ -802,6 +818,38 @@ def _not_an_artist(artist: str | None) -> bool:
         or "://" in artist
         or bool(_DOMAIN_RE.fullmatch(artist.strip()))
     )
+
+
+def parse_title(title: str) -> Parsed:
+    """A title as YouTube Music or real tags give it, with no artist in it: "Crave You
+    (Adventure Club Remix)", "Yesterday - Remastered 2009", "Hotline Bling (feat. X)".
+    Version tokens and featured artists come out; nothing is taken as the artist."""
+    found = _Found()
+    clean = _title_with_versions(_prepare(title), found)
+    return _replace(_result(None, clean, found, _TAGS), source="tags")
+
+
+def _title_with_versions(title: str, found: _Found) -> str:
+    """A clean title. Parts after " - " that are only versions or junk ("- Remastered
+    2009", "- Live", "- Radio Edit") come out as such; any other part stays in the title
+    ("Love Story - Taylor's Version")."""
+    skeleton, groups = _extract_groups(title)
+    parts = re.split(r"\s+[-–—]\s+", skeleton)
+    kept = [parts[0]]
+    for part in parts[1:]:
+        trial = _Found()
+        plain = " ".join(_resolve(part, groups, trial, last_part=False).split())
+        if plain and trial.title_groups == 0:
+            versions = _version_tokens(plain)
+            if versions is not None or _is_junk(plain) or _SOUNDTRACK.fullmatch(plain):
+                _merge(found, trial)
+                if versions is not None:
+                    found.versions += versions
+                else:
+                    found.junk.append(plain.casefold())
+                continue
+        kept.append(part)
+    return _finish_title(" - ".join(kept), groups, found, last_part=True)
 
 
 def _replace(parsed: Parsed, **changes: Any) -> Parsed:

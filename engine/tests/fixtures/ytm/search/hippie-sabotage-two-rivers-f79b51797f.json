@@ -1,0 +1,750 @@
+{
+ "kind": "search",
+ "key": "hippie sabotage two rivers",
+ "request": "Hippie Sabotage Two Rivers",
+ "recorded_at": "2026-09-29T02:36:27Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Two Rivers",
+   "album": {
+    "name": "Red Moon Rising",
+    "id": "MPREb_vIMWcBQZnuV"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "LJhN7Uc2Atw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:22",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hippie Sabotage",
+     "id": "UCb8YfV-2OQ2DPAeRqegPgPg"
+    }
+   ],
+   "duration_seconds": 202,
+   "views": "3.2M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/5m-UvKNSnBxi9OA91x7PER0G8ZPVlftBW6FRN62Vqz9p77NFA6AfJcK2vNmYiUpOvVyhQHmLu3HpS1cT=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/5m-UvKNSnBxi9OA91x7PER0G8ZPVlftBW6FRN62Vqz9p77NFA6AfJcK2vNmYiUpOvVyhQHmLu3HpS1cT=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Otherside",
+   "album": {
+    "name": "Drifter",
+    "id": "MPREb_OByB5GzdFPi"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "jlwJwzzTCKc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:27",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hippie Sabotage",
+     "id": "UCb8YfV-2OQ2DPAeRqegPgPg"
+    }
+   ],
+   "duration_seconds": 207,
+   "views": "312K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2aeKBVKgkMfZmKRuAENTBAIrr4PizVmCthzYRRLvfmTr5fQHzJrPtfD5p-bDArZ85X3sgkW-KVaiQ47C=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2aeKBVKgkMfZmKRuAENTBAIrr4PizVmCthzYRRLvfmTr5fQHzJrPtfD5p-bDArZ85X3sgkW-KVaiQ47C=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Older That You Get",
+   "album": {
+    "name": "Older That You Get",
+    "id": "MPREb_EFBqq3UVgXZ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "3shkTgHwwFI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:10",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hippie Sabotage",
+     "id": "UCb8YfV-2OQ2DPAeRqegPgPg"
+    }
+   ],
+   "duration_seconds": 190,
+   "views": "2.1M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/YRr7Jq2MHOZd8iVjOEoLdd4lLtKc0IWDOcU7fc8htadQ9V0B_b2ljX_k4Q9DjemB2PyaB63JdSKEEwut=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/YRr7Jq2MHOZd8iVjOEoLdd4lLtKc0IWDOcU7fc8htadQ9V0B_b2ljX_k4Q9DjemB2PyaB63JdSKEEwut=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Thinking Irrationally",
+   "album": {
+    "name": "Floating Palace",
+    "id": "MPREb_HYFJShIdiC5"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "6FlfFAwuwaw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:20",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hippie Sabotage",
+     "id": "UCb8YfV-2OQ2DPAeRqegPgPg"
+    }
+   ],
+   "duration_seconds": 260,
+   "views": "1.1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/9PFFDPhlEEIehMAaz_mk56zeJXOrLRQubnU0I9sC_-_XKXfuYDYXwQEK_L3Fx6ie_LT89_RlGG9lFtJe=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/9PFFDPhlEEIehMAaz_mk56zeJXOrLRQubnU0I9sC_-_XKXfuYDYXwQEK_L3Fx6ie_LT89_RlGG9lFtJe=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Thrillen (Bonus)",
+   "album": {
+    "name": "Vol. 2",
+    "id": "MPREb_jnFFqtzdAxY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "v-hmfZoBkg4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:21",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hippie Sabotage",
+     "id": "UCb8YfV-2OQ2DPAeRqegPgPg"
+    }
+   ],
+   "duration_seconds": 141,
+   "views": "10K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/8p5ObLaNMVvu6PGrWXYVM2xrMryH7zrI6jBp-A6b2Tm14QLmv7IzNL4NZC3oqHFoboqCURftnoIsOxp60A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/8p5ObLaNMVvu6PGrWXYVM2xrMryH7zrI6jBp-A6b2Tm14QLmv7IzNL4NZC3oqHFoboqCURftnoIsOxp60A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Point of No Return",
+   "album": {
+    "name": "Floating Palace",
+    "id": "MPREb_HYFJShIdiC5"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "I7c8WOFyy5s",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:45",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hippie Sabotage",
+     "id": "UCb8YfV-2OQ2DPAeRqegPgPg"
+    }
+   ],
+   "duration_seconds": 165,
+   "views": "635K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/9PFFDPhlEEIehMAaz_mk56zeJXOrLRQubnU0I9sC_-_XKXfuYDYXwQEK_L3Fx6ie_LT89_RlGG9lFtJe=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/9PFFDPhlEEIehMAaz_mk56zeJXOrLRQubnU0I9sC_-_XKXfuYDYXwQEK_L3Fx6ie_LT89_RlGG9lFtJe=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Running Miles",
+   "album": {
+    "name": "Running Miles",
+    "id": "MPREb_Hmm64l5W1Ax"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "K2-F0fdRVy0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:16",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hippie Sabotage",
+     "id": "UCb8YfV-2OQ2DPAeRqegPgPg"
+    }
+   ],
+   "duration_seconds": 256,
+   "views": "66M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/uGouoGiun2RbsygzQXfFQ-VekbsQsWnELdYbP6UZ0h55eh0GrpqApdqdpu-QWhgYkr8hnAcm8WnJb3NP=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/uGouoGiun2RbsygzQXfFQ-VekbsQsWnELdYbP6UZ0h55eh0GrpqApdqdpu-QWhgYkr8hnAcm8WnJb3NP=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Hidden Places",
+   "album": {
+    "name": "Providence",
+    "id": "MPREb_s0eoOmfStNS"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "U7hL6JkhIb8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:51",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hippie Sabotage",
+     "id": "UCb8YfV-2OQ2DPAeRqegPgPg"
+    }
+   ],
+   "duration_seconds": 171,
+   "views": "49K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vYc1TGRRhYiCDfbJRoRTDLzr6qm0ewLVZhWMBrymtGDlAzmKL-7S4omir7aNCNUc1arZ5kSQRPSuhsyMVg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vYc1TGRRhYiCDfbJRoRTDLzr6qm0ewLVZhWMBrymtGDlAzmKL-7S4omir7aNCNUc1arZ5kSQRPSuhsyMVg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Trailblazer",
+   "album": {
+    "name": "Trailblazer",
+    "id": "MPREb_uIlnyv97Q3s"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "FzT_1VGhOew",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:15",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hippie Sabotage",
+     "id": "UCb8YfV-2OQ2DPAeRqegPgPg"
+    }
+   ],
+   "duration_seconds": 315,
+   "views": "1.2M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/L_A4wg89Mx2PntuNZo54U5wXsI60aQw9YMISDwTvU34UFB9q3EzObIQDj0X84ChT2QtzGiE7Liy5NqDu=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/L_A4wg89Mx2PntuNZo54U5wXsI60aQw9YMISDwTvU34UFB9q3EzObIQDj0X84ChT2QtzGiE7Liy5NqDu=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Stolen Car",
+   "album": {
+    "name": "Vol. 2",
+    "id": "MPREb_jnFFqtzdAxY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "29xc1hrYpAg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:08",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hippie Sabotage",
+     "id": "UCb8YfV-2OQ2DPAeRqegPgPg"
+    }
+   ],
+   "duration_seconds": 188,
+   "views": "40K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/8p5ObLaNMVvu6PGrWXYVM2xrMryH7zrI6jBp-A6b2Tm14QLmv7IzNL4NZC3oqHFoboqCURftnoIsOxp60A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/8p5ObLaNMVvu6PGrWXYVM2xrMryH7zrI6jBp-A6b2Tm14QLmv7IzNL4NZC3oqHFoboqCURftnoIsOxp60A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Waiting",
+   "album": {
+    "name": "Providence",
+    "id": "MPREb_s0eoOmfStNS"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "1JrbIPu0Uys",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:43",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hippie Sabotage",
+     "id": "UCb8YfV-2OQ2DPAeRqegPgPg"
+    }
+   ],
+   "duration_seconds": 283,
+   "views": "329K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vYc1TGRRhYiCDfbJRoRTDLzr6qm0ewLVZhWMBrymtGDlAzmKL-7S4omir7aNCNUc1arZ5kSQRPSuhsyMVg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vYc1TGRRhYiCDfbJRoRTDLzr6qm0ewLVZhWMBrymtGDlAzmKL-7S4omir7aNCNUc1arZ5kSQRPSuhsyMVg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Shipwrecked",
+   "album": {
+    "name": "Trailblazer",
+    "id": "MPREb_IgLELXp5o7q"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "tLi3DMs_F-M",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:45",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hippie Sabotage",
+     "id": "UCb8YfV-2OQ2DPAeRqegPgPg"
+    }
+   ],
+   "duration_seconds": 285,
+   "views": "608K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/A6HugL8kViuO7KBJ_XaS2q_V7UWsarNAjfD6SDDv-pIQwXiTQxeipxq4fMGHnLYgmmGOKhyFlEYWPaQv=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/A6HugL8kViuO7KBJ_XaS2q_V7UWsarNAjfD6SDDv-pIQwXiTQxeipxq4fMGHnLYgmmGOKhyFlEYWPaQv=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "See the Day",
+   "album": {
+    "name": "Vol. 2",
+    "id": "MPREb_jnFFqtzdAxY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "zVQSmZKf--I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:10",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hippie Sabotage",
+     "id": "UCb8YfV-2OQ2DPAeRqegPgPg"
+    }
+   ],
+   "duration_seconds": 130,
+   "views": "28K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/8p5ObLaNMVvu6PGrWXYVM2xrMryH7zrI6jBp-A6b2Tm14QLmv7IzNL4NZC3oqHFoboqCURftnoIsOxp60A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/8p5ObLaNMVvu6PGrWXYVM2xrMryH7zrI6jBp-A6b2Tm14QLmv7IzNL4NZC3oqHFoboqCURftnoIsOxp60A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Moments",
+   "album": {
+    "name": "Providence",
+    "id": "MPREb_s0eoOmfStNS"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "qpmgPmjzYVU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hippie Sabotage",
+     "id": "UCb8YfV-2OQ2DPAeRqegPgPg"
+    }
+   ],
+   "duration_seconds": 205,
+   "views": "39K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vYc1TGRRhYiCDfbJRoRTDLzr6qm0ewLVZhWMBrymtGDlAzmKL-7S4omir7aNCNUc1arZ5kSQRPSuhsyMVg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vYc1TGRRhYiCDfbJRoRTDLzr6qm0ewLVZhWMBrymtGDlAzmKL-7S4omir7aNCNUc1arZ5kSQRPSuhsyMVg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Nervous System",
+   "album": {
+    "name": "No Judgement",
+    "id": "MPREb_FVaW8EujLvh"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "qhxEfrjdap0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:38",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hippie Sabotage",
+     "id": "UCb8YfV-2OQ2DPAeRqegPgPg"
+    }
+   ],
+   "duration_seconds": 158,
+   "views": "241K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/8Yd_sphgO6nA2s3HLliimpaPubHOfWzo6CBM3eWUCKkrzqkXKfutMqvn5vXOTY93f6j0mmjW1n83IRI6=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/8Yd_sphgO6nA2s3HLliimpaPubHOfWzo6CBM3eWUCKkrzqkXKfutMqvn5vXOTY93f6j0mmjW1n83IRI6=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Grime",
+   "album": {
+    "name": "Vol. 2",
+    "id": "MPREb_jnFFqtzdAxY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "0XfdaxMzE-E",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:39",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hippie Sabotage",
+     "id": "UCb8YfV-2OQ2DPAeRqegPgPg"
+    }
+   ],
+   "duration_seconds": 159,
+   "views": "2.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/8p5ObLaNMVvu6PGrWXYVM2xrMryH7zrI6jBp-A6b2Tm14QLmv7IzNL4NZC3oqHFoboqCURftnoIsOxp60A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/8p5ObLaNMVvu6PGrWXYVM2xrMryH7zrI6jBp-A6b2Tm14QLmv7IzNL4NZC3oqHFoboqCURftnoIsOxp60A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Can't Find Nothing ",
+   "album": {
+    "name": "Vol. 2",
+    "id": "MPREb_jnFFqtzdAxY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "k4NP2o_B8-M",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:57",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hippie Sabotage",
+     "id": "UCb8YfV-2OQ2DPAeRqegPgPg"
+    }
+   ],
+   "duration_seconds": 177,
+   "views": "14K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/8p5ObLaNMVvu6PGrWXYVM2xrMryH7zrI6jBp-A6b2Tm14QLmv7IzNL4NZC3oqHFoboqCURftnoIsOxp60A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/8p5ObLaNMVvu6PGrWXYVM2xrMryH7zrI6jBp-A6b2Tm14QLmv7IzNL4NZC3oqHFoboqCURftnoIsOxp60A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Cryptic Captions",
+   "album": {
+    "name": "Floating Palace",
+    "id": "MPREb_HYFJShIdiC5"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "OO2ALk3LZHs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:55",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hippie Sabotage",
+     "id": "UCb8YfV-2OQ2DPAeRqegPgPg"
+    }
+   ],
+   "duration_seconds": 295,
+   "views": "2.6M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/9PFFDPhlEEIehMAaz_mk56zeJXOrLRQubnU0I9sC_-_XKXfuYDYXwQEK_L3Fx6ie_LT89_RlGG9lFtJe=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/9PFFDPhlEEIehMAaz_mk56zeJXOrLRQubnU0I9sC_-_XKXfuYDYXwQEK_L3Fx6ie_LT89_RlGG9lFtJe=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Not Enough",
+   "album": {
+    "name": "Providence",
+    "id": "MPREb_s0eoOmfStNS"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "7dTWOPuK2ck",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:11",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hippie Sabotage",
+     "id": "UCb8YfV-2OQ2DPAeRqegPgPg"
+    }
+   ],
+   "duration_seconds": 191,
+   "views": "62K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vYc1TGRRhYiCDfbJRoRTDLzr6qm0ewLVZhWMBrymtGDlAzmKL-7S4omir7aNCNUc1arZ5kSQRPSuhsyMVg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vYc1TGRRhYiCDfbJRoRTDLzr6qm0ewLVZhWMBrymtGDlAzmKL-7S4omir7aNCNUc1arZ5kSQRPSuhsyMVg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Swamp Thing",
+   "album": {
+    "name": "Vol. 2",
+    "id": "MPREb_jnFFqtzdAxY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "M1hyHtw3-Rw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:24",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hippie Sabotage",
+     "id": "UCb8YfV-2OQ2DPAeRqegPgPg"
+    }
+   ],
+   "duration_seconds": 204,
+   "views": "7.7K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/8p5ObLaNMVvu6PGrWXYVM2xrMryH7zrI6jBp-A6b2Tm14QLmv7IzNL4NZC3oqHFoboqCURftnoIsOxp60A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/8p5ObLaNMVvu6PGrWXYVM2xrMryH7zrI6jBp-A6b2Tm14QLmv7IzNL4NZC3oqHFoboqCURftnoIsOxp60A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

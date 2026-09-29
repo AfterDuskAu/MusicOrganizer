@@ -1,0 +1,798 @@
+{
+ "kind": "search",
+ "key": "kenya grace strangers",
+ "request": "Kenya Grace Strangers",
+ "recorded_at": "2026-09-29T02:36:25Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Strangers",
+   "album": {
+    "name": "Strangers",
+    "id": "MPREb_BPAiSFIkyZY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "RCaoGyIXI6Y",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:53",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kenya Grace",
+     "id": "UChxHCt_gWE3uZ5ps0MSzlAQ"
+    }
+   ],
+   "duration_seconds": 173,
+   "views": "286M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/GhhSRoNbI923f8cdBMFWHvbVgjmBe7MvMzM0zsAJQBEayjFIZUfsbW7cjfW2VwydCIZKDYqdNtLCKths=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/GhhSRoNbI923f8cdBMFWHvbVgjmBe7MvMzM0zsAJQBEayjFIZUfsbW7cjfW2VwydCIZKDYqdNtLCKths=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "STRANGERS",
+   "album": {
+    "name": "STRANGERS",
+    "id": "MPREb_RLRXK7hhgV2"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Gu_AqpO_EdA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:01",
+   "year": null,
+   "artists": [
+    {
+     "name": "FAST BASSTON",
+     "id": null
+    },
+    {
+     "name": "BASSTON",
+     "id": null
+    }
+   ],
+   "duration_seconds": 121,
+   "views": "27K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/usqXx-0C3XF4Dwb3g4lbOJPARwhBym4-UJe7qG4qPsZAbauC4l8fFU9YZarGynOW9d3LZM_2FihIAUPj=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/usqXx-0C3XF4Dwb3g4lbOJPARwhBym4-UJe7qG4qPsZAbauC4l8fFU9YZarGynOW9d3LZM_2FihIAUPj=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "STRANGERS",
+   "album": {
+    "name": "STRANGERS",
+    "id": "MPREb_h7jf8aMHHm0"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "l453HAEhn_c",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:13",
+   "year": null,
+   "artists": [
+    {
+     "name": "BASSTON",
+     "id": null
+    },
+    {
+     "name": "STRØBE",
+     "id": "UC2JDEGQpLM_iUe8pLcPpdVw"
+    }
+   ],
+   "duration_seconds": 133,
+   "views": "6.9K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/_55j1cKCymiENE_Dv2Nm2_VCUGevXSurjJBcK_fqHtMCtrlaQFMBZ_QUQWEbFUBCbZkPR6iqRb-IH58lrg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/_55j1cKCymiENE_Dv2Nm2_VCUGevXSurjJBcK_fqHtMCtrlaQFMBZ_QUQWEbFUBCbZkPR6iqRb-IH58lrg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Strangers",
+   "album": {
+    "name": "Strangers",
+    "id": "MPREb_ftu87Xhi2X0"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "zgyI71aeRlw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:24",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kay",
+     "id": "UCko71f96qgqOs3c8EdN2X-A"
+    }
+   ],
+   "duration_seconds": 204,
+   "views": "372",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/PQkgrU-0beCzqpe0vZGjsg0V15vnDLGsc7s3iuqw3jJ2qw03Mwe45Gwk8gWlYv0GxnO9f37iPi0IkWJz=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/PQkgrU-0beCzqpe0vZGjsg0V15vnDLGsc7s3iuqw3jJ2qw03Mwe45Gwk8gWlYv0GxnO9f37iPi0IkWJz=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Meteor",
+   "album": {
+    "name": "Meteor",
+    "id": "MPREb_LiSmrkbxhko"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "80mNtFUuXtQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kenya Grace",
+     "id": "UChxHCt_gWE3uZ5ps0MSzlAQ"
+    }
+   ],
+   "duration_seconds": 172,
+   "views": "1.5M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/JS09W635lwkSqj1PX0kf07qaWEdW8kgmYx91BrCnk6qj408RBRNQGxnNofvzjt8PkpOW3LPcsE4taEAdag=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/JS09W635lwkSqj1PX0kf07qaWEdW8kgmYx91BrCnk6qj408RBRNQGxnNofvzjt8PkpOW3LPcsE4taEAdag=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "strangers (nightcore)",
+   "album": {
+    "name": "strangers (nightcore)",
+    "id": "MPREb_L3EHuYxJmD7"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "avjbpTp9O74",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "neko",
+     "id": null
+    }
+   ],
+   "duration_seconds": 85,
+   "views": "3.9K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/UGxNyoYqHtR1RAW3HEgJT4ogegNOC0QSus6ex2Psmnt9Y0jMhJcQLPYKLHPbi3UMJzvaWBrVA6k15Ho=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/UGxNyoYqHtR1RAW3HEgJT4ogegNOC0QSus6ex2Psmnt9Y0jMhJcQLPYKLHPbi3UMJzvaWBrVA6k15Ho=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Strangers x Cola",
+   "album": {
+    "name": "Strangers x Cola",
+    "id": "MPREb_sIo0lwQG87a"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Fs-a0g7iUiI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "TommyMuzzic",
+     "id": "UCIOzVH6F6iE_qpzIBDkJAyA"
+    }
+   ],
+   "duration_seconds": 208,
+   "views": "9.8K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/QmcY-DakMSxTm46RktdxCBUKhj-rPy8r1VOOlwZhxL9gHM-IHsPqGuDFfq82XWMoGVqVLxrxv2vAjMY=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/QmcY-DakMSxTm46RktdxCBUKhj-rPy8r1VOOlwZhxL9gHM-IHsPqGuDFfq82XWMoGVqVLxrxv2vAjMY=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Strangers x Cola (Edit)",
+   "album": {
+    "name": "Strangers x Cola",
+    "id": "MPREb_iQlH5B9VlUv"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "T2MNPFPUvV4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:54",
+   "year": null,
+   "artists": [
+    {
+     "name": "TommyMuzzic",
+     "id": "UCIOzVH6F6iE_qpzIBDkJAyA"
+    },
+    {
+     "name": "PHAZZED",
+     "id": "UCIOP1i8OnFKdrs8lAWbTSEg"
+    }
+   ],
+   "duration_seconds": 174,
+   "views": "9.8K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/3nihH5C7qmOdM2ZmvZKR5iyWZSgfmh6Afj4F9oWoJ7hFihLuhc08nYg-E22RXQrL5vGjUcqjbbKRbA7e=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/3nihH5C7qmOdM2ZmvZKR5iyWZSgfmh6Afj4F9oWoJ7hFihLuhc08nYg-E22RXQrL5vGjUcqjbbKRbA7e=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Strangers (sad acoustic version)",
+   "album": {
+    "name": "Strangers (sad acoustic version)",
+    "id": "MPREb_sei9OkGlYEM"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "rxmm4-gffIs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:05",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kenya Grace",
+     "id": "UChxHCt_gWE3uZ5ps0MSzlAQ"
+    }
+   ],
+   "duration_seconds": 185,
+   "views": "4.4M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/LtyYp7eot4chUOXtiph6PI0KbD7Ca6r5o-RdVBDFO0i0tESQxKenS4dv-IWwIN7EUvxM8K4La-ivyMU54g=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/LtyYp7eot4chUOXtiph6PI0KbD7Ca6r5o-RdVBDFO0i0tESQxKenS4dv-IWwIN7EUvxM8K4La-ivyMU54g=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Strangers",
+   "album": {
+    "name": "Strangers",
+    "id": "MPREb_5vB9HYxLhKd"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "VCl0PcVzAm4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:38",
+   "year": null,
+   "artists": [
+    {
+     "name": "Heater & Crunch",
+     "id": "UCOP4-Mt7RNMiJlVOem1CpTA"
+    },
+    {
+     "name": "Margad",
+     "id": "UCQ8haA9KtrFp6IUGHHSi_sA"
+    }
+   ],
+   "duration_seconds": 158,
+   "views": "5.6K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/j_q9NYT-RK89tvCi3OcMwSL_apzeUjTdLMRp3mpjPhaQoVrzWsMS32vhVRK_ShC658R1nBzpNWaU6AJw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/j_q9NYT-RK89tvCi3OcMwSL_apzeUjTdLMRp3mpjPhaQoVrzWsMS32vhVRK_ShC658R1nBzpNWaU6AJw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Strangers",
+   "album": {
+    "name": "Strangers",
+    "id": "MPREb_Nbq9foptkqV"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "n93LJcwmVXI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "Poylow",
+     "id": "UCPNz2Z6szLcW_lzwBk2ioJA"
+    },
+    {
+     "name": "New Beat Order",
+     "id": "UCYVFeJ__RQLwL2nl1KItjfg"
+    },
+    {
+     "name": "ROXANA",
+     "id": "UC103geA2hCjAEtGNMkDFuUA"
+    }
+   ],
+   "duration_seconds": 123,
+   "views": "78K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-5yhS9EyvfoesraTAIcY3xXN4huLjJOfnHap6GLvaHW3JzKMXj2v6mUUNIJAyPwieWXfGt2Tu0hbEjs=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-5yhS9EyvfoesraTAIcY3xXN4huLjJOfnHap6GLvaHW3JzKMXj2v6mUUNIJAyPwieWXfGt2Tu0hbEjs=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Strangers",
+   "album": {
+    "name": "Strangers",
+    "id": "MPREb_QPOwfqUEyme"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Lb16qGkdEus",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:57",
+   "year": null,
+   "artists": [
+    {
+     "name": "KOANS",
+     "id": null
+    },
+    {
+     "name": "MAGAT",
+     "id": null
+    },
+    {
+     "name": "Nito-Onna",
+     "id": "UCCZObpdiYBpq-zrlJ80DlFQ"
+    },
+    {
+     "name": "Garage King",
+     "id": "UCwtwsSxZFi3q3pebLUk6zeA"
+    }
+   ],
+   "duration_seconds": 117,
+   "views": "155",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/w0NmXxTdR3mufhi62vzHlwQtFQoI7M_ERf21aLc-y_xSduUh5sDnjzHCy9U5KYICWYwhhzaHxiGiL6Y=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/w0NmXxTdR3mufhi62vzHlwQtFQoI7M_ERf21aLc-y_xSduUh5sDnjzHCy9U5KYICWYwhhzaHxiGiL6Y=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Strangers (slowed + reverb)",
+   "album": {
+    "name": "Strangers",
+    "id": "MPREb_Eo78fYDOGv3"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "uhfxcMGClak",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:36",
+   "year": null,
+   "artists": [
+    {
+     "name": "TommyMuzzic",
+     "id": "UCIOzVH6F6iE_qpzIBDkJAyA"
+    }
+   ],
+   "duration_seconds": 216,
+   "views": "3.4K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/jrYhyGqZwYv2IeF2ttBbV66VbksyXfp-qrSEHoBlcrie9yFGas9l3FCuyP95tfvVHrRQaa-5ZPPSt9kS=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/jrYhyGqZwYv2IeF2ttBbV66VbksyXfp-qrSEHoBlcrie9yFGas9l3FCuyP95tfvVHrRQaa-5ZPPSt9kS=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Strangers x Midnight City (slowed to perfection)",
+   "album": {
+    "name": "Strangers x Midnight City",
+    "id": "MPREb_dbW60TuMYT8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "yfS2vlbwGEA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:40",
+   "year": null,
+   "artists": [
+    {
+     "name": "TommyMuzzic",
+     "id": "UCIOzVH6F6iE_qpzIBDkJAyA"
+    }
+   ],
+   "duration_seconds": 160,
+   "views": "18K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/37X0zMjoOxxaRrZ-TGJovP_ViOqyChp8iHocmHnmBqVJLT-kcQDU0OVmRIJcRAORshJ55a4WQ2IATt8=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/37X0zMjoOxxaRrZ-TGJovP_ViOqyChp8iHocmHnmBqVJLT-kcQDU0OVmRIJcRAORshJ55a4WQ2IATt8=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Strangers (Slowed + Reverb)",
+   "album": {
+    "name": "Strangers",
+    "id": "MPREb_MJBM4TeiRsN"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "R2k7Ao2a-A4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:41",
+   "year": null,
+   "artists": [
+    {
+     "name": "fenekot",
+     "id": "UC3Z2K9yJ5c21N4r1nOOkkUA"
+    }
+   ],
+   "duration_seconds": 101,
+   "views": "2.8K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Bcx3hF2JsgOaAmlPzq5AeqClJwcVqTQKuTceXlu-EqjVuBun5wn1llGClVwukdWwqfi3ULEIoi9JyIc5Hw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Bcx3hF2JsgOaAmlPzq5AeqClJwcVqTQKuTceXlu-EqjVuBun5wn1llGClVwukdWwqfi3ULEIoi9JyIc5Hw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "strangers (slowed + reverb)",
+   "album": {
+    "name": "strangers",
+    "id": "MPREb_ILyTyYKaC5s"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "6lK8zCpu_Pk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:24",
+   "year": null,
+   "artists": [
+    {
+     "name": "dark academia",
+     "id": "UCXU3D4K2iWSi-Vm0VdiR4TQ"
+    },
+    {
+     "name": "brown eyed girl",
+     "id": "UCOXTTqR1glKbpFMcqdvQXgg"
+    }
+   ],
+   "duration_seconds": 204,
+   "views": "2.7K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Q1-py_isYYH2JiOWVAqc19ABmxIQlqkTZcwUvpI1P8WuGYvlnYbBiINNEj-rjAoEDv239-xerP93ebZ8Tg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Q1-py_isYYH2JiOWVAqc19ABmxIQlqkTZcwUvpI1P8WuGYvlnYbBiINNEj-rjAoEDv239-xerP93ebZ8Tg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "strangers (short version) (sped up)",
+   "album": {
+    "name": "strangers (short version)",
+    "id": "MPREb_jTsNrvGYQ3e"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "gs1U4tNDGBE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "0:40",
+   "year": null,
+   "artists": [
+    {
+     "name": "accelerate",
+     "id": "UCzaPeoqrnC9VwXTW-SZijaw"
+    }
+   ],
+   "duration_seconds": 40,
+   "views": "1.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/z9dVv2Gfy5HclYw6F4kbE5G2ON5v5-L-iARilBVCDZypVQ2ZeRE8JDAEJ1pRAu9exagzkFjMHFWc7Sg6=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/z9dVv2Gfy5HclYw6F4kbE5G2ON5v5-L-iARilBVCDZypVQ2ZeRE8JDAEJ1pRAu9exagzkFjMHFWc7Sg6=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Strangers",
+   "album": {
+    "name": "Strangers",
+    "id": "MPREb_KNYxI4Hetgt"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ISxpw0CuL7A",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:14",
+   "year": null,
+   "artists": [
+    {
+     "name": "Shoby",
+     "id": "UCb7-4oSIrJbLIR5S5yDoJlw"
+    },
+    {
+     "name": "ABBY M.",
+     "id": "UCvHRHbpecxMiMXfe-REAEpg"
+    }
+   ],
+   "duration_seconds": 134,
+   "views": "12K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/67S9n3qOQa7-oeG0uwYBUJVyZODVC3rCLm2quidBh_KgdEeiNeEOvohefljuzC0_LHdCbxhQYeijuq0=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/67S9n3qOQa7-oeG0uwYBUJVyZODVC3rCLm2quidBh_KgdEeiNeEOvohefljuzC0_LHdCbxhQYeijuq0=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Strangers x Cola (slowed to perfection)",
+   "album": {
+    "name": "Strangers x Cola",
+    "id": "MPREb_SUkkSzgkOC3"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Y2QqAIH8tFE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:40",
+   "year": null,
+   "artists": [
+    {
+     "name": "TommyMuzzic",
+     "id": "UCIOzVH6F6iE_qpzIBDkJAyA"
+    }
+   ],
+   "duration_seconds": 220,
+   "views": "2.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ULL9rAcID5NEawQDxWJuW_Nbjm1j3b2G1aMna9NvfZky0dfgQMIQ0Z4hz8q4LXlKerhIuv2oD2vu1jl3=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ULL9rAcID5NEawQDxWJuW_Nbjm1j3b2G1aMna9NvfZky0dfgQMIQ0Z4hz8q4LXlKerhIuv2oD2vu1jl3=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "strangers (instrumental)",
+   "album": {
+    "name": "strangers (instrumental)",
+    "id": "MPREb_lbFiHg422H0"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "MXDUv_zrYMo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:42",
+   "year": null,
+   "artists": [
+    {
+     "name": "no/vox",
+     "id": "UC9ZtwuIQNEDNeUPL85_naFQ"
+    },
+    {
+     "name": "karaokey",
+     "id": "UClXEC6Pdum3vcBZy6Vp2EcQ"
+    }
+   ],
+   "duration_seconds": 102,
+   "views": "5.8K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/9cCbfOKBUK6-zekzv_6Iemv1a7vAzjsSkqbrqr4ZWOrHaXIjui6XOztwRjhriBFm3GcxxB6PZyAffb6r=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/9cCbfOKBUK6-zekzv_6Iemv1a7vAzjsSkqbrqr4ZWOrHaXIjui6XOztwRjhriBFm3GcxxB6PZyAffb6r=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

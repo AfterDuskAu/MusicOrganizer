@@ -6,6 +6,8 @@ the CLI exit code from docs/ENGINE_API.md.
 
 from __future__ import annotations
 
+from datetime import datetime
+
 EXIT_OK = 0
 EXIT_USER_ERROR = 1
 EXIT_LOCKED = 2
@@ -79,6 +81,24 @@ class YouTubeBlockedError(MusicOrgError):
     """YouTube is slowing us down, or the queue is paused because of it (step 09a)."""
 
     exit_code = EXIT_YOUTUBE_BLOCKED
+
+
+class YouTubePausedError(YouTubeBlockedError):
+    """YouTube refused or dropped several requests in a row, so everything that talks to
+    it waits until `resume_at` (an aware datetime)."""
+
+    def __init__(self, message: str, resume_at: datetime) -> None:
+        super().__init__(message)
+        self.resume_at = resume_at
+
+
+class YouTubeError(UserError):
+    """YouTube Music gave an answer the engine couldn't use (not a slow-down)."""
+
+
+class ReplayMissError(UserError):
+    """Replay mode (MUSICORG_REPLAY_DIR) has no recorded response for a request. Tests
+    never reach the network; record the response first (scripts/record_ytm.py)."""
 
 
 # ---- fileops (step 03b) ----------------------------------------------------------------

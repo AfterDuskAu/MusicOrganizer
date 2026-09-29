@@ -1,0 +1,539 @@
+{
+ "kind": "album",
+ "key": "MPREb_UUFKiZYr3uO",
+ "request": "MPREb_UUFKiZYr3uO",
+ "recorded_at": "2026-09-29T02:40:31Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [
+  "related_recommendations",
+  "description",
+  "descriptionRuns",
+  "feedback tokens"
+ ],
+ "response": {
+  "title": "Recovery",
+  "type": "Album",
+  "thumbnails": [
+   {
+    "url": "https://yt3.googleusercontent.com/IUuZFSUqFLMQlejTtsnLM_cB16A0T1g-savL7DYbWz5NFh2-DOw5-v9_PREJt9keX48NSan-8yUQCPM=w60-h60-l90-rj",
+    "width": 60,
+    "height": 60
+   },
+   {
+    "url": "https://yt3.googleusercontent.com/IUuZFSUqFLMQlejTtsnLM_cB16A0T1g-savL7DYbWz5NFh2-DOw5-v9_PREJt9keX48NSan-8yUQCPM=w120-h120-l90-rj",
+    "width": 120,
+    "height": 120
+   },
+   {
+    "url": "https://yt3.googleusercontent.com/IUuZFSUqFLMQlejTtsnLM_cB16A0T1g-savL7DYbWz5NFh2-DOw5-v9_PREJt9keX48NSan-8yUQCPM=w226-h226-l90-rj",
+    "width": 226,
+    "height": 226
+   },
+   {
+    "url": "https://yt3.googleusercontent.com/IUuZFSUqFLMQlejTtsnLM_cB16A0T1g-savL7DYbWz5NFh2-DOw5-v9_PREJt9keX48NSan-8yUQCPM=w544-h544-l90-rj",
+    "width": 544,
+    "height": 544
+   }
+  ],
+  "isExplicit": false,
+  "year": "2010",
+  "artists": [
+   {
+    "name": "Eminem",
+    "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+   }
+  ],
+  "trackCount": 17,
+  "duration": "1 hour, 17 minutes",
+  "audioPlaylistId": "OLAK5uy_mtZ2py53GId5rPn7boqDY9ah6P2yUPTG8",
+  "likeStatus": "INDIFFERENT",
+  "tracks": [
+   {
+    "videoId": "c4Yz9o5UtN8",
+    "title": "Cold Wind Blows",
+    "artists": [
+     {
+      "name": "Eminem",
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+     }
+    ],
+    "album": "Recovery",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "58M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 1,
+    "duration": "5:04",
+    "duration_seconds": 304,
+    "creditsBrowseId": "MPTCc4Yz9o5UtN8"
+   },
+   {
+    "videoId": "LG369AbsWfI",
+    "title": "Talkin’ 2 Myself (feat. Kobe)",
+    "artists": [
+     {
+      "name": "Eminem",
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+     }
+    ],
+    "album": "Recovery",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "48M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 2,
+    "duration": "5:01",
+    "duration_seconds": 301,
+    "creditsBrowseId": "MPTCLG369AbsWfI"
+   },
+   {
+    "videoId": "hmqSuMX5fyM",
+    "title": "On Fire",
+    "artists": [
+     {
+      "name": "Eminem",
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+     }
+    ],
+    "album": "Recovery",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "16M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 3,
+    "duration": "3:34",
+    "duration_seconds": 214,
+    "creditsBrowseId": "MPTChmqSuMX5fyM"
+   },
+   {
+    "videoId": "NI4qHvsjz7I",
+    "title": "Won't Back Down (feat. P!nk)",
+    "artists": [
+     {
+      "name": "Eminem",
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+     }
+    ],
+    "album": "Recovery",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "50M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 4,
+    "duration": "4:26",
+    "duration_seconds": 266,
+    "creditsBrowseId": "MPTChOFkhNijQeY"
+   },
+   {
+    "videoId": "qwB3JZoaOIk",
+    "title": "W.T.P.",
+    "artists": [
+     {
+      "name": "Eminem",
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+     }
+    ],
+    "album": "Recovery",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "34M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 5,
+    "duration": "3:59",
+    "duration_seconds": 239,
+    "creditsBrowseId": "MPTCqwB3JZoaOIk"
+   },
+   {
+    "videoId": "T6T_94qjp5g",
+    "title": "Going Through Changes",
+    "artists": [
+     {
+      "name": "Eminem",
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+     }
+    ],
+    "album": "Recovery",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "39M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 6,
+    "duration": "4:59",
+    "duration_seconds": 299,
+    "creditsBrowseId": "MPTCT6T_94qjp5g"
+   },
+   {
+    "videoId": "j5-yKhDd64s",
+    "title": "Not Afraid",
+    "artists": [
+     {
+      "name": "Eminem",
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+     }
+    ],
+    "album": "Recovery",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "2.5B plays",
+    "communityVoteStatus": null,
+    "trackNumber": 7,
+    "duration": "4:09",
+    "duration_seconds": 249,
+    "creditsBrowseId": "MPTC-grPV-Fae6I"
+   },
+   {
+    "videoId": "rJYKtt9eg4o",
+    "title": "Seduction",
+    "artists": [
+     {
+      "name": "Eminem",
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+     }
+    ],
+    "album": "Recovery",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "15M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 8,
+    "duration": "4:36",
+    "duration_seconds": 276,
+    "creditsBrowseId": "MPTCrJYKtt9eg4o"
+   },
+   {
+    "videoId": "KV2ssT8lzj8",
+    "title": "No Love (feat. Lil Wayne)",
+    "artists": [
+     {
+      "name": "Eminem",
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+     }
+    ],
+    "album": "Recovery",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "1B plays",
+    "communityVoteStatus": null,
+    "trackNumber": 9,
+    "duration": "5:00",
+    "duration_seconds": 300,
+    "creditsBrowseId": "MPTCi4CaamMGj9s"
+   },
+   {
+    "videoId": "JByDbPn6A1o",
+    "title": "Space Bound",
+    "artists": [
+     {
+      "name": "Eminem",
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+     }
+    ],
+    "album": "Recovery",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "513M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 10,
+    "duration": "4:39",
+    "duration_seconds": 279,
+    "creditsBrowseId": "MPTCBDrG1q-9rTY"
+   },
+   {
+    "videoId": "vs-Bsqt5ooQ",
+    "title": "Cinderella Man",
+    "artists": [
+     {
+      "name": "Eminem",
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+     }
+    ],
+    "album": "Recovery",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "87M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 11,
+    "duration": "4:40",
+    "duration_seconds": 280,
+    "creditsBrowseId": "MPTCkKPZqkcWeTM"
+   },
+   {
+    "videoId": "Ngng8UyyaGQ",
+    "title": "25 To Life",
+    "artists": [
+     {
+      "name": "Eminem",
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+     }
+    ],
+    "album": "Recovery",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "98M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 12,
+    "duration": "4:02",
+    "duration_seconds": 242,
+    "creditsBrowseId": "MPTCNgng8UyyaGQ"
+   },
+   {
+    "videoId": "37-4H5wwrqc",
+    "title": "So Bad",
+    "artists": [
+     {
+      "name": "Eminem",
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+     }
+    ],
+    "album": "Recovery",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "51M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 13,
+    "duration": "5:26",
+    "duration_seconds": 326,
+    "creditsBrowseId": "MPTC37-4H5wwrqc"
+   },
+   {
+    "videoId": "f3ISSTTJrU8",
+    "title": "Almost Famous",
+    "artists": [
+     {
+      "name": "Eminem",
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+     }
+    ],
+    "album": "Recovery",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "15M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 14,
+    "duration": "4:53",
+    "duration_seconds": 293,
+    "creditsBrowseId": "MPTCf3ISSTTJrU8"
+   },
+   {
+    "videoId": "uelHwf8o7_U",
+    "title": "Love The Way You Lie (feat. Rihanna)",
+    "artists": [
+     {
+      "name": "Eminem",
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+     }
+    ],
+    "album": "Recovery",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "4B plays",
+    "communityVoteStatus": null,
+    "trackNumber": 15,
+    "duration": "4:24",
+    "duration_seconds": 264,
+    "creditsBrowseId": "MPTCRnkShwdXfyc"
+   },
+   {
+    "videoId": "lKum7GDQxOY",
+    "title": "You’re Never Over",
+    "artists": [
+     {
+      "name": "Eminem",
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+     }
+    ],
+    "album": "Recovery",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "15M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 16,
+    "duration": "5:06",
+    "duration_seconds": 306,
+    "creditsBrowseId": "MPTClKum7GDQxOY"
+   },
+   {
+    "videoId": "rLvbigobrRk",
+    "title": "Untitled",
+    "artists": [
+     {
+      "name": "Eminem",
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+     }
+    ],
+    "album": "Recovery",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "views": "9.5M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 17,
+    "duration": "3:15",
+    "duration_seconds": 195,
+    "creditsBrowseId": "MPTCrLvbigobrRk"
+   }
+  ],
+  "other_versions": [
+   {
+    "title": "Recovery (Deluxe Edition)",
+    "artists": [
+     {
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ",
+      "name": "Eminem"
+     }
+    ],
+    "browseId": "MPREb_HPC5KHJw2P1",
+    "audioPlaylistId": "OLAK5uy_k8p_Xc26MSwCUwH0IDW_YL3HzuAXLTdvE",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/kjGAWLPahjWCJLj56tYEYQrpNv2D8kwS8jhd8NPSQvYezAybSpsfb7vDqKQ84otIpjuYFVS005pIwRlEZw=w226-h226-l90-rj",
+      "width": 226,
+      "height": 226
+     },
+     {
+      "url": "https://yt3.googleusercontent.com/kjGAWLPahjWCJLj56tYEYQrpNv2D8kwS8jhd8NPSQvYezAybSpsfb7vDqKQ84otIpjuYFVS005pIwRlEZw=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ],
+    "isExplicit": true,
+    "type": "Album"
+   },
+   {
+    "title": "Recovery",
+    "artists": [
+     {
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ",
+      "name": "Eminem"
+     }
+    ],
+    "browseId": "MPREb_2rUNcAGIKby",
+    "audioPlaylistId": "OLAK5uy_k3omMgwc5SS3TGlfwbS28Jc6H7Xqm5iko",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/3R6rNkEYEWHJ8Xtk1fJgTgIQs9cvEOWYv4smaNwaQ_imS4c5eJLUVoKOMmxCXCRFUks9paUXWAOzHJ8=w226-h226-l90-rj",
+      "width": 226,
+      "height": 226
+     },
+     {
+      "url": "https://yt3.googleusercontent.com/3R6rNkEYEWHJ8Xtk1fJgTgIQs9cvEOWYv4smaNwaQ_imS4c5eJLUVoKOMmxCXCRFUks9paUXWAOzHJ8=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ],
+    "isExplicit": false,
+    "type": "Album"
+   },
+   {
+    "title": "Recovery",
+    "artists": [
+     {
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ",
+      "name": "Eminem"
+     }
+    ],
+    "browseId": "MPREb_nsfwyAy4Uap",
+    "audioPlaylistId": "OLAK5uy_kyOMw7ilW0UoDq9uLgcWQg40kBBrpjxp8",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/3R6rNkEYEWHJ8Xtk1fJgTgIQs9cvEOWYv4smaNwaQ_imS4c5eJLUVoKOMmxCXCRFUks9paUXWAOzHJ8=w226-h226-l90-rj",
+      "width": 226,
+      "height": 226
+     },
+     {
+      "url": "https://yt3.googleusercontent.com/3R6rNkEYEWHJ8Xtk1fJgTgIQs9cvEOWYv4smaNwaQ_imS4c5eJLUVoKOMmxCXCRFUks9paUXWAOzHJ8=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ],
+    "isExplicit": false,
+    "type": "Album"
+   }
+  ],
+  "duration_seconds": 4633
+ }
+}

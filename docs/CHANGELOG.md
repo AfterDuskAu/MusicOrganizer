@@ -207,3 +207,48 @@
   - **States from state.json and the library** outrank `new`: a superseded link → `superseded`; a library file with `MUSICORG_SOURCE` `rip_copy` whose `MUSICORG_ORIGIN_PATH` is the rip → `adopted`; the owner's decision → `matched_user`, `only_copy` or `skipped`. The state.json keys (`sources`, `decisions`, `superseded`) are documented in `state.py` for steps 07 and 09b.
   - **`sources add`** also refuses a folder overlapping another source. state.json is the record of sources; the index mirrors it.
   - New: `ENGINE_API.md` → Enums gained the item flags; `naming.is_within`; error `LibraryIndexError`.
+
+### Step 06: YouTube Music matcher
+
+- `youtube.py`, the one gate to YouTube, with search and metadata only:
+  - `search_songs(query)`, the "songs" search as `Candidate`s; `get_track(video_id)` via `get_watch_playlist`; and `get_album(browse_id)` with `find_track`, which places a song by videoId, else by the one track with the same normalised title and a length within 2 s, else leaves the number empty and logs it.
+  - **Rate limiter**, one per process: 1 request per 1.5 s ±0.5 s. It backs off 5 s then 10 s on HTTP 429, a 5xx or a connection failure, and after 3 in a row raises `YouTubePausedError` (exit code 4) and refuses every call for 30 minutes.
+  - **Replay mode** (`MUSICORG_REPLAY_DIR`): answers only from recordings; a miss raises `ReplayMissError`. Every test runs in it (an autouse fixture), so no test can reach the network.
+  - **Search cache:** raw responses in `search_cache`, keyed by the normalised query, for 30 days.
+  - `scripts/record_ytm.py` records responses; `cases` records every search the harness cases need.
+- `match.py`: `queries`, `score`, `assess`, `classify`, `match_item`, `run` and `write_sample`, with the prompt's weights (artist 0.35, title 0.35, version 0.20, duration 0.10), AUTO conditions, clean/explicit rule and thresholds.
+  - Items are saved one at a time, so an interrupted run carries on where it stopped.
+  - Candidates rejected in state.json are never proposed again.
+- `musicorg match [--limit N] [--rescan]`, with progress and an estimate of the time left on stderr. It ends by writing `Reports/auto-sample.csv` through `fileops.write_export`.
+- `normalize.parse_title` reads YouTube Music's own titles. Parts after " - " that are only versions come out as version tokens ("Yesterday - Remastered 2009" → `remaster:2009`); `parse_tags` now does the same for tag titles. Also new: `Parsed.from_dict`.
+- **Evaluation harness** (`tests/data/match_cases.json`, `test_match_harness.py`): 45 hand-labelled cases, 40 of them rips from the owner's library and 5 made up. They cover remixes, live versions, clean/explicit pairs, a cover, the tribute trap, wrong artists, video rips a few seconds long, title-only names and a non-song.
+  - Result: **0 false AUTO matches, top-1 45/45 (100%)**; 19 AUTO, 21 review, 5 not found.
+  - I labelled the cases from each candidate's artist, title, album, length and explicit flag. The matcher's own result was on screen while I did, so the labels aren't independent of it; the owner's listening check below is the independent test.
+  - A third test pins each case's expected state, so a rule change that moves a case has to be deliberate.
+- 58 searches, 6 track lookups (one of a video that doesn't exist) and 5 albums recorded in `tests/fixtures/ytm/` (1.2 MB).
+- **What the recorded responses showed (ytmusicapi 1.12.3)**, and the code now relies on:
+  - Search: every field the prompt names is there. Official audio is `MUSIC_VIDEO_TYPE_ATV`, music videos `…_OMV`. `limit` is a minimum: 20 results come back for `limit=10`, so the engine keeps the first 10.
+  - `get_watch_playlist` tracks have `length` ("3:55") and `year`, but no `duration_seconds` and no `isExplicit`. A video that doesn't exist raises `YTMusicServerError` ("No content returned by the server"), and `get_track` returns None.
+  - **Albums list other videoIds than search**, often the music video, for 3 of the 5 recorded albums. The title-and-length fallback placed every one.
+  - **The album-level `isExplicit` is unreliable:** Eminem's *Recovery* says false while all 17 tracks say true. Only the per-track flag is used.
+  - Artist names can carry odd spellings ("JAŸ-Z"); `compare_key`'s accent folding matches them.
+  - ytmusicapi parses the body as JSON before checking the status code, so a 429 served as a web page arrives as a JSON error, which also counts as a slow-down.
+- **Acceptance** (2026-09-29):
+  1. Harness: 0 false AUTO matches, top-1 100% (45 cases).
+  2. `musicorg match --limit 100` on the owner's library (the Apple Music folder scanned in step 05) ran without errors: 100 items in 2 min 37 s with 101 searches; 36 AUTO, 64 review, 0 not found.
+     - Every AUTO match I checked by metadata is the same artist, the same title, an official album track and within 2 s.
+     - Why items went to review: a length 3–60 s off (usually a YouTube rip of the right song), a different title ("Are You Mine?" vs "R U Mine?", typos), or a different artist ("Adventure Club - Crave You", which is their remix, tagged without the word "remix").
+     - Nothing was `not_found`. An exact title with the same versions already scores 0.55, so almost any same-title song reaches review at 0.60. The report in step 07 should rank review items by score.
+  3. `Reports/auto-sample.csv` written with 20 links. **Listening check: pending (the owner).**
+- Deviations and additions:
+  - **Artist similarity** pairs everyone credited on both sides, including "feat." artists in a candidate's title, so a mislabelled "Eminem & Rihanna - Run This Town" finds JAY-Z's track (feat. Rihanna). AUTO still needs the rip's main artist or its whole credit to equal a candidate artist.
+  - **Artist equality ignores spaces**, because tags say "Cold Play" and "Audio Slave". Titles must be exactly equal, as the prompt says.
+  - **Queries** use the whole credited artist ("Michael Franti & Spearhead") where the prompt says main artist; YouTube Music finds both.
+  - **Title-only rips** ("Mase-Feel So Good") match a candidate artist at the start or end of the title for scoring, but are never AUTO (no main artist).
+  - **Clean/explicit:** a rip's own advisory tag counts as saying explicit. When the rip says neither and there's a pair, only the preferred version can be AUTO. If it isn't eligible (e.g. its length is 3 s out), the item goes to review; the other version is never taken instead. A disagreement is recorded as `version_mismatch`, since the enum has no separate code.
+  - **Soundtrack notes** ("(From "Top Gun: Maverick")", "- From the Motion Picture …") are junk in brackets and after a title's " - ", but not elsewhere: "The Beatles - From Me To You" keeps its title.
+  - **state.json** gains `rejected` ({item_id: [videoId, …]}), which step 07 writes. **config.json** gains `prefer_explicit` (default true).
+  - **Stored candidates** carry the ENGINE_API Candidate shape plus `link`, `video_type`, `year` and `thumbnail`. Items store the review-reason codes; candidates store the human reasons followed by the codes.
+  - **Recordings are trimmed:** opaque feedback tokens are removed everywhere, a watch playlist keeps only its first track, and an album drops its recommendations and description. A failed request is recorded as its error and replayed as the same error.
+  - **The time-left estimate** uses the time items have actually taken so far (paced by the rate limiter), so cached searches and slow answers are counted too.
+  - **auto-sample.csv** is UTF-8 with a byte-order mark (Excel and Numbers read the names correctly). It adds the album and the rip's full path, and draws its 20 from every `matched_auto` item in the index, not only this run's.

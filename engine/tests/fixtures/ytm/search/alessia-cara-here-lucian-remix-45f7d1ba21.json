@@ -1,0 +1,770 @@
+{
+ "kind": "search",
+ "key": "alessia cara here lucian remix",
+ "request": "Alessia Cara Here lucian remix",
+ "recorded_at": "2026-09-29T02:36:38Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Best Days",
+   "album": {
+    "name": "In The Meantime",
+    "id": "MPREb_kbBf6Q2MLWH"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "MySI7qXIIbw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alessia Cara",
+     "id": "UCrqLG11GjSzO5bVYzXIF8CA"
+    }
+   ],
+   "duration_seconds": 212,
+   "views": "7.7M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/mqLbfvmdrTYBnITTglfbP5mK8JXN9MAeXbIaWTOjh82Fq_disfXVgei93GRGMUb7Az_Sqw1oZWL9-nDB=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/mqLbfvmdrTYBnITTglfbP5mK8JXN9MAeXbIaWTOjh82Fq_disfXVgei93GRGMUb7Az_Sqw1oZWL9-nDB=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Here",
+   "album": {
+    "name": "High",
+    "id": "MPREb_0GDlr6dF3GP"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "oK9mk9TM5dc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:05",
+   "year": null,
+   "artists": [
+    {
+     "name": "Lil yD",
+     "id": "UCW5mdWrbIRVJOYEbXc_5r5g"
+    }
+   ],
+   "duration_seconds": 245,
+   "views": "5K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Z503Rt7lh5iRGZugj88zIj4udQCci36_D1q7f5TUCHSSxw3NJuWFT8EN_uA35HVPq_VvyuqGsPDxwOM=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Z503Rt7lh5iRGZugj88zIj4udQCci36_D1q7f5TUCHSSxw3NJuWFT8EN_uA35HVPq_VvyuqGsPDxwOM=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "I'm Yours",
+   "album": {
+    "name": "Know-It-All (Deluxe)",
+    "id": "MPREb_ZK8G0nbjeAd"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "VE2r5ilQnVo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:57",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alessia Cara",
+     "id": "UCrqLG11GjSzO5bVYzXIF8CA"
+    }
+   ],
+   "duration_seconds": 237,
+   "views": "593K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/MRm9cQZb2v8euyZYj_WdouVDj8cLSTyV5rKVFaXO2iT30f_PoaGtlgVqSC_IzZsel4EhBhrMW4l94Gk=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/MRm9cQZb2v8euyZYj_WdouVDj8cLSTyV5rKVFaXO2iT30f_PoaGtlgVqSC_IzZsel4EhBhrMW4l94Gk=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "I'm Yours",
+   "album": {
+    "name": "Know-It-All (Deluxe)",
+    "id": "MPREb_ZK8G0nbjeAd"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "HAg3aQZK7NA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:49",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alessia Cara",
+     "id": "UCrqLG11GjSzO5bVYzXIF8CA"
+    }
+   ],
+   "duration_seconds": 229,
+   "views": "53M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/MRm9cQZb2v8euyZYj_WdouVDj8cLSTyV5rKVFaXO2iT30f_PoaGtlgVqSC_IzZsel4EhBhrMW4l94Gk=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/MRm9cQZb2v8euyZYj_WdouVDj8cLSTyV5rKVFaXO2iT30f_PoaGtlgVqSC_IzZsel4EhBhrMW4l94Gk=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Here (Nightcore)",
+   "album": {
+    "name": "Here (Nightcore)",
+    "id": "MPREb_Mp9kWeiW8N1"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "qsYFAO63A8o",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:01",
+   "year": null,
+   "artists": [
+    {
+     "name": "Syrex",
+     "id": "UCy3piD15DDJfvrx8Mqib9Yw"
+    }
+   ],
+   "duration_seconds": 181,
+   "views": "224K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/JhqdRtMtEnQiwh7Qc7PwI0x8ZhmHBn4Fx9JUJb_Pvl06mfSCUF9VsSqLVAHg82YXBvCyZgUCg7z0tVGIBg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/JhqdRtMtEnQiwh7Qc7PwI0x8ZhmHBn4Fx9JUJb_Pvl06mfSCUF9VsSqLVAHg82YXBvCyZgUCg7z0tVGIBg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Scars To Your Beautiful (Joe Mason Remix)",
+   "album": {
+    "name": "Scars To Your Beautiful (Remixes)",
+    "id": "MPREb_o3ndvbD2NR5"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "vOBN9G827VM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alessia Cara",
+     "id": "UCrqLG11GjSzO5bVYzXIF8CA"
+    }
+   ],
+   "duration_seconds": 232,
+   "views": "3.4M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/frtidu4CQNZV1shoxjMUtVhpJhunZUvgul0WtVgB_0qHeTd3Wh8uxJRiQu58CJxL5qG6E7hudXQFETg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/frtidu4CQNZV1shoxjMUtVhpJhunZUvgul0WtVgB_0qHeTd3Wh8uxJRiQu58CJxL5qG6E7hudXQFETg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Here",
+   "album": {
+    "name": "Texilon, Vol. 001",
+    "id": "MPREb_TIlXFYgRn1Y"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "1xhCeKTlFd4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:44",
+   "year": null,
+   "artists": [
+    {
+     "name": "Orgazmatron",
+     "id": null
+    }
+   ],
+   "duration_seconds": 224,
+   "views": "313",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/hSj0DxlLwnyvG4xv-Qpakf1d4k1b3Ml7D9vmwRMmmvDjWNVFBHfp70stAWzRMP5U9ZpjbqmeKMLWHX_y=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/hSj0DxlLwnyvG4xv-Qpakf1d4k1b3Ml7D9vmwRMmmvDjWNVFBHfp70stAWzRMP5U9ZpjbqmeKMLWHX_y=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Twenty-Something (Lucian Remix)",
+   "album": {
+    "name": "Twenty-Something (Lucian Remix)",
+    "id": "MPREb_Aga9I4pzBJu"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ec5q81VT2Ew",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:42",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kiri T",
+     "id": "UCtwbr7bKx7mcUSuSS3fVajA"
+    }
+   ],
+   "duration_seconds": 222,
+   "views": "5.1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/bJcs7l2j6HwWCVWwXw0b41lR1LCnzMT5y-wmd9zgwpWQ_5hMnUY3RaUwgKxatGngDK0lx5jVkcpFztYB=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/bJcs7l2j6HwWCVWwXw0b41lR1LCnzMT5y-wmd9zgwpWQ_5hMnUY3RaUwgKxatGngDK0lx5jVkcpFztYB=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Here",
+   "album": {
+    "name": "Lerupo",
+    "id": "MPREb_CthBoxpXKNk"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "d80oqKet2VI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:24",
+   "year": null,
+   "artists": [
+    {
+     "name": "Lucy Loop",
+     "id": "UCZeIJBF-M7ZzYIyHSLnFjhw"
+    }
+   ],
+   "duration_seconds": 264,
+   "views": "30",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/WmBkE80zva6axpRfn10PlypRSmkwG9t6bmm5GQ290IjUb_Txntse8JfosjUpmO0yCgezWPO1geCLC3o=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/WmBkE80zva6axpRfn10PlypRSmkwG9t6bmm5GQ290IjUb_Txntse8JfosjUpmO0yCgezWPO1geCLC3o=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Here",
+   "album": {
+    "name": "Here",
+    "id": "MPREb_fo99DoxsEUv"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "5oio_kyBaHo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "Lucian",
+     "id": "UC4YKDbXLsRpqFbWONDzIXRw"
+    },
+    {
+     "name": "Amanda Yang",
+     "id": "UC0zRvnGbctb_IhkDIhf_UWg"
+    },
+    {
+     "name": "Dance Mage",
+     "id": "UCApACo50kX5pRh6yYvN7_tw"
+    }
+   ],
+   "duration_seconds": 208,
+   "views": "2.6M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/N3Kx2tg3vmlRz9X1uQIg2wxoHybetkwSARnQxA79g7EGsGvJ334BxyHEisfqjLnmR33TwIx_tKm6bj2D8A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/N3Kx2tg3vmlRz9X1uQIg2wxoHybetkwSARnQxA79g7EGsGvJ334BxyHEisfqjLnmR33TwIx_tKm6bj2D8A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Here",
+   "album": {
+    "name": "Know-It-All",
+    "id": "MPREb_IOTjwwSUZvC"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "dI5JaT6gjvw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:20",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alessia Cara",
+     "id": "UCrqLG11GjSzO5bVYzXIF8CA"
+    }
+   ],
+   "duration_seconds": 200,
+   "views": "497M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Ke3emicpnXJZR4-oONWo9kJ0zj2qlxl8sZunQnwe8_AFfWqxsirgN3I-sB08FBLVqaU_H2JFb2RpwEM4=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Ke3emicpnXJZR4-oONWo9kJ0zj2qlxl8sZunQnwe8_AFfWqxsirgN3I-sB08FBLVqaU_H2JFb2RpwEM4=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Here",
+   "album": {
+    "name": "Here",
+    "id": "MPREb_FPaN8bh2TVi"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "SCdO40Pp764",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "REZZY",
+     "id": "UCsmqbfyHyB4jwa7ziwpLF2w"
+    }
+   ],
+   "duration_seconds": 212,
+   "views": "15",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/lyxPsW5qA--Jh3Sp2RV20ibWWxEHJeqEHJy6C135jSZE0WyWhRzCcyBoKQfQ9LAg9-rqyOaV9koJ3Xg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/lyxPsW5qA--Jh3Sp2RV20ibWWxEHJeqEHJy6C135jSZE0WyWhRzCcyBoKQfQ9LAg9-rqyOaV9koJ3Xg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Here (SEKAijOURNEY Remix)",
+   "album": {
+    "name": "Here (SEKAijOURNEY Remix)",
+    "id": "MPREb_boihLZgsMvj"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "JEPmMJO-vME",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:42",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mo Moshiri",
+     "id": "UCbXbtl9NL6ovWQbV7z8iiXQ"
+    }
+   ],
+   "duration_seconds": 222,
+   "views": "3.3K",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/hJTwJYxNxf94I8XIqLZEQFzAtM_2ecgZYdr19-Xj9XUfrD-cKHMxyJ7BBPgXC4N_ANGzLFmuWaumIRw_qg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/hJTwJYxNxf94I8XIqLZEQFzAtM_2ecgZYdr19-Xj9XUfrD-cKHMxyJ7BBPgXC4N_ANGzLFmuWaumIRw_qg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "here",
+   "album": {
+    "name": "here",
+    "id": "MPREb_ryVdVouPpT8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "CJOp2RduyYo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:22",
+   "year": null,
+   "artists": [
+    {
+     "name": "brown eyed girl",
+     "id": "UCOXTTqR1glKbpFMcqdvQXgg"
+    }
+   ],
+   "duration_seconds": 202,
+   "views": "6.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vQ1niCF6FnS6pXSDhl4ugH_LyJ7-Srl6XCmbn7ko5IbEZe5DHJsCRJ1jA7Kpnd2cv4PhiR3lhQKJySd2RQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vQ1niCF6FnS6pXSDhl4ugH_LyJ7-Srl6XCmbn7ko5IbEZe5DHJsCRJ1jA7Kpnd2cv4PhiR3lhQKJySd2RQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "here (8D)",
+   "album": {
+    "name": "here",
+    "id": "MPREb_ryVdVouPpT8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "4_Ql9yurfr0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:22",
+   "year": null,
+   "artists": [
+    {
+     "name": "brown eyed girl",
+     "id": "UCOXTTqR1glKbpFMcqdvQXgg"
+    }
+   ],
+   "duration_seconds": 202,
+   "views": "6.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vQ1niCF6FnS6pXSDhl4ugH_LyJ7-Srl6XCmbn7ko5IbEZe5DHJsCRJ1jA7Kpnd2cv4PhiR3lhQKJySd2RQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vQ1niCF6FnS6pXSDhl4ugH_LyJ7-Srl6XCmbn7ko5IbEZe5DHJsCRJ1jA7Kpnd2cv4PhiR3lhQKJySd2RQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Here",
+   "album": {
+    "name": "Here",
+    "id": "MPREb_rlpiq9b1xbY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "y4N5ARFfhE8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:58",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alex Goot",
+     "id": "UCFn-B19siHrgQ8_dsJKhyzA"
+    },
+    {
+     "name": "Sam Tsui",
+     "id": "UCaZGpQzGguaHqJMeMh-2Q8Q"
+    }
+   ],
+   "duration_seconds": 178,
+   "views": "1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/MbKCXUe9JtnzH6PISIDb4QZ7JJNgHkIjK78hrc-2SVJzg5kPx5ipXSl2cGeAEwmVa0qll541sKjPyobAhQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/MbKCXUe9JtnzH6PISIDb4QZ7JJNgHkIjK78hrc-2SVJzg5kPx5ipXSl2cGeAEwmVa0qll541sKjPyobAhQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Here (slowed + reverb) [Lucian remix] (feat. Amanda Yang)",
+   "album": {
+    "name": "Slowed & Reverb Vol. 1",
+    "id": "MPREb_vQi8hbkacgH"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "XAhBvNxy1Aw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:44",
+   "year": null,
+   "artists": [
+    {
+     "name": "Slow Mage",
+     "id": "UCHQ_SdE8GgC_uh1Xr1O1i0A"
+    },
+    {
+     "name": "8D Tunes",
+     "id": "UCb2euhHS5Sr829DzCse65cA"
+    },
+    {
+     "name": "Lucian",
+     "id": "UC4YKDbXLsRpqFbWONDzIXRw"
+    }
+   ],
+   "duration_seconds": 224,
+   "views": "989K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/KViRHiFQH525axIrYy3iCIRy3N8MD3iP5UobAmKf38TIgayZ-uonc8MZ-eWgpvYBRffpO4eJ_DvD7p4y=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/KViRHiFQH525axIrYy3iCIRy3N8MD3iP5UobAmKf38TIgayZ-uonc8MZ-eWgpvYBRffpO4eJ_DvD7p4y=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Here",
+   "album": {
+    "name": "Metamorphisis",
+    "id": "MPREb_jD47w39EwGa"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "3zaA0JT490w",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:56",
+   "year": null,
+   "artists": [
+    {
+     "name": "WhereIsDemi",
+     "id": "UCCG-9G5z9Zc_zCekG6aF-TQ"
+    }
+   ],
+   "duration_seconds": 176,
+   "views": "11",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/j1jePgDlqL7FGJBI5_C5Try6WtmXszHn6jSFzqd80z49cKdZOoPVNbUsvHWzyguS3ky66IsyGI5CKdIY=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/j1jePgDlqL7FGJBI5_C5Try6WtmXszHn6jSFzqd80z49cKdZOoPVNbUsvHWzyguS3ky66IsyGI5CKdIY=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Out Of Love (Mangal Suvarnan Remix)",
+   "album": {
+    "name": "Out Of Love (Remixes)",
+    "id": "MPREb_ub7M6VvyFjl"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "E7SNjKvxwKQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alessia Cara",
+     "id": "UCrqLG11GjSzO5bVYzXIF8CA"
+    }
+   ],
+   "duration_seconds": 210,
+   "views": "31K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/v6gd7ERwxXv_TIREo3-LundzL4EYBL7Sz7Qz60b7tNFVpBcpmCcssYuJLdrZFroAseiKV6LEJ1Gv9FE=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/v6gd7ERwxXv_TIREo3-LundzL4EYBL7Sz7Qz60b7tNFVpBcpmCcssYuJLdrZFroAseiKV6LEJ1Gv9FE=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Here We Go I Go Slow Intro",
+   "album": {
+    "name": "First Album",
+    "id": "MPREb_FwtT1kaHc0m"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "79VLg-4_4lQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "0:51",
+   "year": null,
+   "artists": [
+    {
+     "name": "SSEN",
+     "id": null
+    }
+   ],
+   "duration_seconds": 51,
+   "views": "305",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/noSsxsYc7mSk2xzpaOzFkXYR0upDMhgTTDJ_OMNiU5LgexwI7yeeEmWVVCromPmbsS9ZzESLmVSpLTbX1A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/noSsxsYc7mSk2xzpaOzFkXYR0upDMhgTTDJ_OMNiU5LgexwI7yeeEmWVVCromPmbsS9ZzESLmVSpLTbX1A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,766 @@
+{
+ "kind": "search",
+ "key": "michael jackson thriller",
+ "request": "Michael Jackson Thriller",
+ "recorded_at": "2026-09-29T02:36:49Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Thriller",
+   "album": {
+    "name": "Thriller",
+    "id": "MPREb_dqWTncCjkSp"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Z85lxckrtzg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:58",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 358,
+   "views": "1.2B",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/URvHCfI2iyGAlAwqqBFeaFhU9DeKk_iuX40OIIIj8Zp0wIT3BVsJ2JRMwLLbUB9EZS7t7oDlMrI2S3OvGA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/URvHCfI2iyGAlAwqqBFeaFhU9DeKk_iuX40OIIIj8Zp0wIT3BVsJ2JRMwLLbUB9EZS7t7oDlMrI2S3OvGA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Is It Scary",
+   "album": {
+    "name": "BLOOD ON THE DANCE FLOOR/ HIStory In The Mix",
+    "id": "MPREb_WgCvvqLBUYR"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "nFSYcvSv5vU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:36",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 336,
+   "views": "11M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/rjnkRkr7YVWh8aI4qJIMF0fm9quq5NrUY5ZQ_G9tbLBHXaVGXdbStHreuKj7Nl-4ZhghoP9jgnipk-yn=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/rjnkRkr7YVWh8aI4qJIMF0fm9quq5NrUY5ZQ_G9tbLBHXaVGXdbStHreuKj7Nl-4ZhghoP9jgnipk-yn=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Who Is It",
+   "album": {
+    "name": "Dangerous",
+    "id": "MPREb_FYLUmINBQn2"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "1dspo0Esmy0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:34",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 394,
+   "views": "226M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/acFvHA1OEoI0HBPPG33zidd9n9aG1OTvo7XQQeFjEeQObGv6R3464BvFijHerp3Sit5UeHvQnx6LMoE=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/acFvHA1OEoI0HBPPG33zidd9n9aG1OTvo7XQQeFjEeQObGv6R3464BvFijHerp3Sit5UeHvQnx6LMoE=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "They Don't Care About Us",
+   "album": {
+    "name": "HIStory: PAST, PRESENT AND FUTURE, BOOK I",
+    "id": "MPREb_L7mH5RJKKdI"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "-_OPJ2d86kE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:45",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 285,
+   "views": "338M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/R7pwf7-lcPvK3dxv8jMkUd4SlbVmrM-nZOFEJqnHGLQFBl4lqj1gyeWSFO5X9HZxgUhTh4KM8n0l7j_k=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/R7pwf7-lcPvK3dxv8jMkUd4SlbVmrM-nZOFEJqnHGLQFBl4lqj1gyeWSFO5X9HZxgUhTh4KM8n0l7j_k=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Don't Stop 'Til You Get Enough",
+   "album": {
+    "name": "HIStory: PAST, PRESENT AND FUTURE, BOOK I",
+    "id": "MPREb_L7mH5RJKKdI"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "DkjwyAk2GRw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:05",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 365,
+   "views": "844M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/R7pwf7-lcPvK3dxv8jMkUd4SlbVmrM-nZOFEJqnHGLQFBl4lqj1gyeWSFO5X9HZxgUhTh4KM8n0l7j_k=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/R7pwf7-lcPvK3dxv8jMkUd4SlbVmrM-nZOFEJqnHGLQFBl4lqj1gyeWSFO5X9HZxgUhTh4KM8n0l7j_k=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Thriller",
+   "album": {
+    "name": "Piano Hits of Michael Jackson",
+    "id": "MPREb_S2B4SpTqgvU"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "2akWAf1HQ2s",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:26",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sheet Music Boss",
+     "id": "UCdrVkVOyKz0qqduGT55Cy0A"
+    }
+   ],
+   "duration_seconds": 326,
+   "views": "3.3M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/mdxdtCnQ1sKHuui1mQifUhNyAdKhpmY2tOJLUXuNXzIcxpgXMVA_TMnYvMAW4Dt8l8Ex9_QQqMS_l_m4=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/mdxdtCnQ1sKHuui1mQifUhNyAdKhpmY2tOJLUXuNXzIcxpgXMVA_TMnYvMAW4Dt8l8Ex9_QQqMS_l_m4=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Thriller (With Vincent Price) [In the Style of Michael Jackson] [Karaoke Version]",
+   "album": {
+    "name": "Ameritz Karaoke Party Vol. 263",
+    "id": "MPREb_pWTSuHtsMH6"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "KSOclc8Oikk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:12",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ameritz Karaoke Hits",
+     "id": "UCRKXh0dGLgIOc2lbzZG2pmg"
+    }
+   ],
+   "duration_seconds": 312,
+   "views": "253K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vJ2h5BlgVQyAb4vYIxUp9d7l1fO_SNJpgdp6qvUA43Fg6LuVCsVbUSIWNmO4jaVKNsdCYZD84bzELI0r=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vJ2h5BlgVQyAb4vYIxUp9d7l1fO_SNJpgdp6qvUA43Fg6LuVCsVbUSIWNmO4jaVKNsdCYZD84bzELI0r=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Is It Scary / Threatened (Immortal Version) (feat. 50 Cent)",
+   "album": {
+    "name": "Immortal (Deluxe Edition) [Original Motion Picture Soundtrack]",
+    "id": "MPREb_zUEjG7GbW0J"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "MCYgldSo6po",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:04",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    },
+    {
+     "name": "Rockwell",
+     "id": "UCsUjEuAbP8wAEz8tiB3dvNw"
+    }
+   ],
+   "duration_seconds": 304,
+   "views": "901K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2ZG_eSA11UcbaM45o29k-CWOflyIyENAHcysd7XhxVJEKYiM0KxVH2sBSs6RLGQcB1TML2-YZBGF3_Hr=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2ZG_eSA11UcbaM45o29k-CWOflyIyENAHcysd7XhxVJEKYiM0KxVH2sBSs6RLGQcB1TML2-YZBGF3_Hr=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Thriller",
+   "album": {
+    "name": "Unity: The Latin Tribute to Michael Jackson",
+    "id": "MPREb_dxT9UqU5aID"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "AwOVn2lSIXI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:36",
+   "year": null,
+   "artists": [
+    {
+     "name": "Tony Succar",
+     "id": "UCNNGCvqS0B5UgkZcVPXZJ1w"
+    },
+    {
+     "name": "Kevin Ceballo",
+     "id": "UC60ttexipaLKC_rjAJKTFyA"
+    }
+   ],
+   "duration_seconds": 276,
+   "views": "55K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/fLWEizqqwgQ_DyE1XWGlwgr7qFTA70LMi-aNsM6dA_O0vjljtqIl_qvIFJIqODNpe5ia559pHSTYlsEZ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/fLWEizqqwgQ_DyE1XWGlwgr7qFTA70LMi-aNsM6dA_O0vjljtqIl_qvIFJIqODNpe5ia559pHSTYlsEZ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Are Not Alone (Single Version)",
+   "album": {
+    "name": "The Essential Michael Jackson",
+    "id": "MPREb_lrzGImeeSWk"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "FZMPtvJe0fg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:56",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 296,
+   "views": "672M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/N3dO2K1MIFWJtEqZNpQ4yfISUC3gDaIIZNYCs6kwcX5G46AHtK6W_fxfHeQ30sdBdRgyyqXkbbqzPuI=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/N3dO2K1MIFWJtEqZNpQ4yfISUC3gDaIIZNYCs6kwcX5G46AHtK6W_fxfHeQ30sdBdRgyyqXkbbqzPuI=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Thriller",
+   "album": {
+    "name": "Mancini Rocks The Pops",
+    "id": "MPREb_6sUhGqkJ0Yq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "UUMAs0jTsqk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:21",
+   "year": null,
+   "artists": [
+    {
+     "name": "Henry Mancini",
+     "id": "UCieaIKlhI5t7_gAmBA99d-g"
+    },
+    {
+     "name": "Royal Philharmonic Pops Orchestra",
+     "id": "UCpWvSvZKuO7pivr0sS-Z0lg"
+    }
+   ],
+   "duration_seconds": 261,
+   "views": "10K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/PdJvCVQsNcrSjxBt86xjUH-wlzcYsfipbXOCjbh_5uqqfgN9SBfEHsCWe_nzRKtZs7MDN43J_xiO8ERq=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/PdJvCVQsNcrSjxBt86xjUH-wlzcYsfipbXOCjbh_5uqqfgN9SBfEHsCWe_nzRKtZs7MDN43J_xiO8ERq=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Thriller (Epic Orchestra)",
+   "album": {
+    "name": "Thriller (Epic Orchestra)",
+    "id": "MPREb_TMA9nGSQW21"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "gVyq8aUhH5M",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:06",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mathias Fritsche",
+     "id": "UCVEkgdmmrCoDlTYU4cs0xHQ"
+    }
+   ],
+   "duration_seconds": 306,
+   "views": "85K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/x0rmRmNTDpvoKjLIqgyhlUuIr3I55qZ1CtegdZh6oA0yojI7170U10H90GBRxjviLm9pgSir-DnIJUM=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/x0rmRmNTDpvoKjLIqgyhlUuIr3I55qZ1CtegdZh6oA0yojI7170U10H90GBRxjviLm9pgSir-DnIJUM=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Can't Get Outta The Rain",
+   "album": {
+    "name": "Thriller 40",
+    "id": "MPREb_RmQFPjKjIPm"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "VEAbEk_lYL0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:07",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 247,
+   "views": "2.6M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/pu5bdluXWwddUM6NTdcSraCxnlj2HMMYC5meaHCBVAT6lJoGE2wSq439hmVJJcYGmzPvrxo5N1Afz9t-=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/pu5bdluXWwddUM6NTdcSraCxnlj2HMMYC5meaHCBVAT6lJoGE2wSq439hmVJJcYGmzPvrxo5N1Afz9t-=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Speed Demon",
+   "album": {
+    "name": "Bad",
+    "id": "MPREb_Y5ebh1nnQs5"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "MCE5MfEnVXw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 243,
+   "views": "36M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/LjzTyOPVIWPWb1jNKky5hVKh8pCPcX0WfCqeMpJ93PyPEEgrFuqEF7wHMt-NDXCZYo1T7o8La0pPMxCl=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/LjzTyOPVIWPWb1jNKky5hVKh8pCPcX0WfCqeMpJ93PyPEEgrFuqEF7wHMt-NDXCZYo1T7o8La0pPMxCl=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Rock My World",
+   "album": {
+    "name": "Invincible",
+    "id": "MPREb_fg6gHhdC0qT"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "MiE1inuK5tE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:38",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 338,
+   "views": "460M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/L0nwBz3JF8kFa1-1PAOiLC6pB49lsRc3QRCbj1gvU3uCNf4SXnLUGtAFBha1CZ02mhQzMJrcl-rJ0pSG=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/L0nwBz3JF8kFa1-1PAOiLC6pB49lsRc3QRCbj1gvU3uCNf4SXnLUGtAFBha1CZ02mhQzMJrcl-rJ0pSG=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Michael Jackson - Thriller (Marimba Ringtone)",
+   "album": {
+    "name": "Michael Jackson - Thriller (Marimba Ringtone)",
+    "id": "MPREb_lugZ6A0D36y"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "zonc9YLO6AU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "0:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "Anime Ringtones",
+     "id": "UCTnkcCHyopKD7c_CuR6uY5A"
+    },
+    {
+     "name": "Anytunz",
+     "id": "UC8iHkSIpb_Xnl2chSlKvmKA"
+    }
+   ],
+   "duration_seconds": 32,
+   "views": "130K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/MF6EcKdgGHciKajRL17_v3PAlzOveMZO-tjSFLuMgBbGF3XEtxVfS-b_BpRwmYoTPdoDc6t_V8Gj9gI=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/MF6EcKdgGHciKajRL17_v3PAlzOveMZO-tjSFLuMgBbGF3XEtxVfS-b_BpRwmYoTPdoDc6t_V8Gj9gI=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Thriller (Live) (feat. Kevin Ceballo)",
+   "album": {
+    "name": "Unity: The Latin Tribute to Michael Jackson (Live Concert Special)",
+    "id": "MPREb_4hm0Y5Kz0kb"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "CReojlBL9hc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:57",
+   "year": null,
+   "artists": [
+    {
+     "name": "Tony Succar",
+     "id": "UCNNGCvqS0B5UgkZcVPXZJ1w"
+    }
+   ],
+   "duration_seconds": 357,
+   "views": "3.1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/6KdG9iLUiFuSYw27_gsStB68NsKiqrSeOmvmLOQ-bS4rAcuOFfGBoS6VV4tl5W_-YEmYBU2rssp2Y4s=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/6KdG9iLUiFuSYw27_gsStB68NsKiqrSeOmvmLOQ-bS4rAcuOFfGBoS6VV4tl5W_-YEmYBU2rssp2Y4s=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Thriller (Without Vincent Price) [Karaoke Version] [Originally Performed By Michael Jackson]",
+   "album": {
+    "name": "Zoom Karaoke Party, Vol. 189",
+    "id": "MPREb_H5F4B7hdVny"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "M3XOsUH28Y0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:13",
+   "year": null,
+   "artists": [
+    {
+     "name": "Zoom Karaoke",
+     "id": "UCNYSWVhwlPlLnwMLrbVlKrQ"
+    }
+   ],
+   "duration_seconds": 313,
+   "views": "21K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/tjXvh_x3Ni11y_ttlyQ29QKqqIcZ_OkIJ_z7yx7E1wDGQNxuw1z053YtSn_yP14AEd2xYFYqZoVzLxsw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/tjXvh_x3Ni11y_ttlyQ29QKqqIcZ_OkIJ_z7yx7E1wDGQNxuw1z053YtSn_yP14AEd2xYFYqZoVzLxsw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "What A Lovely Way To Go (Demo)",
+   "album": {
+    "name": "Thriller 40",
+    "id": "MPREb_RmQFPjKjIPm"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "NNSzjrh3hu8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:56",
+   "year": null,
+   "artists": [
+    {
+     "name": "Michael Jackson",
+     "id": "UCoIOOL7QKuBhQHVKL8y7BEQ"
+    }
+   ],
+   "duration_seconds": 236,
+   "views": "1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/pu5bdluXWwddUM6NTdcSraCxnlj2HMMYC5meaHCBVAT6lJoGE2wSq439hmVJJcYGmzPvrxo5N1Afz9t-=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/pu5bdluXWwddUM6NTdcSraCxnlj2HMMYC5meaHCBVAT6lJoGE2wSq439hmVJJcYGmzPvrxo5N1Afz9t-=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Thriller (Instrumental Track With Background Vocals)[Karaoke in the style of Michael Jackson]",
+   "album": {
+    "name": "Easy Instrumental Hits, Vol. 128 (Karaoke Version)",
+    "id": "MPREb_wWJDq4bPxU4"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "1fmHONz2uME",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:15",
+   "year": null,
+   "artists": [
+    {
+     "name": "Easy Karaoke Players",
+     "id": "UCqF_oMwHSNWk-PEgBtY5rDA"
+    }
+   ],
+   "duration_seconds": 315,
+   "views": "26K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/O5PpGIPsFDTXkJXtOaq_A0XpsojQvMOkel-pc1xdqi5DCZfn97deuEPz8sGjUBcd6GpB4ynhi6FQD40=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/O5PpGIPsFDTXkJXtOaq_A0XpsojQvMOkel-pc1xdqi5DCZfn97deuEPz8sGjUBcd6GpB4ynhi6FQD40=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

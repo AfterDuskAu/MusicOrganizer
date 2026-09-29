@@ -1,0 +1,754 @@
+{
+ "kind": "search",
+ "key": "jill scott still here",
+ "request": "Jill Scott Still Here",
+ "recorded_at": "2026-09-29T02:36:51Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Why Is She Still Here?",
+   "album": {
+    "name": "BITE ME",
+    "id": "MPREb_UxnP67jCKk5"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "e31WDBU9E5A",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "Reneé Rapp",
+     "id": "UCivGbGUwwnfiZeOczhIIN3w"
+    }
+   ],
+   "duration_seconds": 151,
+   "views": "3.8M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/TNHyjIWb_KaXVvD9K541mXelo-xiffei8Re-lo9iIiXMYv74eFICH9VefEG0OZUbhu65sAqEzArY9AI=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/TNHyjIWb_KaXVvD9K541mXelo-xiffei8Re-lo9iIiXMYv74eFICH9VefEG0OZUbhu65sAqEzArY9AI=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Still Believe (feat. Jill Scott & Alex Isley)",
+   "album": {
+    "name": "Watch The Sun",
+    "id": "MPREb_kaoIne54Hoc"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "HmxRqWPJT2c",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:41",
+   "year": null,
+   "artists": [
+    {
+     "name": "PJ Morton",
+     "id": "UCGDihJuCycPacNNW5IO9F4A"
+    }
+   ],
+   "duration_seconds": 221,
+   "views": "1.2M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/IDOSTO0x-Lqctxf2CODADM0Z9iuD1CkKQ_Uhc_QDIkWKOi0QSpxTzTqo-oX0vyhYaA-SSDQp2RLK7pc=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/IDOSTO0x-Lqctxf2CODADM0Z9iuD1CkKQ_Uhc_QDIkWKOi0QSpxTzTqo-oX0vyhYaA-SSDQp2RLK7pc=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Jill Scott (feat. Jill Scott)",
+   "album": {
+    "name": "ALICIA",
+    "id": "MPREb_xFYtZNDGMve"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "svfLaEs-FJM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:06",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alicia Keys",
+     "id": "UCvaP3izVIy3fieneHVV6Drw"
+    }
+   ],
+   "duration_seconds": 246,
+   "views": "492K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/HNHlL2RpbvoU6lL-rG2qttrrttMpiSSykPSwOcvW23Jh1ViyzICmM95eDeJPgAEiWan0HpffEyajZ1FG=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/HNHlL2RpbvoU6lL-rG2qttrrttMpiSSykPSwOcvW23Jh1ViyzICmM95eDeJPgAEiWan0HpffEyajZ1FG=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Jilltro",
+   "album": {
+    "name": "Who Is Jill Scott? - Words and Sounds, Vol. 1",
+    "id": "MPREb_yypGkaxffbQ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Jq5SX7uajyk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:04",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jill Scott",
+     "id": "UCYAoAgoEY3HPmybt1JxsT9Q"
+    }
+   ],
+   "duration_seconds": 64,
+   "views": "971K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/HhBrS-xtzWyrJQQ_0AqmQsRDBUzWVLhj0JMynQz5agKoFvEgvN6WPi7cIDhUZMt7DUPW1lSvZXdpOgZQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/HhBrS-xtzWyrJQQ_0AqmQsRDBUzWVLhj0JMynQz5agKoFvEgvN6WPi7cIDhUZMt7DUPW1lSvZXdpOgZQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "The Fact Is ( I Need You) (Live)",
+   "album": {
+    "name": "The Real Thing Words & Sounds, Vol. 3 (Deluxe Edition)",
+    "id": "MPREb_VPDYobS7Btr"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "XWusJbMLSmQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:41",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jill Scott",
+     "id": "UCYAoAgoEY3HPmybt1JxsT9Q"
+    }
+   ],
+   "duration_seconds": 401,
+   "views": "208K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vnLSwwXxx4PFaSLROTK7x9x6dZ3L5ExAR76bar7BoEdjaVUUtC9t_-f17--ibCRXpVIHg3g3USA1CuY=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vnLSwwXxx4PFaSLROTK7x9x6dZ3L5ExAR76bar7BoEdjaVUUtC9t_-f17--ibCRXpVIHg3g3USA1CuY=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Still Here",
+   "album": {
+    "name": "Still Here",
+    "id": "MPREb_XuO9Lkxk1Yq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "sVBqGS3nv18",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:06",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ah_Jinx",
+     "id": "UCNmxvKsAyswBSXb9SuEEnrQ"
+    }
+   ],
+   "duration_seconds": 126,
+   "views": "4.4K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/fNq-XSEV5lX6Aeih7WeZyFg6efD6o1g5L8HTQTPMEttiKbxBboQUzTFs1jtQqoBROahoHgZsmNhQUitG=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/fNq-XSEV5lX6Aeih7WeZyFg6efD6o1g5L8HTQTPMEttiKbxBboQUzTFs1jtQqoBROahoHgZsmNhQUitG=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "A Long Walk (2015 Remastered Version)",
+   "album": {
+    "name": "Golden Moments (2015 Remastered Deluxe Version)",
+    "id": "MPREb_4Wjf8IWvbkY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "UjQTpLcbGTw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:38",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jill Scott",
+     "id": "UCYAoAgoEY3HPmybt1JxsT9Q"
+    }
+   ],
+   "duration_seconds": 278,
+   "views": "42M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/UErOHHx8TicfXFXcOWcJDM7H5jo3fMiV1FdXsyzJzbSA_oubtB1jR4EpyUUekqMSSA_wfl8jakfFEWhwfQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/UErOHHx8TicfXFXcOWcJDM7H5jo3fMiV1FdXsyzJzbSA_oubtB1jR4EpyUUekqMSSA_wfl8jakfFEWhwfQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Àṣẹ",
+   "album": {
+    "name": "To Whom This May Concern",
+    "id": "MPREb_8vZz06fuZXx"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "2aa6DZxQhyE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:12",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jill Scott",
+     "id": "UCYAoAgoEY3HPmybt1JxsT9Q"
+    }
+   ],
+   "duration_seconds": 192,
+   "views": "412K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/EXmW26N2A1AFaLocajma6ZUQ_A-7nektnaK5S_VkmPEAI1hMkGgGmohM-uLsA2IeoIHqnsw1Gvebo90=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/EXmW26N2A1AFaLocajma6ZUQ_A-7nektnaK5S_VkmPEAI1hMkGgGmohM-uLsA2IeoIHqnsw1Gvebo90=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Lotus Flower",
+   "album": {
+    "name": "Somewhere: Still Here...",
+    "id": "MPREb_qA82CsQjg9E"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "gPykW-i_HG4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:18",
+   "year": null,
+   "artists": [
+    {
+     "name": "Steven Sincere",
+     "id": "UC-yf37S3PJpsindwMzCar6g"
+    }
+   ],
+   "duration_seconds": 258,
+   "views": "1",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/n42FI01N24hv0qjC_IZ7UpAKlGw-JO689A_O6AvQkyPwE8Nr48b64UVfHbjljSqSpcPwVIS6Y95EZxvg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/n42FI01N24hv0qjC_IZ7UpAKlGw-JO689A_O6AvQkyPwE8Nr48b64UVfHbjljSqSpcPwVIS6Y95EZxvg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Still Here",
+   "album": {
+    "name": "Still Here",
+    "id": "MPREb_KH3mOsHrBhz"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "fUAj7RK_ELU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:11",
+   "year": null,
+   "artists": [
+    {
+     "name": "Girls Who Cry",
+     "id": "UCDZMiNnKa8_8U9UWViTxE4Q"
+    }
+   ],
+   "duration_seconds": 311,
+   "views": "4K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/71NKhJosXGSXLQf7ouRIVOEMuJYCP8DEmWbL16F3PISx6HzfFifzGN94Fm2QeZH80hdPHgB_BhXl2uddYQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/71NKhJosXGSXLQf7ouRIVOEMuJYCP8DEmWbL16F3PISx6HzfFifzGN94Fm2QeZH80hdPHgB_BhXl2uddYQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Be Great (feat. Trombone Shorty)",
+   "album": {
+    "name": "To Whom This May Concern",
+    "id": "MPREb_8vZz06fuZXx"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "SqMPNmWzj-Q",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:13",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jill Scott",
+     "id": "UCYAoAgoEY3HPmybt1JxsT9Q"
+    }
+   ],
+   "duration_seconds": 193,
+   "views": "644K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/EXmW26N2A1AFaLocajma6ZUQ_A-7nektnaK5S_VkmPEAI1hMkGgGmohM-uLsA2IeoIHqnsw1Gvebo90=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/EXmW26N2A1AFaLocajma6ZUQ_A-7nektnaK5S_VkmPEAI1hMkGgGmohM-uLsA2IeoIHqnsw1Gvebo90=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Comes To Light (Everything)",
+   "album": {
+    "name": "Hidden Beach presents: The Original Jill Scott: from the vault vol. 1 (Deluxe with Digital Booklet)",
+    "id": "MPREb_pOIsFH87ic2"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "4u7hszVGn_o",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:47",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jill Scott",
+     "id": "UCYAoAgoEY3HPmybt1JxsT9Q"
+    }
+   ],
+   "duration_seconds": 287,
+   "views": "4.2M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ZC3RyS3wi3UzTuGosnngNZFTo1bpyUbGyyaQGTmCAGAemagim-wlxNst0uthh1Elxkt3wq9G7zkHOnlR=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ZC3RyS3wi3UzTuGosnngNZFTo1bpyUbGyyaQGTmCAGAemagim-wlxNst0uthh1Elxkt3wq9G7zkHOnlR=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Getting Late",
+   "album": {
+    "name": "Floetic",
+    "id": "MPREb_TxJimmu8DLb"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "luuqF4bM_hw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:47",
+   "year": null,
+   "artists": [
+    {
+     "name": "Floetry",
+     "id": "UCH5_MK6DQFjTxnhFCwK9r9A"
+    }
+   ],
+   "duration_seconds": 407,
+   "views": "30M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/kuZzBEvq0WmLhFBeuuc_aKR-avxVYw-uOH_U4nTcA6d-5gtMCuo6Mtxhcon5ZsRiOSTufutEBX3ZgKc=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/kuZzBEvq0WmLhFBeuuc_aKR-avxVYw-uOH_U4nTcA6d-5gtMCuo6Mtxhcon5ZsRiOSTufutEBX3ZgKc=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Still Here (feat. Vivian Green)",
+   "album": {
+    "name": "Dreams EP",
+    "id": "MPREb_URHgtCmSs1Q"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "qY7WEU2_RiM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:20",
+   "year": null,
+   "artists": [
+    {
+     "name": "Brian Culbertson",
+     "id": "UCAcFLGUYc-rsvrzaMbgmjFw"
+    }
+   ],
+   "duration_seconds": 260,
+   "views": "402K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/nboUGpFkWZo0zmKi73wRWs41CGePGDpnp8rclx6P_s25xmVUFk5Rfc3FgJdUCI9F6cCxKE0RYeZQK2g=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/nboUGpFkWZo0zmKi73wRWs41CGePGDpnp8rclx6P_s25xmVUFk5Rfc3FgJdUCI9F6cCxKE0RYeZQK2g=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "I'm New Here",
+   "album": {
+    "name": "We're New Here",
+    "id": "MPREb_iT82ahOQku8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "TQiOHhHOkTU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:27",
+   "year": null,
+   "artists": [
+    {
+     "name": "Gil Scott-Heron",
+     "id": "UCO78NEi7Y7J3HKFuPke0LoA"
+    },
+    {
+     "name": "Jamie xx",
+     "id": "UCUIRrvexIhgFsdjRucxhQ5w"
+    }
+   ],
+   "duration_seconds": 207,
+   "views": "898K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/rOm9kabqRZQhvXAUltmL_CPge7xLecwEVnvdkPqX-5q8c3h1cdlaWV1fw5LeU4mxpQjypSu8L8CBHp43=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/rOm9kabqRZQhvXAUltmL_CPge7xLecwEVnvdkPqX-5q8c3h1cdlaWV1fw5LeU4mxpQjypSu8L8CBHp43=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sucia (feat. Jill Scott & Young Miko)",
+   "album": {
+    "name": "CRASH",
+    "id": "MPREb_ZaJtglbBR2A"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "rAS-VoXa2xE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:23",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kehlani",
+     "id": "UCONwFIjhxe4MR2sY3Cv0adA"
+    }
+   ],
+   "duration_seconds": 263,
+   "views": "1.8M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/-zImcF6sjSAAUcRHyk4OQllh-0Up_Qr8A-wWV5h_ZOM_o-SShGxtWchH-3oXzBOUepDcQo1O0fFiuprH=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/-zImcF6sjSAAUcRHyk4OQllh-0Up_Qr8A-wWV5h_ZOM_o-SShGxtWchH-3oXzBOUepDcQo1O0fFiuprH=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "STILL HERE",
+   "album": {
+    "name": "XR",
+    "id": "MPREb_avX71cJfmms"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "M1FXsc4zXq4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:12",
+   "year": null,
+   "artists": [
+    {
+     "name": "Zachary Aghaizu",
+     "id": "UCryEnuEeo7YnVcgz1f71PeA"
+    }
+   ],
+   "duration_seconds": 132,
+   "views": "8.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/LpyyArxfgEbtYqqqk_92tUduC1Pyn5IveoBClN-KRHn-SJMKnYAGLumpG9Cnci5CngjQQeuKuHGqMdc=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/LpyyArxfgEbtYqqqk_92tUduC1Pyn5IveoBClN-KRHn-SJMKnYAGLumpG9Cnci5CngjQQeuKuHGqMdc=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Still Here",
+   "album": {
+    "name": "Still Here",
+    "id": "MPREb_XYshQAqS1uq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "I52isY0DH1I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "Project Hilts",
+     "id": "UCAs0_Es2KEAot9UVI-elYjA"
+    }
+   ],
+   "duration_seconds": 210,
+   "views": "83",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/0RgYclanjIT5m0X-Vvyr4Xu838yxyRHKSDBaKaWhAmd4UM4LGCf5Kz6QgfanWwkxGWyvvTpb3rtUcyLr=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/0RgYclanjIT5m0X-Vvyr4Xu838yxyRHKSDBaKaWhAmd4UM4LGCf5Kz6QgfanWwkxGWyvvTpb3rtUcyLr=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Sincerely Do",
+   "album": {
+    "name": "To Whom This May Concern",
+    "id": "MPREb_mFpbiBDsJJ7"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "kbjQ5W5S4pU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:42",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jill Scott",
+     "id": "UCYAoAgoEY3HPmybt1JxsT9Q"
+    }
+   ],
+   "duration_seconds": 162,
+   "views": "411K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/uIdtsFX6ANvYLic2IJOaCoIQ7qDtX33fLBZilqIRUuwleXThKtius3rP0BWpI_5RBMTKqR4eTce341d4Hw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/uIdtsFX6ANvYLic2IJOaCoIQ7qDtX33fLBZilqIRUuwleXThKtius3rP0BWpI_5RBMTKqR4eTce341d4Hw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Pressha",
+   "album": {
+    "name": "To Whom This May Concern",
+    "id": "MPREb_8vZz06fuZXx"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "CCunGTSZe0o",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:17",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jill Scott",
+     "id": "UCYAoAgoEY3HPmybt1JxsT9Q"
+    }
+   ],
+   "duration_seconds": 257,
+   "views": "3.4M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/EXmW26N2A1AFaLocajma6ZUQ_A-7nektnaK5S_VkmPEAI1hMkGgGmohM-uLsA2IeoIHqnsw1Gvebo90=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/EXmW26N2A1AFaLocajma6ZUQ_A-7nektnaK5S_VkmPEAI1hMkGgGmohM-uLsA2IeoIHqnsw1Gvebo90=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

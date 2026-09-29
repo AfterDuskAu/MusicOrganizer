@@ -1,0 +1,774 @@
+{
+ "kind": "search",
+ "key": "phantogram black out days r slowed",
+ "request": "Phantogram Black Out Days R slowed",
+ "recorded_at": "2026-09-29T02:37:30Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Black Out Days (Future Islands Remix (Slowed))",
+   "album": {
+    "name": "Black Out Days (Future Islands Remix (Slowed))",
+    "id": "MPREb_eBGHIxUgAFc"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "M-kUKqvRnGc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:35",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    },
+    {
+     "name": "xxtristanxo",
+     "id": "UCkC6ZCM1iklYbnFGt6Sas8Q"
+    },
+    {
+     "name": "Slowed Radio",
+     "id": "UCFMphGaeXqj6wm0zNLMSXwQ"
+    }
+   ],
+   "duration_seconds": 215,
+   "views": "20M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/gIznA2pX--rlzdYHaNpadldbzHJRrnVP9q_C9EFAwZcmRErxpQ6vSxja54TaLfWuhFuLG7TUq7kQvryVKA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/gIznA2pX--rlzdYHaNpadldbzHJRrnVP9q_C9EFAwZcmRErxpQ6vSxja54TaLfWuhFuLG7TUq7kQvryVKA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "After Dark",
+   "album": {
+    "name": "Time",
+    "id": "MPREb_5aGkZjDicQr"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Cl5Vkd4N03Q",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:20",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mr.Kitty",
+     "id": "UCrajKr9NDZs-_1simGxgtmQ"
+    }
+   ],
+   "duration_seconds": 260,
+   "views": "832M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/b92yfjtgYeBaZDIzQViE8zlfsDwvImUJuGqwIBOQmyxrcG1cvyVdJKzuIiZLKU_aBM_X4h43rXgUkjMD=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/b92yfjtgYeBaZDIzQViE8zlfsDwvImUJuGqwIBOQmyxrcG1cvyVdJKzuIiZLKU_aBM_X4h43rXgUkjMD=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Black Out Days (Sped Up)",
+   "album": {
+    "name": "Black Out Days (UK Garage)",
+    "id": "MPREb_Mp0h5373HW5"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "TjGYtdzpziI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mr. Luzé",
+     "id": "UCWom3USdz7IfhK90CuLMLsg"
+    }
+   ],
+   "duration_seconds": 208,
+   "views": "1.2K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/mEaw0TTS_4qzQeukXn-jGKi_kYDvKw-TKXpVaIGX7r5eEncbDNYAqzG-l-9F2aVHK3ow6ebUPHj8Nls=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/mEaw0TTS_4qzQeukXn-jGKi_kYDvKw-TKXpVaIGX7r5eEncbDNYAqzG-l-9F2aVHK3ow6ebUPHj8Nls=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "The Day You Died",
+   "album": {
+    "name": "Voices",
+    "id": "MPREb_X3AD613YMBy"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "p4yRm2_ODfQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 230,
+   "views": "1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/zfkX7dIBJ_Ik0Klwy3jKO5aE0wdERCWanaaeXLMVelrZmsFsgAp33aawtWYHY-QNv78fpJR6M7KpIKU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/zfkX7dIBJ_Ik0Klwy3jKO5aE0wdERCWanaaeXLMVelrZmsFsgAp33aawtWYHY-QNv78fpJR6M7KpIKU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Black Out Days (Sped Up)",
+   "album": {
+    "name": "Black Out Days (UK Garage)",
+    "id": "MPREb_TJxfw1hBXh0"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "dyXS9-y0Ib4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mr. Luzé",
+     "id": "UCWom3USdz7IfhK90CuLMLsg"
+    },
+    {
+     "name": "ecentral",
+     "id": "UCGcKz0tQk7ke_tB7yhW_1yA"
+    }
+   ],
+   "duration_seconds": 208,
+   "views": "1.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/eqAV5rTHR1WhYcnK2-dei2bXpAXWjdMVl4szGgq5sBfVJOuKlDjd7pHRKHyWczopeRdm4Undi_ra3DtV=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/eqAV5rTHR1WhYcnK2-dei2bXpAXWjdMVl4szGgq5sBfVJOuKlDjd7pHRKHyWczopeRdm4Undi_ra3DtV=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "The Perfect Girl",
+   "album": {
+    "name": "The Perfect Girl",
+    "id": "MPREb_WlGaNvR8VlP"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "W5Sq71VTJ9Q",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:15",
+   "year": null,
+   "artists": [
+    {
+     "name": "Mareux",
+     "id": "UC14YfHJCc8hq15WnZ7_oCHA"
+    }
+   ],
+   "duration_seconds": 195,
+   "views": "358M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/DDK8Csjn04GX8B91BNaAB2uC4anP4oLnb6VmKkkvPvwhJqiUVuVvWo3zWrkKZ3sI-ME-TT2lMrY5vs61=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/DDK8Csjn04GX8B91BNaAB2uC4anP4oLnb6VmKkkvPvwhJqiUVuVvWo3zWrkKZ3sI-ME-TT2lMrY5vs61=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Black Out Days",
+   "album": {
+    "name": "Black Out Days (UK Garage / DNB)",
+    "id": "MPREb_yZOE4gDzGVs"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "uZZ0R9PlCgM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:44",
+   "year": null,
+   "artists": [
+    {
+     "name": "Nikko",
+     "id": "UCvG4x8N_2LTLF8I1KpTkNIw"
+    },
+    {
+     "name": "Jynxx",
+     "id": "UC4B2XXm_PY_8BDISDMciODA"
+    }
+   ],
+   "duration_seconds": 224,
+   "views": "2K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/wSLoHqzZIJZOmvmUGWYimIx0yNZmANvEtYoA7IZEjPxd1VYz4oupc7v-HfyQV5tHLWjBHXKTuQ0NJKS_Dw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/wSLoHqzZIJZOmvmUGWYimIx0yNZmANvEtYoA7IZEjPxd1VYz4oupc7v-HfyQV5tHLWjBHXKTuQ0NJKS_Dw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Black Out Days x Get Crazy",
+   "album": {
+    "name": "Black Out Days x I Get Crazy",
+    "id": "MPREb_XYO2BAfg5Zr"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "6a0PsKCfU0g",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:43",
+   "year": null,
+   "artists": [
+    {
+     "name": "skyemane",
+     "id": "UC7m60tX_MZbb2r8lwFMG4TA"
+    },
+    {
+     "name": "13Aurora",
+     "id": null
+    }
+   ],
+   "duration_seconds": 223,
+   "views": "2.6K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/jIW5NPLORA-j6uZX0S9fznau6SSv4fY0UsCb4rWo7N6JLoIpjle3pHxp9n6voY4SW9A-ixbfXPJnUsCW=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/jIW5NPLORA-j6uZX0S9fznau6SSv4fY0UsCb4rWo7N6JLoIpjle3pHxp9n6voY4SW9A-ixbfXPJnUsCW=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Black Out Days",
+   "album": {
+    "name": "Black Out Days",
+    "id": "MPREb_9IT1k9YS4wC"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ufKz0xdp3co",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:59",
+   "year": null,
+   "artists": [
+    {
+     "name": "JpDaDon6",
+     "id": "UCmVqYfZTsbsgZcQOZ9W6OCg"
+    }
+   ],
+   "duration_seconds": 179,
+   "views": "74",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/W3jI2X6Z25Ax7dnzwnvogVtj-2rbRrwdqMmQFIafb1C7sEPDhqAsALhDEOQLMAxbOWwcDnbMbVYHVWpS=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/W3jI2X6Z25Ax7dnzwnvogVtj-2rbRrwdqMmQFIafb1C7sEPDhqAsALhDEOQLMAxbOWwcDnbMbVYHVWpS=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Black Out Days",
+   "album": {
+    "name": "Voices",
+    "id": "MPREb_X3AD613YMBy"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "OjCdK0MLd4I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:48",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 228,
+   "views": "237M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/zfkX7dIBJ_Ik0Klwy3jKO5aE0wdERCWanaaeXLMVelrZmsFsgAp33aawtWYHY-QNv78fpJR6M7KpIKU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/zfkX7dIBJ_Ik0Klwy3jKO5aE0wdERCWanaaeXLMVelrZmsFsgAp33aawtWYHY-QNv78fpJR6M7KpIKU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "A Dark Tunnel",
+   "album": {
+    "name": "Nightlife",
+    "id": "MPREb_7CIuzT3kLKB"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "7mWzylsioWs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 330,
+   "views": "236K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/NBJS8Cd5CYPqX8MQQ1kVWILOBWpQxEyfNyAARIfg2B91PTBg3jnQ-rGB5eyQwguyCcM6FvKo6Jk45jPRcg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/NBJS8Cd5CYPqX8MQQ1kVWILOBWpQxEyfNyAARIfg2B91PTBg3jnQ-rGB5eyQwguyCcM6FvKo6Jk45jPRcg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Phantom (slowed + reverb)",
+   "album": {
+    "name": "Phantom (slowed + reverb)",
+    "id": "MPREb_2UR6vyJhWGt"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "EbudD9_F7Ns",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:18",
+   "year": null,
+   "artists": [
+    {
+     "name": "NateWantsToBattle",
+     "id": "UCn47DsiwQ9btGilwnBBKSgg"
+    }
+   ],
+   "duration_seconds": 318,
+   "views": "34K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/0EXQUuWhhGi61mveVb-5aXWbnqJOG4_J8Q025x3470GoaE6MYJ4z5nSd_LoyFM39QJD0t6TcT5HTb3Jg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/0EXQUuWhhGi61mveVb-5aXWbnqJOG4_J8Q025x3470GoaE6MYJ4z5nSd_LoyFM39QJD0t6TcT5HTb3Jg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "In This Darkness (Slowed + Reverb) (Remix)",
+   "album": {
+    "name": "In This Darkness (Remix)",
+    "id": "MPREb_ICYm42H5yuN"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "WHAdwtu5Ic0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:29",
+   "year": null,
+   "artists": [
+    {
+     "name": "ViralityX",
+     "id": "UCORvWnreYd90IvK4aBG5TLg"
+    }
+   ],
+   "duration_seconds": 149,
+   "views": "2.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/a0PusQOMlCp062aXaLBwsG_VA5ahj2KGQMgQKy5-CTcC-9KsgnZgkYablAJReZZFzLxLZqIVxWPbM8Rf=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/a0PusQOMlCp062aXaLBwsG_VA5ahj2KGQMgQKy5-CTcC-9KsgnZgkYablAJReZZFzLxLZqIVxWPbM8Rf=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Ceremony",
+   "album": {
+    "name": "Ceremony",
+    "id": "MPREb_6uNbonf7pBP"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "XI31_4zc75E",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:38",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 338,
+   "views": "427K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/rDNHxm0lsU-5CjV94qKMpyg63vf56LEd-tri4ia5Y0qugL718Tq8PUO4WNbJeMHccVACa1a5wkVcHg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/rDNHxm0lsU-5CjV94qKMpyg63vf56LEd-tri4ia5Y0qugL718Tq8PUO4WNbJeMHccVACa1a5wkVcHg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Running From the Cops",
+   "album": {
+    "name": "Eyelid Movies",
+    "id": "MPREb_geWUyTCGP8H"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "qSq7HZ10w8g",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:58",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 238,
+   "views": "2.4M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/bDBCuCLqKZBqVjwZa2roROCq9PNJbVV4TUmSBHL1k3gReh9R8OfdEZPZ5X69i7kjBbYygo1TLC1nm4_l=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/bDBCuCLqKZBqVjwZa2roROCq9PNJbVV4TUmSBHL1k3gReh9R8OfdEZPZ5X69i7kjBbYygo1TLC1nm4_l=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "black out days (house)",
+   "album": {
+    "name": "black out days",
+    "id": "MPREb_tr8jbFsAlTM"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "as5-1Szyjbo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:29",
+   "year": null,
+   "artists": [
+    {
+     "name": "TEKKNO MODE",
+     "id": "UCNm0onM47qimobUpJKsE7Yg"
+    },
+    {
+     "name": "SPEED RUNNR",
+     "id": "UC_0c7WZZOmsiGwKMoykuiaQ"
+    }
+   ],
+   "duration_seconds": 89,
+   "views": "2.5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/MnFDbsQV7GmEC7zn_3FsM4Ho1GrudnwsOqmiN9Ckx6OEHUqs1ql820Nc8VBgxJtnoSu6e4sVRV6QE3J0=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/MnFDbsQV7GmEC7zn_3FsM4Ho1GrudnwsOqmiN9Ckx6OEHUqs1ql820Nc8VBgxJtnoSu6e4sVRV6QE3J0=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Black Out Days (Stay Away) (Remix)",
+   "album": {
+    "name": "Black Out Days (Stay Away) (Remix)",
+    "id": "MPREb_PtM82dACiGj"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "23aFg2xkKFU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:44",
+   "year": null,
+   "artists": [
+    {
+     "name": "Coffee Brothers",
+     "id": "UCkLQhcwIbzu9fRireyU2new"
+    }
+   ],
+   "duration_seconds": 284,
+   "views": "2.6K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/1fwY4gAzM5yDjWTlxBPibCHaJ3P9kZlEHDuJUu7IjqmvegfqahVHS_FCiU_C4E8nXqajq-ZuYYn1B94=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/1fwY4gAzM5yDjWTlxBPibCHaJ3P9kZlEHDuJUu7IjqmvegfqahVHS_FCiU_C4E8nXqajq-ZuYYn1B94=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Destroyer",
+   "album": {
+    "name": "Three",
+    "id": "MPREb_JBTwQdIALEN"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "UFlNe7L6VoA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:18",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 258,
+   "views": "487K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/4yRCt5V8Rkr1c2njAeN3IZ073L60vCF41h2sMObypv5bOtgNDe3yUIXzxJLFqd7HIKRi4pILYBMCsRMU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/4yRCt5V8Rkr1c2njAeN3IZ073L60vCF41h2sMObypv5bOtgNDe3yUIXzxJLFqd7HIKRi4pILYBMCsRMU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "BLACKOUT (Slowed & Reverb)",
+   "album": {
+    "name": "SUN BLEACHED ...Dummy <3",
+    "id": "MPREb_an9ARoLy4Gi"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "i34_jigrREY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:05",
+   "year": null,
+   "artists": [
+    {
+     "name": "808CUTBYPIXELS",
+     "id": "UCtaH_BKn5H-uz_oh6jwaGnQ"
+    }
+   ],
+   "duration_seconds": 185,
+   "views": "35",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/_F57eQXyLc0orlPIM71BLIXRMhVEsu1zy3LUvklikYSmUwn_4iTGI3BURD22V11g0UDmSGxH1q_sh-Bzfw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/_F57eQXyLc0orlPIM71BLIXRMhVEsu1zy3LUvklikYSmUwn_4iTGI3BURD22V11g0UDmSGxH1q_sh-Bzfw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Turn It Off",
+   "album": {
+    "name": "Eyelid Movies",
+    "id": "MPREb_geWUyTCGP8H"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "RRZkfiOMghE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:02",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 242,
+   "views": "1.9M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/bDBCuCLqKZBqVjwZa2roROCq9PNJbVV4TUmSBHL1k3gReh9R8OfdEZPZ5X69i7kjBbYygo1TLC1nm4_l=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/bDBCuCLqKZBqVjwZa2roROCq9PNJbVV4TUmSBHL1k3gReh9R8OfdEZPZ5X69i7kjBbYygo1TLC1nm4_l=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

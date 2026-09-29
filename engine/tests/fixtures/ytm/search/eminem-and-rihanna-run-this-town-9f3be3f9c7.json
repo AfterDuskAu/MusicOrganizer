@@ -1,0 +1,754 @@
+{
+ "kind": "search",
+ "key": "eminem and rihanna run this town",
+ "request": "Eminem & Rihanna Run This Town",
+ "recorded_at": "2026-09-29T02:37:00Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Run This Town (feat. Rihanna & Kanye West)",
+   "album": {
+    "name": "The Blueprint 3",
+    "id": "MPREb_ZbWqeKbKuK5"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "EeE7CfNs7Js",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "JAŸ-Z",
+     "id": "UCbJG1HvzgzaMe_15xfiUyWw"
+    }
+   ],
+   "duration_seconds": 268,
+   "views": "141M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/cac7RCDKMaGadnmmVcJA1pJBi5Vcp3hwPHbKSHJzJ1H-JXOhASEuLYCvUPX3blZx6OlIyGtm8ld9BKFS=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/cac7RCDKMaGadnmmVcJA1pJBi5Vcp3hwPHbKSHJzJ1H-JXOhASEuLYCvUPX3blZx6OlIyGtm8ld9BKFS=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Run This Town (feat. AvaZ)",
+   "album": {
+    "name": "Run This Town",
+    "id": "MPREb_RGDkIhz1evY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "wR22YLm0ou0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:51",
+   "year": null,
+   "artists": [
+    {
+     "name": "YeSBrO SLY",
+     "id": null
+    }
+   ],
+   "duration_seconds": 171,
+   "views": "109",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/DnKMuLmxCQtWHf0Xb6xkN3JpywgzZXri2P939-Tu-Cud2ttUAi3mNs4ZWB36E3YXmLY_jpx-0_agpXNHcw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/DnKMuLmxCQtWHf0Xb6xkN3JpywgzZXri2P939-Tu-Cud2ttUAi3mNs4ZWB36E3YXmLY_jpx-0_agpXNHcw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Run This Town (Made Famous by Jay Z & Rihanna)",
+   "album": {
+    "name": "Ultimate Hits Of Today",
+    "id": "MPREb_gyGxEbxH9Wt"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ZXUYG55FWaA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:37",
+   "year": null,
+   "artists": [
+    {
+     "name": "Future Hitmakers",
+     "id": "UCsaKcP4-Qgja9-RbXCcPjkg"
+    }
+   ],
+   "duration_seconds": 277,
+   "views": "160K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/NaBDzw47O5X8a5yje6Itx-HEu7xaJpsV8l17InG8hCPLsu1JIJs01BnUBPS2eecSW929UrTd2qrfMYg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/NaBDzw47O5X8a5yje6Itx-HEu7xaJpsV8l17InG8hCPLsu1JIJs01BnUBPS2eecSW929UrTd2qrfMYg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Run This Town (Made Famous by Jay Z & Rihanna)",
+   "album": {
+    "name": "Blockbuster Hits Now!",
+    "id": "MPREb_Xm9Mcr3rNPq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "DMm6uinU0Bo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:37",
+   "year": null,
+   "artists": [
+    {
+     "name": "Future Pop Stars",
+     "id": "UCkh5KAf15YcuB3VilOrZD0g"
+    }
+   ],
+   "duration_seconds": 277,
+   "views": "160K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/yRnFcPHiIaL3CXj7PbkmpJZ8vG3pHrYggpx0DDTgnY7s6r5ZAYCxNdzo-apPzHpLDstdW44KbtkuKJGB=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/yRnFcPHiIaL3CXj7PbkmpJZ8vG3pHrYggpx0DDTgnY7s6r5ZAYCxNdzo-apPzHpLDstdW44KbtkuKJGB=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Run This Town (feat. Prezzie & Specs)",
+   "album": {
+    "name": "Innocent 'Till Proven Guilty",
+    "id": "MPREb_kFydeK32VRQ"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "LIbuX_mgt7k",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "Two 4 War",
+     "id": "UCqguUPkzE0XAEXR-IfCcnNA"
+    },
+    {
+     "name": "Fes Taylor",
+     "id": "UCu_0yxaHl8_Rq8IkBwPKPOg"
+    }
+   ],
+   "duration_seconds": 243,
+   "views": "234",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ABrz2qDf3SH4TrLvnnWHwHGLcBX6_S1kjQUb811DS7UFVDgECDn2v5xnqpNk7lWVWrA4UHfohcyUaPUW=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ABrz2qDf3SH4TrLvnnWHwHGLcBX6_S1kjQUb811DS7UFVDgECDn2v5xnqpNk7lWVWrA4UHfohcyUaPUW=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Umbrella (feat. JAŸ-Z)",
+   "album": {
+    "name": "Good Girl Gone Bad: Reloaded",
+    "id": "MPREb_Z5m1HoQcIAg"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "xXD5tltX9Pg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:36",
+   "year": null,
+   "artists": [
+    {
+     "name": "Rihanna",
+     "id": "UCvWtix2TtWGe9kffqnwdaMw"
+    }
+   ],
+   "duration_seconds": 276,
+   "views": "1.8B",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Aql9vUYozUQWzZQOuSXf6fq0UKvnbPQMdZobMYbKE-rUsgHbv2CqKxDYgWoPLnrAU2B_JuFVMSs3JvOt=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Aql9vUYozUQWzZQOuSXf6fq0UKvnbPQMdZobMYbKE-rUsgHbv2CqKxDYgWoPLnrAU2B_JuFVMSs3JvOt=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Run This Town",
+   "album": {
+    "name": "Run This Town",
+    "id": "MPREb_nSb9bMHtDDu"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "F-8JGtcIIiw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:00",
+   "year": null,
+   "artists": [
+    {
+     "name": "Laélia",
+     "id": "UCPTvMihsyqd0t36TnwmI0tg"
+    }
+   ],
+   "duration_seconds": 240,
+   "views": "890",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/WFY77Hob3mK3qz4XtxFJYhIlqKsWD-qKs5xPChZkF6hr4XvxCEpdp2v1Lr5bDyM5Wu1ieliFsC57wOyj=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/WFY77Hob3mK3qz4XtxFJYhIlqKsWD-qKs5xPChZkF6hr4XvxCEpdp2v1Lr5bDyM5Wu1ieliFsC57wOyj=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "This Town (feat. LBO South & Big Foo)",
+   "album": {
+    "name": "Paper Chasers",
+    "id": "MPREb_94GMN1bKvNs"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "K4lvEltocec",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:15",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sit Tight Click",
+     "id": "UCwcJIZnOa2vBxs22X6gtCpA"
+    }
+   ],
+   "duration_seconds": 195,
+   "views": "2M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/5WBKHxQTjk9AgKjQa9Zlv8BocG5VozNUmEwP3EHdYNS2si4Bo9PO7jiRB_2qnZ7h0mSPOia9F8wWtjBu=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/5WBKHxQTjk9AgKjQa9Zlv8BocG5VozNUmEwP3EHdYNS2si4Bo9PO7jiRB_2qnZ7h0mSPOia9F8wWtjBu=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Run This Town (Made Famous by Jay Z & Rihanna)",
+   "album": {
+    "name": "Super Hip Hop Chart Beats",
+    "id": "MPREb_EKFhPSzcNpd"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "G0qI4Xi9uCA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:37",
+   "year": null,
+   "artists": [
+    {
+     "name": "Super Hot All-Stars",
+     "id": "UC7VKmKXRJX74QvDSylT__Vw"
+    }
+   ],
+   "duration_seconds": 277,
+   "views": "217K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/O6yVRAXCJeO0YDtU-6_Dv_8dvfuwq7EXxn_k6O7gRZVRKxin1U2OYA6QlefIxFqREMPp8hG8QQQeTjYZ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/O6yVRAXCJeO0YDtU-6_Dv_8dvfuwq7EXxn_k6O7gRZVRKxin1U2OYA6QlefIxFqREMPp8hG8QQQeTjYZ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Run This Town",
+   "album": {
+    "name": "Knees Up",
+    "id": "MPREb_hGmYXVMG08T"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "6p-7waF9lQQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:45",
+   "year": null,
+   "artists": [
+    {
+     "name": "Olly Murs",
+     "id": "UCiyrNvUzc88UhboR13H_7Zg"
+    }
+   ],
+   "duration_seconds": 225,
+   "views": "326K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/evfRTYO8dFry-wEn2dSDLPFiXgHs_CWpCWhAjZLxNNHLkxWnVUQY0_J6baQBjfJPicDzAQFF6ZpTm4td=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/evfRTYO8dFry-wEn2dSDLPFiXgHs_CWpCWhAjZLxNNHLkxWnVUQY0_J6baQBjfJPicDzAQFF6ZpTm4td=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Run This Town (Made Famous by Jay Z & Rihanna)",
+   "album": {
+    "name": "100 Beats For DJs & MCs",
+    "id": "MPREb_3cVWPOzoFoY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "As_qP43ROgU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:37",
+   "year": null,
+   "artists": [
+    {
+     "name": "Superstar Beat Makers",
+     "id": "UCLFrYSzDa68fJ1TUO0AmALA"
+    }
+   ],
+   "duration_seconds": 277,
+   "views": "217K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/8WkYgbM7bsNDLLk9CqOq9fpltrlCbm05zxSe183DSaIv0AhMV8vnXqFkiQ2Zo7OlPZVTG_BZXEZn_vg6=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/8WkYgbM7bsNDLLk9CqOq9fpltrlCbm05zxSe183DSaIv0AhMV8vnXqFkiQ2Zo7OlPZVTG_BZXEZn_vg6=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Run This Town (Made Famous by Jay Z & Rihanna)",
+   "album": {
+    "name": "Instrumental Backing Tracks 2010",
+    "id": "MPREb_GEXrc34u8aL"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "fXmjRCsUPXY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:37",
+   "year": null,
+   "artists": [
+    {
+     "name": "Karaoke Masters",
+     "id": "UCJZk3qaS_1cuzMDtKT4VAJg"
+    }
+   ],
+   "duration_seconds": 277,
+   "views": "216K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/p6ksXKQreGX5wzAtV09vzim7XSQpQpowyW_j9PCNnPH9PRB4wOsCZ6ddFRNFSMbDXHHpDxhntfMBraqi=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/p6ksXKQreGX5wzAtV09vzim7XSQpQpowyW_j9PCNnPH9PRB4wOsCZ6ddFRNFSMbDXHHpDxhntfMBraqi=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "The Monster (feat. Rihanna)",
+   "album": {
+    "name": "The Marshall Mathers LP2 (Deluxe)",
+    "id": "MPREb_nQC4oVRtVFb"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "SQVkYgkMzhY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:11",
+   "year": null,
+   "artists": [
+    {
+     "name": "Eminem",
+     "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+    }
+   ],
+   "duration_seconds": 251,
+   "views": "1.5B",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Y1g2sIdzam7aOAuJUJbOc015H8_BQ1XzdKsY8KIEn4JT5wekLrJ5RurMQLz28l2YxyNknDtXfkUb4x0=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Y1g2sIdzam7aOAuJUJbOc015H8_BQ1XzdKsY8KIEn4JT5wekLrJ5RurMQLz28l2YxyNknDtXfkUb4x0=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Run This Town (Made Famous by Jay Z & Rihanna)",
+   "album": {
+    "name": "Karaoke Hip Hop 2010",
+    "id": "MPREb_sVSILpvvFN0"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Ba_JKhmYaRM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:37",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hip Hop DJ Masters",
+     "id": "UCmCPnytTQmJrk6U5Rdoe2jg"
+    }
+   ],
+   "duration_seconds": 277,
+   "views": "217K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/e3oOq83yx6uUfxDS3FiJ7X9XSXPx35l0GNdHbBN-yq2u8bxYay_l-MF5tF3MbGyjMMShdtIQvZIIdaGv=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/e3oOq83yx6uUfxDS3FiJ7X9XSXPx35l0GNdHbBN-yq2u8bxYay_l-MF5tF3MbGyjMMShdtIQvZIIdaGv=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Run This Town (Made Famous by Jay Z & Rihanna)",
+   "album": {
+    "name": "100 Hip Hop Beats Now!",
+    "id": "MPREb_qQLkzHGE8vq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "P4_O5cnEOK0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:37",
+   "year": null,
+   "artists": [
+    {
+     "name": "Hip Hop Legends",
+     "id": "UCiceKkon0mxv9R2COy946Ng"
+    }
+   ],
+   "duration_seconds": 277,
+   "views": "217K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/gXa-mNdmdULgpbyRwwsidkEF0q8cZjx1PyPihEWXBzhMypZRRck7uBChDsFxfklevHkAtK_4nFNWsEd4=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/gXa-mNdmdULgpbyRwwsidkEF0q8cZjx1PyPihEWXBzhMypZRRck7uBChDsFxfklevHkAtK_4nFNWsEd4=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Run This Town (Made Famous by Jay Z & Rihanna)",
+   "album": {
+    "name": "Massive Instrumental Chart Hits",
+    "id": "MPREb_XCc0J6awLhO"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "MNrKCgkK90Q",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:37",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Chart Hit Players",
+     "id": "UCMFL3_rZcYAh9n_qSjd585w"
+    }
+   ],
+   "duration_seconds": 277,
+   "views": "217K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/7XffmcG7xNeGPuDymuZy_8UhH35tiEjuSOMXED2E3DmWU7bjk9OHR_FGlR-jlcwoOLBk8fus9ne_RbU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/7XffmcG7xNeGPuDymuZy_8UhH35tiEjuSOMXED2E3DmWU7bjk9OHR_FGlR-jlcwoOLBk8fus9ne_RbU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Run This Town (Made Famous by Jay Z & Rihanna)",
+   "album": {
+    "name": "Hip Hop Beats 2011",
+    "id": "MPREb_eSJlpyQFxZB"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "hZTSbiNcjNI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:37",
+   "year": null,
+   "artists": [
+    {
+     "name": "DJ Hip Hop Masters",
+     "id": "UCQPNJvuk13ObpLZkmst2YhA"
+    }
+   ],
+   "duration_seconds": 277,
+   "views": "217K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/AgeHcKS2ZKg9GVNLzpvIFE8wa5DCJLt-2ILzyIwr3JdTKcHch8loY5W3UsYfmrfrbdvKznT8WYZo0HIV=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/AgeHcKS2ZKg9GVNLzpvIFE8wa5DCJLt-2ILzyIwr3JdTKcHch8loY5W3UsYfmrfrbdvKznT8WYZo0HIV=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Run This Town (Made Famous by Jay Z & Rihanna)",
+   "album": {
+    "name": "Big Instrumental Hits 2010",
+    "id": "MPREb_4QJTGDjc9Ns"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "s1uEBxV9wgg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:37",
+   "year": null,
+   "artists": [
+    {
+     "name": "Top Of The Charts Music Crew",
+     "id": "UCq7aci8qIBMd87U_Bc_iQjg"
+    }
+   ],
+   "duration_seconds": 277,
+   "views": "217K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/uaP5O0laoS0gFzRoPlIGtrcYey06cQ8c2F4gikNNZetAKNboOrl3Tc6SouMZTh9cICKsEBYNdlQe5M59=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/uaP5O0laoS0gFzRoPlIGtrcYey06cQ8c2F4gikNNZetAKNboOrl3Tc6SouMZTh9cICKsEBYNdlQe5M59=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Run This Town",
+   "album": {
+    "name": "Mud and Mascara",
+    "id": "MPREb_XoNF2CxNRRR"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "yoHZEzBqZTs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:00",
+   "year": null,
+   "artists": [
+    {
+     "name": "Steeletown Girls",
+     "id": "UCm8FRJ7ArnPXGfFMpdGcsUA"
+    }
+   ],
+   "duration_seconds": 240,
+   "views": "88",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/cNSdHbtKo1Rf8Y73E8X_Iiuk1hhdMKAM7UoKdjfyZxzbEttsTQBBUpwmQIGGmeneuAGYE3S3iKqemeRpww=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/cNSdHbtKo1Rf8Y73E8X_Iiuk1hhdMKAM7UoKdjfyZxzbEttsTQBBUpwmQIGGmeneuAGYE3S3iKqemeRpww=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Run This Town (as made famous by Jay Z & Rihanna)",
+   "album": {
+    "name": "Essential Hits Now!",
+    "id": "MPREb_IOhahnux6dx"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "k0GG4qW4JmM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:37",
+   "year": null,
+   "artists": [
+    {
+     "name": "Future Hitmakers",
+     "id": "UCsaKcP4-Qgja9-RbXCcPjkg"
+    }
+   ],
+   "duration_seconds": 277,
+   "views": "160K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/QpRaLrpmd_bTIaQdKp2NyCzUTn4gPYNgzBnWCFEE7O1CRX9t_pIe1g__abagVvOVObPMquq4zbv9941G=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/QpRaLrpmd_bTIaQdKp2NyCzUTn4gPYNgzBnWCFEE7O1CRX9t_pIe1g__abagVvOVObPMquq4zbv9941G=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

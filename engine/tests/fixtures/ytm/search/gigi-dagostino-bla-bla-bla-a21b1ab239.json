@@ -1,0 +1,770 @@
+{
+ "kind": "search",
+ "key": "gigi dagostino bla bla bla",
+ "request": "Gigi D'Agostino Bla Bla Bla",
+ "recorded_at": "2026-09-29T02:37:03Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bla Bla Bla",
+   "album": {
+    "name": "L'Amour Toujours",
+    "id": "MPREb_4VWh3Y2ye1H"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "r9F2FrmnUdk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:16",
+   "year": null,
+   "artists": [
+    {
+     "name": "Gigi D'Agostino",
+     "id": "UC5L_iVFnJTeEbXkMZYKbu4A"
+    }
+   ],
+   "duration_seconds": 256,
+   "views": "406M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Vd5bc5eB2QtLdOycTwJaFm_pa37BTv8VB1kQid8KqWOXV74lWe2HKte3A8hPTTzUmp_WB2BK2QA18Dfu=w60-h60-s-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Vd5bc5eB2QtLdOycTwJaFm_pa37BTv8VB1kQid8KqWOXV74lWe2HKte3A8hPTTzUmp_WB2BK2QA18Dfu=w120-h120-s-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "BlaBlaBla (Radio Edit)",
+   "album": {
+    "name": "BlaBlaBla",
+    "id": "MPREb_4i3HLiC1kCI"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "PUW97F7Yl-0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:48",
+   "year": null,
+   "artists": [
+    {
+     "name": "Blr",
+     "id": "UCZ5aCwvxlmNH0dqOkTOm4tQ"
+    }
+   ],
+   "duration_seconds": 228,
+   "views": "3.4M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/XGdcvBevHfXumqUzUxX5Otw46m30ssOa1xs50ZFVrZUJ3lNLHmV0Y6Lxjv_X5_WEkooAc8vZVwGzGnIj=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/XGdcvBevHfXumqUzUxX5Otw46m30ssOa1xs50ZFVrZUJ3lNLHmV0Y6Lxjv_X5_WEkooAc8vZVwGzGnIj=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bla Bla Bla",
+   "album": {
+    "name": "The Essential Gigi D'Agostino",
+    "id": "MPREb_IWFMAhpOZko"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Af0aEHxveW0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:17",
+   "year": null,
+   "artists": [
+    {
+     "name": "Gigi D'Agostino",
+     "id": "UC5L_iVFnJTeEbXkMZYKbu4A"
+    }
+   ],
+   "duration_seconds": 257,
+   "views": "406M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/mvZHRcg-zyMfZ0cnBx3o5JMvTdMr-71gGjVnUrTvug_1UfM_SXCq3bPsy8eBWUJ9N7iEGgNzC6YoZxLh=w60-h60-s-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/mvZHRcg-zyMfZ0cnBx3o5JMvTdMr-71gGjVnUrTvug_1UfM_SXCq3bPsy8eBWUJ9N7iEGgNzC6YoZxLh=w120-h120-s-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Lo Sbaglio(Orgoglio Mix)",
+   "album": {
+    "name": "Lento Violento...e altre storie",
+    "id": "MPREb_RZYwkhFBG3h"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "4vFbWiSo8As",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:49",
+   "year": null,
+   "artists": [
+    {
+     "name": "Gigi D'Agostino",
+     "id": "UC5L_iVFnJTeEbXkMZYKbu4A"
+    }
+   ],
+   "duration_seconds": 229,
+   "views": "10M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/vQeMrfl-WS9qj6xvd_Gdhr1UXEcWlfR-A1WTU4gYJaxGskpj9Ra0oq7Hv-0S-V6EEDqV6BPpwWkE6R6tSA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/vQeMrfl-WS9qj6xvd_Gdhr1UXEcWlfR-A1WTU4gYJaxGskpj9Ra0oq7Hv-0S-V6EEDqV6BPpwWkE6R6tSA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bla Bla Bla (Remix 2)",
+   "album": {
+    "name": "Bla Bla Bla (Remix 2)",
+    "id": "MPREb_zmZUJMcZupL"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "uTazoFDe0HY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:26",
+   "year": null,
+   "artists": [
+    {
+     "name": "Lukão DuFlow",
+     "id": "UCQlTDjvWoaJjrEJ-yLVkyow"
+    }
+   ],
+   "duration_seconds": 206,
+   "views": "9.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/TdHfuVjw7D2knjRtmZhZH7SD_fbY1UyKpnUbnezdHaJbI4GTekbZj0QY7cWrv6wlg2b9qFvvDqonIySu=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/TdHfuVjw7D2knjRtmZhZH7SD_fbY1UyKpnUbnezdHaJbI4GTekbZj0QY7cWrv6wlg2b9qFvvDqonIySu=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bla Bla Bla (Stev Dive Club Mix 126 Bpm)",
+   "album": {
+    "name": "Power Cycling: 45 Minutes Mixed For Fitness & Workout",
+    "id": "MPREb_SDwq5lMQQF0"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "uIyV65Is7ds",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:23",
+   "year": null,
+   "artists": [
+    {
+     "name": "DJ Blackstone",
+     "id": "UCJZ2KM_T7ss-DOn_Kl1sdyw"
+    },
+    {
+     "name": "Stev Dive",
+     "id": "UC2XN2IPU_-REmpyPNbhSr4A"
+    }
+   ],
+   "duration_seconds": 323,
+   "views": "4.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ZKJ58Ee--QTyZj0Y-mV_-wTWdnjWnitNhG5oWP7iBBujoaYli7H6cWdk28FIf-j1eXKx5lSdWA9c-HUp=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ZKJ58Ee--QTyZj0Y-mV_-wTWdnjWnitNhG5oWP7iBBujoaYli7H6cWdk28FIf-j1eXKx5lSdWA9c-HUp=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bla Bla Bla (Remix)",
+   "album": {
+    "name": "Bla Bla Bla (Remix)",
+    "id": "MPREb_kUZMBY3qiUF"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "SgNdZSSssX8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:45",
+   "year": null,
+   "artists": [
+    {
+     "name": "Lukão DuFlow",
+     "id": "UCQlTDjvWoaJjrEJ-yLVkyow"
+    }
+   ],
+   "duration_seconds": 165,
+   "views": "12K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/s4BCH0pyw0S2__zFfg13PaNeiIYReFUL60zpKX07XjDoSOLMt29Wfbfd5_5luxBtCIW_C7vb-QykSN3Efw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/s4BCH0pyw0S2__zFfg13PaNeiIYReFUL60zpKX07XjDoSOLMt29Wfbfd5_5luxBtCIW_C7vb-QykSN3Efw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Blah Blah Blah (Bassjackers Remix)",
+   "album": {
+    "name": "Blah Blah Blah (Remixes)",
+    "id": "MPREb_0ArtQSeVxVq"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "7O7mw3SRz_Y",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:17",
+   "year": null,
+   "artists": [
+    {
+     "name": "Armin van Buuren",
+     "id": "UCAeLFBCQS7FvI8PvBrWvSBg"
+    }
+   ],
+   "duration_seconds": 197,
+   "views": "20M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/qUJ3hdajmPVdVzbyoVJKFQv1w3rssVOFGgs-YCtvX1ZaRNDjys3iwlVIGYCklUWUHaTLoolGQal6-6T5=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/qUJ3hdajmPVdVzbyoVJKFQv1w3rssVOFGgs-YCtvX1ZaRNDjys3iwlVIGYCklUWUHaTLoolGQal6-6T5=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bla Bla Bla",
+   "album": {
+    "name": "A Sky Full of Stars",
+    "id": "MPREb_NC3LkOu72nj"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "EX0IP4u4t2M",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:01",
+   "year": null,
+   "artists": [
+    {
+     "name": "Gabriel Bone",
+     "id": "UCytKB4-YkmB7-YHaETOcDDQ"
+    }
+   ],
+   "duration_seconds": 241,
+   "views": "1.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/yog_lNC-jdDXbxu-MxzB5RntfAsRoiRDN3P4pZyYOQ6CnSYnzFLrqruyXd9mxjeea2Y0R0VEH4iKZEI=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/yog_lNC-jdDXbxu-MxzB5RntfAsRoiRDN3P4pZyYOQ6CnSYnzFLrqruyXd9mxjeea2Y0R0VEH4iKZEI=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bla Bla Bla (Electro Bass)",
+   "album": {
+    "name": "Bla Bla Bla (Electro Bass)",
+    "id": "MPREb_Wvp4PoBrM6p"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "kSeFFYqiDmc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:26",
+   "year": null,
+   "artists": [
+    {
+     "name": "Lukão DuFlow",
+     "id": "UCQlTDjvWoaJjrEJ-yLVkyow"
+    },
+    {
+     "name": "El Padrino",
+     "id": "UCSXWxk5mafteGIuqhlS-h0Q"
+    },
+    {
+     "name": "Mr. Noise",
+     "id": "UCcvySzv8Ov8nGgLempwZeHQ"
+    }
+   ],
+   "duration_seconds": 86,
+   "views": "1.5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/pbhzEbuk0ymDP1GzuylSPtDV_goDy3s3Y9VnAVLiXVhN3Cp9yzML2J7sBaaToFTR0DLNeyn8sL3oyetU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/pbhzEbuk0ymDP1GzuylSPtDV_goDy3s3Y9VnAVLiXVhN3Cp9yzML2J7sBaaToFTR0DLNeyn8sL3oyetU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "BLABLABLA",
+   "album": {
+    "name": "BLABLABLA",
+    "id": "MPREb_qNrPk9iKJup"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "O-1fzJejN4c",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:04",
+   "year": null,
+   "artists": [
+    {
+     "name": "OVENBERG",
+     "id": null
+    }
+   ],
+   "duration_seconds": 184,
+   "views": "856",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/pR3OCFFnSDrbRwBdGqiTQPDbILq5hnX4OmrNgZ-fYXXyZUD2nAwKapTF-X8MlUW1shCGCpb_NgxI-fk=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/pR3OCFFnSDrbRwBdGqiTQPDbILq5hnX4OmrNgZ-fYXXyZUD2nAwKapTF-X8MlUW1shCGCpb_NgxI-fk=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bla Bla Bla",
+   "album": {
+    "name": "Bla Bla Bla",
+    "id": "MPREb_Ftm5kHJfaUR"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "4LYqkyeDQ9k",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "Lukão DuFlow",
+     "id": "UCQlTDjvWoaJjrEJ-yLVkyow"
+    },
+    {
+     "name": "El Padrino",
+     "id": "UCSXWxk5mafteGIuqhlS-h0Q"
+    },
+    {
+     "name": "Mr. Noise",
+     "id": "UCcvySzv8Ov8nGgLempwZeHQ"
+    }
+   ],
+   "duration_seconds": 85,
+   "views": "2.8K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/WVVD0alxtnmL_XX3nF06q8bkDoj8OvSr358JvC2legBT2MO147jgBOXlC3YU1Dd1XUDh3GF81FxX1Y9h=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/WVVD0alxtnmL_XX3nF06q8bkDoj8OvSr358JvC2legBT2MO147jgBOXlC3YU1Dd1XUDh3GF81FxX1Y9h=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bla Bla Bla(Dark Mix)",
+   "album": {
+    "name": "L'Amour Toujours",
+    "id": "MPREb_4VWh3Y2ye1H"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "xevpQH3ykP8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:40",
+   "year": null,
+   "artists": [
+    {
+     "name": "Gigi D'Agostino",
+     "id": "UC5L_iVFnJTeEbXkMZYKbu4A"
+    }
+   ],
+   "duration_seconds": 340,
+   "views": "1.9M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Vd5bc5eB2QtLdOycTwJaFm_pa37BTv8VB1kQid8KqWOXV74lWe2HKte3A8hPTTzUmp_WB2BK2QA18Dfu=w60-h60-s-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Vd5bc5eB2QtLdOycTwJaFm_pa37BTv8VB1kQid8KqWOXV74lWe2HKte3A8hPTTzUmp_WB2BK2QA18Dfu=w120-h120-s-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "bla bla bla (feat. ABIBU & YOUNG RISIKO)",
+   "album": {
+    "name": "2 Tracks",
+    "id": "MPREb_OQA5yTgqhkY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ui7lk8rwNjY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:49",
+   "year": null,
+   "artists": [
+    {
+     "name": "Gaara",
+     "id": "UCbjsG8JKq-uCzyCKf_6FL2Q"
+    }
+   ],
+   "duration_seconds": 109,
+   "views": "60",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/PcSWuAA0iQ8DP-odY4EGOCGOq0tYMgz-XD3YLg8qrC2MNB969GW6MJch8w3UDUt5wTPgmOBl61S9vEfI=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/PcSWuAA0iQ8DP-odY4EGOCGOq0tYMgz-XD3YLg8qrC2MNB969GW6MJch8w3UDUt5wTPgmOBl61S9vEfI=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "BlaBlaBla",
+   "album": {
+    "name": "BlaBlaBla",
+    "id": "MPREb_TPqq1x0xyoh"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "kjGjvRBUTSQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:53",
+   "year": null,
+   "artists": [
+    {
+     "name": "Nikki Ninja",
+     "id": "UCEVJtfu2VkeeMS9DAtiTKEw"
+    }
+   ],
+   "duration_seconds": 173,
+   "views": "1.9K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/G0d-CXvbeuigrd9WLcZ-H0Wgd28DjjHdkYjUylhoh-6_XuXWCBRoyMHS6tDkLMB3t86afHyL6W5-_C27=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/G0d-CXvbeuigrd9WLcZ-H0Wgd28DjjHdkYjUylhoh-6_XuXWCBRoyMHS6tDkLMB3t86afHyL6W5-_C27=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bla Bla Bla",
+   "album": {
+    "name": "Bla Bla Bla",
+    "id": "MPREb_IUomM8yqZ8n"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "MZI1iK9gGQQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:05",
+   "year": null,
+   "artists": [
+    {
+     "name": "Zackfly",
+     "id": "UCNzl7oWIxkW-w4BAvodFchg"
+    }
+   ],
+   "duration_seconds": 125,
+   "views": "11K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/9ZwYiBwRFrW1qVOJNPs0-593JlrKnsQW4PZTRaZEoLQ0gN1lkLy8_viyt0_jGMQX3pFP4km63XrGC7k=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/9ZwYiBwRFrW1qVOJNPs0-593JlrKnsQW4PZTRaZEoLQ0gN1lkLy8_viyt0_jGMQX3pFP4km63XrGC7k=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bla Bla Bla (Hypertechno)",
+   "album": {
+    "name": "Bla Bla Bla",
+    "id": "MPREb_zI2WNhAvHDv"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "-zZJ_VkC4pA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Vex Woven",
+     "id": "UCX_TPM6cc9VRPA5_rFoX9Ig"
+    }
+   ],
+   "duration_seconds": 230,
+   "views": "1.6K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/I0VItqJ-M8OrKuO5g3N9LYrRXndcsDxdc-PJ9XaWpyEuyU89poYTTEr2tMOxEUSMAfNVuha546yhNFMHzg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/I0VItqJ-M8OrKuO5g3N9LYrRXndcsDxdc-PJ9XaWpyEuyU89poYTTEr2tMOxEUSMAfNVuha546yhNFMHzg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bla Bla Bla",
+   "album": {
+    "name": "Black & White lll",
+    "id": "MPREb_1VoMmmGWQmO"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "OVwN-K7BGvg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "1:14",
+   "year": null,
+   "artists": [
+    {
+     "name": "Nautylus",
+     "id": "UCFRUz6y9qur2qa6VNWIcLmg"
+    }
+   ],
+   "duration_seconds": 74,
+   "views": "288",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Sn_YxWQwxyJqfFyaz0DW5WoFR73b7V1kx7WVKlSX4qzPYGeUakhXVjxsvffhKPkODlJ2fa8spHv-0cdH=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Sn_YxWQwxyJqfFyaz0DW5WoFR73b7V1kx7WVKlSX4qzPYGeUakhXVjxsvffhKPkODlJ2fa8spHv-0cdH=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bla Bla Bla (feat. Fui.Joven)",
+   "album": {
+    "name": "Bla Bla Bla",
+    "id": "MPREb_oymCksytDrb"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "QFahcHA1i1o",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "LOGUTOV",
+     "id": "UCs2HTGQgcRvtV9-s7U3F7pQ"
+    }
+   ],
+   "duration_seconds": 150,
+   "views": "179",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/oGLFPE1F-9QnxUr2ExyRIlyUwrIRihAzhfI7LGApo5_V7i7_VXx60wjWoV5_ZzfcMjIUkOwuHf_v9orW=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/oGLFPE1F-9QnxUr2ExyRIlyUwrIRihAzhfI7LGApo5_V7i7_VXx60wjWoV5_ZzfcMjIUkOwuHf_v9orW=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bla Bla Bla",
+   "album": {
+    "name": "Rave on Snow Compilation, Vol.15",
+    "id": "MPREb_fKAdpc0qR8E"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Pu3RZlmzdxY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "LUCIANO",
+     "id": "UCfnr8vDVQNCfYDa5sUfIcVg"
+    }
+   ],
+   "duration_seconds": 205,
+   "views": "567",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/7tRNxGZSZ0If6UnntN-2Fih5yRMpxyx_GdUfmlyInb1zTwHZPmdZPKQY-jjZq85mdDRhtFzaxerAdss=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/7tRNxGZSZ0If6UnntN-2Fih5yRMpxyx_GdUfmlyInb1zTwHZPmdZPKQY-jjZq85mdDRhtFzaxerAdss=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

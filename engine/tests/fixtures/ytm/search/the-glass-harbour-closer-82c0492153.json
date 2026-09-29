@@ -1,0 +1,762 @@
+{
+ "kind": "search",
+ "key": "the glass harbour closer",
+ "request": "The Glass Harbour Closer",
+ "recorded_at": "2026-09-29T02:37:10Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Closer",
+   "album": {
+    "name": "The Secret Place",
+    "id": "MPREb_HrjkzQsKdvX"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "AR07EVptx4s",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "8:24",
+   "year": null,
+   "artists": [
+    {
+     "name": "Harborside Music",
+     "id": "UCGz9FDQZIiwgdrbIld3Y6zA"
+    }
+   ],
+   "duration_seconds": 504,
+   "views": "129K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/mkqx6VCXBi0kcGCHHmxuhn3Mo-ahqR7dkwUBdPv5u0ZTu7p5taBhgIRHIpKCeVwcdqVPlZ0FbPCtwlIR=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/mkqx6VCXBi0kcGCHHmxuhn3Mo-ahqR7dkwUBdPv5u0ZTu7p5taBhgIRHIpKCeVwcdqVPlZ0FbPCtwlIR=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Taylor Port Junkie (feat. Lil Yachty)",
+   "album": {
+    "name": "Been One",
+    "id": "MPREb_sSIWsrtNUqN"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "nRifwv1yJeE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:29",
+   "year": null,
+   "artists": [
+    {
+     "name": "Rylo Rodriguez",
+     "id": "UCNa3AxvfpqEePnCpVggILtg"
+    }
+   ],
+   "duration_seconds": 209,
+   "views": "36M",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/cDfUpRifv3qRfe4Khj7VT0VFdG3_NliJ7flMWjiQhQB9RyE7cTq_RGJfUrMbW7KsUGboSvd58KVuJOYB=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/cDfUpRifv3qRfe4Khj7VT0VFdG3_NliJ7flMWjiQhQB9RyE7cTq_RGJfUrMbW7KsUGboSvd58KVuJOYB=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Closer Window",
+   "album": {
+    "name": "Faithful Wish (Alternate Take)",
+    "id": "MPREb_kiQmGn19y71"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "-76rvA6Ema8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:40",
+   "year": null,
+   "artists": [
+    {
+     "name": "Clara Moss",
+     "id": "UC4-3j2vbLUZxxv0oP5e99uw"
+    }
+   ],
+   "duration_seconds": 160,
+   "views": "0",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/5gvpaaCRFhjOwl_B7_sPseVTNHY7g_i7-ARAK9GlfROwIpMfx6SCqyat9l-IKKEqx-qtCzLbMFlc0tPgtg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/5gvpaaCRFhjOwl_B7_sPseVTNHY7g_i7-ARAK9GlfROwIpMfx6SCqyat9l-IKKEqx-qtCzLbMFlc0tPgtg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Pulling Teeth",
+   "album": {
+    "name": "Nothing Stays the Same",
+    "id": "MPREb_18AuCuQdOW4"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Qg0PtXaNXo0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "Harbours",
+     "id": "UCmzL01zch1hfuV0MFAxxLlw"
+    }
+   ],
+   "duration_seconds": 145,
+   "views": "1.5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/NS2MKo7I_6fIDdZkEoAfu1ID3sjhCkEuSi05C8mbcXGS-GiQ4K0dUx6EJ9QCyxVeTNcRzI7Lwc-QujKb=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/NS2MKo7I_6fIDdZkEoAfu1ID3sjhCkEuSi05C8mbcXGS-GiQ4K0dUx6EJ9QCyxVeTNcRzI7Lwc-QujKb=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Glass Harbor",
+   "album": {
+    "name": "Glass Harbor",
+    "id": "MPREb_nk2DeXuUVvK"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "uXq339xw9-I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:15",
+   "year": null,
+   "artists": [
+    {
+     "name": "TheWorldOfKrish",
+     "id": "UCETzPF9HJcqMHOmknNwB_Sw"
+    }
+   ],
+   "duration_seconds": 195,
+   "views": "6",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/18NoyuBH4GntE_CEEezZs54P2PdJdKA546JXAQ2wX_1ZA4vBGiIhg67_WzLeNx27Y8dG9_0YaWLJSkNEHQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/18NoyuBH4GntE_CEEezZs54P2PdJdKA546JXAQ2wX_1ZA4vBGiIhg67_WzLeNx27Y8dG9_0YaWLJSkNEHQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Glasshouse (feat. Julia Church)",
+   "album": {
+    "name": "Cold Enough For Snow",
+    "id": "MPREb_c1fqM984f6K"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "aXDLnwGXWSg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:12",
+   "year": null,
+   "artists": [
+    {
+     "name": "Tinlicker",
+     "id": "UCK3eSB48zl-wIT0wODaGMtA"
+    },
+    {
+     "name": "Julia Church",
+     "id": "UC00VY8uUL9RlACXDLgOqj6Q"
+    }
+   ],
+   "duration_seconds": 252,
+   "views": "676K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/NYztrjTGIK9fpl8Fn_uD9MQmBGdtg58Ct0bqmXBCTHHQcKXjlm8sB9UnXyzkR7fshSB86oev323nslGb=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/NYztrjTGIK9fpl8Fn_uD9MQmBGdtg58Ct0bqmXBCTHHQcKXjlm8sB9UnXyzkR7fshSB86oev323nslGb=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You, Clearly",
+   "album": {
+    "name": "After the Signal",
+    "id": "MPREb_LXFlGAuqTxD"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "rzeRvxteTMc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Harbour Lights",
+     "id": "UC-fhD_YN59USCyIOnTnzTyw"
+    }
+   ],
+   "duration_seconds": 230,
+   "views": "1",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/fEvvaeUxKwga3tY4A5OojxD-Y8IEVCyJEU_4qnm_qrAZ1o57Xo8LEAImt0teJD_S1Y18yVRcuwicLGsf=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/fEvvaeUxKwga3tY4A5OojxD-Y8IEVCyJEU_4qnm_qrAZ1o57Xo8LEAImt0teJD_S1Y18yVRcuwicLGsf=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Fish Tank",
+   "album": {
+    "name": "To Chase My Dreams, or to Just Lie Down?",
+    "id": "MPREb_1zVi9SXdC35"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "9GUrX0F95Zk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:42",
+   "year": null,
+   "artists": [
+    {
+     "name": "HARBOUR",
+     "id": "UCn-vUwYBBOZv_d4dSHuG-Lw"
+    }
+   ],
+   "duration_seconds": 222,
+   "views": "54K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/3p65NhhEsbtA9qNgLSYSbWOWDL4ZFYP_3WJv6NyzBsKG-dUkyEdbvSEtm2uGykPup_QWCA5xmWr8Ge8o=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/3p65NhhEsbtA9qNgLSYSbWOWDL4ZFYP_3WJv6NyzBsKG-dUkyEdbvSEtm2uGykPup_QWCA5xmWr8Ge8o=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Flicker and Fade",
+   "album": {
+    "name": "Flicker and Fade",
+    "id": "MPREb_oCs9gzeFO2P"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "mn1L3KmJVUw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:08",
+   "year": null,
+   "artists": [
+    {
+     "name": "Harbours",
+     "id": "UCmzL01zch1hfuV0MFAxxLlw"
+    }
+   ],
+   "duration_seconds": 188,
+   "views": "1.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/jjHEY7YxG9teooR8HY2i45JwzfTUA_68_GqHuwlmaGJraKpI-P60FNfSYiqzJi52X45oEfldT7k6gevy=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/jjHEY7YxG9teooR8HY2i45JwzfTUA_68_GqHuwlmaGJraKpI-P60FNfSYiqzJi52X45oEfldT7k6gevy=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Upper Harbour Highway",
+   "album": {
+    "name": "Upper Harbour Highway",
+    "id": "MPREb_tArIFgM13DS"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "VK_Kt7sTEwY",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:08",
+   "year": null,
+   "artists": [
+    {
+     "name": "Sci-Clone",
+     "id": "UCaEuNnppYye8VYF3CNCBB5A"
+    },
+    {
+     "name": "A Sides",
+     "id": "UC8IibVbvFKQUi8e_JpXt1vw"
+    },
+    {
+     "name": "Nathan Haines",
+     "id": "UCMgQV6lZhsWmeQP7dNpgzpg"
+    }
+   ],
+   "duration_seconds": 368,
+   "views": "11K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/ME59W9wi89tVMYcJ3vADj5sGNdr31Ed-jZQ74bA-xgoEb8vDnohrjLABF8tLheww4xbksMulm9Z5Mp78=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/ME59W9wi89tVMYcJ3vADj5sGNdr31Ed-jZQ74bA-xgoEb8vDnohrjLABF8tLheww4xbksMulm9Z5Mp78=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Closer",
+   "album": {
+    "name": "The Corner of Miles and Gil",
+    "id": "MPREb_a4KvhwStzU8"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Vhtx9nQbYQU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:23",
+   "year": null,
+   "artists": [
+    {
+     "name": "Shack",
+     "id": "UCIwcAdtjKJOMg57bOfkf6jA"
+    }
+   ],
+   "duration_seconds": 323,
+   "views": "16K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/f7AgayUdsMlQwD3uIvFOXpUBG-8bmFFVwbw3083l7Phlqusn3Tj2yKXdf1TTaRDFlBhFQ0TlNn3iXUE=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/f7AgayUdsMlQwD3uIvFOXpUBG-8bmFFVwbw3083l7Phlqusn3Tj2yKXdf1TTaRDFlBhFQ0TlNn3iXUE=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "A Glass of Your Love Harmony",
+   "album": {
+    "name": "A Glass of Your Love Harmony",
+    "id": "MPREb_vV6uf4945fO"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "tySm12zXqLo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:33",
+   "year": null,
+   "artists": [
+    {
+     "name": "Glass Harbor",
+     "id": "UCrPx8GTlEkhlomYENoU8EJQ"
+    }
+   ],
+   "duration_seconds": 153,
+   "views": "192",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/a-gDi0RaiqLgZg5TKlC7Qy9GffUnW4L4iPqbvEDNrVuHTm_gOmpL19PoWoupKpbK7b3Q7qedBF53uF2J=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/a-gDi0RaiqLgZg5TKlC7Qy9GffUnW4L4iPqbvEDNrVuHTm_gOmpL19PoWoupKpbK7b3Q7qedBF53uF2J=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Glass Harbor",
+   "album": {
+    "name": "Mind Garden",
+    "id": "MPREb_uqXyHbSKHs9"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "JZzymTnMkCo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Nova Music",
+     "id": "UCxA6YCBrGU0avKBCYczHj4w"
+    }
+   ],
+   "duration_seconds": 290,
+   "views": "2",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/2hnPtm7Q4s8EcSlHLroVuMB3b5hlHwXxzs5bdxlQ_Mtx3E2aaoNTbZdpcgX2IKAMao6ROOCtjwZnVx2gaA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/2hnPtm7Q4s8EcSlHLroVuMB3b5hlHwXxzs5bdxlQ_Mtx3E2aaoNTbZdpcgX2IKAMao6ROOCtjwZnVx2gaA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Brandy (You're a Fine Girl)",
+   "album": {
+    "name": "Looking Glass",
+    "id": "MPREb_z7MGlsC1ZSV"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "CFhFyvk0yS8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:07",
+   "year": null,
+   "artists": [
+    {
+     "name": "Looking Glass",
+     "id": "UCOTcQa8A7UjOQkowuTlbG2g"
+    }
+   ],
+   "duration_seconds": 187,
+   "views": "169M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/MNe2Lg6zoJfBjXv9SoyZgntSMJoNxQIeNIPrgIgmoyo645Q69thragvQJo1UJPvg7E47asPNVG7dGTYwGw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/MNe2Lg6zoJfBjXv9SoyZgntSMJoNxQIeNIPrgIgmoyo645Q69thragvQJo1UJPvg7E47asPNVG7dGTYwGw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Very Neutral Harbour Ambience with Ship Passes",
+   "album": {
+    "name": "Ship and Ferry Sound Effects",
+    "id": "MPREb_jSuhOTk4cgH"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "AFYWwB9kEio",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "Digiffects Sound Effects Library",
+     "id": "UCv0x_0g7WRqcH3--jSeAq4A"
+    }
+   ],
+   "duration_seconds": 352,
+   "views": "64",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/dGA8-OCI2fo98NnFk33YVf2bDCwsvtEFHqpGHHyNFak-vY9UHcEvd3lE5Kuus7W1Uexsssh-vfIHyOk=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/dGA8-OCI2fo98NnFk33YVf2bDCwsvtEFHqpGHHyNFak-vY9UHcEvd3lE5Kuus7W1Uexsssh-vfIHyOk=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Cold Harbour",
+   "album": {
+    "name": "Stepdub / Cold Harbour",
+    "id": "MPREb_4FVwupjekkR"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "wj7kis7Ep8s",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:40",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Insiders",
+     "id": "UCaPlTP9a5TmBVJkTWen0k5w"
+    }
+   ],
+   "duration_seconds": 340,
+   "views": "177",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/iHhiiN654IvmdaG4c03KO7Rgb09HrWIP0jeSRAoHMCjR4ntrUwYLiFdUhOK6uT_n0I49AU3CcqQfuHLhhQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/iHhiiN654IvmdaG4c03KO7Rgb09HrWIP0jeSRAoHMCjR4ntrUwYLiFdUhOK6uT_n0I49AU3CcqQfuHLhhQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "City Harbour Ambience with Cranes Loading",
+   "album": {
+    "name": "Ship and Ferry Sound Effects",
+    "id": "MPREb_jSuhOTk4cgH"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ZIJQrKNevTQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:31",
+   "year": null,
+   "artists": [
+    {
+     "name": "Digiffects Sound Effects Library",
+     "id": "UCv0x_0g7WRqcH3--jSeAq4A"
+    }
+   ],
+   "duration_seconds": 151,
+   "views": "96",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/dGA8-OCI2fo98NnFk33YVf2bDCwsvtEFHqpGHHyNFak-vY9UHcEvd3lE5Kuus7W1Uexsssh-vfIHyOk=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/dGA8-OCI2fo98NnFk33YVf2bDCwsvtEFHqpGHHyNFak-vY9UHcEvd3lE5Kuus7W1Uexsssh-vfIHyOk=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Medium Distant Harbour Ambience with Cranes and Heavy Equipment",
+   "album": {
+    "name": "Ship and Ferry Sound Effects",
+    "id": "MPREb_jSuhOTk4cgH"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "YgIj-ssN5JA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "Digiffects Sound Effects Library",
+     "id": "UCv0x_0g7WRqcH3--jSeAq4A"
+    }
+   ],
+   "duration_seconds": 145,
+   "views": "65",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/dGA8-OCI2fo98NnFk33YVf2bDCwsvtEFHqpGHHyNFak-vY9UHcEvd3lE5Kuus7W1Uexsssh-vfIHyOk=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/dGA8-OCI2fo98NnFk33YVf2bDCwsvtEFHqpGHHyNFak-vY9UHcEvd3lE5Kuus7W1Uexsssh-vfIHyOk=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "The Past Is Past",
+   "album": {
+    "name": "Anthology, Vol. 2 (2011-2020)",
+    "id": "MPREb_yoYk0XWMmO5"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "_EKOQefLMC0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "9:57",
+   "year": null,
+   "artists": [
+    {
+     "name": "Glass Hammer",
+     "id": "UCRxbl77tbPZCZ89avjXvfjw"
+    }
+   ],
+   "duration_seconds": 597,
+   "views": "898",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/fn8ZXIMWGYHK4kl5QF4Z8yekta_waU8-J9h7Io4vQqOZZFixuc_2mIgINVS50iWF35h76qOczt0DTS_aMQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/fn8ZXIMWGYHK4kl5QF4Z8yekta_waU8-J9h7Io4vQqOZZFixuc_2mIgINVS50iWF35h76qOczt0DTS_aMQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Depth Charge",
+   "album": {
+    "name": "Ctrl Alt Reality",
+    "id": "MPREb_ffJvyEAFeWf"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "i9cp_ydwamI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:34",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Glitch Mob",
+     "id": "UCM1FCOiyAasueBx7hyq-71w"
+    }
+   ],
+   "duration_seconds": 394,
+   "views": "112K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/dJzvHavf1XR3eW1SDTQ0YQ3dnoagE4z6uTuIN5X6WRNAs546v6OyJFzP3Peqi19IbnWSD1hiJKBH9kfn=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/dJzvHavf1XR3eW1SDTQ0YQ3dnoagE4z6uTuIN5X6WRNAs546v6OyJFzP3Peqi19IbnWSD1hiJKBH9kfn=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

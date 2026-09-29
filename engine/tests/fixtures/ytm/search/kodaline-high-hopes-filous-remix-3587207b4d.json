@@ -1,0 +1,758 @@
+{
+ "kind": "search",
+ "key": "kodaline high hopes filous remix",
+ "request": "Kodaline High Hopes filous remix",
+ "recorded_at": "2026-09-29T02:37:15Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes (filous Remix)",
+   "album": {
+    "name": "Coming Up For Air (Live and Remixed)",
+    "id": "MPREb_C0fATbCH9XE"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "hFKFm-rjnEc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:43",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kodaline",
+     "id": "UC0cymQddFci7e31o7EIznYw"
+    }
+   ],
+   "duration_seconds": 283,
+   "views": "26M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/k0A6eRnD_63Wihcy67j7hl3VrfMbHsF36VWwfEK77PgJKblz1YFP2bwB60fF2u1YqK0YG3DqGslNDmQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/k0A6eRnD_63Wihcy67j7hl3VrfMbHsF36VWwfEK77PgJKblz1YFP2bwB60fF2u1YqK0YG3DqGslNDmQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "90S Hits Playlist for Running",
+    "id": "MPREb_F0cPlA3hcPP"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "HfGNcbufhOM",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:12",
+   "year": null,
+   "artists": [
+    {
+     "name": "Manic Jam",
+     "id": null
+    }
+   ],
+   "duration_seconds": 312,
+   "views": "38K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/zMY7wkDN853FMLLLjuMXGjNxmPstyF9lSxhr6Di_EcuvrDKKB2Ou5F1ePZeVAZ3OUJl7s7k1RoAZ5xUB=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/zMY7wkDN853FMLLLjuMXGjNxmPstyF9lSxhr6Di_EcuvrDKKB2Ou5F1ePZeVAZ3OUJl7s7k1RoAZ5xUB=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "Tell Your Mama",
+    "id": "MPREb_vQQUXJvp2Cn"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "r1koFs-L6Y8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:06",
+   "year": null,
+   "artists": [
+    {
+     "name": "The Vespers",
+     "id": null
+    }
+   ],
+   "duration_seconds": 186,
+   "views": "61K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/6l0KYONmdICDI9nRsUbreQERoPJKxVQtZPWRf-SsvSbqmo-9F4oDabjBtBgWUY9HAuhaIuMGYwfNCrM=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/6l0KYONmdICDI9nRsUbreQERoPJKxVQtZPWRf-SsvSbqmo-9F4oDabjBtBgWUY9HAuhaIuMGYwfNCrM=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Honest (Cesare Remix)",
+   "album": {
+    "name": "Coming Up For Air (Live and Remixed)",
+    "id": "MPREb_C0fATbCH9XE"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "IMvP3WWAQn8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:39",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kodaline",
+     "id": "UC0cymQddFci7e31o7EIznYw"
+    }
+   ],
+   "duration_seconds": 219,
+   "views": "10K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/k0A6eRnD_63Wihcy67j7hl3VrfMbHsF36VWwfEK77PgJKblz1YFP2bwB60fF2u1YqK0YG3DqGslNDmQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/k0A6eRnD_63Wihcy67j7hl3VrfMbHsF36VWwfEK77PgJKblz1YFP2bwB60fF2u1YqK0YG3DqGslNDmQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes Original Mix",
+   "album": {
+    "name": "Universal Religion, Vol. 2: The Awakening (Compiled by V Society)",
+    "id": "MPREb_K0VT98voaWG"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "SGjmwaK7M7w",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "8:49",
+   "year": null,
+   "artists": [
+    {
+     "name": "Outsiders,Symbolic",
+     "id": "UCcJJtcU6OEmFV8v8q2lnW1g"
+    }
+   ],
+   "duration_seconds": 529,
+   "views": "364K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/k177xeH-gBNyyqia-QYvFXABnk9SnMkZ0LlHxcdna0OS_yiDkbDeTGSNZSdMRxLVS9mIxsCd1_LDjKA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/k177xeH-gBNyyqia-QYvFXABnk9SnMkZ0LlHxcdna0OS_yiDkbDeTGSNZSdMRxLVS9mIxsCd1_LDjKA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "High Hopes",
+    "id": "MPREb_hABnaf7Cu02"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "snhb4PXiDzQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:17",
+   "year": null,
+   "artists": [
+    {
+     "name": "Avenue",
+     "id": "UC-M2_vszRlXPZjQD5k9w43w"
+    }
+   ],
+   "duration_seconds": 197,
+   "views": "178",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/RFyORUcYCxzlsM0DX9jsH_VcEMyT-nUVl5QoVIslhiWR1A7EIC27XffQ844ZjxhI4ipZ-SpSOYsCuszK=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/RFyORUcYCxzlsM0DX9jsH_VcEMyT-nUVl5QoVIslhiWR1A7EIC27XffQ844ZjxhI4ipZ-SpSOYsCuszK=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Ohio (filous Remix)",
+   "album": {
+    "name": "Ohio (filous Remix)",
+    "id": "MPREb_W9Lt270oa1u"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "-tbs3gYPiSQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:06",
+   "year": null,
+   "artists": [
+    {
+     "name": "Damien Jurado",
+     "id": "UCDNJcazG0tu91CS6uFwVQoA"
+    },
+    {
+     "name": "filous",
+     "id": "UC5WMiuvjshLoZDC4vf0Zk4g"
+    }
+   ],
+   "duration_seconds": 246,
+   "views": "9.8M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/UivIZXINqhwZUcCWU-U42BgaYpkSn3f1A0mFXpDRzsJ7hXQKvdM_1mTyMOGdG-QhPJNsE-_vXJN0wYY=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/UivIZXINqhwZUcCWU-U42BgaYpkSn3f1A0mFXpDRzsJ7hXQKvdM_1mTyMOGdG-QhPJNsE-_vXJN0wYY=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "We Drive",
+    "id": "MPREb_ZLTvkvG8WMb"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "2m8-dz3sguE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:24",
+   "year": null,
+   "artists": [
+    {
+     "name": "Quentin Travade",
+     "id": "UCQmnN_4MFPPmMhsTLXQlZSg"
+    },
+    {
+     "name": "Louis Horhan",
+     "id": "UCW1js_htzlCPsKjOEw0vQsQ"
+    }
+   ],
+   "duration_seconds": 144,
+   "views": "1.3K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/CwBXBX54hR4r2fcOoJW7m8lttsXDM7-tjE_BfXD6pBPE2q4b9Ld3K-IGZxWw-HoS8pCHueYGaPnXId3S=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/CwBXBX54hR4r2fcOoJW7m8lttsXDM7-tjE_BfXD6pBPE2q4b9Ld3K-IGZxWw-HoS8pCHueYGaPnXId3S=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes (Radio Edit)",
+   "album": {
+    "name": "High Hopes",
+    "id": "MPREb_67gzg9rAaBo"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "kk_gfQTYYXs",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:16",
+   "year": null,
+   "artists": [
+    {
+     "name": "Instant Groove",
+     "id": "UCtPwAQo35DTjlj-b7nr7gFA"
+    }
+   ],
+   "duration_seconds": 196,
+   "views": "221",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/7vCA8GaedY2AoRIQH0DPDAQx1k4_sTs04azeDCnMLosNHAacadD9iXSaiEJuH2CElO3AftDYO8Og9sg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/7vCA8GaedY2AoRIQH0DPDAQx1k4_sTs04azeDCnMLosNHAacadD9iXSaiEJuH2CElO3AftDYO8Og9sg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "High Hopes",
+    "id": "MPREb_AXMyeSsbZXA"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "N_twBPSKc3s",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:17",
+   "year": null,
+   "artists": [
+    {
+     "name": "Veserium",
+     "id": "UCiSMiVOMYv4XMbPOQaXzreg"
+    }
+   ],
+   "duration_seconds": 197,
+   "views": "1.7K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/M2myJmQkoCdMjJmEnU3YeBI-cQyM6pSkz6KBTrz7UqekPTLvF3m5Z-g2TPntUNXvxXi1mke86zlaQpGh=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/M2myJmQkoCdMjJmEnU3YeBI-cQyM6pSkz6KBTrz7UqekPTLvF3m5Z-g2TPntUNXvxXi1mke86zlaQpGh=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "High Hopes",
+    "id": "MPREb_QcxUytjnyoT"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "qQzSR9DrcQ8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "Linnea Dale",
+     "id": "UCBoeQLHFRlpE6jBSdFDv7Kg"
+    }
+   ],
+   "duration_seconds": 183,
+   "views": "194K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/fNOpxTsfGShr9_T4VTjQqM8z7h0gkf1M2FviDH78VjLWbwng5MCr4tYtCezyJYRsdx9RxxSFBJXRnV9q8A=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/fNOpxTsfGShr9_T4VTjQqM8z7h0gkf1M2FviDH78VjLWbwng5MCr4tYtCezyJYRsdx9RxxSFBJXRnV9q8A=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Hopes",
+   "album": {
+    "name": "Hopes",
+    "id": "MPREb_SUPFP4XbaQr"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "_0GJMzyIeqQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "Eyght",
+     "id": "UC6BXN__gHlNv6PwOZagdWFQ"
+    }
+   ],
+   "duration_seconds": 210,
+   "views": "2.5K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/LyA0h3lPAcQSDOVPC50UpZ0beqg570IsFqCyyK_S_L7v0CVfmmsfGYNXnQifQGuCXu2YfaPRz9U6LmPcFQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/LyA0h3lPAcQSDOVPC50UpZ0beqg570IsFqCyyK_S_L7v0CVfmmsfGYNXnQifQGuCXu2YfaPRz9U6LmPcFQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "Under The Covers EP",
+    "id": "MPREb_2PcY2U8azdE"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "l2H6UWn-n8E",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:21",
+   "year": null,
+   "artists": [
+    {
+     "name": "Rob IYF",
+     "id": "UCAgOFbDEjU7hNKB4d40dXsQ"
+    }
+   ],
+   "duration_seconds": 321,
+   "views": "1.9K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/1lwM4QWDAY-XUYEOeqOUmiw9b7p8BmGU5vjoSQTxzPJIGVgqFDYjI6hOHUIXq3I52lHmbwEcVyl9FBTI3g=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/1lwM4QWDAY-XUYEOeqOUmiw9b7p8BmGU5vjoSQTxzPJIGVgqFDYjI6hOHUIXq3I52lHmbwEcVyl9FBTI3g=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "Kiss the Ground",
+    "id": "MPREb_UXWq8IxGEJt"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "kaOoyAF9YZ8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kayla Schureman",
+     "id": "UCvgXJBOpYX4VanMvoopHKcw"
+    }
+   ],
+   "duration_seconds": 210,
+   "views": "351",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/H4XGrWgYIAi7XSSweBFrfoaQv3RkH8re4d896m4xiwVNY5U7VtMnpu6ydkm_9M8Vp-BlDycuqbZUBhg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/H4XGrWgYIAi7XSSweBFrfoaQv3RkH8re4d896m4xiwVNY5U7VtMnpu6ydkm_9M8Vp-BlDycuqbZUBhg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Brother (Leon Arcade Remix)",
+   "album": {
+    "name": "Brother - EP",
+    "id": "MPREb_lu53pzLjXed"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "e2T9vUAHhv8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:22",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kodaline",
+     "id": "UC0cymQddFci7e31o7EIznYw"
+    }
+   ],
+   "duration_seconds": 202,
+   "views": "50K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/EV7s0wKQLJuGsZhrm66R6oWSed3yxo89dJ7KxjVh1EUXbTysdPzQnbbMohflHEN8JitdBcwPAKra9EBJPw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/EV7s0wKQLJuGsZhrm66R6oWSed3yxo89dJ7KxjVh1EUXbTysdPzQnbbMohflHEN8JitdBcwPAKra9EBJPw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes (feat. 4IZE)",
+   "album": {
+    "name": "Emotional Summer",
+    "id": "MPREb_fJlsiDv6jEd"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "L2e9J90V8Ss",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:55",
+   "year": null,
+   "artists": [
+    {
+     "name": "J.Reu",
+     "id": "UCtxw0XjLuqixmyd6YeYDQdA"
+    }
+   ],
+   "duration_seconds": 235,
+   "views": "386",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/25u9Pt0Qcr5g6gwRMTs7Eqad8YdVo6Uf5ilW0TiCLdtpgb5r5vV41hHY2WNVmorOweb5OfCbUI-Uy16B=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/25u9Pt0Qcr5g6gwRMTs7Eqad8YdVo6Uf5ilW0TiCLdtpgb5r5vV41hHY2WNVmorOweb5OfCbUI-Uy16B=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "Work out -Run-",
+    "id": "MPREb_Q6EpAGLq0U9"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "QqY8LBRoNPk",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Platinum Party",
+     "id": "UCPVTzOVtqGGPN-b_1qxK01A"
+    }
+   ],
+   "duration_seconds": 230,
+   "views": "179K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/MsoxQUzcAqcil-6OGRugk58w7kvpWan7yQ0Yw8UqM42_xYs2Wjo8PEVHOlSm1noqCcWYrotOQfou9zfF=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/MsoxQUzcAqcil-6OGRugk58w7kvpWan7yQ0Yw8UqM42_xYs2Wjo8PEVHOlSm1noqCcWYrotOQfou9zfF=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "High Hopes",
+    "id": "MPREb_uEuy2bGJC47"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "eUPD004iO2Q",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "Gigi Moss",
+     "id": "UCkQlcmis-U0sB6SLC1h6s2A"
+    }
+   ],
+   "duration_seconds": 205,
+   "views": "372K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/IBJhA_Eq89Ket2bvuei4ogZbB2Dh6QC70m-zbTZhwvFJeJd7zYQaky_eZQJ2mzVaKN1mPZ8l4hczVSuyoQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/IBJhA_Eq89Ket2bvuei4ogZbB2Dh6QC70m-zbTZhwvFJeJd7zYQaky_eZQJ2mzVaKN1mPZ8l4hczVSuyoQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes",
+   "album": {
+    "name": "Simply the Best Of…",
+    "id": "MPREb_PBnQmbMOB9Z"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "f75V59IoGT4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:43",
+   "year": null,
+   "artists": [
+    {
+     "name": "Doris Day",
+     "id": "UCDCDsuGaDdAmgyvfdMAwmIg"
+    }
+   ],
+   "duration_seconds": 163,
+   "views": "926K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/urRUQNB-EdzNa3KMxJMb28M8bGx2NFsL-Z-AN8GZXIoNl0J2X7ZK4QR2ATvmxgnrwsWDNkoxMKdmGtNi=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/urRUQNB-EdzNa3KMxJMb28M8bGx2NFsL-Z-AN8GZXIoNl0J2X7ZK4QR2ATvmxgnrwsWDNkoxMKdmGtNi=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "High Hopes (feat. XTrappeR)",
+   "album": {
+    "name": "High Hopes",
+    "id": "MPREb_FJsvNZ72a8p"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "h_JWaq85lq0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:45",
+   "year": null,
+   "artists": [
+    {
+     "name": "Kidd Burban",
+     "id": "UC1Ebm68ISFNnH-19fGzJz1A"
+    }
+   ],
+   "duration_seconds": 165,
+   "views": "268",
+   "isExplicit": true,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/RZeAQSRoUzXKnYQSa-beTeVnJt5WiKZztP5NnTBKhgiQjOUlCbDXKmS4mhSDU00uN_LrFJeT7k0PqL1b=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/RZeAQSRoUzXKnYQSa-beTeVnJt5WiKZztP5NnTBKhgiQjOUlCbDXKmS4mhSDU00uN_LrFJeT7k0PqL1b=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

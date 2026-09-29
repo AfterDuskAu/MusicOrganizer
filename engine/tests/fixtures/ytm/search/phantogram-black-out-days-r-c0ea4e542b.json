@@ -1,0 +1,750 @@
+{
+ "kind": "search",
+ "key": "phantogram black out days r",
+ "request": "Phantogram Black Out Days R",
+ "recorded_at": "2026-09-29T02:37:28Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Black Out Days",
+   "album": {
+    "name": "Voices",
+    "id": "MPREb_X3AD613YMBy"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "OjCdK0MLd4I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:48",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 228,
+   "views": "237M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/zfkX7dIBJ_Ik0Klwy3jKO5aE0wdERCWanaaeXLMVelrZmsFsgAp33aawtWYHY-QNv78fpJR6M7KpIKU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/zfkX7dIBJ_Ik0Klwy3jKO5aE0wdERCWanaaeXLMVelrZmsFsgAp33aawtWYHY-QNv78fpJR6M7KpIKU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "The Day You Died",
+   "album": {
+    "name": "Voices",
+    "id": "MPREb_X3AD613YMBy"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "p4yRm2_ODfQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 230,
+   "views": "1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/zfkX7dIBJ_Ik0Klwy3jKO5aE0wdERCWanaaeXLMVelrZmsFsgAp33aawtWYHY-QNv78fpJR6M7KpIKU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/zfkX7dIBJ_Ik0Klwy3jKO5aE0wdERCWanaaeXLMVelrZmsFsgAp33aawtWYHY-QNv78fpJR6M7KpIKU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Don't Move",
+   "album": {
+    "name": "Nightlife",
+    "id": "MPREb_7CIuzT3kLKB"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "oGx4iTw8xT8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:19",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 259,
+   "views": "11M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/NBJS8Cd5CYPqX8MQQ1kVWILOBWpQxEyfNyAARIfg2B91PTBg3jnQ-rGB5eyQwguyCcM6FvKo6Jk45jPRcg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/NBJS8Cd5CYPqX8MQQ1kVWILOBWpQxEyfNyAARIfg2B91PTBg3jnQ-rGB5eyQwguyCcM6FvKo6Jk45jPRcg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Run Run Blood",
+   "album": {
+    "name": "Three",
+    "id": "MPREb_JBTwQdIALEN"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "usxVE0jJ0nQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:00",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 300,
+   "views": "2.2M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/4yRCt5V8Rkr1c2njAeN3IZ073L60vCF41h2sMObypv5bOtgNDe3yUIXzxJLFqd7HIKRi4pILYBMCsRMU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/4yRCt5V8Rkr1c2njAeN3IZ073L60vCF41h2sMObypv5bOtgNDe3yUIXzxJLFqd7HIKRi4pILYBMCsRMU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Destroyer",
+   "album": {
+    "name": "Three",
+    "id": "MPREb_JBTwQdIALEN"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "UFlNe7L6VoA",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:18",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 258,
+   "views": "487K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/4yRCt5V8Rkr1c2njAeN3IZ073L60vCF41h2sMObypv5bOtgNDe3yUIXzxJLFqd7HIKRi4pILYBMCsRMU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/4yRCt5V8Rkr1c2njAeN3IZ073L60vCF41h2sMObypv5bOtgNDe3yUIXzxJLFqd7HIKRi4pILYBMCsRMU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Glowing",
+   "album": {
+    "name": "Ceremony",
+    "id": "MPREb_6uNbonf7pBP"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "1FKwmYaFnVc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:23",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 203,
+   "views": "350K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/rDNHxm0lsU-5CjV94qKMpyg63vf56LEd-tri4ia5Y0qugL718Tq8PUO4WNbJeMHccVACa1a5wkVcHg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/rDNHxm0lsU-5CjV94qKMpyg63vf56LEd-tri4ia5Y0qugL718Tq8PUO4WNbJeMHccVACa1a5wkVcHg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Let Me Down",
+   "album": {
+    "name": "Ceremony",
+    "id": "MPREb_6uNbonf7pBP"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "WFDDUCSEha4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 210,
+   "views": "1.1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/rDNHxm0lsU-5CjV94qKMpyg63vf56LEd-tri4ia5Y0qugL718Tq8PUO4WNbJeMHccVACa1a5wkVcHg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/rDNHxm0lsU-5CjV94qKMpyg63vf56LEd-tri4ia5Y0qugL718Tq8PUO4WNbJeMHccVACa1a5wkVcHg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Never Going Home",
+   "album": {
+    "name": "Voices",
+    "id": "MPREb_X3AD613YMBy"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "ZVb89UJ6Li4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:35",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 275,
+   "views": "745K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/zfkX7dIBJ_Ik0Klwy3jKO5aE0wdERCWanaaeXLMVelrZmsFsgAp33aawtWYHY-QNv78fpJR6M7KpIKU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/zfkX7dIBJ_Ik0Klwy3jKO5aE0wdERCWanaaeXLMVelrZmsFsgAp33aawtWYHY-QNv78fpJR6M7KpIKU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Make A Fist",
+   "album": {
+    "name": "Nightlife",
+    "id": "MPREb_7CIuzT3kLKB"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "EpwY5XUIM7I",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:37",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 277,
+   "views": "439K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/NBJS8Cd5CYPqX8MQQ1kVWILOBWpQxEyfNyAARIfg2B91PTBg3jnQ-rGB5eyQwguyCcM6FvKo6Jk45jPRcg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/NBJS8Cd5CYPqX8MQQ1kVWILOBWpQxEyfNyAARIfg2B91PTBg3jnQ-rGB5eyQwguyCcM6FvKo6Jk45jPRcg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Love Me Now",
+   "album": {
+    "name": "Ceremony",
+    "id": "MPREb_6uNbonf7pBP"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "x8gDQ82f5Is",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:55",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 175,
+   "views": "399K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/rDNHxm0lsU-5CjV94qKMpyg63vf56LEd-tri4ia5Y0qugL718Tq8PUO4WNbJeMHccVACa1a5wkVcHg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/rDNHxm0lsU-5CjV94qKMpyg63vf56LEd-tri4ia5Y0qugL718Tq8PUO4WNbJeMHccVACa1a5wkVcHg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Nightlife",
+   "album": {
+    "name": "Nightlife",
+    "id": "MPREb_7CIuzT3kLKB"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "TdYjisxOCpU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:07",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 247,
+   "views": "772K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/NBJS8Cd5CYPqX8MQQ1kVWILOBWpQxEyfNyAARIfg2B91PTBg3jnQ-rGB5eyQwguyCcM6FvKo6Jk45jPRcg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/NBJS8Cd5CYPqX8MQQ1kVWILOBWpQxEyfNyAARIfg2B91PTBg3jnQ-rGB5eyQwguyCcM6FvKo6Jk45jPRcg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You Don’t Get Me High Anymore",
+   "album": {
+    "name": "Three",
+    "id": "MPREb_JBTwQdIALEN"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "E4TEdjE4-es",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:40",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 220,
+   "views": "21M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/4yRCt5V8Rkr1c2njAeN3IZ073L60vCF41h2sMObypv5bOtgNDe3yUIXzxJLFqd7HIKRi4pILYBMCsRMU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/4yRCt5V8Rkr1c2njAeN3IZ073L60vCF41h2sMObypv5bOtgNDe3yUIXzxJLFqd7HIKRi4pILYBMCsRMU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Suzie",
+   "album": {
+    "name": "Eyelid Movies (Expanded Edition)",
+    "id": "MPREb_fdVTV9VxCaR"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "nkywaagd-bU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:40",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 220,
+   "views": "30K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Sm9XERK6G6m_cPe_EoxoQaLtJylioa7h2t5Xo8p8IQaG8EXuVBM_dUkL2dJOfZOrVBg5ezKBUG8anRVk=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Sm9XERK6G6m_cPe_EoxoQaLtJylioa7h2t5Xo8p8IQaG8EXuVBM_dUkL2dJOfZOrVBg5ezKBUG8anRVk=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Voices",
+   "album": {
+    "name": "Eyelid Movies (Expanded Edition)",
+    "id": "MPREb_fdVTV9VxCaR"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "kQ0SwW8KTo4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:02",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 242,
+   "views": "603K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Sm9XERK6G6m_cPe_EoxoQaLtJylioa7h2t5Xo8p8IQaG8EXuVBM_dUkL2dJOfZOrVBg5ezKBUG8anRVk=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Sm9XERK6G6m_cPe_EoxoQaLtJylioa7h2t5Xo8p8IQaG8EXuVBM_dUkL2dJOfZOrVBg5ezKBUG8anRVk=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Black Out Days (Future Islands Remix)",
+   "album": {
+    "name": "Black Out Days (Future Islands Remix)",
+    "id": "MPREb_MMw2FBGEvjn"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "t6XfC9rPWbg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:09",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 249,
+   "views": "128M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/trYafGGg3yEjfq5fcmpXtOIwQ-35rPZXqPGne0C1P-2436L35FoehqG7htkqLjb4Hz7Vh8S5DGBEK9cRSQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/trYafGGg3yEjfq5fcmpXtOIwQ-35rPZXqPGne0C1P-2436L35FoehqG7htkqLjb4Hz7Vh8S5DGBEK9cRSQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Black Out Days (8D Audio)",
+   "album": {
+    "name": "8D Audios Of Popular Covers Vol. 10",
+    "id": "MPREb_5wcxRZMyKx3"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "D5WsVHxLb8c",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:06",
+   "year": null,
+   "artists": [
+    {
+     "name": "8Waves",
+     "id": "UCct3CVFGaE4QGGbzhhTRjlA"
+    }
+   ],
+   "duration_seconds": 246,
+   "views": "7.2K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/V2t8rfiJFIHd_PWEj4k2OB9QuqlkkwVAo1ynHwrGPhWWNxgn9O8Uzkj0rytHzEDa7bCWpBZZwRA4qbFELQ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/V2t8rfiJFIHd_PWEj4k2OB9QuqlkkwVAo1ynHwrGPhWWNxgn9O8Uzkj0rytHzEDa7bCWpBZZwRA4qbFELQ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Pedestal",
+   "album": {
+    "name": "Ceremony",
+    "id": "MPREb_6uNbonf7pBP"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "iJ8YjGOhjvQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:12",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 192,
+   "views": "604K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/rDNHxm0lsU-5CjV94qKMpyg63vf56LEd-tri4ia5Y0qugL718Tq8PUO4WNbJeMHccVACa1a5wkVcHg=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/rDNHxm0lsU-5CjV94qKMpyg63vf56LEd-tri4ia5Y0qugL718Tq8PUO4WNbJeMHccVACa1a5wkVcHg=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "All Dried Up",
+   "album": {
+    "name": "Eyelid Movies",
+    "id": "MPREb_geWUyTCGP8H"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "xejaCO3Gnmo",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:47",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 227,
+   "views": "281K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/bDBCuCLqKZBqVjwZa2roROCq9PNJbVV4TUmSBHL1k3gReh9R8OfdEZPZ5X69i7kjBbYygo1TLC1nm4_l=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/bDBCuCLqKZBqVjwZa2roROCq9PNJbVV4TUmSBHL1k3gReh9R8OfdEZPZ5X69i7kjBbYygo1TLC1nm4_l=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Funeral Pyre",
+   "album": {
+    "name": "Three",
+    "id": "MPREb_JBTwQdIALEN"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Wc9m5TrV0TU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:06",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 246,
+   "views": "877K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/4yRCt5V8Rkr1c2njAeN3IZ073L60vCF41h2sMObypv5bOtgNDe3yUIXzxJLFqd7HIKRi4pILYBMCsRMU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/4yRCt5V8Rkr1c2njAeN3IZ073L60vCF41h2sMObypv5bOtgNDe3yUIXzxJLFqd7HIKRi4pILYBMCsRMU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Bill Murray",
+   "album": {
+    "name": "Voices",
+    "id": "MPREb_X3AD613YMBy"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "rCh3RF0uVfE",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:36",
+   "year": null,
+   "artists": [
+    {
+     "name": "Phantogram",
+     "id": "UCUslN5d3K5iQ7s65GNPrjQQ"
+    }
+   ],
+   "duration_seconds": 216,
+   "views": "1.2M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/zfkX7dIBJ_Ik0Klwy3jKO5aE0wdERCWanaaeXLMVelrZmsFsgAp33aawtWYHY-QNv78fpJR6M7KpIKU=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/zfkX7dIBJ_Ik0Klwy3jKO5aE0wdERCWanaaeXLMVelrZmsFsgAp33aawtWYHY-QNv78fpJR6M7KpIKU=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

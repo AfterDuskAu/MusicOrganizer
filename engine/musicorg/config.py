@@ -86,6 +86,9 @@ def default_data() -> dict[str, Any]:
         "tools": {},
         # Download throttle settings; step 09a fills in the defaults.
         "throttle": {},
+        # When a song has both an explicit and a clean official version and the rip says
+        # neither, match the explicit one (step 06).
+        "prefer_explicit": True,
     }
 
 
@@ -132,6 +135,11 @@ class Config:
     @last_library.setter
     def last_library(self, root: Path | None) -> None:
         self.data["last_library"] = str(root) if root is not None else None
+
+    @property
+    def prefer_explicit(self) -> bool:
+        value = self.data.get("prefer_explicit", True)
+        return value if isinstance(value, bool) else True
 
     def tool_path(self, tool: str) -> Path | None:
         tools = self.data.get("tools")

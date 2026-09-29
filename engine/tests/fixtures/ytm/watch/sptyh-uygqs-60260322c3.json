@@ -1,0 +1,68 @@
+{
+ "kind": "watch",
+ "key": "SpTYh-uYgQs",
+ "request": "SpTYh-uYgQs",
+ "recorded_at": "2026-09-29T02:41:03Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [
+  "all but the first track, lyrics, related",
+  "feedback tokens"
+ ],
+ "error": null,
+ "response": {
+  "tracks": [
+   {
+    "videoId": "SpTYh-uYgQs",
+    "title": "Bomb the World",
+    "length": "4:29",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/VbKddzwC9CgOYAEPsF2-tts1__E_dbk5Vl0trKuCiaqIUnDBFnkDYzAk6ciGSmjmNNqqjJ5h70OUeo-j=w60-h60-l90-rj",
+      "width": 60,
+      "height": 60
+     },
+     {
+      "url": "https://yt3.googleusercontent.com/VbKddzwC9CgOYAEPsF2-tts1__E_dbk5Vl0trKuCiaqIUnDBFnkDYzAk6ciGSmjmNNqqjJ5h70OUeo-j=w120-h120-l90-rj",
+      "width": 120,
+      "height": 120
+     },
+     {
+      "url": "https://yt3.googleusercontent.com/VbKddzwC9CgOYAEPsF2-tts1__E_dbk5Vl0trKuCiaqIUnDBFnkDYzAk6ciGSmjmNNqqjJ5h70OUeo-j=w180-h180-l90-rj",
+      "width": 180,
+      "height": 180
+     },
+     {
+      "url": "https://yt3.googleusercontent.com/VbKddzwC9CgOYAEPsF2-tts1__E_dbk5Vl0trKuCiaqIUnDBFnkDYzAk6ciGSmjmNNqqjJ5h70OUeo-j=w226-h226-l90-rj",
+      "width": 226,
+      "height": 226
+     },
+     {
+      "url": "https://yt3.googleusercontent.com/VbKddzwC9CgOYAEPsF2-tts1__E_dbk5Vl0trKuCiaqIUnDBFnkDYzAk6ciGSmjmNNqqjJ5h70OUeo-j=w302-h302-l90-rj",
+      "width": 302,
+      "height": 302
+     },
+     {
+      "url": "https://yt3.googleusercontent.com/VbKddzwC9CgOYAEPsF2-tts1__E_dbk5Vl0trKuCiaqIUnDBFnkDYzAk6ciGSmjmNNqqjJ5h70OUeo-j=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ],
+    "likeStatus": null,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "artists": [
+     {
+      "name": "Michael Franti & Spearhead",
+      "id": "UCGKtk_GJGty1dqvSmsa-KDg"
+     }
+    ],
+    "album": {
+     "name": "Everyone Deserves Music",
+     "id": "MPREb_An5Uj0USKqe"
+    },
+    "year": "2003"
+   }
+  ]
+ }
+}
