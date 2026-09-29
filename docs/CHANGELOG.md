@@ -242,7 +242,7 @@
   3. `Reports/auto-sample.csv` written with 20 links. **Listening check: the owner listened to all 20; every one is the same recording as the rip.**
 - **CI** (commit `deff4f8`): green on all three runners. macOS Apple Silicon and Intel: 951 passed, 4 skipped. Windows: 950 passed, 5 skipped (its platform-only skips, the real-Trash test and the live search).
 - **The owner's rules** (asked after the first run):
-  - **"R" means remix.** A final capital "R" or "(R)" in a rip's name or title ("Stressed Out R", "Done Wrong (R)", "Black Out Days R(slowed)"; 124 files in the library) becomes the version token `remix`. YouTube Music's own titles are left alone ("Vitamin R" stays). A bare `remix` never equals a named one (`remix:filous`), so these rips are never AUTO, but the right remix can rank first in review.
+  - **"R" means remix.** A final capital "R" or "(R)" in a rip's name or title ("Stressed Out R", "Done Wrong (R)", "Black Out Days R(slowed)"; 124 files in the library) becomes the version token `remix`. YouTube Music's own titles are left alone ("Vitamin R" stays). A bare `remix` never equals a named one (`remix:filous`), so these rips are AUTO only when YouTube Music's track is an unnamed "(Remix)" too, with the same length. Otherwise the right remix can rank first in review.
   - **Always the explicit version, unless the rip's name says clean.** "Edited", "censored" and "clean edit/mix/radio edit" now also mean clean ("uncensored" already meant explicit). A track whose own title says clean is never AUTO for a rip that doesn't say clean. That's on top of the pair rule, which already took the explicit one.
   - Re-checking the 36 AUTO matches from the real run with both rules changed none of them. The index keeps the old parses of the "R" files until `musicorg index rebuild` (the step 05 limit).
 - Deviations and additions:
@@ -271,6 +271,23 @@
 - `review.py`, for `musicorg review export <csv> [--include-auto]` (no lock) and `musicorg review import <csv>` (lock), with the prompt's columns, checks and decisions. `accept`/`cand:n` → `matched_user`; `url` → fetched with `get_track` and scored; `only_copy` with its fixes; `skip`; `reject:n`.
 - CLI: `report`, `review export`, `review import`. `config.THROTTLE_DEFAULTS` holds the step 09a pace (8–25 s pauses, 20–40 s for the first 20, 300 per 24 h); `Config.throttle()` merges the owner's changes. New helpers: `scan.source_folders`, `scan.item_path`, `index.all_candidates`, `match.candidate_id`.
 - 979 tests pass (4 skipped). New: the report on a fixture index (exact counts, percentages, sections, files, never overwriting, the cost estimate, each recommendation) and the review round trip. The round-trip tests cover every decision; all bad rows reported with row numbers and nothing imported; commas, quotes, newlines and other scripts surviving; a cp1252 file refused; a moved row refused; a double import changing nothing; pasted links scored (high, low and unavailable); and a spreadsheet exported before `index rebuild` importing after it.
+- **Acceptance** (2026-09-29, the v0.1 checkpoint):
+  1. `index rebuild` (so the "R" files parse as remixes), then `musicorg match` over the whole library: 1,890 items in 52 minutes, 1,980 searches, no errors or slow-downs.
+  2. `musicorg report`:
+
+     | State | Items | Share |
+     |---|---:|---:|
+     | `matched_auto` | 704 | 37.2% |
+     | `review` | 1,123 | 59.4% |
+     | `not_found` | 62 | 3.3% |
+     | `unsupported_format` | 1 | 0.1% |
+
+     Recommendation: neither threshold is met (37% AUTO against 60%; 3% not found against 30%), so the review decides how much gets replaced.
+     - Review reasons: length off 925 (82%), title 268, artist 262, version 126, a hard-to-read name 16.
+     - **534 reviews differ only in length.** Same artist, title and version, official audio; off by up to 5 s: 178, 5–10 s: 91, 10–30 s: 131, over 30 s: 134. The report now shows this breakdown, which the prompt didn't ask for.
+     - Replacing the 704 AUTO items: about 3 days at the queue's pace.
+     - The 8 AUTO matches carrying a version (two 2003 edits, six remixes) all name the same remix or edit, at the same length.
+  3. **Stop:** the table and recommendation go back to the owner's Claude chat before steps 08–11.
 - Deviations and additions:
   - **Candidates are identified by the video id in the row's own `candN_url`**, never by their position in the index. That's what makes an export from before a rebuild import correctly (the rebuild drops candidates), and makes a second import of the same file change nothing, even after a `reject` has removed a candidate.
   - **`unsupported_format`** in the report: a WebM, raw AAC or WAV rip with no official match (`not_found` or `only_copy` with the `not_adoptable` flag), as contract section 3 says. It can't be adopted in v0.1, so it's counted apart. The index state is unchanged; step 09b sets the real state.

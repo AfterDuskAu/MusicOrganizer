@@ -69,6 +69,8 @@ BITRATE_BANDS = ((0, 128, "under 128 kbps"), (128, 160, "128–159 kbps"),
                  (256, 320, "256–319 kbps"), (320, 10**9, "320 kbps and over"))  # fmt: skip
 LOSSLESS = frozenset({".wav", ".flac"})
 VERSION_COLUMNS = ("matched_auto", "matched_user", "review", "not_found")
+# How far off the length is, for review items where nothing else differs.
+LENGTH_BANDS = ((5, "up to 5 s"), (10, "5–10 s"), (30, "10–30 s"), (10**9, "over 30 s"))
 
 
 def report_state(item: dict[str, Any]) -> str:
@@ -87,6 +89,7 @@ class Report:
     sources: int = 0
     states: Counter[str] = field(default_factory=Counter)
     review_reasons: Counter[str] = field(default_factory=Counter)
+    length_only: Counter[str] = field(default_factory=Counter)  # band → n
     no_results: int = 0
     low_score: int = 0
     misses: list[dict[str, Any]] = field(default_factory=list)  # closest first
@@ -133,6 +136,8 @@ def gather(lib: Library, index: Index, *, now: datetime | None = None) -> Report
         state_name = report_state(item)
         if item["state"] == "review":
             report.review_reasons.update(list(dict.fromkeys(item.get("reasons_json") or [])))
+            if item.get("reasons_json") == ["duration_mismatch"]:
+                report.length_only[_length_band(item, candidates.get(item["id"]))] += 1
         _count_versions(report, item, state_name)
         _count_quality(report, item)
 
@@ -154,6 +159,14 @@ def gather(lib: Library, index: Index, *, now: datetime | None = None) -> Report
     _estimate_downloads(report, Config.load().throttle())
     report.recommendations = recommend(report)
     return report
+
+
+def _length_band(item: dict[str, Any], options: list[dict[str, Any]] | None) -> str:
+    theirs = options[0]["payload"].get("duration_s") if options else None
+    if item.get("duration_s") is None or theirs is None:
+        return "unknown"
+    delta = abs(item["duration_s"] - theirs)
+    return next(name for limit, name in LENGTH_BANDS if delta <= limit)
 
 
 def _count_versions(report: Report, item: dict[str, Any], state_name: str) -> None:
@@ -259,6 +272,19 @@ def render_markdown(report: Report) -> str:
             n = report.review_reasons.get(code, 0)
             if n:
                 lines.append(f"| `{code}` | {REASON_MEANING[code]} | {n:,} | {n / in_review:.1%} |")
+        only = sum(report.length_only.values())
+        if only:
+            bands = [name for _, name in LENGTH_BANDS] + ["unknown"]
+            spread = " · ".join(f"{b}: {report.length_only[b]:,}" for b in bands
+                                if report.length_only.get(b))  # fmt: skip
+            lines += [
+                "",
+                f"**Only the length differs** for {only:,} of them ({only / in_review:.0%}): the "
+                "same artist, exactly the same title and version, and official audio. By how "
+                f"much: {spread}. A few seconds is usually silence or a fade at the ends; much "
+                "more is usually another edit (radio, extended, a video's intro). Comparing the "
+                "audio itself (step 08) can tell.",
+            ]
     else:
         lines.append("None.")
     lines.append("")

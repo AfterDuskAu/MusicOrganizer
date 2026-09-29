@@ -32,7 +32,8 @@ def filled(index: Index) -> Index:
     for n in range(4):
         add_item(index, f"Artist{n} - Song{n}", state="matched_auto", kbps=320,
                  flags=["suspect_upscale"] if n == 0 else [])  # fmt: skip
-    add_item(index, "A - Late", state="review", reasons=["duration_mismatch"])
+    late = add_item(index, "A - Late", state="review", reasons=["duration_mismatch"])
+    add_candidates(index, late, [candidate("v2", "Late", ("A",), 212)])  # 12 s off
     add_item(index, "B - Near (X Remix)", state="review",
              reasons=["duration_mismatch", "title_fuzzy"], kbps=96)  # fmt: skip
     poor = add_item(index, "C - Obscure", state="not_found")
@@ -68,6 +69,9 @@ def test_counts_and_percentages(lib: Library, filled: Index) -> None:
     assert "| **Total** | | **10** | **100%** |" in text
     assert "| `duration_mismatch` | length more than 2 s off | 2 | 100.0% |" in text
     assert "| `title_fuzzy` | title not exactly the same | 1 | 50.0% |" in text
+    assert data.length_only == Counter({"10–30 s": 1})
+    assert "**Only the length differs** for 1 of them (50%)" in text
+    assert "By how much: 10–30 s: 1." in text
     assert "- No results at all: 1" in text
     assert "| 2 | D | Rare | no results | — |" in text
 
