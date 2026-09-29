@@ -299,3 +299,30 @@
   - **One decision per row**; a blank decision leaves the item alone. Decisions are case-insensitive and may have spaces (`Cand: 2`). Rows for items already `superseded` or `adopted` are refused.
   - **Accepted spreadsheets:** a file saved by Numbers ("CSV UTF-8", no BOM) or Excel (with a BOM) both import. The header must hold the columns; any extra ones are ignored.
   - **Order of the export:** review items with the most likely match first, then not found, then AUTO (with `--include-auto`).
+
+### Step 07b: The local review page (the owner's request at the checkpoint)
+
+At the step 07 checkpoint the owner chose a basic UI for settling the review items by hand, before step 08. `CLAUDE.md` now allows this one tool in v0.1 ("Not in v0.1" names it as the exception; the Mac app stays v0.2), and `ENGINE_API.md` lists the command.
+
+- `musicorg review serve [--port N] [--no-open]` (lock) opens the review page in the browser. Ctrl-C closes it.
+- **Five lists:**
+  - Real doubts: review items with any reason besides length, most likely match first.
+  - Length only: the smallest differences first.
+  - Not found.
+  - Automatic: for spot checks.
+  - Decided.
+- **For each rip:** your file, playable in the page (with seeking); the reasons in plain words; and up to 3 candidates. Each candidate shows its artist, album, length (and the difference from yours), score, version, and "Explicit" or "Clean" when both are listed.
+- **Decisions:**
+  - "Use this"; "✗" (not this one, stays on the song); "None of these"; "Keep my copy", with optional name fixes; "Skip"; or "Use link" for a pasted link, which is fetched and scored.
+  - Keys: ← → 1–3 x k s p.
+  - Each click goes through `review.decide_one`, the same checks and effects as a row of `review import`: state.json first, then the index.
+  - A new choice replaces the old one.
+- `review_web.py` (Python's own `http.server`, nothing added) and `review_page.html` (plain HTML and JavaScript, nothing loaded from elsewhere). `review.decide_one` is the new one-decision entry point.
+- **Safety:**
+  - It listens on 127.0.0.1 only.
+  - Every request needs the session's random key (in the printed address) and a 127.0.0.1/localhost Host header. A POST needs JSON and a same-origin Origin. So other web pages in the browser can't drive it (cross-site requests, DNS rebinding).
+  - A rip is played by item id only, opened read-only; no path comes from the browser.
+  - A content security policy allows only the page's own scripts and YouTube thumbnails.
+- **Listening to a candidate** opens it in YouTube Music, in one browser tab the page reuses. YouTube's embedded player showed "This video is unavailable" in testing, even for a video that normally allows embedding, so the page doesn't use it.
+- Tried in the browser pane on a scratch copy of the library's records (the owner's decisions untouched). Worked: listing, playing a rip, use, ✗, skip, keep, a pasted link, and the Decided list. That run added three things: ✗ stays on the song, "Clean" is shown beside an explicit version, and dropped connections go to the log instead of the terminal.
+- 990 tests pass (4 skipped). New: the page's safety checks (key, host, origin, content type, 127.0.0.1 only, no outside scripts), the lists and their order, every decision (repeating one changes nothing), a pasted link (replayed), bad decisions with their messages, playing with ranges (206, 416, missing file, unknown item, a path in the address), and the command holding the lock.

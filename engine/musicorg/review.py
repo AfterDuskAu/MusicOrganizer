@@ -222,6 +222,76 @@ def import_csv(lib: Library, index: Index, path: Path) -> ImportResult:
     return result
 
 
+# ---- one decision at a time (the review page) ------------------------------------------
+
+PAGE_DECISIONS = ("use", "reject", "url", "only_copy", "skip")
+
+
+@dataclass
+class OneResult:
+    changed: bool
+    warning: str | None = None
+
+
+def decide_one(
+    lib: Library,
+    index: Index,
+    item_id: str,
+    decision: str,
+    *,
+    video_id: str | None = None,
+    link: str | None = None,
+    fixes: dict[str, str] | None = None,
+) -> OneResult:
+    """One decision from the review page, with the same checks and effects as a row of
+    `review import`. `decision` is one of PAGE_DECISIONS: "use" or "reject" a candidate
+    (by `video_id`), "url" (`link`), "only_copy" (optional `fixes`) or "skip"."""
+    item = index.item(item_id)
+    if item is None:
+        raise UserError(f"There's no item {item_id!r} in the index.")
+    if item["state"] in ("superseded", "adopted"):
+        raise UserError(f"This rip was already {item['state']}; there's nothing left to decide.")
+    if decision not in PAGE_DECISIONS:
+        raise UserError(f"{decision!r} isn't a decision.")
+    plan = Planned(row=0, item=item, kind=decision)
+    if decision in ("use", "reject"):
+        options = index.candidates(item_id)
+        number = next((n for n, c in enumerate(options, start=1) if c["video_id"] == video_id), 0)
+        if not number:
+            raise UserError(f"{video_id!r} isn't one of this item's candidates.")
+        payload = options[number - 1]["payload"]
+        plan.number, plan.video_id = number, video_id
+        if decision == "use":
+            plan.kind = "accept" if number == 1 else "candidate"
+        plan.row_candidate = {
+            "title": payload.get("title", ""),
+            "artists": ", ".join(payload.get("artists") or []),
+            "duration": minutes(payload.get("duration_s")),
+            "score": str(options[number - 1]["score"]),
+        }
+    elif decision == "url":
+        found = _LINK.fullmatch((link or "").strip())
+        if not found:
+            raise UserError(
+                "That isn't a YouTube link (music.youtube.com/watch?v=…, youtube.com/watch?v=… "
+                "or youtu.be/…)."
+            )
+        plan.video_id, plan.link = found.group("id"), (link or "").strip()
+    elif decision == "only_copy":
+        plan.fixes = {k: v.strip() for k, v in (fixes or {}).items()
+                      if k in ("artist_fix", "title_fix", "album_fix") and v.strip()}  # fmt: skip
+
+    track = youtube.get_track(plan.video_id) if plan.kind == "url" and plan.video_id else None
+    now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    with state.edit(lib.paths.state_file) as st:
+        decisions = st.data.setdefault("decisions", {})
+        rejected = st.data.setdefault("rejected", {})
+        outcome = _decide(plan, decisions, rejected, track, now)
+        turned_down = state.rejected(st.data).get(item_id, set())
+    _update_index(index, plan, outcome, turned_down)
+    return OneResult(outcome.changed, outcome.warning)
+
+
 def _check_row(
     number: int,
     row: dict[str, str],

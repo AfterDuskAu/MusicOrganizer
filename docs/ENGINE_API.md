@@ -48,6 +48,7 @@ Global options:
 | `musicorg report [--out <dir>]` | Decision report, markdown and CSV | no | 07 |
 | `musicorg review export <csv> [--include-auto]` | Review CSV. Never overwrites: a ` (2)` suffix if the file exists. | no | 07 |
 | `musicorg review import <csv>` | Apply decisions (CSV decision enum) | yes | 07 |
+| `musicorg review serve [--port N] [--no-open]` | The local review page in the browser: play each rip and its candidates, click to decide (same checks as `review import`). Only on 127.0.0.1. | yes | 07b |
 | `musicorg journal list [--limit N]` | Recent batches (default 20) with counts and open/closed status | no | 03b |
 | `musicorg undo <batch_id> [--dry-run]` | Reverse a batch | yes | 03b, extended 09b |
 | `musicorg plan replace [--only auto\|accepted\|all-eligible] [--limit N] [--stage-only]` | Dry-run plan. `--stage-only` stops after the fingerprint step for calibration. | yes | 09b |

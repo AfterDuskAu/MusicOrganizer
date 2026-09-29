@@ -176,6 +176,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--include-auto", action="store_true", help="Also list the automatic matches.")
     p = add(review, "import", "Apply the decisions from a review CSV.", _cmd_review_import)
     p.add_argument("csv", type=_path)
+    p = add(
+        review,
+        "serve",
+        "Open the review page in your browser: hear each rip and its matches, click to decide.",
+        _cmd_review_serve,
+    )
+    p.add_argument("--port", type=int, default=0, metavar="N", help="Port (default: any free one).")
+    p.add_argument("--no-open", action="store_true", help="Don't open the browser.")
 
     journal = group("journal", "The log of every change made to the library.")
     p = add(journal, "list", "Recent batches of changes.", _cmd_journal_list)
@@ -538,6 +546,25 @@ def _cmd_review_import(args: argparse.Namespace) -> int:
         print(f"{result.blank:,} rows had no decision and were left as they are.")
     for warning in result.warnings:
         print(f"  ! {warning}")
+    return EXIT_OK
+
+
+def _cmd_review_serve(args: argparse.Namespace) -> int:
+    from musicorg import review_web
+
+    def ready(url: str) -> None:
+        print("The review page is open at:")
+        print(f"  {url}")
+        print("Keep this window open while you review; press Ctrl-C here to finish.", flush=True)
+
+    with library.open(_library_root(args), write=True, command="review serve") as lib:
+        try:
+            review_web.serve(lib, port=args.port, open_browser=not args.no_open, ready=ready)
+        except KeyboardInterrupt:
+            pass
+        except OSError as exc:
+            raise UserError(f"Couldn't start the review page: {exc.strerror or exc}.") from exc
+    print("Review page closed. Your decisions are saved.")
     return EXIT_OK
 
 

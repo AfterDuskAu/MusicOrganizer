@@ -54,6 +54,7 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
   - `pipeline`: download → verify → tag → commit, and adopt
   - `lyrics` and `artwork`
   - `report`
+  - `review` and `review_web`: the review spreadsheet, and the local review page
   - `rpc`: the JSON-RPC server
 - External binaries, located by `tools`:
   - `ffmpeg` and `ffprobe`
@@ -100,4 +101,4 @@ All states, decisions and tag values are defined **once**, in `docs/ENGINE_API.m
 
 ## Not in v0.1
 
-UI work, Spotify/Apple Music import, Discover and recommendations, weekly mix, phone/Subsonic server, packaging, signing, notarization, Windows app shell, accounts and cloud anything.
+UI work (one exception: the local review page, `musicorg review serve`, which the owner asked for at the step 07 checkpoint; the Mac app stays v0.2), Spotify/Apple Music import, Discover and recommendations, weekly mix, phone/Subsonic server, packaging, signing, notarization, Windows app shell, accounts and cloud anything.
