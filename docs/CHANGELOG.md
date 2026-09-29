@@ -141,7 +141,7 @@
   - ffprobe reads every field of both files, the `MUSICORG_*` ones included, and the 600 px cover.
   - macOS's own reader (`afinfo`, AudioToolbox) reads the title with its Japanese, the artist, album, year, genre and track number from both the M4A and the ID3v2.3 MP3. It doesn't report artwork or lyrics.
   - Apple Music (Music app, checked by the owner in Get Info): both files show the right title with its Japanese, artist, album artist, album, genre, year, track and disc numbers, the artwork and the three lines of lyrics. The M4A shows the explicit (E) mark.
-  - Kid3 and Picard: not checked, as neither is installed. ffprobe's reading of every `MUSICORG_*` field, above, is the evidence for those tags.
+  - Kid3 3.10.1 (`kid3-cli`, installed on the iMac for this; Picard wasn't needed): both files show every `MUSICORG_*` field with its value, the front cover, the lyrics with their Japanese and emoji, and the explicit flag (M4A "Rating/Advisory 1", MP3 `ITUNESADVISORY 1`). Kid3 reports the MP3's tag as ID3v2.3.0.
 - Deviations and additions:
   - **Types:** the year, track and disc numbers are whole numbers, and the year is written as 4 digits (a full date in a rip reads as its year, and stays in the file unless the year is changed). `explicit` is True/False. `match_score` keeps 3 decimals. `only_copy=True` writes `1`; False removes the field, since the contract only defines `1`. `version` is a list of tokens.
   - **Empty text** counts as "not given", so it leaves a field as it is rather than erasing it; `REMOVE` erases.
