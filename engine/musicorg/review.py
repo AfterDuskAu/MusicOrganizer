@@ -32,7 +32,7 @@ from musicorg import fileops, match, scan, state, youtube
 from musicorg.errors import UserError
 from musicorg.index import Index
 from musicorg.library import Library
-from musicorg.normalize import render_versions
+from musicorg.normalize import compare_key, render_versions
 from musicorg.report import minutes
 from musicorg.youtube import Candidate
 
@@ -231,6 +231,9 @@ PAGE_DECISIONS = ("use", "reject", "url", "only_copy", "skip")
 class OneResult:
     changed: bool
     warning: str | None = None
+    # The chosen track's artist isn't the rip's under any spelling, nor featured: ask
+    # whether they're the same artist. {"from", "to", "others"}.
+    alias_offer: dict[str, Any] | None = None
 
 
 def decide_one(
@@ -289,7 +292,52 @@ def decide_one(
         outcome = _decide(plan, decisions, rejected, track, now)
         turned_down = state.rejected(st.data).get(item_id, set())
     _update_index(index, plan, outcome, turned_down)
-    return OneResult(outcome.changed, outcome.warning)
+    result = OneResult(outcome.changed, outcome.warning)
+    if plan.kind in ("accept", "candidate", "url") and not outcome.warning:
+        result.alias_offer = _alias_offer(lib, index, item, plan, track)
+    return result
+
+
+def _alias_offer(
+    lib: Library, index: Index, item: dict[str, Any], plan: Planned, track: Candidate | None
+) -> dict[str, Any] | None:
+    if track is None:
+        chosen = next((c for c in index.candidates(item["id"]) if c["video_id"] == plan.video_id),
+                      None)  # fmt: skip
+        track = Candidate.from_dict(chosen["payload"]) if chosen else None
+    rip = match.rip_of(item, state.aliases(lib.load_state().data))
+    name = match.alias_offer(rip, track) if track is not None else None
+    if name is None or rip.aliases:
+        return None
+    artist = rip.parsed.artist or rip.parsed.credit or ""
+    others = [i for i in _by_artist(index, artist) if i["id"] != item["id"]]
+    return {"from": artist, "to": name, "others": len(others)}
+
+
+def confirm_alias(lib: Library, index: Index, name_in_rips: str, name: str) -> match.RecheckResult:
+    """The owner confirmed that `name_in_rips` (as the rips spell it) is `name`: remember
+    it in state.json, and classify that artist's undecided items again from the
+    candidates already found."""
+    key = compare_key(name_in_rips)
+    if not key or not name.strip():
+        raise UserError("Both names are needed.")
+    now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    with state.edit(lib.paths.state_file) as st:
+        aliases = st.data.setdefault("aliases", {})
+        aliases[key] = {"name": name.strip(), "from": name_in_rips.strip(), "decided_at": now}
+    ids = [i["id"] for i in _by_artist(index, name_in_rips)]
+    return match.recheck(lib, index, item_ids=ids)
+
+
+def _by_artist(index: Index, artist: str) -> list[dict[str, Any]]:
+    """Undecided items whose artist, as the rips name it, is `artist`."""
+    key = compare_key(artist)
+    found = []
+    for item in index.items_in_states(["review", "not_found"]):
+        parsed = match.rip_of(item).parsed
+        if key and key in (compare_key(parsed.artist), compare_key(parsed.credit)):
+            found.append(item)
+    return found
 
 
 def _check_row(

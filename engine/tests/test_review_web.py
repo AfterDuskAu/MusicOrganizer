@@ -244,3 +244,40 @@ def test_the_command(
     assert "Review page closed. Your decisions are saved." in out
     assert seen["writable"] is True  # it holds the library's lock
     assert (seen["port"], seen["open_browser"]) == (1234, False)
+
+
+# ---- confirming an artist's other name -------------------------------------------------
+
+
+def test_a_choice_by_another_artist_offers_to_remember_the_name(
+    server: review_web.ReviewServer, index: Index, lib: Library
+) -> None:
+    juicy = add_item(index, "Biggie Smalls - Juicy", state="review", reasons=["artist_mismatch"])
+    add_candidates(index, juicy, [candidate("Jui1xxxxxxx", "Juicy", ("The Notorious B.I.G.",))])
+    hypnotize = add_item(index, "Biggie Smalls - Hypnotize", state="review",
+                         reasons=["artist_mismatch"])  # fmt: skip
+    add_candidates(index, hypnotize,
+                   [candidate("Hyp1xxxxxxx", "Hypnotize", ("The Notorious B.I.G.",))])  # fmt: skip
+
+    used = api(server, "/api/decide", {"item_id": juicy, "decision": "use",
+                                       "video_id": "Jui1xxxxxxx"})  # fmt: skip
+    assert used["alias_offer"] == {"from": "Biggie Smalls", "to": "The Notorious B.I.G.",
+                                   "others": 1}  # fmt: skip
+    confirmed = api(server, "/api/alias", {"from": "Biggie Smalls", "to": "The Notorious B.I.G."})
+    assert confirmed["changed"] == {"review → matched_auto": 1}
+    assert index.item(hypnotize)["state"] == "matched_auto"  # type: ignore[index]
+    saved = json.loads(lib.paths.state_file.read_text(encoding="utf-8"))["aliases"]
+    assert saved["biggie smalls"]["name"] == "The Notorious B.I.G."
+    assert saved["biggie smalls"]["from"] == "Biggie Smalls"
+
+
+def test_no_offer_when_the_artist_is_the_same(
+    server: review_web.ReviewServer, index: Index
+) -> None:
+    uptown = add_item(index, "Bruno Mars - Uptown Funk", state="review", seconds=260,
+                      reasons=["duration_mismatch"])  # fmt: skip
+    add_candidates(index, uptown, [candidate("Upt1xxxxxxx", "Uptown Funk (feat. Bruno Mars)",
+                                             ("Mark Ronson",), 270)])  # fmt: skip
+    used = api(server, "/api/decide", {"item_id": uptown, "decision": "use",
+                                       "video_id": "Upt1xxxxxxx"})  # fmt: skip
+    assert used["alias_offer"] is None  # he's featured on it: nothing to learn

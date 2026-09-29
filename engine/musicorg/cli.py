@@ -159,6 +159,12 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Match review and not-found items again, skipping the search cache.",
     )
+    p.add_argument(
+        "--recheck",
+        action="store_true",
+        help="Classify review and not-found items again from the results already found "
+        "(no searching), e.g. after the rules improve.",
+    )
 
     p = add(
         commands,
@@ -465,6 +471,21 @@ class _Progress:
 
 
 def _cmd_match(args: argparse.Namespace) -> int:
+    if args.recheck:
+        if args.rescan or args.limit is not None:
+            raise UserError("--recheck doesn't search, so it takes neither --rescan nor --limit.")
+        with library.open(_library_root(args), write=True) as lib:
+            with open_index(lib.paths, write=True) as index:
+                checked = match.recheck(lib, index)
+        if args.json:
+            _print_json(checked.to_dict())
+            return EXIT_OK
+        print(f"Re-checked {checked.items:,} review and not-found items (no searching).")
+        for change, n in sorted(checked.changed.items()):
+            print(f"  {n:>6,}  {change}")
+        if not checked.changed:
+            print("  Nothing changed.")
+        return EXIT_OK
     if args.limit is not None and args.limit < 1:
         raise UserError("--limit must be 1 or more.")
     progress = None if args.json else _MatchProgress()

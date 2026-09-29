@@ -44,7 +44,7 @@ Global options:
 | `musicorg sources remove <id>` | Forget a source; never touches its files | yes | 05 |
 | `musicorg scan [<source_id>…]` | Read-only index of sources | yes | 05 |
 | `musicorg index rebuild` | Rebuild per contract section 5 | yes | 05 |
-| `musicorg match [--limit N] [--rescan]` | Search and score `new` items. `--rescan` re-matches `review` and `not_found` items and bypasses the search cache. Ends by writing `Reports/auto-sample.csv`. | yes | 06 |
+| `musicorg match [--limit N] [--rescan] [--recheck]` | Search and score `new` items. `--rescan` re-matches `review` and `not_found` items and bypasses the search cache. Ends by writing `Reports/auto-sample.csv`. `--recheck` (07b) searches nothing: it classifies `review` and `not_found` items again from the candidates already found. | yes | 06 |
 | `musicorg report [--out <dir>]` | Decision report, markdown and CSV | no | 07 |
 | `musicorg review export <csv> [--include-auto]` | Review CSV. Never overwrites: a ` (2)` suffix if the file exists. | no | 07 |
 | `musicorg review import <csv>` | Apply decisions (CSV decision enum) | yes | 07 |

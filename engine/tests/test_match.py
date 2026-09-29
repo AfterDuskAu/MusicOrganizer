@@ -142,10 +142,11 @@ def test_the_main_artist_must_match_for_auto() -> None:
     assert scored.score >= 0.9  # but the pairing finds her, so it ranks first
 
 
-def test_a_title_only_rip_can_rank_but_never_auto() -> None:
+def test_a_title_only_rip_that_starts_with_the_artist() -> None:
     scored = match.assess(rip("Mase-Feel So Good"), cand(title="Feel so Good", artists=("Mase",)))
-    assert scored.score == 1.0
-    assert not scored.auto
+    assert scored.score == 1.0 and scored.auto
+    other = match.assess(rip("Feel So Good"), cand(title="Feel so Good", artists=("Mase",)))
+    assert not other.auto and "artist_mismatch" in other.codes  # no artist to go by
 
 
 # ---- clean and explicit ----------------------------------------------------------------
@@ -203,9 +204,9 @@ def test_review_keeps_the_top_three_best_first() -> None:
 
 
 def test_low_parse_confidence_is_a_reason() -> None:
-    outcome = match.classify(rip("Artist Song"), [cand(title="Song")])  # title only: 0.3
-    assert outcome.state == "review"
-    assert outcome.reasons == ["artist_mismatch", "low_parse_confidence"]
+    outcome = match.classify(rip("Artist Song"), [cand(title="Song", duration=230)])
+    assert outcome.state == "review"  # a title-only name (0.3)
+    assert outcome.reasons == ["duration_mismatch", "low_parse_confidence"]
 
 
 def test_rejected_candidates_are_never_proposed() -> None:
@@ -420,3 +421,109 @@ def test_the_owners_remix_mark_is_never_auto_without_a_remixer() -> None:
     outcome = match.classify(rip("Artist - Song R"), options)
     assert outcome.state == "review"
     assert outcome.top[0].candidate.video_id == "remix"
+
+
+# ---- spelling, featured artists and confirmed names (step 07b) ---------------------------
+
+
+@pytest.mark.parametrize(
+    ("a", "b", "same"),
+    [
+        ("The xx", "XX", True),
+        ("Beatles", "The Beatles", True),
+        ("Huslin", "Hustlin", True),
+        ("Snoop Dog", "Snoop Dogg", True),
+        ("Fall Out Boys", "Fall Out Boy", True),
+        ("Rage Against the Machines", "Rage Against The Machine", True),
+        ("Trough the Fire and Flames", "Through The Fire And Flames", True),
+        ("Rock Star", "Rockstar", True),
+        ("Guns and Roses", "Guns N' Roses", True),
+        ("Air", "Aer", False),  # short names must match exactly
+        ("Kiss", "Kids", False),
+        ("Interlude", "Interlude I", False),  # numbers must agree
+        ("Part 2", "Part 3", False),
+        ("Slide 1", "Slide", False),
+        ("Sorry", "Sorrow", False),
+        ("Kayne West", "Kanye West", False),  # two letters swapped in a short name: too far
+    ],
+)
+def test_same_name(a: str, b: str, same: bool) -> None:
+    assert match.same_name(a, b) is same
+    assert match.same_name(b, a) is same
+
+
+def test_spelling_differences_can_be_auto() -> None:
+    hustlin = cand(title="Hustlin", artists=("Wiz Khalifa",))
+    assert match.assess(rip("Wiz Khalifa - Huslin"), hustlin).auto
+    scored = match.assess(rip("XX - Angels"), cand(title="Angels", artists=("The xx",)))
+    assert scored.auto and "artist exact" in scored.reasons
+    snoop = cand(title="Beautiful", artists=("Snoop Dogg",))
+    typo = match.assess(rip("Snoop Dog - Beautiful"), snoop)
+    assert typo.auto and "artist same (spelling)" in typo.reasons
+    # Everything else stays strict: the length, the version, the numbers.
+    assert not match.assess(rip("Wiz Khalifa - Huslin", duration=230), hustlin).auto
+    interlude = cand(title="Interlude I", artists=("alt-J",))
+    assert not match.assess(rip("Alt J - Interlude"), interlude).auto
+
+
+def test_a_featured_artist_credited_as_the_main_one() -> None:
+    uptown = cand(title="Uptown Funk (feat. Bruno Mars)", artists=("Mark Ronson",))
+    assert match.assess(rip("Bruno Mars - Uptown Funk"), uptown).auto
+
+
+def test_a_confirmed_name() -> None:
+    parsed = parse_filename("Biggie Smalls - Juicy")
+    juicy = cand(title="Juicy", artists=("The Notorious B.I.G.",))
+    assert not match.assess(Rip(parsed, 200.0), juicy).auto
+    known = {"biggie smalls": "The Notorious B.I.G."}
+    item = {"parsed_json": parsed.to_dict(), "duration_s": 200.0, "raw_tags_json": {}}
+    found = match.rip_of(item, known)
+    assert found.aliases == ("The Notorious B.I.G.",)
+    assert match.assess(found, juicy).auto
+    assert match.queries(parsed, "The Notorious B.I.G.") == ["The Notorious B.I.G. Juicy"]
+
+
+def test_alias_offers() -> None:
+    biggie = cand(title="Juicy", artists=("The Notorious B.I.G.",))
+    assert match.alias_offer(rip("Biggie Smalls - Juicy"), biggie) == "The Notorious B.I.G."
+    # Nothing to learn: the same artist spelt differently, or featured on the track.
+    assert match.alias_offer(rip("Snoop Dog - X"), cand(artists=("Snoop Dogg",))) is None
+    uptown = cand(title="Uptown Funk (feat. Bruno Mars)", artists=("Mark Ronson",))
+    assert match.alias_offer(rip("Bruno Mars - Uptown Funk"), uptown) is None
+    assert match.alias_offer(rip("Uptown Funk"), uptown) is None  # no artist in the name
+    pair = cand(title="No Church", artists=("JAY-Z", "Kanye West"))
+    assert match.alias_offer(rip("Kayne West - No Church"), pair) == "Kanye West"
+
+
+def test_recheck(lib: Library, index: Index, tmp_path: Path) -> None:
+    """Items are classified again from the candidates already found; nothing is searched."""
+    from index_support import add_candidates, add_item
+
+    add_items(index, {"A - Decided": "matched_user"}, tmp_path)
+    xx = add_item(index, "XX - Angels", state="review", reasons=["artist_mismatch"])
+    add_candidates(index, xx, [cand("xx", "Angels", ("The xx",))])
+    biggie = add_item(index, "Biggie Smalls - Juicy", state="review", reasons=["artist_mismatch"])
+    add_candidates(index, biggie, [cand("big", "Juicy", ("The Notorious B.I.G.",))])
+    result = match.recheck(lib, index)
+    assert result.items == 2
+    assert result.changed == {"review → matched_auto": 1}  # XX is The xx
+    assert index.item(biggie)["state"] == "review"  # type: ignore[index]
+    with state.edit(lib.paths.state_file) as st:
+        st.data["aliases"] = {"biggie smalls": {"name": "The Notorious B.I.G.",
+                                                 "from": "Biggie Smalls"}}  # fmt: skip
+    assert match.recheck(lib, index, item_ids=[biggie]).changed == {"review → matched_auto": 1}
+    decided = next(i for i in index.items() if i["parsed_title"] == "Decided")
+    assert decided["state"] == "matched_user"
+
+
+def test_the_real_artist_outranks_a_tribute_act() -> None:
+    """ "Beatles" is The Beatles by the rules, so it scores as exact; "Re Beatles" (a
+    tribute act) mustn't rank above it."""
+    options = [
+        cand("tribute", "She Loves You", ("Re Beatles",), 201),
+        cand("real", "She Loves You (Remastered 2009)", ("The Beatles",), 200),
+    ]
+    outcome = match.classify(rip("Beatles - She Loves You"), options)
+    assert outcome.state == "matched_auto"
+    assert [s.candidate.video_id for s in outcome.top] == ["real", "tribute"]
+    assert outcome.top[0].score > outcome.top[1].score

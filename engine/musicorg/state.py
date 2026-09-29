@@ -19,6 +19,9 @@ Keys (contract section 5), each written by the step named:
 - "superseded": {normalised rip path: MUSICORG_ID} (step 09b)
 - "rejected": {item_id: [YouTube videoId, ...]}: candidates the owner turned down, never
   proposed again (read by step 06, written by step 07)
+- "aliases": {compare key of an artist name in the rips: {"name": the name the owner
+  confirmed is the same artist, "from": the rips' spelling, "decided_at": ISO time}}
+  (step 07b: "Biggie Smalls" → "The Notorious B.I.G.")
 """
 
 from __future__ import annotations
@@ -211,4 +214,16 @@ def rejected(data: dict[str, Any]) -> dict[str, set[str]]:
         k: {v for v in ids if isinstance(v, str)}
         for k, ids in value.items()
         if isinstance(ids, list)
+    }
+
+
+def aliases(data: dict[str, Any]) -> dict[str, str]:
+    """The compare key of an artist name in the rips → the name the owner confirmed."""
+    value = data.get("aliases")
+    if not isinstance(value, dict):
+        return {}
+    return {
+        k: v["name"]
+        for k, v in value.items()
+        if isinstance(v, dict) and isinstance(v.get("name"), str) and v["name"]
     }

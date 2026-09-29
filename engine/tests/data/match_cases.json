@@ -677,11 +677,11 @@
    },
    "duration_s": 207.0,
    "explicit_tag": null,
-   "expected_state": "review",
+   "expected_state": "matched_auto",
    "expected_video_ids": [
     "FFkook9g6U8"
    ],
-   "why": "The right track, but the name has no separable artist, so it can't be AUTO.",
+   "why": "The name has no separator, but it starts with the artist (Mase), the rest is the title and the length agrees (2 s), so it's AUTO (since step 07b).",
    "made_up": false
   },
   {

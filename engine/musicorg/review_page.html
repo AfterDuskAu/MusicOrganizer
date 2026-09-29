@@ -71,6 +71,10 @@
                      border: 1px solid var(--line); background: var(--bg); color: var(--text); }
   details.fix { margin-top: 10px; color: var(--muted); }
   details.fix .row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .offer { margin: 0 0 12px; padding: 12px 14px; border-radius: 10px; background: var(--card);
+           border: 1px solid var(--accent); display: flex; gap: 8px; flex-wrap: wrap;
+           align-items: center; }
+  .offer p { margin: 0; flex: 1 1 320px; }
   #notice { min-height: 24px; margin: 10px 0 0; }
   #notice.warn { color: var(--warn); } #notice.bad { color: var(--bad); } #notice.good { color: var(--good); }
   .empty { text-align: center; color: var(--muted); padding: 48px 16px; }
@@ -93,6 +97,7 @@
   <div class="bar"><span id="position"></span>
     <span><button class="btn" id="prev" title="Previous (←)">← Previous</button>
           <button class="btn" id="next" title="Next (→)">Next →</button></span></div>
+  <div id="offer" class="offer" hidden role="region" aria-label="Same artist?"></div>
   <div id="view"></div>
   <div id="notice" role="status" aria-live="polite"></div>
 </main>
@@ -113,7 +118,7 @@ const GROUPS = [
   ["auto", "Automatic", "Matched automatically; spot-check if you like."],
   ["decided", "Decided", "Everything you've decided so far."],
 ];
-const S = { group: "doubts", items: [], at: 0, counts: {}, busy: false };
+const S = { group: "doubts", items: [], at: 0, counts: {}, busy: false, declined: new Set() };
 
 function h(tag, attrs, ...children) {
   const el = document.createElement(tag);
@@ -307,6 +312,7 @@ async function decide(item, choice) {
   try {
     const data = await api("/api/decide", { item_id: item.id, ...choice });
     S.items[S.at] = data.item;
+    if (data.alias_offer) offer(data.alias_offer);
     const oneRejected = choice.decision === "reject" && !choice.video_ids;
     if (data.warnings.length) {
       notice(data.warnings.join(" "), "warn");
@@ -324,6 +330,59 @@ async function decide(item, choice) {
     notice(error.message, "bad");
   } finally {
     S.busy = false;
+  }
+}
+
+function offer(o) {
+  // The chosen track is by an artist the file doesn't name, even allowing for spelling:
+  // ask once whether they're the same artist (a mislabelled file isn't an alias).
+  const pair = o.from + "\u0000" + o.to;
+  if (S.declined.has(pair)) return;
+  const bar = document.getElementById("offer");
+  const others = o.others
+    ? ` Saying yes also re-checks your ${o.others} other song${o.others === 1 ? "" : "s"} by ${o.from}.`
+    : "";
+  bar.replaceChildren(
+    h("p", {}, `Is “${o.from}” the same artist as “${o.to}”?${others}`),
+    h("button", { class: "btn primary", onclick: () => confirmAlias(o) }, "Yes, the same artist"),
+    h("button", { class: "btn", onclick: () => { S.declined.add(pair); bar.hidden = true; } },
+      "No, just this song"));
+  bar.hidden = false;
+  bar.scrollIntoView({ block: "nearest" });
+}
+
+const STATE_WORDS = { matched_auto: "matched automatically", review: "to review",
+                      not_found: "not found" };
+
+function describeChanges(changed) {
+  return Object.entries(changed).map(([change, n]) => {
+    const [from, to] = change.split(" → ");
+    if (to === "matched_auto") return `${n} now matched automatically`;
+    if (from === to) return `${n} still to review, with fewer doubts`;
+    return `${n} moved from ${STATE_WORDS[from] || from} to ${STATE_WORDS[to] || to}`;
+  });
+}
+
+async function confirmAlias(o) {
+  const bar = document.getElementById("offer");
+  bar.hidden = true;
+  notice("Re-checking…");
+  try {
+    const data = await api("/api/alias", { from: o.from, to: o.to });
+    const changes = describeChanges(data.changed);
+    const songs = `${data.items} other song${data.items === 1 ? "" : "s"}`;
+    notice(`Remembered that ${o.from} is ${o.to} — re-checked ${songs}: ` +
+           (changes.length ? changes.join(", ") : "nothing changed"), "good");
+    const current = S.items[S.at] && S.items[S.at].id;
+    const before = S.at;
+    const fresh = await api("/api/items?group=" + encodeURIComponent(S.group));
+    S.items = fresh.items;
+    const found = S.items.findIndex(i => i.id === current);
+    S.at = found >= 0 ? found : Math.max(0, Math.min(before, S.items.length - 1));
+    render();
+    loadSummary().catch(() => {});
+  } catch (error) {
+    notice(error.message, "bad");
   }
 }
 

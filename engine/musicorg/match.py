@@ -27,6 +27,7 @@ import hashlib
 import io
 import logging
 import random
+import re
 import time
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field, replace
@@ -34,6 +35,7 @@ from pathlib import Path
 from typing import Any
 
 from rapidfuzz import fuzz
+from rapidfuzz.distance import Levenshtein
 
 from musicorg import fileops, scan, state, youtube
 from musicorg.config import Config
@@ -66,13 +68,14 @@ Progress = Callable[[int, int, float | None], None]  # done, total, seconds left
 # ---- queries ---------------------------------------------------------------------------
 
 
-def queries(parsed: Parsed) -> list[str]:
+def queries(parsed: Parsed, alias: str | None = None) -> list[str]:
     """The searches for a rip, best first, at most 3: "<artist> <title>", then with
     its versions ("… Adventure Club Remix"), then for a low-confidence parse the title
-    alone and the reversed order."""
+    alone and the reversed order. `alias`: the name the owner confirmed for the rip's
+    artist ("The Notorious B.I.G." for "Biggie Smalls"), searched instead."""
     if not parsed.title:
         return []
-    artist = parsed.credit or parsed.artist
+    artist = alias or parsed.credit or parsed.artist
     base = " ".join(x for x in (artist, parsed.title) if x)
     found = [base]
     hard = _hard(parsed.version_tokens)
@@ -98,6 +101,7 @@ class Rip:
     parsed: Parsed
     duration_s: float | None
     explicit_tag: bool | None = None  # the file's own advisory tag
+    aliases: tuple[str, ...] = ()  # other names the owner confirmed for the rip's artist
 
     @property
     def says(self) -> str | None:
@@ -158,31 +162,39 @@ def assess(rip: Rip, candidate: Candidate, *, prefer_explicit: bool = True) -> S
 
     # Artist (0.35): the best pairing of everyone credited on each side, featured artists
     # included (a mislabelled "Eminem & Rihanna - Run This Town" still finds JAY-Z's track
-    # "feat. Rihanna"). AUTO needs the rip's main artist (or whole credit) itself.
+    # "feat. Rihanna"). AUTO needs the rip's main artist, its whole credit or a name the
+    # owner confirmed for it to be credited on the track, featured or not ("Bruno Mars -
+    # Uptown Funk" is Mark Ronson's track feat. Bruno Mars), allowing for spelling.
     names = list(candidate.artists)
     if len(names) > 1:
         names.append(" & ".join(names))
     everyone = [*names, *theirs.artists]
     rip_title = parsed.title or ""
-    main = [n for n in dict.fromkeys([parsed.credit, parsed.artist]) if n]
+    main = [n for n in dict.fromkeys([parsed.credit, parsed.artist, *rip.aliases]) if n]
     mine = [n for n in dict.fromkeys([*main, *parsed.artists]) if n]
     if main:
         artist_sim = max((_ratio(a, b) for a in mine for b in everyone), default=0.0)
-        artist_equal = any(_tight(a) == _tight(b) for a in main for b in names)
+        artist_exact = any(_tight(a) == _tight(b) for a in main for b in everyone)
+        artist_equal = artist_exact or any(same_name(a, b) for a in main for b in everyone)
     else:
-        # No artist in the rip's name: it may start the title ("Gigi D'Agostino Bla Bla Bla").
+        # No artist in the rip's name: it may start or end the title ("Mase-Feel So Good").
         artist_sim, rip_title = _artist_in_title(rip_title, candidate.artists)
-        artist_equal = False
-    human.append("artist exact" if artist_equal else f"artist {artist_sim:.0%}")
+        artist_exact = artist_equal = artist_sim == 1.0
+    if artist_equal:
+        artist_sim = 1.0  # the same artist by the rules: "Beatles" is The Beatles
+    human.append(_likeness("artist", artist_exact, artist_equal, artist_sim))
     if not artist_equal:
         codes.append("artist_mismatch")
 
     # Title (0.35), without versions or featured artists on either side.
     title_sim = _ratio(rip_title, theirs.title or "")
-    title_equal = bool(compare_key(rip_title)) and compare_key(rip_title) == compare_key(
+    title_exact = bool(compare_key(rip_title)) and compare_key(rip_title) == compare_key(
         theirs.title
     )
-    human.append("title exact" if title_equal else f"title {title_sim:.0%}")
+    title_equal = title_exact or same_name(rip_title, theirs.title or "")
+    if title_equal:
+        title_sim = 1.0
+    human.append(_likeness("title", title_exact, title_equal, title_sim))
     if not title_equal:
         codes.append("title_fuzzy")
 
@@ -261,9 +273,39 @@ def _ratio(a: str, b: str) -> float:
     return fuzz.token_sort_ratio(compare_key(a), compare_key(b)) / 100
 
 
+def _likeness(what: str, exact: bool, same: bool, similarity: float) -> str:
+    if exact:
+        return f"{what} exact"
+    return f"{what} same (spelling)" if same else f"{what} {similarity:.0%}"
+
+
+# Numbers and roman numerals must agree for names to count as the same: "Interlude I"
+# isn't "Interlude", "Part 2" isn't "Part 3".
+_NUMBERS = re.compile(r"\d+|\b(?:i|ii|iii|iv|v|vi|vii|viii|ix|x|xi|xii)\b")
+
+
+def same_name(a: str, b: str) -> bool:
+    """Two names that are the same apart from spelling: case, accents, punctuation,
+    spaces, "&"/"and", a leading "The" ("XX" and "The xx"), and a typo: one letter in
+    names of 5–10 letters, two in longer ones ("Huslin" and "Hustlin", "Snoop Dog" and
+    "Snoop Dogg"). Shorter names must match exactly ("Air" isn't "Aer"), and so must any
+    numbers ("Interlude I" isn't "Interlude")."""
+    key_a, key_b = compare_key(a), compare_key(b)
+    if not key_a or not key_b or _NUMBERS.findall(key_a) != _NUMBERS.findall(key_b):
+        return False
+    tight_a, tight_b = _tight(a), _tight(b)
+    if tight_a == tight_b:
+        return True
+    shorter = min(len(tight_a), len(tight_b))
+    allowed = 2 if shorter > 10 else 1 if shorter >= 5 else 0
+    return allowed > 0 and Levenshtein.distance(tight_a, tight_b) <= allowed
+
+
 def _tight(name: str) -> str:
-    """Artist names compared without spaces too: tags say "Cold Play", "Audio Slave"."""
-    return compare_key(name).replace(" ", "")
+    """A name without spaces or a leading "The", and "n" as "and": tags say "Cold Play",
+    "Audio Slave", "Beatles", "XX", "Guns and Roses"."""
+    key = re.sub(r"\bn\b", "and", compare_key(name))
+    return re.sub(r"^the ", "", key).replace(" ", "")
 
 
 def _artist_in_title(title: str, artists: Iterable[str]) -> tuple[float, str]:
@@ -351,8 +393,9 @@ def _review_or_not_found(rip: Rip, ranked: list[Scored]) -> Outcome:
 # ---- matching items --------------------------------------------------------------------
 
 
-def rip_of(item: dict[str, Any]) -> Rip:
-    """A scanned item (a row from the index) as matching sees it."""
+def rip_of(item: dict[str, Any], aliases: dict[str, str] | None = None) -> Rip:
+    """A scanned item (a row from the index) as matching sees it. `aliases`: the names
+    the owner confirmed for artists, by the compare key of the name in the rips."""
     data = item.get("parsed_json") or {}
     if data:
         parsed = Parsed.from_dict(data)
@@ -362,7 +405,35 @@ def rip_of(item: dict[str, Any]) -> Rip:
                         confidence=item.get("parse_confidence") or 0.0)  # fmt: skip
     tags = (item.get("raw_tags_json") or {}).get("tags") or {}
     explicit = tags.get("explicit")
-    return Rip(parsed, item.get("duration_s"), explicit if isinstance(explicit, bool) else None)
+    known = aliases or {}
+    other_names = tuple(dict.fromkeys(
+        known[key] for key in (compare_key(parsed.credit), compare_key(parsed.artist))
+        if key and key in known
+    ))  # fmt: skip
+    return Rip(parsed, item.get("duration_s"), explicit if isinstance(explicit, bool) else None,
+               other_names)  # fmt: skip
+
+
+def alias_offer(rip: Rip, chosen: Candidate) -> str | None:
+    """The owner chose `chosen` for this rip: if its artist isn't the rip's artist under
+    any spelling, nor featured on it, the name to offer as the same artist ("The
+    Notorious B.I.G." for "Biggie Smalls"). None when there's nothing to learn."""
+    main = [n for n in (rip.parsed.credit, rip.parsed.artist, *rip.aliases) if n]
+    if not main or not chosen.artists:
+        return None
+    credited = [*chosen.artists, *parse_title(chosen.title).artists]
+    if any(same_name(a, b) for a in main for b in credited):
+        return None
+    return max(chosen.artists, key=lambda name: _ratio(rip.parsed.artist or main[0], name))
+
+
+def candidate_rows(item_id: str, scored: Iterable[Scored]) -> list[dict[str, Any]]:
+    """Scored candidates as the index stores them."""
+    return [
+        {"id": s.candidate_id(item_id), "video_id": s.candidate.video_id, "score": s.score,
+         "reasons": list(s.reasons), "payload": s.payload(item_id)}
+        for s in scored
+    ]  # fmt: skip
 
 
 def match_item(
@@ -376,7 +447,7 @@ def match_item(
     """Search for one rip and classify it, stopping early on an AUTO match."""
     found: list[Candidate] = []
     outcome = Outcome("not_found")
-    for query in queries(rip.parsed):
+    for query in queries(rip.parsed, rip.aliases[0] if rip.aliases else None):
         found += youtube.search_songs(query, cache=cache, refresh=refresh)
         outcome = classify(rip, found, rejected=rejected, prefer_explicit=prefer_explicit)
         if outcome.state == "matched_auto":
@@ -424,32 +495,21 @@ def run(
         todo = todo[:limit]
     data = lib.load_state().data
     rejected = state.rejected(data)
+    aliases = state.aliases(data)
     prefer = Config.load().prefer_explicit if prefer_explicit is None else prefer_explicit
     limiter = youtube.limiter()
     requests_before = limiter.requests
 
     for done, item in enumerate(todo, start=1):
         outcome = match_item(
-            rip_of(item),
+            rip_of(item, aliases),
             cache=index,
             rejected=rejected.get(item["id"], ()),
             prefer_explicit=prefer,
             refresh=rescan,
         )
         index.set_match(
-            item["id"],
-            outcome.state,
-            outcome.reasons,
-            [
-                {
-                    "id": s.candidate_id(item["id"]),
-                    "video_id": s.candidate.video_id,
-                    "score": s.score,
-                    "reasons": list(s.reasons),
-                    "payload": s.payload(item["id"]),
-                }
-                for s in outcome.top
-            ],
+            item["id"], outcome.state, outcome.reasons, candidate_rows(item["id"], outcome.top)
         )
         result.items += 1
         setattr(result, outcome.state, getattr(result, outcome.state) + 1)
@@ -462,6 +522,49 @@ def run(
 
     result.seconds = time.monotonic() - started
     result.sample, result.sample_size = write_sample(lib, index, rng=rng)
+    return result
+
+
+@dataclass
+class RecheckResult:
+    items: int = 0
+    changed: dict[str, int] = field(default_factory=dict)  # "review → matched_auto": n
+
+    def to_dict(self) -> dict[str, Any]:
+        return dict(self.__dict__)
+
+
+def recheck(
+    lib: Library,
+    index: Index,
+    *,
+    item_ids: Iterable[str] | None = None,
+    prefer_explicit: bool | None = None,
+) -> RecheckResult:
+    """Classify `review` and `not_found` items again from the candidates already found,
+    with the current rules, confirmed artist names and rejections. Nothing is searched;
+    items the owner decided are left alone."""
+    data = lib.load_state().data
+    rejected, aliases = state.rejected(data), state.aliases(data)
+    prefer = Config.load().prefer_explicit if prefer_explicit is None else prefer_explicit
+    wanted = set(item_ids) if item_ids is not None else None
+    stored = index.all_candidates()
+    result = RecheckResult()
+    for item in index.items_in_states(["review", "not_found"]):
+        if wanted is not None and item["id"] not in wanted:
+            continue
+        options = [Candidate.from_dict(c["payload"]) for c in stored.get(item["id"], [])]
+        turned_down = rejected.get(item["id"], ())
+        outcome = classify(
+            rip_of(item, aliases), options, rejected=turned_down, prefer_explicit=prefer
+        )
+        result.items += 1
+        before = (item["state"], item.get("reasons_json") or [])
+        if (outcome.state, outcome.reasons) != before:
+            change = f"{item['state']} → {outcome.state}"
+            result.changed[change] = result.changed.get(change, 0) + 1
+        index.set_match(item["id"], outcome.state, outcome.reasons,
+                        candidate_rows(item["id"], outcome.top))  # fmt: skip
     return result
 
 

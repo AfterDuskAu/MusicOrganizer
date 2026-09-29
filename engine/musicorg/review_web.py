@@ -206,7 +206,7 @@ class _Handler(BaseHTTPRequestHandler):
         url = urlsplit(self.path)
         if not self._allowed(url, post=True):
             return
-        if url.path != "/api/decide":
+        if url.path not in ("/api/decide", "/api/alias"):
             self._error(HTTPStatus.NOT_FOUND, "Not found.")
             return
         try:
@@ -216,7 +216,7 @@ class _Handler(BaseHTTPRequestHandler):
             self._error(HTTPStatus.BAD_REQUEST, "The request wasn't valid JSON.")
             return
         try:
-            self._json(self._decide(body))
+            self._json(self._decide(body) if url.path == "/api/decide" else self._alias(body))
         except MusicOrgError as exc:
             self._error(HTTPStatus.BAD_REQUEST, exc.message)
 
@@ -270,6 +270,7 @@ class _Handler(BaseHTTPRequestHandler):
         ids = body.get("video_ids") or ([body["video_id"]] if body.get("video_id") else [None])
         warnings: list[str] = []
         changed = False
+        offer = None
         with self.server.deciding, open_index(lib.paths, write=True) as index:
             for video_id in ids:
                 result = review.decide_one(
@@ -277,6 +278,7 @@ class _Handler(BaseHTTPRequestHandler):
                     video_id=video_id, link=body.get("link"), fixes=body.get("fixes"),
                 )  # fmt: skip
                 changed = changed or result.changed
+                offer = result.alias_offer or offer
                 if result.warning:
                     warnings.append(result.warning)
             item = index.item(item_id)
@@ -284,7 +286,15 @@ class _Handler(BaseHTTPRequestHandler):
             decisions = state.decisions(lib.load_state().data)
             view = item_view(item, index.candidates(item_id), decisions.get(item_id),
                              scan.source_folders(lib, index))  # fmt: skip
-        return {"ok": True, "changed": changed, "warnings": warnings, "item": view}
+        return {"ok": True, "changed": changed, "warnings": warnings, "item": view,
+                "alias_offer": offer}  # fmt: skip
+
+    def _alias(self, body: dict[str, Any]) -> dict[str, Any]:
+        lib = self.server.lib
+        with self.server.deciding, open_index(lib.paths, write=True) as index:
+            result = review.confirm_alias(lib, index, str(body.get("from") or ""),
+                                          str(body.get("to") or ""))  # fmt: skip
+        return {"ok": True, **result.to_dict()}
 
     def _audio(self, item_id: str) -> None:
         lib = self.server.lib

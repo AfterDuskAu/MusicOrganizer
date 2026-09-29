@@ -72,3 +72,13 @@ def test_limit_must_be_positive(capsys: pytest.CaptureFixture[str], scanned: Lib
     code, _, err = run(capsys, "match", "--limit", "0")
     assert code == EXIT_USER_ERROR
     assert "--limit must be 1 or more" in err
+
+
+def test_recheck(capsys: pytest.CaptureFixture[str], scanned: Library) -> None:
+    run(capsys, "match")
+    code, out, _ = run(capsys, "match", "--recheck")
+    assert code == EXIT_OK
+    assert "Re-checked 1 review and not-found items (no searching)." in out
+    assert "Nothing changed." in out
+    code, _, err = run(capsys, "match", "--recheck", "--rescan")
+    assert code == EXIT_USER_ERROR and "takes neither" in err
