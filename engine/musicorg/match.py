@@ -7,6 +7,12 @@ and the item classified (`classify`):
 - `matched_auto`: an official audio track with the same main artist, exactly the same
   title and version, the clean/explicit rule satisfied, and a length within 2 s. That
   means safe to *queue*; replacing a file still needs the fingerprint gate (step 08).
+
+Clean or explicit: the owner always wants the explicit version, unless the rip's own
+name says clean (or "edited", "censored"). A rip that says clean only matches a clean
+track; one that says explicit, or neither, never matches a track marked clean, and when
+both versions are listed it takes the explicit one (config `prefer_explicit`, default
+true).
 - `review`: the best candidate scores at least 0.60 but isn't AUTO. The top 3 are kept.
 - `not_found`: nothing scores 0.60.
 
@@ -139,7 +145,7 @@ def score(
     return scored.score, list(scored.reasons)
 
 
-def assess(rip: Rip, candidate: Candidate) -> Scored:
+def assess(rip: Rip, candidate: Candidate, *, prefer_explicit: bool = True) -> Scored:
     parsed = rip.parsed
     theirs = parse_title(candidate.title)
     human: list[str] = []
@@ -210,14 +216,20 @@ def assess(rip: Rip, candidate: Candidate) -> Scored:
         human.append("not official audio")
         codes.append("not_official_audio")
 
-    # Clean/explicit: a rip that says which it is only matches the same kind.
+    # Clean/explicit: a rip that says which it is only matches the same kind. One that
+    # says neither is taken as explicit (the owner's wish), so a track whose title says
+    # clean ("(Clean)", "(Edited)") isn't AUTO for it.
     says = rip.says
     agrees = says is None or candidate.is_explicit is (says == "explicit")
+    marked_clean = "clean" in {t.partition(":")[0] for t in theirs.version_tokens}
     if not agrees:
         kind = {True: "explicit", False: "clean", None: "not marked"}[candidate.is_explicit]
         human.append(f"rip is {says}, this is {kind}")
-        if "version_mismatch" not in codes:
-            codes.append("version_mismatch")
+    elif marked_clean and says != "clean" and (says == "explicit" or prefer_explicit):
+        agrees = False
+        human.append("this is a clean version; the rip doesn't say clean")
+    if not agrees and "version_mismatch" not in codes:
+        codes.append("version_mismatch")
 
     total = (
         ARTIST_WEIGHT * artist_sim
@@ -294,7 +306,10 @@ def classify(
     for c in candidates:
         if c.video_id not in turned_down:
             unique.setdefault(c.video_id, c)
-    scored = sorted((assess(rip, c) for c in unique.values()), key=lambda s: -s.score)
+    scored = sorted(
+        (assess(rip, c, prefer_explicit=prefer_explicit) for c in unique.values()),
+        key=lambda s: -s.score,
+    )
     if not scored:
         return Outcome("not_found")
 

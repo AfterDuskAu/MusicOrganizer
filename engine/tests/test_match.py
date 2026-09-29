@@ -399,3 +399,24 @@ def test_rip_of_an_index_row() -> None:
     found = match.rip_of(row)
     assert (found.parsed, found.duration_s, found.explicit_tag) == (parsed, 12.5, True)
     assert found.says == "explicit"
+
+
+def test_a_track_marked_clean_is_only_for_a_clean_rip() -> None:
+    edited = cand(title="Song (Edited)", explicit=False)
+    neutral = match.assess(rip(), edited)
+    assert not neutral.auto
+    assert "this is a clean version; the rip doesn't say clean" in neutral.reasons
+    assert "version_mismatch" in neutral.codes
+    assert not match.assess(rip(explicit_tag=True), edited).auto
+    assert match.assess(rip("Artist - Song (Clean)"), edited).auto
+    assert match.assess(rip("Artist - Song [Censored]"), cand(title="Song (Clean)")).auto
+    # With prefer_explicit off, a rip that says neither may take it.
+    assert match.assess(rip(), edited, prefer_explicit=False).auto
+
+
+def test_the_owners_remix_mark_is_never_auto_without_a_remixer() -> None:
+    # "R" means remix, but not whose: the right remix can rank first, never AUTO.
+    options = [cand("original", duration=240), cand("remix", "Song (Filous Remix)")]
+    outcome = match.classify(rip("Artist - Song R"), options)
+    assert outcome.state == "review"
+    assert outcome.top[0].candidate.video_id == "remix"

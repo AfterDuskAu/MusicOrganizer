@@ -221,11 +221,11 @@
   - Candidates rejected in state.json are never proposed again.
 - `musicorg match [--limit N] [--rescan]`, with progress and an estimate of the time left on stderr. It ends by writing `Reports/auto-sample.csv` through `fileops.write_export`.
 - `normalize.parse_title` reads YouTube Music's own titles. Parts after " - " that are only versions come out as version tokens ("Yesterday - Remastered 2009" → `remaster:2009`); `parse_tags` now does the same for tag titles. Also new: `Parsed.from_dict`.
-- **Evaluation harness** (`tests/data/match_cases.json`, `test_match_harness.py`): 45 hand-labelled cases, 40 of them rips from the owner's library and 5 made up. They cover remixes, live versions, clean/explicit pairs, a cover, the tribute trap, wrong artists, video rips a few seconds long, title-only names and a non-song.
-  - Result: **0 false AUTO matches, top-1 45/45 (100%)**; 19 AUTO, 21 review, 5 not found.
+- **Evaluation harness** (`tests/data/match_cases.json`, `test_match_harness.py`): 47 hand-labelled cases, 42 of them rips from the owner's library and 5 made up. They cover remixes (including the owner's "R" mark), live versions, clean/explicit pairs, a cover, the tribute trap, wrong artists, video rips a few seconds long, title-only names and a non-song.
+  - Result: **0 false AUTO matches, top-1 47/47 (100%)**; 19 AUTO, 23 review, 5 not found.
   - I labelled the cases from each candidate's artist, title, album, length and explicit flag. The matcher's own result was on screen while I did, so the labels aren't independent of it; the owner's listening check below is the independent test.
   - A third test pins each case's expected state, so a rule change that moves a case has to be deliberate.
-- 58 searches, 6 track lookups (one of a video that doesn't exist) and 5 albums recorded in `tests/fixtures/ytm/` (1.2 MB).
+- 61 searches, 6 track lookups (one of a video that doesn't exist) and 5 albums recorded in `tests/fixtures/ytm/` (1.3 MB). 951 tests pass (4 skipped: the three as before, and the live search).
 - **What the recorded responses showed (ytmusicapi 1.12.3)**, and the code now relies on:
   - Search: every field the prompt names is there. Official audio is `MUSIC_VIDEO_TYPE_ATV`, music videos `…_OMV`. `limit` is a minimum: 20 results come back for `limit=10`, so the engine keeps the first 10.
   - `get_watch_playlist` tracks have `length` ("3:55") and `year`, but no `duration_seconds` and no `isExplicit`. A video that doesn't exist raises `YTMusicServerError` ("No content returned by the server"), and `get_track` returns None.
@@ -234,12 +234,16 @@
   - Artist names can carry odd spellings ("JAŸ-Z"); `compare_key`'s accent folding matches them.
   - ytmusicapi parses the body as JSON before checking the status code, so a 429 served as a web page arrives as a JSON error, which also counts as a slow-down.
 - **Acceptance** (2026-09-29):
-  1. Harness: 0 false AUTO matches, top-1 100% (45 cases).
+  1. Harness: 0 false AUTO matches, top-1 100% (47 cases).
   2. `musicorg match --limit 100` on the owner's library (the Apple Music folder scanned in step 05) ran without errors: 100 items in 2 min 37 s with 101 searches; 36 AUTO, 64 review, 0 not found.
      - Every AUTO match I checked by metadata is the same artist, the same title, an official album track and within 2 s.
      - Why items went to review: a length 3–60 s off (usually a YouTube rip of the right song), a different title ("Are You Mine?" vs "R U Mine?", typos), or a different artist ("Adventure Club - Crave You", which is their remix, tagged without the word "remix").
      - Nothing was `not_found`. An exact title with the same versions already scores 0.55, so almost any same-title song reaches review at 0.60. The report in step 07 should rank review items by score.
   3. `Reports/auto-sample.csv` written with 20 links. **Listening check: pending (the owner).**
+- **The owner's rules** (asked after the first run):
+  - **"R" means remix.** A final capital "R" or "(R)" in a rip's name or title ("Stressed Out R", "Done Wrong (R)", "Black Out Days R(slowed)"; 124 files in the library) becomes the version token `remix`. YouTube Music's own titles are left alone ("Vitamin R" stays). A bare `remix` never equals a named one (`remix:filous`), so these rips are never AUTO, but the right remix can rank first in review.
+  - **Always the explicit version, unless the rip's name says clean.** "Edited", "censored" and "clean edit/mix/radio edit" now also mean clean ("uncensored" already meant explicit). A track whose own title says clean is never AUTO for a rip that doesn't say clean. That's on top of the pair rule, which already took the explicit one.
+  - Re-checking the 36 AUTO matches from the real run with both rules changed none of them. The index keeps the old parses of the "R" files until `musicorg index rebuild` (the step 05 limit).
 - Deviations and additions:
   - **Artist similarity** pairs everyone credited on both sides, including "feat." artists in a candidate's title, so a mislabelled "Eminem & Rihanna - Run This Town" finds JAY-Z's track (feat. Rihanna). AUTO still needs the rip's main artist or its whole credit to equal a candidate artist.
   - **Artist equality ignores spaces**, because tags say "Cold Play" and "Audio Slave". Titles must be exactly equal, as the prompt says.

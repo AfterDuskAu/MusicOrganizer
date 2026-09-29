@@ -1,0 +1,771 @@
+{
+ "kind": "search",
+ "key": "angus and julia stone big jet plane",
+ "request": "Angus and Julia Stone Big Jet Plane",
+ "recorded_at": "2026-09-29T03:05:20Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "error": null,
+ "response": [
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Big Jet Plane",
+   "album": {
+    "name": "Down The Way",
+    "id": "MPREb_D9HYL4tHayf"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "nZks-gWcLY4",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:00",
+   "year": null,
+   "artists": [
+    {
+     "name": "Angus & Julia Stone",
+     "id": "UCP86bswr5bclI4YTihJ8haQ"
+    }
+   ],
+   "duration_seconds": 240,
+   "views": "120M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/QH_mwbo2apqUk9uLr_W3MvYZRshjY2DfnbjjfRa6ynbIvcgAS7fvropEO0vFihdQh7tnvSsOdq0JXqw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/QH_mwbo2apqUk9uLr_W3MvYZRshjY2DfnbjjfRa6ynbIvcgAS7fvropEO0vFihdQh7tnvSsOdq0JXqw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Big Jet Plane (Live Acoustic From Texas,United States/2010)",
+   "album": {
+    "name": "For You",
+    "id": "MPREb_vu0gQiiTRql"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "RYqntqBE6_Q",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:00",
+   "year": null,
+   "artists": [
+    {
+     "name": "Angus & Julia Stone",
+     "id": "UCP86bswr5bclI4YTihJ8haQ"
+    }
+   ],
+   "duration_seconds": 240,
+   "views": "71K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/p4yCggySwTnQ3LJojhoH3CGPqQv-P-bTSbMJjncGlz72SuXZWss2Rl_XN4sM6Y3GeyUtOGpWkMP0khI=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/p4yCggySwTnQ3LJojhoH3CGPqQv-P-bTSbMJjncGlz72SuXZWss2Rl_XN4sM6Y3GeyUtOGpWkMP0khI=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Big Jet Plane (Milk Live At The Chapel)",
+   "album": {
+    "name": "Big Jet Plane (Milk Live At The Chapel)",
+    "id": "MPREb_OVW8XYDHM0V"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "dc1iMYCALOU",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:46",
+   "year": null,
+   "artists": [
+    {
+     "name": "Angus & Julia Stone",
+     "id": "UCP86bswr5bclI4YTihJ8haQ"
+    }
+   ],
+   "duration_seconds": 286,
+   "views": "9.6M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/FevKxfnTPT35tCJnDDH6WcdpIrrpa4dAK3zoEdiNfNawU6AUclY7hIokvh8i_R5DCMUE9zmzqfkMIY7O=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/FevKxfnTPT35tCJnDDH6WcdpIrrpa4dAK3zoEdiNfNawU6AUclY7hIokvh8i_R5DCMUE9zmzqfkMIY7O=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Big Jet Plane",
+   "album": {
+    "name": "Big Jet Plane",
+    "id": "MPREb_e94Y8XEhJgY"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "MBaEuNyUNtc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:01",
+   "year": null,
+   "artists": [
+    {
+     "name": "Clubhouse",
+     "id": "UCXt4iB28Xs7J8-XvCgTtDeA"
+    }
+   ],
+   "duration_seconds": 241,
+   "views": "9.5M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/bPDjSEvQIsnmHgb6TnV-hR4ItLS3gkvAq264-logW_QXZVQ2wpiFRvuDd736CdYgtQMxI2UIEfBrZNp_=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/bPDjSEvQIsnmHgb6TnV-hR4ItLS3gkvAq264-logW_QXZVQ2wpiFRvuDd736CdYgtQMxI2UIEfBrZNp_=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "She Said (Big Jet Plane)",
+   "album": {
+    "name": "She Said (Big Jet Plane)",
+    "id": "MPREb_6Dl5sIK92mO"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "OYIGhxErW3c",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:54",
+   "year": null,
+   "artists": [
+    {
+     "name": "Trinix",
+     "id": "UCq2kq0ECeEHLAj7wxHlD3Cg"
+    },
+    {
+     "name": "Queen D",
+     "id": "UCtTNaz9cKkLkLclvMygVx5A"
+    }
+   ],
+   "duration_seconds": 174,
+   "views": "4.1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/GZWT-dMmwL1u8Vv-qFY4Bb0yHHMDhKgx0WG-EIj1qB3sefOsDmRSck-WjzirU_J_UWjhTWi6lWuLnaO0RA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/GZWT-dMmwL1u8Vv-qFY4Bb0yHHMDhKgx0WG-EIj1qB3sefOsDmRSck-WjzirU_J_UWjhTWi6lWuLnaO0RA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Big Jet Plane (Instrumental)",
+   "album": {
+    "name": "Big Jet Plane",
+    "id": "MPREb_ZyZV8lDyy58"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Vr7P3ODOzx8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alhanii",
+     "id": "UCDg3K05YJiPi7dmL6rY_6Vw"
+    }
+   ],
+   "duration_seconds": 232,
+   "views": "13K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/clL7-VfS204gMG3uxXXkezJyBgtCI0zOJNgBhkd0oxUjp8-5hAqB2mWSm1JipYzeFXmO6ghY7akqwEYD=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/clL7-VfS204gMG3uxXXkezJyBgtCI0zOJNgBhkd0oxUjp8-5hAqB2mWSm1JipYzeFXmO6ghY7akqwEYD=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Big Jet Plane",
+   "album": {
+    "name": "Love Songs for a Modern Wedding",
+    "id": "MPREb_S6beuNwsLSn"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "3ZaP5zwBp5U",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:58",
+   "year": null,
+   "artists": [
+    {
+     "name": "Bright Time Band",
+     "id": null
+    }
+   ],
+   "duration_seconds": 238,
+   "views": "28K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/w3qUvY7hPUf9wF0_xCdcJHA5xfsaPVeGZ26l1pELa-FFc0xnEj3FU4xUxgRY_b73LHdhG_FCoL3IemI=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/w3qUvY7hPUf9wF0_xCdcJHA5xfsaPVeGZ26l1pELa-FFc0xnEj3FU4xUxgRY_b73LHdhG_FCoL3IemI=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "You're The One That I Want",
+   "album": {
+    "name": "Big Jet Plane",
+    "id": "MPREb_KtLRC1JGFW2"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "5I5jxRiv6-U",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:15",
+   "year": null,
+   "artists": [
+    {
+     "name": "Angus & Julia Stone",
+     "id": "UCP86bswr5bclI4YTihJ8haQ"
+    }
+   ],
+   "duration_seconds": 195,
+   "views": "4.8M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/IYoxPWdVA-FoG3kVfM9hTL4FCOvIz9ifkot84HNZC9OoBBiMVqnGImJqjBjODE16MTOsrV73V__NVw3X=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/IYoxPWdVA-FoG3kVfM9hTL4FCOvIz9ifkot84HNZC9OoBBiMVqnGImJqjBjODE16MTOsrV73V__NVw3X=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Big Jet Plane",
+   "album": {
+    "name": "Big Jet Plane",
+    "id": "MPREb_1xQawA6ktKH"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "33Z69knonIw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:18",
+   "year": null,
+   "artists": [
+    {
+     "name": "Meo Swangs Music",
+     "id": null
+    }
+   ],
+   "duration_seconds": 138,
+   "views": "368",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/cX6WYjRLCIc24zFVZRRSwrqo-prUAdL09t3lsPg5_5ADvZ_M7qQu5CMwWNAKy2Gz9Dd0V4tpBMK8lMEC=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/cX6WYjRLCIc24zFVZRRSwrqo-prUAdL09t3lsPg5_5ADvZ_M7qQu5CMwWNAKy2Gz9Dd0V4tpBMK8lMEC=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Big Jet Plane (Animal Trainer Remix)",
+   "album": {
+    "name": "Big Jet Plane",
+    "id": "MPREb_6JTaxmoFhuE"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "y42vB9S9SKQ",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "6:41",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jan Blomqvist",
+     "id": "UCQqqM3IZTj06Cnoz_um2obw"
+    },
+    {
+     "name": "Animal Trainer",
+     "id": "UCvXlb_NLYj0T70KE9Rr0snA"
+    }
+   ],
+   "duration_seconds": 401,
+   "views": "819K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/OB9DinJJLw18lcJTiN_5xTMSz2bhwa5MjmD7YERQx6eehGnp8UNNFPDfuBY6l6yVEaNGWjIQ-GgDgMWY=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/OB9DinJJLw18lcJTiN_5xTMSz2bhwa5MjmD7YERQx6eehGnp8UNNFPDfuBY6l6yVEaNGWjIQ-GgDgMWY=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Big Jet Plane (Live In Lyon / 2014)",
+   "album": {
+    "name": "Angus & Julia Stone (Special Edition)",
+    "id": "MPREb_GGir9JMubg2"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "R3ptOUfnIEw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:16",
+   "year": null,
+   "artists": [
+    {
+     "name": "Angus & Julia Stone",
+     "id": "UCP86bswr5bclI4YTihJ8haQ"
+    }
+   ],
+   "duration_seconds": 256,
+   "views": "9.6K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/NxmP2ac4f5kIx149zNhvqn6dCAsE6XzUpImTTQqN_IHnzXzAPJmAjDmbeS-1LpBPy1WnNtsgQJoqc3uxqw=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/NxmP2ac4f5kIx149zNhvqn6dCAsE6XzUpImTTQqN_IHnzXzAPJmAjDmbeS-1LpBPy1WnNtsgQJoqc3uxqw=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Big Jet Plane",
+   "album": {
+    "name": "Big Jet Plane",
+    "id": "MPREb_t9J4J7EMtq1"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "iwvFr7HoDyI",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:30",
+   "year": null,
+   "artists": [
+    {
+     "name": "Restricted",
+     "id": "UCgTS1vDYJKhvFMc8oO9p27A"
+    }
+   ],
+   "duration_seconds": 150,
+   "views": "20M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/JiWM7PkWm_c7UiOiaIxDTGZ_IlAhILhKxXAZMA-topk56ntTVnQ-ZsSrNSTy5Bo-GHOxB569it6uQFsH=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/JiWM7PkWm_c7UiOiaIxDTGZ_IlAhILhKxXAZMA-topk56ntTVnQ-ZsSrNSTy5Bo-GHOxB569it6uQFsH=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Big Jet Plane",
+   "album": {
+    "name": "Kiss My Knees",
+    "id": "MPREb_cUcOT0ma3wC"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "B9QEY1KPODg",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:15",
+   "year": null,
+   "artists": [
+    {
+     "name": "TIME AGO",
+     "id": "UCgKA4ltgsJgvjkMmFki4GVQ"
+    }
+   ],
+   "duration_seconds": 195,
+   "views": "6",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/alozc-DSEFoPf9_zBEDUDRdLTzcwHl4gcGX74PLlawubCh20Lx9dL4lF7c8j15M75nCwXd893Ra0EgtF=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/alozc-DSEFoPf9_zBEDUDRdLTzcwHl4gcGX74PLlawubCh20Lx9dL4lF7c8j15M75nCwXd893Ra0EgtF=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Paper Aeroplane",
+   "album": {
+    "name": "Home Grown Roots, Vol. 1",
+    "id": "MPREb_LqwjRuRG1EG"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "252B1LN9u8U",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:41",
+   "year": null,
+   "artists": [
+    {
+     "name": "Angus & Julia Stone",
+     "id": "UCP86bswr5bclI4YTihJ8haQ"
+    }
+   ],
+   "duration_seconds": 221,
+   "views": "15M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/CI_yEtBPsGF1eRV5ypP1ZyxpKuwaS9QuEVtbuHty_2EIWwHPfqrgRBdV6dl5uW9BFrf5W_Qh2oB7RP8h=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/CI_yEtBPsGF1eRV5ypP1ZyxpKuwaS9QuEVtbuHty_2EIWwHPfqrgRBdV6dl5uW9BFrf5W_Qh2oB7RP8h=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Big Jet Plane (Live)",
+   "album": {
+    "name": "ARIA Awards 2010: The Performances",
+    "id": "MPREb_UNoPber7BhH"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "eIgoRShRr04",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:20",
+   "year": null,
+   "artists": [
+    {
+     "name": "Angus & Julia Stone",
+     "id": "UCP86bswr5bclI4YTihJ8haQ"
+    }
+   ],
+   "duration_seconds": 260,
+   "views": "926",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/PncuwL0zjf9ZQowbDt1x5JT3H6MhVwoeiOOemeBp--l7-MZz9kT4AiOyZt8tIz7nAiuD_9uZfGwksOkr1w=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/PncuwL0zjf9ZQowbDt1x5JT3H6MhVwoeiOOemeBp--l7-MZz9kT4AiOyZt8tIz7nAiuD_9uZfGwksOkr1w=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Big Jet Plane",
+   "album": {
+    "name": "Big Jet Plane",
+    "id": "MPREb_dEGYuEtcrCK"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "JeJkLKKocO8",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:54",
+   "year": null,
+   "artists": [
+    {
+     "name": "Braaten",
+     "id": "UCgrfGY1h-jKeST6DYl36Yaw"
+    },
+    {
+     "name": "Victor Perry",
+     "id": "UCda6FJi5bx3KYZTdBFfj1iw"
+    }
+   ],
+   "duration_seconds": 174,
+   "views": "1M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/Og7CPTRhPXFMN0-_XYLytxEEAPICLPxM2o0ILPmmmxkj_u5b-JhK0hAaU_KvEHVTepFEwq_cwjYyoE9P=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/Og7CPTRhPXFMN0-_XYLytxEEAPICLPxM2o0ILPmmmxkj_u5b-JhK0hAaU_KvEHVTepFEwq_cwjYyoE9P=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Big Jet Plane",
+   "album": {
+    "name": "Big Jet Plane",
+    "id": "MPREb_xl9oE2IshfW"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "w02u9SNJAu0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "3:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "Alok",
+     "id": "UCyeThGzVYx1MbxUGgIkj3iQ"
+    },
+    {
+     "name": "Mathieu Koss",
+     "id": "UCFpkVDUMQ1B3jwEZf6IzzHw"
+    }
+   ],
+   "duration_seconds": 183,
+   "views": "17M",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/7yBIv4Owf8vWYPzNjVjK_KvAoI_quLohVinZsjI-6i7G-7OV9sPpOtpEnMYoEPEvsLXlT51SFYJIaZA=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/7yBIv4Owf8vWYPzNjVjK_KvAoI_quLohVinZsjI-6i7G-7OV9sPpOtpEnMYoEPEvsLXlT51SFYJIaZA=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Big Jet Plane",
+   "album": {
+    "name": "Big Jet Plane",
+    "id": "MPREb_t7BgWOKC1fy"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "Rsyy251oLuc",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "2:44",
+   "year": null,
+   "artists": [
+    {
+     "name": "OFF TOPIC",
+     "id": "UCsPbxkvYcMIXcDRwtI6LUyA"
+    },
+    {
+     "name": "French Original",
+     "id": "UCP4hCz21emm5T1bwx6LCnIg"
+    }
+   ],
+   "duration_seconds": 164,
+   "views": "5.1K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/mIqhikDhKgAeZRJa4IrQKhNZs6d2Tzpm7FYz0mp0uJm7vszj69yfxAONrMYVXxxJ1L_RWDjC5FjSIp-Z=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/mIqhikDhKgAeZRJa4IrQKhNZs6d2Tzpm7FYz0mp0uJm7vszj69yfxAONrMYVXxxJ1L_RWDjC5FjSIp-Z=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Big Jet Plane (feat. Dabin)",
+   "album": {
+    "name": "Covers, Vol. 1",
+    "id": "MPREb_oe1CKmt6kPm"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "LfCAeyKU-Yw",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "4:34",
+   "year": null,
+   "artists": [
+    {
+     "name": "Daniela Andrade",
+     "id": "UCbEKLy7YaR1mblxoPPAdXwQ"
+    }
+   ],
+   "duration_seconds": 274,
+   "views": "255K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/NHRJpxFpMclC1kOTUKcRyrOwPcZ3Wf9OwpQRrZMlrnoAo0RsyWcUVMwn80BbDlRV8vMB6_SAMVWdlIfZ=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/NHRJpxFpMclC1kOTUKcRyrOwPcZ3Wf9OwpQRrZMlrnoAo0RsyWcUVMwn80BbDlRV8vMB6_SAMVWdlIfZ=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  },
+  {
+   "category": "Songs",
+   "resultType": "song",
+   "title": "Big Jet Plane",
+   "album": {
+    "name": "Big Jet Plane",
+    "id": "MPREb_6JTaxmoFhuE"
+   },
+   "inLibrary": false,
+   "pinnedToListenAgain": false,
+   "videoId": "5KYEZYIbSi0",
+   "videoType": "MUSIC_VIDEO_TYPE_ATV",
+   "isAvailable": true,
+   "duration": "5:52",
+   "year": null,
+   "artists": [
+    {
+     "name": "Jan Blomqvist",
+     "id": "UCQqqM3IZTj06Cnoz_um2obw"
+    }
+   ],
+   "duration_seconds": 352,
+   "views": "643K",
+   "isExplicit": false,
+   "thumbnails": [
+    {
+     "url": "https://yt3.googleusercontent.com/OB9DinJJLw18lcJTiN_5xTMSz2bhwa5MjmD7YERQx6eehGnp8UNNFPDfuBY6l6yVEaNGWjIQ-GgDgMWY=w60-h60-l90-rj",
+     "width": 60,
+     "height": 60
+    },
+    {
+     "url": "https://yt3.googleusercontent.com/OB9DinJJLw18lcJTiN_5xTMSz2bhwa5MjmD7YERQx6eehGnp8UNNFPDfuBY6l6yVEaNGWjIQ-GgDgMWY=w120-h120-l90-rj",
+     "width": 120,
+     "height": 120
+    }
+   ]
+  }
+ ]
+}

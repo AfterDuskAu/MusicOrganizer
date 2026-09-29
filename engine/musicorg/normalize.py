@@ -291,7 +291,8 @@ _VERSION_RULES: list[tuple[re.Pattern[str], str]] = [
         (r"cover\s+by\s+" + _WHO, "cover"),
         (r"(?:" + _WHO + r"\s+)?cover(?:\s+version)?", "cover"),
         (r"demo(?:\s+version)?", "demo"),
-        (r"clean(?:\s+(?:version|edit))?|radio\s+clean", "clean"),
+        (r"(?:super\s+)?clean(?:\s+(?:version|edit|radio\s+edit|mix))?|radio\s+clean"
+         r"|edited(?:\s+version)?|censored(?:\s+version)?", "clean"),
         (r"explicit(?:\s+version)?|dirty(?:\s+version)?|uncensored", "explicit"),
     ]
 ]  # fmt: skip
@@ -538,8 +539,33 @@ def _prepare(text: str) -> str:
     return " ".join(text.translate(_ODD_DASHES).split())
 
 
+# The owner's own mark for a remix: a final "R" or "(R)" ("Stressed Out R", "Done Wrong
+# (R)", "Black Out Days R(slowed)"). Upper case only, and never the whole title.
+_OWNER_REMIX = re.compile(r"(?:(?<=\s)R|\(R\)|\[R\])$")
+
+
+def _owner_remix(parsed: Parsed) -> Parsed:
+    title = (parsed.title or "").rstrip()
+    match = _OWNER_REMIX.search(title)
+    if not match or not title[: match.start()].strip():
+        return parsed
+    versions = parsed.version_tokens
+    if not any(t.partition(":")[0] == "remix" for t in versions):
+        versions = (*versions, "remix")
+    return _replace(
+        parsed,
+        title=title[: match.start()].rstrip(" -–(["),
+        version_tokens=versions,
+        notes=(*parsed.notes, "R: the owner's mark for a remix"),
+    )
+
+
 def parse_filename(stem: str) -> Parsed:
     """Parse a rip's file name (without its extension)."""
+    return _owner_remix(_parse_filename(stem))
+
+
+def _parse_filename(stem: str) -> Parsed:
     found = _Found()
     text = _prepare(stem)
     suffix = _CONVERTER_SUFFIX.search(text)
@@ -783,6 +809,10 @@ _PROMO_CHANNELS = frozenset({
 def parse_tags(tags: TrackTags) -> Parsed:
     """Parse a rip's own tags. Rip converters often put the video title in the title
     and the channel in the artist; those are recognised and parsed like a file name."""
+    return _owner_remix(_parse_tags(tags))
+
+
+def _parse_tags(tags: TrackTags) -> Parsed:
     title = _prepare(tags.title) if isinstance(tags.title, str) else None
     artist = _prepare(tags.artist) if isinstance(tags.artist, str) else None
     if not title:

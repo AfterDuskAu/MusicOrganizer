@@ -119,3 +119,13 @@ Linkin Park - Crawling [FULL-HD]	Linkin Park	Crawling		high	hyphenated junk
 Mase-Feel So Good		Mase-Feel So Good		low	a hyphen without spaces isn't a separator
 Mr.Kitty - After Dark	Mr.Kitty	After Dark		high	a dotted name isn't a web address
 The Beatles - From Me To You	The Beatles	From Me To You		high	a title starting with From isn't a soundtrack note
+Stressed Out R		Stressed Out	remix	low	the owner's R mark means remix
+Oh Wonder - Body Gold (R)	Oh Wonder	Body Gold	remix	high	the owner's (R) mark means remix
+Phantogram - Black Out Days R(slowed)	Phantogram	Black Out Days	slowed; remix	high	R mark before a slowed tag
+Kodaline - High Hopes (Filous Remix) R	Kodaline	High Hopes	remix:filous	high	R mark next to a named remix
+Artist - Song r	Artist	Song r		high	only a capital R is the mark
+Artist - Song (Clean Version)	Artist	Song	clean	high	clean version
+Artist - Song (Edited)	Artist	Song	clean	high	edited means clean
+Artist - Song [Censored]	Artist	Song	clean	high	censored means clean
+Artist - Song (Uncensored)	Artist	Song	explicit	high	uncensored means explicit
+Clean Bandit - Rather Be	Clean Bandit	Rather Be		high	Clean in a name isn't a version

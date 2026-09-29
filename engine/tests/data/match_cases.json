@@ -1031,6 +1031,54 @@
    ],
    "why": "The Heart Shaped World track, the same length; live versions must lose.",
    "made_up": true
+  },
+  {
+   "id": "kodaline-high-hopes-r",
+   "what": "the owner's R mark: a remix, remixer not named",
+   "parsed": {
+    "artist": "Kodaline",
+    "title": "High Hopes",
+    "version_tokens": [
+     "remix"
+    ],
+    "confidence": 0.95,
+    "artists": [
+     "Kodaline"
+    ],
+    "credit": "Kodaline",
+    "artist_uncertain": false
+   },
+   "duration_s": 282.4,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [
+    "hFKFm-rjnEc"
+   ],
+   "why": "R means a remix, but not whose, so never AUTO. The Filous remix (the same length) should rank first.",
+   "made_up": false
+  },
+  {
+   "id": "angus-julia-big-jet-plane-r",
+   "what": "the owner's R mark on a remix much longer than the original",
+   "parsed": {
+    "artist": "Angus and Julia Stone",
+    "title": "Big Jet Plane",
+    "version_tokens": [
+     "remix"
+    ],
+    "confidence": 0.95,
+    "artists": [
+     "Angus and Julia Stone"
+    ],
+    "credit": "Angus and Julia Stone",
+    "artist_uncertain": false
+   },
+   "duration_s": 390.1,
+   "explicit_tag": null,
+   "expected_state": "review",
+   "expected_video_ids": [],
+   "why": "R means a remix, but not whose. The nearest listed remix (Animal Trainer) runs 6:41 against the rip's 6:30, so the right one isn't clearly there.",
+   "made_up": false
   }
  ]
 }
