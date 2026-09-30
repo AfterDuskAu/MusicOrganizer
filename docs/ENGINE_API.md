@@ -94,16 +94,16 @@ Exit codes:
 | `sources.list` | — | `{ "sources": [..] }` |
 | `sources.scan` | `{ "source_ids"?: [..] }` | `{ "job_id" }` |
 | `match.run` | `{ "limit"?, "rescan"? }` | `{ "job_id" }` |
-| `review.list` | `{ "state"?: "review"\|"not_found"\|"matched_auto", "offset", "limit" }` | `{ "items": [ReviewItem], "total" }` |
-| `review.decide` | `{ "item_id", "decision", "candidate_id"?, "url"?, "metadata"? }` | `{ "item" }` |
-| `plan.create` | `{ "kind", "options"? }` | `{ "plan_id", "summary": { "operations", "downloads", "est_minutes", "low_confidence_adopts" } }` |
+| `review.list` | `{ "state"?: "review"\|"not_found"\|"matched_auto", "offset"?: 0, "limit"?: 50 }` (limit 1–500) | `{ "items": [ReviewItem], "total" }` |
+| `review.decide` | `{ "item_id", "decision", "candidate_id"?, "url"?, "metadata"? }`. `accept` without `candidate_id` takes candidate 1; `metadata` holds `artist_fix`, `title_fix`, `album_fix`, `art_url` for `only_copy`. | `{ "item": ReviewItem }` |
+| `plan.create` | `{ "kind", "options"? }`. Kinds and options: `replace` (`only`, `limit`, `stage_only`), `adopt` (`include_not_found`, `matched`), `lyrics` and `artwork` (`missing`), as the CLI's flags. | `{ "plan_id", "summary": { "operations", "downloads", "est_minutes", "low_confidence_adopts", … } }` (the plan's whole summary) |
 | `plan.get` | `{ "plan_id" }` | `{ "plan" }` |
-| `plan.apply` | `{ "plan_id" }` | `{ "batch_id" }` (jobs go to the queue) |
+| `plan.apply` | `{ "plan_id" }` | `{ "batch_id" }` (jobs go to the queue, and the queue worker starts) |
 | `queue.status` | — | `{ "state", "reason"?, "resume_at"?, "queued", "running", "done", "failed", "needs_review", "daily_count", "daily_cap" }` |
 | `queue.pause` / `queue.resume` | — | `{ "state" }` |
 | `journal.batches` | `{ "limit"? }` | `{ "batches": [..] }` |
-| `journal.undo` | `{ "batch_id", "dry_run"?: true }` | `{ "operations": [..] }` or `{ "job_id" }` |
-| `search.ytmusic` | `{ "query", "limit"? }` | `{ "results": [Candidate] }` |
+| `journal.undo` | `{ "batch_id", "dry_run"?: true }` (a dry run unless `dry_run` is `false`) | `{ "operations": [..] }` for a dry run, else `{ "job_id" }` |
+| `search.ytmusic` | `{ "query", "limit"?: 10 }` (limit 1–50) | `{ "results": [Candidate] }` (`score` null; `candidate_id` made from the videoId) |
 
 **CLI-only in v0.1** (RPC comes with the v0.2 app when needed): `sources.remove`, `index.rebuild`, `report`, `review export/import`, `lyrics`, `artwork`, `doctor`.
 
@@ -114,10 +114,10 @@ Exit codes:
 | Method | Params |
 |---|---|
 | `job.progress` | `{ "job_id", "done", "total", "message" }`, at most 4/s per job |
-| `job.finished` | `{ "job_id", "ok", "summary", "error"? }` |
-| `queue.state` | `{ "state", "reason"?, "resume_at"? }` |
+| `job.finished` | `{ "job_id", "ok", "summary", "error"? }` (`summary` is null when `ok` is false; `error` is plain English) |
+| `queue.state` | `{ "state", "reason"?, "resume_at"? }`, when the queue worker starts or stops, and after `queue.pause` |
 | `review.changed` | `{ "review", "not_found" }` |
-| `library.changed` | `{ "batch_id"?, "tracks_added", "tracks_changed" }` |
+| `library.changed` | `{ "batch_id"?, "tracks_added", "tracks_changed" }`, after a queue run that finished jobs (`tracks_changed` = jobs done) and after an undo |
 
 ### Errors
 
@@ -125,6 +125,7 @@ Standard JSON-RPC codes, plus:
 
 | Code | Meaning |
 |---|---|
+| -32000 | The request couldn't be done (a plain-English reason, e.g. "No library is open yet", a folder that doesn't exist) |
 | -32001 | Library locked by another engine |
 | -32002 | Path outside library |
 | -32003 | External tool missing (`data.tool`) |
@@ -133,7 +134,7 @@ Standard JSON-RPC codes, plus:
 | -32006 | Not found (item, plan, batch) |
 | -32007 | Busy: another long operation is running |
 
-`error.message` is always plain English, suitable to show the user directly.
+`error.message` is always plain English, suitable to show the user directly. Also standard: -32700 (not JSON), -32600 (not a request, a batch array, or anything before `engine.hello`), -32601 (no such method), -32602 (a missing or mistyped param), -32603 (unexpected; `data.log` is the log file).
 
 ### Shapes
 

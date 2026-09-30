@@ -36,15 +36,6 @@ class ConfigError(UserError):
     """config.json can't be read or saved."""
 
 
-class NotImplementedYetError(UserError):
-    """A command that a later step of the build brief will implement."""
-
-    def __init__(self, command: str, step: str) -> None:
-        super().__init__(f"musicorg {command}: not implemented yet (step {step})")
-        self.command = command
-        self.step = step
-
-
 class StateError(UserError):
     """The library's state.json can't be read or saved."""
 

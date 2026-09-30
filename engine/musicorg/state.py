@@ -35,6 +35,7 @@ import json
 import os
 import sys
 import tempfile
+import threading
 import unicodedata
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -108,10 +109,16 @@ class State:
 
 @contextmanager
 def edit(path: Path) -> Iterator[State]:
-    """Load state.json, let the caller change it, and save it if no error was raised."""
-    state = State.load(path)
-    yield state
-    state.save()
+    """Load state.json, let the caller change it, and save it if no error was raised.
+    One edit at a time in this process: `musicorg serve` (step 11) runs queue jobs and
+    the app's requests on different threads, and two interleaved edits would lose one."""
+    with _EDIT_LOCK:
+        state = State.load(path)
+        yield state
+        state.save()
+
+
+_EDIT_LOCK = threading.RLock()
 
 
 def create_if_missing(path: Path) -> bool:

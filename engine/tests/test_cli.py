@@ -52,13 +52,16 @@ def test_python_dash_m() -> None:
     assert __version__ in result.stdout
 
 
-def test_stub_through_console_script() -> None:
+def test_serve_through_console_script() -> None:
+    """`musicorg serve` answers on stdout with JSON only, and exits 0 when stdin closes."""
+    hello = {"jsonrpc": "2.0", "id": 1, "method": "engine.hello", "params": {"client": "test"}}
     result = subprocess.run(
-        [_installed_script(), "serve"], capture_output=True, text=True, encoding="utf-8"
-    )
-    assert result.returncode == EXIT_USER_ERROR
-    assert "not implemented yet (step 11)" in result.stderr
-    assert result.stdout == ""
+        [_installed_script(), "serve"], input=json.dumps(hello) + "\n", capture_output=True,
+        text=True, encoding="utf-8", timeout=60,
+    )  # fmt: skip
+    assert result.returncode == 0, result.stderr
+    (line,) = result.stdout.splitlines()
+    assert json.loads(line)["result"]["engine_version"]
 
 
 def test_doctor_output_is_utf8_through_a_pipe() -> None:
@@ -114,26 +117,13 @@ def test_group_needs_subcommand(capsys: pytest.CaptureFixture[str]) -> None:
     assert "required" in err
 
 
-@pytest.mark.parametrize(
-    ("args", "step"),
-    [
-        (["serve"], "11"),
-    ],
-)
-def test_stubs(capsys: pytest.CaptureFixture[str], args: list[str], step: str) -> None:
-    code, out, err = run(capsys, *args)
-    assert code == EXIT_USER_ERROR
-    assert f"not implemented yet (step {step})" in err
-    assert out == ""
-
-
-def test_stub_error_as_json(capsys: pytest.CaptureFixture[str]) -> None:
-    code, out, err = run(capsys, "--json", "serve")
+def test_an_error_as_json(capsys: pytest.CaptureFixture[str]) -> None:
+    code, out, err = run(capsys, "--json", "sources", "list")
     assert code == EXIT_USER_ERROR
     data = json.loads(out)
     assert data["ok"] is False
     assert data["error"]["exit_code"] == EXIT_USER_ERROR
-    assert "step 11" in data["error"]["message"]
+    assert "No library chosen yet" in data["error"]["message"]
 
 
 # ---- global options --------------------------------------------------------------------

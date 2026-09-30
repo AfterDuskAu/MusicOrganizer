@@ -571,3 +571,43 @@ The owner asked for ideas from the Photonizer project that would make the app ru
   - Covers: 787 embedded and 505 `cover.jpg` files; 0 failed. Most are 1200 × 1200. 15 albums only offer 512 px. 30 official covers aren't square within 2% (e.g. 1145 × 1200); they're kept and logged.
   - Checks: every "synced" song has its `.lrc` next to it. The lyrics' tag writes (plain lyrics, in 763 songs) and the covers' (787) all passed the verified-write check, where the decoded audio must be unchanged.
 - **Step 10's acceptance:** the counts above are recorded. What's left is the owner's check of a few `.lrc` files against playback, in a player that reads them.
+
+### Step 11: The JSON-RPC server (`musicorg serve`)
+
+- `rpc.py` implements every method, notification and error in `ENGINE_API.md` section 2.
+  - **Transport:**
+    - Newline-delimited JSON on stdin and stdout, in binary mode.
+    - `protect_stdout()` duplicates descriptor 1 for the protocol, then points 1 at stderr, so a child process (ffmpeg, fpcalc, deno) or a stray print can't corrupt the stream.
+    - Deviation: the brief's `os.fdopen(os.dup(1), 'wb')` is written as `os.write` on the duplicated descriptor (`ProtocolOut`). The write-rules test rightly flags any `fdopen` for writing outside fileops, and the protocol stream isn't a file on disk. The effect is the same, and CLAUDE.md's rule 3 needed no new exception.
+    - One writer lock for every message.
+  - **Lifecycle:**
+    - `engine.hello` comes first.
+    - `library.open` holds the lock for the engine's lifetime.
+    - On stdin EOF (and SIGTERM on macOS), no new work is taken, the queue's job gets 10 s, and the lock is released, exit 0. A job still running after 10 s is queued again at the next start; the crash-loop guard caps that.
+  - **Workers:**
+    - The queue worker runs `queue.run` from `library.open`, and again after `plan.apply` or `queue.resume`.
+    - One long operation at a time (`sources.scan`, `match.run`, a non-dry-run `journal.undo`) returns `{job_id}`. Its progress goes out at most 4 times a second, the last always, and it ends with `job.finished`. A second one gets -32007.
+  - **Errors:** every engine exception maps to a code, and an unexpected one to -32603 with the log's path.
+- `scripts/rpc_client.py` plays the app's part:
+  - makes a scratch library with five made-up rips named after recorded matcher cases
+  - runs hello, open, status, `sources.add`, a scan and `match.run` (limit 5) in replay mode, printing every notification
+  - closes stdin and checks for exit code 0
+  - It runs in the test suite too, so the Windows runner exercises it.
+- `state.edit()` holds a lock, so a queue job and an app request never interleave their state.json edits.
+- 19 new tests:
+  - the handshake
+  - every protocol error, and the engine errors' codes
+  - every method's shape, on a real scratch library
+  - notifications during a job, and throttled progress
+  - the busy error
+  - 1,000 notifications from four threads, every line whole
+  - `musicorg serve` as a real process: a second engine refused with -32001, a clean exit on EOF and on SIGTERM, the lock released
+  - a child process writing to descriptor 1 without breaking the stream
+  - the no-print rule: only `cli.py` calls `print`
+  - the API doc naming every method
+- **Doc changes** (`ENGINE_API.md`, to match the implementation):
+  - -32000 for a request that can't be done, with a plain-English reason. The doc had no code for ordinary user errors.
+  - The defaults: `review.list` limit 50, at most 500; `journal.undo` a dry run unless `dry_run` is false; `search.ytmusic` limit 10.
+  - `plan.create`'s kinds and options, including 09c's `matched` and step 10's `missing`.
+  - When `queue.state` and `library.changed` are sent.
+- `musicorg serve` replaced the last "not implemented yet" stub, and `NotImplementedYetError` is gone.

@@ -38,7 +38,6 @@ from musicorg.errors import (
     EXIT_YOUTUBE_BLOCKED,
     ConfigError,
     MusicOrgError,
-    NotImplementedYetError,
     UserError,
 )
 from musicorg.index import open_index
@@ -268,7 +267,7 @@ def build_parser() -> argparse.ArgumentParser:
         commands,
         "serve",
         "Run the JSON-RPC server on stdin/stdout for the app.",
-        _not_yet("serve", "11"),
+        _cmd_serve,
     )
     return parser
 
@@ -930,11 +929,10 @@ def _local_time(stamp: str) -> str:
         return stamp
 
 
-def _not_yet(command: str, step: str) -> Handler:
-    def handler(args: argparse.Namespace) -> int:
-        raise NotImplementedYetError(command, step)
+def _cmd_serve(args: argparse.Namespace) -> int:
+    from musicorg import rpc  # only `serve` needs it
 
-    return handler
+    return rpc.serve()
 
 
 # ---- plumbing --------------------------------------------------------------------------
