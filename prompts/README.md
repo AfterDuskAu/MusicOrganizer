@@ -72,7 +72,7 @@ The engine needs **Python 3.12, ffmpeg (with ffprobe), fpcalc (Chromaprint) and 
 | **0.1** | Engine on your own library (this brief) |
 | 0.2 | Mac app (SwiftUI): library view, review queue with A/B listen and "Other → paste link", mini and full player, synced lyrics and karaoke view, search box that plays anything |
 | 0.3 | Imports for friends: Spotify data export, Exportify CSV, Apple Music library XML, YouTube Music playlist links, most-played first |
-| 0.4 | Discover: YouTube Music radio minus what you own, Last.fm similar tracks as backup, a one-line "why" on each pick |
+| 0.4 | Discover: YouTube Music radio minus what you own, Last.fm similar tracks as backup, a one-line "why" on each pick. Owner's plan: `docs/roadmap/0.4-discover.md` |
 | 0.5 | Packaging: signed and notarized DMG, bundled Python/ffmpeg/fpcalc/deno, Sparkle updates, yt-dlp updates without an app release, arm64 and x86_64 builds |
 | **1.0** | Hand it to 1–2 Mac friends |
 | 1.1 | Phone server (Subsonic-compatible, home Wi-Fi), weekly mix in its own `Mix/` folder, shareable playlist links, Inbox for Bandcamp, CD rips and iTunes purchases |
