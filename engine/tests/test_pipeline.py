@@ -75,7 +75,7 @@ def downloads(monkeypatch: pytest.MonkeyPatch, audio: AudioFixtures, fpcalc: Pat
         tracks=(AlbumTrack(VIDEO_A, "Melody", 3, SECONDS, False, None),
                 AlbumTrack(VIDEO_B, "Melody", 4, SECONDS, False, None)),
     )  # fmt: skip
-    monkeypatch.setattr(youtube, "get_album", lambda browse_id: album)
+    monkeypatch.setattr(youtube, "get_album", lambda browse_id, **kw: album)
     return fake
 
 
@@ -535,3 +535,141 @@ def test_the_commands(
     assert "Skipped" not in undone  # the tag write in staging isn't shown
     assert "Undid 1 change." in undone
     assert not (root / "Music" / "Band" / "Unsorted" / "Rare Song.mp3").exists()
+
+
+# ---- keep your own audio (step 09c) --------------------------------------------------
+
+
+@pytest.fixture
+def album_lookups(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str]]:
+    """YouTube Music's album answer, counted; and any download fails the test."""
+    calls: list[tuple[str, str]] = []
+    raw = {
+        "title": "Tunes", "artists": [{"name": "Band", "id": "UC1"}], "year": "2020",
+        "trackCount": 9, "isExplicit": False, "thumbnails": [], "description": "long text",
+        "tracks": [
+            {"videoId": VIDEO_A, "title": "Melody", "trackNumber": 3, "duration_seconds": 20},
+            {"videoId": VIDEO_B, "title": "Other Melody", "trackNumber": 4,
+             "duration_seconds": 20},
+        ],
+    }  # fmt: skip
+
+    def fetch(kind: str, key: str, live: Any) -> Any:
+        calls.append((kind, key))
+        return raw
+
+    def no_download(*args: Any, **kw: Any) -> Any:
+        raise AssertionError("step 09c never downloads")
+
+    monkeypatch.setattr(youtube, "_fetch", fetch)
+    monkeypatch.setattr(youtube, "download_audio", no_download)
+    return calls
+
+
+def own_rip(
+    index: Index,
+    rips: Path,
+    source: Path,
+    name: str,
+    *,
+    video_id: str = VIDEO_A,
+    title: str = "Melody",
+    state_: str = "matched_auto",
+    own: tags.TrackTags | None = None,
+) -> str:
+    target = rips / f"{name}{source.suffix}"
+    shutil.copyfile(source, target)
+    if own is not None:
+        tags.write_tags(target, own)
+    iid = add_item(index, name, state=state_, seconds=3, ext=source.suffix)
+    add_candidates(index, iid, [candidate(video_id, title, ("Band",), 3, album="Tunes")])
+    return iid
+
+
+def test_keep_your_own_audio(
+    lib: Library,
+    index: Index,
+    rips: Path,
+    samples: dict[str, Path],
+    album_lookups: list[tuple[str, str]],
+) -> None:
+    own = tags.TrackTags(title="melody (official video)", artist="band", track=7,
+                         disc=1, disc_total=2, genre="Rock")  # fmt: skip
+    auto = own_rip(index, rips, samples["mp3"], "Band - Melody", own=own)
+    chosen = own_rip(index, rips, samples["m4a"], "Band - Other", video_id=VIDEO_B,
+                     title="Other Melody", state_="matched_user")  # fmt: skip
+    before = (rips / "Band - Melody.mp3").read_bytes()
+
+    plan = pipeline.plan_adopt(lib, index, matched=True)
+    assert (plan.summary["with_details"], plan.summary["adopts"], plan.summary["downloads"]) == (
+        2, 0, 0,
+    )  # fmt: skip
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+
+    assert music_files(lib) == ["Band/Tunes (2020)/03 Melody.mp3",
+                                "Band/Tunes (2020)/04 Other Melody.m4a"]  # fmt: skip
+    written = tags.read_tags(lib.paths.music / "Band" / "Tunes (2020)" / "03 Melody.mp3")
+    assert (written.title, written.artist, written.album_artist, written.album) == (
+        "Melody", "Band", "Band", "Tunes",
+    )  # fmt: skip
+    assert (written.year, written.track, written.track_total) == (2020, 3, 9)
+    assert (written.disc, written.disc_total) == (None, None)  # the rip's disc was another CD's
+    assert written.genre == "Rock"  # what YouTube Music doesn't give is kept
+    assert (written.source, written.source_id, written.source_format) == (
+        "rip_copy", VIDEO_A, "mp3",
+    )  # fmt: skip
+    assert written.match == "auto_details" and written.only_copy is None
+    assert written.origin_path == str(rips / "Band - Melody.mp3")
+    other = tags.read_tags(lib.paths.music / "Band" / "Tunes (2020)" / "04 Other Melody.m4a")
+    assert other.match == "user_details"
+    assert item_state(index, auto) == item_state(index, chosen) == ("adopted", [])
+    assert (rips / "Band - Melody.mp3").read_bytes() == before  # the rip is untouched
+    assert album_lookups == [("album", "MPREb_1")]  # two songs, one album: asked once
+
+    # Undo puts both back as they were matched.
+    batch_id = jobs(lib)[0]["batch_id"]
+    pipeline.undo(lib, batch_id)
+    assert item_state(index, auto) == ("matched_auto", [])
+    assert item_state(index, chosen) == ("matched_user", [])
+    assert music_files(lib) == []
+
+
+def test_keep_your_own_audio_leaves_out_what_it_cant_trust(
+    lib: Library,
+    index: Index,
+    rips: Path,
+    samples: dict[str, Path],
+    album_lookups: list[tuple[str, str]],
+) -> None:
+    turned_down = own_rip(index, rips, samples["mp3"], "Band - One")
+    with state.edit(lib.paths.state_file) as st:
+        st.data["gate"] = {turned_down: {VIDEO_A: {"verdict": "different", "ber": 0.4}}}
+    own_rip(index, rips, samples["webm"], "Band - Two")
+    iid = add_item(index, "Band - Three", state="review", reasons=["duration_mismatch"])
+    add_candidates(index, iid, [candidate(VIDEO_A, "Melody", ("Band",), 3)])
+
+    plan = pipeline.plan_adopt(lib, index, matched=True)
+
+    assert plan.operations == []
+    assert plan.summary["skipped"] == {"fingerprint_turned_down": 1, "format_needs_a_download": 1}
+    # Without --matched, matched rips aren't touched at all.
+    assert pipeline.plan_adopt(lib, index).summary["skipped"] == {}
+
+
+def test_an_unknown_track_number_is_removed_not_kept(
+    lib: Library,
+    index: Index,
+    rips: Path,
+    samples: dict[str, Path],
+    album_lookups: list[tuple[str, str]],
+) -> None:
+    own = tags.TrackTags(track=7, track_total=12)
+    own_rip(index, rips, samples["mp3"], "Band - Bonus", video_id="notOnAlbum1",
+            title="Bonus Song", own=own)  # fmt: skip
+    plan = pipeline.plan_adopt(lib, index, matched=True)
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    assert music_files(lib) == ["Band/Tunes (2020)/Bonus Song.mp3"]
+    written = tags.read_tags(lib.paths.music / "Band" / "Tunes (2020)" / "Bonus Song.mp3")
+    assert (written.track, written.track_total) == (None, None)

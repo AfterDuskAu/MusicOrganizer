@@ -27,6 +27,11 @@ staging → check → tag → commit, through `fileops`, journaled and undoable.
   state changes. `calibration_pairs` turns the notes into a pairs.csv to fill in.
 - **An adopt job** copies one rip into `_Staging/`, tags the copy, and commits it. Only
   MP3, M4A, FLAC, Ogg and Opus are adopted; any other format → `unsupported_format`.
+- **Keep your own audio** (step 09c, `plan adopt --matched`): a matched rip is copied in
+  the same way, with its match's official details (title, artist, album, year, track
+  number) and no download. MUSICORG_MATCH says so: `auto_details` or `user_details`.
+  There's no fingerprint check without a download, so only AUTO matches and the owner's
+  own choices qualify, never a guess still in review.
 - **`undo`** wraps `fileops.undo`: after the files are back, the batch's `superseded` and
   `adopted` rips return to the state the plan found them in, and their links go.
 """
@@ -66,6 +71,7 @@ ONLY = {
     "all-eligible": ("matched_auto", "matched_user"),
 }
 MATCH_TAG = {"matched_auto": "auto_exact", "matched_user": "user_confirmed"}
+DETAILS_TAG = {"matched_auto": "auto_details", "matched_user": "user_details"}
 ADOPT_SUFFIXES = frozenset({".mp3", ".m4a", ".flac", ".ogg", ".opus"})
 TRUSTED_PARSE = 0.8  # below this, an adopt keeps the rip's own title and artist
 MIN_BITRATE_KBPS = 100
@@ -73,6 +79,7 @@ DURATION_TOLERANCE_S = 2
 BYTES_PER_SECOND = 16_000  # format 140 is about 128 kbps
 WORK_S_PER_DOWNLOAD = 10  # download, check, fingerprint, tag: a rough figure for estimates
 WORK_S_PER_ADOPT = 2
+WORK_S_PER_DETAILS = 4  # an adopt with official details: a copy plus an album lookup
 DONE_STATES = ("superseded", "adopted")
 KEPT_DIR = "kept"
 FILE_CHANGED = "file_changed"
@@ -208,14 +215,20 @@ def plan_adopt(
     index: Index,
     *,
     include_not_found: bool = False,
+    matched: bool = False,
     config: Config | None = None,
 ) -> fileops.Plan:
     """A dry-run plan copying `only_copy` rips (and with `include_not_found`, every
     `not_found` one) into `Music/`. The summary counts adopts whose names are unsure
     (parsed with confidence under 0.8 and no fixes from the owner): those keep the rip's
-    own title and artist tags."""
+    own title and artist tags.
+
+    With `matched` (step 09c), matched rips come too, keeping their own audio, with their
+    match's official details. A rip whose match the fingerprint gate turned down stays
+    out, and so does a WebM, raw AAC or WAV rip (only a download would fix those)."""
     states = ("only_copy", "not_found") if include_not_found else ("only_copy",)
-    decisions = state.decisions(lib.load_state().data)
+    data = lib.load_state().data
+    decisions, gate = state.decisions(data), state.gate(data)
     folders = scan.source_folders(lib, index)
     busy = _items_in_open_jobs(lib)
     skipped: dict[str, int] = {}
@@ -271,17 +284,59 @@ def plan_adopt(
                 params={"rip": str(rip), "names": names, "fixes": fixes, "trusted": trusted},
             )
         )
-    adopts = len(ops) - unsupported
+    details = 0
+    if matched:
+        for item in index.items_in_states(ONLY["all-eligible"]):
+            if item["id"] in busy:
+                skipped["already_queued"] = skipped.get("already_queued", 0) + 1
+                continue
+            chosen = _chosen(index, item, decisions)
+            if chosen is None:
+                skipped["no_candidate"] = skipped.get("no_candidate", 0) + 1
+                continue
+            verdict = gate.get(item["id"], {}).get(chosen["video_id"], {}).get("verdict")
+            if verdict in ("different", "uncertain"):
+                skipped["fingerprint_turned_down"] = skipped.get("fingerprint_turned_down", 0) + 1
+                continue
+            if _suffix(item) not in ADOPT_SUFFIXES:
+                skipped["format_needs_a_download"] = skipped.get("format_needs_a_download", 0) + 1
+                continue
+            rip = Path(scan.item_path(folders, item))
+            try:
+                source = fileops.FileCheck.of(lib, rip)
+            except OSError:
+                skipped["rip_missing"] = skipped.get("rip_missing", 0) + 1
+                continue
+            details += 1
+            size += source.size
+            ops.append(
+                fileops.PlanOp(
+                    action="adopt_details",
+                    item_id=item["id"],
+                    item_state=item["state"],
+                    source=source,
+                    params={
+                        "rip": str(rip),
+                        "video_id": chosen["video_id"],
+                        "candidate": chosen["payload"],
+                        "score": chosen["score"],
+                    },
+                )  # fmt: skip
+            )
+    adopts = len(ops) - unsupported - details
     summary = {
         "operations": len(ops),
         "downloads": 0,
         "adopts": adopts,
+        "with_details": details,
         "unsupported_format": unsupported,
-        "est_minutes": estimate_minutes(0, adopts, config),
+        "est_minutes": estimate_minutes(0, adopts, config)
+        + math.ceil(details * WORK_S_PER_DETAILS / 60),
         "days": 0,
         "disk_mb": round(size / 1e6, 1),
         "low_confidence_adopts": low_confidence,
         "include_not_found": include_not_found,
+        "matched": matched,
         "skipped": skipped,
     }
     plan = fileops.new_plan("adopt", ops, summary)
@@ -533,7 +588,7 @@ def replace_job(ctx: JobContext) -> Outcome:
             first = results[0][1]
             return Outcome.needs_review(first.reason, first.why)
 
-        album = _album(candidate)
+        album = _album(candidate, index)
         extras = _extras(candidate, album)
         probe = tags.probe(path)
         new_tags = _download_tags(
@@ -685,7 +740,7 @@ def _keep_for_calibration(
     return Outcome.done(f"Calibration: kept {kept.name} ({verdicts}); nothing committed.")
 
 
-def _album(candidate: Candidate) -> AlbumInfo:
+def _album(candidate: Candidate, cache: youtube.SearchCache | None = None) -> AlbumInfo:
     """Album, album artist, year and track number from YouTube Music. A lookup that fails
     costs only those tags (a YouTube slow-down still stops the queue)."""
     found = candidate
@@ -708,7 +763,7 @@ def _album(candidate: Candidate) -> AlbumInfo:
     if not found.album_browse_id:
         return info
     try:
-        album = youtube.get_album(found.album_browse_id)
+        album = youtube.get_album(found.album_browse_id, cache=cache)
     except YouTubeError as exc:
         log.info("Couldn't read the album %s: %s", found.album_browse_id, exc)
         return info
@@ -823,6 +878,8 @@ def adopt_job(ctx: JobContext) -> Outcome:
         if op.action == "unsupported":
             index.set_state(item_id, "unsupported_format", [])
             return Outcome.done(f"{Path(op.params['rip']).name}: this format isn't adopted.")
+        if op.action == "adopt_details":
+            return _adopt_with_details(ctx, index, op)
 
         rip = Path(op.params["rip"])
         staged = fileops.stage_copy(ctx.batch, rip)
@@ -837,6 +894,76 @@ def adopt_job(ctx: JobContext) -> Outcome:
         index.put_library_tracks([_track_row(ctx.lib, final, written, probe.duration_s)])
         index.set_state(item_id, "adopted", [])
     return Outcome.done(f"Copied in as {final.name}.")
+
+
+def _adopt_with_details(ctx: JobContext, index: Index, op: fileops.PlanOp) -> Outcome:
+    """Step 09c: the rip's own audio, with its match's official details. Nothing is
+    downloaded; YouTube Music is asked only for the album (once per album, cached)."""
+    item_id, rip = str(op.item_id), Path(op.params["rip"])
+    candidate = Candidate.from_dict(op.params["candidate"])
+    album = _album(candidate, index)
+    extras = _extras(candidate, album)
+    staged = fileops.stage_copy(ctx.batch, rip)
+    probe = tags.probe(staged)
+    current = tags.read_tags(staged)
+    change = _details_tags(op, candidate, album, extras, current, probe, rip)
+    fileops.write_tags(ctx.batch, staged, change)
+    meta = naming.TrackMeta(
+        title=candidate.title, artist=", ".join(candidate.artists) or None,
+        album_artist=album.artist, album=album.title, year=album.year, track=album.track,
+        compilation=album.artist == naming.VARIOUS_ARTISTS, ext=rip.suffix.lower(),
+        source_file=rip.name,
+    )  # fmt: skip
+    final = fileops.commit(ctx.batch, staged, naming.library_path(meta, ctx.lib.root))
+    written = tags.merge(current, change)
+    index.put_library_tracks([_track_row(ctx.lib, final, written, probe.duration_s)])
+    _write_sidecars(ctx, final, extras)
+    index.set_state(item_id, "adopted", [])
+    return Outcome.done(f"Copied in with its official details as {final.name}.")
+
+
+def _details_tags(
+    op: fileops.PlanOp,
+    candidate: Candidate,
+    album: AlbumInfo,
+    extras: Extras,
+    current: tags.TrackTags,
+    probe: tags.Probe,
+    rip: Path,
+) -> tags.TrackTags:
+    """The official details over the rip's own tags. A track number, total or disc that
+    YouTube Music doesn't give is removed rather than kept from the rip: the rip's numbers
+    may belong to another album (a compilation, a greatest-hits CD). Never a guess."""
+    versions = [str(v) for v in (op.params["candidate"].get("version_tokens") or [])]
+    change = tags.TrackTags(
+        title=candidate.title,
+        artist=", ".join(candidate.artists) or None,
+        album_artist=album.artist or tags.REMOVE,
+        album=album.title or tags.REMOVE,
+        year=_year(album.year) or tags.REMOVE,
+        track=album.track or tags.REMOVE,
+        track_total=(album.track_total if album.track else None) or tags.REMOVE,
+        disc=tags.REMOVE,
+        disc_total=tags.REMOVE,
+        explicit=candidate.is_explicit,
+        lyrics=extras.lyrics,
+        cover=extras.cover,
+        cover_mime=extras.cover_mime if extras.cover else None,
+        schema=tags.SCHEMA_VERSION,
+        source="rip_copy",
+        source_id=candidate.video_id,
+        source_format=(probe.codec or rip.suffix.lstrip(".")).lower(),
+        source_bitrate=probe.bitrate_kbps,
+        acquired=_now(),
+        match=DETAILS_TAG.get(str(op.item_state)),
+        match_score=round(min(max(float(op.params["score"]), 0.0), 1.0), 3),
+        only_copy=False,
+        origin_path=str(rip),
+        version=versions or tags.REMOVE,
+    )
+    if not isinstance(current.musicorg_id, str):
+        change.musicorg_id = tags.new_track_id()
+    return change
 
 
 def _adopt_tags(
@@ -967,6 +1094,11 @@ def describe(plan: fileops.Plan) -> list[str]:
             score = float(op.params["score"])
             lines.append(f"{op.op_id:>5}  replace  {rip}  ←  {artists} – {c.get('title', '')} "
                          f"({op.params['video_id']}, score {score:.2f})")  # fmt: skip
+        elif op.action == "adopt_details":
+            c = op.params["candidate"]
+            artists = ", ".join(c.get("artists") or [])
+            lines.append(f"{op.op_id:>5}  adopt    {rip}  +  official details: {artists} – "
+                         f"{c.get('title', '')} ({op.params['video_id']})")  # fmt: skip
         elif op.action == "adopt":
             unsure = "" if op.params.get("trusted") else "  [keeps the rip's own names]"
             lines.append(f"{op.op_id:>5}  adopt    {rip}  →  {op.target}{unsure}")

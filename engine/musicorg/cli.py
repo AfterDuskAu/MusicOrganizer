@@ -225,6 +225,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--include-not-found", action="store_true", help="Also copy in every not-found rip."
     )
+    p.add_argument(
+        "--matched",
+        action="store_true",
+        help="Also copy in matched rips, keeping your own audio, with their official "
+        "details (no downloads).",
+    )
     p = add(plan, "show", "Show a plan's operations and summary.", _cmd_plan_show)
     p.add_argument("plan_id")
     p = add(
@@ -764,7 +770,9 @@ def _cmd_plan_replace(args: argparse.Namespace) -> int:
 def _cmd_plan_adopt(args: argparse.Namespace) -> int:
     with library.open(_library_root(args), write=True, command="plan adopt") as lib:
         with open_index(lib.paths, write=False) as index:
-            plan = pipeline.plan_adopt(lib, index, include_not_found=args.include_not_found)
+            plan = pipeline.plan_adopt(
+                lib, index, include_not_found=args.include_not_found, matched=args.matched
+            )
     return _print_new_plan(plan, args.json)
 
 
@@ -829,7 +837,10 @@ def _print_plan_summary(plan: fileops.Plan) -> None:
         if s.get("stage_only"):
             print("  Calibration only (--stage-only): nothing will be committed or replaced")
     else:
-        print(f"  {s.get('adopts', 0):,} rip(s) to copy in")
+        print(f"  {s.get('adopts', 0):,} rip(s) to copy in as they are")
+        if s.get("matched"):
+            print(f"  {s.get('with_details', 0):,} matched rip(s) to copy in with their official "
+                  "details (your own audio; nothing is downloaded)")  # fmt: skip
         if s.get("low_confidence_adopts"):
             print(f"  {s['low_confidence_adopts']:,} of them keep the rip's own names "
                   "(the file name was hard to read)")  # fmt: skip

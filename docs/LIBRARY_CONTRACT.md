@@ -62,6 +62,7 @@ Music/<Album Artist>/<Album> (<Year>)/<Track> <Title>.<ext>
 |---|---|---|
 | YouTube Music download | `.m4a` (AAC, **format 140 only**) | Exactly as downloaded. Container fix-up allowed, no re-encode. No fallback to other formats. |
 | Only-copy rip: MP3, M4A, FLAC, OGG, Opus | copied as is | Tags fixed on the copy only. |
+| Matched rip kept as the owner's own audio (step 09c): MP3, M4A, FLAC, OGG, Opus | copied as is | The copy gets the match's official details. No download, so no fingerprint check: only AUTO matches and the owner's own choices. |
 | Only-copy rip: WebM, raw AAC, WAV | **not adopted in v0.1** | Still matched and replaceable; counted in the report as `unsupported_format`. |
 | Future lossless (Bandcamp, CD) | `.flac` | v1.1 Inbox; listed so the schema covers it. |
 
@@ -97,13 +98,13 @@ In M4A these are freeform atoms `----:com.apple.iTunes:<NAME>`. The `com.apple.i
 | `MUSICORG_SCHEMA` | Schema version | `1` |
 | `MUSICORG_ID` | UUIDv4, assigned once, never changed. The track's identity across moves, renames and upgrades. | `3f0c…` |
 | `MUSICORG_SOURCE` | See Enums in `ENGINE_API.md` | `youtube_music` |
-| `MUSICORG_SOURCE_ID` | YouTube videoId, or a URL or other ID | `dQw4w9WgXcQ` |
+| `MUSICORG_SOURCE_ID` | YouTube videoId, or a URL or other ID. For a rip kept with official details (step 09c), the videoId of its match | `dQw4w9WgXcQ` |
 | `MUSICORG_SOURCE_FORMAT` | The actual format id yt-dlp delivered (`info_dict['format_id']`), or the codec for copies | `140` |
 | `MUSICORG_SOURCE_BITRATE` | kbps from `probe()`, never a constant | `129` |
 | `MUSICORG_ACQUIRED` | ISO-8601 UTC | `2026-10-02T09:14:00Z` |
 | `MUSICORG_MATCH` | See Enums. Absent for adopts without owner fixes. | `auto_exact` |
 | `MUSICORG_MATCH_SCORE` | 0.000–1.000 | `0.987` |
-| `MUSICORG_ONLY_COPY` | `1` if no official source exists. Protect it. | `1` |
+| `MUSICORG_ONLY_COPY` | `1` if no official source exists. Protect it. Absent for a rip kept with official details: an official source exists. | `1` |
 | `MUSICORG_ORIGIN_PATH` | Copies and replacements: the original external rip path | `/Users/…/rips/x.mp3` |
 | `MUSICORG_VERSION` | Normalised version tokens, **separated by `; `** | `remix:adventure club` |
 

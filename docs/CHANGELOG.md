@@ -501,3 +501,26 @@ The owner asked for ideas from the Photonizer project that would make the app ru
   - All 25 files are complete and linked (25 superseded), and they stay in the library.
   - Downloads in the last 24 hours: 80 of 300.
 - **Step 09b's acceptance passes.** Bigger batches come next, with the daily cap left on (acceptance 7).
+
+### Step 09c: Keep your own audio (the owner's decision, 2026-09-30)
+
+- **Why:** the owner already has about 1,800 songs and doesn't want them downloaded again. Downloading stays for people moving off streaming services, and for a song the owner picks.
+  - Step 09b's real batch showed the owner is right for many songs. Of the 25 rips, about 10 came from CDs, at 320 kbps MP3 (one made with Exact Audio Copy) or iTunes AAC, as good as or better than YouTube's 128 kbps AAC.
+  - The YouTube-converter rips (ffmpeg's "Lavf" encoder) were worse than the download, since each is a re-encode of it.
+  - That batch was undone; its files are in `_Replaced/`.
+- `plan adopt --matched` copies in `matched_auto` and `matched_user` rips, keeping their audio, with their match's official details. Nothing is downloaded. See `prompts/09c-keep-your-own-audio.md`.
+  - Tags: title, artist, album artist, album, year, track number and total, and explicit.
+  - A track number, total or disc that YouTube Music doesn't give is removed, because the rip's may belong to another CD. Other tags, like genre, stay.
+  - Provenance: `SOURCE=rip_copy`, `SOURCE_ID` = the match's videoId, and `MATCH=auto_details` or `user_details` (new values in `ENGINE_API.md` → Enums and `tags.MATCHES`). No `ONLY_COPY`.
+  - Left out, and counted in the summary: matches the fingerprint gate turned down, and WebM, raw AAC or WAV rips, which only a download would fix.
+  - The next plan picks up songs matched or confirmed later.
+- `youtube.get_album(…, cache=index)`: album answers are kept in the index for 30 days, so songs from one album ask once. Only the fields the engine uses are kept, plus thumbnails for step 10. Replace jobs use the cache too.
+- The contract's format table, `MUSICORG_SOURCE_ID` and `MUSICORG_ONLY_COPY` describe the new kind of file.
+- New tests:
+  - the official details applied and the audio untouched
+  - the rip's disc and track numbers removed when they don't belong
+  - its genre kept
+  - one album lookup shared by two songs
+  - no download ever
+  - undo back to `matched_auto` and `matched_user`
+  - turned-down and WebM matches left out

@@ -204,8 +204,27 @@ def get_track(video_id: str) -> Candidate | None:
     return _from_track(track, duration=parse_length(track.get("length")))
 
 
-def get_album(browse_id: str) -> Album:
-    raw = _fetch("album", browse_id, lambda client: client.get_album(browse_id))
+ALBUM_KEEP = ("title", "artists", "year", "trackCount", "isExplicit", "thumbnails")
+ALBUM_TRACK_KEEP = ("videoId", "title", "trackNumber", "duration_seconds", "duration",
+                    "isExplicit", "videoType")  # fmt: skip
+
+
+def get_album(browse_id: str, *, cache: SearchCache | None = None) -> Album:
+    """An album's details. With `cache` (the index), an answer younger than 30 days is
+    reused, so a library with many songs from one album asks YouTube Music once (step
+    09c). Only the fields the engine uses are kept (thumbnails too, for step 10's art)."""
+    key = f"album {browse_id}"
+    raw = None if cache is None else cache.cached_search(key, max_age_days=SEARCH_CACHE_DAYS)
+    if raw is None:
+        raw = _fetch("album", browse_id, lambda client: client.get_album(browse_id))
+        if cache is not None and isinstance(raw, dict) and isinstance(raw.get("tracks"), list):
+            kept = {k: raw.get(k) for k in ALBUM_KEEP}
+            kept["tracks"] = [
+                {k: t.get(k) for k in ALBUM_TRACK_KEEP}
+                for t in raw["tracks"]
+                if isinstance(t, dict)
+            ]
+            cache.put_search(key, kept)
     if not isinstance(raw, dict) or not isinstance(raw.get("tracks"), list):
         raise YouTubeError(f"YouTube Music's album {browse_id} gave an answer we can't read.")
     tracks = tuple(

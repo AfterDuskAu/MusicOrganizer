@@ -20,7 +20,7 @@ The engine has two front doors onto the **same functions**. The CLI is for the o
 | **Journal operation** | `commit` · `copy_in` · `supersede` · `restore` (back from `_Replaced/`, by undo) · `move` · `trash` · `write_tags` · `write_sidecar` |
 | **Undo step status** | `planned` (dry run) · `done` · `skipped` (already undone, or the file is gone) · `manual` (restore from the Trash by hand) |
 | **`MUSICORG_SOURCE`** | `youtube_music` · `youtube` · `rip_copy` · `bandcamp` · `cd` · `itunes` · `other` |
-| **`MUSICORG_MATCH`** | `auto_exact` (AUTO match and fingerprint pass) · `user_confirmed` (owner's decision and fingerprint pass) · `manual` (adopt using the owner's `*_fix` values). Absent for adopts without fixes. |
+| **`MUSICORG_MATCH`** | `auto_exact` (AUTO match and fingerprint pass) · `user_confirmed` (owner's decision and fingerprint pass) · `manual` (adopt using the owner's `*_fix` values) · `auto_details` (step 09c: the owner's own audio with an AUTO match's official details; no fingerprint check) · `user_details` (step 09c: the same, from the owner's review choice). Absent for adopts without fixes. |
 
 A fingerprint mismatch puts the item back in `review` with reason `fingerprint_mismatch`. The gate's result is kept in `state.json` (`gate`): a `different` video is never proposed for that rip again, and an `uncertain` one never goes AUTO again.
 
@@ -55,7 +55,7 @@ Global options:
 | `musicorg journal list [--limit N]` | Recent batches (default 20) with counts and open/closed status | no | 03b |
 | `musicorg undo <batch_id> [--dry-run]` | Reverse a batch | yes | 03b, extended 09b |
 | `musicorg plan replace [--only auto\|accepted\|all-eligible] [--limit N] [--stage-only]` | Dry-run plan. `--only` defaults to `all-eligible` (AUTO matches and the owner's choices). `--limit` counts videos: one download serves every rip that matched it. `--stage-only` stops after the fingerprint step for calibration. | yes | 09b |
-| `musicorg plan adopt [--include-not-found]` | Dry-run plan: copy `only_copy` items (and optionally all `not_found`) into `Music/` | yes | 09b |
+| `musicorg plan adopt [--include-not-found] [--matched]` | Dry-run plan: copy `only_copy` items (and optionally all `not_found`) into `Music/`. `--matched` (09c) also copies in `matched_auto` and `matched_user` rips, keeping the owner's own audio, with their match's official details; nothing is downloaded. | yes | 09b, 09c |
 | `musicorg plan show <plan_id>` | Print operations and summary | no | 09b |
 | `musicorg plan calibration [--out <dir>]` | Write `calibration-pairs.csv` (default `Reports/`) from the `--stage-only` downloads, `same` left for the owner to fill in | no | 09b |
 | `musicorg apply <plan_id>` | Validate and enqueue; prints the `batch_id` | yes | 09b |

@@ -68,7 +68,7 @@ NOT_ADOPTED_SUFFIXES = frozenset({".webm", ".aac", ".wav"})
 
 # docs/ENGINE_API.md → Enums.
 SOURCES = frozenset({"youtube_music", "youtube", "rip_copy", "bandcamp", "cd", "itunes", "other"})
-MATCHES = frozenset({"auto_exact", "user_confirmed", "manual"})
+MATCHES = frozenset({"auto_exact", "user_confirmed", "manual", "auto_details", "user_details"})
 
 VERSION_SEPARATOR = "; "
 MULTI_VALUE_SEPARATOR = "; "  # how several values of one field are shown when read

@@ -36,6 +36,7 @@ v0.1 is done when the engine can:
 | 08 | `prompts/08-fingerprint-gate.md` | Audio fingerprint comparison (Chromaprint) |
 | 09a | `prompts/09a-queue-and-downloader.md` | Throttled download queue, YouTube block handling, downloader (format 140 only) |
 | 09b | `prompts/09b-replace-and-adopt.md` | Replace and adopt pipeline, fingerprint calibration, first real batch |
+| 09c | `prompts/09c-keep-your-own-audio.md` | The owner's own audio with official details, no downloads (added 2026-09-30) |
 | 10 | `prompts/10-lyrics-and-artwork.md` | LRCLIB synced lyrics, square cover art |
 | 11 | `prompts/11-rpc-server.md` | The interface the Mac app uses from v0.2, then tag `v0.1.0` |
 
