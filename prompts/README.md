@@ -68,6 +68,8 @@ The engine needs **Python 3.12, ffmpeg (with ffprobe), fpcalc (Chromaprint) and 
 
 ## Roadmap after v0.1
 
+The current, fuller roadmap is `docs/ROADMAP.md`; this table is the original brief's.
+
 | Version | What |
 |---|---|
 | **0.1** | Engine on your own library (this brief) |
