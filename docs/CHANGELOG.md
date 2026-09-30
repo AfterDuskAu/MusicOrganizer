@@ -387,7 +387,11 @@ At the step 07 checkpoint the owner chose a basic UI for settling the review ite
   - the downloader writing only inside its folder, with the options checked
   - 12 real yt-dlp error messages and what each becomes
   - update and rollback with pip stubbed
-- **Acceptance:** the live check (`test_live_download`: one song into a scratch library's staging; format 140, AAC, about 128 kbps, nothing outside staging) is written but not yet run. It downloads from YouTube, so it waits for the owner's go-ahead.
+- **Acceptance** (2026-09-30, with the owner's go-ahead): the live check `test_live_download` downloads one official track into a scratch library's staging.
+  - The first run failed with a `DownloadError`. Its message was lost when the next run reused the temporary folder.
+  - The next two runs passed: `format_id` 140, AAC, 128 kbps, 199.5 s, 3.2 MB, and nothing outside `_Staging/<batch>/job-live/`.
+  - So a first attempt can fail and a retry succeed, as in the research. The queue's retries cover that.
+  - The downloaded files went to the Trash afterwards.
 - **Deviations, from the song-identification research:**
   - **Format 140 missing gets one retry** before `needs_review`. Research downloads saw "Requested format is not available" 28 times, and 9 of those videos worked on a later try. The retry asks for format 140 again; there's never a fallback format (rule 6).
   - **An empty download is retried** like any other failure, rather than ending the job (research: 5 empty files).
