@@ -469,3 +469,26 @@ The owner asked for ideas from the Photonizer project that would make the app ru
   - one read per file and per-drive read queues (scans are incremental, and the reads are small)
   - security-scoped bookmarks (yt-dlp's self-updates mean this is never a Mac App Store app)
 - 1,103 tests pass.
+
+### Step 09b: the calibration run (2026-09-30)
+
+- The owner ran `plan replace --only auto --limit 25 --stage-only`, then `apply` and `queue run`:
+  - All 25 downloads finished in about 15 minutes.
+  - One HTTP 403 was retried a minute later and succeeded.
+  - `plan calibration` wrote the pairs file.
+- **Verdicts:**
+  - 24 were `match`, with BER from 0.011 to 0.110. The limit for a match is 0.15.
+  - 1 was `uncertain`: fpcalc couldn't read the rip.
+- **Fixed, `fingerprint.py`:** that rip (an MP3) has a cut-off last frame.
+  - fpcalc read it to the end but exited with "Invalid data found", and the engine threw the fingerprint away.
+  - Now, when fpcalc fails but printed a fingerprint covering at least 90% of the file (less the ~2.7 s every whole-file fingerprint stops short of the end), that fingerprint is used and the damage is logged. The comparison is as strict as ever.
+  - Damage earlier in a file still fails. fpcalc stops at the damage, and a test shows it.
+  - With this fix, the rip compares with its download as `match` at BER 0.038: 25 of 25.
+- **Different-version pairs, from the research's saved fingerprints** (read-only, outside the repo):
+  - 32 of the owner's remix rips (an "R" at the end of the file name means remix, the owner's convention), each against the original of the same song. No audio was downloaded again.
+  - `calibrate_fp.py` on the 57 pairs (25 same, 32 different):
+    - Same: all 25 `match`. BER from 0.011 to 0.110 (median 0.046); at most 2 s of extra audio at the start and 3 s at the end.
+    - Different: all 32 `different`. BER from 0.347 to 0.495.
+    - **No different pair came near a match.**
+  - The script suggests match ≤ 0.169 and uncertain ≤ 0.287. **Kept at 0.15 and 0.25** (config.json unchanged): every same pair already passes with room to spare, and the stricter values are the safer ones.
+- Still to do for acceptance: the first real batch (`plan replace --only auto --limit 25`), 5 files checked in Apple Music, then undo and a new plan.

@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import functools
 import json
+import logging
 import struct
 import subprocess
 from collections import Counter
@@ -53,6 +54,8 @@ from musicorg.config import Config
 from musicorg.errors import AudioError, NotFoundError
 from musicorg.index import Index
 
+log = logging.getLogger(__name__)
+
 VERDICTS = ("match", "uncertain", "different")
 
 ITEM_S = 0.1238  # seconds per raw Chromaprint item
@@ -63,6 +66,8 @@ MIN_VOTES = 12  # identical values needed for a voted offset to count
 MAX_VOTED_OFFSETS = 6
 COMMON_VALUE = 20  # a value this frequent (silence, a drone) doesn't vote
 FPCALC_TIMEOUT_S = 600
+MOSTLY_READ = 0.9  # a file with a damaged spot, fingerprinted this far, still counts
+FPCALC_TAIL_S = 3.0  # a whole-file fingerprint always stops ~2.7 s before the end
 
 
 @dataclass(frozen=True)
@@ -135,13 +140,35 @@ def fingerprint(path: PurePath | str, length_s: int = 0, *, index: Index | None 
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise AudioError(f"Couldn't fingerprint the audio in {path.name}: {exc}") from exc
+    detail = (result.stderr.strip().splitlines()[-1:] or ["no details"])[0]
     if result.returncode != 0:
-        detail = result.stderr.strip().splitlines()[-1:] or ["no details"]
-        raise AudioError(f"Couldn't fingerprint the audio in {path.name}: {detail[0]}")
-    fp = parse_fpcalc_json(result.stdout, path.name)
+        fp = _mostly_read(result.stdout, path.name)
+        if fp is None:
+            raise AudioError(f"Couldn't fingerprint the audio in {path.name}: {detail}")
+        log.warning("%s has a damaged spot (%s); fingerprinted %.0f of its %.0f s anyway",
+                    path, detail, _seconds(len(fp.items)), fp.duration_s)  # fmt: skip
+    else:
+        fp = parse_fpcalc_json(result.stdout, path.name)
 
     if use_cache and index is not None and index.write:
         index.put_fingerprint(key, stat.st_size, stat.st_mtime_ns, fp.duration_s, pack(fp.items))
+    return fp
+
+
+def _mostly_read(text: str, name: str) -> RawFP | None:
+    """fpcalc stops with an error at a damaged spot in a file (an old rip with a missing
+    MP3 frame header), but it still prints what it read up to there. That fingerprint is
+    used when it covers at least `MOSTLY_READ` of the file (less the ~2.7 s any whole-file
+    fingerprint stops short of the end), i.e. the damage is near the end. The comparison
+    is as strict as ever: the unread seconds count as extra audio at the end, within the
+    gate's usual allowance. (Found by step 09b's calibration run: a rip whose last frame is
+    cut off, read to the end but reported as an error.)"""
+    try:
+        fp = parse_fpcalc_json(text, name)
+    except AudioError:
+        return None
+    if fp.duration_s <= 0 or _seconds(len(fp.items)) < MOSTLY_READ * fp.duration_s - FPCALC_TAIL_S:
+        return None
     return fp
 
 

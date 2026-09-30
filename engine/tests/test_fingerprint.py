@@ -165,6 +165,35 @@ def test_not_audio(fpcalc: Path, tmp_path: Path) -> None:
     assert "notes.m4a" in err.value.message
 
 
+def damaged(source: Path, dest: Path, at: float, length: int = 800) -> Path:
+    """A copy of `source` with `length` bytes zeroed at `at` (0–1) of the way in: a missing
+    MP3 frame header, like an old rip's (step 09b's calibration run). fpcalc stops there."""
+    data = bytearray(source.read_bytes())
+    start = int(len(data) * at)
+    data[start : start + length] = bytes(length)
+    dest.write_bytes(data)
+    return dest
+
+
+def test_a_rip_with_a_damaged_spot_is_still_compared(
+    fpcalc: Path, audio: AudioFixtures, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    rip = damaged(audio.melody_a_mp3, tmp_path / "old rip.mp3", at=0.95)
+    assert subprocess.run([str(fpcalc), "-raw", "-json", str(rip)],
+                          capture_output=True).returncode != 0  # fmt: skip
+    assert compare(rip, audio.melody_a_m4a).verdict == "match"
+    assert compare(rip, audio.melody_b_m4a).verdict == "different"
+    assert "damaged spot" in caplog.text
+
+
+def test_a_rip_damaged_early_on_is_refused(
+    fpcalc: Path, audio: AudioFixtures, tmp_path: Path
+) -> None:
+    rip = damaged(audio.melody_a_mp3, tmp_path / "old rip.mp3", at=0.3, length=4000)
+    with pytest.raises(AudioError, match="Couldn't fingerprint"):
+        fp.fingerprint(rip)
+
+
 def test_pack_round_trip() -> None:
     items = (0, 1, 2**31, 2**32 - 1, 123456789)
     assert fp.unpack(fp.pack(items)) == items
