@@ -1032,21 +1032,21 @@ def test_a_cd_rip_beats_a_youtube_conversion_whatever_the_bitrate(tmp_path: Path
     """Found on the owner's library: an iTunes CD rip at 121 kbps and a converter site's
     128 kbps MP3 of the same song. The CD rip is the better copy."""
     source = fileops.FileCheck("x", 5_000_000, 0, "")
-    cd = {"codec": "aac", "bitrate_kbps": 121, "rel_path": "RHCP/Californication/04 Otherside.m4a",
+    cd = {"codec": "aac", "bitrate_kbps": 121, "rel_path": "Band/Album/04 Song.m4a",
           "raw_tags_json": {"extra": {"encoder": "iTunes v4.6, QuickTime 6.5.1"}}}  # fmt: skip
-    converted = {"codec": "mp3", "bitrate_kbps": 128, "rel_path": "RHCP/Otherside.mp3",
+    converted = {"codec": "mp3", "bitrate_kbps": 128, "rel_path": "Band/Song.mp3",
                  "raw_tags_json": {"extra": {"encoder": "Lavf53.32.100"}}}  # fmt: skip
-    site = {"codec": "mp3", "bitrate_kbps": 320, "rel_path": "yt5s.io - RHCP - Otherside.mp3",
+    site = {"codec": "mp3", "bitrate_kbps": 320, "rel_path": "yt5s.io - Band - Song.mp3",
             "raw_tags_json": {"extra": {}}}  # fmt: skip
-    flac = {"codec": "flac", "bitrate_kbps": 900, "rel_path": "RHCP/Otherside.flac",
+    flac = {"codec": "flac", "bitrate_kbps": 900, "rel_path": "Band/Song.flac",
             "raw_tags_json": {"extra": {"encoder": "Lavf60"}}}  # fmt: skip
     ranked = sorted([converted, site, cd, flac], key=lambda i: pipeline._rip_quality(i, source),
                     reverse=True)  # fmt: skip
     assert [i["rel_path"] for i in ranked] == [
-        "RHCP/Otherside.flac",  # lossless first
-        "RHCP/Californication/04 Otherside.m4a",  # then a rip that isn't a conversion
-        "yt5s.io - RHCP - Otherside.mp3",  # then the higher bitrate
-        "RHCP/Otherside.mp3",
+        "Band/Song.flac",  # lossless first
+        "Band/Album/04 Song.m4a",  # then a rip that isn't a conversion
+        "yt5s.io - Band - Song.mp3",  # then the higher bitrate
+        "Band/Song.mp3",
     ]
 
 
@@ -1059,8 +1059,8 @@ def test_a_lyrics_file_both_copies_share_stays(
     album_lookups: list[tuple[str, str]],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Found on the owner's library: "04 Otherside.m4a" and "04 Otherside.mp3" share
-    "04 Otherside.lrc", which must stay when the lesser copy is set aside."""
+    """Found on the owner's library: "04 Song.m4a" and "04 Song.mp3" share "04 Song.lrc",
+    which must stay when the lesser copy is set aside."""
     monkeypatch.setattr(pipeline, "EXTRAS", [])
     own_rip(index, rips, two_mp3s[0], "Band - Melody", kbps=96)
     pipeline.apply(lib, index, pipeline.plan_adopt(lib, index, matched=True).plan_id)

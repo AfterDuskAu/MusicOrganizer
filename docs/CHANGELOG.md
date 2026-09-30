@@ -6,7 +6,7 @@
 
 - **Duplicates keep the best copy:**
   - The best copy is chosen by: lossless first; then a rip that isn't a YouTube conversion; then the higher bitrate; then the bigger file.
-  - Any CD or iTunes rip beats a converter site's MP3, whatever the bitrates. The owner's library showed why: the first tidy plan would have kept a 128 kbps converter MP3 of "Otherside" over the 121 kbps iTunes CD rip.
+  - Any CD or iTunes rip beats a converter site's MP3, whatever the bitrates. The owner's library showed why: the first tidy plan would have kept a 128 kbps converter MP3 of a song over its 121 kbps iTunes CD rip.
   - A YouTube conversion is recognised by ffmpeg's "Lavf"/"Lavc" encoder tag, or a converter's name in the file name (`scan.youtube_converted`). The converter names y2meta, x2mate and yt5s were added.
   - When both copies come from one YouTube upload, the higher-bitrate one lost less in its re-encode.
   - `plan adopt --matched` copies in only the best rip of each song. The others (`adopt_duplicate`) are linked to it (`superseded`), and nothing is copied.
@@ -18,9 +18,9 @@
   - Only whole names are replaced, never inside the preferred spelling, so doing it twice changes nothing. A test showed "Band" → "The Band" could otherwise become "The The Band".
 - **Fixed, `fileops.undo`:** undo planned every step before running any. So a batch that retagged a file and then moved it lost the tag restore: when it was planned, the file wasn't yet back where it had been tagged. Each step is now planned right before it runs. A regression test covers it.
 - Undo now refreshes the index's library tracks for every file a batch touched (moves, set-asides), not only commits.
-- **After the owner's tidy run** (5 duplicates set aside, 19 Jay Z songs moved; all 24 done), two gaps were found and fixed:
-  - "04 Otherside.m4a" and "04 Otherside.mp3" shared one "04 Otherside.lrc", and setting the MP3 aside took the shared lyrics file with it. A lyrics file that both copies share now stays. `lyrics --missing` fetches the lost one again.
-  - Moves left the old `JAŸ-Z` folders behind, empty. `fileops.remove_empty_folders` removes a `Music/` folder holding nothing but junk, and its emptied parents. No data is removed, so it isn't journaled, and undo recreates any folder a file moves back into. Renames call it for the folder they leave, and `plan tidy` also clears empty folders already in the library.
+- **After the owner's tidy run** (5 duplicates set aside, 19 songs renamed; all 24 done), two gaps were found and fixed:
+  - Two copies of one song, "04 Song.m4a" and "04 Song.mp3", shared one "04 Song.lrc", and setting the MP3 aside took the shared lyrics file with it. A lyrics file that both copies share now stays. `lyrics --missing` fetches the lost one again.
+  - Moves left the old artist folders behind, empty. `fileops.remove_empty_folders` removes a `Music/` folder holding nothing but junk, and its emptied parents. No data is removed, so it isn't journaled, and undo recreates any folder a file moves back into. Renames call it for the folder they leave, and `plan tidy` also clears empty folders already in the library.
   - Both have tests.
 - The plan and batch kind `tidy` is new (ENGINE_API.md → Enums), as are the `names` key in state.json (contract section 5) and `plan.create` kind `tidy` over RPC.
 - 1,175 tests pass. New:
