@@ -21,6 +21,14 @@ Most of these came from comparing the engine with the Photonizer project's lesso
   - Proposed: one read-only review session of fileops' guard, reserve-then-replace, recovery and undo; the pipeline's commit and undo; queue recovery; and state.json writes.
   - Run it after 09b's calibration run and before `plan replace` without `--stage-only`. Decide: yes or no.
 
+- **Duplicate songs in the rips come in twice.** Two rips of one song (e.g. from two converter sites) both match the same official track, so both are copied in, the second as ` (2)`. Four such pairs after step 09c.
+  - Proposed: `plan adopt --matched` keeps one copy per matched video, the higher-quality rip; the rest wait as duplicates.
+  - The 4 existing pairs: a small plan that moves the extra copy out of the library.
+  - Decide: which copy to keep. Bitrate doesn't help much when both came from YouTube, since 320 kbps is only a re-encode of 128 kbps.
+- **Artist names exactly as YouTube Music spells them**, e.g. "JAŸ-Z" instead of "JAY-Z".
+  - Proposed: a "preferred artist names" setting in state.json, applied to tags and folder names across the library.
+  - Decide: which names.
+
 ## For later steps
 
 - **Step 11 (RPC):** treat the app stopping the engine (SIGTERM) like Ctrl-C: finish or requeue the current job cleanly. Today only Ctrl-C is handled, so a stop counts as a crash. The crash-loop guard sets a job aside after 5 of those.

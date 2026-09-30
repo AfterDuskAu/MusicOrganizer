@@ -524,3 +524,9 @@ The owner asked for ideas from the Photonizer project that would make the app ru
   - no download ever
   - undo back to `matched_auto` and `matched_user`
   - turned-down and WebM matches left out
+- **Acceptance run on the owner's library** (2026-09-30): `plan adopt --matched` → `apply` → `queue run`.
+  - 817 of 817 done (735 `auto_details`, 82 `user_details`), 0 failed, no downloads. Faster than the 55 min estimate, because songs share album lookups.
+  - 352 artist folders; about 4.2 GB copied; every rip untouched.
+  - 6 files have no track number and 2 no album or year, because YouTube Music couldn't place them. They're left empty rather than guessed.
+  - 4 songs are in the library twice (` (2)`). The owner's rips had them twice, from different YouTube-converter sites, so both copies were adopted. Noted in `KNOWN-ISSUES.md`.
+  - Artist names are as YouTube Music spells them, e.g. "JAŸ-Z". A "preferred artist names" setting is noted in `KNOWN-ISSUES.md`.
