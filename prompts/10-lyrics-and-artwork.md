@@ -48,3 +48,10 @@ Plus:
 - `musicorg lyrics --missing` → `apply` → `queue run` on the tracks replaced in step 09b. Report how many got synced, plain only, or none.
 - Open 3 `.lrc` files alongside playback in a player that reads sidecar LRC files, and check the timing.
 - Record in `docs/CHANGELOG.md` the **count** of files whose verified tag writes passed.
+
+## Owner's notes (2026-09-30)
+- **The owner wants every song to get its cover automatically**, the same way names, artists and lyrics are fixed. For replaced songs the plan above already does that. A single's "album" on YouTube Music is the single release, so a single gets its own song cover, not a random album's.
+- **Only-copy songs:** the plan above gives them no automatic art (a wrong cover is worse than none), only an `art_url` the owner supplies. The owner's wish goes further, so decide with the owner at this step:
+  - keep the rule;
+  - use the album art of a YouTube Music match the owner confirmed in review;
+  - or add a new source such as MusicBrainz's Cover Art Archive. That's a new network service: ask first, as for any dependency.
