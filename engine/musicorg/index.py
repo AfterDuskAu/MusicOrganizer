@@ -492,6 +492,13 @@ class Index:
         )
         return [dict(row) for row in rows]
 
+    def library_tracks_with_source_id(self, source_id: str) -> list[dict[str, Any]]:
+        """Library tracks from this video, whatever their MUSICORG_SOURCE (step 09d)."""
+        rows = self._rows(
+            "SELECT * FROM library_tracks WHERE source_id = ? ORDER BY rel_path", (source_id,)
+        )
+        return [dict(row) for row in rows]
+
     def remove_library_tracks(self, rel_paths: Iterable[str]) -> int:
         batch = [(p,) for p in rel_paths]
         if not batch:

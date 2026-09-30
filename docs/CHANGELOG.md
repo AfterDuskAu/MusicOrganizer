@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.1.1 — in progress
+
+### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)
+
+- **Duplicates keep the best copy:**
+  - The best copy is chosen by: lossless first, then the higher bitrate, then the bigger file. When two converter rips come from one YouTube upload, the higher-bitrate one lost less in its re-encode.
+  - `plan adopt --matched` copies in only the best rip of each song. The others (`adopt_duplicate`) are linked to it (`superseded`), and nothing is copied.
+  - `plan tidy` does the same for songs already in the library twice. The lesser copy and its `.lrc` go to `_Replaced/`, and its rip is linked to the kept file. A kept file named ` (2)` gets its plain name back when that name is free.
+- **Preferred names:**
+  - `musicorg names set "JAŸ-Z" "Jay Z"` saves the owner's spelling in state.json (`names`).
+  - New songs use it at once (replace, and adopt with official details).
+  - `plan tidy` writes it into the tags (title, artist, album artist, album). It moves each file to the folder and name those give, taking the `.lrc` along, and the album's `cover.jpg` once its old folder has no songs left.
+  - Only whole names are replaced, never inside the preferred spelling, so doing it twice changes nothing. A test showed "Band" → "The Band" could otherwise become "The The Band".
+- **Fixed, `fileops.undo`:** undo planned every step before running any. So a batch that retagged a file and then moved it lost the tag restore: when it was planned, the file wasn't yet back where it had been tagged. Each step is now planned right before it runs. A regression test covers it.
+- Undo now refreshes the index's library tracks for every file a batch touched (moves, set-asides), not only commits.
+- The plan and batch kind `tidy` is new (ENGINE_API.md → Enums), as are the `names` key in state.json (contract section 5) and `plan.create` kind `tidy` over RPC.
+- 1,175 tests pass. New:
+  - preferred names applied to the library and undone, with lyrics and cover moved along
+  - new songs using them
+  - only the best rip adopted, with the other linked, and undone
+  - a library duplicate set aside with its " (2)" dropped, and undone
+  - the `names` commands
+  - the undo regression test
+
 ## 0.1.0 — 2026-09-30
 
 The first version of the engine, run on the owner's own library.

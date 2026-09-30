@@ -191,7 +191,7 @@ def test_batches_need_the_library_open_for_writing(lib: Library) -> None:
 
 
 def test_unknown_batch_kind(lib: Library) -> None:
-    with pytest.raises(ValueError, match="batch kind"), fileops.batch(lib, "tidy"):
+    with pytest.raises(ValueError, match="batch kind"), fileops.batch(lib, "shuffle"):
         pass
 
 

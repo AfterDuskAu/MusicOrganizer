@@ -23,6 +23,9 @@ Keys (contract section 5), each written by the step named:
   video is never proposed for that rip again, and an `uncertain` one never goes AUTO.
 - "rejected": {item_id: [YouTube videoId, ...]}: candidates the owner turned down, never
   proposed again (read by step 06, written by step 07)
+- "names": {a spelling YouTube Music uses: {"name": the owner's preferred spelling,
+  "decided_at": ISO time}}: preferred names in tags and folders, e.g. "JAŸ-Z" → "Jay Z"
+  (step 09d)
 - "aliases": {compare key of an artist name in the rips: {"name": the name the owner
   confirmed is the same artist, "from": the rips' spelling, "decided_at": ISO time}}
   (step 07b: "Biggie Smalls" → "The Notorious B.I.G.")
@@ -248,6 +251,18 @@ def rejected(data: dict[str, Any]) -> dict[str, set[str]]:
         k: {v for v in ids if isinstance(v, str)}
         for k, ids in value.items()
         if isinstance(ids, list)
+    }
+
+
+def names(data: dict[str, Any]) -> dict[str, str]:
+    """A spelling YouTube Music uses → the owner's preferred spelling (step 09d)."""
+    value = data.get("names")
+    if not isinstance(value, dict):
+        return {}
+    return {
+        k: v["name"]
+        for k, v in value.items()
+        if isinstance(k, str) and k and isinstance(v, dict) and isinstance(v.get("name"), str)
     }
 
 

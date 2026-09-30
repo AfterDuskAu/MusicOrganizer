@@ -275,3 +275,21 @@ def test_windows_a_file_open_in_another_app(
             retag(lib, path, TrackTags(title="Song"))
     assert path.read_bytes() == before
     assert files_in(lib.paths.staging) == []
+
+
+def test_a_tag_write_then_a_move_of_the_same_file_both_come_back(
+    lib: Library, track: Callable[[str], Path]
+) -> None:
+    """Undo plans each step right before it runs: the move back puts the file where its
+    tag write happened, so the tags can then be restored (found by step 09d's renames)."""
+    path = track("mp3")
+    before = tags.read_tags(path).artist
+    with fileops.batch(lib, "demo") as b:
+        fileops.write_tags(b, path, TrackTags(artist="Renamed"))
+        moved = fileops.move(b, path, Path("Renamed", "Song.mp3"))
+        batch_id = b.batch_id
+    assert tags.read_tags(moved).artist == "Renamed"
+    result = fileops.undo(lib, batch_id)
+    assert path.is_file() and not moved.exists()
+    assert tags.read_tags(path).artist == before
+    assert [s.status for s in result.steps] == ["done", "done"]

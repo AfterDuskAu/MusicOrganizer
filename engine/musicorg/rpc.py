@@ -585,8 +585,12 @@ class Server:
                 plan = pipeline.plan_lyrics(lib, index, missing=bool(options.get("missing")))
             elif kind == "artwork":
                 plan = pipeline.plan_artwork(lib, index, missing=bool(options.get("missing")))
+            elif kind == "tidy":
+                plan = pipeline.plan_tidy(lib, index)
             else:
-                raise RpcError(INVALID_PARAMS, "kind should be replace, adopt, lyrics or artwork.")
+                raise RpcError(
+                    INVALID_PARAMS, "kind should be replace, adopt, lyrics, artwork or tidy."
+                )
         summary = dict(plan.summary)
         for key in ("operations", "downloads", "est_minutes", "low_confidence_adopts"):
             summary.setdefault(key, 0)

@@ -58,7 +58,7 @@ import time
 import unicodedata
 from collections import Counter
 from collections.abc import Callable, Iterable, Iterator
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path, PurePath, PurePosixPath
@@ -97,8 +97,8 @@ STAGING = (naming.STAGING_DIR,)
 ENGINE = (naming.ENGINE_DIR,)
 
 # docs/ENGINE_API.md → Enums.
-BATCH_KINDS = frozenset({"replace", "adopt", "lyrics", "artwork", "undo", "demo"})
-PLAN_KINDS = frozenset({"replace", "adopt", "lyrics", "artwork"})
+BATCH_KINDS = frozenset({"replace", "adopt", "lyrics", "artwork", "tidy", "undo", "demo"})
+PLAN_KINDS = frozenset({"replace", "adopt", "lyrics", "artwork", "tidy"})
 OPERATIONS = (
     "commit", "copy_in", "supersede", "restore", "move", "trash", "write_tags", "write_sidecar",
 )  # fmt: skip
@@ -1685,34 +1685,40 @@ def undo(
             )
 
     undone_by = _undone_ops(journal, batch_id)
-    reversals = [
-        _plan_reversal(paths, op, undone_by)
-        for op in reversed(record.ops)
-        if op.status in ("done", "pending")
-    ]
+    to_undo = [op for op in reversed(record.ops) if op.status in ("done", "pending")]
+    reversals = [_plan_reversal(paths, op, undone_by) for op in to_undo]
     result = UndoResult(batch_id, dry_run, [r.step for r in reversals], cancelled_jobs=cancelled)
     if dry_run:
         return result
 
-    runnable = [r for r in reversals if r.run is not None]
-    if runnable:
-        with batch(paths, "undo", undo_of=batch_id) as ub:
-            result.undo_batch_id = ub.batch_id
-            for done_count, reversal in enumerate(runnable):
-                assert reversal.run is not None
-                try:
-                    final = reversal.run(ub)
-                except MusicOrgError as exc:
-                    raise UndoError(
-                        f"The undo stopped at {reversal.step.path}: {exc.message} "
-                        f"{done_count} of {len(runnable)} operations were undone (as batch "
-                        f"{ub.batch_id}). Once that's sorted out, run `musicorg undo "
-                        f"{batch_id}` again: it carries on where it stopped."
-                    ) from exc
-                reversal.step.status = "done"
-                if final is not None:
-                    reversal.step.to = _rel(paths, final)
-                _prune_dirs(paths, reversal.prune)
+    # Each step is planned again right before it runs: an earlier step may have put a
+    # file back where a later one expects it (a tag write, then a move of the same file:
+    # the move is undone first, and only then is the file where its tag write was).
+    with ExitStack() as stack:
+        ub: Batch | None = None
+        done_count = 0
+        for position, op in enumerate(to_undo):
+            reversal = _plan_reversal(paths, op, undone_by)
+            result.steps[position] = reversal.step
+            if reversal.run is None:
+                continue
+            if ub is None:
+                ub = stack.enter_context(batch(paths, "undo", undo_of=batch_id))
+                result.undo_batch_id = ub.batch_id
+            try:
+                final = reversal.run(ub)
+            except MusicOrgError as exc:
+                raise UndoError(
+                    f"The undo stopped at {reversal.step.path}: {exc.message} "
+                    f"{done_count} operations were undone (as batch {ub.batch_id}). Once "
+                    f"that's sorted out, run `musicorg undo {batch_id}` again: it carries on "
+                    "where it stopped."
+                ) from exc
+            done_count += 1
+            reversal.step.status = "done"
+            if final is not None:
+                reversal.step.to = _rel(paths, final)
+            _prune_dirs(paths, reversal.prune)
     if record.open_batch and record.end is None:
         close_batch(paths, batch_id, closed_by=result.undo_batch_id or "undo")
     log.info(

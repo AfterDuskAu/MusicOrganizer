@@ -31,7 +31,12 @@ staging → check → tag → commit, through `fileops`, journaled and undoable.
   the same way, with its match's official details (title, artist, album, year, track
   number) and no download. MUSICORG_MATCH says so: `auto_details` or `user_details`.
   There's no fingerprint check without a download, so only AUTO matches and the owner's
-  own choices qualify, never a guess still in review.
+  own choices qualify, never a guess still in review. When several rips match the same
+  track, only the best copy is copied in (lossless first, then the higher bitrate, then
+  the bigger file); the others are linked to it.
+- **Tidy** (step 09d, `plan tidy`): songs already in the library twice keep their best
+  copy (the other goes to `_Replaced/`), and the owner's preferred names ("JAŸ-Z" →
+  "Jay Z") are written into the tags and folders. New songs use them from the start.
 - **`undo`** wraps `fileops.undo`: after the files are back, the batch's `superseded` and
   `adopted` rips return to the state the plan found them in, and their links go.
 """
@@ -43,8 +48,9 @@ import io
 import json
 import logging
 import math
+import re
 from collections.abc import Callable
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -92,6 +98,7 @@ WORK_S_PER_DOWNLOAD = 10  # download, check, fingerprint, tag: a rough figure fo
 WORK_S_PER_ADOPT = 2
 WORK_S_PER_DETAILS = 4  # an adopt with official details: a copy plus an album lookup
 DONE_STATES = ("superseded", "adopted")
+LOSSLESS = frozenset({"flac", "alac", "wavpack", "pcm_s16le", "pcm_s24le"})
 KEPT_DIR = "kept"
 FILE_CHANGED = "file_changed"
 
@@ -333,8 +340,9 @@ def plan_adopt(
                 params={"rip": str(rip), "names": names, "fixes": fixes, "trusted": trusted},
             )
         )
-    details = 0
+    details = duplicates = 0
     if matched:
+        wanted: dict[str, list[tuple[dict[str, Any], dict[str, Any], Path, fileops.FileCheck]]] = {}
         for item in index.items_in_states(ONLY["all-eligible"]):
             if item["id"] in busy:
                 skipped["already_queued"] = skipped.get("already_queued", 0) + 1
@@ -356,28 +364,36 @@ def plan_adopt(
             except OSError:
                 skipped["rip_missing"] = skipped.get("rip_missing", 0) + 1
                 continue
-            details += 1
-            size += source.size
-            ops.append(
-                fileops.PlanOp(
-                    action="adopt_details",
+            wanted.setdefault(chosen["video_id"], []).append((item, chosen, rip, source))
+        linked: list[fileops.PlanOp] = []
+        for video_id, group in wanted.items():
+            group.sort(key=lambda g: _rip_quality(g[0], g[3]), reverse=True)
+            in_library = bool(index.library_tracks_with_source_id(video_id))
+            for n, (item, chosen, rip, source) in enumerate(group):
+                if n == 0 and not in_library:
+                    details += 1
+                    size += source.size
+                    action = "adopt_details"
+                else:
+                    duplicates += 1
+                    action = "adopt_duplicate"
+                op = fileops.PlanOp(
+                    action=action,
                     item_id=item["id"],
                     item_state=item["state"],
                     source=source,
-                    params={
-                        "rip": str(rip),
-                        "video_id": chosen["video_id"],
-                        "candidate": chosen["payload"],
-                        "score": chosen["score"],
-                    },
+                    params={"rip": str(rip), "video_id": video_id,
+                            "candidate": chosen["payload"], "score": chosen["score"]},
                 )  # fmt: skip
-            )
-    adopts = len(ops) - unsupported - details
+                (ops if action == "adopt_details" else linked).append(op)
+        ops.extend(linked)  # after the copies they link to
+    adopts = len(ops) - unsupported - details - duplicates
     summary = {
         "operations": len(ops),
         "downloads": 0,
         "adopts": adopts,
         "with_details": details,
+        "duplicates": duplicates,
         "unsupported_format": unsupported,
         "est_minutes": estimate_minutes(0, adopts, config)
         + math.ceil(details * WORK_S_PER_DETAILS / 60),
@@ -635,7 +651,9 @@ def replace_job(ctx: JobContext) -> Outcome:
             first = results[0][1]
             return Outcome.needs_review(first.reason, first.why)
 
-        album = _album(candidate, index)
+        names = state.names(ctx.lib.load_state().data)
+        candidate = _preferred(candidate, names)
+        album = _preferred_album(_album(candidate, index), names)
         probe = tags.probe(path)
         extras = _extras(ExtrasQuery(candidate, album, probe.duration_s,
                                      _versions(passed[0]), index))  # fmt: skip
@@ -928,6 +946,8 @@ def adopt_job(ctx: JobContext) -> Outcome:
             return Outcome.done(f"{Path(op.params['rip']).name}: this format isn't adopted.")
         if op.action == "adopt_details":
             return _adopt_with_details(ctx, index, op)
+        if op.action == "adopt_duplicate":
+            return _link_duplicate(ctx, index, op)
 
         rip = Path(op.params["rip"])
         staged = fileops.stage_copy(ctx.batch, rip)
@@ -948,8 +968,9 @@ def _adopt_with_details(ctx: JobContext, index: Index, op: fileops.PlanOp) -> Ou
     """Step 09c: the rip's own audio, with its match's official details. Nothing is
     downloaded; YouTube Music is asked only for the album (once per album, cached)."""
     item_id, rip = str(op.item_id), Path(op.params["rip"])
-    candidate = Candidate.from_dict(op.params["candidate"])
-    album = _album(candidate, index)
+    names = state.names(ctx.lib.load_state().data)
+    candidate = _preferred(Candidate.from_dict(op.params["candidate"]), names)
+    album = _preferred_album(_album(candidate, index), names)
     staged = fileops.stage_copy(ctx.batch, rip)
     probe = tags.probe(staged)
     extras = _extras(ExtrasQuery(candidate, album, probe.duration_s, _versions(op), index))
@@ -1041,6 +1062,252 @@ def _adopt_tags(
         if not current.title:
             change.title = names["title"]
     return change
+
+
+def _rip_quality(item: dict[str, Any], source: fileops.FileCheck) -> tuple[int, int, int]:
+    """The better of two rips of one song: lossless first, then the higher bitrate, then
+    the bigger file. (Two converter rips of one YouTube upload came from the same
+    audio; the higher-bitrate one lost less in its re-encode.)"""
+    lossless = 1 if str(item.get("codec") or "").lower() in LOSSLESS else 0
+    return lossless, int(item.get("bitrate_kbps") or 0), int(source.size)
+
+
+def _link_duplicate(ctx: JobContext, index: Index, op: fileops.PlanOp) -> Outcome:
+    """A rip of a song already in the library as a better copy: link it, copy nothing."""
+    video_id = str(op.params["video_id"])
+    for track in index.library_tracks_with_source_id(video_id):
+        path = ctx.lib.root / Path(*PurePosixPath(track["rel_path"]).parts)
+        if path.is_file() and track.get("musicorg_id"):
+            _mark_replaced(ctx.lib, index, [op], str(track["musicorg_id"]))
+            return Outcome.done(f"A duplicate of {path.name}, which is kept; linked to it.")
+    return Outcome.done("Its better copy isn't in the library, so nothing was linked.")
+
+
+# ---- preferred names and duplicates (step 09d) ---------------------------------------
+
+
+def prefer(text: str | None, names: dict[str, str]) -> str | None:
+    """`text` with each spelling the owner renamed replaced, e.g. "JAŸ-Z, Kanye West" →
+    "Jay Z, Kanye West"."""
+    if not text:
+        return text
+    for original, preferred in names.items():
+        # Whole names only ("Band" isn't changed inside "Bandit"), and never inside the
+        # preferred spelling itself, so doing it twice changes nothing ("Band" → "The
+        # Band" mustn't become "The The Band").
+        pattern = re.compile(rf"(?<!\w){re.escape(original)}(?!\w)")
+        pieces = text.split(preferred)
+        literal = preferred.replace("\\", "\\\\")  # re.sub's replacement escapes
+        text = preferred.join(pattern.sub(literal, piece) for piece in pieces)
+    return text
+
+
+def _preferred(candidate: Candidate, names: dict[str, str]) -> Candidate:
+    if not names:
+        return candidate
+    return replace(
+        candidate,
+        title=prefer(candidate.title, names) or candidate.title,
+        artists=tuple(prefer(a, names) or a for a in candidate.artists),
+        album=prefer(candidate.album, names),
+    )
+
+
+def _preferred_album(album: AlbumInfo, names: dict[str, str]) -> AlbumInfo:
+    album.title = prefer(album.title, names)
+    album.artist = prefer(album.artist, names)
+    return album
+
+
+def set_name(lib: Library, original: str, preferred: str) -> dict[str, str]:
+    """Remember the owner's preferred spelling of a name ("JAŸ-Z" → "Jay Z"). Takes
+    effect for new songs at once, and for the library with `plan tidy`."""
+    original, preferred = original.strip(), preferred.strip()
+    if not original or not preferred:
+        raise UserError("Give both the spelling to change and the one you prefer.")
+    if original == preferred:
+        raise UserError("Those are the same spelling.")
+    with state.edit(lib.paths.state_file) as st:
+        found = st.data.get("names")
+        if not isinstance(found, dict):
+            found = st.data["names"] = {}
+        found[original] = {"name": preferred, "decided_at": _now()}
+    return state.names(lib.load_state().data)
+
+
+def remove_name(lib: Library, original: str) -> dict[str, str]:
+    with state.edit(lib.paths.state_file) as st:
+        found = st.data.get("names")
+        if not isinstance(found, dict) or original not in found:
+            raise NotFoundError(f"There's no preferred spelling for {original!r}.")
+        del found[original]
+    return state.names(lib.load_state().data)
+
+
+TIDY_FIELDS = ("title", "artist", "album_artist", "album")
+
+
+def plan_tidy(lib: Library, index: Index) -> fileops.Plan:
+    """`musicorg plan tidy`: songs in the library twice keep their best copy, and every
+    file gets the owner's preferred names, moving to the folder and name they now give.
+    A file whose name has a ` (2)` it no longer needs is renamed too."""
+    names = state.names(lib.load_state().data)
+    files = _library_files(lib, index)
+    by_video: dict[str, list[tuple[dict[str, Any], Path]]] = {}
+    for track, path in files:
+        if track.get("source_id"):
+            by_video.setdefault(str(track["source_id"]), []).append((track, path))
+    items_by_rip = _items_by_rip(lib, index)
+    ops: list[fileops.PlanOp] = []
+    dropped: set[str] = set()
+    for group in by_video.values():
+        if len(group) < 2:
+            continue
+        group.sort(key=lambda g: _file_quality(g[1]), reverse=True)
+        keep_track, _ = group[0]
+        for track, path in group[1:]:
+            item = items_by_rip.get(state.normalise_path(Path(track.get("origin_path") or "")))
+            dropped.add(track["rel_path"])
+            ops.append(
+                fileops.PlanOp(
+                    action="duplicate",
+                    item_id=item["id"] if item else None,
+                    item_state=item["state"] if item else None,
+                    source=fileops.FileCheck.of(lib, path),
+                    params={
+                        "musicorg_id": track["musicorg_id"],
+                        "rip": track.get("origin_path"),
+                        "keep": keep_track["rel_path"],
+                        "keep_id": keep_track["musicorg_id"],
+                    },
+                )  # fmt: skip
+            )
+    duplicates = len(ops)
+    for track, path in files:
+        if track["rel_path"] in dropped:
+            continue
+        current = tags.read_tags(path)
+        changes = {
+            field: prefer(getattr(current, field), names)
+            for field in TIDY_FIELDS
+            if isinstance(getattr(current, field), str)
+            and prefer(getattr(current, field), names) != getattr(current, field)
+        }
+        after = {f: changes.get(f, getattr(current, f)) for f in TIDY_FIELDS}
+        meta = naming.TrackMeta(
+            title=after["title"], artist=after["artist"], album_artist=after["album_artist"],
+            album=after["album"], year=current.year if isinstance(current.year, int) else None,
+            track=current.track if isinstance(current.track, int) else None,
+            compilation=after["album_artist"] == naming.VARIOUS_ARTISTS, ext=path.suffix,
+            source_file=path.name,
+        )  # fmt: skip
+        target = PurePosixPath(naming.MUSIC_DIR, *naming.library_path(meta, lib.root).parts)
+        here = PurePosixPath(track["rel_path"])
+        if not changes:
+            if target == here or not _just_a_number_added(here, target):
+                continue
+            ideal = lib.root / Path(*target.parts)
+            if (ideal.exists() or ideal.is_symlink()) and target.as_posix() not in dropped:
+                continue  # the plain name belongs to another song: keep the number
+        ops.append(
+            fileops.PlanOp(
+                action="rename",
+                source=fileops.FileCheck.of(lib, path),
+                target=target.as_posix(),
+                params={"musicorg_id": track["musicorg_id"], "changes": changes},
+            )
+        )
+    summary = {"operations": len(ops), "duplicates": duplicates, "renames": len(ops) - duplicates,
+               "downloads": 0, "est_minutes": math.ceil(len(ops) * 2 / 60), "days": 0,
+               "disk_mb": 0, "low_confidence_adopts": 0}  # fmt: skip
+    plan = fileops.new_plan("tidy", ops, summary)
+    fileops.save_plan(lib, plan)
+    return plan
+
+
+def _just_a_number_added(here: PurePosixPath, ideal: PurePosixPath) -> bool:
+    """`here` is the ideal name with a " (2)"-style number the file may no longer need."""
+    return here.parent == ideal.parent and here.stem != ideal.stem and (
+        here.stem.startswith(ideal.stem + " (") and here.stem.endswith(")")
+    )  # fmt: skip
+
+
+def _file_quality(path: Path) -> tuple[int, int, int]:
+    found = tags.probe(path)
+    lossless = 1 if (found.codec or "").lower() in LOSSLESS else 0
+    return lossless, int(found.bitrate_kbps or 0), path.stat().st_size
+
+
+def _items_by_rip(lib: Library, index: Index) -> dict[str, dict[str, Any]]:
+    folders = scan.source_folders(lib, index)
+    return {
+        state.normalise_path(Path(scan.item_path(folders, item))): item
+        for item in index.items_in_states(DONE_STATES)
+    }
+
+
+def tidy_job(ctx: JobContext) -> Outcome:
+    (op,) = _ops(ctx.payload)
+    path = _same_file(ctx.lib, op)
+    if path is None:
+        return Outcome.needs_review(FILE_CHANGED, "The file has moved or changed since the plan.")
+    with open_index(ctx.lib.paths, write=True) as index:
+        if op.action == "duplicate":
+            return _set_aside_duplicate(ctx, index, op, path)
+        return _rename(ctx, index, op, path)
+
+
+def _set_aside_duplicate(ctx: JobContext, index: Index, op: fileops.PlanOp, path: Path) -> Outcome:
+    keep = ctx.lib.root / Path(*PurePosixPath(str(op.params["keep"])).parts)
+    if not keep.is_file() or tags.read_tags(keep).musicorg_id != op.params["keep_id"]:
+        return Outcome.needs_review(FILE_CHANGED, "The better copy has moved or changed.")
+    lrc = path.with_suffix(".lrc")
+    if lrc.is_file() and not keep.with_suffix(".lrc").is_file():
+        fileops.move(ctx.batch, lrc, _music_rel(ctx.lib, keep.with_suffix(".lrc")))
+    elif lrc.is_file():
+        fileops.supersede(ctx.batch, lrc)
+    fileops.supersede(ctx.batch, path)
+    index.remove_library_tracks([_rel_path(ctx.lib, path)])
+    if op.item_id is not None and op.params.get("rip"):
+        _mark_replaced(ctx.lib, index, [op], str(op.params["keep_id"]))
+    return Outcome.done(f"{path.name} set aside; {keep.name} is the better copy.")
+
+
+def _rename(ctx: JobContext, index: Index, op: fileops.PlanOp, path: Path) -> Outcome:
+    changes = dict(op.params.get("changes") or {})
+    if changes:
+        fileops.write_tags(ctx.batch, path, tags.TrackTags(**changes))
+    assert op.target is not None
+    target = PurePosixPath(op.target).relative_to(naming.MUSIC_DIR)
+    final = path
+    if PurePosixPath(_rel_path(ctx.lib, path)) != PurePosixPath(op.target):
+        old_folder = path.parent
+        final = fileops.move(ctx.batch, path, Path(*target.parts))
+        lrc = path.with_suffix(".lrc")
+        if lrc.is_file():
+            fileops.move(ctx.batch, lrc, _music_rel(ctx.lib, final.with_suffix(".lrc")))
+        cover = old_folder / naming.COVER_NAME
+        if (
+            cover.is_file()
+            and old_folder != final.parent
+            and not (final.parent / naming.COVER_NAME).exists()
+            and not any(p.suffix.lower() in ADOPT_SUFFIXES for p in old_folder.iterdir())
+        ):
+            fileops.move(ctx.batch, cover, _music_rel(ctx.lib, final.parent / naming.COVER_NAME))
+    index.remove_library_tracks([_rel_path(ctx.lib, path)])
+    written = tags.read_tags(final)
+    index.put_library_tracks([_track_row(ctx.lib, final, written, tags.probe(final).duration_s)])
+    what = ", ".join(f"{k} → {v}" for k, v in changes.items())
+    return Outcome.done(f"{final.name}" + (f" ({what})" if what else " (renamed)"))
+
+
+def _rel_path(lib: Library, path: Path) -> str:
+    return PurePosixPath(*path.relative_to(lib.root).parts).as_posix()
+
+
+def _music_rel(lib: Library, path: Path) -> Path:
+    """A library path as `fileops.move` takes it: relative to Music/."""
+    return path.relative_to(lib.paths.music)
 
 
 # ---- lyrics and covers for the library (step 10) ------------------------------------
@@ -1234,18 +1501,19 @@ def undo(lib: Library, batch_id: str, *, dry_run: bool = False) -> fileops.UndoR
         jobs = store.jobs(batch_id=batch_id)
     ops = [op for job in jobs if job["payload"].get("ops") for op in _ops(job["payload"])]
     record = fileops.read_journal(lib).get(batch_id)
-    added = [op.result_path for op in (record.ops if record else []) if op.op == "commit"]
+    touched = _touched_paths(record)
     with open_index(lib.paths, write=True) as index:
         restored: list[fileops.PlanOp] = []
         for op in ops:
-            item = index.item(str(op.item_id))
+            item = index.item(str(op.item_id)) if op.item_id else None
             if item is not None and item["state"] in DONE_STATES and op.item_state:
                 index.set_state(str(op.item_id), op.item_state, [])
                 restored.append(op)
-        gone = [p for p in added if p and not (lib.root / Path(*PurePosixPath(p).parts)).exists()]
-        index.remove_library_tracks(gone)
+        _refresh_tracks(lib, index, touched)
     rips = {
-        state.normalise_path(Path(op.params["rip"])) for op in restored if op.action == "replace"
+        state.normalise_path(Path(op.params["rip"]))
+        for op in restored
+        if op.action in LINKING_ACTIONS and op.params.get("rip")
     }
     if rips:
         with state.edit(lib.paths.state_file) as st:
@@ -1255,6 +1523,37 @@ def undo(lib: Library, batch_id: str, *, dry_run: bool = False) -> fileops.UndoR
                     links.pop(rip, None)
     log.info("Undo of %s: %d rips back to their earlier state", batch_id, len(restored))
     return result
+
+
+LINKING_ACTIONS = frozenset({"replace", "duplicate", "adopt_duplicate"})
+
+
+def _touched_paths(record: fileops.BatchRecord | None) -> set[str]:
+    """Every audio path in `Music/` an undone batch's operations named."""
+    found: set[str] = set()
+    for op in record.ops if record else []:
+        for value in (op.result_path, op.intent.get("src"), op.intent.get("dst"),
+                      op.intent.get("path")):  # fmt: skip
+            if isinstance(value, str) and value.startswith(naming.MUSIC_DIR + "/"):
+                if Path(value).suffix.lower() in ADOPT_SUFFIXES:
+                    found.add(value)
+    return found
+
+
+def _refresh_tracks(lib: Library, index: Index, rel_paths: set[str]) -> None:
+    """Make the index's library tracks match these files again after an undo: rows for
+    files that are back, none for files that went."""
+    gone, back = [], []
+    for rel in rel_paths:
+        path = lib.root / Path(*PurePosixPath(rel).parts)
+        if path.is_file():
+            written = tags.read_tags(path)
+            if isinstance(written.musicorg_id, str):
+                back.append(_track_row(lib, path, written, tags.probe(path).duration_s))
+                continue
+        gone.append(rel)
+    index.remove_library_tracks(gone)
+    index.put_library_tracks(back)
 
 
 # ---- calibration ---------------------------------------------------------------------
@@ -1327,6 +1626,17 @@ def describe(plan: fileops.Plan) -> list[str]:
         elif op.action == "adopt":
             unsure = "" if op.params.get("trusted") else "  [keeps the rip's own names]"
             lines.append(f"{op.op_id:>5}  adopt    {rip}  →  {op.target}{unsure}")
+        elif op.action == "duplicate":
+            assert op.source is not None
+            lines.append(f"{op.op_id:>5}  set aside {op.source.path}  (a duplicate of "
+                         f"{op.params['keep']})")  # fmt: skip
+        elif op.action == "rename":
+            assert op.source is not None
+            changes = ", ".join(f"{k}: {v}" for k, v in (op.params.get("changes") or {}).items())
+            lines.append(f"{op.op_id:>5}  rename   {op.source.path}  →  {op.target}"
+                         + (f"  ({changes})" if changes else ""))  # fmt: skip
+        elif op.action == "adopt_duplicate":
+            lines.append(f"{op.op_id:>5}  link     {rip}  (a duplicate; the best copy is kept)")
         elif op.action in ("lyrics", "artwork"):
             assert op.source is not None
             where = op.params.get("browse_id") or op.params.get("art_url") or ""
@@ -1343,3 +1653,4 @@ queue.register("adopt", adopt_job, network=False)
 # request a second, YouTube's shared limiter), not the download pace or the daily cap.
 queue.register("lyrics", lyrics_job, network=False)
 queue.register("artwork", artwork_job, network=False)
+queue.register("tidy", tidy_job, network=False)

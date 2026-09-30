@@ -8,6 +8,7 @@ from __future__ import annotations
 import csv
 import json
 import shutil
+import subprocess
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
@@ -25,6 +26,7 @@ from musicorg import (
     library,
     lyrics,
     match,
+    naming,
     pipeline,
     queue,
     review,
@@ -597,12 +599,13 @@ def own_rip(
     title: str = "Melody",
     state_: str = "matched_auto",
     own: tags.TrackTags | None = None,
+    kbps: int = 128,
 ) -> str:
     target = rips / f"{name}{source.suffix}"
     shutil.copyfile(source, target)
     if own is not None:
         tags.write_tags(target, own)
-    iid = add_item(index, name, state=state_, seconds=3, ext=source.suffix)
+    iid = add_item(index, name, state=state_, seconds=3, ext=source.suffix, kbps=kbps)
     add_candidates(index, iid, [candidate(video_id, title, ("Band",), 3, album="Tunes")])
     return iid
 
@@ -858,3 +861,166 @@ def test_new_adopts_get_lyrics_and_a_cover(
     assert (written.lyrics, written.cover) == (PLAIN, cover())
     assert song.with_suffix(".lrc").read_text(encoding="utf-8") == SYNCED
     assert (song.parent / "cover.jpg").is_file()
+
+
+# ---- preferred names and duplicates (step 09d) ------------------------------------------
+
+
+@pytest.fixture
+def two_mp3s(ffmpeg_path: Path, samples: dict[str, Path], tmp_path: Path) -> tuple[Path, Path]:
+    """The same 3 s of melody as a 96 kbps and a 192 kbps MP3."""
+    made = []
+    for kbps in (96, 192):
+        out = tmp_path / f"melody-{kbps}.mp3"
+        subprocess.run([str(ffmpeg_path), "-v", "error", "-i", str(samples["m4a"]), "-c:a",
+                        "libmp3lame", "-b:a", f"{kbps}k", str(out)], check=True)  # fmt: skip
+        made.append(out)
+    return made[0], made[1]
+
+
+def test_preferred_names_rename_the_library(lib: Library, index: Index, adopted: Path) -> None:
+    with fileops.batch(lib, "demo") as b:
+        fileops.write_sidecar(b, adopted, ".lrc", SYNCED.encode())
+        fileops.write_sidecar(b, adopted, naming.COVER_NAME, cover())
+    assert pipeline.plan_tidy(lib, index).operations == []  # nothing to do yet
+    pipeline.set_name(lib, "Band", "The Band")
+
+    plan = pipeline.plan_tidy(lib, index)
+    assert (plan.summary["renames"], plan.summary["duplicates"]) == (1, 0)
+    batch_id = pipeline.apply(lib, index, plan.plan_id).batch_id
+    run_queue(lib)
+
+    moved = lib.paths.music / "The Band" / "Tunes (2020)" / "03 Melody.mp3"
+    assert music_files(lib) == ["The Band/Tunes (2020)/03 Melody.lrc",
+                                "The Band/Tunes (2020)/03 Melody.mp3",
+                                "The Band/Tunes (2020)/cover.jpg"]  # fmt: skip
+    written = tags.read_tags(moved)
+    assert (written.artist, written.album_artist, written.title) == (
+        "The Band",
+        "The Band",
+        "Melody",
+    )
+    assert [t["rel_path"] for t in index.library_tracks()] == [
+        "Music/The Band/Tunes (2020)/03 Melody.mp3"
+    ]
+    assert pipeline.plan_tidy(lib, index).operations == []  # done
+
+    pipeline.undo(lib, batch_id)
+    assert music_files(lib) == ["Band/Tunes (2020)/03 Melody.lrc",
+                                "Band/Tunes (2020)/03 Melody.mp3",
+                                "Band/Tunes (2020)/cover.jpg"]  # fmt: skip
+    assert tags.read_tags(adopted).artist == "Band"
+    assert [t["rel_path"] for t in index.library_tracks()] == [
+        "Music/Band/Tunes (2020)/03 Melody.mp3"
+    ]
+
+
+def test_new_songs_use_preferred_names(
+    lib: Library,
+    index: Index,
+    rips: Path,
+    samples: dict[str, Path],
+    album_lookups: list[tuple[str, str]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(pipeline, "EXTRAS", [])
+    pipeline.set_name(lib, "Band", "The Band")
+    own_rip(index, rips, samples["mp3"], "Band - Melody")
+    plan = pipeline.plan_adopt(lib, index, matched=True)
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    assert music_files(lib) == ["The Band/Tunes (2020)/03 Melody.mp3"]
+    written = tags.read_tags(lib.paths.music / "The Band" / "Tunes (2020)" / "03 Melody.mp3")
+    assert (written.artist, written.album_artist) == ("The Band", "The Band")
+
+
+def test_only_the_best_copy_of_a_song_is_adopted(
+    lib: Library,
+    index: Index,
+    rips: Path,
+    two_mp3s: tuple[Path, Path],
+    album_lookups: list[tuple[str, str]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(pipeline, "EXTRAS", [])
+    low, high = two_mp3s
+    worse = own_rip(index, rips, low, "Band - Melody", kbps=96)
+    better = own_rip(index, rips, high, "Band - Melody (another site)", kbps=192)
+
+    plan = pipeline.plan_adopt(lib, index, matched=True)
+    assert (plan.summary["with_details"], plan.summary["duplicates"]) == (1, 1)
+    batch_id = pipeline.apply(lib, index, plan.plan_id).batch_id
+    run_queue(lib)
+
+    assert music_files(lib) == ["Band/Tunes (2020)/03 Melody.mp3"]
+    kept = tags.read_tags(lib.paths.music / "Band" / "Tunes (2020)" / "03 Melody.mp3")
+    assert kept.origin_path == str(rips / "Band - Melody (another site).mp3")
+    assert item_state(index, better)[0] == "adopted"
+    assert item_state(index, worse)[0] == "superseded"
+    links = state.superseded(lib.load_state().data)
+    assert links == {state.normalise_path(rips / "Band - Melody.mp3"): kept.musicorg_id}
+
+    pipeline.undo(lib, batch_id)
+    assert item_state(index, worse)[0] == item_state(index, better)[0] == "matched_auto"
+    assert state.superseded(lib.load_state().data) == {}
+
+
+def test_a_duplicate_in_the_library_is_set_aside_and_the_number_dropped(
+    lib: Library,
+    index: Index,
+    rips: Path,
+    two_mp3s: tuple[Path, Path],
+    album_lookups: list[tuple[str, str]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(pipeline, "EXTRAS", [])
+    low, high = two_mp3s
+    worse = own_rip(index, rips, low, "Band - Melody", kbps=96)
+    pipeline.apply(lib, index, pipeline.plan_adopt(lib, index, matched=True).plan_id)
+    run_queue(lib)
+    # Before step 09d, a second rip of the song came in too, as " (2)".
+    shutil.copyfile(high, rips / "Band - Melody (2).mp3")
+    better = add_item(index, "Band - Melody (2)", state="adopted", seconds=3)
+    with fileops.batch(lib, "demo") as b:
+        staged = fileops.stage_copy(b, rips / "Band - Melody (2).mp3")
+        fileops.write_tags(b, staged, tags.TrackTags(
+            title="Melody", artist="Band", album_artist="Band", album="Tunes", year=2020,
+            track=3, musicorg_id=tags.new_track_id(), source="rip_copy", source_id=VIDEO_A,
+            origin_path=str(rips / "Band - Melody (2).mp3"), schema=1))  # fmt: skip
+        second = fileops.commit(b, staged, Path("Band", "Tunes (2020)", "03 Melody.mp3"))
+    assert second.name == "03 Melody (2).mp3"
+    index.put_library_tracks([pipeline._track_row(lib, second, tags.read_tags(second), 3.0)])
+
+    plan = pipeline.plan_tidy(lib, index)
+    assert (plan.summary["duplicates"], plan.summary["renames"]) == (1, 1)
+    batch_id = pipeline.apply(lib, index, plan.plan_id).batch_id
+    run_queue(lib)
+
+    assert music_files(lib) == ["Band/Tunes (2020)/03 Melody.mp3"]
+    kept = tags.read_tags(lib.paths.music / "Band" / "Tunes (2020)" / "03 Melody.mp3")
+    assert kept.origin_path == str(rips / "Band - Melody (2).mp3")  # the 192 kbps copy
+    assert sorted(p.name for p in lib.paths.replaced.rglob("*.mp3")) == ["03 Melody.mp3"]
+    assert item_state(index, worse)[0] == "superseded"
+    assert item_state(index, better)[0] == "adopted"
+    assert len(index.library_tracks()) == 1
+
+    pipeline.undo(lib, batch_id)
+    assert music_files(lib) == ["Band/Tunes (2020)/03 Melody (2).mp3",
+                                "Band/Tunes (2020)/03 Melody.mp3"]  # fmt: skip
+    assert item_state(index, worse)[0] == "adopted"
+    assert len(index.library_tracks()) == 2
+
+
+def test_the_names_commands(lib: Library, capsys: pytest.CaptureFixture[str]) -> None:
+    root = str(lib.root)
+    lib.close()
+    assert cli.main(["--library", root, "names", "set", "JAŸ-Z", "Jay Z"]) == 0
+    assert cli.main(["--library", root, "--json", "names", "list"]) == 0
+    out = capsys.readouterr().out
+    assert json.loads(out[out.index("{") :])["names"] == {"JAŸ-Z": "Jay Z"}
+    assert cli.main(["--library", root, "names", "remove", "JAŸ-Z"]) == 0
+    assert cli.main(["--library", root, "names", "remove", "JAŸ-Z"]) == 1
+    assert pipeline.prefer("JAŸ-Z, Kanye West", {"JAŸ-Z": "Jay Z"}) == "Jay Z, Kanye West"
+    once = pipeline.prefer("Band & Bandit", {"Band": "The Band"})
+    assert once == "The Band & Bandit"
+    assert pipeline.prefer(once, {"Band": "The Band"}) == once  # doing it twice changes nothing

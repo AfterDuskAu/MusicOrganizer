@@ -27,6 +27,7 @@ from musicorg import (
     report,
     review,
     scan,
+    state,
     status,
 )
 from musicorg.config import Config
@@ -230,6 +231,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Also copy in matched rips, keeping your own audio, with their official "
         "details (no downloads).",
     )
+    add(
+        plan,
+        "tidy",
+        "Plan keeping the best copy of songs the library has twice, and using your preferred "
+        "names.",
+        _cmd_plan_tidy,
+    )
     p = add(plan, "show", "Show a plan's operations and summary.", _cmd_plan_show)
     p.add_argument("plan_id")
     p = add(
@@ -239,6 +247,14 @@ def build_parser() -> argparse.ArgumentParser:
         _cmd_plan_calibration,
     )
     p.add_argument("--out", type=_path, metavar="DIR", help="Folder (default: Reports/).")
+
+    names = group("names", "Your preferred spellings of names, e.g. JAŸ-Z → Jay Z.")
+    add(names, "list", "List your preferred spellings.", _cmd_names_list)
+    p = add(names, "set", "Prefer another spelling of a name.", _cmd_names_set)
+    p.add_argument("original", help="The spelling to change, exactly as it appears.")
+    p.add_argument("preferred", help="The spelling you want.")
+    p = add(names, "remove", "Forget a preferred spelling.", _cmd_names_remove)
+    p.add_argument("original")
 
     p = add(commands, "apply", "Check a plan and queue its jobs.", _cmd_apply)
     p.add_argument("plan_id")
@@ -818,6 +834,44 @@ def _cmd_artwork(args: argparse.Namespace) -> int:
     return _print_new_plan(plan, args.json)
 
 
+def _cmd_plan_tidy(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=True, command="plan tidy") as lib:
+        with open_index(lib.paths, write=False) as index:
+            plan = pipeline.plan_tidy(lib, index)
+    return _print_new_plan(plan, args.json)
+
+
+def _cmd_names_list(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=False) as lib:
+        found = state.names(lib.load_state().data)
+    return _print_names(found, args.json)
+
+
+def _cmd_names_set(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=True, command="names set") as lib:
+        found = pipeline.set_name(lib, args.original, args.preferred)
+    if not args.json:
+        print("Saved. New songs use it from now on; `musicorg plan tidy` renames the library.")
+    return _print_names(found, args.json)
+
+
+def _cmd_names_remove(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=True, command="names remove") as lib:
+        found = pipeline.remove_name(lib, args.original)
+    return _print_names(found, args.json)
+
+
+def _print_names(found: dict[str, str], json_mode: bool) -> int:
+    if json_mode:
+        _print_json({"names": found})
+    elif not found:
+        print("No preferred spellings yet.")
+    else:
+        for original, preferred in sorted(found.items()):
+            print(f"  {original}  →  {preferred}")
+    return EXIT_OK
+
+
 def _cmd_apply(args: argparse.Namespace) -> int:
     with library.open(_library_root(args), write=True, command=f"apply {args.plan_id}") as lib:
         with open_index(lib.paths, write=False) as index:
@@ -845,7 +899,10 @@ def _print_new_plan(plan: fileops.Plan, json_mode: bool) -> int:
 
 def _print_plan_summary(plan: fileops.Plan) -> None:
     s = plan.summary
-    if plan.kind == "lyrics":
+    if plan.kind == "tidy":
+        print(f"  {s.get('duplicates', 0):,} duplicate(s) to set aside (the best copy is kept)")
+        print(f"  {s.get('renames', 0):,} song(s) to rename with your preferred names")
+    elif plan.kind == "lyrics":
         print(f"  {s.get('operations', 0):,} song(s) to look up lyrics for (LRCLIB, then "
               "YouTube Music)")  # fmt: skip
     elif plan.kind == "artwork":
@@ -861,6 +918,8 @@ def _print_plan_summary(plan: fileops.Plan) -> None:
             print("  Calibration only (--stage-only): nothing will be committed or replaced")
     else:
         print(f"  {s.get('adopts', 0):,} rip(s) to copy in as they are")
+        if s.get("duplicates"):
+            print(f"  {s['duplicates']:,} duplicate rip(s) linked to the best copy, not copied")
         if s.get("matched"):
             print(f"  {s.get('with_details', 0):,} matched rip(s) to copy in with their official "
                   "details (your own audio; nothing is downloaded)")  # fmt: skip
