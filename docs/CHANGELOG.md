@@ -561,3 +561,13 @@ The owner asked for ideas from the Photonizer project that would make the app ru
   - **No new index columns** for "instrumental" or "version uncertain" (a schema change would force a rebuild, losing the review candidates). The 30-day answer cache stops repeat lookups, and each job's result line says what was found.
 - **Tests never contain real lyrics or covers:** lyrics are copyrighted and the repo is public. The recordings keep LRCLIB's and YouTube Music's real shapes, with made-up lines. Covers are made in memory.
 - Also fixed: `queue.run(kinds={})` fell back to every registered kind.
+- **Acceptance run on the owner's library** (2026-09-30): `lyrics --missing` (807 songs; 10 already had lyrics) and `artwork --missing` (787 songs; 28 had a square cover already, 2 have no official album). Both applied, then one `queue run`: 1,594 jobs done, 0 failed, 0 to review; 2 network hiccups were retried and worked.
+  - Lyrics:
+    - **708 synced** (88%): 634 from LRCLIB and 74 from YouTube Music (Musixmatch or LyricFind), so the second source added 74 songs
+    - 55 plain only, 19 of them because of the timing guard (the file 2–3 s off the length the lyrics were timed for)
+    - 12 instrumental
+    - 32 not found
+    - The version guard didn't trigger.
+  - Covers: 787 embedded and 505 `cover.jpg` files; 0 failed. Most are 1200 × 1200. 15 albums only offer 512 px. 30 official covers aren't square within 2% (e.g. 1145 × 1200); they're kept and logged.
+  - Checks: every "synced" song has its `.lrc` next to it. The lyrics' tag writes (plain lyrics, in 763 songs) and the covers' (787) all passed the verified-write check, where the decoded audio must be unchanged.
+- **Step 10's acceptance:** the counts above are recorded. What's left is the owner's check of a few `.lrc` files against playback, in a player that reads them.
