@@ -276,7 +276,7 @@ def _same_file_key(path: Path) -> str:
 
 # ---- keeping the computer awake --------------------------------------------------------
 
-CAFFEINATE = Path("/usr/bin/caffeinate")
+CAFFEINATE = "/usr/bin/caffeinate"  # a macOS path, kept as text so it reads the same everywhere
 _ES_CONTINUOUS = 0x80000000
 _ES_SYSTEM_REQUIRED = 0x00000001
 
@@ -307,7 +307,7 @@ def _caffeinate() -> Iterator[None]:
     process = None
     try:
         process = subprocess.Popen(
-            [str(CAFFEINATE), "-i", "-w", str(os.getpid())],
+            [CAFFEINATE, "-i", "-w", str(os.getpid())],
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
