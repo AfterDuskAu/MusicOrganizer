@@ -6,10 +6,12 @@ without the lock."""
 
 from __future__ import annotations
 
+import contextlib
 import os
 import subprocess
 import sys
 import textwrap
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -492,3 +494,42 @@ def test_cli_queue_commands(lib: Library, capsys: pytest.CaptureFixture[str]) ->
     assert cli.main(["--library", root, "queue", "run"]) == 4
     captured = capsys.readouterr()
     assert "YouTube is slowing us down" in captured.out
+
+
+# ---- the crash-loop guard and keeping awake (ideas from the Photonizer project) ---------
+
+
+def test_a_job_that_keeps_stopping_the_engine_is_set_aside(
+    lib: Library, clock: FakeClock, yt: FakeYouTube
+) -> None:
+    batch_id, (first, second) = enqueue(lib, 2)
+    now = queue._iso(clock.t)
+    with open_queue(lib.paths, write=True) as store:
+        # The engine died during job 1 on every one of its tries, and once during job 2.
+        store.update_job(first, now, state="running", attempts=queue.MAX_ATTEMPTS)
+        store.update_job(second, now, state="running", attempts=1)
+
+    run(lib, clock)
+
+    found = jobs(lib)
+    assert found[first]["state"] == "failed"
+    assert "stopped in the middle of this job 5 times" in found[first]["last_error"]
+    assert found[second]["state"] == "done"
+    assert [v for v, _ in yt.downloads] == [vid(2)]
+
+
+def test_the_queue_keeps_the_computer_awake(
+    lib: Library, clock: FakeClock, yt: FakeYouTube, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    events: list[str] = []
+
+    @contextlib.contextmanager
+    def awake() -> Iterator[None]:
+        events.append("awake")
+        yield
+        events.append("may sleep")
+
+    monkeypatch.setattr(tools, "keep_awake", awake)
+    enqueue(lib, 1)
+    run(lib, clock)
+    assert events == ["awake", "may sleep"]

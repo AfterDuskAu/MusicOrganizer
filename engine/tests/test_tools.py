@@ -272,3 +272,64 @@ def test_non_executable_file_is_ignored(isolated_path: Isolate, tmp_path: Path) 
     (folder / "ffmpeg").write_text("#!/bin/sh\necho 'ffmpeg version 1'\n")
     isolated_path([folder])
     assert tools.find("ffmpeg").path is None
+
+
+# ---- keep_awake ------------------------------------------------------------------------
+
+REAL_KEEP_AWAKE = tools.keep_awake  # conftest replaces it in every test
+
+
+class FakeProcess:
+    def __init__(self, args: list[str], **kw: object) -> None:
+        self.args = args
+        self.ended = False
+
+    def terminate(self) -> None:
+        self.ended = True
+
+    def wait(self, timeout: float | None = None) -> int:
+        return 0
+
+
+def test_keep_awake_on_a_mac(monkeypatch: pytest.MonkeyPatch) -> None:
+    started: list[FakeProcess] = []
+
+    def popen(args: list[str], **kw: object) -> FakeProcess:
+        started.append(FakeProcess(args))
+        return started[-1]
+
+    monkeypatch.setattr(tools.subprocess, "Popen", popen)
+    with REAL_KEEP_AWAKE("darwin"):
+        (process,) = started
+        assert process.args == ["/usr/bin/caffeinate", "-i", "-w", str(os.getpid())]
+        assert not process.ended
+    assert process.ended
+
+
+def test_keep_awake_carries_on_without_caffeinate(monkeypatch: pytest.MonkeyPatch) -> None:
+    def popen(args: list[str], **kw: object) -> None:
+        raise FileNotFoundError(args[0])
+
+    monkeypatch.setattr(tools.subprocess, "Popen", popen)
+    ran = False
+    with REAL_KEEP_AWAKE("darwin"):
+        ran = True
+    assert ran
+
+
+def test_keep_awake_on_windows(monkeypatch: pytest.MonkeyPatch) -> None:
+    import ctypes
+    import types
+
+    calls: list[int] = []
+    kernel32 = types.SimpleNamespace(SetThreadExecutionState=lambda f: calls.append(f) or 1)
+    monkeypatch.setattr(ctypes, "windll", types.SimpleNamespace(kernel32=kernel32), raising=False)
+    with REAL_KEEP_AWAKE("win32"):
+        assert calls == [0x80000001]
+    assert calls == [0x80000001, 0x80000000]
+
+
+def test_keep_awake_elsewhere_does_nothing(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(tools.subprocess, "Popen", None)
+    with REAL_KEEP_AWAKE("linux"):
+        pass

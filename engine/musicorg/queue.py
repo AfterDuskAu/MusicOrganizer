@@ -44,7 +44,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from musicorg import fileops, youtube
+from musicorg import fileops, tools, youtube
 from musicorg.config import Config
 from musicorg.errors import (
     DownloadError,
@@ -209,7 +209,7 @@ def run(
     if not lib.writable:
         raise RuntimeError("queue.run needs the library open for writing")
     cfg = config if config is not None else Config.load()
-    with open_queue(lib.paths, write=True) as store:
+    with open_queue(lib.paths, write=True) as store, tools.keep_awake():
         runner = _Runner(lib, store, cfg.throttle(), clock or Clock(), kinds or KINDS, report)
         runner.requeue_interrupted()
         _clean_old_staging(lib)
@@ -403,9 +403,21 @@ class _Runner:
                 pass
 
     def requeue_interrupted(self) -> int:
-        """Jobs a crash left `running` go back to `queued`, their staging discarded."""
+        """Jobs a crash left `running` go back to `queued`, their staging discarded. A
+        job the engine stopped during as many times as it may be tried ends `failed`, so
+        a job that crashes the engine can't block the front of the queue forever (a
+        lesson from the Photonizer project's crash-loop guard)."""
         stuck = self.store.jobs(state="running")
         for job in stuck:
+            if job["attempts"] >= MAX_ATTEMPTS:
+                self._end(
+                    job,
+                    "failed",
+                    error=f"The engine stopped in the middle of this job {job['attempts']} "
+                    "times, so it's been set aside. Make a new plan to try it again.",
+                )
+                log.warning("Job %s was interrupted too often; it's failed", job["id"])
+                continue
             self._requeue(job, attempts=job["attempts"])
             log.info("Job %s was interrupted; it's queued again", job["id"])
         if stuck:

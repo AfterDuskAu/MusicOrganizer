@@ -451,3 +451,21 @@ At the step 07 checkpoint the owner chose a basic UI for settling the review ite
   - Run the first real batch of 25.
   - Check 5 files in Apple Music. There's no cover art until step 10.
   - Undo, then a new plan.
+
+### Ideas from the Photonizer project (2026-09-30)
+
+The owner asked for ideas from the Photonizer project that would make the app run smoothly. One review agent checked about 20 candidates against the engine's code. Two small ones were real gaps and are fixed. The rest are in the new `docs/KNOWN-ISSUES.md`, or were already covered, or aren't worth it (listed there).
+- **Crash-loop guard (`queue.py`):**
+  - A job's try is counted before it starts, but a job left `running` by a crash was put back at the front of the queue however many times it had crashed the engine. One bad job could block the queue on every restart.
+  - Now a job interrupted on each of its 5 tries ends `failed`, saying so in plain words. Making a new plan tries it again.
+- **Keep the computer awake (`tools.keep_awake`, used by `queue run`):**
+  - macOS: `/usr/bin/caffeinate -i -w <pid>`, which ends by itself if the engine crashes.
+  - Windows: `SetThreadExecutionState`.
+  - The screen can still turn off. If it can't be done, the queue runs anyway. There's no new dependency.
+  - Tests never start either: `conftest.py` stubs it, and `test_tools.py` tests it with both stubbed.
+- Already covered, so not added: tests kept away from the real config and Trash, fake clocks, the Time Machine and iCloud warnings, and the handling of disconnected drives.
+- Not worth it here:
+  - fingerprint caching by content (the gate's results are already remembered)
+  - one read per file and per-drive read queues (scans are incremental, and the reads are small)
+  - security-scoped bookmarks (yt-dlp's self-updates mean this is never a Mac App Store app)
+- 1,103 tests pass.

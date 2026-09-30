@@ -1,4 +1,5 @@
-"""Finding the external programs the engine needs: ffmpeg, ffprobe, fpcalc and deno.
+"""Finding the external programs the engine needs: ffmpeg, ffprobe, fpcalc and deno; and
+`keep_awake()`, which stops the computer sleeping while the queue works.
 
 Search order for each tool:
 1. the path set under "tools" in config.json
@@ -11,15 +12,20 @@ carries on to the next copy.
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 import subprocess
 import sys
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from pathlib import Path
 
 from musicorg.config import Config, config_path
 from musicorg.errors import ToolMissingError
+
+log = logging.getLogger(__name__)
 
 TOOL_NAMES = ("ffmpeg", "ffprobe", "fpcalc", "deno")
 MIN_DENO_VERSION = (2, 3)
@@ -266,3 +272,70 @@ def _same_file_key(path: Path) -> str:
         return os.path.normcase(os.path.realpath(path))
     except OSError:
         return os.path.normcase(str(path))
+
+
+# ---- keeping the computer awake --------------------------------------------------------
+
+CAFFEINATE = Path("/usr/bin/caffeinate")
+_ES_CONTINUOUS = 0x80000000
+_ES_SYSTEM_REQUIRED = 0x00000001
+
+
+@contextmanager
+def keep_awake(platform: str | None = None) -> Iterator[None]:
+    """Keep the computer from going to sleep (the screen may still turn off) while the
+    queue works through hours of paced downloads. From the Photonizer project's lessons.
+
+    - macOS: `caffeinate -i -w <this process>`, which also ends by itself if the engine
+      crashes.
+    - Windows: SetThreadExecutionState, which Windows drops when the process ends.
+    - Anywhere else, or if it can't be done: nothing, and the queue still runs.
+    """
+    platform = platform or sys.platform
+    if platform == "darwin":
+        with _caffeinate():
+            yield
+    elif platform == "win32":
+        with _execution_state():
+            yield
+    else:
+        yield
+
+
+@contextmanager
+def _caffeinate() -> Iterator[None]:
+    process = None
+    try:
+        process = subprocess.Popen(
+            [str(CAFFEINATE), "-i", "-w", str(os.getpid())],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except OSError as exc:
+        log.info("Couldn't keep the Mac awake (%s); it may sleep during long runs", exc)
+    try:
+        yield
+    finally:
+        if process is not None:
+            process.terminate()
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+
+
+@contextmanager
+def _execution_state() -> Iterator[None]:
+    import ctypes
+
+    kernel32 = getattr(getattr(ctypes, "windll", None), "kernel32", None)
+    set_state = getattr(kernel32, "SetThreadExecutionState", None)
+    if set_state is None or not set_state(_ES_CONTINUOUS | _ES_SYSTEM_REQUIRED):
+        log.info("Couldn't keep Windows awake; it may sleep during long runs")
+        yield
+        return
+    try:
+        yield
+    finally:
+        set_state(_ES_CONTINUOUS)

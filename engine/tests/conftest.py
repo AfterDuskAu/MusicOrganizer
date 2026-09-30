@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 import re
 import subprocess
@@ -101,6 +102,13 @@ def fake_trash(
 
     monkeypatch.setattr(fileops, "_send_to_trash", send)
     return trash
+
+
+@pytest.fixture(autouse=True)
+def no_keep_awake(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Tests never start caffeinate or change Windows' power state; test_tools.py tests
+    `keep_awake` itself with those stubbed."""
+    monkeypatch.setattr(tools, "keep_awake", contextlib.nullcontext)
 
 
 @pytest.fixture(autouse=True)
