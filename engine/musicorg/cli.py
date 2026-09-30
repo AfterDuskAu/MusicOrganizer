@@ -255,10 +255,14 @@ def build_parser() -> argparse.ArgumentParser:
     add(queue_group, "pause", "Pause the queue after the current job.", _cmd_queue_pause)
     add(queue_group, "resume", "Resume the queue.", _cmd_queue_resume)
 
-    p = add(commands, "lyrics", "Plan adding lyrics.", _not_yet("lyrics", "10"))
-    p.add_argument("--missing", action="store_true")
-    p = add(commands, "artwork", "Plan adding cover art.", _not_yet("artwork", "10"))
-    p.add_argument("--missing", action="store_true")
+    p = add(commands, "lyrics", "Plan adding lyrics to the library's songs.", _cmd_lyrics)
+    p.add_argument("--missing", action="store_true", help="Only songs with no lyrics yet.")
+    p = add(commands, "artwork", "Plan adding covers to the library's songs.", _cmd_artwork)
+    p.add_argument(
+        "--missing",
+        action="store_true",
+        help="Only songs with no cover, or a cover that isn't square (a video frame).",
+    )
 
     add(
         commands,
@@ -801,6 +805,20 @@ def _cmd_plan_calibration(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def _cmd_lyrics(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=True, command="lyrics") as lib:
+        with open_index(lib.paths, write=False) as index:
+            plan = pipeline.plan_lyrics(lib, index, missing=args.missing)
+    return _print_new_plan(plan, args.json)
+
+
+def _cmd_artwork(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=True, command="artwork") as lib:
+        with open_index(lib.paths, write=False) as index:
+            plan = pipeline.plan_artwork(lib, index, missing=args.missing)
+    return _print_new_plan(plan, args.json)
+
+
 def _cmd_apply(args: argparse.Namespace) -> int:
     with library.open(_library_root(args), write=True, command=f"apply {args.plan_id}") as lib:
         with open_index(lib.paths, write=False) as index:
@@ -828,7 +846,13 @@ def _print_new_plan(plan: fileops.Plan, json_mode: bool) -> int:
 
 def _print_plan_summary(plan: fileops.Plan) -> None:
     s = plan.summary
-    if plan.kind == "replace":
+    if plan.kind == "lyrics":
+        print(f"  {s.get('operations', 0):,} song(s) to look up lyrics for (LRCLIB, then "
+              "YouTube Music)")  # fmt: skip
+    elif plan.kind == "artwork":
+        print(f"  {s.get('operations', 0):,} song(s) to give a cover, from "
+              f"{s.get('albums', 0):,} album(s) or picture(s)")  # fmt: skip
+    elif plan.kind == "replace":
         print(
             f"  {s.get('operations', 0):,} rip(s) to replace, {s.get('downloads', 0):,} download(s)"
         )

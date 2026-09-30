@@ -280,3 +280,35 @@ def test_a_spreadsheet_from_before_a_rebuild_still_imports(
     # And a rebuild keeps the decision (state.json is the record).
     scan.rebuild(lib, index)
     assert index.item(alpha["id"])["state"] == "matched_user"  # type: ignore[index]
+
+
+def test_art_url_for_an_only_copy_song(
+    lib: Library, index: Index, items: dict[str, str], tmp_path: Path
+) -> None:
+    rows = decide(export_rows(lib, index, tmp_path), Echo="only_copy")
+    link = "https://soundcloud.com/band/echo"
+    next(r for r in rows if r["parsed_title"] == "Echo").update(art_url=link)
+    review.import_csv(lib, index, write_rows(tmp_path / "edited.csv", rows))
+    assert state_json(lib)["decisions"][items["Echo"]]["art_url"] == link
+
+
+@pytest.mark.parametrize(
+    ("decision", "art_url", "problem"),
+    [
+        ("only_copy", "http://example.com/a.jpg", "isn't an https:// link"),
+        ("accept", "https://example.com/a.jpg", "art_url is for only_copy rows"),
+    ],
+)
+def test_art_url_problems(
+    lib: Library,
+    index: Index,
+    items: dict[str, str],
+    tmp_path: Path,
+    decision: str,
+    art_url: str,
+    problem: str,
+) -> None:
+    rows = decide(export_rows(lib, index, tmp_path), Alpha=decision)
+    next(r for r in rows if r["parsed_title"] == "Alpha").update(art_url=art_url)
+    with pytest.raises(review.ReviewImportError, match=problem):
+        review.import_csv(lib, index, write_rows(tmp_path / "edited.csv", rows))

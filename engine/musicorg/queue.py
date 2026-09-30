@@ -210,7 +210,9 @@ def run(
         raise RuntimeError("queue.run needs the library open for writing")
     cfg = config if config is not None else Config.load()
     with open_queue(lib.paths, write=True) as store, tools.keep_awake():
-        runner = _Runner(lib, store, cfg.throttle(), clock or Clock(), kinds or KINDS, report)
+        runner = _Runner(
+            lib, store, cfg.throttle(), clock or Clock(), KINDS if kinds is None else kinds, report
+        )
         runner.requeue_interrupted()
         _clean_old_staging(lib)
         return runner.loop(should_stop)

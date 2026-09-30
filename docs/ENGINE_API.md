@@ -62,8 +62,8 @@ Global options:
 | `musicorg queue run` | Process the queue in the foreground until empty, paused or Ctrl-C | yes | 09a |
 | `musicorg queue status` | Queue state and counts | no | 09a |
 | `musicorg queue pause` / `resume` | Set a flag in `queue.sqlite` that `queue run` checks between jobs | no | 09a |
-| `musicorg lyrics [--missing]` | Create a `lyrics` plan; run it with `apply` | yes | 10 |
-| `musicorg artwork [--missing]` | Create an `artwork` plan; run it with `apply` | yes | 10 |
+| `musicorg lyrics [--missing]` | Create a `lyrics` plan; run it with `apply`. Lyrics come from LRCLIB, then YouTube Music. `--missing`: songs with neither embedded lyrics nor a `.lrc`. | yes | 10 |
+| `musicorg artwork [--missing]` | Create an `artwork` plan; run it with `apply`. The album's official cover, or the owner's `art_url`. `--missing`: songs with no cover, or a cover that isn't square (a video frame). | yes | 10 |
 | `musicorg serve` | JSON-RPC server on stdio | yes | 11 |
 
 Exit codes:

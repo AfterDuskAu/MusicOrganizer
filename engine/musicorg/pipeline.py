@@ -18,7 +18,7 @@ staging → check → tag → commit, through `fileops`, journaled and undoable.
      review. The result is kept in state.json ("gate"), so the same download is never
      tried again. If no rip passes, the download is kept in `_Staging/` for 24 hours.
   5. the album from YouTube Music (the track number by the step 06 rule, never a guess)
-  6. lyrics and artwork: step 10's hook (`EXTRAS`), none until then
+  6. lyrics and the album cover (step 10, through `EXTRAS`)
   7. **one verified tag write** on the staged file, then commit to `naming.library_path`
   8. sidecars under the committed name; the rips marked `superseded`, and linked to the
      new MUSICORG_ID in state.json
@@ -49,7 +49,18 @@ from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from musicorg import fileops, fingerprint, naming, queue, scan, state, tags, youtube
+from musicorg import (
+    artwork,
+    fileops,
+    fingerprint,
+    lyrics,
+    naming,
+    queue,
+    scan,
+    state,
+    tags,
+    youtube,
+)
 from musicorg.config import Config
 from musicorg.errors import (
     AudioError,
@@ -99,19 +110,57 @@ class Extras:
     cover_mime: str | None = None
 
 
-ExtrasHook = Callable[[Candidate, "AlbumInfo"], Extras | None]
-EXTRAS: list[ExtrasHook] = []  # step 10 appends its lyrics and artwork functions
+@dataclass
+class ExtrasQuery:
+    """What the step 10 hooks get: the official track, its album, the file's own length
+    and version tokens, and the index (as the answers' cache)."""
+
+    candidate: Candidate
+    album: AlbumInfo
+    duration_s: float | None
+    versions: tuple[str, ...]
+    cache: Any
 
 
-def _extras(candidate: Candidate, album: AlbumInfo) -> Extras:
+ExtrasHook = Callable[[ExtrasQuery], Extras | None]
+
+
+def lyrics_extras(query: ExtrasQuery) -> Extras | None:
+    c = query.candidate
+    found = lyrics.find(
+        lyrics.Query(
+            title=c.title, artist=", ".join(c.artists), album=query.album.title,
+            duration_s=query.duration_s, video_id=c.video_id,
+            official_s=float(c.duration_s) if c.duration_s else None, versions=query.versions,
+        ),
+        cache=query.cache,
+    )  # fmt: skip
+    return Extras(lyrics=found.plain, synced_lyrics=found.synced)
+
+
+def cover_extras(query: ExtrasQuery) -> Extras | None:
+    if not query.album.browse_id:
+        return None
+    art = artwork.album_art(query.album.browse_id, cache=query.cache)
+    return Extras(cover=art.data, cover_mime=art.mime) if art is not None else None
+
+
+EXTRAS: list[ExtrasHook] = [lyrics_extras, cover_extras]
+
+
+def _versions(op: fileops.PlanOp) -> tuple[str, ...]:
+    return tuple(str(v) for v in (op.params["candidate"].get("version_tokens") or []))
+
+
+def _extras(query: ExtrasQuery) -> Extras:
     """Everything the hooks give. A hook that fails only costs its extra: missing lyrics
     never fail a job."""
     found = Extras()
     for hook in EXTRAS:
         try:
-            got = hook(candidate, album)
+            got = hook(query)
         except (UserError, OSError) as exc:
-            log.warning("No extras for %s from %s: %s", candidate.video_id, hook, exc)
+            log.warning("No extras for %s from %s: %s", query.candidate.video_id, hook, exc)
             continue
         if got is None:
             continue
@@ -451,8 +500,6 @@ def apply(lib: Library, index: Index, plan_id: str) -> ApplyResult:
     until its last job ends. Refuses a plan that was applied already, or whose rips or
     items changed since it was made."""
     plan = fileops.load_plan(lib, plan_id)
-    if plan.kind not in ("replace", "adopt"):
-        raise UserError(f"Plan {plan_id} is a {plan.kind} plan; step 10 runs those.")
     with open_queue(lib.paths, write=False) as store:
         earlier = store.jobs(plan_id=plan_id)
     if earlier:
@@ -490,10 +537,10 @@ def apply(lib: Library, index: Index, plan_id: str) -> ApplyResult:
 
 
 def _jobs(plan: fileops.Plan, batch_id: str) -> list[dict[str, Any]]:
-    """One job per video for a replace plan; one per rip for an adopt plan."""
-    if plan.kind == "adopt":
+    """One job per video for a replace plan; one per operation for the others."""
+    if plan.kind != "replace":
         return [
-            {"batch_id": batch_id, "plan_id": plan.plan_id, "kind": "adopt",
+            {"batch_id": batch_id, "plan_id": plan.plan_id, "kind": plan.kind,
              "item_id": op.item_id, "payload": {"ops": [asdict(op)]}}
             for op in plan.operations
         ]  # fmt: skip
@@ -589,8 +636,9 @@ def replace_job(ctx: JobContext) -> Outcome:
             return Outcome.needs_review(first.reason, first.why)
 
         album = _album(candidate, index)
-        extras = _extras(candidate, album)
         probe = tags.probe(path)
+        extras = _extras(ExtrasQuery(candidate, album, probe.duration_s,
+                                     _versions(passed[0]), index))  # fmt: skip
         new_tags = _download_tags(
             candidate, album, extras, info, probe, passed[0], float(passed[0].params["score"])
         )
@@ -902,9 +950,9 @@ def _adopt_with_details(ctx: JobContext, index: Index, op: fileops.PlanOp) -> Ou
     item_id, rip = str(op.item_id), Path(op.params["rip"])
     candidate = Candidate.from_dict(op.params["candidate"])
     album = _album(candidate, index)
-    extras = _extras(candidate, album)
     staged = fileops.stage_copy(ctx.batch, rip)
     probe = tags.probe(staged)
+    extras = _extras(ExtrasQuery(candidate, album, probe.duration_s, _versions(op), index))
     current = tags.read_tags(staged)
     change = _details_tags(op, candidate, album, extras, current, probe, rip)
     fileops.write_tags(ctx.batch, staged, change)
@@ -993,6 +1041,183 @@ def _adopt_tags(
         if not current.title:
             change.title = names["title"]
     return change
+
+
+# ---- lyrics and covers for the library (step 10) ------------------------------------
+
+WORK_S_PER_LYRICS = 3  # LRCLIB's pace (one request a second), sometimes YouTube Music too
+WORK_S_PER_COVER = 1  # most songs share their album's cover, fetched once
+
+
+@dataclass
+class _Official:
+    """What's known about a library file's official track, from its rip's match."""
+
+    candidate: dict[str, Any] | None = None
+    art_url: str | None = None
+
+
+def _officials(lib: Library, index: Index) -> dict[str, _Official]:
+    """Rip path (normalised) → its match's candidate, and the owner's `art_url`, for
+    every rip that's in the library."""
+    decisions = state.decisions(lib.load_state().data)
+    folders = scan.source_folders(lib, index)
+    found: dict[str, _Official] = {}
+    for item in index.items_in_states(DONE_STATES):
+        chosen = _chosen(index, {**item, "state": "matched_user"}, decisions)
+        art_url = decisions.get(item["id"], {}).get("art_url")
+        found[state.normalise_path(Path(scan.item_path(folders, item)))] = _Official(
+            chosen["payload"] if chosen else None,
+            art_url if isinstance(art_url, str) and art_url else None,
+        )
+    return found
+
+
+def _library_files(lib: Library, index: Index) -> list[tuple[dict[str, Any], Path]]:
+    found = []
+    for track in index.library_tracks():
+        path = lib.root / Path(*PurePosixPath(track["rel_path"]).parts)
+        if path.is_file() and track.get("musicorg_id"):
+            found.append((track, path))
+    return found
+
+
+def _official_for(
+    officials: dict[str, _Official], track: dict[str, Any]
+) -> tuple[_Official, dict[str, Any] | None]:
+    """The track's official match, if it has one and it's the track's own videoId."""
+    origin = track.get("origin_path")
+    official = officials.get(state.normalise_path(Path(origin))) if origin else None
+    official = official or _Official()
+    candidate = official.candidate
+    if candidate is not None and candidate.get("video_id") != track.get("source_id"):
+        candidate = None  # the tags say another track; don't mix them up
+    return official, candidate
+
+
+def plan_lyrics(lib: Library, index: Index, *, missing: bool = False) -> fileops.Plan:
+    """`musicorg lyrics [--missing]`: a plan fetching lyrics for library files (with
+    `missing`, only files with neither embedded lyrics nor a `.lrc`)."""
+    officials = _officials(lib, index)
+    ops, skipped = [], {}
+    for track, path in _library_files(lib, index):
+        current = tags.read_tags(path)
+        if missing and (current.lyrics or path.with_suffix(".lrc").exists()):
+            skipped["has_lyrics"] = skipped.get("has_lyrics", 0) + 1
+            continue
+        _, candidate = _official_for(officials, track)
+        video_id = track.get("source_id") if candidate is not None or (
+            track.get("source") == "youtube_music") else None  # fmt: skip
+        ops.append(
+            fileops.PlanOp(
+                action="lyrics",
+                source=fileops.FileCheck.of(lib, path),
+                params={
+                    "musicorg_id": track["musicorg_id"],
+                    "video_id": video_id,
+                    "official_s": (candidate or {}).get("duration_s"),
+                },
+            )  # fmt: skip
+        )
+    summary = {"operations": len(ops), "downloads": 0, "missing": missing, "skipped": skipped,
+               "est_minutes": math.ceil(len(ops) * WORK_S_PER_LYRICS / 60), "days": 0,
+               "disk_mb": 0, "low_confidence_adopts": 0}  # fmt: skip
+    plan = fileops.new_plan("lyrics", ops, summary)
+    fileops.save_plan(lib, plan)
+    return plan
+
+
+def plan_artwork(lib: Library, index: Index, *, missing: bool = False) -> fileops.Plan:
+    """`musicorg artwork [--missing]`: a plan giving library files their cover: the
+    album's official cover, or the owner's `art_url`. With `missing`, only files with no
+    cover or a cover that isn't square (a converter's video frame). A file with neither an
+    official match nor an `art_url` gets no automatic cover."""
+    officials = _officials(lib, index)
+    ops, skipped = [], {}
+    albums: set[str] = set()
+    for track, path in _library_files(lib, index):
+        official, candidate = _official_for(officials, track)
+        browse_id = (candidate or {}).get("album_browse_id")
+        if not browse_id and not official.art_url:
+            skipped["no_official_cover"] = skipped.get("no_official_cover", 0) + 1
+            continue
+        if missing and artwork.is_square(tags.read_tags(path).cover):
+            skipped["has_cover"] = skipped.get("has_cover", 0) + 1
+            continue
+        albums.add(browse_id or official.art_url or "")
+        ops.append(
+            fileops.PlanOp(
+                action="artwork",
+                source=fileops.FileCheck.of(lib, path),
+                params={
+                    "musicorg_id": track["musicorg_id"],
+                    "browse_id": browse_id,
+                    "art_url": None if browse_id else official.art_url,
+                },
+            )  # fmt: skip
+        )
+    summary = {"operations": len(ops), "albums": len(albums), "downloads": 0,
+               "missing": missing, "skipped": skipped,
+               "est_minutes": math.ceil((len(albums) * 3 + len(ops) * WORK_S_PER_COVER) / 60),
+               "days": 0, "disk_mb": 0, "low_confidence_adopts": 0}  # fmt: skip
+    plan = fileops.new_plan("artwork", ops, summary)
+    fileops.save_plan(lib, plan)
+    return plan
+
+
+def _same_file(lib: Library, op: fileops.PlanOp) -> Path | None:
+    """The library file the operation is about, if it's still there with the same
+    MUSICORG_ID. Its bytes may have changed since the plan (a lyrics batch before an
+    artwork one): these jobs only add their own fields, in a verified write, so the
+    file's identity is what's checked, not its size or time."""
+    assert op.source is not None
+    path = lib.root / Path(*PurePosixPath(op.source.path).parts)
+    if not path.is_file() or tags.read_tags(path).musicorg_id != op.params["musicorg_id"]:
+        return None
+    return path
+
+
+def lyrics_job(ctx: JobContext) -> Outcome:
+    (op,) = _ops(ctx.payload)
+    path = _same_file(ctx.lib, op)
+    if path is None:
+        return Outcome.needs_review(FILE_CHANGED, "The file has moved or changed since the plan.")
+    current = tags.read_tags(path)
+    duration = tags.probe(path).duration_s
+    query = lyrics.Query(
+        title=str(current.title or path.stem), artist=str(current.artist or ""),
+        album=current.album if isinstance(current.album, str) else None,
+        duration_s=duration, video_id=op.params.get("video_id"),
+        official_s=float(op.params["official_s"]) if op.params.get("official_s") else None,
+        versions=tuple(current.version) if isinstance(current.version, list) else (),
+    )  # fmt: skip
+    with open_index(ctx.lib.paths, write=True) as index:
+        found = lyrics.find(query, cache=index)
+    if found.plain and found.plain != current.lyrics:
+        fileops.write_tags(ctx.batch, path, tags.TrackTags(lyrics=found.plain))
+    if found.synced:
+        fileops.write_sidecar(ctx.batch, path, ".lrc", found.synced.encode("utf-8"))
+    detail = f" from {found.source}" if found.source else ""
+    note = f" ({found.note})" if found.note else ""
+    return Outcome.done(f"{found.status}{detail}{note}")
+
+
+def artwork_job(ctx: JobContext) -> Outcome:
+    (op,) = _ops(ctx.payload)
+    path = _same_file(ctx.lib, op)
+    if path is None:
+        return Outcome.needs_review(FILE_CHANGED, "The file has moved or changed since the plan.")
+    with open_index(ctx.lib.paths, write=True) as index:
+        if op.params.get("browse_id"):
+            art = artwork.album_art(str(op.params["browse_id"]), cache=index)
+        else:
+            art = artwork.art_from_url(str(op.params["art_url"]))
+    if art is None:
+        return Outcome.done("none: no cover could be fetched")
+    fileops.write_tags(ctx.batch, path, tags.TrackTags(cover=art.data, cover_mime=art.mime))
+    fileops.write_sidecar(ctx.batch, path, naming.COVER_NAME, art.data)
+    problems = f" ({'; '.join(art.problems)})" if art.problems else ""
+    return Outcome.done(f"cover {art.width}×{art.height}{problems}")
 
 
 # ---- undo ----------------------------------------------------------------------------
@@ -1102,6 +1327,11 @@ def describe(plan: fileops.Plan) -> list[str]:
         elif op.action == "adopt":
             unsure = "" if op.params.get("trusted") else "  [keeps the rip's own names]"
             lines.append(f"{op.op_id:>5}  adopt    {rip}  →  {op.target}{unsure}")
+        elif op.action in ("lyrics", "artwork"):
+            assert op.source is not None
+            where = op.params.get("browse_id") or op.params.get("art_url") or ""
+            what = f"  (cover from {where})" if op.action == "artwork" else ""
+            lines.append(f"{op.op_id:>5}  {op.action:<8} {op.source.path}{what}")
         else:
             lines.append(f"{op.op_id:>5}  skip     {rip}  (format not adopted in v0.1)")
     return lines
@@ -1109,3 +1339,7 @@ def describe(plan: fileops.Plan) -> list[str]:
 
 queue.register("replace", replace_job, network=True)
 queue.register("adopt", adopt_job, network=False)
+# Lyrics and covers download no audio: they're paced by their own limiters (LRCLIB's one
+# request a second, YouTube's shared limiter), not the download pace or the daily cap.
+queue.register("lyrics", lyrics_job, network=False)
+queue.register("artwork", artwork_job, network=False)

@@ -10,6 +10,7 @@ import json
 import shutil
 from collections.abc import Iterator
 from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +18,20 @@ import pytest
 from conftest import AudioFixtures, require_tool
 from index_support import add_candidates, add_item, add_source, candidate
 
-from musicorg import cli, fileops, library, match, pipeline, queue, review, state, tags, youtube
+from musicorg import (
+    artwork,
+    cli,
+    fileops,
+    library,
+    lyrics,
+    match,
+    pipeline,
+    queue,
+    review,
+    state,
+    tags,
+    youtube,
+)
 from musicorg.config import Config
 from musicorg.errors import PlanOutOfDateError, UserError
 from musicorg.index import Index, open_index, open_queue
@@ -103,7 +117,14 @@ def settings() -> Config:
 
 
 def run_queue(lib: Library) -> queue.RunResult:
-    clock = queue.Clock(sleep=lambda s: None, uniform=lambda a, b: a)
+    """Run the queue with a clock that moves on when the queue waits, so a job waiting
+    to retry never makes a test spin until real time catches up."""
+    now = [datetime.now(UTC)]
+
+    def sleep(seconds: float) -> None:
+        now[0] += timedelta(seconds=seconds)
+
+    clock = queue.Clock(now=lambda: now[0], sleep=sleep, uniform=lambda a, b: a)
     return queue.run(lib, clock=clock, config=settings())
 
 
@@ -146,8 +167,8 @@ def test_a_full_replace(
     before = (rips / "Band - Melody.mp3").read_bytes()
     seen: list[str] = []
 
-    def extras(c: youtube.Candidate, album: pipeline.AlbumInfo) -> pipeline.Extras:
-        seen.append(c.video_id)
+    def extras(query: pipeline.ExtrasQuery) -> pipeline.Extras:
+        seen.append(query.candidate.video_id)
         return pipeline.Extras(lyrics="la la", synced_lyrics="[00:01.00]la la\n")
 
     monkeypatch.setattr(pipeline, "EXTRAS", [extras])
@@ -673,3 +694,167 @@ def test_an_unknown_track_number_is_removed_not_kept(
     assert music_files(lib) == ["Band/Tunes (2020)/Bonus Song.mp3"]
     written = tags.read_tags(lib.paths.music / "Band" / "Tunes (2020)" / "Bonus Song.mp3")
     assert (written.track, written.track_total) == (None, None)
+
+
+# ---- lyrics and covers for the library (step 10) ---------------------------------------
+
+PLAIN = "First made-up line\nSecond made-up line"
+SYNCED = "[00:01.00]First made-up line\n[00:02.00]Second made-up line\n"
+
+
+def cover(width: int = 1200) -> bytes:
+    import io
+
+    from PIL import Image
+
+    buffer = io.BytesIO()
+    Image.new("RGB", (width, width), (10, 120, 200)).save(buffer, "JPEG")
+    return buffer.getvalue()
+
+
+@pytest.fixture
+def adopted(
+    lib: Library,
+    index: Index,
+    rips: Path,
+    samples: dict[str, Path],
+    album_lookups: list[tuple[str, str]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> Path:
+    """One matched rip in the library with its official details, and no extras yet."""
+    monkeypatch.setattr(pipeline, "EXTRAS", [])
+    own_rip(index, rips, samples["mp3"], "Band - Melody")
+    plan = pipeline.plan_adopt(lib, index, matched=True)
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    return lib.paths.music / "Band" / "Tunes (2020)" / "03 Melody.mp3"
+
+
+def test_lyrics_for_the_library(
+    lib: Library, index: Index, adopted: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    asked: list[lyrics.Query] = []
+
+    def find(query: lyrics.Query, *, cache: Any = None) -> lyrics.Found:
+        asked.append(query)
+        return lyrics.Found("synced", plain=PLAIN, synced=SYNCED, source="LRCLIB")
+
+    monkeypatch.setattr(lyrics, "find", find)
+    plan = pipeline.plan_lyrics(lib, index, missing=True)
+    assert plan.summary["operations"] == 1
+    batch_id = pipeline.apply(lib, index, plan.plan_id).batch_id
+    run_queue(lib)
+
+    (query,) = asked
+    assert (query.title, query.artist, query.album, query.video_id, query.official_s) == (
+        "Melody", "Band", "Tunes", VIDEO_A, 3.0,
+    )  # fmt: skip
+    assert tags.read_tags(adopted).lyrics == PLAIN
+    assert adopted.with_suffix(".lrc").read_text(encoding="utf-8") == SYNCED
+    assert [j["last_error"] for j in jobs(lib) if j["kind"] == "lyrics"] == ["synced from LRCLIB"]
+    assert pipeline.plan_lyrics(lib, index, missing=True).summary["skipped"] == {"has_lyrics": 1}
+
+    pipeline.undo(lib, batch_id)
+    assert tags.read_tags(adopted).lyrics is None
+    assert not adopted.with_suffix(".lrc").exists()
+
+
+def test_covers_for_the_library(
+    lib: Library, index: Index, adopted: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    asked: list[str] = []
+
+    def album_art(browse_id: str, *, cache: Any = None) -> artwork.Art:
+        asked.append(browse_id)
+        return artwork.Art(cover(), 1200, 1200)
+
+    monkeypatch.setattr(artwork, "album_art", album_art)
+    plan = pipeline.plan_artwork(lib, index, missing=True)
+    assert (plan.summary["operations"], plan.summary["albums"]) == (1, 1)
+    batch_id = pipeline.apply(lib, index, plan.plan_id).batch_id
+    run_queue(lib)
+
+    assert asked == ["MPREb_1"]
+    assert tags.read_tags(adopted).cover == cover()
+    assert (adopted.parent / "cover.jpg").read_bytes() == cover()
+    assert pipeline.plan_artwork(lib, index, missing=True).summary["skipped"] == {"has_cover": 1}
+
+    pipeline.undo(lib, batch_id)
+    assert tags.read_tags(adopted).cover is None
+    assert not (adopted.parent / "cover.jpg").exists()
+
+
+def test_a_video_frame_cover_counts_as_missing(lib: Library, index: Index, adopted: Path) -> None:
+    import io
+
+    from PIL import Image
+
+    buffer = io.BytesIO()
+    Image.new("RGB", (1280, 720)).save(buffer, "JPEG")
+    with fileops.batch(lib, "demo") as b:
+        fileops.write_tags(b, adopted, tags.TrackTags(cover=buffer.getvalue()))
+    assert pipeline.plan_artwork(lib, index, missing=True).summary["operations"] == 1
+
+
+def test_an_only_copy_song_gets_a_cover_only_from_the_owners_art_url(
+    lib: Library,
+    index: Index,
+    rips: Path,
+    samples: dict[str, Path],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    with_url = adopt_item(index, rips, samples["mp3"], "Band - Rare Song", confidence=0.95)
+    adopt_item(index, rips, samples["m4a"], "Band - Other Rare Song", confidence=0.95)
+    with state.edit(lib.paths.state_file) as st:
+        chosen = {"decision": "only_copy", "art_url": "https://soundcloud.com/band/rare"}
+        st.data["decisions"] = {with_url: chosen}
+    plan = pipeline.plan_adopt(lib, index)
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    urls: list[str] = []
+
+    def from_url(url: str) -> artwork.Art:
+        urls.append(url)
+        return artwork.Art(cover(600), 600, 600)
+
+    monkeypatch.setattr(artwork, "art_from_url", from_url)
+    plan = pipeline.plan_artwork(lib, index)
+    assert plan.summary["skipped"] == {"no_official_cover": 1}
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    assert urls == ["https://soundcloud.com/band/rare"]
+    assert tags.read_tags(lib.paths.music / "Band" / "Unsorted" / "Rare Song.mp3").cover == cover(
+        600
+    )
+
+
+def test_a_file_gone_since_the_plan(lib: Library, index: Index, adopted: Path) -> None:
+    plan = pipeline.plan_lyrics(lib, index)
+    pipeline.apply(lib, index, plan.plan_id)
+    adopted.unlink()
+    run_queue(lib)
+    (job,) = [j for j in jobs(lib) if j["kind"] == "lyrics"]
+    assert (job["state"], job["reason"]) == ("needs_review", "file_changed")
+
+
+def test_new_adopts_get_lyrics_and_a_cover(
+    lib: Library,
+    index: Index,
+    rips: Path,
+    samples: dict[str, Path],
+    album_lookups: list[tuple[str, str]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(lyrics, "find", lambda query, cache=None: lyrics.Found(
+        "synced", plain=PLAIN, synced=SYNCED, source="LRCLIB"))  # fmt: skip
+    monkeypatch.setattr(artwork, "album_art", lambda browse_id, cache=None: artwork.Art(
+        cover(), 1200, 1200))  # fmt: skip
+    own_rip(index, rips, samples["mp3"], "Band - Melody")
+    plan = pipeline.plan_adopt(lib, index, matched=True)
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    song = lib.paths.music / "Band" / "Tunes (2020)" / "03 Melody.mp3"
+    written = tags.read_tags(song)
+    assert (written.lyrics, written.cover) == (PLAIN, cover())
+    assert song.with_suffix(".lrc").read_text(encoding="utf-8") == SYNCED
+    assert (song.parent / "cover.jpg").is_file()

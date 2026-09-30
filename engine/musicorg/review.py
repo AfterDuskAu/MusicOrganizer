@@ -297,6 +297,12 @@ def decide_one(
     elif decision == "only_copy":
         plan.fixes = {k: v.strip() for k, v in (fixes or {}).items()
                       if k in ("artist_fix", "title_fix", "album_fix") and v.strip()}  # fmt: skip
+        art_url = ((fixes or {}).get("art_url") or "").strip()
+        if art_url:
+            if not art_url.lower().startswith("https://"):
+                raise UserError(f"{art_url!r} isn't an https:// link to a picture or a page "
+                                "with one.")  # fmt: skip
+            plan.fixes["art_url"] = art_url
 
     track = youtube.get_track(plan.video_id) if plan.kind == "url" and plan.video_id else None
     now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -404,6 +410,14 @@ def _check_row(
         plan.video_id, plan.link = found.group("id"), link
     elif word == "only_copy":
         plan.fixes = {k: row[k] for k in ("artist_fix", "title_fix", "album_fix") if row.get(k)}
+    art_url = (row.get("art_url") or "").strip()
+    if art_url:
+        if not art_url.lower().startswith("https://"):
+            return None, (f"art_url {art_url!r} isn't an https:// link to a picture or a page "
+                          "with one (SoundCloud, Bandcamp, YouTube…)")  # fmt: skip
+        if plan.kind != "only_copy":
+            return None, "art_url is for only_copy rows; matched songs get their album's cover"
+        plan.fixes["art_url"] = art_url
     return plan, None
 
 

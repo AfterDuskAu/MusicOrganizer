@@ -55,3 +55,6 @@ Plus:
   - keep the rule;
   - use the album art of a YouTube Music match the owner confirmed in review;
   - or add a new source such as MusicBrainz's Cover Art Archive. That's a new network service: ask first, as for any dependency.
+- **The owner's decisions (later that day):**
+  - Lyrics: use every source that allows it. That's LRCLIB, then YouTube Music's own lyrics (Musixmatch or LyricFind, often timed). Genius and Musixmatch's own API are left out: paid keys, or terms against automatic copying.
+  - Covers for songs with no official match: none, unless a picture is found on another source. The owner's `art_url` can now be a picture or a page with one (SoundCloud, Bandcamp, YouTube); its picture is read with yt-dlp, and nothing is downloaded.

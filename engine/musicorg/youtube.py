@@ -138,6 +138,7 @@ class Album:
     track_count: int | None
     is_explicit: bool | None
     tracks: tuple[AlbumTrack, ...]
+    thumbnails: tuple[tuple[str, int, int], ...] = ()  # (url, width, height), smallest first
 
 
 class SearchCache(Protocol):
@@ -247,7 +248,160 @@ def get_album(browse_id: str, *, cache: SearchCache | None = None) -> Album:
         track_count=_int(raw.get("trackCount")),
         is_explicit=raw.get("isExplicit") if isinstance(raw.get("isExplicit"), bool) else None,
         tracks=tracks,
+        thumbnails=_thumbnails(raw.get("thumbnails")),
     )
+
+
+def _thumbnails(raw: Any) -> tuple[tuple[str, int, int], ...]:
+    found = [
+        (str(t["url"]), _int(t.get("width")) or 0, _int(t.get("height")) or 0)
+        for t in raw or []
+        if isinstance(t, dict) and t.get("url")
+    ]
+    return tuple(sorted(found, key=lambda t: t[1] * t[2]))
+
+
+# ---- lyrics and pictures (step 10) ------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class TrackLyrics:
+    """YouTube Music's lyrics for one track: timed lines (milliseconds, text) when it has
+    them, plain text otherwise. `source` is who supplied them, e.g. "Musixmatch"."""
+
+    plain: str | None
+    lines: tuple[tuple[int, str], ...] = ()
+    source: str | None = None
+
+
+def get_lyrics(video_id: str, *, cache: SearchCache | None = None) -> TrackLyrics | None:
+    """The lyrics YouTube Music shows for a track, timed if it has them. None if it has
+    none. Two requests (the watch playlist, then the lyrics), both cached for 30 days.
+    Checked against ytmusicapi 1.12.3: `get_watch_playlist()["lyrics"]` is a browseId
+    starting "MPLYt", and `get_lyrics(browseId, timestamps=True)` gives `hasTimestamps`,
+    `source` and `lyrics` (text, or LyricLine objects with `text`, `start_time`,
+    `end_time` in milliseconds)."""
+    key = f"lyrics {video_id}"
+    raw = None if cache is None else cache.cached_search(key, max_age_days=SEARCH_CACHE_DAYS)
+    if raw is None:
+        watch = _fetch(
+            "watch", video_id, lambda client: client.get_watch_playlist(videoId=video_id, limit=1)
+        )
+        browse_id = watch.get("lyrics") if isinstance(watch, dict) else None
+        raw = {"found": False}
+        if isinstance(browse_id, str) and browse_id:
+            found = _fetch(
+                "lyrics",
+                browse_id,
+                lambda client: _plain_lyrics(client.get_lyrics(browse_id, timestamps=True)),
+            )
+            if isinstance(found, dict):
+                raw = {"found": True, **found}
+        if cache is not None:
+            cache.put_search(key, raw)
+    if not isinstance(raw, dict) or not raw.get("found"):
+        return None
+    source = str(raw.get("source") or "").removeprefix("Source: ").strip() or None
+    body = raw.get("lyrics")
+    if raw.get("hasTimestamps") and isinstance(body, list):
+        lines = tuple(
+            (int(line["start_time"]), str(line.get("text") or ""))
+            for line in body
+            if isinstance(line, dict) and isinstance(line.get("start_time"), int)
+        )
+        plain = "\n".join(text for _, text in lines).strip() or None
+        return TrackLyrics(plain, lines, source) if lines else None
+    if isinstance(body, str) and body.strip():
+        return TrackLyrics(body.strip(), (), source)
+    return None
+
+
+def _plain_lyrics(found: Any) -> Any:
+    """ytmusicapi's answer as plain JSON (its LyricLine objects become dicts), so it can
+    be cached and recorded."""
+    if not isinstance(found, dict):
+        return None
+    body = found.get("lyrics")
+    if isinstance(body, list):
+        body = [
+            {"text": getattr(line, "text", None), "start_time": getattr(line, "start_time", None),
+             "end_time": getattr(line, "end_time", None)}
+            for line in body
+        ]  # fmt: skip
+    return {"lyrics": body, "source": found.get("source"),
+            "hasTimestamps": bool(found.get("hasTimestamps"))}  # fmt: skip
+
+
+IMAGE_MAX_BYTES = 15_000_000
+IMAGE_TIMEOUT_S = 30
+USER_AGENT = "MusicOrganizer (https://github.com/AfterDuskAu/MusicOrganizer)"
+_SIZED = re.compile(r"=(?:w\d+-h\d+|s\d+)[^/]*$")
+
+
+def sized_thumbnail(url: str, px: int) -> str:
+    """A Google image URL asking for `px` × `px`. Checked live (2026-09-30): an album
+    listed at 544 px comes at 1200 px when asked, and asking for more than the original
+    (1425 px) returns the original, never an enlarged copy. Other URLs are unchanged."""
+    if "googleusercontent.com" in url or "ggpht.com" in url:
+        return _SIZED.sub(f"=w{px}-h{px}", url) if _SIZED.search(url) else f"{url}=w{px}-h{px}"
+    return url
+
+
+def fetch_image(url: str) -> bytes:
+    """A picture from the web (album art, a page's thumbnail), through the rate limiter.
+    Raises YouTubeError if it isn't an image or is implausibly large."""
+    if not url.lower().startswith("https://"):
+        raise YouTubeError(f"Only https:// pictures are fetched, not {url}.")
+    replay = os.environ.get(REPLAY_ENV)
+    if replay:
+        import base64
+
+        return base64.b64decode(read_recording(Path(replay), "image", url))
+
+    def live() -> bytes:
+        import requests
+
+        response = requests.get(url, timeout=IMAGE_TIMEOUT_S, headers={"User-Agent": USER_AGENT})
+        if response.status_code == 429 or response.status_code >= 500:
+            response.raise_for_status()  # a slow-down: the limiter backs off
+        if response.status_code >= 400:
+            raise YouTubeError(f"{url} answered HTTP {response.status_code}.")
+        kind = response.headers.get("content-type", "")
+        if not kind.startswith("image/"):
+            raise YouTubeError(f"{url} isn't a picture ({kind or 'unknown type'}).")
+        if len(response.content) > IMAGE_MAX_BYTES:
+            raise YouTubeError(f"The picture at {url} is too large.")
+        return response.content
+
+    return limiter().call(live)
+
+
+def page_thumbnail(url: str) -> str | None:
+    """The picture a web page offers for a track (SoundCloud, Bandcamp, YouTube and the
+    other sites yt-dlp knows), without downloading anything. None if there isn't one."""
+    replay = os.environ.get(REPLAY_ENV)
+    if replay:
+        return read_recording(Path(replay), "page", url)
+    opts = {"quiet": True, "noprogress": True, "skip_download": True, "noplaylist": True,
+            "logger": _YtDlpLog(), "socket_timeout": SOCKET_TIMEOUT_S,
+            "cachedir": str(ensure_app_dir(app_dirs().cache) / "yt-dlp")}  # fmt: skip
+
+    def live() -> Any:
+        with _make_ydl(opts) as ydl:
+            return ydl.extract_info(url, download=False)
+
+    try:
+        info = limiter().call(live)
+    except (YouTubePausedError, ReplayMissError):
+        raise
+    except Exception as exc:
+        raise YouTubeError(f"Couldn't read {url}: {_short_detail(str(exc))}") from exc
+    if not isinstance(info, dict):
+        return None
+    thumbs = [t for t in info.get("thumbnails") or [] if isinstance(t, dict) and t.get("url")]
+    best = max(thumbs, key=lambda t: (t.get("width") or 0) * (t.get("height") or 0), default=None)
+    found = (best or {}).get("url") or info.get("thumbnail")
+    return str(found) if found else None
 
 
 def find_track(

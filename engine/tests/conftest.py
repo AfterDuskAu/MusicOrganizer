@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from musicorg import fileops, library, state, tools
+from musicorg import artwork, fileops, library, state, tools
 
 REQUIRE_TOOLS = os.environ.get("MUSICORG_REQUIRE_TOOLS") == "1"
 RUN_LIVE = os.environ.get("MUSICORG_LIVE") == "1"
@@ -102,6 +102,12 @@ def fake_trash(
 
     monkeypatch.setattr(fileops, "_send_to_trash", send)
     return trash
+
+
+@pytest.fixture(autouse=True)
+def fresh_cover_memory(monkeypatch: pytest.MonkeyPatch) -> None:
+    """artwork remembers covers for the length of a run; each test starts empty."""
+    monkeypatch.setattr(artwork, "_MEMORY", artwork._Memory())
 
 
 @pytest.fixture(autouse=True)

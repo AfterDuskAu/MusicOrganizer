@@ -115,6 +115,12 @@ MusicBrainz IDs use Picard's standard names and are optional in v0.1. Leave room
 - Plain lyrics are embedded in the file.
 - Synced lyrics go in a `.lrc` sidecar with the same base name, UTF-8, `[mm:ss.xx]` timestamps (non-decreasing; `[ar:]`, `[ti:]` and `[offset:]` header tags are allowed).
 - No lyrics found means no sidecar. Never write an empty or fake one.
+- Synced lyrics are written only when the file is within 2 s of the length they were timed for (step 10). A file with a longer intro gets plain lyrics only, never lines at the wrong moment.
+
+### Cover art
+
+- The album's official cover from YouTube Music, 1200 × 1200 JPEG (never enlarged from a smaller original), embedded and saved once per album folder as `cover.jpg`. An existing different `cover.jpg` is left alone.
+- A song with no official match gets no automatic cover. The owner's `art_url` (a picture, or a page with one) is the exception.
 
 ## 5. What lives outside the files, and rebuilding
 

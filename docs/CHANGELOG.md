@@ -530,3 +530,34 @@ The owner asked for ideas from the Photonizer project that would make the app ru
   - 6 files have no track number and 2 no album or year, because YouTube Music couldn't place them. They're left empty rather than guessed.
   - 4 songs are in the library twice (` (2)`). The owner's rips had them twice, from different YouTube-converter sites, so both copies were adopted. Noted in `KNOWN-ISSUES.md`.
   - Artist names are as YouTube Music spells them, e.g. "JAŸ-Z". A "preferred artist names" setting is noted in `KNOWN-ISSUES.md`.
+
+### Step 10: Lyrics and covers
+
+- `lyrics.py`: LRCLIB first, then YouTube Music. The owner asked for every source that allows it; Genius and Musixmatch's own API need paid keys or forbid automatic copying.
+  - **LRCLIB:** `/api/get` (album left out when unknown or `Unsorted`), then `/api/search`. A search result counts only within 2 s and with the same artist and title. At most one request a second, with a User-Agent naming the project. Checked against the research's 1,357 saved answers, since LRCLIB's docs page renders only in a browser.
+  - **YouTube Music:** `youtube.get_lyrics`, via `get_watch_playlist()["lyrics"]` then `get_lyrics(browseId, timestamps=True)`. Checked live with ytmusicapi 1.12.3: timed lines with `start_time` in ms, from Musixmatch or LyricFind.
+  - **Guards:**
+    - version: a remix or live track whose LRCLIB title lacks that word gets plain lyrics only (`version_uncertain`)
+    - timing (new): synced lyrics only when the file is within 2 s of the length they were timed for. The owner's own audio (09c) can have a video intro.
+    - every LRC text is checked
+  - Answers, "not found" included, are cached in the index for 30 days.
+- `artwork.py`: the album's cover at 1200 px, or the owner's `art_url`.
+  - Checked live: an album listed at 544 px comes at 1200 px, and asking for more than the original returns the original (1425 px), never an enlarged copy.
+  - Square within 2% and at least 500 px, else kept anyway and logged. JPEG quality 90 at most 1200 px, made in memory; a JPEG already 1200 px or less is never re-encoded.
+  - An album's cover is fetched once per run. Songs with no official match get nothing automatic.
+- `youtube.py`:
+  - `get_lyrics`, `fetch_image` (https only; a 404 is an error, not a slow-down), `page_thumbnail` (yt-dlp, no download), `sized_thumbnail`
+  - `Album.thumbnails`, which the album cache already keeps
+  - all through the shared limiter
+- `pipeline.py`:
+  - **New replaces and adopts get lyrics and a cover in the same verified tag write** (`EXTRAS`: `lyrics_extras`, `cover_extras`).
+  - `musicorg lyrics [--missing]` and `musicorg artwork [--missing]` plan the same for songs already in the library, one job per song, and `apply` queues them.
+  - `artwork --missing` also takes songs whose cover isn't square: a converter's 16:9 video frame.
+  - Undo takes both back: the tags return to how they were, and the `.lrc` and `cover.jpg` go to `_Replaced/`.
+- `review`: `art_url` is read from the spreadsheet and the review page, for only-copy rows, https only.
+- **Deviations:**
+  - **Lyrics and cover jobs aren't "network jobs" in the queue's sense.** They download no audio, so they don't wait the 8–25 s download pace or count toward the 300-a-day cap. LRCLIB's one-a-second pace and YouTube's shared limiter set their speed. The brief called them network jobs; taken literally, 817 songs would take hours and use up the day's downloads.
+  - **Lyrics and cover jobs check the file's identity, not its bytes.** It must still be there with the same MUSICORG_ID. These jobs only add their own fields in a verified write, so a lyrics batch before an artwork one doesn't make the artwork plan stale.
+  - **No new index columns** for "instrumental" or "version uncertain" (a schema change would force a rebuild, losing the review candidates). The 30-day answer cache stops repeat lookups, and each job's result line says what was found.
+- **Tests never contain real lyrics or covers:** lyrics are copyrighted and the repo is public. The recordings keep LRCLIB's and YouTube Music's real shapes, with made-up lines. Covers are made in memory.
+- Also fixed: `queue.run(kinds={})` fell back to every registered kind.
