@@ -1,6 +1,33 @@
 # Changelog
 
-## 0.1.0 — in progress
+## 0.1.0 — 2026-09-30
+
+The first version of the engine, run on the owner's own library.
+
+**What it does:**
+- Scans the owner's rip folders without ever changing them. It indexed 1,890 rips.
+- Matches the rips on YouTube Music.
+- Fixes each matched song's details, on the owner's own audio (step 09c).
+- Adds covers and timed lyrics.
+- Every change is journaled and can be undone.
+- It can also replace a rip with the official YouTube Music download. The owner decided to keep their own audio, since many rips are CD rips, so that stays for later users moving off streaming services.
+
+**On the owner's library:**
+- 817 songs are in the library, with official details, 787 covers and 708 synced lyrics.
+- 1,012 rips are waiting in review, and 61 weren't found.
+
+**For the v0.2 Mac app:** `musicorg serve`, the JSON-RPC interface in `ENGINE_API.md` section 2.
+
+**Tests:** 1,169 pass on macOS (Intel and Apple Silicon) and Windows, and CI runs the secret check.
+
+**Left for later** (`docs/KNOWN-ISSUES.md`):
+- relocating a source folder
+- state.json backups
+- keeping one copy of songs the rips have twice
+- preferred artist spellings
+- a check of synced lyrics against playback, in the Mac app's karaoke view
+
+Steps, in order:
 
 ### Step 01: Project setup
 
