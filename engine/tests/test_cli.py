@@ -117,10 +117,6 @@ def test_group_needs_subcommand(capsys: pytest.CaptureFixture[str]) -> None:
 @pytest.mark.parametrize(
     ("args", "step"),
     [
-        (["plan", "replace", "--only", "auto", "--limit", "5", "--stage-only"], "09b"),
-        (["plan", "adopt", "--include-not-found"], "09b"),
-        (["plan", "show", "p_1"], "09b"),
-        (["apply", "p_1"], "09b"),
         (["lyrics", "--missing"], "10"),
         (["artwork", "--missing"], "10"),
         (["serve"], "11"),

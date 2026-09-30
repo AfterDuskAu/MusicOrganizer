@@ -22,6 +22,7 @@ from musicorg import (
     library,
     logging_setup,
     match,
+    pipeline,
     queue,
     report,
     review,
@@ -206,26 +207,35 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     plan = group("plan", "Make a dry-run plan of changes.")
-    p = add(
-        plan,
-        "replace",
-        "Plan replacing rips with official downloads.",
-        _not_yet("plan replace", "09b"),
+    p = add(plan, "replace", "Plan replacing rips with official downloads.", _cmd_plan_replace)
+    p.add_argument(
+        "--only",
+        choices=list(pipeline.ONLY),
+        default="all-eligible",
+        help="auto: AUTO matches; accepted: your review choices; all-eligible: both (default).",
     )
-    p.add_argument("--only", choices=["auto", "accepted", "all-eligible"])
-    p.add_argument("--limit", type=int, metavar="N")
-    p.add_argument("--stage-only", action="store_true")
-    p = add(
-        plan,
-        "adopt",
-        "Plan copying only-copy rips into the library.",
-        _not_yet("plan adopt", "09b"),
+    p.add_argument("--limit", type=int, metavar="N", help="At most N videos.")
+    p.add_argument(
+        "--stage-only",
+        action="store_true",
+        help="Calibration: download and compare, keep the downloads in _Staging/calibration, "
+        "and change nothing else.",
     )
-    p.add_argument("--include-not-found", action="store_true")
-    p = add(plan, "show", "Show a plan's operations and summary.", _not_yet("plan show", "09b"))
+    p = add(plan, "adopt", "Plan copying only-copy rips into the library.", _cmd_plan_adopt)
+    p.add_argument(
+        "--include-not-found", action="store_true", help="Also copy in every not-found rip."
+    )
+    p = add(plan, "show", "Show a plan's operations and summary.", _cmd_plan_show)
     p.add_argument("plan_id")
+    p = add(
+        plan,
+        "calibration",
+        "Write Reports/calibration-pairs.csv from the --stage-only downloads.",
+        _cmd_plan_calibration,
+    )
+    p.add_argument("--out", type=_path, metavar="DIR", help="Folder (default: Reports/).")
 
-    p = add(commands, "apply", "Check a plan and queue its jobs.", _not_yet("apply", "09b"))
+    p = add(commands, "apply", "Check a plan and queue its jobs.", _cmd_apply)
     p.add_argument("plan_id")
 
     queue_group = group("queue", "The throttled download queue.")
@@ -742,12 +752,105 @@ def _cmd_journal_list(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def _cmd_plan_replace(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=True, command="plan replace") as lib:
+        with open_index(lib.paths, write=False) as index:
+            plan = pipeline.plan_replace(
+                lib, index, only=args.only, limit=args.limit, stage_only=args.stage_only
+            )
+    return _print_new_plan(plan, args.json)
+
+
+def _cmd_plan_adopt(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=True, command="plan adopt") as lib:
+        with open_index(lib.paths, write=False) as index:
+            plan = pipeline.plan_adopt(lib, index, include_not_found=args.include_not_found)
+    return _print_new_plan(plan, args.json)
+
+
+def _cmd_plan_show(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=False) as lib:
+        plan = pipeline.show(lib, args.plan_id)
+    if args.json:
+        _print_json(plan.to_dict())
+        return EXIT_OK
+    print(f"Plan {plan.plan_id} ({plan.kind}), made {_local_time(plan.created_at)}:")
+    for line in pipeline.describe(plan):
+        print(line)
+    _print_plan_summary(plan)
+    return EXIT_OK
+
+
+def _cmd_plan_calibration(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=False) as lib:
+        with open_index(lib.paths, write=False) as index:
+            path = pipeline.calibration_pairs(lib, index, args.out)
+    if args.json:
+        _print_json({"path": str(path)})
+    else:
+        print(f"Saved {path}. Fill in `same` (yes or no) after listening, add the")
+        print("different-version pairs, then run scripts/calibrate_fp.py on it.")
+    return EXIT_OK
+
+
+def _cmd_apply(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=True, command=f"apply {args.plan_id}") as lib:
+        with open_index(lib.paths, write=False) as index:
+            result = pipeline.apply(lib, index, args.plan_id)
+    if args.json:
+        _print_json(result.to_dict())
+    else:
+        print(f"Queued {result.jobs:,} job(s) as batch {result.batch_id}.")
+        print("Run `musicorg queue run` to work through them. To take the batch back later:")
+        print(f"  musicorg undo {result.batch_id}")
+    return EXIT_OK
+
+
+def _print_new_plan(plan: fileops.Plan, json_mode: bool) -> int:
+    if json_mode:
+        _print_json({"plan_id": plan.plan_id, "summary": plan.summary})
+        return EXIT_OK
+    print(f"Made plan {plan.plan_id} ({plan.kind}). Nothing has been changed yet.")
+    _print_plan_summary(plan)
+    if plan.operations:
+        print(f"See each step with `musicorg plan show {plan.plan_id}`, then run it with")
+        print(f"  musicorg apply {plan.plan_id}")
+    return EXIT_OK
+
+
+def _print_plan_summary(plan: fileops.Plan) -> None:
+    s = plan.summary
+    if plan.kind == "replace":
+        print(
+            f"  {s.get('operations', 0):,} rip(s) to replace, {s.get('downloads', 0):,} download(s)"
+        )
+        if s.get("in_library"):
+            print(f"  {s['in_library']:,} video(s) already in the library: linked, not downloaded")
+        if s.get("stage_only"):
+            print("  Calibration only (--stage-only): nothing will be committed or replaced")
+    else:
+        print(f"  {s.get('adopts', 0):,} rip(s) to copy in")
+        if s.get("low_confidence_adopts"):
+            print(f"  {s['low_confidence_adopts']:,} of them keep the rip's own names "
+                  "(the file name was hard to read)")  # fmt: skip
+        if s.get("unsupported_format"):
+            print(f"  {s['unsupported_format']:,} in a format not adopted in v0.1 (WebM, AAC, WAV)")
+    minutes = s.get("est_minutes") or 0
+    took = f"about {minutes} min" if minutes < 90 else f"about {minutes / 60:.1f} hours"
+    days = s.get("days") or 0
+    if days > 1:
+        took += f", spread over {days} days by the daily download limit"
+    print(f"  Time: {took}; disk space: about {s.get('disk_mb', 0):,} MB")
+    for why, n in sorted((s.get("skipped") or {}).items()):
+        print(f"  Left out: {n:,} ({why.replace('_', ' ')})")
+
+
 def _cmd_undo(args: argparse.Namespace) -> int:
     command = f"undo {args.batch_id}" + (" --dry-run" if args.dry_run else "")
     with library.open(_library_root(args), write=True, command=command) as lib:
         if not args.dry_run:
             queue.requeue_interrupted(lib)  # no queue runs while this holds the lock
-        result = fileops.undo(lib, args.batch_id, dry_run=args.dry_run, jobs=queue.BatchJobs(lib))
+        result = pipeline.undo(lib, args.batch_id, dry_run=args.dry_run)
     if args.json:
         _print_json(result.to_dict())
         return EXIT_OK

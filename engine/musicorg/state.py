@@ -17,6 +17,10 @@ Keys (contract section 5), each written by the step named:
   "score"; `only_copy` any of "artist_fix", "title_fix", "album_fix". A rejection isn't
   a decision: it goes in "rejected".
 - "superseded": {normalised rip path: MUSICORG_ID} (step 09b)
+- "gate": {item_id: {YouTube videoId: {"verdict": fingerprint verdict (docs/ENGINE_API.md
+  → Enums), "ber", "why", "checked_at": ISO time}}}: the fingerprint gate's results
+  (step 09b). A download costs YouTube's patience, so a result is kept: a `different`
+  video is never proposed for that rip again, and an `uncertain` one never goes AUTO.
 - "rejected": {item_id: [YouTube videoId, ...]}: candidates the owner turned down, never
   proposed again (read by step 06, written by step 07)
 - "aliases": {compare key of an artist name in the rips: {"name": the name the owner
@@ -203,6 +207,29 @@ def superseded(data: dict[str, Any]) -> dict[str, str]:
     """Rip path (normalised) → MUSICORG_ID of the library file that replaced it."""
     value = data.get("superseded")
     return {k: v for k, v in value.items() if isinstance(v, str)} if isinstance(value, dict) else {}
+
+
+def gate(data: dict[str, Any]) -> dict[str, dict[str, dict[str, Any]]]:
+    """Item id → videoId → the fingerprint gate's result for that pair (step 09b)."""
+    value = data.get("gate")
+    if not isinstance(value, dict):
+        return {}
+    return {
+        k: {v: r for v, r in found.items() if isinstance(r, dict)}
+        for k, found in value.items()
+        if isinstance(found, dict)
+    }
+
+
+def turned_down(data: dict[str, Any]) -> dict[str, set[str]]:
+    """Item id → videoIds never to propose for it: the owner's rejections, and videos the
+    fingerprint gate found `different`."""
+    found = rejected(data)
+    for item_id, results in gate(data).items():
+        for video_id, result in results.items():
+            if result.get("verdict") == "different":
+                found.setdefault(item_id, set()).add(video_id)
+    return found
 
 
 def rejected(data: dict[str, Any]) -> dict[str, set[str]]:

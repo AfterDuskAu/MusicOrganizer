@@ -1,6 +1,6 @@
 """fileops staging and exports: `stage_path`, `discard_staged` and `clean_staging` (the only
-outright deletes, never following links), and `write_export` (never overwrites, never
-inside the library's own folders or a source)."""
+outright deletes, never following links), `stage_copy` and `set_aside` (step 09b), and
+`write_export` (never overwrites, never inside the library's own folders or a source)."""
 
 from __future__ import annotations
 
@@ -169,6 +169,75 @@ def test_cleaning_staging_needs_the_lock(lib: Library) -> None:
             fileops.clean_staging(read_only)
         with pytest.raises(RuntimeError, match="open for writing"):
             fileops.discard_staged(read_only, read_only.paths.staging / "x")
+
+
+# ---- stage_copy and set_aside (step 09b) -----------------------------------------------
+
+
+def test_stage_copy(lib: Library, precious: Path) -> None:
+    info = os.stat(precious)
+    with fileops.batch(lib, "demo") as b:
+        copy = fileops.stage_copy(b, precious)
+        assert copy == lib.paths.staging / b.batch_id / "precious.mp3"
+        assert copy.read_bytes() == b"irreplaceable"
+        # A second copy of the same name never overwrites the first.
+        assert fileops.stage_copy(b, precious).name == "precious (2).mp3"
+    assert precious.read_bytes() == b"irreplaceable"
+    assert os.stat(precious).st_mtime_ns == info.st_mtime_ns
+    assert files_in(lib.paths.music) == []
+
+
+def test_stage_copy_refuses_library_files_and_folders(lib: Library, precious: Path) -> None:
+    track = put(lib.paths.music / "A" / "Song.m4a")
+    with fileops.batch(lib, "demo") as b:
+        with pytest.raises(UserError, match="already inside the library"):
+            fileops.stage_copy(b, track)
+        with pytest.raises(UserError, match="isn't a file"):
+            fileops.stage_copy(b, precious.parent)
+        with pytest.raises(UserError, match="There's no file"):
+            fileops.stage_copy(b, precious.parent / "missing.mp3")
+    assert files_in(lib.paths.staging) == []
+
+
+def test_stage_copy_that_doesnt_verify_is_discarded(
+    lib: Library, precious: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(fileops, "_copy_file", lambda src, dst: (put(dst, b"x"), "0" * 64)[1])
+    with fileops.batch(lib, "demo") as b:
+        with pytest.raises(fileops.IntegrityError, match="didn't match the original"):
+            fileops.stage_copy(b, precious)
+    assert files_in(lib.paths.staging) == []
+    assert precious.read_bytes() == b"irreplaceable"
+
+
+def test_set_aside(lib: Library) -> None:
+    with fileops.batch(lib, "demo") as b:
+        job = fileops.stage_dir(b, "job-1")
+        first = put(job / "vid.m4a", b"one")
+        kept = fileops.set_aside(lib, first, f"{b.batch_id}/kept", note={"verdict": "match"})
+        assert kept == lib.paths.staging / b.batch_id / "kept" / "vid.m4a"
+        assert kept.read_bytes() == b"one" and not first.exists()
+        assert (kept.parent / "vid.m4a.json").read_text(encoding="utf-8").startswith("{")
+        # A second file of the same name is kept too, never over the first.
+        second = put(job / "vid.m4a", b"two")
+        again = fileops.set_aside(lib, second, f"{b.batch_id}/kept")
+        assert again.name == "vid (2).m4a"
+        assert kept.read_bytes() == b"one"
+        calibration = fileops.set_aside(lib, put(job / "c.m4a"), "calibration/b_1")
+        assert calibration == lib.paths.calibration / "b_1" / "c.m4a"
+
+
+def test_set_aside_stays_in_staging(lib: Library, precious: Path) -> None:
+    track = put(lib.paths.music / "A" / "Song.m4a")
+    loose = put(lib.paths.staging / "loose.m4a")
+    for path in (precious, track):
+        with pytest.raises(OutsideLibraryError):
+            fileops.set_aside(lib, path, "kept")
+    for folder in ("../Music", "/tmp", "a/../../x"):
+        with pytest.raises(OutsideLibraryError):
+            fileops.set_aside(lib, loose, folder)
+    assert track.exists() and loose.exists()
+    assert precious.read_bytes() == b"irreplaceable"
 
 
 # ---- exports ---------------------------------------------------------------------------

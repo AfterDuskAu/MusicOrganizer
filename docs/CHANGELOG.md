@@ -400,3 +400,54 @@ At the step 07 checkpoint the owner chose a basic UI for settling the review ite
 - Other deviations:
   - **Four retries.** The prompt lists four waits (1 min, 5 min, 30 min, 2 h) and says "after 4 attempts". Read as four retries, so the 2 h wait is used: a job ends `failed` after its 5th try.
   - **Daily cap reached:** `queue run` stops and says when the next download can start, rather than holding the lock for hours.
+
+### Step 09b: Replace and adopt
+
+- `pipeline.py`: `plan replace`, `plan adopt`, `plan show`, `apply`, the replace and adopt jobs (registered with the queue), undo, and calibration.
+  - **Plans** are saved in `.musicorg/plans/` with each rip's preconditions (size, time, first megabyte, item state). A replace plan groups rips by videoId: one download serves every rip that matched it, and a video already in the library (`MUSICORG_SOURCE_ID`) isn't downloaded again. `--only` defaults to `all-eligible`; `--limit` counts videos. The summary gives downloads, time (from the throttle settings), the days the daily cap spreads them over, and disk space (length × 16 KB/s).
+  - **`apply`** re-checks every precondition, refuses a plan applied before or one whose items another batch has queued (`PlanOutOfDateError`, new, exit code 1), opens a batch and queues the jobs.
+  - **A replace job:**
+    1. re-checks the rips (`file_changed` → review)
+    2. downloads format 140
+    3. checks it: format 140, AAC, at least 100 kbps, length within 2 s
+    4. runs the fingerprint gate against each rip
+    5. reads the album from YouTube Music (the track number by the step 06 rule)
+    6. calls step 10's hook (`pipeline.EXTRAS`, empty for now)
+    7. makes one verified tag write in staging
+    8. commits to `naming.library_path`, writes the sidecars under the committed name, and links each passing rip in `state.json`
+  - **An adopt job** copies the rip into staging (SHA-256 verified), tags the copy with provenance (`rip_copy`, `ONLY_COPY=1`, `ORIGIN_PATH`, a new `MUSICORG_ID`), and commits it. The metadata rule is the prompt's: parsed names only with confidence ≥ 0.8 or the owner's fixes (`MATCH=manual` then), else the rip's own tags. WebM, raw AAC and WAV become `unsupported_format`. Two rips that would get the same name are planned as ` (2)`.
+  - **`undo`** (`pipeline.undo`, used by `musicorg undo`): after `fileops.undo` puts the files back, the batch's `superseded` and `adopted` rips return to the state the plan found them in, their `state.json` links go, and their `library_tracks` rows go.
+  - **`--stage-only`** keeps each download in `_Staging/calibration/<batch_id>/` with a `.json` note of every comparison, and changes no state. The new `musicorg plan calibration` writes `Reports/calibration-pairs.csv` (`a_path,b_path,same,verdict,ber,why`, `same` left empty) for `scripts/calibrate_fp.py`.
+- `fileops`:
+  - `stage_copy()` copies an outside file into `_Staging/`, SHA-256 verified. The source is opened read-only.
+  - `set_aside()` keeps a staged file in another `_Staging/` folder, never overwriting.
+  - Neither is journaled: staging is scratch space, and the commit that follows is journaled. Undo explains a tag write done in staging ("taking the file back covers it") instead of calling it missing.
+- `queue run` now cleans `_Staging/` of files older than 24 hours when it starts. Nothing called `clean_staging` before.
+- `youtube.download_options` sets `updatetime: False` (already yt-dlp's default from Python), so a kept download ages from when it was downloaded.
+- `index.py`: `library_tracks_from(source, source_id)`, `remove_library_tracks()`, and `QueueStore.jobs(plan_id=…)`. No schema change, so no rebuild is needed.
+- 1,097 tests pass (5 skipped). New tests, with a stand-in downloader that "downloads" the step 02 melodies:
+  - a full replace: path, every provenance tag, the hook called, the sidecar named after a ` (2)` commit, the rip byte-identical
+  - a mismatch: back to review, nothing committed, the download kept, never planned or proposed again
+  - two rips of one video: one download and one `MUSICORG_ID`; then a third rip linked with no download
+  - a download of the wrong length
+  - a rip changed after apply
+  - plans applied twice or out of date
+  - undo of a replace and of an adopt
+  - `--stage-only` and the pairs CSV
+  - `--only` and `--limit`
+  - adopts: trusted, low-confidence, the owner's fixes, WebM, two of one name
+  - the matcher respecting an uncertain verdict, and the review CSV's `fingerprint` column
+  - `stage_copy` and `set_aside`
+  - the commands end to end: `plan adopt`, `plan show`, `apply`, `queue run`, `undo`
+- **Deviations:**
+  - **The gate's results are kept in `state.json`** (`gate`, added to the contract's section 5). Without that, `match --recheck` could make an `uncertain` rip AUTO again, and the next plan would download the same video again. Now a `different` video is turned down for that rip like an owner's rejection (`state.turned_down`), an `uncertain` one can't go AUTO, and plans leave both out ("fingerprint … before"). The review CSV's `fingerprint` column shows the result, e.g. `uncertain (BER 0.20)`.
+  - **Adopt copies into staging, then commits** (`stage_copy` + `commit`) instead of `copy_in`, which commits straight into `Music/`. That keeps the prompt's order (copy, tag, verified write, commit): a crash can't leave an untagged file in the library to be copied again as ` (2)`.
+  - **Download checks use existing review reasons:** a delivered format other than 140, a codec other than AAC, or under 100 kbps → `format_140_unavailable`; a length off by more than 2 s → `duration_mismatch`. No new enum values.
+  - **An unreadable rip is `uncertain`**, not an error: it goes to review rather than being replaced unchecked, or retried forever.
+  - **A matched item without an album id** (a review choice made from a spreadsheet row) gets its album from `get_track()` before `get_album()`.
+- **Acceptance: not run yet.** It downloads from YouTube and needs the owner's listening. Steps 1–7 of the prompt are for the owner's next session:
+  - Calibrate: `plan replace --only auto --limit 25 --stage-only`, then `apply`, `queue run` and `plan calibration`.
+  - Add the different-version pairs, then run `calibrate_fp.py`.
+  - Run the first real batch of 25.
+  - Check 5 files in Apple Music. There's no cover art until step 10.
+  - Undo, then a new plan.

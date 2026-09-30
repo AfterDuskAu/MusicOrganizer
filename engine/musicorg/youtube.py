@@ -342,6 +342,10 @@ def download_options(dest: Path, progress: ProgressHook | None = None) -> dict[s
         "progress_hooks": [hook],
         "postprocessors": [],  # none; yt-dlp's own M4A container fix-up still runs
         "overwrites": False,
+        # The file's time is when it was downloaded, not YouTube's Last-Modified date, so
+        # a download kept in _Staging for 24 hours isn't cleaned up at once (step 09b).
+        # Already off when yt-dlp is used from Python; said here so it stays off.
+        "updatetime": False,
         "socket_timeout": SOCKET_TIMEOUT_S,
     }
 

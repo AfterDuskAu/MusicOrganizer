@@ -22,7 +22,9 @@ The engine has two front doors onto the **same functions**. The CLI is for the o
 | **`MUSICORG_SOURCE`** | `youtube_music` · `youtube` · `rip_copy` · `bandcamp` · `cd` · `itunes` · `other` |
 | **`MUSICORG_MATCH`** | `auto_exact` (AUTO match and fingerprint pass) · `user_confirmed` (owner's decision and fingerprint pass) · `manual` (adopt using the owner's `*_fix` values). Absent for adopts without fixes. |
 
-A fingerprint mismatch puts the item back in `review` with reason `fingerprint_mismatch`.
+A fingerprint mismatch puts the item back in `review` with reason `fingerprint_mismatch`. The gate's result is kept in `state.json` (`gate`): a `different` video is never proposed for that rip again, and an `uncertain` one never goes AUTO again.
+
+A download that isn't what was asked for also goes to review: not format 140, not AAC, or under 100 kbps → `format_140_unavailable`; more than 2 s longer or shorter than YouTube Music said → `duration_mismatch`.
 
 ## 1. CLI (`musicorg`)
 
@@ -52,9 +54,10 @@ Global options:
 | `musicorg review serve [--port N] [--no-open]` | The local review page in the browser: play each rip and its candidates, click to decide (same checks as `review import`). Only on 127.0.0.1. | yes | 07b |
 | `musicorg journal list [--limit N]` | Recent batches (default 20) with counts and open/closed status | no | 03b |
 | `musicorg undo <batch_id> [--dry-run]` | Reverse a batch | yes | 03b, extended 09b |
-| `musicorg plan replace [--only auto\|accepted\|all-eligible] [--limit N] [--stage-only]` | Dry-run plan. `--stage-only` stops after the fingerprint step for calibration. | yes | 09b |
+| `musicorg plan replace [--only auto\|accepted\|all-eligible] [--limit N] [--stage-only]` | Dry-run plan. `--only` defaults to `all-eligible` (AUTO matches and the owner's choices). `--limit` counts videos: one download serves every rip that matched it. `--stage-only` stops after the fingerprint step for calibration. | yes | 09b |
 | `musicorg plan adopt [--include-not-found]` | Dry-run plan: copy `only_copy` items (and optionally all `not_found`) into `Music/` | yes | 09b |
 | `musicorg plan show <plan_id>` | Print operations and summary | no | 09b |
+| `musicorg plan calibration [--out <dir>]` | Write `calibration-pairs.csv` (default `Reports/`) from the `--stage-only` downloads, `same` left for the owner to fill in | no | 09b |
 | `musicorg apply <plan_id>` | Validate and enqueue; prints the `batch_id` | yes | 09b |
 | `musicorg queue run` | Process the queue in the foreground until empty, paused or Ctrl-C | yes | 09a |
 | `musicorg queue status` | Queue state and counts | no | 09a |

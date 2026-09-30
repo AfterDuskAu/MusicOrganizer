@@ -483,6 +483,23 @@ class Index:
     def library_tracks(self) -> list[dict[str, Any]]:
         return [dict(row) for row in self._rows("SELECT * FROM library_tracks ORDER BY rel_path")]
 
+    def library_tracks_from(self, source: str, source_id: str) -> list[dict[str, Any]]:
+        """Library tracks with this MUSICORG_SOURCE and MUSICORG_SOURCE_ID (step 09b: is
+        this video in the library already?)."""
+        rows = self._rows(
+            "SELECT * FROM library_tracks WHERE source = ? AND source_id = ? ORDER BY rel_path",
+            (source, source_id),
+        )
+        return [dict(row) for row in rows]
+
+    def remove_library_tracks(self, rel_paths: Iterable[str]) -> int:
+        batch = [(p,) for p in rel_paths]
+        if not batch:
+            return 0
+        with self.transaction() as conn:
+            conn.executemany("DELETE FROM library_tracks WHERE rel_path = ?", batch)
+        return len(batch)
+
     def library_track_count(self) -> int:
         rows = self._rows("SELECT COUNT(*) AS n FROM library_tracks")
         return int(rows[0]["n"]) if rows else 0
@@ -667,9 +684,16 @@ class QueueStore:
         return _job(rows[0]) if rows else None
 
     def jobs(
-        self, *, state: str | None = None, batch_id: str | None = None
+        self,
+        *,
+        state: str | None = None,
+        batch_id: str | None = None,
+        plan_id: str | None = None,
     ) -> list[dict[str, Any]]:
         where, params = [], []
+        if plan_id is not None:
+            where.append("plan_id = ?")
+            params.append(plan_id)
         if state is not None:
             where.append("state = ?")
             params.append(state)

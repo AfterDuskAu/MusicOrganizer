@@ -212,7 +212,17 @@ def run(
     with open_queue(lib.paths, write=True) as store:
         runner = _Runner(lib, store, cfg.throttle(), clock or Clock(), kinds or KINDS, report)
         runner.requeue_interrupted()
+        _clean_old_staging(lib)
         return runner.loop(should_stop)
+
+
+def _clean_old_staging(lib: Library) -> None:
+    """Downloads no rip matched are kept in `_Staging/` for 24 hours (step 09b), then
+    cleaned up here. `_Staging/calibration/` is never cleaned."""
+    try:
+        fileops.clean_staging(lib)
+    except (OSError, MusicOrgError) as exc:
+        log.warning("Couldn't clean up old files in _Staging: %s", exc)
 
 
 class _Runner:

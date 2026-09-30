@@ -167,6 +167,11 @@ class NotFoundError(UserError):
     """A batch, plan or item that doesn't exist."""
 
 
+class PlanOutOfDateError(UserError):
+    """A plan's preconditions no longer hold (a rip changed, an item was decided again,
+    or the plan was applied already). Make a new plan."""
+
+
 class UndoError(UserError):
     """An undo was refused, or stopped part way. It can be run again."""
 

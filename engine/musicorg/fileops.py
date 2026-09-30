@@ -8,7 +8,7 @@ guarantees of docs/LIBRARY_CONTRACT.md section 6. In order below:
 - the journal, and batches: `batch()`, `open_batch()`, `resume_batch()`, `close_batch()`
 - `_move_no_overwrite()`: the one way anything moves
 - the operations: `stage_path`, `commit`, `copy_in`, `supersede`, `move`, `trash`,
-  `write_tags`, `write_sidecar`
+  `write_tags`, `write_sidecar`; and for step 09b's jobs, `stage_copy` and `set_aside`
 - `recover_journal()`: finishes or rolls back what a crash interrupted
 - `undo()` and `list_batches()`
 - plans with preconditions: `Plan`, `save_plan`, `load_plan`, `validate`, `check_op`
@@ -1006,6 +1006,80 @@ def copy_in(b: Batch, external_src: PurePath | str, rel_target: PurePath | str) 
     return final
 
 
+def stage_copy(b: Batch, external_src: PurePath | str) -> Path:
+    """Copy a file from outside the library into `_Staging/<batch_id>/`, so it can be
+    tagged there and then committed (step 09b's adopt: nothing half-tagged ever lands in
+    `Music/`). The original is only opened for reading. Like `copy_in`, the copy's SHA-256
+    must equal what was read, and the original mustn't change meanwhile. Staging is
+    scratch space, so this isn't journaled; `commit` is."""
+    paths = b.paths
+    src = Path(external_src).expanduser().absolute()
+    if _within(src.resolve(), paths.root):
+        raise UserError(
+            f"{src} is already inside the library. Only files from outside it can be copied in."
+        )
+    try:
+        before = os.stat(src)
+    except FileNotFoundError as exc:
+        raise UserError(f"There's no file at {src}.") from exc
+    except OSError as exc:
+        raise FileOperationError(f"Couldn't read {src}: {exc.strerror or exc}.") from exc
+    if not stat.S_ISREG(before.st_mode):
+        raise UserError(f"{src} isn't a file, so it can't be copied in.")
+    staged = stage_path(b, src.name)
+    try:
+        digest = _copy_file(src, staged)
+        if sha256_file(staged) != digest or staged.stat().st_size != before.st_size:
+            raise IntegrityError(
+                f"The copy of {src.name} didn't match the original, so it wasn't added to "
+                "the library. The original is untouched. Check the drive, then try again."
+            )
+        _check_unchanged(src, before, _CHANGED_WHILE_COPYING.format(path=src))
+    except Exception as exc:
+        _discard_quietly(paths, staged)
+        if isinstance(exc, OSError):
+            raise FileOperationError(
+                f"Couldn't copy {src.name} into the library: {exc.strerror or exc}."
+            ) from exc
+        raise
+    return staged
+
+
+def set_aside(
+    lib: LibraryPaths | _HasPaths,
+    staged: PurePath | str,
+    folder: PurePath | str,
+    note: dict[str, Any] | None = None,
+) -> Path:
+    """Keep a staged file by moving it to `_Staging/<folder>/` (step 09b), out of the job
+    folder the queue discards:
+
+    - a download no rip matched: `<batch_id>/kept`, removed by `clean_staging` after 24 h
+    - a calibration download: `calibration/<batch_id>`, which is never cleaned
+
+    `note`, if given, is saved beside it as `<name>.json` (what it was compared with).
+    Never overwrites: a taken name gets ` (2)`. Returns where the file went."""
+    paths = _paths_of(lib)
+    _require_lock(paths, "Keeping a staged file")
+    src = guard(paths, staged, STAGING)
+    _require_file(src)
+    target_dir = paths.staging
+    for part in _check_rel(folder).parts:
+        target_dir = _ensure_folder(paths, target_dir / part, STAGING)
+    target = _reserve(guard(paths, target_dir / src.name, STAGING))
+    try:
+        _replace(src, target)
+    except Exception:
+        _remove_placeholder(paths, target)
+        raise
+    if note is not None:
+        text = json.dumps(note, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+        side = guard(paths, target.with_name(target.name + ".json"), STAGING)
+        _write_new(side, text.encode("utf-8"), lambda p: _remove_placeholder(paths, p))
+    _sync_folder(target_dir)
+    return target
+
+
 def supersede(b: Batch, lib_file: PurePath | str) -> Path:
     """Move a library file to `_Replaced/<the same path>` (contract 6.5). Returns where
     it went; ` (2)` etc. if something of that name was replaced before."""
@@ -1737,6 +1811,10 @@ def _plan_tag_reversal(
 ) -> _Reversal:
     rel = str(op.intent["path"])
     path = _abs(paths, rel)
+    if PurePosixPath(rel).parts[:1] == (naming.STAGING_DIR,):
+        # Step 09b tags a download or copy in _Staging, then commits it: taking the
+        # committed file back undoes both.
+        return skip(rel, "Tagged before it went into the library; taking the file back covers it.")
     if not path.is_file():
         return skip(rel, f"{rel} is no longer there, so its tags can't be restored.")
     before = op.intent.get("before") or {}

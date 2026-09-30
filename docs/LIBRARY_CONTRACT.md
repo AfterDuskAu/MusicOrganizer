@@ -123,6 +123,7 @@ MusicBrainz IDs use Picard's standard names and are optional in v0.1. Leave room
 - review decisions, including rejected candidates, so they're never suggested again
 - registered sources with their stable ids
 - superseded-rip links (rip path → `MUSICORG_ID`)
+- the fingerprint gate's results (rip item, video → verdict), so a download the gate turned down is never fetched again (step 09b)
 - settings
 
 It's written atomically (temp file, fsync, rename) after every batch and every review import.

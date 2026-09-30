@@ -69,6 +69,7 @@ class ExportResult:
 def export(lib: Library, index: Index, path: Path, *, include_auto: bool = False) -> ExportResult:
     candidates = index.all_candidates()
     folders = scan.source_folders(lib, index)
+    gate = state.gate(lib.load_state().data)
 
     def best_score(item: dict[str, Any]) -> float:
         found = candidates.get(item["id"])
@@ -102,11 +103,24 @@ def export(lib: Library, index: Index, path: Path, *, include_auto: bool = False
                 ]  # fmt: skip
             else:
                 cells += [""] * 6
-        cells += [""] * 7  # fingerprint (step 09b), decision, url, *_fix, art_url
+        cells.append(_fingerprint_cell(gate.get(item["id"], {}), found))
+        cells += [""] * 6  # decision, url, *_fix, art_url
         writer.writerow(cells)
     data = out.getvalue().encode("utf-8-sig")
     written = fileops.write_export(lib, path, data, sources=folders.values())
     return ExportResult(written, len(rows))
+
+
+def _fingerprint_cell(results: dict[str, dict[str, Any]], found: list[dict[str, Any]]) -> str:
+    """The fingerprint gate's verdict on candidate 1 (step 09b), e.g. "uncertain (BER
+    0.21)"; empty if it was never downloaded."""
+    if not found:
+        return ""
+    result = results.get(found[0]["video_id"])
+    if not result or not result.get("verdict"):
+        return ""
+    ber = result.get("ber")
+    return f"{result['verdict']} (BER {ber:.2f})" if isinstance(ber, float) else result["verdict"]
 
 
 # ---- import ----------------------------------------------------------------------------

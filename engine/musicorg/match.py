@@ -379,6 +379,17 @@ def classify(
     return _review_or_not_found(rip, scored)
 
 
+def respect_gate(outcome: Outcome, results: dict[str, dict[str, Any]]) -> Outcome:
+    """The fingerprint gate outranks the scores (step 09b): an AUTO pick whose download
+    the gate found `uncertain` goes to review instead. (Videos it found `different` are
+    turned down before scoring, like the owner's rejections: state.turned_down.)"""
+    if outcome.state == "matched_auto" and outcome.top:
+        pick = outcome.top[0].candidate.video_id
+        if results.get(pick, {}).get("verdict") == "uncertain":
+            return Outcome("review", ["fingerprint_uncertain"], outcome.top)
+    return outcome
+
+
 def _review_or_not_found(rip: Rip, ranked: list[Scored]) -> Outcome:
     best = ranked[0]
     top = ranked[:TOP_CANDIDATES]
@@ -494,7 +505,8 @@ def run(
         result.left = max(0, len(todo) - limit)
         todo = todo[:limit]
     data = lib.load_state().data
-    rejected = state.rejected(data)
+    rejected = state.turned_down(data)
+    gate = state.gate(data)
     aliases = state.aliases(data)
     prefer = Config.load().prefer_explicit if prefer_explicit is None else prefer_explicit
     limiter = youtube.limiter()
@@ -508,6 +520,7 @@ def run(
             prefer_explicit=prefer,
             refresh=rescan,
         )
+        outcome = respect_gate(outcome, gate.get(item["id"], {}))
         index.set_match(
             item["id"], outcome.state, outcome.reasons, candidate_rows(item["id"], outcome.top)
         )
@@ -545,7 +558,8 @@ def recheck(
     with the current rules, confirmed artist names and rejections. Nothing is searched;
     items the owner decided are left alone."""
     data = lib.load_state().data
-    rejected, aliases = state.rejected(data), state.aliases(data)
+    rejected, aliases = state.turned_down(data), state.aliases(data)
+    gate = state.gate(data)
     prefer = Config.load().prefer_explicit if prefer_explicit is None else prefer_explicit
     wanted = set(item_ids) if item_ids is not None else None
     stored = index.all_candidates()
@@ -558,6 +572,7 @@ def recheck(
         outcome = classify(
             rip_of(item, aliases), options, rejected=turned_down, prefer_explicit=prefer
         )
+        outcome = respect_gate(outcome, gate.get(item["id"], {}))
         result.items += 1
         before = (item["state"], item.get("reasons_json") or [])
         if (outcome.state, outcome.reasons) != before:
