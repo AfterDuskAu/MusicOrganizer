@@ -36,8 +36,9 @@ Deletes
 -------
 Nothing here deletes user data. The only files and folders ever removed outright are:
 regular files and empty folders inside `_Staging/`; an empty name a move reserved and
-didn't use (contract 6.4); and, during undo, folders the undone batch created that are
-empty again (ignoring `.DS_Store` and the other junk names, which go with them).
+didn't use (contract 6.4); during undo, folders the undone batch created that are empty
+again; and folders in `Music/` left empty by moves (`remove_empty_folders`, step 09d).
+"Empty" ignores `.DS_Store` and the other junk names, which go with the folder.
 """
 
 from __future__ import annotations
@@ -884,6 +885,28 @@ def _prune_dirs(paths: LibraryPaths, folders: Iterable[Path]) -> list[Path]:
             continue
         log.info("Removed the empty folder %s", folder)
         removed.append(folder)
+    return removed
+
+
+def remove_empty_folders(lib: LibraryPaths | _HasPaths, folder: PurePath | str) -> list[Path]:
+    """Remove `folder` in `Music/` if nothing but junk is left in it, then each parent
+    that's empty in turn, up to (not including) `Music/` itself. No data is removed, so
+    it isn't journaled; undo recreates any folder a file moves back into. Returns the
+    folders removed."""
+    paths = _paths_of(lib)
+    _require_lock(paths, "Removing empty folders")
+    start = guard(paths, folder, MUSIC)
+    chain = []
+    current = start
+    while current != paths.music and _within(current, paths.music):
+        chain.append(current)
+        current = current.parent
+    removed = []
+    for candidate in chain:  # deepest first; stop at the first folder that still holds something
+        gone = _prune_dirs(paths, [candidate])
+        if not gone:
+            break
+        removed += gone
     return removed
 
 

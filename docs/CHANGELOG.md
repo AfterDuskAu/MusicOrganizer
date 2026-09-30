@@ -18,6 +18,10 @@
   - Only whole names are replaced, never inside the preferred spelling, so doing it twice changes nothing. A test showed "Band" → "The Band" could otherwise become "The The Band".
 - **Fixed, `fileops.undo`:** undo planned every step before running any. So a batch that retagged a file and then moved it lost the tag restore: when it was planned, the file wasn't yet back where it had been tagged. Each step is now planned right before it runs. A regression test covers it.
 - Undo now refreshes the index's library tracks for every file a batch touched (moves, set-asides), not only commits.
+- **After the owner's tidy run** (5 duplicates set aside, 19 Jay Z songs moved; all 24 done), two gaps were found and fixed:
+  - "04 Otherside.m4a" and "04 Otherside.mp3" shared one "04 Otherside.lrc", and setting the MP3 aside took the shared lyrics file with it. A lyrics file that both copies share now stays. `lyrics --missing` fetches the lost one again.
+  - Moves left the old `JAŸ-Z` folders behind, empty. `fileops.remove_empty_folders` removes a `Music/` folder holding nothing but junk, and its emptied parents. No data is removed, so it isn't journaled, and undo recreates any folder a file moves back into. Renames call it for the folder they leave, and `plan tidy` also clears empty folders already in the library.
+  - Both have tests.
 - The plan and batch kind `tidy` is new (ENGINE_API.md → Enums), as are the `names` key in state.json (contract section 5) and `plan.create` kind `tidy` over RPC.
 - 1,175 tests pass. New:
   - preferred names applied to the library and undone, with lyrics and cover moved along

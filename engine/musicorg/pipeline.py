@@ -1221,9 +1221,14 @@ def plan_tidy(lib: Library, index: Index) -> fileops.Plan:
                 params={"musicorg_id": track["musicorg_id"], "changes": changes},
             )
         )
-    summary = {"operations": len(ops), "duplicates": duplicates, "renames": len(ops) - duplicates,
-               "downloads": 0, "est_minutes": math.ceil(len(ops) * 2 / 60), "days": 0,
-               "disk_mb": 0, "low_confidence_adopts": 0}  # fmt: skip
+    renames = len(ops) - duplicates
+    empty = _empty_folders(lib)
+    if empty:
+        ops.append(fileops.PlanOp(action="empty_folders", params={"folders": empty}))
+    summary = {"operations": len(ops), "duplicates": duplicates, "renames": renames,
+               "empty_folders": len(empty), "downloads": 0,
+               "est_minutes": math.ceil(len(ops) * 2 / 60), "days": 0, "disk_mb": 0,
+               "low_confidence_adopts": 0}  # fmt: skip
     plan = fileops.new_plan("tidy", ops, summary)
     fileops.save_plan(lib, plan)
     return plan
@@ -1255,8 +1260,28 @@ def _items_by_rip(lib: Library, index: Index) -> dict[str, dict[str, Any]]:
     }
 
 
+def _empty_folders(lib: Library) -> list[str]:
+    """Folders in `Music/` with nothing in them but junk (e.g. left by an earlier move)."""
+    found = []
+    for folder in sorted(lib.paths.music.rglob("*"), key=lambda p: len(p.parts), reverse=True):
+        if folder.is_dir() and not folder.is_symlink() and all(
+            naming.is_junk(p.name) and p.is_file() for p in folder.rglob("*")
+        ):  # fmt: skip
+            if not any(PurePosixPath(f) in PurePosixPath(_rel_path(lib, folder)).parents
+                       for f in found):  # fmt: skip
+                found.append(_rel_path(lib, folder))
+    return sorted(found)
+
+
 def tidy_job(ctx: JobContext) -> Outcome:
     (op,) = _ops(ctx.payload)
+    if op.action == "empty_folders":
+        removed = 0
+        for rel in op.params["folders"]:
+            folder = ctx.lib.root / Path(*PurePosixPath(rel).parts)
+            if folder.is_dir():
+                removed += len(fileops.remove_empty_folders(ctx.lib, folder))
+        return Outcome.done(f"Removed {removed} empty folder(s).")
     path = _same_file(ctx.lib, op)
     if path is None:
         return Outcome.needs_review(FILE_CHANGED, "The file has moved or changed since the plan.")
@@ -1271,7 +1296,9 @@ def _set_aside_duplicate(ctx: JobContext, index: Index, op: fileops.PlanOp, path
     if not keep.is_file() or tags.read_tags(keep).musicorg_id != op.params["keep_id"]:
         return Outcome.needs_review(FILE_CHANGED, "The better copy has moved or changed.")
     lrc = path.with_suffix(".lrc")
-    if lrc.is_file() and not keep.with_suffix(".lrc").is_file():
+    if lrc == keep.with_suffix(".lrc"):
+        pass  # the two copies share a name ("04 Song.mp3", "04 Song.m4a"), and the lyrics
+    elif lrc.is_file() and not keep.with_suffix(".lrc").is_file():
         fileops.move(ctx.batch, lrc, _music_rel(ctx.lib, keep.with_suffix(".lrc")))
     elif lrc.is_file():
         fileops.supersede(ctx.batch, lrc)
@@ -1303,6 +1330,7 @@ def _rename(ctx: JobContext, index: Index, op: fileops.PlanOp, path: Path) -> Ou
             and not any(p.suffix.lower() in ADOPT_SUFFIXES for p in old_folder.iterdir())
         ):
             fileops.move(ctx.batch, cover, _music_rel(ctx.lib, final.parent / naming.COVER_NAME))
+        fileops.remove_empty_folders(ctx.lib, old_folder)
     index.remove_library_tracks([_rel_path(ctx.lib, path)])
     written = tags.read_tags(final)
     index.put_library_tracks([_track_row(ctx.lib, final, written, tags.probe(final).duration_s)])
@@ -1644,6 +1672,9 @@ def describe(plan: fileops.Plan) -> list[str]:
             changes = ", ".join(f"{k}: {v}" for k, v in (op.params.get("changes") or {}).items())
             lines.append(f"{op.op_id:>5}  rename   {op.source.path}  →  {op.target}"
                          + (f"  ({changes})" if changes else ""))  # fmt: skip
+        elif op.action == "empty_folders":
+            for rel in op.params["folders"]:
+                lines.append(f"{op.op_id:>5}  remove   {rel}/  (an empty folder)")
         elif op.action == "adopt_duplicate":
             lines.append(f"{op.op_id:>5}  link     {rip}  (a duplicate; the best copy is kept)")
         elif op.action in ("lyrics", "artwork"):

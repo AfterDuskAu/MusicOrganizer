@@ -902,6 +902,8 @@ def _print_plan_summary(plan: fileops.Plan) -> None:
     if plan.kind == "tidy":
         print(f"  {s.get('duplicates', 0):,} duplicate(s) to set aside (the best copy is kept)")
         print(f"  {s.get('renames', 0):,} song(s) to rename with your preferred names")
+        if s.get("empty_folders"):
+            print(f"  {s['empty_folders']:,} empty folder(s) to remove")
     elif plan.kind == "lyrics":
         print(f"  {s.get('operations', 0):,} song(s) to look up lyrics for (LRCLIB, then "
               "YouTube Music)")  # fmt: skip

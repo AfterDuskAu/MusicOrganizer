@@ -904,8 +904,10 @@ def test_preferred_names_rename_the_library(lib: Library, index: Index, adopted:
         "Music/The Band/Tunes (2020)/03 Melody.mp3"
     ]
     assert pipeline.plan_tidy(lib, index).operations == []  # done
+    assert not (lib.paths.music / "Band").exists()  # the emptied folders went
 
     pipeline.undo(lib, batch_id)
+    assert not (lib.paths.music / "The Band").exists()
     assert music_files(lib) == ["Band/Tunes (2020)/03 Melody.lrc",
                                 "Band/Tunes (2020)/03 Melody.mp3",
                                 "Band/Tunes (2020)/cover.jpg"]  # fmt: skip
@@ -1046,3 +1048,51 @@ def test_a_cd_rip_beats_a_youtube_conversion_whatever_the_bitrate(tmp_path: Path
         "yt5s.io - RHCP - Otherside.mp3",  # then the higher bitrate
         "RHCP/Otherside.mp3",
     ]
+
+
+def test_a_lyrics_file_both_copies_share_stays(
+    lib: Library,
+    index: Index,
+    rips: Path,
+    two_mp3s: tuple[Path, Path],
+    samples: dict[str, Path],
+    album_lookups: list[tuple[str, str]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Found on the owner's library: "04 Otherside.m4a" and "04 Otherside.mp3" share
+    "04 Otherside.lrc", which must stay when the lesser copy is set aside."""
+    monkeypatch.setattr(pipeline, "EXTRAS", [])
+    own_rip(index, rips, two_mp3s[0], "Band - Melody", kbps=96)
+    pipeline.apply(lib, index, pipeline.plan_adopt(lib, index, matched=True).plan_id)
+    run_queue(lib)
+    mp3 = lib.paths.music / "Band" / "Tunes (2020)" / "03 Melody.mp3"
+    shutil.copyfile(samples["m4a"], rips / "Band - Melody.m4a")
+    add_item(index, "Band - Melody", state="adopted", seconds=3, ext=".m4a")
+    with fileops.batch(lib, "demo") as b:
+        staged = fileops.stage_copy(b, rips / "Band - Melody.m4a")
+        fileops.write_tags(b, staged, tags.TrackTags(
+            title="Melody", artist="Band", album_artist="Band", album="Tunes", year=2020,
+            track=3, musicorg_id=tags.new_track_id(), source="rip_copy", source_id=VIDEO_A,
+            origin_path=str(rips / "Band - Melody.m4a"), schema=1))  # fmt: skip
+        m4a = fileops.commit(b, staged, Path("Band", "Tunes (2020)", "03 Melody.m4a"))
+        fileops.write_sidecar(b, mp3, ".lrc", SYNCED.encode())
+    index.put_library_tracks([pipeline._track_row(lib, m4a, tags.read_tags(m4a), 3.0)])
+
+    plan = pipeline.plan_tidy(lib, index)
+    assert plan.summary["duplicates"] == 1
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    assert len([f for f in music_files(lib) if not f.endswith(".lrc")]) == 1
+    assert (lib.paths.music / "Band" / "Tunes (2020)" / "03 Melody.lrc").is_file()
+
+
+def test_empty_folders_are_cleared(lib: Library, index: Index, adopted: Path) -> None:
+    leftover = lib.paths.music / "Old Name" / "Album (2001)"
+    leftover.mkdir(parents=True)
+    (leftover / ".DS_Store").write_bytes(b"junk")
+    plan = pipeline.plan_tidy(lib, index)
+    assert plan.summary["empty_folders"] == 1
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    assert not (lib.paths.music / "Old Name").exists()
+    assert adopted.is_file()  # a folder with a song in it is never touched
