@@ -1,9 +1,11 @@
-"""The one gate to YouTube (CLAUDE.md rule 8). Step 06: search and metadata only.
+"""The one gate to YouTube (CLAUDE.md rule 8).
 
 - `search_songs(query)`: YouTube Music's "songs" search, as `Candidate`s.
 - `get_track(video_id)`: one track, for a link the owner pastes (step 07).
 - `get_album(browse_id)` and `find_track(album, ...)`: album artist, year and track
   numbers for downloads (step 09a).
+- `download_audio(video_id, dest_dir)`: format 140 through yt-dlp (step 09a). Only the
+  queue calls it (rule 8: downloads happen only through the throttled queue).
 
 Every request goes through one rate limiter per process (`limiter()`): at most one
 request per 1.5 s (±0.5 s jitter), exponential backoff when YouTube refuses (HTTP 429)
@@ -40,7 +42,18 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Protocol, TypeVar
 
-from musicorg.errors import ReplayMissError, YouTubeError, YouTubePausedError
+from musicorg import tools
+from musicorg.config import app_dirs, ensure_app_dir
+from musicorg.errors import (
+    DownloadError,
+    FormatUnavailableError,
+    ReplayMissError,
+    VideoUnavailableError,
+    YouTubeError,
+    YouTubePausedError,
+    YouTubeRefusedError,
+)
+from musicorg.naming import STAGING_DIR
 from musicorg.normalize import compare_key
 
 log = logging.getLogger(__name__)
@@ -243,6 +256,178 @@ def find_track(
     log.info("Couldn't place %s (%r) on the album %s; no track number", video_id, title,
              album.browse_id)  # fmt: skip
     return None, None
+
+
+# ---- downloads (step 09a) --------------------------------------------------------------
+
+VIDEO_ID = re.compile(r"[A-Za-z0-9_-]{11}")
+DOWNLOAD_FORMAT = "140"  # AAC in M4A, ~128 kbps. No fallback (CLAUDE.md rule 6).
+SOCKET_TIMEOUT_S = 30
+
+# What yt-dlp's error messages say, lower-cased, checked in this order.
+_REFUSED = ("not a bot", "http error 429", "too many requests")
+_UNAVAILABLE = (
+    "confirm your age", "age-restricted", "age restricted", "inappropriate for some users",
+    "private video", "video unavailable", "this video is unavailable",
+    "this video is not available", "has been removed", "been terminated", "your country",
+    "geo restrict", "members-only", "members only", "join this channel", "premieres in",
+    "live event will begin", "copyright",
+)  # fmt: skip
+_FORMAT = ("requested format is not available",)
+_EMPTY = ("downloaded file is empty",)
+_NETWORK = (
+    "http error 403", "http error 5", "timed out", "timeout", "connection", "unreachable",
+    "name resolution", "getaddrinfo", "ssl", "incompleteread", "remote end closed",
+    "unable to download",
+)  # fmt: skip
+
+ProgressHook = Callable[[int, int | None], None]
+
+
+def download_audio(
+    video_id: str, dest_dir: Path, *, progress: ProgressHook | None = None
+) -> tuple[Path, dict[str, Any]]:
+    """Download a video's audio as format 140 into `dest_dir` (a folder from
+    `fileops.stage_dir`; yt-dlp writes nowhere else, `.part` files included). Returns the
+    file and yt-dlp's info; the caller reads the delivered format from
+    `info["format_id"]` and never assumes 140.
+
+    Raises YouTubeRefusedError (the queue pauses), VideoUnavailableError (only this job),
+    FormatUnavailableError (format 140 not offered), or DownloadError (`network` set for
+    network-level failures). Goes through the shared rate limiter.
+    """
+    if not VIDEO_ID.fullmatch(video_id):
+        raise YouTubeError(f"{video_id!r} isn't a YouTube video id.")
+    dest = Path(dest_dir)
+    if not dest.is_dir() or STAGING_DIR not in dest.parts:
+        raise ValueError(f"{dest} isn't a folder in _Staging (use fileops.stage_dir)")
+    opts = download_options(dest, progress)
+    url = f"https://www.youtube.com/watch?v={video_id}"
+
+    def run() -> Any:
+        with _make_ydl(opts) as ydl:
+            return ydl.extract_info(url, download=True)
+
+    try:
+        info = limiter().call(run)
+    except (YouTubePausedError, ReplayMissError):
+        raise
+    except Exception as exc:
+        raise download_problem(video_id, exc) from exc
+    if not isinstance(info, dict):
+        raise DownloadError(f"The download of {video_id} gave an answer we can't read.")
+    return _downloaded_file(info, dest, video_id), info
+
+
+def download_options(dest: Path, progress: ProgressHook | None = None) -> dict[str, Any]:
+    """yt-dlp's options for one download (names checked against yt-dlp 2026.08.19)."""
+
+    def hook(status: dict[str, Any]) -> None:
+        if progress is not None and status.get("status") in ("downloading", "finished"):
+            done = status.get("downloaded_bytes") or 0
+            total = status.get("total_bytes") or status.get("total_bytes_estimate")
+            progress(int(done), int(total) if total else None)
+
+    return {
+        "format": DOWNLOAD_FORMAT,
+        "paths": {"home": str(dest), "temp": str(dest)},
+        "outtmpl": {"default": "%(id)s.%(ext)s"},
+        "ffmpeg_location": str(tools.require("ffmpeg")),
+        "js_runtimes": {"deno": {"path": str(tools.require("deno"))}},
+        "cachedir": str(ensure_app_dir(app_dirs().cache) / "yt-dlp"),
+        "noplaylist": True,
+        "quiet": True,
+        "noprogress": True,
+        "logger": _YtDlpLog(),
+        "progress_hooks": [hook],
+        "postprocessors": [],  # none; yt-dlp's own M4A container fix-up still runs
+        "overwrites": False,
+        "socket_timeout": SOCKET_TIMEOUT_S,
+    }
+
+
+def download_problem(video_id: str, exc: BaseException) -> Exception:
+    """The engine's error for what yt-dlp raised, by its message."""
+    text = str(exc)
+    low = text.lower()
+    detail = _short_detail(text)
+    if any(s in low for s in _REFUSED):
+        return YouTubeRefusedError(
+            "YouTube asked us to slow down (it wants to check we're not a bot), so downloads "
+            "are paused. They carry on by themselves later; nothing is lost."
+        )
+    if any(s in low for s in _UNAVAILABLE):
+        return VideoUnavailableError(f"YouTube won't let {video_id} be downloaded: {detail}")
+    if any(s in low for s in _FORMAT):
+        return FormatUnavailableError(
+            f"YouTube didn't offer the usual audio format (140, AAC) for {video_id}. No "
+            "other format is used."
+        )
+    if any(s in low for s in _EMPTY):
+        return DownloadError(f"The download of {video_id} came back empty.")
+    if any(s in low for s in _NETWORK):
+        return DownloadError(
+            f"The download of {video_id} failed on the network: {detail}", network=True
+        )
+    return DownloadError(f"The download of {video_id} didn't work: {detail}")
+
+
+def _short_detail(text: str) -> str:
+    """yt-dlp's message without "ERROR: [youtube] <id>: ", first line only."""
+    first = (text.strip().splitlines() or [""])[0]
+    first = re.sub(r"^(?:ERROR:\s*)?(?:\[[^\]]+\]\s*)?(?:[A-Za-z0-9_-]{11}:\s*)?", "", first)
+    return first.strip() or "no details"
+
+
+def _downloaded_file(info: dict[str, Any], dest: Path, video_id: str) -> Path:
+    found: list[Path] = []
+    for entry in info.get("requested_downloads") or []:
+        if isinstance(entry, dict) and entry.get("filepath"):
+            found.append(Path(entry["filepath"]))
+    if not found:
+        found = [
+            p
+            for p in dest.glob(f"{glob_escape(video_id)}.*")
+            if not p.name.endswith((".part", ".ytdl", ".temp"))
+        ]
+    root = dest.resolve()
+    for path in found:
+        real = path.resolve()
+        if real.parent != root:
+            raise DownloadError(f"The download of {video_id} ended up outside its folder.")
+        if real.is_file() and real.stat().st_size > 0:
+            return real
+    raise DownloadError(f"The download of {video_id} came back empty.")
+
+
+def glob_escape(text: str) -> str:
+    return re.sub(r"([\[\]*?])", r"[\1]", text)
+
+
+class _YtDlpLog:
+    """yt-dlp's messages go to the engine's log, never to stdout."""
+
+    def debug(self, message: str) -> None:
+        log.debug("yt-dlp: %s", message)
+
+    def info(self, message: str) -> None:
+        log.debug("yt-dlp: %s", message)
+
+    def warning(self, message: str) -> None:
+        log.info("yt-dlp warning: %s", message)
+
+    def error(self, message: str) -> None:
+        log.info("yt-dlp error: %s", message)  # raised to the caller as well
+
+
+def _make_ydl(opts: dict[str, Any]) -> Any:
+    """A yt-dlp downloader. Tests replace this; in replay mode it refuses, so a test that
+    forgot to never reaches the network."""
+    if os.environ.get(REPLAY_ENV):
+        raise ReplayMissError("Replay mode: downloads aren't recorded; stub youtube._make_ydl.")
+    import yt_dlp
+
+    return yt_dlp.YoutubeDL(opts)
 
 
 def parse_length(text: Any) -> int | None:

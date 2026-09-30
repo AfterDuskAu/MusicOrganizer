@@ -32,6 +32,8 @@ THROTTLE_DEFAULTS = {
     "quiet_start_min_s": 20,
     "quiet_start_max_s": 40,
     "daily_cap": 300,
+    # How long the whole queue waits after YouTube refuses us (step 09a).
+    "youtube_pause_hours": 6,
 }
 # The fingerprint gate's thresholds (step 08). Conservative until step 09b calibrates them.
 # `match_ber` and `uncertain_ber` are bit error rates; the rest come from the research on the
@@ -213,6 +215,14 @@ class Config:
             raise ConfigError(
                 f"Couldn't save your settings to {self.path}: {exc.strerror or exc}."
             ) from exc
+
+
+def remember_ytdlp_versions(versions: dict[str, str | None]) -> None:
+    """Record the yt-dlp versions from before an update (`doctor --update-ytdlp`), for
+    `doctor --rollback-ytdlp`."""
+    cfg = Config.load()
+    cfg.data["ytdlp_previous"] = dict(versions)
+    cfg.save()
 
 
 def remember_library(root: Path) -> None:

@@ -514,3 +514,253 @@ def _damaged(path: Path, exc: Exception) -> LibraryIndexError:
 def open_index(paths: LibraryPaths, *, write: bool) -> Index:
     """The library's index. Open it for writing only while holding the library's lock."""
     return Index(paths, write=write)
+
+
+# ---- queue.sqlite (step 09a) -----------------------------------------------------------
+
+QUEUE_SCHEMA_VERSION = 1
+
+_QUEUE_TABLES = """
+CREATE TABLE jobs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    batch_id TEXT NOT NULL,
+    plan_id TEXT,
+    kind TEXT NOT NULL,
+    item_id TEXT,
+    payload_json TEXT NOT NULL DEFAULT '{}',
+    state TEXT NOT NULL DEFAULT 'queued',
+    attempts INTEGER NOT NULL DEFAULT 0,
+    next_attempt_at TEXT,
+    last_error TEXT,
+    reason TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX jobs_state ON jobs (state, next_attempt_at);
+CREATE INDEX jobs_batch ON jobs (batch_id, state);
+CREATE TABLE queue_meta (
+    key TEXT PRIMARY KEY,
+    value TEXT
+);
+"""
+_JOB_COLUMNS = ("id", "batch_id", "plan_id", "kind", "item_id", "payload_json", "state",
+                "attempts", "next_attempt_at", "last_error", "reason", "created_at",
+                "updated_at")  # fmt: skip
+
+
+class QueueStore:
+    """queue.sqlite: the jobs, and `queue_meta` (the pause flag, the YouTube pause, the
+    rolling 24-hour download count). Not a cache: never deleted by a rebuild.
+
+    `write=False` opens it read-only (a missing file reads as an empty queue). `queue
+    pause`/`resume` write the flag without the library's lock, so they open it with
+    `write=True`; SQLite's own locking keeps the two writers apart. The logic lives in
+    musicorg.queue; this class only stores.
+    """
+
+    def __init__(self, paths: LibraryPaths, *, write: bool) -> None:
+        self.paths = paths
+        self.path = paths.queue_file
+        self.write = write
+        self._conn: sqlite3.Connection | None = None
+        if write:
+            self._prepare()
+
+    def _connection(self) -> sqlite3.Connection | None:
+        if self._conn is None:
+            try:
+                if self.write:
+                    conn = sqlite3.connect(self.path, timeout=30)
+                else:
+                    if not self.path.exists():
+                        return None
+                    conn = sqlite3.connect(f"{self.path.as_uri()}?mode=ro", uri=True, timeout=30)
+                conn.row_factory = sqlite3.Row
+            except sqlite3.Error as exc:
+                raise _queue_damaged(self.path, exc) from exc
+            self._conn = conn
+        return self._conn
+
+    def _prepare(self) -> None:
+        conn = self._connection()
+        assert conn is not None
+        try:
+            conn.execute("PRAGMA journal_mode = WAL")
+            version = conn.execute("PRAGMA user_version").fetchone()[0]
+            if version == 0:
+                tables = conn.execute(
+                    "SELECT name FROM sqlite_master WHERE type = 'table'"
+                ).fetchall()
+                if not tables:
+                    with conn:
+                        conn.executescript(_QUEUE_TABLES)
+                        conn.execute(f"PRAGMA user_version = {QUEUE_SCHEMA_VERSION}")
+                    return
+        except sqlite3.DatabaseError as exc:
+            raise _queue_damaged(self.path, exc) from exc
+        if version != QUEUE_SCHEMA_VERSION:
+            raise LibraryIndexError(
+                f"The library's queue ({self.path}) was made by a different version of Music "
+                "Organizer. Update the engine to the version that made it."
+            )
+
+    def close(self) -> None:
+        if self._conn is not None:
+            self._conn.close()
+            self._conn = None
+
+    def __enter__(self) -> QueueStore:
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        self.close()
+
+    def _rows(self, sql: str, params: Iterable[Any] = ()) -> list[sqlite3.Row]:
+        conn = self._connection()
+        if conn is None:
+            return []
+        try:
+            return conn.execute(sql, tuple(params)).fetchall()
+        except sqlite3.OperationalError as exc:
+            if "no such table" in str(exc):
+                return []
+            raise _queue_damaged(self.path, exc) from exc
+        except sqlite3.DatabaseError as exc:
+            raise _queue_damaged(self.path, exc) from exc
+
+    @contextmanager
+    def _writing(self) -> Iterator[sqlite3.Connection]:
+        if not self.write:
+            raise RuntimeError("the queue was opened read-only")
+        conn = self._connection()
+        assert conn is not None
+        try:
+            with conn:
+                yield conn
+        except sqlite3.DatabaseError as exc:
+            raise _queue_damaged(self.path, exc) from exc
+
+    # ---- jobs --------------------------------------------------------------------------
+
+    def add_jobs(self, jobs: Iterable[dict[str, Any]], now: str) -> list[int]:
+        """Queue jobs (dicts with batch_id, plan_id, kind, item_id and payload). Returns
+        their ids, in order."""
+        ids = []
+        with self._writing() as conn:
+            for job in jobs:
+                cur = conn.execute(
+                    "INSERT INTO jobs (batch_id, plan_id, kind, item_id, payload_json, state, "
+                    "created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'queued', ?, ?)",
+                    (job["batch_id"], job.get("plan_id"), job["kind"], job.get("item_id"),
+                     json.dumps(job.get("payload") or {}, ensure_ascii=False), now, now),
+                )  # fmt: skip
+                ids.append(int(cur.lastrowid or 0))
+        return ids
+
+    def job(self, job_id: int) -> dict[str, Any] | None:
+        rows = self._rows("SELECT * FROM jobs WHERE id = ?", (job_id,))
+        return _job(rows[0]) if rows else None
+
+    def jobs(
+        self, *, state: str | None = None, batch_id: str | None = None
+    ) -> list[dict[str, Any]]:
+        where, params = [], []
+        if state is not None:
+            where.append("state = ?")
+            params.append(state)
+        if batch_id is not None:
+            where.append("batch_id = ?")
+            params.append(batch_id)
+        sql = "SELECT * FROM jobs" + (f" WHERE {' AND '.join(where)}" if where else "")
+        return [_job(row) for row in self._rows(sql + " ORDER BY id", params)]
+
+    def next_ready(self, now: str) -> dict[str, Any] | None:
+        """The oldest queued job whose retry time (if any) has come."""
+        rows = self._rows(
+            "SELECT * FROM jobs WHERE state = 'queued' "
+            "AND (next_attempt_at IS NULL OR next_attempt_at <= ?) ORDER BY id LIMIT 1",
+            (now,),
+        )
+        return _job(rows[0]) if rows else None
+
+    def next_retry_at(self) -> str | None:
+        """When the earliest queued job that's waiting to retry can run."""
+        rows = self._rows(
+            "SELECT MIN(next_attempt_at) AS t FROM jobs "
+            "WHERE state = 'queued' AND next_attempt_at IS NOT NULL"
+        )
+        return rows[0]["t"] if rows else None
+
+    def update_job(self, job_id: int, now: str, **fields: Any) -> None:
+        """Set some of a job's columns (state, attempts, next_attempt_at, last_error,
+        reason)."""
+        allowed = {"state", "attempts", "next_attempt_at", "last_error", "reason"}
+        unknown = set(fields) - allowed
+        if unknown:
+            raise ValueError(f"can't set {', '.join(sorted(unknown))} on a job")
+        sets = ", ".join(f"{name} = ?" for name in fields)
+        with self._writing() as conn:
+            conn.execute(
+                f"UPDATE jobs SET {sets}, updated_at = ? WHERE id = ?",
+                (*fields.values(), now, job_id),
+            )
+
+    def counts(self) -> dict[str, int]:
+        rows = self._rows("SELECT state, COUNT(*) AS n FROM jobs GROUP BY state")
+        return {row["state"]: int(row["n"]) for row in rows}
+
+    def open_jobs(self, batch_id: str) -> int:
+        """How many of a batch's jobs are queued or running."""
+        rows = self._rows(
+            "SELECT COUNT(*) AS n FROM jobs WHERE batch_id = ? AND state IN ('queued', 'running')",
+            (batch_id,),
+        )
+        return int(rows[0]["n"]) if rows else 0
+
+    def cancel_queued(self, batch_id: str, now: str) -> int:
+        with self._writing() as conn:
+            cur = conn.execute(
+                "UPDATE jobs SET state = 'cancelled', updated_at = ? "
+                "WHERE batch_id = ? AND state = 'queued'",
+                (now, batch_id),
+            )
+        return cur.rowcount
+
+    # ---- queue_meta ----------------------------------------------------------------------
+
+    def meta(self, key: str) -> str | None:
+        rows = self._rows("SELECT value FROM queue_meta WHERE key = ?", (key,))
+        return rows[0]["value"] if rows else None
+
+    def set_meta(self, key: str, value: str | None) -> None:
+        with self._writing() as conn:
+            if value is None:
+                conn.execute("DELETE FROM queue_meta WHERE key = ?", (key,))
+            else:
+                conn.execute(
+                    "INSERT OR REPLACE INTO queue_meta (key, value) VALUES (?, ?)", (key, value)
+                )
+
+
+def _job(row: sqlite3.Row) -> dict[str, Any]:
+    job = {name: row[name] for name in _JOB_COLUMNS}
+    job["payload"] = json.loads(job.pop("payload_json") or "{}")
+    return job
+
+
+def _queue_damaged(path: Path, exc: Exception) -> LibraryIndexError:
+    return LibraryIndexError(
+        f"The library's queue ({path}) can't be read ({exc}). It isn't a cache, so it's left "
+        "as it is: make a copy of it, then ask for help."
+    )
+
+
+def open_queue(paths: LibraryPaths, *, write: bool) -> QueueStore:
+    """queue.sqlite. `queue run` opens it for writing while holding the library's lock;
+    `queue pause`/`resume` write only the pause flag, without the lock."""
+    return QueueStore(paths, write=write)

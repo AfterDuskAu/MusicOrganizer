@@ -54,10 +54,10 @@ def test_python_dash_m() -> None:
 
 def test_stub_through_console_script() -> None:
     result = subprocess.run(
-        [_installed_script(), "queue", "status"], capture_output=True, text=True, encoding="utf-8"
+        [_installed_script(), "lyrics"], capture_output=True, text=True, encoding="utf-8"
     )
     assert result.returncode == EXIT_USER_ERROR
-    assert "not implemented yet (step 09a)" in result.stderr
+    assert "not implemented yet (step 10)" in result.stderr
     assert result.stdout == ""
 
 
@@ -121,15 +121,9 @@ def test_group_needs_subcommand(capsys: pytest.CaptureFixture[str]) -> None:
         (["plan", "adopt", "--include-not-found"], "09b"),
         (["plan", "show", "p_1"], "09b"),
         (["apply", "p_1"], "09b"),
-        (["queue", "run"], "09a"),
-        (["queue", "status"], "09a"),
-        (["queue", "pause"], "09a"),
-        (["queue", "resume"], "09a"),
         (["lyrics", "--missing"], "10"),
         (["artwork", "--missing"], "10"),
         (["serve"], "11"),
-        (["doctor", "--update-ytdlp"], "09a"),
-        (["doctor", "--rollback-ytdlp"], "09a"),
     ],
 )
 def test_stubs(capsys: pytest.CaptureFixture[str], args: list[str], step: str) -> None:

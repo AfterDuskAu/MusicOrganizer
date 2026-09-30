@@ -22,6 +22,7 @@ from musicorg import (
     library,
     logging_setup,
     match,
+    queue,
     report,
     review,
     scan,
@@ -33,6 +34,7 @@ from musicorg.errors import (
     EXIT_OK,
     EXIT_TOOL_MISSING,
     EXIT_USER_ERROR,
+    EXIT_YOUTUBE_BLOCKED,
     ConfigError,
     MusicOrgError,
     NotImplementedYetError,
@@ -226,16 +228,16 @@ def build_parser() -> argparse.ArgumentParser:
     p = add(commands, "apply", "Check a plan and queue its jobs.", _not_yet("apply", "09b"))
     p.add_argument("plan_id")
 
-    queue = group("queue", "The throttled download queue.")
+    queue_group = group("queue", "The throttled download queue.")
     add(
-        queue,
+        queue_group,
         "run",
         "Work through the queue until it's empty or paused.",
-        _not_yet("queue run", "09a"),
+        _cmd_queue_run,
     )
-    add(queue, "status", "Queue state and counts.", _not_yet("queue status", "09a"))
-    add(queue, "pause", "Pause the queue after the current job.", _not_yet("queue pause", "09a"))
-    add(queue, "resume", "Resume the queue.", _not_yet("queue resume", "09a"))
+    add(queue_group, "status", "Queue state and counts.", _cmd_queue_status)
+    add(queue_group, "pause", "Pause the queue after the current job.", _cmd_queue_pause)
+    add(queue_group, "resume", "Resume the queue.", _cmd_queue_resume)
 
     p = add(commands, "lyrics", "Plan adding lyrics.", _not_yet("lyrics", "10"))
     p.add_argument("--missing", action="store_true")
@@ -307,6 +309,8 @@ def _cmd_status(args: argparse.Namespace) -> int:
     else:
         print(f"Library: {root}")
         _print_counts(result)
+        if result["queue"] is not None:
+            _print_queue_status(result["queue"], json_mode=False)
     _print_warnings(result["warnings"])
     return EXIT_OK
 
@@ -326,9 +330,10 @@ def _print_counts(result: dict[str, Any]) -> None:
 
 
 def _cmd_doctor(args: argparse.Namespace) -> int:
+    if args.update_ytdlp and args.rollback_ytdlp:
+        raise UserError("Choose one: --update-ytdlp or --rollback-ytdlp.")
     if args.update_ytdlp or args.rollback_ytdlp:
-        flag = "--update-ytdlp" if args.update_ytdlp else "--rollback-ytdlp"
-        raise NotImplementedYetError(f"doctor {flag}", "09a")
+        return _update_ytdlp(args)
 
     cfg: Config | None
     try:
@@ -369,6 +374,27 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     else:
         print("Everything is in place.")
     return code
+
+
+def _update_ytdlp(args: argparse.Namespace) -> int:
+    cfg = Config.load()
+    root = args.library if args.library is not None else cfg.last_library
+    if args.update_ytdlp:
+        print("Updating yt-dlp (this can take a minute)...", file=sys.stderr, flush=True)
+        result = doctor.update_ytdlp(root)
+    else:
+        print("Going back to the earlier yt-dlp...", file=sys.stderr, flush=True)
+        result = doctor.rollback_ytdlp(cfg, root)
+    if args.json:
+        _print_json(result.to_dict())
+        return EXIT_OK
+    for dist in doctor.YTDLP_PACKAGES:
+        old, new = result.before.get(dist), result.after.get(dist)
+        change = f"{old} → {new}" if old != new else f"{new} (unchanged)"
+        print(f"  {dist}: {change}")
+    if args.update_ytdlp:
+        print("If downloads stop working, `musicorg doctor --rollback-ytdlp` goes back.")
+    return EXIT_OK
 
 
 def _cmd_sources_add(args: argparse.Namespace) -> int:
@@ -606,6 +632,68 @@ class _MatchProgress:
         print(f"  {done:,} of {total:,} items{left}", file=sys.stderr, flush=True)
 
 
+def _cmd_queue_run(args: argparse.Namespace) -> int:
+    def say(message: str) -> None:
+        print(f"  {message}", file=sys.stderr, flush=True)
+
+    with library.open(_library_root(args), write=True, command="queue run") as lib:
+        print("Working through the queue. Ctrl-C stops after the current job.", file=sys.stderr)
+        with queue.graceful_ctrl_c() as should_stop:
+            result = queue.run(lib, should_stop=should_stop, report=say)
+    if args.json:
+        _print_json(result.to_dict())
+    else:
+        ended = ", ".join(f"{n} {state.replace('_', ' ')}" for state, n in result.counts.items())
+        if ended:
+            print(f"Jobs this run: {ended}.")
+        print(result.message)
+    return EXIT_YOUTUBE_BLOCKED if result.stopped == "paused_by_youtube" else EXIT_OK
+
+
+def _cmd_queue_status(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=False) as lib:
+        result = queue.status(lib.paths)
+    _print_queue_status(result, args.json)
+    return EXIT_OK
+
+
+def _cmd_queue_pause(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=False) as lib:
+        result = queue.pause(lib.paths)
+    if not args.json:
+        print("Paused. A running `queue run` stops after its current job.")
+    _print_queue_status(result, args.json)
+    return EXIT_OK
+
+
+def _cmd_queue_resume(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=False) as lib:
+        result = queue.resume(lib.paths)
+    if not args.json:
+        print("Resumed. `musicorg queue run` works through what's queued.")
+    _print_queue_status(result, args.json)
+    return EXIT_OK
+
+
+def _print_queue_status(result: dict[str, Any], json_mode: bool) -> None:
+    if json_mode:
+        _print_json(result)
+        return
+    words = {
+        "running": "running",
+        "idle": "idle",
+        "paused": "paused (by you)",
+        "paused_by_youtube": "paused by YouTube",
+    }
+    line = f"Queue: {words.get(result['state'], result['state'])}"
+    if result.get("resume_at"):
+        line += f" until {_local_time(result['resume_at'])}"
+    print(line + (f". {result['reason']}" if result["state"] == "paused_by_youtube" else "."))
+    counts = ", ".join(f"{result[s]:,} {s.replace('_', ' ')}" for s in queue.JOB_STATES)
+    print(f"Jobs: {counts}.")
+    print(f"Downloads in the last 24 hours: {result['daily_count']} of {result['daily_cap']}.")
+
+
 # How `journal list` describes each operation (docs/ENGINE_API.md → Journal operation).
 _OPERATION_WORDS = {
     "commit": "added",
@@ -657,7 +745,9 @@ def _cmd_journal_list(args: argparse.Namespace) -> int:
 def _cmd_undo(args: argparse.Namespace) -> int:
     command = f"undo {args.batch_id}" + (" --dry-run" if args.dry_run else "")
     with library.open(_library_root(args), write=True, command=command) as lib:
-        result = fileops.undo(lib, args.batch_id, dry_run=args.dry_run)
+        if not args.dry_run:
+            queue.requeue_interrupted(lib)  # no queue runs while this holds the lock
+        result = fileops.undo(lib, args.batch_id, dry_run=args.dry_run, jobs=queue.BatchJobs(lib))
     if args.json:
         _print_json(result.to_dict())
         return EXIT_OK
@@ -673,6 +763,8 @@ def _cmd_undo(args: argparse.Namespace) -> int:
     if not result.steps:
         print("  Nothing: the batch didn't change any files.")
     done = sum(step.status == "done" for step in result.steps)
+    if result.cancelled_jobs:
+        print(f"Cancelled {result.cancelled_jobs} queued job(s) of that batch.")
     if result.undo_batch_id:
         noun = "change" if done == 1 else "changes"
         print(f"Undid {done} {noun}. The undo itself is batch {result.undo_batch_id}.")

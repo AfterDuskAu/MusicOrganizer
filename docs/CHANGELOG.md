@@ -357,3 +357,42 @@ At the step 07 checkpoint the owner chose a basic UI for settling the review ite
   - Rips with a long music-video intro or outro (19), and partial or related pairs (19), were `uncertain` or `different`.
   - One rip that ends a few seconds before the official track was a `match`. That's inside the 15 s allowance.
   - About 75 ms per comparison of whole songs.
+
+### Step 09a: The download queue and the downloader
+
+- `queue.py` and `.musicorg/queue.sqlite`: the `jobs` table with the prompt's columns, and `queue_meta` holding the owner's pause flag, the YouTube pause (until when, and why), the downloads of the last 24 hours, and the count of network failures in a row. All of it survives a restart. Under rule 3 the SQL lives in `index.py` (`QueueStore`, `open_queue`); `queue.py` holds the logic.
+  - One job at a time. The pace comes from `config.json` → `throttle`: 8–25 s between downloads, 20–40 s for the first 20 of a session, at most 300 in any 24 hours. Jobs that don't download (adopts) skip the pace.
+  - **Retries** wait 1 min, 5 min, 30 min, then 2 h. A retry due within 30 minutes is waited for; a later one ends the run ("waiting", with the time to come back).
+  - **YouTube refusing us** ("confirm you're not a bot", HTTP 429), or 3 network-level failures in a row (403, timeouts, dropped connections), pauses the whole queue for 6 hours (`youtube_pause_hours`). The job goes back to the queue with its attempt not counted, and `queue run` exits with code 4 and the time it can resume.
+  - **One video's problem stays that job's.** Age-restricted, private, removed, region-blocked or members-only → `needs_review` with `video_unavailable`, and the queue carries on.
+  - On start, jobs a crash left `running` go back to `queued`, and their staging folders are discarded. A job's batch is closed when its last job ends. A job whose batch has already ended (e.g. undone) is `cancelled`.
+  - `queue pause` / `resume` flip the flag without the lock; `queue run` checks it between jobs, and during the waits between downloads. `resume` doesn't lift a YouTube pause.
+  - Ctrl-C during `queue run` stops after the current job; a second Ctrl-C stops at once, and that job is queued again next time.
+  - Handlers per job kind (`queue.register`) come in step 09b. A handler downloads only through `JobContext.download()`, which keeps to the pace and the cap.
+- `youtube.download_audio(video_id, dest_dir)`: format `"140"` only, `paths` home and temp both set to the job's staging folder, `outtmpl` `%(id)s.%(ext)s`, the `tools` ffmpeg and deno (`js_runtimes`), `cachedir` in the app's cache folder, no postprocessors, a logging adapter and a progress hook. Every option name was checked against yt-dlp 2026.08.19. It goes through the shared rate limiter, returns yt-dlp's info (the caller reads `format_id`), and turns yt-dlp's error messages into `YouTubeRefusedError`, `VideoUnavailableError`, `FormatUnavailableError` or `DownloadError` (with `network`).
+- `fileops.stage_dir(batch, name)`: an empty folder `_Staging/<batch_id>/<name>/` for one job, anything left there before discarded first. The prompt says "from `fileops.stage_path`", but that returns a file name, and yt-dlp needs a folder of its own. Tested for success, leftovers, a link in the way and the lock.
+- `doctor --update-ytdlp` records the `yt-dlp` and `yt-dlp-ejs` versions in `config.json` (`ytdlp_previous`), then runs `pip install -U "yt-dlp[default]"` with the engine's own Python. `--rollback-ytdlp` reinstalls those versions. Both refuse while the library is locked, and then hold the lock themselves while pip runs, so a `queue run` can't start half way through (`ENGINE_API.md` updated).
+- `status` shows the queue's state and counts, and `undo` now cancels the batch's queued jobs first, then says how many it cancelled.
+- 1,078 tests pass (5 skipped). New tests:
+  - the pace, with a fake clock
+  - the daily cap across a restart
+  - "not a bot" pausing everything, across a restart, and `resume` not lifting it
+  - 3 network failures pausing the queue, and a success resetting the count
+  - an age-restricted video going to review while the queue continues
+  - format 140 missing twice going to review, and only format 140 ever requested
+  - retries up to failed
+  - `queue pause` from a second process while `queue run` holds the lock
+  - a real crash: a child process exits in the middle of a job, leaving a `.part` file; the next run queues the job again and clears the file
+  - undo cancelling queued jobs
+  - the downloader writing only inside its folder, with the options checked
+  - 12 real yt-dlp error messages and what each becomes
+  - update and rollback with pip stubbed
+- **Acceptance:** the live check (`test_live_download`: one song into a scratch library's staging; format 140, AAC, about 128 kbps, nothing outside staging) is written but not yet run. It downloads from YouTube, so it waits for the owner's go-ahead.
+- **Deviations, from the song-identification research:**
+  - **Format 140 missing gets one retry** before `needs_review`. Research downloads saw "Requested format is not available" 28 times, and 9 of those videos worked on a later try. The retry asks for format 140 again; there's never a fallback format (rule 6).
+  - **An empty download is retried** like any other failure, rather than ending the job (research: 5 empty files).
+  - **"Sign in to confirm your age" is one video, not a block.** Research matched on "sign in to confirm" alone and wrongly paused everything for 6 hours. Only "not a bot", 429 and too many requests pause the queue, and a test holds the two apart.
+  - **After a YouTube pause the pace starts gently again.** Each `queue run` is a new session, so the quiet start applies. Research found that slowing down after a refusal, not only pausing, is what keeps a home connection working.
+- Other deviations:
+  - **Four retries.** The prompt lists four waits (1 min, 5 min, 30 min, 2 h) and says "after 4 attempts". Read as four retries, so the 2 h wait is used: a job ends `failed` after its 5th try.
+  - **Daily cap reached:** `queue run` stops and says when the next download can start, rather than holding the lock for hours.

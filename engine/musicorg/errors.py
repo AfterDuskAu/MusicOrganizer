@@ -92,8 +92,35 @@ class YouTubePausedError(YouTubeBlockedError):
         self.resume_at = resume_at
 
 
+class YouTubeRefusedError(YouTubeBlockedError):
+    """YouTube refused a download from us ("confirm you're not a bot", HTTP 429). The whole
+    queue pauses (step 09a). Never retried in a loop, and never worked around."""
+
+
 class YouTubeError(UserError):
     """YouTube Music gave an answer the engine couldn't use (not a slow-down)."""
+
+
+# ---- downloads (step 09a) --------------------------------------------------------------
+
+
+class DownloadError(UserError):
+    """A download didn't work. `network` is True for network-level failures (HTTP 403,
+    timeouts, dropped connections): three in a row pause the queue."""
+
+    def __init__(self, message: str, *, network: bool = False) -> None:
+        super().__init__(message)
+        self.network = network
+
+
+class FormatUnavailableError(DownloadError):
+    """YouTube didn't offer format 140 (AAC in M4A) for this video. There's no fallback to
+    another format (CLAUDE.md rule 6)."""
+
+
+class VideoUnavailableError(DownloadError):
+    """This one video can't be downloaded: age-restricted, private, removed, blocked in
+    this country, members-only. The queue carries on with the next job."""
 
 
 class ReplayMissError(UserError):

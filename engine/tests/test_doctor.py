@@ -10,8 +10,9 @@ from pathlib import Path
 import pytest
 from conftest import FakeTool
 
-from musicorg import cli, doctor
-from musicorg.errors import EXIT_OK, EXIT_TOOL_MISSING, EXIT_USER_ERROR
+from musicorg import cli, doctor, library
+from musicorg.config import Config
+from musicorg.errors import EXIT_OK, EXIT_TOOL_MISSING, EXIT_USER_ERROR, UserError
 
 
 def run(capsys: pytest.CaptureFixture[str], *args: str) -> tuple[int, str, str]:
@@ -161,3 +162,54 @@ def test_real_packages_are_installed() -> None:
     """The engine's own dependencies, as installed by pip install -e "engine[dev]"."""
     for dist in ("yt-dlp", "yt-dlp-ejs", "ytmusicapi"):
         assert metadata.version(dist)
+
+
+# ---- --update-ytdlp and --rollback-ytdlp (step 09a) -------------------------------------
+
+
+@pytest.fixture
+def fake_pip(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, ...]]:
+    calls: list[tuple[str, ...]] = []
+    monkeypatch.setattr(doctor, "_pip", lambda *args: calls.append(args))
+    monkeypatch.setattr(
+        doctor, "installed_versions", lambda: {"yt-dlp": "2026.8.19", "yt-dlp-ejs": "0.8.0"}
+    )
+    return calls
+
+
+def test_update_records_the_versions_then_updates(fake_pip: list[tuple[str, ...]]) -> None:
+    result = doctor.update_ytdlp(None)
+    assert fake_pip == [("install", "-U", "yt-dlp[default]")]
+    assert Config.load().data["ytdlp_previous"] == {"yt-dlp": "2026.8.19", "yt-dlp-ejs": "0.8.0"}
+    assert result.before["yt-dlp"] == "2026.8.19"
+
+
+def test_rollback_reinstalls_the_recorded_versions(fake_pip: list[tuple[str, ...]]) -> None:
+    doctor.update_ytdlp(None)
+    doctor.rollback_ytdlp(Config.load(), None)
+    assert fake_pip[-1] == ("install", "yt-dlp==2026.8.19", "yt-dlp-ejs==0.8.0")
+
+
+def test_rollback_with_nothing_recorded(fake_pip: list[tuple[str, ...]]) -> None:
+    with pytest.raises(UserError, match="no earlier yt-dlp"):
+        doctor.rollback_ytdlp(Config.load(), None)
+    assert fake_pip == []
+
+
+def test_update_refused_while_the_library_is_in_use(
+    fake_pip: list[tuple[str, ...]], lib: library.Library
+) -> None:
+    with pytest.raises(UserError, match="in use"):
+        doctor.update_ytdlp(lib.root)
+    assert fake_pip == []
+    lib.close()
+    doctor.update_ytdlp(lib.root)
+    assert fake_pip == [("install", "-U", "yt-dlp[default]")]
+
+
+def test_cli_update(fake_pip: list[tuple[str, ...]], capsys: pytest.CaptureFixture[str]) -> None:
+    assert cli.main(["doctor", "--update-ytdlp"]) == 0
+    out = capsys.readouterr().out
+    assert "yt-dlp: 2026.8.19 (unchanged)" in out
+    assert "--rollback-ytdlp" in out
+    assert cli.main(["doctor", "--update-ytdlp", "--rollback-ytdlp"]) == 1

@@ -38,8 +38,8 @@ Global options:
 | `musicorg init <root>` | Create layout; refuse a folder already holding audio, or staging on another volume; environment warnings | yes | 03a |
 | `musicorg status` | Counts per item state, queue state, warnings | no | 02 (stub) → grows |
 | `musicorg doctor` | Check tools (deno ≥ 2.3), yt-dlp, yt-dlp-ejs and ytmusicapi versions, config and log folders | no | 02 |
-| `musicorg doctor --update-ytdlp` | `pip install -U "yt-dlp[default]"`, recording the old versions. Refuses while the lock is held. | no (checks it) | 09a |
-| `musicorg doctor --rollback-ytdlp` | Reinstall the recorded previous versions | no (checks it) | 09a |
+| `musicorg doctor --update-ytdlp` | `pip install -U "yt-dlp[default]"`, recording the old versions. Refuses while the lock is held. | refuses if held, then holds it during pip | 09a |
+| `musicorg doctor --rollback-ytdlp` | Reinstall the recorded previous versions | refuses if held, then holds it during pip | 09a |
 | `musicorg sources add <path>` | Register a read-only source. Refuse if it's inside the root or contains it. | yes | 05 |
 | `musicorg sources list` | List sources | no | 05 |
 | `musicorg sources remove <id>` | Forget a source; never touches its files | yes | 05 |

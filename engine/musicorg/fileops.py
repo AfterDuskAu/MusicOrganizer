@@ -917,6 +917,18 @@ def stage_path(b: Batch, name: str) -> Path:
     return _first_free(folder / (naming.safe_component(name) or "file"))
 
 
+def stage_dir(b: Batch, name: str) -> Path:
+    """An empty folder `_Staging/<batch_id>/<name>/` for one job's download (step 09a):
+    yt-dlp writes only there. Whatever a crashed or requeued run left in it (a `.part`
+    file, a half-finished download) is discarded first."""
+    _require_lock(b.paths, "Staging")
+    parent = _ensure_folder(b.paths, b.paths.staging / b.batch_id, STAGING)
+    folder = parent / (naming.safe_component(name) or "job")
+    if os.path.lexists(folder):
+        discard_staged(b.paths, folder)
+    return _ensure_folder(b.paths, folder, STAGING)
+
+
 def commit(b: Batch, staged: PurePath | str, rel_target: PurePath | str) -> Path:
     """Move a finished file from `_Staging/` into `Music/<rel_target>`. Returns where it
     landed: `rel_target`, or ` (2)` etc. if that name is taken."""

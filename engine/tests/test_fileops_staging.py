@@ -34,6 +34,37 @@ def test_stage_path(lib: Library) -> None:
         assert fileops.stage_path(b, "Artist: Song?.m4a").name == "Artist_ Song_ (2).m4a"
 
 
+def test_stage_dir(lib: Library, precious: Path) -> None:
+    with fileops.batch(lib, "demo") as b:
+        folder = fileops.stage_dir(b, "job-7")
+        assert folder == lib.paths.staging / b.batch_id / "job-7"
+        assert folder.is_dir() and not any(folder.iterdir())
+        # What a crashed run left behind is discarded, so a download starts clean.
+        put(folder / "abc.m4a.part", b"half")
+        put(folder / "sub" / "x.tmp")
+        again = fileops.stage_dir(b, "job-7")
+        assert again == folder
+        assert folder.is_dir() and not any(folder.iterdir())
+        assert precious.read_bytes() == b"irreplaceable"
+
+
+def test_stage_dir_never_follows_a_link(lib: Library, precious: Path) -> None:
+    with fileops.batch(lib, "demo") as b:
+        parent = fileops.stage_dir(b, "job-1").parent
+        symlink_or_skip(parent / "job-2", precious.parent)
+        folder = fileops.stage_dir(b, "job-2")
+        assert folder.is_dir() and not folder.is_symlink()
+        assert precious.read_bytes() == b"irreplaceable"
+
+
+def test_stage_dir_needs_the_lock(lib: Library) -> None:
+    with fileops.batch(lib, "demo") as b:
+        pass
+    lib.close()
+    with pytest.raises(RuntimeError):
+        fileops.stage_dir(b, "job-1")
+
+
 def test_discard_staged(lib: Library) -> None:
     with fileops.batch(lib, "demo") as b:
         one = staged(b, "one.m4a")

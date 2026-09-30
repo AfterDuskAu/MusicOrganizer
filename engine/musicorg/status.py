@@ -1,8 +1,8 @@
 """`musicorg status`: what the engine knows about the library.
 
 The library in use, its environment warnings (step 03a), sources and item counts by
-state with how many parses have low confidence (step 05). The queue state arrives in
-step 09a. Needs no lock: the index is opened read-only.
+state with how many parses have low confidence (step 05), and the queue's state and
+counts (step 09a). Needs no lock: the index and the queue are opened read-only.
 """
 
 from __future__ import annotations
@@ -10,7 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from musicorg import __version__, library, normalize, state
+from musicorg import __version__, library, normalize, queue, state
 from musicorg.errors import MusicOrgError
 from musicorg.index import Index
 from musicorg.naming import LibraryPaths
@@ -43,6 +43,7 @@ def get_status(root: Path | None) -> dict[str, Any]:
             result["items"] = sum(counts.values())
             result["low_confidence"] = index.low_confidence_count(normalize.LOW_CONFIDENCE)
             result["tracks"] = index.library_track_count()
+        result["queue"] = queue.status(paths)
     except MusicOrgError as exc:
         result["warnings"].append(exc.message)
     return result
