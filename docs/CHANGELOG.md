@@ -497,4 +497,7 @@ The owner asked for ideas from the Photonizer project that would make the app ru
   - Checked in Kid3, not Apple Music: the owner's rips live in Apple Music's own media folder, so adding the new files there would list every song twice. Cover art arrives with step 10.
   - `undo` put the library back exactly: `Music/` empty, the 25 files in `_Replaced/`, `matched_auto` back to 735 (710 + 25), and no superseded links left.
   - The undo printout no longer lists the tag writes done in staging (still in `--json`).
-- Still to do for acceptance: a new plan applied after the undo (step 6's last part).
+- A new plan after the undo (the end of acceptance 6): 25 `done`, 0 failed, 0 to review. Two HTTP 403s were retried and worked.
+  - All 25 files are complete and linked (25 superseded), and they stay in the library.
+  - Downloads in the last 24 hours: 80 of 300.
+- **Step 09b's acceptance passes.** Bigger batches come next, with the daily cap left on (acceptance 7).
