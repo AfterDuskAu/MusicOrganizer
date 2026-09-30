@@ -532,6 +532,6 @@ def test_the_commands(
     assert "Jobs this run: 1 done." in run("queue", "run")
     assert (root / "Music" / "Band" / "Unsorted" / "Rare Song.mp3").is_file()
     undone = run("undo", batch_id)
-    assert "Skipped: Tagged before it went into the library" in undone
+    assert "Skipped" not in undone  # the tag write in staging isn't shown
     assert "Undid 1 change." in undone
     assert not (root / "Music" / "Band" / "Unsorted" / "Rare Song.mp3").exists()

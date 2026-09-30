@@ -491,4 +491,10 @@ The owner asked for ideas from the Photonizer project that would make the app ru
     - Different: all 32 `different`. BER from 0.347 to 0.495.
     - **No different pair came near a match.**
   - The script suggests match ≤ 0.169 and uncertain ≤ 0.287. **Kept at 0.15 and 0.25** (config.json unchanged): every same pair already passes with room to spare, and the stricter values are the safer ones.
-- Still to do for acceptance: the first real batch (`plan replace --only auto --limit 25`), 5 files checked in Apple Music, then undo and a new plan.
+- **First real batch** (acceptance 4–6):
+  - `plan replace --only auto --limit 25`, `apply`, `queue run`: 25 `done`; 2 network hiccups were retried and worked; 0 failed, 0 to review.
+  - All 25 files have title, artist, album, year, track number and total, and full provenance.
+  - Checked in Kid3, not Apple Music: the owner's rips live in Apple Music's own media folder, so adding the new files there would list every song twice. Cover art arrives with step 10.
+  - `undo` put the library back exactly: `Music/` empty, the 25 files in `_Replaced/`, `matched_auto` back to 735 (710 + 25), and no superseded links left.
+  - The undo printout no longer lists the tag writes done in staging (still in `--json`).
+- Still to do for acceptance: a new plan applied after the undo (step 6's last part).

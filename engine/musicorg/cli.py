@@ -861,6 +861,8 @@ def _cmd_undo(args: argparse.Namespace) -> int:
         print(f"Undoing batch {result.batch_id}:")
     marks = {"planned": "↩", "done": "↩", "skipped": "-", "manual": "!"}
     for step in result.steps:
+        if step.status == "skipped" and step.path.startswith("_Staging/"):
+            continue  # a tag write in staging before a commit: undoing the commit covers it
         prefix = "Skipped: " if step.status == "skipped" else ""
         print(f"  {marks.get(step.status, '?')} {prefix}{step.note}")
     if not result.steps:
