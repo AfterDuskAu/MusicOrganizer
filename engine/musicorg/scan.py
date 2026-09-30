@@ -55,7 +55,9 @@ DECISION_STATES = {
 
 SUSPECT_UPSCALE_KBPS = 256
 _YOUTUBE_SIGNS = re.compile(
-    r"youtube|youtu\.be|y2mate|ytmp3|savefrom|mp3juices|converter|onlinevideo", re.IGNORECASE
+    r"youtube|youtu\.be|y2mate|y2meta|x2mate|yt5s|ytmp3|savefrom|mp3juices|converter|"
+    r"onlinevideo",
+    re.IGNORECASE,
 )
 _BATCH = 200  # items written to the index at a time
 _WORKERS = min(4, os.cpu_count() or 1)
@@ -374,6 +376,16 @@ def _analyse(job: _Todo) -> dict[str, Any]:
         "reasons_json": [],
         "scanned_at": _now(),
     }
+
+
+def youtube_converted(extra: dict[str, str], name: str) -> bool:
+    """Signs a rip was made from a YouTube video by a converter site or tool: ffmpeg's
+    encoder tag ("Lavf…", "Lavc…"), or a converter's name in the file name or comment.
+    Such a file is a re-encode of YouTube's own audio, so a CD or iTunes rip of the same
+    song is better whatever the bitrates say (step 09d)."""
+    encoder = extra.get("encoder", "").casefold()
+    clues = " ".join([name, extra.get("comment", ""), encoder])
+    return encoder.startswith(("lavf", "lavc")) or bool(_YOUTUBE_SIGNS.search(clues))
 
 
 def _suspect_upscale(

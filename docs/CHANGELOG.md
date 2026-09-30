@@ -5,7 +5,10 @@
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)
 
 - **Duplicates keep the best copy:**
-  - The best copy is chosen by: lossless first, then the higher bitrate, then the bigger file. When two converter rips come from one YouTube upload, the higher-bitrate one lost less in its re-encode.
+  - The best copy is chosen by: lossless first; then a rip that isn't a YouTube conversion; then the higher bitrate; then the bigger file.
+  - Any CD or iTunes rip beats a converter site's MP3, whatever the bitrates. The owner's library showed why: the first tidy plan would have kept a 128 kbps converter MP3 of "Otherside" over the 121 kbps iTunes CD rip.
+  - A YouTube conversion is recognised by ffmpeg's "Lavf"/"Lavc" encoder tag, or a converter's name in the file name (`scan.youtube_converted`). The converter names y2meta, x2mate and yt5s were added.
+  - When both copies come from one YouTube upload, the higher-bitrate one lost less in its re-encode.
   - `plan adopt --matched` copies in only the best rip of each song. The others (`adopt_duplicate`) are linked to it (`superseded`), and nothing is copied.
   - `plan tidy` does the same for songs already in the library twice. The lesser copy and its `.lrc` go to `_Replaced/`, and its rip is linked to the kept file. A kept file named ` (2)` gets its plain name back when that name is free.
 - **Preferred names:**

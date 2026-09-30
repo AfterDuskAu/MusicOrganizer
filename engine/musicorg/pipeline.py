@@ -32,8 +32,9 @@ staging → check → tag → commit, through `fileops`, journaled and undoable.
   number) and no download. MUSICORG_MATCH says so: `auto_details` or `user_details`.
   There's no fingerprint check without a download, so only AUTO matches and the owner's
   own choices qualify, never a guess still in review. When several rips match the same
-  track, only the best copy is copied in (lossless first, then the higher bitrate, then
-  the bigger file); the others are linked to it.
+  track, only the best copy is copied in (lossless first, then a CD or iTunes rip over a
+  YouTube conversion, then the higher bitrate, then the bigger file); the others are
+  linked to it.
 - **Tidy** (step 09d, `plan tidy`): songs already in the library twice keep their best
   copy (the other goes to `_Replaced/`), and the owner's preferred names ("JAŸ-Z" →
   "Jay Z") are written into the tags and folders. New songs use them from the start.
@@ -1064,12 +1065,15 @@ def _adopt_tags(
     return change
 
 
-def _rip_quality(item: dict[str, Any], source: fileops.FileCheck) -> tuple[int, int, int]:
-    """The better of two rips of one song: lossless first, then the higher bitrate, then
-    the bigger file. (Two converter rips of one YouTube upload came from the same
-    audio; the higher-bitrate one lost less in its re-encode.)"""
+def _rip_quality(item: dict[str, Any], source: fileops.FileCheck) -> tuple[int, int, int, int]:
+    """The better of two rips of one song: lossless first; then one that isn't a YouTube
+    conversion (a CD or iTunes rip beats a converter site's MP3 of any bitrate); then the
+    higher bitrate; then the bigger file. (Two converter rips of one YouTube upload came
+    from the same audio; the higher-bitrate one lost less in its re-encode.)"""
     lossless = 1 if str(item.get("codec") or "").lower() in LOSSLESS else 0
-    return lossless, int(item.get("bitrate_kbps") or 0), int(source.size)
+    extra = (item.get("raw_tags_json") or {}).get("extra") or {}
+    original = 0 if scan.youtube_converted(extra, str(item.get("rel_path") or "")) else 1
+    return lossless, original, int(item.get("bitrate_kbps") or 0), int(source.size)
 
 
 def _link_duplicate(ctx: JobContext, index: Index, op: fileops.PlanOp) -> Outcome:
@@ -1232,10 +1236,15 @@ def _just_a_number_added(here: PurePosixPath, ideal: PurePosixPath) -> bool:
     )  # fmt: skip
 
 
-def _file_quality(path: Path) -> tuple[int, int, int]:
+def _file_quality(path: Path) -> tuple[int, int, int, int]:
+    """As `_rip_quality`, for a library file: the signs of a YouTube conversion are read
+    from the rip it came from (read-only), or from the file itself if that's gone."""
     found = tags.probe(path)
     lossless = 1 if (found.codec or "").lower() in LOSSLESS else 0
-    return lossless, int(found.bitrate_kbps or 0), path.stat().st_size
+    origin = tags.read_tags(path).origin_path
+    source = Path(origin) if isinstance(origin, str) and Path(origin).is_file() else path
+    original = 0 if scan.youtube_converted(tags.read_extra(source), source.name) else 1
+    return lossless, original, int(found.bitrate_kbps or 0), path.stat().st_size
 
 
 def _items_by_rip(lib: Library, index: Index) -> dict[str, dict[str, Any]]:
