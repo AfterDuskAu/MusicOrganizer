@@ -75,7 +75,7 @@ The engine needs **Python 3.12, ffmpeg (with ffprobe), fpcalc (Chromaprint) and 
 | 0.4 | Discover: YouTube Music radio minus what you own, Last.fm similar tracks as backup, a one-line "why" on each pick. Owner's plan: `docs/roadmap/0.4-discover.md` |
 | 0.5 | Packaging: signed and notarized DMG, bundled Python/ffmpeg/fpcalc/deno, Sparkle updates, yt-dlp updates without an app release, arm64 and x86_64 builds |
 | **1.0** | Hand it to 1–2 Mac friends |
-| 1.1 | Phone server (Subsonic-compatible, home Wi-Fi), weekly mix in its own `Mix/` folder, shareable playlist links, Inbox for Bandcamp, CD rips and iTunes purchases |
+| 1.1 | Phone server (Subsonic-compatible, home Wi-Fi), weekly mix in its own `Mix/` folder, shareable playlist links, Inbox for Bandcamp, CD rips and iTunes purchases, family mode (kids profile with clean music and a parent PIN: `docs/roadmap/1.1-family-mode.md`) |
 | 2.0 | Windows app on the same engine |
 
 ## Not in v0.1 (on purpose)
