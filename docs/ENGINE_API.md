@@ -11,6 +11,7 @@ The engine has two front doors onto the **same functions**. The CLI is for the o
 | **Review reasons** (stored with `review` items) | `version_mismatch` · `duration_mismatch` · `artist_mismatch` · `title_fuzzy` · `not_official_audio` · `low_parse_confidence` · `fingerprint_mismatch` · `fingerprint_uncertain` · `format_140_unavailable` · `video_unavailable` · `file_changed` · `url_low_score` |
 | **CSV decision** (`review import`) | `accept` · `cand:<n>` · `url` · `only_copy` · `skip` · `reject:<n>` |
 | **RPC decision** (`review.decide`) | `accept` · `candidate` (+`candidate_id`) · `url` (+`url`) · `only_copy` · `skip` · `reject` (+`candidate_id`) |
+| **Fingerprint verdict** (step 08, `fingerprint.compare`) | `match` · `uncertain` (→ review reason `fingerprint_uncertain`) · `different` (→ `fingerprint_mismatch`) |
 | **Job state** | `queued` · `running` · `done` · `failed` · `needs_review` · `cancelled` |
 | **Queue state** | `running` · `idle` · `paused` · `paused_by_youtube` |
 | **Plan kind** | `replace` · `adopt` · `lyrics` · `artwork` |

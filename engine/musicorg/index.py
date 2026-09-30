@@ -440,6 +440,32 @@ class Index:
                 (key, now, json.dumps(response, ensure_ascii=False)),
             )
 
+    # ---- fingerprints (step 08) ---------------------------------------------------------
+
+    def cached_fingerprint(
+        self, path: str, size: int, mtime_ns: int
+    ) -> tuple[float | None, bytes] | None:
+        """A whole-file fingerprint saved for `path`, if the file hasn't changed since:
+        (duration_s, the raw items as little-endian 32-bit words)."""
+        rows = self._rows(
+            "SELECT duration_s, fp_blob FROM fingerprints "
+            "WHERE path = ? AND size = ? AND mtime_ns = ?",
+            (path, size, mtime_ns),
+        )
+        if not rows or rows[0]["fp_blob"] is None:
+            return None
+        return rows[0]["duration_s"], bytes(rows[0]["fp_blob"])
+
+    def put_fingerprint(
+        self, path: str, size: int, mtime_ns: int, duration_s: float, blob: bytes
+    ) -> None:
+        with self.transaction() as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO fingerprints (path, size, mtime_ns, duration_s, fp_blob) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (path, size, mtime_ns, duration_s, blob),
+            )
+
     # ---- library tracks ----------------------------------------------------------------
 
     def put_library_tracks(self, tracks: Iterable[dict[str, Any]]) -> None:

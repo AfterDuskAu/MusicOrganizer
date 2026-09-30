@@ -337,3 +337,23 @@ At the step 07 checkpoint the owner chose a basic UI for settling the review ite
     - "No, just this song" isn't asked again that session.
   - `musicorg match --recheck` classifies review and not-found items again from the candidates already found, with the current rules, aliases and rejections, without searching (about 6 s for 1,135 items).
   - New: `match.same_name`, `match.alias_offer`, `match.recheck`, `match.candidate_rows`, `review.confirm_alias`, `state.aliases`, and `/api/alias` on the page. 1,015 tests pass (4 skipped).
+
+### Step 08: The fingerprint gate
+
+- `fingerprint.py`: `fingerprint(path, length_s=0, index=None) -> RawFP` runs `fpcalc -raw -json`, and `compare(a, b) -> FingerprintResult` gives `ber`, `offset_s`, `overlap_ratio` and a verdict: `match`, `uncertain` or `different`. The verdicts are now in `ENGINE_API.md` → Enums. Whole-file fingerprints are cached in the index's `fingerprints` table by (path, size, mtime); `Index.cached_fingerprint` / `put_fingerprint` are new.
+- Thresholds live in `config.json` under `"fingerprint"` (`config.FINGERPRINT_DEFAULTS`). They stay at the prompt's conservative values (`match` BER ≤ 0.15 with overlap ≥ 0.6, `uncertain` ≤ 0.25) until step 09b calibrates them.
+- `scripts/calibrate_fp.py <pairs.csv>` (`a_path,b_path,same`) prints the BER distribution of each group, the verdicts under the current thresholds, any different pair that passes as a match (marked DANGER), the same pairs that would go to review, and suggested thresholds with a quarter of the gap as a margin on each side. A path may also be a saved `fpcalc -raw -json` file, so step 09b can reuse fingerprints the research already made instead of downloading the audio again.
+- The known limit is in the module docstring: the clean and explicit edits of a song fingerprint as a `match`, and step 06's clean/explicit rule decides between them.
+- 1,037 tests pass (4 skipped). New: the prompt's four comparisons on the step 02 audio, fpcalc missing, the cache (reused, refreshed when the file changes, never written through a read-only index, never used for partial fingerprints), a file that isn't audio, thresholds from `config.json`, the calibration script on a small synthetic pairs file and its refusals, and the shapes below, built from generated audio.
+- **Deviations, from the song-identification research (29–30 Sep, about 1,000 comparisons on the owner's rips):**
+  - **Whole-file fingerprints**, not the first 120 s. A radio edit and the album version share their first two minutes, so only the whole file tells them apart. `length_s` still limits it when asked.
+  - **Offset voting as well as the ±15 s slide.** Offsets where many identical fingerprint values agree are tried too, so a music video's 30 s or 69 s intro still lines up. Voting is Chromaprint's usual trick and is cheap in plain Python.
+  - **Coverage in 2 s windows, and a shape check.** The prompt's single average BER lets an extended mix pass as a `match`: the whole of the shorter file lines up, and the extra minute at the end isn't in the average. Each file's 2 s windows are now checked against the other. A `match` also needs at most 15 s of unmatched audio at either end of either file, and no unmatched stretch of 10 s or more in the middle. Otherwise the result is `uncertain` and the file goes to review, never `match`. Research basis: a rip's extra audio was at most 7 s at the start and 11 s at the end in 90% of true matches, and no true match had a 10 s gap in the middle. Both limits are in `config.json`.
+  - **Partly the same is `uncertain`, not `different`.** A high average BER with at least half of either file found (a cut, an inserted skit, a remix) goes to review with `fingerprint_uncertain`, which says more than `fingerprint_mismatch`.
+  - `FingerprintResult` also carries `a_coverage`, `b_coverage`, the extra seconds at each end, `middle_gap_s` and a plain-English `why`, for the review page and the log.
+- **Checked against the research data** (read-only, outside the repo): the research's 1,036 saved comparisons with both fingerprints, replayed through `compare_items` with the default thresholds.
+  - All 692 pairs the research found different came out `different`. **No different recording passed as a match.**
+  - Of the 301 same pairs, 290 were `match` and 11 `uncertain`: review, the safe side. Among these, the AUTO and owner-decided items gave 43 `match` and 2 `uncertain`.
+  - Rips with a long music-video intro or outro (19), and partial or related pairs (19), were `uncertain` or `different`.
+  - One rip that ends a few seconds before the official track was a `match`. That's inside the 15 s allowance.
+  - About 75 ms per comparison of whole songs.

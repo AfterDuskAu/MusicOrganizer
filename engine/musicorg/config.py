@@ -33,6 +33,17 @@ THROTTLE_DEFAULTS = {
     "quiet_start_max_s": 40,
     "daily_cap": 300,
 }
+# The fingerprint gate's thresholds (step 08). Conservative until step 09b calibrates them.
+# `match_ber` and `uncertain_ber` are bit error rates; the rest come from the research on the
+# owner's rips (Sep 2026): extra audio at either end of a rip was at most 7 s (start) and
+# 11 s (end) in 90% of true matches, and no true match had a 10 s gap in the middle.
+FINGERPRINT_DEFAULTS: dict[str, float] = {
+    "match_ber": 0.15,
+    "uncertain_ber": 0.25,
+    "min_overlap": 0.6,
+    "max_end_extra_s": 15.0,
+    "max_middle_gap_s": 10.0,
+}
 CONFIG_SCHEMA = 1
 HOME_ENV = "MUSICORG_HOME"
 
@@ -97,6 +108,8 @@ def default_data() -> dict[str, Any]:
         "tools": {},
         # Changes to the download pace (THROTTLE_DEFAULTS); empty means the defaults.
         "throttle": {},
+        # Changes to the fingerprint gate (FINGERPRINT_DEFAULTS); empty means the defaults.
+        "fingerprint": {},
         # When a song has both an explicit and a clean official version and the rip says
         # neither, match the explicit one (step 06).
         "prefer_explicit": True,
@@ -160,6 +173,16 @@ class Config:
             for key, value in chosen.items():
                 if key in values and isinstance(value, int) and not isinstance(value, bool):
                     values[key] = value
+        return values
+
+    def fingerprint(self) -> dict[str, float]:
+        """The fingerprint gate's thresholds: the defaults, with any set in config.json."""
+        values = dict(FINGERPRINT_DEFAULTS)
+        chosen = self.data.get("fingerprint")
+        if isinstance(chosen, dict):
+            for key, value in chosen.items():
+                if key in values and isinstance(value, int | float) and not isinstance(value, bool):
+                    values[key] = float(value)
         return values
 
     def tool_path(self, tool: str) -> Path | None:
