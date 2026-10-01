@@ -38,6 +38,31 @@ public enum LRC {
         return low == 0 ? nil : low - 1
     }
 
+    /// The words alone: each line of `text` without its time stamps, blank lines and
+    /// tags like `[ar:…]` left out. This is what tap-along syncing starts from.
+    public static func words(of text: String) -> [String] {
+        var found: [String] = []
+        for raw in text.split(whereSeparator: \.isNewline) {
+            var rest = Substring(raw.trimmingCharacters(in: .whitespaces))
+            while rest.hasPrefix("["), let close = rest.firstIndex(of: "]") {
+                rest = rest[rest.index(after: close)...]
+            }
+            let line = rest.trimmingCharacters(in: .whitespaces)
+            if !line.isEmpty { found.append(line) }
+        }
+        return found
+    }
+
+    /// Timed lyrics as text: one `[mm:ss.xx]words` line for each line with its time.
+    public static func text(of timed: [(time: Double, text: String)]) -> String {
+        timed.map { line in
+            let hundredths = Int((max(0, line.time) * 100).rounded())
+            return String(
+                format: "[%02d:%02d.%02d]%@", hundredths / 6000, hundredths / 100 % 60,
+                hundredths % 100, line.text)
+        }.joined(separator: "\n")
+    }
+
     /// "01:23.45" or "1:23" → seconds. Nil for anything else, such as "ar:Name".
     private static func seconds(_ stamp: Substring) -> Double? {
         let parts = stamp.split(separator: ":", omittingEmptySubsequences: false)

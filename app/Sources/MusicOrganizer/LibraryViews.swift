@@ -5,6 +5,18 @@ extension Track {
     // Never-nil values, so a table column can sort by them.
     var sortDuration: Double { durationS ?? 0 }
     var sortYear: Int { year ?? 0 }
+    var sortGenre: String { genre ?? "" }
+    var sortAdded: String { acquired ?? "" }
+    /// "MP3 320", "AAC 128": what the audio is, for the Quality column.
+    var quality: String {
+        let kind = (format == "140" ? "aac" : format ?? "").uppercased()
+        return [kind, bitrateKbps.map(String.init) ?? ""].filter { !$0.isEmpty }.joined(separator: " ")
+    }
+    /// "1 Oct 2026": the day the song came into the library.
+    var addedDay: String {
+        guard let acquired, let date = ISO8601DateFormatter().date(from: acquired) else { return "" }
+        return date.formatted(date: .abbreviated, time: .omitted)
+    }
 }
 
 // MARK: lists of songs
@@ -50,6 +62,24 @@ struct SongList: View {
     @State private var ready = false
     @State private var selection = Set<Int>()
     @State private var sortOrder: [KeyPathComparator<TrackRow>] = []
+    /// Which columns show, and in what order: the owner's choice, kept for every list.
+    @AppStorage("songColumns") private var columns = TableColumnCustomization<TrackRow>()
+
+    /// The columns that can be shown or hidden, as (saved name, title).
+    private static let optional: [(id: String, title: String)] = [
+        ("artist", "Artist"), ("album", "Album"), ("year", "Year"), ("genre", "Genre"),
+        ("quality", "Quality"), ("added", "Added"), ("plays", "Plays"), ("time", "Time"),
+    ]
+    /// Hidden until the owner asks for them.
+    private static let hiddenAtFirst: Set<String> = ["genre", "quality", "added"]
+
+    private func isShown(_ id: String) -> Bool {
+        switch columns[visibility: id] {
+        case .visible: true
+        case .hidden: false
+        default: !Self.hiddenAtFirst.contains(id)
+        }
+    }
 
     private var playlist: Playlist? {
         if case .playlist(let id) = source { model.playlist(id) } else { nil }
@@ -134,6 +164,17 @@ struct SongList: View {
                 }
             }
             Spacer()
+            Menu {
+                ForEach(Self.optional, id: \.id) { column in
+                    Toggle(column.title, isOn: Binding(
+                        get: { isShown(column.id) },
+                        set: { columns[visibility: column.id] = $0 ? .visible : .hidden }))
+                }
+            } label: {
+                Label("Columns", systemImage: "tablecells")
+            }
+            .fixedSize()
+            .help("Choose what's shown beside each song")
             Button("Play", systemImage: "play.fill") { model.player.play(rows.map(\.track)) }
                 .help("Play these songs in order")
             Button("Shuffle", systemImage: "shuffle") { model.player.playShuffled(rows.map(\.track)) }
@@ -145,36 +186,63 @@ struct SongList: View {
     }
 
     private var table: some View {
-        Table(rows, selection: $selection, sortOrder: $sortOrder) {
+Table(rows, selection: $selection, sortOrder: $sortOrder, columnCustomization: $columns) {
             TableColumn("") { row in
                 // Table cells don't inherit the window's environment on macOS.
                 FavouriteButton(track: row.track).environment(model)
             }
             .width(20)
+            .customizationID("favourite")
+            .disabledCustomizationBehavior(.all)
             TableColumn("Title", value: \.track.title) { row in
                 SongTitle(track: row.track).environment(model)
             }
             .width(min: 200, ideal: 320)
+            .customizationID("title")
+            .disabledCustomizationBehavior(.visibility)
             TableColumn("Artist", value: \.track.artistName)
                 .width(min: 100, ideal: 200)
+                .customizationID("artist")
             TableColumn("Album", value: \.track.albumName)
                 .width(min: 100, ideal: 200)
+                .customizationID("album")
             TableColumn("Year", value: \.track.sortYear) { row in
                 Text(row.track.year.map(String.init) ?? "").foregroundStyle(.secondary)
             }
             .width(46)
+            .customizationID("year")
+            TableColumn("Genre", value: \.track.sortGenre) { row in
+                Text(row.track.sortGenre).foregroundStyle(.secondary)
+            }
+            .width(min: 60, ideal: 110)
+            .defaultVisibility(.hidden)
+            .customizationID("genre")
+            TableColumn("Quality", value: \.track.quality) { row in
+                Text(row.track.quality).foregroundStyle(.secondary)
+            }
+            .width(70)
+            .defaultVisibility(.hidden)
+            .customizationID("quality")
+            TableColumn("Added", value: \.track.sortAdded) { row in
+                Text(row.track.addedDay).foregroundStyle(.secondary)
+            }
+            .width(90)
+            .defaultVisibility(.hidden)
+            .customizationID("added")
             TableColumn("Plays", value: \.plays) { row in
                 Text(row.plays > 0 ? String(row.plays) : "")
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
             .width(40)
+            .customizationID("plays")
             TableColumn("Time", value: \.track.sortDuration) { row in
                 Text(clockTime(row.track.durationS))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
             .width(52)
+            .customizationID("time")
         }
         .background(FixedRows(height: 34))
         .contextMenu(forSelectionType: Int.self) { ids in

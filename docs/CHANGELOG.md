@@ -82,6 +82,13 @@
   - Local Visualizer was rebuilt on every visit and blurred its backdrop at full window size. It's now kept like the other pages, and blurs a tiny picture before stretching it.
 - Measured after: six switches between open pages gave one stall of 104 ms (before: a stall of 126 to 415 ms on every switch). With a song on, where the lyrics panel comes and goes and the table changes width, a switch still stalls for 120 to 185 ms. The first visit to a page still takes 0.3 to 0.5 s while its table is built.
 
+2026-10-03. Lyrics tools in Edit Details, and columns the owner chooses (the rest of parked Fix A-3's list).
+
+- **Find Timed Lyrics** (Edit Details): looks the song up by the title, artist and album typed in the sheet (`lyrics.find`: LRCLIB, then YouTube Music) and fills the lyrics box with what it finds. Nothing is saved until Save.
+- **Sync by Tapping** (Edit Details): the song plays from the start, and a tap or the space bar as each line begins records its time (0.15 s is taken off each tap, for the ear-to-hand delay). "Back One Line" and "Start Again" correct mistakes. The timed text goes back to the lyrics box, to be saved like any other lyrics.
+- **Columns:** a Columns menu on every song list shows or hides Artist, Album, Year, Genre, Quality, Added, Plays and Time (Genre, Quality and Added start hidden). Columns can also be dragged into another order. The choice is kept, and is the same for every list.
+- Not checked in the running app beyond "the lists still draw": Claude's tools can't open menus or right-click, so the Columns menu, Find Timed Lyrics and Sync by Tapping are for the owner to try.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

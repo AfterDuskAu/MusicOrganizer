@@ -84,6 +84,8 @@ final class AppModel {
     @ObservationIgnored private var engine: EngineProcess?
     @ObservationIgnored private var stopping = false
     @ObservationIgnored private var keyMonitor: Any?
+    /// While set, the space bar does this instead of play/pause (tap-along lyrics).
+    @ObservationIgnored var spaceBar: (() -> Void)?
     private static let rootKey = "libraryRoot"
 
     init() {
@@ -488,6 +490,24 @@ final class AppModel {
         return found.synced ?? found.plain ?? ""
     }
 
+    /// Look for timed lyrics for a song by its names (LRCLIB, then YouTube Music), for
+    /// the Edit Details sheet. Nothing is saved until the owner saves the sheet.
+    func findLyrics(
+        title: String, artist: String, album: String, for track: Track
+    ) async -> (text: String, timed: Bool, source: String?)? {
+        guard let connection = engine?.connection else { return nil }
+        var asked: [String: Any] = ["title": title]
+        if !artist.isEmpty { asked["artist"] = artist }
+        if !album.isEmpty { asked["album"] = album }
+        if let length = track.durationS { asked["duration_s"] = length }
+        if let videoId = track.sourceId { asked["video_id"] = videoId }
+        guard let found = try? await connection.call("lyrics.find", asked, as: FoundLyrics.self)
+        else { return nil }
+        if let synced = found.synced, !synced.isEmpty { return (synced, true, found.source) }
+        if let plain = found.plain, !plain.isEmpty { return (plain, false, found.source) }
+        return nil
+    }
+
     func saveEdit(
         of track: Track, changes: [String: Any], lyrics: String?, coverFile: URL?
     ) async throws {
@@ -549,9 +569,15 @@ final class AppModel {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard event.keyCode == 49,
-                event.modifierFlags.intersection([.command, .option, .control]).isEmpty,
-                !(event.window?.firstResponder is NSText)
+                event.modifierFlags.intersection([.command, .option, .control]).isEmpty
             else { return event }
+            let borrowed = MainActor.assumeIsolated { () -> Bool in
+                guard let action = self?.spaceBar else { return false }
+                action()
+                return true
+            }
+            if borrowed { return nil }
+            guard !(event.window?.firstResponder is NSText) else { return event }
             MainActor.assumeIsolated { self?.player.toggle() }
             return nil
         }
@@ -568,6 +594,12 @@ struct NamePrompt: Identifiable {
     let button: String
     let name: String
     let done: (String) -> Void
+}
+
+private struct FoundLyrics: Decodable {
+    let synced: String?
+    let plain: String?
+    let source: String?
 }
 
 private struct Hello: Decodable {

@@ -21,6 +21,9 @@ struct EditSheet: View {
     @State private var coverFile: URL?
     @State private var saving = false
     @State private var problem: String?
+    @State private var looking = false
+    @State private var lyricsNote: String?
+    @State private var tapping = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -55,14 +58,25 @@ struct EditSheet: View {
                 .frame(width: 380)
             }
             VStack(alignment: .leading, spacing: 4) {
-                Text("Lyrics").font(.subheadline.weight(.medium))
+                HStack {
+                    Text("Lyrics").font(.subheadline.weight(.medium))
+                    Spacer()
+                    if looking { ProgressView().controlSize(.small) }
+                    Button("Find Timed Lyrics", action: findLyrics)
+                        .disabled(looking || lyricsAsLoaded == nil)
+                        .help("Look this song up by its title and artist, and fill the box with what's found")
+                    Button("Sync by Tapping…") { tapping = true }
+                        .disabled(LRC.words(of: lyrics).isEmpty)
+                        .help("Play the song and tap as each line starts, to time the words yourself")
+                }
+                .controlSize(.small)
                 TextEditor(text: $lyrics)
                     .font(.body.monospaced())
                     .frame(height: 190)
                     .overlay(RoundedRectangle(cornerRadius: 6).stroke(.quaternary))
                     .disabled(lyricsAsLoaded == nil)
-                Text("Type or paste the words. Lines that start with a time, like [01:23.45], "
-                    + "light up as the song plays. Empty the box to remove the lyrics.")
+                Text(lyricsNote ?? "Type or paste the words. Lines that start with a time, like "
+                    + "[01:23.45], light up as the song plays. Empty the box to remove the lyrics.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -81,6 +95,13 @@ struct EditSheet: View {
         }
         .padding(20)
         .frame(width: 600)
+        .sheet(isPresented: $tapping) {
+            TapSyncSheet(track: track, words: LRC.words(of: lyrics)) { timed in
+                lyrics = timed
+                lyricsNote = "Timed by tapping. Save to keep it."
+            }
+            .environment(model)
+        }
         .task {
             title = track.title
             artist = track.artist ?? ""
@@ -92,6 +113,28 @@ struct EditSheet: View {
             let text = await model.lyricsText(for: track)
             lyrics = text
             lyricsAsLoaded = text
+        }
+    }
+
+    private func findLyrics() {
+        looking = true
+        lyricsNote = nil
+        Task {
+            let found = await model.findLyrics(
+                title: title.trimmingCharacters(in: .whitespaces),
+                artist: artist.trimmingCharacters(in: .whitespaces),
+                album: album.trimmingCharacters(in: .whitespaces), for: track)
+            looking = false
+            guard let found else {
+                lyricsNote = "No lyrics were found for this title and artist. Check the names "
+                    + "above, or type the words and use Sync by Tapping."
+                return
+            }
+            lyrics = found.text
+            let from = found.source.map { " from \($0)" } ?? ""
+            lyricsNote = found.timed
+                ? "Found timed lyrics\(from). Save to keep them."
+                : "Found the words\(from), but not timed. Use Sync by Tapping to time them, or save as they are."
         }
     }
 

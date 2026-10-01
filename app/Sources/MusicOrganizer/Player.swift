@@ -67,6 +67,13 @@ final class Player {
 
     // MARK: what the screens call
 
+    /// The position right now, to the hundredth of a second (the clock only moves five
+    /// times a second, which is too coarse for timing lyrics by ear).
+    var exactTime: Double {
+        let seconds = audio.currentTime().seconds
+        return seconds.isFinite ? max(0, seconds) : 0
+    }
+
     func play(_ tracks: [Track], startAt index: Int = 0) {
         queue.play(tracks, startAt: index)
         start(queue.current)

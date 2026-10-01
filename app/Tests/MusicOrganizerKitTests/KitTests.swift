@@ -18,6 +18,14 @@ final class LRCTests: XCTestCase {
         XCTAssertEqual(lines.map(\.id), [0, 1, 2, 3, 4])
     }
 
+    func testWordsAndBackToTimedText() {
+        let words = LRC.words(of: "[ar:Band]\n[00:12.50]First line\n\n  Second line  \n[00:01.00][01:05]Chorus")
+        XCTAssertEqual(words, ["First line", "Second line", "Chorus"])
+        let text = LRC.text(of: [(1.0, "First line"), (65.257, "Second line"), (600, "Chorus")])
+        XCTAssertEqual(text, "[00:01.00]First line\n[01:05.26]Second line\n[10:00.00]Chorus")
+        XCTAssertEqual(LRC.parse(text).map(\.text), ["First line", "Second line", "Chorus"])
+    }
+
     func testCurrentLine() {
         let lines = LRC.parse("[00:10.00]a\n[00:20.00]b\n[00:30.00]c")
         XCTAssertNil(LRC.current(at: 5, in: lines))
