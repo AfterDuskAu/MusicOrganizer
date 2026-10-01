@@ -7,9 +7,8 @@ Most of these came from comparing the engine with the Photonizer project's lesso
 ## Needs the owner's decision
 
 - **Saving a song's video (MP4): decided in part, not built** (owner, 2026-10-01).
-  - Decided: saved videos show under Discover → Downloads, and under Library → Videos once moved into the library. **Rule 6 may be changed** to allow a video file (an H.264 picture stream, up to 1080p, joined to the format-140 sound by ffmpeg without converting either). **The size saved is the one chosen in the player.**
+  - Decided: saved videos show under Discover → Downloads, and under Library → Videos once moved into the library. **Rule 6 may be changed** to allow a video file (an H.264 picture stream, up to 1080p, joined to the format-140 sound by ffmpeg without converting either). **The size saved is the one chosen in the player.** **Songs and videos share one daily limit** (250 a day, 300 at most): a video counts as one download.
   - Still to settle, with Claude's suggestions:
-    - *Does a video count toward the daily download limit* (250 a day, 300 at most)? Suggested: yes, as one download. The limit is about how often YouTube is asked, not about size.
     - *Where a video is found to save:* suggested, a Songs / Videos switch on the YouTube Music page (videos kept apart from songs, as YouTube Music keeps them), and a Save Video button beside the video on the Local Visualizer.
     - *A saved video needs no separate audio copy:* its sound is inside it, at the same quality as a downloaded song, and the app can play it with or without the picture. A music video is often a different cut from the album song, so the song stays its own download.
     - The library contract's part: which folder videos live in, how they're named, tagged and indexed, and what "moved into the library" does (Discover → Downloads is a list in the app today, not a folder).
