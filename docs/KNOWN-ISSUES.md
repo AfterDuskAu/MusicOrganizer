@@ -21,6 +21,17 @@ Most of these came from comparing the engine with the Photonizer project's lesso
   - Proposed: one read-only review session of fileops' guard, reserve-then-replace, recovery and undo; the pipeline's commit and undo; queue recovery; and state.json writes.
   - Run it after 09b's calibration run and before `plan replace` without `--stage-only`. Decide: yes or no.
 
+## The Mac app (owner's notes after first use, 2026-10-01; to fix later)
+
+- **It feels glitchy and slow:** slow to scroll, slow to follow clicks.
+  - Likely causes to measure first (Photonizer's rule: measure before fixing): the song table is filtered and sorted again every time anything on screen changes; every visible row starts its own cover load; the player bar and the rows all redraw when the playing song changes.
+  - Fixes to try: work the list out once per change and off the main thread; keep rows' identity stable; load covers through a small queue; check the app in a 60-second scroll with nothing else running (the first impressions were formed while a 1,063-song copy and the test suite were running on the same Mac).
+- **The lyrics jump about ("spaz") as they move.** The view scrolls with an animation on every new line, inside a lazily built list whose row heights aren't known ahead, and the current line changes weight (bold), which changes its height mid-scroll. Fix: fixed layout for every line (no weight change, or a scale/colour change only), and one smooth scroll.
+- **Remember where the owner was.** Moving between Songs, Albums, a playlist and so on always starts at the top. Each list should come back at the scroll position, selection and sort order it was left with, and the app should reopen on the section it was closed on.
+- **A rip whose file name has no extension can't be copied in.** One of 1,063 unconfirmed copies failed this way on 2026-10-01: the file's name ends "(320 kbps (2)" with no ".mp3", so the staged copy's "extension" is everything after the first dot in "Y2meta.app". The scan knows it's an MP3; the adopt should name the staged copy by the detected format, not the file name.
+- **"Reading your library…" takes a minute or more after a big import.** The first `library.tracks` after new songs arrive reads each new file's tags from disk, and on the iMac's disk that is slow for files not read recently (about 90 seconds for 1,062 new songs on 2026-10-01; this was also the unexplained slow first launch). After that it's instant. Fix: the adopt and replace jobs already hold each song's tags, so they should store the app's details in the index as they go; and the app should show progress instead of a bare spinner.
+- **Unconfirmed copies keep junk from the rip's own tags**, such as an album called after a download site. They're fixed when the song is identified; a clean-up of obvious junk could come sooner.
+
 ## For later steps
 
 - **Step 11 (RPC):** treat the app stopping the engine (SIGTERM) like Ctrl-C: finish or requeue the current job cleanly. Today only Ctrl-C is handled, so a stop counts as a crash. The crash-loop guard sets a job aside after 5 of those.
