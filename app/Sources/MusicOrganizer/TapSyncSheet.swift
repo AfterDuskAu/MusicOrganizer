@@ -53,6 +53,12 @@ struct TapSyncSheet: View {
                 Button(started ? "Start Again" : "Start", action: start)
                 Button("Back One Line") { if !times.isEmpty { times.removeLast() } }
                     .disabled(times.isEmpty)
+                Button("−5 s") { skip(-5) }
+                    .disabled(!started)
+                    .help("Take the song back 5 seconds. Lines tapped after that point are cleared, to tap again.")
+                Button("+5 s") { skip(5) }
+                    .disabled(!started)
+                    .help("Move the song on 5 seconds")
                 Spacer()
                 Text("\(times.count) of \(words.count)").foregroundStyle(.secondary).monospacedDigit()
                 Button(action: tap) {
@@ -85,6 +91,14 @@ struct TapSyncSheet: View {
         times = []
         started = true
         model.player.play([track])
+    }
+
+    /// Move the song back or forward. Going back clears the lines tapped after the new
+    /// position, so they can be tapped again as the song reaches them.
+    private func skip(_ seconds: Double) {
+        let position = max(0, model.player.exactTime + seconds)
+        model.player.seek(to: position)
+        if seconds < 0 { times.removeAll { $0 > position } }
     }
 
     private func tap() {
