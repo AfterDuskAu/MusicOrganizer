@@ -6,6 +6,8 @@
   numbers for downloads (step 09a).
 - `download_audio(video_id, dest_dir)`: format 140 through yt-dlp (step 09a). Only the
   queue calls it (rule 8: downloads happen only through the throttled queue).
+- `stream(video_id)`, `find_video(title, artist)` and `video(video_id)`: where the app can
+  play a song, or its official video, from right now (v0.2). Nothing is downloaded.
 
 Every request goes through one rate limiter per process (`limiter()`): at most one
 request per 1.5 s (±0.5 s jitter), exponential backoff when YouTube refuses (HTTP 429)
@@ -54,12 +56,13 @@ from musicorg.errors import (
     YouTubeRefusedError,
 )
 from musicorg.naming import STAGING_DIR
-from musicorg.normalize import compare_key
+from musicorg.normalize import SOFT_VERSION_KINDS, Parsed, compare_key, parse_title
 
 log = logging.getLogger(__name__)
 
 REPLAY_ENV = "MUSICORG_REPLAY_DIR"
 OFFICIAL_AUDIO = "MUSIC_VIDEO_TYPE_ATV"
+OFFICIAL_VIDEO = "MUSIC_VIDEO_TYPE_OMV"
 SEARCH_CACHE_DAYS = 30
 
 MIN_INTERVAL_S = 1.5
@@ -262,6 +265,63 @@ def _thumbnails(raw: Any) -> tuple[tuple[str, int, int], ...]:
 
 
 # ---- lyrics and pictures (step 10) ------------------------------------------------------
+
+
+def find_video(title: str, artist: str, *, cache: SearchCache | None = None) -> Candidate | None:
+    """The official music video YouTube Music has for a song, or None (v0.2). One
+    "videos" search, cached for 30 days like a song search.
+
+    Only a video YouTube Music itself marks as the artist's official one
+    (`MUSIC_VIDEO_TYPE_OMV`) is taken, and only if it's the same song: the same title
+    once "(Official Video)" and the like are set aside, the same version (a remix isn't
+    the original), and an artist in common. Uploads by other people (lyric videos,
+    fan edits: `MUSIC_VIDEO_TYPE_UGC`) are never taken, so plenty of songs have none.
+
+    Checked against ytmusicapi 1.12.3: a "videos" result carries `resultType` "video",
+    `videoId`, `title`, `artists[].name`, `videoType` and `duration_seconds`, and no
+    album."""
+    query = f"{artist} {title}".strip()
+    key = query_key(query)
+    cache_key = f"videos {key}"
+    raw = None if cache is None else cache.cached_search(cache_key, max_age_days=SEARCH_CACHE_DAYS)
+    if raw is None:
+        raw = _fetch("videos", key, lambda client: client.search(query, filter="videos", limit=10))
+        if cache is not None:
+            cache.put_search(cache_key, raw)
+    if not isinstance(raw, list):
+        raise YouTubeError(f"YouTube Music's search for {query!r} gave an answer we can't read.")
+    wanted = parse_title(title)
+    for result in raw:
+        if not isinstance(result, dict) or result.get("videoType") != OFFICIAL_VIDEO:
+            continue
+        duration = _int(result.get("duration_seconds")) or parse_length(result.get("duration"))
+        found = _from_track(result, duration=duration)
+        if found is not None and _same_song(wanted, artist, found):
+            return found
+    return None
+
+
+def _same_song(wanted: Parsed, artist: str, found: Candidate) -> bool:
+    theirs = parse_title(found.title)
+    if compare_key(wanted.title) != compare_key(theirs.title) or not compare_key(wanted.title):
+        return False
+    if _hard_versions(wanted) != _hard_versions(theirs):
+        return False
+    credit = f" {_artist_key(artist)} "
+    return any(f" {_artist_key(name)} " in credit for name in found.artists if _artist_key(name))
+
+
+def _artist_key(name: str) -> str:
+    """An artist's name for comparing, without "the": the library may say "Notorious
+    B.I.G." where YouTube Music says "The Notorious B.I.G."."""
+    key = compare_key(name)
+    return " ".join(word for word in key.split() if word != "the") or key
+
+
+def _hard_versions(parsed: Parsed) -> set[str]:
+    """The version words that make it a different recording ("remix", "live"), without
+    the ones that don't ("remaster", "explicit")."""
+    return {t for t in parsed.version_tokens if t.partition(":")[0] not in SOFT_VERSION_KINDS}
 
 
 @dataclass(frozen=True)
@@ -539,12 +599,77 @@ class Stream:
     duration_s: float | None
 
 
+@dataclass(frozen=True)
+class VideoQuality:
+    """One size of a video's picture, as an address to play it from (no sound in it)."""
+
+    height: int  # 1080 for "1080p"
+    fps: int
+    url: str
+
+    @property
+    def label(self) -> str:
+        return f"{self.height}p{self.fps}" if self.fps > 30 else f"{self.height}p"
+
+
+@dataclass(frozen=True)
+class Video:
+    """A video the app can play: its sound, and its picture in each size on offer."""
+
+    video_id: str
+    audio: Stream
+    qualities: tuple[VideoQuality, ...]  # the sharpest first
+
+
 def stream(video_id: str) -> Stream:
     """The address of a video's format-140 audio, for the app to play (v0.2). Nothing is
     downloaded or written. The address is YouTube's and stops working after a few
     hours, so it's asked for each time a song is played, through the shared rate limiter.
 
     Raises the same errors as `download_audio`."""
+    return _audio_of(video_id, _look_up(video_id))
+
+
+def video(video_id: str) -> Video:
+    """A video's sound and its picture sizes, for the app to play together (v0.2).
+    Nothing is downloaded or written, and it's one request to YouTube, like `stream`.
+
+    Only pictures Apple's player can show are listed: H.264 in MP4, served whole over
+    https, which YouTube offers from 144p up to 1080p. Its 1440p and 4K pictures are
+    VP9 or AV1 only, and aren't listed. Checked against yt-dlp 2026.08.19: each entry of
+    `formats` carries `vcodec` ("avc1.640028"), `acodec` ("none" for picture only),
+    `ext`, `protocol` ("https" or "m3u8_native"), `height`, `fps`, `tbr` and `url`."""
+    info = _look_up(video_id)
+    best: dict[tuple[int, int], tuple[float, str]] = {}
+    for found in info.get("formats") or []:
+        if not isinstance(found, dict) or not _is_playable_picture(found):
+            continue
+        key = (int(found["height"]), round(float(found.get("fps") or 0)))
+        rate = float(found.get("tbr") or 0)
+        if key not in best or rate > best[key][0]:
+            best[key] = (rate, found["url"])
+    qualities = tuple(
+        VideoQuality(height, fps, best[height, fps][1])
+        for height, fps in sorted(best, reverse=True)
+    )
+    return Video(video_id, _audio_of(video_id, info), qualities)
+
+
+def _is_playable_picture(found: dict[str, Any]) -> bool:
+    address = found.get("url")
+    return (
+        str(found.get("vcodec") or "").startswith("avc1")
+        and str(found.get("acodec") or "none") == "none"
+        and found.get("ext") == "mp4"
+        and found.get("protocol") == "https"
+        and isinstance(found.get("height"), int)
+        and isinstance(address, str)
+        and address.startswith("https://")
+    )
+
+
+def _look_up(video_id: str) -> dict[str, Any]:
+    """What YouTube says about a video right now (yt-dlp, nothing downloaded)."""
     if not VIDEO_ID.fullmatch(video_id):
         raise YouTubeError(f"{video_id!r} isn't a YouTube video id.")
     url = f"https://www.youtube.com/watch?v={video_id}"
@@ -559,7 +684,13 @@ def stream(video_id: str) -> Stream:
         raise
     except Exception as exc:
         raise download_problem(video_id, exc) from exc
-    address = info.get("url") if isinstance(info, dict) else None
+    if not isinstance(info, dict):
+        raise DownloadError(f"YouTube gave no address to play {video_id} from.")
+    return info
+
+
+def _audio_of(video_id: str, info: dict[str, Any]) -> Stream:
+    address = info.get("url")
     if not isinstance(address, str) or not address.startswith("https://"):
         raise DownloadError(f"YouTube gave no address to play {video_id} from.")
     if str(info.get("format_id") or "") != DOWNLOAD_FORMAT:

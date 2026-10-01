@@ -5,7 +5,7 @@ import SwiftUI
 ///
 /// A SwiftUI `Table` on the Mac is an AppKit table that, left alone, measures the height
 /// of every row as it comes into view by laying out all its cells. Profiling (Fix A-1,
-/// 2026-10-02) showed that measuring was nearly all of the freeze on each click and
+/// 2026-10-01) showed that measuring was nearly all of the freeze on each click and
 /// scroll. Our rows are all the same height, so the table is told the height instead.
 struct FixedRows: NSViewRepresentable {
     let height: CGFloat

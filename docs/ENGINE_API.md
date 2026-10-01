@@ -117,12 +117,13 @@ Exit codes:
 | `journal.undo` | `{ "batch_id", "dry_run"?: true }` (a dry run unless `dry_run` is `false`) | `{ "operations": [..] }` for a dry run, else `{ "job_id" }` |
 | `search.ytmusic` | `{ "query", "limit"?: 10 }` (limit 1–100; the app's "show more" asks again with a bigger limit) | `{ "results": [Candidate] }` (`score` null; `candidate_id` made from the videoId) |
 | `youtube.stream` | `{ "video_id" }` | `{ "url", "http_headers", "duration_s" }`: where the app can play the song's audio (format 140) from right now. Nothing is downloaded or saved. The address expires, so the app asks each time it plays. |
+| `youtube.video` | `{ "title", "artist" }` (the song) | `{ "found": false }` when YouTube Music has no official video for the song (only a video it marks as the artist's own counts, of the same version of the song; other people's uploads never do). Otherwise `{ "found": true, "video_id", "title", "duration_s", "http_headers", "audio_url", "qualities": [{ "label", "height", "fps", "url" }] }`: the video's sound (format 140) and its picture in each size the app can show (H.264, 144p to 1080p, the sharpest first), as separate addresses the app plays together. Nothing is downloaded or saved. The addresses expire, so the app asks again when one stops working; the search behind it is kept for 30 days. |
 | `lyrics.find` | `{ "title", "artist"?, "album"?, "duration_s"?, "video_id"? }` | `{ "synced", "plain", "source" }`: lyrics for a song being played from YouTube Music (LRCLIB, then YouTube Music), with the usual length and version checks. Nothing is saved; either may be null. |
 | `queue.jobs` | `{ "batch_id" }` | `{ "jobs": [{ "job_id", "kind", "state", "reason", "message" }] }`: how a batch's jobs ended, so the app can say what happened to a download or an edit |
 | `settings.get` | — | `{ "daily_cap", "daily_cap_default", "daily_cap_max" }`: the engine's settings the app shows (kept in `config.json`) |
 | `settings.set` | `{ "daily_cap"? }` (1 to `daily_cap_max`, which is 300) | the same as `settings.get`. A new cap applies from the next queue run. |
 
-**RPC-only:** `plan.create` with kind `edit` (the app's Edit Details sheet), `youtube.stream`, `lyrics.find`, `listening.*`, `playlist.*`.
+**RPC-only:** `plan.create` with kind `edit` (the app's Edit Details sheet), `youtube.stream`, `youtube.video`, `lyrics.find`, `listening.*`, `playlist.*`.
 
 **CLI-only in v0.1** (RPC comes with the v0.2 app when needed): `sources.remove`, `index.rebuild`, `report`, `review export/import`, `lyrics`, `artwork`, `doctor`.
 

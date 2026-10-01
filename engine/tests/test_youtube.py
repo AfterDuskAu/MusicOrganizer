@@ -83,6 +83,60 @@ def test_get_track_refuses_a_different_track(
     assert youtube.get_track("aaaaaaaaaaa") is None
 
 
+def test_find_video_takes_only_the_artists_official_video() -> None:
+    """Recorded "videos" searches: the official video of the same song, or nothing."""
+    found = youtube.find_video("Work Out", "J. Cole")
+    assert found is not None
+    assert (found.video_id, found.title, found.artists) == ("W5hSdGt2M8w", "Work Out", ("J. Cole",))
+    assert found.video_type == youtube.OFFICIAL_VIDEO
+    assert found.duration_s == 245  # the video runs longer than the song (236 s)
+    # Only other people's uploads, and another artist's official video: nothing is taken.
+    assert youtube.find_video("cLOUDs", "J. Cole") is None
+    remix = youtube.find_video("Crave You (Adventure Club Remix)", "Flight Facilities")
+    assert remix is not None and remix.title.startswith("Crave You (Adventure Club Remix)")
+
+
+def test_a_video_of_another_version_or_artist_isnt_the_songs() -> None:
+    from musicorg.normalize import parse_title
+
+    remix = youtube.find_video("Crave You (Adventure Club Remix)", "Flight Facilities")
+    assert remix is not None
+    assert not youtube._same_song(parse_title("Crave You"), "Flight Facilities", remix)
+    assert not youtube._same_song(parse_title(remix.title), "Somebody Else", remix)
+    assert not youtube._same_song(parse_title(remix.title), "", remix)
+    # "The" in an artist's name doesn't count: libraries and YouTube Music differ on it.
+    assert youtube._same_song(
+        parse_title("Crave You (Adventure Club Remix)"), "The Flight Facilities", remix
+    )
+    assert youtube._artist_key("The Notorious B.I.G.") == youtube._artist_key("Notorious B.I.G.")
+    assert youtube._artist_key("The The") == "the the"
+    assert youtube._same_song(  # a remaster is the same recording, and so is a second artist
+        parse_title("Crave You - Adventure Club Remix (2019 Remaster)"),
+        "Flight Facilities, Giselle",
+        remix,
+    )
+
+
+def test_video_searches_are_cached_apart_from_song_searches(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class Cache:
+        def __init__(self) -> None:
+            self.kept: dict[str, Any] = {}
+
+        def cached_search(self, key: str, *, max_age_days: float) -> Any | None:
+            return self.kept.get(key)
+
+        def put_search(self, key: str, response: Any) -> None:
+            self.kept[key] = response
+
+    cache = Cache()
+    assert youtube.find_video("Work Out", "J. Cole", cache=cache) is not None
+    assert list(cache.kept) == ["videos j cole work out"]
+    monkeypatch.setattr(youtube, "_fetch", lambda *a: pytest.fail("asked YouTube again"))
+    assert youtube.find_video("Work Out", "J. Cole", cache=cache) is not None
+
+
 def test_get_album() -> None:
     album = youtube.get_album("MPREb_blrjqA5PY0E")
     assert (album.title, album.artists, album.year, album.track_count) == (

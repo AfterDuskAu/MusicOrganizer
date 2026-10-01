@@ -12,7 +12,16 @@ final class PlaybackClock {
     var duration: Double = 0
 }
 
-/// Plays the library's files. It opens them for reading and never changes them.
+/// The video on screen: which one, and which size of its picture.
+struct ShowingVideo: Equatable {
+    let source: SongVideo
+    let quality: SongVideo.Quality
+    /// It's as long as the song, so the song's timed lyrics fit it too.
+    let keepsTime: Bool
+}
+
+/// Plays the library's files, and songs and their videos straight from YouTube. It opens
+/// the library's files for reading and never changes them, and it saves nothing.
 @MainActor
 @Observable
 final class Player {
@@ -21,6 +30,8 @@ final class Player {
     private(set) var isPlaying = false
     /// Waiting for YouTube to say where the song can be played from.
     private(set) var isFetching = false
+    /// The song has stopped to wait for more of itself to arrive.
+    private(set) var isBuffering = false
     var problem: String?
     var volume: Float = UserDefaults.standard.object(forKey: "volume") as? Float ?? 1 {
         didSet {
@@ -30,6 +41,16 @@ final class Player {
     }
     let clock = PlaybackClock()
 
+    /// Show each song's official video in place of its cover. Off whenever the app
+    /// starts: while it's on, a song's sound comes from its video, not the library's file.
+    private(set) var videoOn = false
+    /// The video that's playing, when there is one.
+    private(set) var video: ShowingVideo?
+    /// What to say where the video would be: still looking, or why there's none.
+    private(set) var videoNote: String?
+    /// The picture size last chosen. Nil is "the best there is".
+    private(set) var videoPreference = Player.savedPreference()
+
     @ObservationIgnored var root: URL?
     @ObservationIgnored var onTrackChange: ((Track?) -> Void)?
     @ObservationIgnored var onTick: ((Double) -> Void)?
@@ -37,8 +58,28 @@ final class Player {
     @ObservationIgnored var onFinished: ((Track) -> Void)?
     /// Where a YouTube video's audio can be played from (the engine asks YouTube).
     @ObservationIgnored var findStream: ((String) async throws -> (URL, [String: String], Double?))?
+    /// A song's official video, or nil if it has none (the engine asks YouTube Music).
+    @ObservationIgnored var findVideo: ((Track) async throws -> SongVideo?)?
     @ObservationIgnored private let audio = AVPlayer()
     @ObservationIgnored private var observers: [Any] = []
+
+    /// What the player has been given to play.
+    private enum Loaded { case file, youtubeSound, video }
+    @ObservationIgnored private var loaded = Loaded.file
+    /// Goes up whenever something new is started, so an answer from YouTube that arrives
+    /// after the owner has moved on is dropped.
+    @ObservationIgnored private var ticket = 0
+    /// How many fresh addresses have been asked for since this song was started.
+    @ObservationIgnored private var retries = 0
+    private static let maxRetries = 2
+    @ObservationIgnored private var itemWatch: NSKeyValueObservation?
+    @ObservationIgnored private var waitingWatch: NSKeyValueObservation?
+    @ObservationIgnored private var bufferingTimer: Task<Void, Never>?
+    /// The videos found so far, by song. Their addresses stop working after a few hours,
+    /// so each is kept for half an hour.
+    @ObservationIgnored private var videos: [String: (found: SongVideo?, at: Date)] = [:]
+    @ObservationIgnored private var lookUps: [String: Task<SongVideo?, Error>] = [:]
+    private nonisolated static let headersKey = "AVURLAssetHTTPHeaderFieldsKey"
 
     init() {
         audio.volume = volume
@@ -62,8 +103,19 @@ final class Player {
                 let item = note.object as? AVPlayerItem
                 MainActor.assumeIsolated { self?.failed(item) }
             })
+        waitingWatch = audio.observe(\.timeControlStatus) { [weak self] player, _ in
+            let waiting = player.timeControlStatus == .waitingToPlayAtSpecifiedRate
+            Task { @MainActor in self?.waitingChanged(waiting) }
+        }
         setUpMediaKeys()
     }
+
+    /// The player itself, for the view that shows a video's picture.
+    var screen: AVPlayer { audio }
+
+    /// False while a video that isn't the song second for second is playing: the song's
+    /// timed lyrics don't fit it.
+    var lyricsInTime: Bool { loaded != .video || video?.keepsTime ?? true }
 
     // MARK: what the screens call
 
@@ -87,10 +139,13 @@ final class Player {
     }
 
     func toggle() {
-        guard current != nil, !isFetching else { return }
+        guard let current, !isFetching else { return }
         if isPlaying {
             audio.pause()
             isPlaying = false
+        } else if audio.currentItem == nil || audio.currentItem?.status == .failed {
+            start(current)  // it never got going (YouTube refused it): ask afresh
+            return
         } else {
             audio.play()
             isPlaying = true
@@ -136,75 +191,302 @@ final class Player {
     }
 
     func stop() {
+        ticket += 1
         audio.pause()
         audio.replaceCurrentItem(with: nil)
         queue.play([])
         current = nil
         isPlaying = false
         isFetching = false
+        video = nil
+        videoNote = nil
         clock.time = 0
         clock.duration = 0
         onTrackChange?(nil)
         publishNowPlaying()
     }
 
+    // MARK: the song's video
+
+    /// Show the song's official video, or go back to its cover.
+    func setVideo(_ on: Bool) {
+        guard on != videoOn else { return }
+        videoOn = on
+        guard let track = current else { return }
+        if on {
+            // The sound carries on while the video is looked for, if there is any yet.
+            let nothingYet = isFetching || audio.currentItem == nil
+            startVideo(
+                track, at: exactTime, interrupt: nothingYet, playing: nothingYet || isPlaying)
+            return
+        }
+        videoNote = nil
+        let showing = loaded == .video && audio.currentItem != nil
+        let keepsTime = video?.keepsTime ?? false
+        video = nil
+        if showing {
+            startSound(track, at: keepsTime ? exactTime : 0, playing: isPlaying)
+        } else if isFetching {  // it was waiting for its video
+            startSound(track, at: 0, playing: true)
+        } else {
+            ticket += 1  // a video still being looked for isn't wanted any more
+        }
+    }
+
+    /// Choose the picture's size, as on YouTube. Nil is "the best there is". It's
+    /// remembered for the videos that follow.
+    func setQuality(_ quality: SongVideo.Quality?) {
+        videoPreference = quality.map { VideoPreference(height: $0.height, label: $0.label) }
+        UserDefaults.standard.set(
+            videoPreference.flatMap { try? JSONEncoder().encode($0) }, forKey: "videoPreference")
+        guard let showing = video, let track = current, loaded == .video else { return }
+        let wanted = showing.source.quality(for: videoPreference)
+        guard wanted != showing.quality else { return }
+        let mine = nextTicket()
+        Task {
+            do {
+                // The size on screen plays on until the new one is ready to take over.
+                let item = try await Self.joined(showing.source, wanted)
+                guard ticket == mine else { return }
+                video = ShowingVideo(
+                    source: showing.source, quality: wanted, keepsTime: showing.keepsTime)
+                videoNote = nil
+                begin(
+                    track, item, .video, at: exactTime, playing: isPlaying,
+                    length: showing.source.length)
+            } catch {
+                guard ticket == mine else { return }
+                videoNote = "\(wanted.label) couldn't be loaded: \(error.localizedDescription)"
+            }
+        }
+    }
+
+    private static func savedPreference() -> VideoPreference? {
+        UserDefaults.standard.data(forKey: "videoPreference").flatMap {
+            try? JSONDecoder().decode(VideoPreference.self, from: $0)
+        }
+    }
+
     // MARK: playing
+
+    private func nextTicket() -> Int {
+        ticket += 1
+        return ticket
+    }
 
     private func start(_ track: Track?) {
         guard let track else { return }
+        retries = 0
+        video = nil
+        videoNote = nil
+        if videoOn {
+            startVideo(track, at: 0, interrupt: true, playing: true)
+        } else {
+            startSound(track, at: 0, playing: true)
+        }
+    }
+
+    /// The song's own sound: the library's file, or YouTube's audio for a song that
+    /// isn't in the library.
+    private func startSound(_ track: Track, at position: Double, playing: Bool) {
         if let videoId = track.videoId {
-            startFromYouTube(track, videoId)
+            startFromYouTube(track, videoId, at: position, playing: playing)
             return
         }
+        ticket += 1
+        isFetching = false
         guard let root else { return }
         let url = root.appendingPathComponent(track.path)
         guard FileManager.default.isReadableFile(atPath: url.path) else {
             problem = "“\(track.title)” isn't where the library says it is. Try File → Reload Library."
             return
         }
-        begin(track, AVPlayerItem(url: url))
+        begin(track, AVPlayerItem(url: url), .file, at: position, playing: playing)
     }
 
-    /// Nothing is saved: the audio is played from YouTube's own address for it.
-    private func startFromYouTube(_ track: Track, _ videoId: String) {
-        guard let findStream else { return }
+    /// Nothing can play yet: YouTube is being asked where the song or its video is.
+    private func wait(for track: Track, at position: Double) {
         audio.pause()
         audio.replaceCurrentItem(with: nil)
+        itemWatch = nil
+        let changed = current != track
         current = track
         isPlaying = false
         isFetching = true
         problem = nil
-        clock.time = 0
-        clock.duration = track.durationS ?? 0
-        onTrackChange?(track)
+        clock.time = position
+        if changed {
+            clock.duration = track.durationS ?? 0
+            onTrackChange?(track)
+        }
         publishNowPlaying()
+    }
+
+    /// Nothing is saved: the audio is played from YouTube's own address for it.
+    private func startFromYouTube(
+        _ track: Track, _ videoId: String, at position: Double, playing: Bool
+    ) {
+        guard let findStream else { return }
+        let mine = nextTicket()
+        wait(for: track, at: position)
         Task {
             do {
                 let (url, headers, length) = try await findStream(videoId)
-                guard current == track else { return }  // another song was chosen meanwhile
-                let asset = AVURLAsset(url: url, options: ["AVURLAssetHTTPHeaderFieldsKey": headers])
-                begin(track, AVPlayerItem(asset: asset))
-                if clock.duration <= 0, let length { clock.duration = length }
+                guard ticket == mine else { return }  // something else was chosen meanwhile
+                let asset = AVURLAsset(
+                    url: Spoil.address(url), options: [Self.headersKey: headers])
+                begin(
+                    track, AVPlayerItem(asset: asset), .youtubeSound, at: position,
+                    playing: playing, length: (track.durationS ?? 0) > 0 ? nil : length)
             } catch {
-                guard current == track else { return }
+                guard ticket == mine else { return }
                 isFetching = false
                 problem = "“\(track.title)” can't be played from YouTube: \(error.localizedDescription)"
             }
         }
     }
 
-    private func begin(_ track: Track, _ item: AVPlayerItem) {
+    /// The song's official video, picture and sound. With `interrupt`, nothing plays
+    /// while it's looked for (a song that's only starting); without, the sound that's
+    /// on carries on until the video is ready to take over. A song with no video plays
+    /// as it always does.
+    ///
+    /// `position` is a place in the song, unless `inVideoTime` says it's one in the
+    /// video (a video being started again where it stopped).
+    private func startVideo(
+        _ track: Track, at position: Double, interrupt: Bool, playing: Bool,
+        inVideoTime: Bool = false
+    ) {
+        guard findVideo != nil else {
+            if interrupt { startSound(track, at: position, playing: playing) }
+            return
+        }
+        let mine = nextTicket()
+        if interrupt { wait(for: track, at: position) }
+        videoNote = "Looking for this song's video…"
+        Task {
+            do {
+                guard let found = try await lookUpVideo(of: track) else {
+                    guard ticket == mine else { return }
+                    videoNote = "YouTube Music has no official video for this song."
+                    if interrupt {
+                        startSound(track, at: inVideoTime ? 0 : position, playing: playing)
+                    }
+                    return
+                }
+                guard ticket == mine else { return }
+                let quality = found.quality(for: videoPreference)
+                let item = try await Self.joined(found, quality)
+                guard ticket == mine else { return }
+                let keepsTime = found.keepsTime(with: track.durationS)
+                // A video that isn't the song second for second starts at its beginning.
+                let place = interrupt ? position : exactTime
+                video = ShowingVideo(source: found, quality: quality, keepsTime: keepsTime)
+                videoNote = nil
+                begin(
+                    track, item, .video, at: keepsTime || inVideoTime ? place : 0,
+                    playing: interrupt ? playing : isPlaying, length: found.length)
+            } catch {
+                guard ticket == mine else { return }
+                videos[track.id] = nil  // its addresses may be the trouble: ask afresh
+                if retries < Self.maxRetries {
+                    retries += 1
+                    startVideo(
+                        track, at: position, interrupt: interrupt, playing: playing,
+                        inVideoTime: inVideoTime)
+                    return
+                }
+                videoNote = "This song's video couldn't be loaded: \(error.localizedDescription)"
+                if interrupt {
+                    retries = 0
+                    startSound(track, at: inVideoTime ? 0 : position, playing: playing)
+                }
+            }
+        }
+    }
+
+    private func lookUpVideo(of track: Track) async throws -> SongVideo? {
+        if let kept = videos[track.id], Date().timeIntervalSince(kept.at) < 30 * 60 {
+            return kept.found
+        }
+        if let running = lookUps[track.id] { return try await running.value }
+        guard let findVideo else { return nil }
+        let asking = Task { try await findVideo(track) }
+        lookUps[track.id] = asking
+        defer { lookUps[track.id] = nil }
+        let found = try await asking.value
+        videos[track.id] = (found, Date())
+        return found
+    }
+
+    /// Finding a video takes YouTube five to ten seconds. The next song's is looked for
+    /// while this one plays, so one video follows another without a silence.
+    private func lookAhead() {
+        guard videoOn, let next = queue.upNext.first else { return }
+        Task { _ = try? await lookUpVideo(of: next) }
+    }
+
+    /// YouTube serves a video's picture and its sound apart. Joined into one item they
+    /// play, pause and seek as one, so they can't drift apart.
+    private static func joined(
+        _ video: SongVideo, _ quality: SongVideo.Quality
+    ) async throws -> AVPlayerItem {
+        AVPlayerItem(
+            asset: try await join(
+                picture: Spoil.address(quality.url), sound: video.sound, headers: video.headers,
+                length: video.length))
+    }
+
+    /// Not on the main thread: opening the two addresses and joining them is real work.
+    private nonisolated static func join(
+        picture: URL, sound: URL, headers: [String: String], length: Double
+    ) async throws -> AVAsset {
+        let options: [String: Any] = [headersKey: headers]
+        let pictureAsset = AVURLAsset(url: picture, options: options)
+        let soundAsset = AVURLAsset(url: sound, options: options)
+        guard let pictureTrack = try await pictureAsset.loadTracks(withMediaType: .video).first,
+            let soundTrack = try await soundAsset.loadTracks(withMediaType: .audio).first
+        else { throw CocoaError(.fileReadCorruptFile) }
+        // Each of YouTube's streams claims to be twice as long as it is, so the length
+        // YouTube gave for the video is the one that's used.
+        let whole = AVMutableComposition()
+        let wanted = CMTime(seconds: length, preferredTimescale: 600)
+        for (track, kind) in [(pictureTrack, AVMediaType.video), (soundTrack, .audio)] {
+            let has = try await track.load(.timeRange).duration
+            guard
+                let part = whole.addMutableTrack(
+                    withMediaType: kind, preferredTrackID: kCMPersistentTrackID_Invalid)
+            else { throw CocoaError(.fileReadCorruptFile) }
+            try part.insertTimeRange(
+                CMTimeRange(start: .zero, duration: CMTimeMinimum(wanted, has)), of: track,
+                at: .zero)
+        }
+        return whole
+    }
+
+    private func begin(
+        _ track: Track, _ item: AVPlayerItem, _ kind: Loaded, at position: Double = 0,
+        playing: Bool = true, length: Double? = nil
+    ) {
         problem = nil
         isFetching = false
+        loaded = kind
+        watch(item)
         audio.replaceCurrentItem(with: item)
-        audio.play()
+        if position > 0 {
+            audio.seek(
+                to: CMTime(seconds: position, preferredTimescale: 600), toleranceBefore: .zero,
+                toleranceAfter: .zero)
+        }
+        if playing { audio.play() }
         let changed = current != track
         current = track
-        isPlaying = true
-        clock.time = 0
-        clock.duration = track.durationS ?? 0
+        isPlaying = playing
+        clock.time = position
+        clock.duration = length ?? track.durationS ?? 0
         if changed { onTrackChange?(track) }
         publishNowPlaying()
+        lookAhead()
         Task {
             let image = await Covers.shared.load(track, root: root, size: .large)
             if current == track { publishNowPlaying(artwork: image) }
@@ -212,8 +494,8 @@ final class Player {
     }
 
     private func tick(_ seconds: Double) {
-        guard current != nil, seconds.isFinite else { return }
-        if current?.videoId != nil {
+        guard current != nil, !isFetching, seconds.isFinite else { return }
+        if loaded == .youtubeSound {
             // YouTube's stream claims to be twice as long as the song (its second half is
             // silence), so the length YouTube Music gave is the one that counts: the
             // song ends there.
@@ -243,10 +525,70 @@ final class Player {
         }
     }
 
+    // MARK: when it doesn't play
+
+    /// Apple's player doesn't announce an address it couldn't open: the song just sits at
+    /// 0:00 looking as if it's playing. So each item is watched.
+    private func watch(_ item: AVPlayerItem) {
+        itemWatch = item.observe(\.status) { [weak self] item, _ in
+            guard item.status == .failed else { return }
+            let failed = ObjectIdentifier(item)
+            Task { @MainActor in self?.itemFailed(failed) }
+        }
+    }
+
     private func failed(_ item: AVPlayerItem?) {
-        guard item === audio.currentItem, let current else { return }
-        problem = "“\(current.title)” couldn't be played."
+        if let item { itemFailed(ObjectIdentifier(item)) }
+    }
+
+    /// YouTube's addresses don't always work: it refuses one now and then, and they stop
+    /// working after a few hours. A fresh one is asked for, twice at most, and the song
+    /// carries on from where it was.
+    private func itemFailed(_ failed: ObjectIdentifier) {
+        guard let item = audio.currentItem, ObjectIdentifier(item) == failed, let track = current
+        else { return }
+        let position = clock.time
+        let playing = isPlaying
+        if loaded != .file, retries < Self.maxRetries {
+            retries += 1
+            if loaded == .video {
+                videos[track.id] = nil
+                startVideo(track, at: position, interrupt: true, playing: playing, inVideoTime: true)
+            } else if let videoId = track.videoId {
+                startFromYouTube(track, videoId, at: position, playing: playing)
+            }
+            return
+        }
+        if loaded == .video {  // the song can still be heard
+            let keepsTime = video?.keepsTime ?? false
+            retries = 0
+            video = nil
+            videoNote = "This song's video stopped working, so its sound is playing instead."
+            startSound(track, at: keepsTime ? position : 0, playing: playing)
+            return
+        }
+        audio.pause()
         isPlaying = false
+        isBuffering = false
+        problem =
+            loaded == .file
+            ? "“\(track.title)” couldn't be played."
+            : "“\(track.title)” can't be played from YouTube right now. Try it again in a minute."
+        publishNowPlaying()
+    }
+
+    private func waitingChanged(_ waiting: Bool) {
+        bufferingTimer?.cancel()
+        guard waiting else {
+            isBuffering = false
+            return
+        }
+        // Only said after most of a second: every song waits for a moment as it starts.
+        bufferingTimer = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(800))
+            guard !Task.isCancelled, let self else { return }
+            if audio.timeControlStatus == .waitingToPlayAtSpecifiedRate { isBuffering = true }
+        }
     }
 
     // MARK: the keyboard's media keys and the menu bar's Now Playing
@@ -310,5 +652,21 @@ extension PlayQueue.Repeat {
         case .all: "All"
         case .one: "One Song"
         }
+    }
+}
+
+/// For checking by hand that a refused address is recovered from. Started with
+/// MUSICORG_SPOIL=2, the app turns the first two addresses the player is given into ones
+/// YouTube refuses (as it does by itself now and then).
+@MainActor
+enum Spoil {
+    private static var left = Int(ProcessInfo.processInfo.environment["MUSICORG_SPOIL"] ?? "") ?? 0
+
+    static func address(_ url: URL) -> URL {
+        guard left > 0 else { return url }
+        left -= 1
+        let spoiled = url.absoluteString.replacingOccurrences(
+            of: #"expire=\d+"#, with: "expire=1700000000", options: .regularExpression)
+        return URL(string: spoiled) ?? url
     }
 }

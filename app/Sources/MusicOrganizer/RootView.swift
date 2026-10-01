@@ -438,7 +438,7 @@ struct MainView: View {
                     .allowsHitTesting(active)
                     .accessibilityHidden(!active)
                 // No zIndex either: changing which page is on top also made AppKit take
-                // every page's views out and put them back (profiled 2026-10-02).
+                // every page's views out and put them back (profiled 2026-10-01).
             }
         }
         .clipped()
@@ -478,7 +478,7 @@ struct MainView: View {
         case .visualizer:
             // The song that's playing, with its cover and lyrics: the player's own tab
             // (parked Fix A-3 will give it the owner's layout).
-            NowPlayingView(isShown: .constant(true), closable: false)
+            NowPlayingView(isShown: .constant(true), closable: false, isActive: active)
         case .downloads:
             SongList(
                 source: .downloads, title: "Downloads",

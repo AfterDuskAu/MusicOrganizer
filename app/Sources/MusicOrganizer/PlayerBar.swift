@@ -77,7 +77,7 @@ struct PlayerBar: View {
             Button { player.previous() } label: { Image(systemName: "backward.fill") }
                 .help("Previous")
             Button { player.toggle() } label: {
-                if player.isFetching {
+                if player.isFetching || player.isBuffering {
                     ProgressView().controlSize(.small).frame(width: 26)
                 } else {
                     Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")

@@ -90,7 +90,13 @@ final class AppModel {
 
     init() {
         player.onTrackChange = { [weak self] track in self?.showLyrics(for: track) }
-        player.onTick = { [weak self] time in self?.lyrics.follow(time) }
+        player.onTick = { [weak self] time in
+            guard let self else { return }
+            // A music video with an intro isn't the song second for second, so the
+            // song's timed lyrics are shown without a line lit up.
+            if lyrics.timed != player.lyricsInTime { lyrics.timed = player.lyricsInTime }
+            lyrics.follow(time)
+        }
         player.onFinished = { [weak self] track in self?.countPlay(of: track) }
         player.findStream = { [weak self] videoId in
             guard let connection = self?.engine?.connection else {
@@ -102,6 +108,16 @@ final class AppModel {
                 throw RPCError(code: 0, message: "YouTube's answer couldn't be read.")
             }
             return (url, found.httpHeaders, found.durationS)
+        }
+        player.findVideo = { [weak self] track in
+            guard let connection = self?.engine?.connection else {
+                throw RPCError(code: RPCError.closed, message: "The engine isn't running.")
+            }
+            // A song with no artist to its name can't be told from others of its title.
+            guard let artist = track.artist ?? track.albumArtist else { return nil }
+            let found = try await connection.call(
+                "youtube.video", ["title": track.title, "artist": artist], as: VideoAnswer.self)
+            return SongVideo(found)
         }
     }
 
@@ -621,6 +637,11 @@ final class LyricsModel {
     private(set) var state: State = .nothingPlaying
     private(set) var trackPath: String?
     private(set) var currentLine: Int?
+    /// False while the lyrics' times don't fit what's playing (a music video that isn't
+    /// the song second for second): no line is lit up then.
+    var timed = true {
+        didSet { if !timed { currentLine = nil } }
+    }
 
     /// There are lyrics to show right now: a song is on, and its words were found.
     var hasLyrics: Bool {
@@ -638,7 +659,7 @@ final class LyricsModel {
 
     /// Called a few times a second; only changes anything when the line changes.
     func follow(_ time: Double) {
-        guard case .synced(let lines) = state else { return }
+        guard timed, case .synced(let lines) = state else { return }
         let line = LRC.current(at: time, in: lines)
         if line != currentLine { currentLine = line }
     }

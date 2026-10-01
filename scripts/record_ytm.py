@@ -3,6 +3,7 @@
 Usage (from the repo root, with the engine's virtual environment):
 
     .venv/bin/python scripts/record_ytm.py search "Flight Facilities Crave You" ...
+    .venv/bin/python scripts/record_ytm.py videos "J. Cole Work Out" ...
     .venv/bin/python scripts/record_ytm.py watch -- xjj_OVvVQFc -e-y-1VRZ3I ...
     .venv/bin/python scripts/record_ytm.py album MPREb_d8g28l4HU1r ...
     .venv/bin/python scripts/record_ytm.py cases [engine/tests/data/match_cases.json]
@@ -43,7 +44,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
-    parser.add_argument("kind", choices=["search", "watch", "album", "cases"])
+    parser.add_argument("kind", choices=["search", "videos", "watch", "album", "cases"])
     parser.add_argument("args", nargs="*")
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--force", action="store_true", help="Record again even if recorded.")
@@ -59,7 +60,7 @@ def main() -> int:
 
     recorded = 0
     for kind, arg in requests:
-        key = youtube.query_key(arg) if kind == "search" else arg
+        key = youtube.query_key(arg) if kind in ("search", "videos") else arg
         path = youtube.recording_path(opts.out, kind, key)
         if path.exists() and not opts.force:
             continue
@@ -93,6 +94,8 @@ def fetch(kind: str, arg: str) -> tuple[Any, list[str]]:
     trimmed: list[str] = []
     if kind == "search":
         response = youtube.fetch_live(lambda client: client.search(arg, filter="songs", limit=10))
+    elif kind == "videos":
+        response = youtube.fetch_live(lambda client: client.search(arg, filter="videos", limit=10))
     elif kind == "watch":
         response = youtube.fetch_live(
             lambda client: client.get_watch_playlist(videoId=arg, limit=1)

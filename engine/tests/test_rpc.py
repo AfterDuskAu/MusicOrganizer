@@ -467,6 +467,33 @@ def test_stream_jobs_and_the_new_plan_kinds(
         "url": "https://example.invalid/a", "http_headers": {}, "duration_s": 9.0,
     }  # fmt: skip
     assert code(opened, "youtube.stream") == rpc.INVALID_PARAMS
+
+    # A song's official video: looked for by the song's title and artist.
+    asked: list[str] = []
+    sizes: tuple[youtube.VideoQuality, ...] = (
+        youtube.VideoQuality(1080, 60, "https://example.invalid/v1"),
+        youtube.VideoQuality(720, 24, "https://example.invalid/v2"),
+    )
+
+    def video(video_id: str) -> youtube.Video:
+        asked.append(video_id)
+        sound = youtube.Stream("https://example.invalid/a", {"User-Agent": "x"}, 245.0)
+        return youtube.Video(video_id, sound, sizes)
+
+    monkeypatch.setattr(youtube, "video", video)
+    assert result(opened, "youtube.video", title="Work Out", artist="J. Cole") == {
+        "found": True, "video_id": "W5hSdGt2M8w", "title": "Work Out", "duration_s": 245.0,
+        "http_headers": {"User-Agent": "x"}, "audio_url": "https://example.invalid/a",
+        "qualities": [
+            {"label": "1080p60", "height": 1080, "fps": 60, "url": "https://example.invalid/v1"},
+            {"label": "720p", "height": 720, "fps": 24, "url": "https://example.invalid/v2"},
+        ],
+    }  # fmt: skip
+    assert result(opened, "youtube.video", title="cLOUDs", artist="J. Cole") == {"found": False}
+    assert asked == ["W5hSdGt2M8w"]  # nothing more is asked about a song with no video
+    sizes = ()  # a video with no picture the app can show
+    assert result(opened, "youtube.video", title="Work Out", artist="J. Cole") == {"found": False}
+    assert code(opened, "youtube.video", title="Work Out") == rpc.INVALID_PARAMS
     assert result(opened, "queue.jobs", batch_id="b_nothing") == {"jobs": []}
     assert code(opened, "plan.create", kind="download") == rpc.INVALID_PARAMS
     assert code(opened, "plan.create", kind="download", options={"video_ids": ["bad id"]}) == (

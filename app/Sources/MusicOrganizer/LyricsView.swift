@@ -47,6 +47,7 @@ private struct TimedLyrics: View {
 
     var body: some View {
         let current = model.lyrics.currentLine
+        let timed = model.lyrics.timed
         ScrollViewReader { proxy in
             ScrollView {
                 // Every line is laid out once and never changes size: the line being sung
@@ -57,10 +58,10 @@ private struct TimedLyrics: View {
                         Text(line.text.isEmpty ? "♪" : line.text)
                             .font((large ? Font.largeTitle : .title2).weight(.semibold))
                             .foregroundStyle(.primary)
-                            .opacity(line.id == current ? 1 : 0.3)
+                            .opacity(line.id == current ? 1 : timed ? 0.3 : 0.7)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .contentShape(Rectangle())
-                            .onTapGesture { model.player.seek(to: line.time) }
+                            .onTapGesture { if timed { model.player.seek(to: line.time) } }
                             .id(line.id)
                     }
                 }

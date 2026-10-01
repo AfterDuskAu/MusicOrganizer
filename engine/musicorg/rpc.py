@@ -77,7 +77,7 @@ PROTOCOL = "2.0"
 SHUTDOWN_GRACE_S = 10.0
 PROGRESS_INTERVAL_S = 0.25  # at most 4 job.progress a second per job
 REVIEW_STATES = ("review", "not_found", "matched_auto")
-SLOW_METHODS = frozenset({"youtube.stream", "search.ytmusic", "lyrics.find"})
+SLOW_METHODS = frozenset({"youtube.stream", "youtube.video", "search.ytmusic", "lyrics.find"})
 RPC_DECISIONS = ("accept", "candidate", "url", "only_copy", "skip", "reject")
 
 # Error codes (docs/ENGINE_API.md → Errors).
@@ -266,6 +266,7 @@ class Server:
             "journal.undo": self.journal_undo,
             "search.ytmusic": self.search_ytmusic,
             "youtube.stream": self.youtube_stream,
+            "youtube.video": self.youtube_video,
             "lyrics.find": self.lyrics_find,
             "queue.jobs": self.queue_jobs,
             "settings.get": self.settings_get,
@@ -743,6 +744,28 @@ class Server:
     def youtube_stream(self, params: dict[str, Any]) -> dict[str, Any]:
         found = youtube.stream(need(params, "video_id", str))
         return {"url": found.url, "http_headers": found.headers, "duration_s": found.duration_s}
+
+    def youtube_video(self, params: dict[str, Any]) -> dict[str, Any]:
+        """A song's official music video, to play in the app: its sound, and its picture
+        in each size on offer. Nothing is saved."""
+        title, artist = need(params, "title", str), need(params, "artist", str)
+        with self._index(write=True) as index:  # the index keeps the search's answer
+            match = youtube.find_video(title, artist, cache=index)
+        if match is None:
+            return {"found": False}
+        found = youtube.video(match.video_id)
+        if not found.qualities:
+            return {"found": False}
+        return {
+            "found": True,
+            "video_id": found.video_id,
+            "title": match.title,
+            "duration_s": found.audio.duration_s or match.duration_s,
+            "http_headers": found.audio.headers,
+            "audio_url": found.audio.url,
+            "qualities": [{"label": q.label, "height": q.height, "fps": q.fps, "url": q.url}
+                          for q in found.qualities],
+        }  # fmt: skip
 
     def lyrics_find(self, params: dict[str, Any]) -> dict[str, Any]:
         """Lyrics for a song being played from YouTube Music. Looked up, never saved."""

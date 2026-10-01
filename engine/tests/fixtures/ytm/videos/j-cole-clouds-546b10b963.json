@@ -1,0 +1,511 @@
+{
+ "kind": "videos",
+ "key": "j cole clouds",
+ "request": "J. Cole cLOUDs",
+ "recorded_at": "2026-10-01T09:14:32Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "error": null,
+ "response": [
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J. Cole - cLOUDs [Lyrics]",
+   "videoId": "UulIrOUBOPY",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "4:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "Aquila",
+     "id": "UCb8k4_aNhdKVNRyJb8Mif-g"
+    }
+   ],
+   "views": "257K",
+   "duration_seconds": 243,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/UulIrOUBOPY/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3l-Ez-zVlzSBQZI3lUohzt2o1BYpA",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "a lot (Official Video)",
+   "videoId": "DmWWqogr_r8",
+   "videoType": "MUSIC_VIDEO_TYPE_OMV",
+   "isAvailable": true,
+   "duration": "6:32",
+   "year": null,
+   "artists": [
+    {
+     "name": "21 Savage",
+     "id": "UCoC_a7lWbj2v7rt4ujp4n2A"
+    }
+   ],
+   "views": "851M",
+   "duration_seconds": 392,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/DmWWqogr_r8/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3m8jYN4i3RO3Lklnl2XoOkiZh5YAQ",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J COLE - CLOUDS | REACTION MASHUP",
+   "videoId": "OmoO5CFBQ6U",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "3:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "REACTORS GOIN' CRAZY | RGC",
+     "id": "UCp0Dqeb9JEDJ8aDSWur3ZRQ"
+    }
+   ],
+   "views": "196K",
+   "duration_seconds": 230,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/OmoO5CFBQ6U/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3lgc7FCPICHPiAqaGlAa3Z1bZ21DQ",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J. Cole - 7 Minute Drill (Kendrick Lamar Diss)",
+   "videoId": "F18RQuT3-c0",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "3:33",
+   "year": null,
+   "artists": [
+    {
+     "name": "I Am Hip-Hop",
+     "id": "UC9wgG6MYWq-5G0pjHGCw5GA"
+    }
+   ],
+   "views": "7.9M",
+   "duration_seconds": 213,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/F18RQuT3-c0/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3kXx2TwPf-O4Jml0mIYwp17ehYh8w",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "Two Six",
+   "videoId": "pvf_Qv4rmLM",
+   "videoType": "MUSIC_VIDEO_TYPE_OMV",
+   "isAvailable": true,
+   "duration": "4:15",
+   "year": null,
+   "artists": [
+    {
+     "name": "J. Cole",
+     "id": "UC0ajkOzj8xE3Gs3LHCE243A"
+    }
+   ],
+   "views": "8.2M",
+   "duration_seconds": 255,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/pvf_Qv4rmLM/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3kwKVhfVBJnVr4sqFiuNcamRObonw",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J. COLE - CLOUDS (Lyrics)",
+   "videoId": "ubCAm2UobHY",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "4:08",
+   "year": null,
+   "artists": [
+    {
+     "name": "KING WORLDWIDE",
+     "id": "UC5zgmSfxcmZRFKqYF32Tr_Q"
+    }
+   ],
+   "views": "19K",
+   "duration_seconds": 248,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/ubCAm2UobHY/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3kQgtsOSzAWhoFC8-M3LZj2RfaCVg",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J. Cole - cLOUDS | Jackson State University Band | JSU Homecoming ",
+   "videoId": "pstJCskGRPs",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "2:38",
+   "year": null,
+   "artists": [
+    {
+     "name": "JAYYTV Videos ",
+     "id": "UCJ7JoC8D3TPBiDJzw2H0jPQ"
+    }
+   ],
+   "views": "501",
+   "duration_seconds": 158,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/pstJCskGRPs/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3nmIup3W4V1a7p97RJoJYq7qzTfRg",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J. Cole - cLOUDs [한글 가사 해석]",
+   "videoId": "LRNoqwXnyxg",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "4:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "030 공삼공",
+     "id": "UCQF8ZTeH9MzgbfDh_sZ60Vg"
+    }
+   ],
+   "views": "467",
+   "duration_seconds": 243,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/LRNoqwXnyxg/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3lIkfEehABs8EeAR77sZ7TSYFqOUw",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J. Cole - cLOUDS (Sub español)",
+   "videoId": "uyEaT342610",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "3:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "OnceSubtitulados",
+     "id": "UCBKWAYrVYOrXrpZPpL8-VCw"
+    }
+   ],
+   "views": "5.5K",
+   "duration_seconds": 230,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/uyEaT342610/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3mCmaXv6C76TXzqYcF0wM6k03aXRw",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "A Star is Born/ cLOUDs (Live at Dreamville Fest 2025) - J. Cole",
+   "videoId": "u4pl5dr5JII",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "2:39",
+   "year": null,
+   "artists": [
+    {
+     "name": "King Capital",
+     "id": "UCSYr5eM8xyvQzkl2_BkY2ow"
+    }
+   ],
+   "views": "26K",
+   "duration_seconds": 159,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/u4pl5dr5JII/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3mC53GLk-bIGvD9LmX7enU67mhpQg",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J Cole - Clouds (Remix)",
+   "videoId": "0rh_YhMxfDw",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "4:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "MrMessenger0121",
+     "id": "UC25qyI2bmj4N-sYvxz0xvLg"
+    }
+   ],
+   "views": "413",
+   "duration_seconds": 243,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/0rh_YhMxfDw/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3mqnAQfd-ASrXOnj3nHXWNLhwp0lA",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "[FREE] Andre 3000 x J Cole Type Beat 2023 - \"Clouds\"",
+   "videoId": "JGhDUViTMsI",
+   "videoType": "MUSIC_VIDEO_TYPE_OMV",
+   "isAvailable": true,
+   "duration": "2:58",
+   "year": null,
+   "artists": [
+    {
+     "name": "VinceJG",
+     "id": "UCM5V9UKDgDaGal_CpcTtIVA"
+    }
+   ],
+   "views": "42K",
+   "duration_seconds": 178,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/JGhDUViTMsI/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3nyDLOMAPfQaTJdfi3PXg0Q-LX_Mg",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J.Cole - cLOUDS (432hz)",
+   "videoId": "Kp8hEMJkuaQ",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "3:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "TranscedenceRealm3",
+     "id": "UCzAxI91M_LqIT0qiJihD1BA"
+    }
+   ],
+   "views": "494",
+   "duration_seconds": 230,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/Kp8hEMJkuaQ/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3lNE2GTscnWgZ-RHP8CLoZh8X0v9A",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J. Cole - cLOUDs (BrandOnBeatz Remix)",
+   "videoId": "-OG-WGKNJ6U",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "4:06",
+   "year": null,
+   "artists": [
+    {
+     "name": "BrandOnBeatz",
+     "id": "UCspoG78VcijLpanQooW9oFA"
+    }
+   ],
+   "views": "286",
+   "duration_seconds": 246,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/-OG-WGKNJ6U/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3k4QiSLMdvfVgUSGhvIDB6kSuQAtw",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "cLOUDs - J. cole (sped up)",
+   "videoId": "N07pskjqKoE",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "3:41",
+   "year": null,
+   "artists": [
+    {
+     "name": "mila's music",
+     "id": "UCy_c263KMS6CFj_wMrEYZ1g"
+    }
+   ],
+   "views": "384",
+   "duration_seconds": 221,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/N07pskjqKoE/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3kexd9WpK3plvejrmgHN4iMV9p3rg",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J. Cole - cLOUDs (Unofficial Audio)",
+   "videoId": "QncUk8OiK28",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "3:44",
+   "year": null,
+   "artists": [
+    {
+     "name": "Wisconsin Sports",
+     "id": "UCT-kc93WADDZOO-e2fJYi7A"
+    }
+   ],
+   "views": "2.9K",
+   "duration_seconds": 224,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/QncUk8OiK28/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3mjgTqD81lyUoEUmPJa7GA0Rqm46Q",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "COLE WORLD IS BACK | J. COLE - CLOUDS REACTION (NEW)",
+   "videoId": "Qejjj2ojhrU",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "7:42",
+   "year": null,
+   "artists": [
+    {
+     "name": "Ramaj Eroc",
+     "id": "UCan2tSystsyQLMeE9H_nnVA"
+    }
+   ],
+   "views": "2.9K",
+   "duration_seconds": 462,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/Qejjj2ojhrU/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3kdZfXlNVdI6j8usoXzhwwyMpXeEg",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "LONDON (Official Music Video) (feat. J. Cole)",
+   "videoId": "gZFmMoeU5m0",
+   "videoType": "MUSIC_VIDEO_TYPE_OMV",
+   "isAvailable": true,
+   "duration": "4:12",
+   "year": null,
+   "artists": [
+    {
+     "name": "BIA",
+     "id": "UCwhMCNiJ9vDq4dThxowB6Sg"
+    }
+   ],
+   "views": "33M",
+   "duration_seconds": 252,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/gZFmMoeU5m0/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3nhNRMOw3nBUpwS3OshplWU2b7Bdw",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "[FREE] LUTE / J COLE TYPE BEAT - \"HEAD IN THE CLOUDS\"",
+   "videoId": "dczy09KMLso",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "3:08",
+   "year": null,
+   "artists": [
+    {
+     "name": "LUCAS QUINN",
+     "id": "UCgiyzbX4P1mdZvU4QpTGdRQ"
+    }
+   ],
+   "views": "185K",
+   "duration_seconds": 188,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/dczy09KMLso/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3mOR3AO_96FNJO_RBJYzFbjcWfY6w",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J. Cole - cLOUDs (Lyrics)",
+   "videoId": "7M2ubt0XyVQ",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "4:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "TikTok Melodies",
+     "id": "UCudqzoVlpmqi6EQLaU702DA"
+    }
+   ],
+   "views": "8.2K",
+   "duration_seconds": 243,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/7M2ubt0XyVQ/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3lwsIUIbbH-8QSig-lELGcQiyC0OQ",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  }
+ ]
+}

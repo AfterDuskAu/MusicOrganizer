@@ -253,3 +253,51 @@ def test_stream_gives_an_address_and_downloads_nothing(
     StreamYDL.info = yt_dlp.utils.DownloadError("Video unavailable")
     with pytest.raises(VideoUnavailableError):
         youtube.stream("abcdefghijk")
+
+
+def test_video_lists_the_pictures_the_app_can_show(
+    fake_ydl: Callable[[str | None], None], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def picture(format_id: str, height: int, **more: Any) -> dict[str, Any]:
+        return {"format_id": format_id, "ext": "mp4", "protocol": "https", "acodec": "none",
+                "vcodec": "avc1.640028", "height": height, "fps": 24, "tbr": 1000.0,
+                "url": f"https://example.invalid/{format_id}", **more}  # fmt: skip
+
+    StreamYDL.calls = []
+    StreamYDL.info = {
+        "url": "https://example.invalid/audio", "format_id": "140", "duration": 245,
+        "http_headers": {"User-Agent": "x"},
+        "formats": [
+            {"format_id": "140", "ext": "m4a", "protocol": "https", "vcodec": "none",
+             "acodec": "mp4a.40.2", "url": "https://example.invalid/audio"},
+            picture("160", 144),
+            picture("137", 1080),
+            picture("137-low", 1080, tbr=500.0),  # the same size, a thinner copy
+            picture("299", 1080, fps=60),
+            picture("136", 720),
+            picture("18", 360, acodec="mp4a.40.2"),  # picture and sound in one: not used
+            picture("270", 1080, protocol="m3u8_native"),
+            picture("248", 1080, ext="webm", vcodec="vp9"),
+            picture("399", 1080, vcodec="av01.0.08M.0"),
+            picture("313", 2160, ext="webm", vcodec="vp9"),  # 4K is never H.264
+            picture("bad", 480, url=None),
+        ],
+    }  # fmt: skip
+    monkeypatch.setattr(youtube, "_make_ydl", StreamYDL)
+    found = youtube.video("abcdefghijk")
+    assert found.video_id == "abcdefghijk"
+    assert found.audio == youtube.Stream(
+        "https://example.invalid/audio", {"User-Agent": "x"}, 245.0
+    )
+    assert [(q.label, q.url.rsplit("/", 1)[1]) for q in found.qualities] == [
+        ("1080p60", "299"), ("1080p", "137"), ("720p", "136"), ("144p", "160"),
+    ]  # fmt: skip
+    assert StreamYDL.calls == [("https://www.youtube.com/watch?v=abcdefghijk", False)]
+
+    StreamYDL.info = {"url": "https://example.invalid/audio", "format_id": "140"}
+    assert youtube.video("abcdefghijk").qualities == ()
+    with pytest.raises(YouTubeError):
+        youtube.video("not an id")
+    StreamYDL.info = None
+    with pytest.raises(DownloadError):
+        youtube.video("abcdefghijk")

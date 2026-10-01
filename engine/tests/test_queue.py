@@ -27,7 +27,9 @@ from musicorg.library import Library
 from musicorg.queue import Kind, Outcome
 from musicorg.youtube import RateLimiter
 
-START = datetime(2026, 10, 1, 2, 0, tzinfo=UTC)
+# Far in the future: `queue.resume()` and `queue.pause()` read the real clock, and a pause
+# "until 8 am on 1 October 2026" stopped being a pause when that morning came.
+START = datetime(2100, 1, 1, 2, 0, tzinfo=UTC)
 ENGINE = Path(__file__).resolve().parents[1]
 
 

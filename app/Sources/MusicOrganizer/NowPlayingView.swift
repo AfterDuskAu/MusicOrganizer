@@ -7,16 +7,26 @@ struct NowPlayingView: View {
     @Binding var isShown: Bool
     /// False when it's a page of its own (the Local Visualizer), not laid over the library.
     var closable = true
+    /// False while the page is kept out of sight: a video's picture isn't drawn then.
+    var isActive = true
     @Environment(AppModel.self) private var model
 
     var body: some View {
         let track = model.player.current
+        let showsVideo = isActive && model.player.video != nil
         ZStack(alignment: .topLeading) {
             HStack(spacing: 40) {
                 VStack(spacing: 14) {
-                    CoverView(track: track, size: .large, corner: 12)
-                        .frame(maxWidth: 420, maxHeight: 420)
-                        .shadow(color: .black.opacity(0.5), radius: 24, y: 10)
+                    if showsVideo {
+                        VideoSurface(player: model.player.screen)
+                            .aspectRatio(16.0 / 9.0, contentMode: .fit)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .shadow(color: .black.opacity(0.5), radius: 24, y: 10)
+                    } else {
+                        CoverView(track: track, size: .large, corner: 12)
+                            .frame(maxWidth: 420, maxHeight: 420)
+                            .shadow(color: .black.opacity(0.5), radius: 24, y: 10)
+                    }
                     if let track {
                         VStack(spacing: 4) {
                             Text(track.title).font(.title.weight(.bold)).multilineTextAlignment(.center)
@@ -30,10 +40,17 @@ struct NowPlayingView: View {
                     } else {
                         Text("Nothing playing").font(.title2).foregroundStyle(.secondary)
                     }
+                    VideoControls()
                 }
                 .frame(maxWidth: .infinity)
-                LyricsView(large: true)
-                    .frame(maxWidth: .infinity)
+                // A video gets the room: the lyrics move over, or make way if there are none.
+                if !showsVideo {
+                    LyricsView(large: true)
+                        .frame(maxWidth: .infinity)
+                } else if model.lyrics.hasLyrics {
+                    LyricsView(large: false)
+                        .frame(width: 320)
+                }
             }
             .padding(.horizontal, 40)
             .padding(.top, 52)
@@ -72,5 +89,60 @@ struct NowPlayingView: View {
                     .opacity(0.55)
             }
             .clipped()
+    }
+}
+
+/// Cover or video, and the size of the video's picture, as on YouTube.
+private struct VideoControls: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let player = model.player
+        VStack(spacing: 8) {
+            HStack(spacing: 10) {
+                Picker(
+                    "Show", selection: Binding(get: { player.videoOn }, set: { player.setVideo($0) })
+                ) {
+                    Text("Cover").tag(false)
+                    Text("Video").tag(true)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .fixedSize()
+                .help("Show the song's cover, or its official video from YouTube")
+                if let video = player.video {
+                    Menu(video.quality.label) {
+                        // Toggles, so the menu ticks the one that's chosen.
+                        Toggle(
+                            "Best (\(video.source.qualities[0].label))",
+                            isOn: Binding(
+                                get: { player.videoPreference == nil },
+                                set: { _ in player.setQuality(nil) }))
+                        Divider()
+                        ForEach(video.source.qualities) { quality in
+                            Toggle(
+                                quality.label,
+                                isOn: Binding(
+                                    get: { player.videoPreference != nil && quality == video.quality },
+                                    set: { _ in player.setQuality(quality) }))
+                        }
+                    }
+                    .fixedSize()
+                    .help("The size of the video's picture")
+                }
+            }
+            if let note = player.videoNote {
+                Text(note)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            } else if let video = player.video, !video.keepsTime, model.lyrics.hasLyrics {
+                Text("The video isn't the same length as the song, so the lyrics aren't timed.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(.top, 6)
     }
 }

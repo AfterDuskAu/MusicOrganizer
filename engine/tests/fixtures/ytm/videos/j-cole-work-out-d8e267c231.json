@@ -1,0 +1,511 @@
+{
+ "kind": "videos",
+ "key": "j cole work out",
+ "request": "J. Cole Work Out",
+ "recorded_at": "2026-10-01T09:14:31Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [],
+ "error": null,
+ "response": [
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "Work Out",
+   "videoId": "W5hSdGt2M8w",
+   "videoType": "MUSIC_VIDEO_TYPE_OMV",
+   "isAvailable": true,
+   "duration": "4:05",
+   "year": null,
+   "artists": [
+    {
+     "name": "J. Cole",
+     "id": "UC0ajkOzj8xE3Gs3LHCE243A"
+    }
+   ],
+   "views": "220M",
+   "duration_seconds": 245,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/W5hSdGt2M8w/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3l0fofxqMAK_-0TCnlVLOkleNxRLw",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J. Cole – Work Out (Lyrics)",
+   "videoId": "db-cKHE8dqQ",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "3:56",
+   "year": null,
+   "artists": [
+    {
+     "name": "Latin City",
+     "id": "UCMhlipBOCB760EFv2MzGDJg"
+    }
+   ],
+   "views": "2.2M",
+   "duration_seconds": 236,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/db-cKHE8dqQ/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3kXP5_tyB7vC-Ac5apPv9i5ABPYPw",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J.Cole -Work Out (With Lyrics)",
+   "videoId": "Fv8lenO0jqw",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "3:56",
+   "year": null,
+   "artists": [
+    {
+     "name": "TheAlltimerocker",
+     "id": "UCSzhecZG86q36HIZQ4XWVoQ"
+    }
+   ],
+   "views": "729K",
+   "duration_seconds": 236,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/Fv8lenO0jqw/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3kKw5T9Lzwfkmq5NMTaQQ86CoG1aw",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "Paula Abdul Straight Up - J. Cole Work Out MASHUP",
+   "videoId": "pSD8dgk_ak4",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "7:18",
+   "year": null,
+   "artists": [
+    {
+     "name": "D.J. Lui G",
+     "id": "UCmTS1sbu_CQ36on4w25XQ5w"
+    }
+   ],
+   "views": "775",
+   "duration_seconds": 438,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/pSD8dgk_ak4/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3lvhDIaGcVawlGcyHGnn0fUlY66Zw",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J. Cole-Workout[Lofi]",
+   "videoId": "q_5UAF_w24I",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "2:03",
+   "year": null,
+   "artists": [
+    {
+     "name": "ErisRex",
+     "id": "UChtUIFoP0R969djQSF7eUPQ"
+    }
+   ],
+   "views": "306",
+   "duration_seconds": 123,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/q_5UAF_w24I/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3mqdoRIz_EhpVrzXackHPfAOBpBZA",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J. Cole - Work Out (SoMo Remix)",
+   "videoId": "FpAGfVmp838",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "3:41",
+   "year": null,
+   "artists": [
+    {
+     "name": "MusicDope",
+     "id": "UCIN30SFzW0IxD2Rq4s5YG0w"
+    }
+   ],
+   "views": "943",
+   "duration_seconds": 221,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/FpAGfVmp838/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3lVIYGbk5XBelF2fXOOUlScUL1tUw",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J. Cole - Work Out (Lyrics) \"Work Out For Me\"",
+   "videoId": "FoCofef6XZw",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "4:26",
+   "year": null,
+   "artists": [
+    {
+     "name": "Lyric Labs",
+     "id": "UCowfwE0Coz1SdynYG4Ka-jg"
+    }
+   ],
+   "views": "395",
+   "duration_seconds": 266,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/FoCofef6XZw/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3l1DacZ-y-OC83ZP3QPTbOuJE360g",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J Cole Work Out \"DRUM COVER\"",
+   "videoId": "sE3yzRdraCQ",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "4:28",
+   "year": null,
+   "artists": [
+    {
+     "name": "thewetbanditstoronto",
+     "id": "UCK9EVVcQBgY-ycHg8MsUHcg"
+    }
+   ],
+   "views": "5.9K",
+   "duration_seconds": 268,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/sE3yzRdraCQ/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3lRjFUEqHd2_UyrAg10s2hggUWtLg",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J. Cole - Work Out (slowed)",
+   "videoId": "tw_LoNToqiM",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "4:50",
+   "year": null,
+   "artists": [
+    {
+     "name": "JustSlowed",
+     "id": "UCo38u_eeMZ_QFttFD_jJ70g"
+    }
+   ],
+   "views": "319",
+   "duration_seconds": 290,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/tw_LoNToqiM/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3lHYchmQnzs2hzILFfHAET_JT4csg",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J Cole - Work Out [ Chipmunks Version ]",
+   "videoId": "mW8P5KVx3kI",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "2:44",
+   "year": null,
+   "artists": [
+    {
+     "name": "Aziz Asuncion",
+     "id": "UCGZ95qtbf6r9caROocUiyQg"
+    }
+   ],
+   "views": "19K",
+   "duration_seconds": 164,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/mW8P5KVx3kI/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3k_OE0iZh8HyI4cu8RRjkwS_KHgMQ",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J Cole - Work Out Remix July 2011 (Instrumental Included)",
+   "videoId": "9wkAX0wUjZc",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "3:04",
+   "year": null,
+   "artists": [
+    {
+     "name": "MattyJEntertainment",
+     "id": "UCSbFn1PXz0-Ve2MTH7szUqw"
+    }
+   ],
+   "views": "17K",
+   "duration_seconds": 184,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/9wkAX0wUjZc/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3n_7wUb2HYxjxylJyBooXxxJlQPwA",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "work out - j. cole (sped up)",
+   "videoId": "eq1fRoqlyKk",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "3:17",
+   "year": null,
+   "artists": [
+    {
+     "name": "tsumi",
+     "id": "UC6CqmHlOqnqi5x4Wvig--xQ"
+    }
+   ],
+   "views": "5.4K",
+   "duration_seconds": 197,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/eq1fRoqlyKk/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3mp2i1sqHkJ2zl1pOEcUu4wL5hhbg",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "NAPISY PL J. Cole - Work Out",
+   "videoId": "mq5IP_L3op8",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "3:55",
+   "year": null,
+   "artists": [
+    {
+     "name": "ConsciousListener",
+     "id": "UCOQeiH7HXexuzZQntSKnVog"
+    }
+   ],
+   "views": "2K",
+   "duration_seconds": 235,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/mq5IP_L3op8/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3ki-6JXf2lURSpYQIFw97ajQNkfIQ",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J Cole - Work Out (In 639Hz)",
+   "videoId": "qugNM6pPEjE",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "3:56",
+   "year": null,
+   "artists": [
+    {
+     "name": "Meditative HertzW",
+     "id": "UCWTEt_Cni-hjZQzCzz3hYTA"
+    }
+   ],
+   "views": "1.3K",
+   "duration_seconds": 236,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/qugNM6pPEjE/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3k3h2lDsYBeBAd7O1-1FnTAPdxTfQ",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "Chris Jay & J.Cole-Work Out (Remix)",
+   "videoId": "PnOJyTSex-k",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "2:57",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chris Jay",
+     "id": "UCc1IDqYkqm-ct-02IZazZ5w"
+    }
+   ],
+   "views": "1K",
+   "duration_seconds": 177,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/PnOJyTSex-k/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3m7tQSCb0piT2zse6DqJ0ftxiyzFg",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "Dance fitness routine - J Cole \"Workout\"",
+   "videoId": "kO0DxeMlXes",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "2:07",
+   "year": null,
+   "artists": [
+    {
+     "name": "Chel Rogerson",
+     "id": "UCdQgiuUoeMnMEIVovq41oDA"
+    }
+   ],
+   "views": "922",
+   "duration_seconds": 127,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/kO0DxeMlXes/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3n17pH9twB7rO_sz0VH9U70q1XXLA",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J Cole - Work out hiphop choreography",
+   "videoId": "ha4eimQoq0Q",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "0:43",
+   "year": null,
+   "artists": [
+    {
+     "name": "DanceBoxNL",
+     "id": "UC4X4dApUMiSyqjEc_-W6ejA"
+    }
+   ],
+   "views": "2.6K",
+   "duration_seconds": 43,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/ha4eimQoq0Q/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3nuBdVH2y7aY_ONWQQEuQLm8ohdKQ",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "work out - j cole (lyrics) slowed + reverb",
+   "videoId": "RNcFVzn5VBk",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "4:25",
+   "year": null,
+   "artists": [
+    {
+     "name": "icygirl nay",
+     "id": "UCLF4Q3RrzXmzEfnGlq2LslA"
+    }
+   ],
+   "views": "5K",
+   "duration_seconds": 265,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/RNcFVzn5VBk/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3lw5DGrZiA_yRDZ9P64GiIcGZgzrA",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J. Cole - Work Out (Sped up)",
+   "videoId": "5-v8IZw2XeY",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "3:29",
+   "year": null,
+   "artists": [
+    {
+     "name": "Throwback 124",
+     "id": "UCZHLvQoMrdZe3TG-BmU1rbg"
+    }
+   ],
+   "views": "559",
+   "duration_seconds": 209,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/5-v8IZw2XeY/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3m2Tu90EuP1WTzwJRukG5--jiA_Sg",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  },
+  {
+   "category": "Videos",
+   "resultType": "video",
+   "title": "J. Cole - Work Out",
+   "videoId": "a_Pj1nl6Lzc",
+   "videoType": "MUSIC_VIDEO_TYPE_UGC",
+   "isAvailable": true,
+   "duration": "3:56",
+   "year": null,
+   "artists": [
+    {
+     "name": "Aquila",
+     "id": "UCb8k4_aNhdKVNRyJb8Mif-g"
+    }
+   ],
+   "views": "4K",
+   "duration_seconds": 236,
+   "thumbnails": [
+    {
+     "url": "https://i.ytimg.com/vi/a_Pj1nl6Lzc/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3kTA4IttnZOY6Lbn4s7E6eEqI9M8w",
+     "width": 400,
+     "height": 225
+    }
+   ]
+  }
+ ]
+}

@@ -40,7 +40,7 @@
 - 2026-10-01, late: the YouTube Music page has "Show 25 More" (the same search with a bigger limit; `search.ytmusic` now allows up to 100), and Recently Added is no longer capped at 200. The owner's design for the sidebar and Settings is written up in `docs/roadmap/0.2-app-layout.md`.
 - **Not checked in the running app.** The owner asked for the app not to be opened and the Mac left idle (other work needed it), so these screens are compiled and the logic under them is tested, but nobody has clicked through them yet. To check: playing a search result (AVPlayer with YouTube's address), the Download button, and the Edit Details sheet.
 
-2026-10-02. The owner's layout for the sidebar and Settings (`docs/roadmap/0.2-app-layout.md`), and a fix.
+2026-10-01, 5 pm. The owner's layout for the sidebar and Settings (`docs/roadmap/0.2-app-layout.md`), and a fix.
 
 - **Fix: a song played from YouTube Music showed twice its length and went silent halfway.** Apple's player reads YouTube's format-140 stream as twice as long as the song. The app now trusts the length YouTube Music gives: the slider uses it, and the song ends there and the next one starts. Downloaded files aren't affected (yt-dlp repairs the container when it saves one).
 - **Sidebar, to the owner's layout:** Library (with a "+" to add entries back, and "Remove from Sidebar" on each entry), Discover (What's New and Find as "coming" pages, Search YouTube Music, Downloads), Playlists (with a "+"), and a cog wheel for Settings. The owner's choice of Library entries is remembered.
@@ -56,7 +56,7 @@
 - Noted, not built: lyrics for a song being played from YouTube Music (see the layout plan).
 - Not checked in the running app by Claude (the owner asked for the app not to be opened); the owner is trying each build themselves.
 
-2026-10-02, later. **Fix A-1: the app feels right** (the owner's three notes). Measured before and after; the numbers are in `docs/KNOWN-ISSUES.md`.
+2026-10-01, 5:30 pm. **Fix A-1: the app feels right** (the owner's three notes). Measured before and after; the numbers are in `docs/KNOWN-ISSUES.md`.
 
 - **Clicks and scrolling:** table rows have one fixed height (`FixedRows`), which removed the freeze on every click. A list's rows are worked out off the main thread, and only when its songs, the search, the sort or the play counts change, never because of a click. Covers load four at a time, give up their turn when their row scrolls away, and small ones are kept in the app's own cache folder so each is cut down from full size once.
 - **Lyrics** no longer jump: every line keeps one size and weight, the line being sung is shown by brightness alone, and the view makes one smooth scroll per line.
@@ -65,15 +65,15 @@
 - `MUSICORG_STALLS=1` turns on a stall detector (`StallWatch`) that prints every freeze of 100 ms or more.
 - The loading screen explains itself after 6 seconds (a possible macOS permission prompt, or new songs being read).
 
-2026-10-02, evening. The owner's notes on search and the lyrics panel, and signing.
+2026-10-01, 6 pm. The owner's notes on search and the lyrics panel, and signing.
 
 - **Search is a button:** the search field is gone from every page's toolbar. A magnifying glass beside the sidebar button (or ⌘F) opens a search bar under the toolbar; Done or Esc closes it and clears the search. The YouTube Music page keeps its own search box.
 - **The lyrics panel is no longer a fixture.** With lyrics switched on (the bubble button), the panel beside the library appears only while a song is on and its lyrics were found, and goes when there's nothing to show. It never appears beside Local Visualizer or the full-size now-playing screen, which show the lyrics themselves.
 - **Lyrics for a song played from YouTube Music:** `lyrics.find` (RPC) looks them up the same way as for library songs (LRCLIB, then YouTube Music, with the length and version checks) and saves nothing. The panel appears when they arrive.
-- **Signing:** `scripts/build_app.sh` signs with a certificate named "Music Organizer Dev" when the owner has made one (`docs/SIGNING.md`), so macOS remembers which folders the app may use instead of asking after every build. The owner made it on 2026-10-02; the next start was not held up.
+- **Signing:** `scripts/build_app.sh` signs with a certificate named "Music Organizer Dev" when the owner has made one (`docs/SIGNING.md`), so macOS remembers which folders the app may use instead of asking after every build. The owner made it on 2026-10-01; the next start was not held up.
 - Checked in the running app: the magnifying glass and search bar, the panel staying away with nothing playing, a YouTube song bringing up timed lyrics, and Local Visualizer with no second lyrics panel.
 
-2026-10-02, night. Two faults the owner found in the day's work, both from Fix A-1's own changes.
+2026-10-01, a little later. Two faults the owner found in the day's work, both from Fix A-1's own changes.
 
 - **The YouTube results were squashed together.** `FixedRows` took the first table it came across, which could be another page's list, and gave it the song table's row height. It now only touches a table with several columns that fills exactly the space the helper fills.
 - **Switching pages, and the lyrics panel opening, froze the app** (0.3 to 0.8 s per switch, measured). Three causes, found by profiling:
@@ -82,13 +82,33 @@
   - Local Visualizer was rebuilt on every visit and blurred its backdrop at full window size. It's now kept like the other pages, and blurs a tiny picture before stretching it.
 - Measured after: six switches between open pages gave one stall of 104 ms (before: a stall of 126 to 415 ms on every switch). With a song on, where the lyrics panel comes and goes and the table changes width, a switch still stalls for 120 to 185 ms. The first visit to a page still takes 0.3 to 0.5 s while its table is built.
 
-2026-10-03. Lyrics tools in Edit Details, and columns the owner chooses (the rest of parked Fix A-3's list).
+2026-10-01, 6:20 pm. Lyrics tools in Edit Details, and columns the owner chooses (the rest of parked Fix A-3's list).
 
 - **Find Timed Lyrics** (Edit Details): looks the song up by the title, artist and album typed in the sheet (`lyrics.find`: LRCLIB, then YouTube Music) and fills the lyrics box with what it finds. Nothing is saved until Save.
 - **Sync by Tapping** (Edit Details): the song plays from the start, and a tap or the space bar as each line begins records its time (0.15 s is taken off each tap, for the ear-to-hand delay). "Back One Line" and "Start Again" correct mistakes. The timed text goes back to the lyrics box, to be saved like any other lyrics.
 - **Columns:** a Columns menu on every song list shows or hides Artist, Album, Year, Genre, Quality, Added, Plays and Time (Genre, Quality and Added start hidden). Columns can also be dragged into another order. The choice is kept, and is the same for every list.
 - Sync by Tapping has **−5 s** and **+5 s** buttons (owner, after trying it). Going back clears the lines tapped after the new position, so they're tapped again.
 - Not checked in the running app beyond "the lists still draw": Claude's tools can't open menus or right-click, so the Columns menu, Find Timed Lyrics and Sync by Tapping are for the owner to try.
+
+2026-10-01, 7:30 pm. **A song's video in the app's own player**, and a song that wouldn't start.
+
+- **Fix: a YouTube song sat at 0:00, looking as if it was playing** (the owner's "Work Out"; other songs played, and so did this one a while later). YouTube now and then hands out an address it then refuses (HTTP 403; the engine's log shows the same on a download that worked at the second try). Apple's player doesn't announce an address it couldn't open, and the app wasn't watching for it.
+  - The app now watches each item. When one fails, it asks for a fresh address and carries on from the same place, twice at most. After that it says so in the player bar ("can't be played from YouTube right now"), shows the play button again, and Play asks afresh.
+  - The player bar shows its spinner while a song has stopped to wait for more of itself.
+  - Checked by spoiling addresses on purpose (`MUSICORG_SPOIL=<n>` when starting the app: the first n addresses are made into ones YouTube refuses): one spoiled, the song starts by itself; three spoiled, the message; then Play, and it plays.
+- **The song's official video, on the Local Visualizer** (and the full-window screen): a Cover / Video switch, and a menu of picture sizes like YouTube's (Best, then 1080p down to 144p; the choice is remembered).
+  - Engine: `youtube.find_video(title, artist)` (one "videos" search on YouTube Music, kept for 30 days) and `youtube.video(video_id)` (the video's sound and its picture in each size the app can show, one yt-dlp look-up, nothing downloaded). RPC: `youtube.video`.
+  - **Only the artist's own video counts:** one YouTube Music marks as official (`MUSIC_VIDEO_TYPE_OMV`), with the same title, the same version (a remix isn't the original; a remaster is) and an artist in common ("The" doesn't count: the library says "Notorious B.I.G."). Other people's uploads are never used, so many songs have no video, and the app says so and plays the song as usual.
+  - YouTube serves picture and sound apart. The app joins one picture stream to the format-140 sound as a single item (off the main thread), so play, pause and seek act on both and they can't drift.
+  - **While Video is on, the sound is the video's own**, not the library's file: a music video is often a different cut (an intro, a scene in the middle). It's off again each time the app starts.
+  - A video as long as the song (within 2 seconds) keeps the song's place when switching, and its timed lyrics. Any other starts at its beginning, and the lyrics are shown without a lit line, with a note saying why.
+  - Finding a video takes YouTube 5 to 12 seconds the first time. Turning Video on mid-song, the sound carries on until the picture is ready. With Video already on, the next song's video is looked for while the current one plays.
+  - Not possible: above 1080p (YouTube's bigger pictures are VP9 or AV1, which Apple's player can't show here).
+- `scripts/record_ytm.py` records "videos" searches too. ytmusicapi 1.12.3: a watch playlist's track has no `counterpart` (the song's video) without a sign-in, so the video is found by searching.
+- **Looked at in the running app** (Claude, with the owner's library): a song from the YouTube page and three library songs; Video on mid-song and from the start; a song with no official video; 1080p and 360p; pause, a jump to 2:34, back to Cover; the retry and the give-up message. **Not checked: the sound itself.** Nobody has listened yet; the player reports it playing.
+- Dates corrected: entries here and in the other notes that were dated 2 and 3 October were all written on 1 October.
+- Fix (a test only): one queue test pretended it was 2 am on 1 October 2026 and paused its queue "until 8 am", then asked the real clock whether the pause still held. It began failing when that morning passed. Its pretend clock is now in the year 2100.
+- Not built: saving a video (MP4). The owner has said where saved videos should show; it needs a change to rule 6 and the library contract first (`docs/KNOWN-ISSUES.md` → "Needs the owner's decision").
 
 ## 0.1.1 — in progress
 

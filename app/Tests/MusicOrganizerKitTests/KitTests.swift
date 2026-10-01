@@ -334,3 +334,63 @@ final class EngineLocateTests: XCTestCase {
                 environment: [:], appLocation: app, recorded: nil, exists: { _ in false }))
     }
 }
+
+final class SongVideoTests: XCTestCase {
+    private func answer(_ sizes: [(String, Int)] = [("1080p60", 1080), ("1080p", 1080), ("720p", 720), ("360p", 360)])
+        -> VideoAnswer
+    {
+        VideoAnswer(
+            found: true, videoId: "abcdefghijk", title: "Song", durationS: 245,
+            httpHeaders: ["User-Agent": "x"], audioUrl: "https://example.invalid/a",
+            qualities: sizes.map {
+                .init(label: $0.0, height: $0.1, fps: 30, url: "https://example.invalid/\($0.0)")
+            })
+    }
+
+    func testReadsTheEnginesAnswer() throws {
+        let data = Data(
+            """
+            {"found": true, "video_id": "abcdefghijk", "title": "Song", "duration_s": 245.0,
+             "http_headers": {"User-Agent": "x"}, "audio_url": "https://example.invalid/a",
+             "qualities": [{"label": "720p", "height": 720, "fps": 24, "url": "https://example.invalid/v"}]}
+            """.utf8)
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let video = try XCTUnwrap(SongVideo(try decoder.decode(VideoAnswer.self, from: data)))
+        XCTAssertEqual(video.videoId, "abcdefghijk")
+        XCTAssertEqual(video.length, 245)
+        XCTAssertEqual(video.headers, ["User-Agent": "x"])
+        XCTAssertEqual(video.qualities.map(\.label), ["720p"])
+
+        let none = try decoder.decode(VideoAnswer.self, from: Data(#"{"found": false}"#.utf8))
+        XCTAssertNil(SongVideo(none))
+    }
+
+    func testAnAnswerThatCantBePlayedIsNoVideo() {
+        XCTAssertNil(SongVideo(answer([])))  // no picture
+        XCTAssertNil(SongVideo(VideoAnswer(found: true, videoId: "abcdefghijk", durationS: 245)))
+        let noLength = VideoAnswer(
+            found: true, videoId: "abcdefghijk", audioUrl: "https://example.invalid/a",
+            qualities: [.init(label: "720p", height: 720, fps: 24, url: "https://example.invalid/v")])
+        XCTAssertNil(SongVideo(noLength))
+    }
+
+    func testThePictureThatsChosen() throws {
+        let video = try XCTUnwrap(SongVideo(answer()))
+        XCTAssertEqual(video.quality(for: nil).label, "1080p60")  // the sharpest
+        XCTAssertEqual(video.quality(for: .init(height: 1080, label: "1080p")).label, "1080p")
+        XCTAssertEqual(video.quality(for: .init(height: 720, label: "720p")).label, "720p")
+        // Not on offer for this video: the sharpest that's no bigger, else the smallest.
+        XCTAssertEqual(video.quality(for: .init(height: 480, label: "480p")).label, "360p")
+        XCTAssertEqual(video.quality(for: .init(height: 720, label: "720p60")).label, "720p")
+        XCTAssertEqual(video.quality(for: .init(height: 144, label: "144p")).label, "360p")
+    }
+
+    func testOnlyAVideoAsLongAsTheSongKeepsItsTime() throws {
+        let video = try XCTUnwrap(SongVideo(answer()))  // 245 s
+        XCTAssertTrue(video.keepsTime(with: 245))
+        XCTAssertTrue(video.keepsTime(with: 243.4))
+        XCTAssertFalse(video.keepsTime(with: 236))  // the video has an intro
+        XCTAssertFalse(video.keepsTime(with: nil))
+    }
+}
