@@ -5,14 +5,22 @@ import SwiftUI
 /// picture and the sound are one thing and the player bar's buttons work on both.
 struct VideoSurface: NSViewRepresentable {
     let player: AVPlayer
+    /// When this changes, the layer lets go of the player and takes it again (the
+    /// player's watchdog asks for that when the picture has stopped).
+    var refresh = 0
 
     func makeNSView(context: Context) -> PictureView {
         let view = PictureView()
         view.picture.player = player
+        view.refresh = refresh
         return view
     }
 
     func updateNSView(_ view: PictureView, context: Context) {
+        if view.refresh != refresh {
+            view.refresh = refresh
+            view.picture.player = nil
+        }
         if view.picture.player !== player { view.picture.player = player }
     }
 
@@ -22,6 +30,7 @@ struct VideoSurface: NSViewRepresentable {
 
     final class PictureView: NSView {
         let picture = AVPlayerLayer()
+        var refresh = 0
 
         override init(frame: NSRect) {
             super.init(frame: frame)

@@ -67,7 +67,7 @@ struct NowPlayingView: View {
     }
 
     private var picture: some View {
-        VideoSurface(player: model.player.screen)
+        VideoSurface(player: model.player.screen, refresh: model.player.pictureRefresh)
             .aspectRatio(16.0 / 9.0, contentMode: .fit)
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .shadow(color: .black.opacity(0.5), radius: 24, y: 10)

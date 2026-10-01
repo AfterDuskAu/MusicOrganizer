@@ -83,6 +83,13 @@ final class Player {
     @ObservationIgnored private var videoTicket = 0
     /// Nothing is playing because a video that stopped working is being fetched again.
     @ObservationIgnored private var waitingForVideo = false
+    /// A tap on the picture being played: it says whether new frames are still coming.
+    @ObservationIgnored private var frames: AVPlayerItemVideoOutput?
+    @ObservationIgnored private var lastFrame = Date()
+    @ObservationIgnored private var lastNudge = Date.distantPast
+    @ObservationIgnored private var nudges = 0
+    /// Goes up when the picture has to be taken hold of again (`VideoSurface` watches it).
+    private(set) var pictureRefresh = 0
     /// How many fresh addresses have been asked for since this song was started.
     @ObservationIgnored private var retries = 0
     private static let maxRetries = 2
@@ -167,6 +174,7 @@ final class Player {
             start(current)  // it never got going (YouTube refused it): ask afresh
             return
         } else {
+            lastFrame = Date()
             audio.play()
             isPlaying = true
         }
@@ -195,6 +203,7 @@ final class Player {
         guard current != nil else { return }
         clock.time = seconds
         onTick?(seconds)
+        lastFrame = Date()
         audio.seek(
             to: CMTime(seconds: seconds, preferredTimescale: 600), toleranceBefore: .zero,
             toleranceAfter: .zero
@@ -511,6 +520,14 @@ final class Player {
         waitingForVideo = false
         loaded = kind
         watch(item)
+        frames = nil
+        if kind == .video || track.isVideo {
+            let tap = AVPlayerItemVideoOutput(pixelBufferAttributes: nil)
+            item.add(tap)
+            frames = tap
+        }
+        lastFrame = Date()
+        nudges = 0
         audio.replaceCurrentItem(with: item)
         if position > 0 {
             audio.seek(
@@ -549,6 +566,45 @@ final class Player {
         }
         clock.time = seconds
         onTick?(seconds)
+        checkPicture()
+    }
+
+    /// The picture has been seen to stop on one frame while the song and its lyrics
+    /// carry on (owner, 2026-10-01), and the player reports nothing wrong. So new
+    /// frames are counted: none for three seconds of playing, and the picture is
+    /// fetched afresh from where the song is, and its layer takes hold again. What was
+    /// seen is written down, because the cause isn't known yet. Tried against two
+    /// minutes of real playback with a pause and three jumps: the longest gap between
+    /// frames was 0.17 s, and this never fired.
+    private func checkPicture() {
+        guard let frames, isPlaying, audio.timeControlStatus == .playing else {
+            lastFrame = Date()
+            return
+        }
+        let now = audio.currentTime()
+        if frames.hasNewPixelBuffer(forItemTime: now) {
+            _ = frames.copyPixelBuffer(forItemTime: now, itemTimeForDisplay: nil)
+            lastFrame = Date()
+            return
+        }
+        let stuck = Date().timeIntervalSince(lastFrame)
+        guard stuck > 3, Date().timeIntervalSince(lastNudge) > 8 else { return }
+        let what = video.map { "\($0.source.videoId) \($0.quality.label)" } ?? "a saved video"
+        guard nudges < 3 else {
+            if nudges == 3 {
+                nudges += 1
+                PlayerLog.note("picture still stuck after 3 nudges: \(what) at \(Int(now.seconds)) s")
+            }
+            return
+        }
+        nudges += 1
+        lastNudge = Date()
+        lastFrame = Date()
+        PlayerLog.note(
+            "no new picture for \(String(format: "%.1f", stuck)) s: \(what) at "
+                + "\(Int(now.seconds)) s of “\(current?.title ?? "?")”; nudge \(nudges)")
+        pictureRefresh += 1
+        audio.seek(to: now, toleranceBefore: .zero, toleranceAfter: .zero)
     }
 
     private func finished(_ item: AVPlayerItem?) {
@@ -707,5 +763,32 @@ enum Spoil {
         let spoiled = url.absoluteString.replacingOccurrences(
             of: #"expire=\d+"#, with: "expire=1700000000", options: .regularExpression)
         return URL(string: spoiled) ?? url
+    }
+}
+
+/// A few lines about what the player saw when something went wrong that it can't
+/// explain, kept in the app's own cache folder (never in the library), so the next
+/// time it happens there's something to read. The file is started again when it grows.
+enum PlayerLog {
+    static let file: URL = {
+        let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        return caches.appendingPathComponent("org.musicorganizer.app/player.log")
+    }()
+
+    static func note(_ text: String) {
+        let stamp = ISO8601DateFormatter().string(from: Date())
+        let line = Data("\(stamp) \(text)\n".utf8)
+        FileHandle.standardError.write(line)
+        let manager = FileManager.default
+        try? manager.createDirectory(
+            at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let size = (try? manager.attributesOfItem(atPath: file.path)[.size] as? Int) ?? 0
+        if size > 200_000 || !manager.fileExists(atPath: file.path) {
+            try? line.write(to: file)
+        } else if let handle = try? FileHandle(forWritingTo: file) {
+            defer { try? handle.close() }
+            _ = try? handle.seekToEnd()
+            try? handle.write(contentsOf: line)
+        }
     }
 }

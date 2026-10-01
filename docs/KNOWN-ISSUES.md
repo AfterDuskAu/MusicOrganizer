@@ -51,6 +51,8 @@ The owner named these and parked them: nothing here is built until the owner say
 
 ### The video player (built 2026-10-01): what's still rough
 
+- **A video's picture can stop on one frame while the song goes on** (owner, 2026-10-01). Not explained: see the changelog for what was ruled out. The player now notices (no new frames for 3 s), nudges the picture, and notes it in `~/Library/Caches/org.musicorganizer.app/player.log`. Next time it happens: read that file. No line there means frames were arriving and the layer wasn't drawing them (then: re-attach the layer when the window comes back into view). A line there means the stream stopped (then: fetch the picture in 10 MB pieces, which YouTube serves 50 times faster than one long request).
+
 - **Full Screen, the Downloads strip, dragging a download onto Library, and View → Columns have never been tried by Claude in the running app** (the owner was using it, and had said to stop driving it). The owner's own tries are the test so far.
 - **Song tables are now built row by row** so that downloaded rows can be dragged. Fix A-1's smoothness was measured before this; it hasn't been measured since. If scrolling feels worse, taking dragging out again (the right-click menu does the same job) is the first thing to try.
 

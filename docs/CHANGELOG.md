@@ -173,6 +173,19 @@
 - **Swap Audio…** is on a song's right-click menu (owner: "build a swap button, its implementation comes later"). It explains what it will do and changes nothing. What must be true before a file is replaced is the owner's to decide; the questions are in `docs/roadmap/0.2-app-layout.md`.
 - Not checked in the running app.
 
+2026-10-01, 11:20 pm. A video's picture stopped while the song went on (the owner's report): not explained yet.
+
+- **Seen:** in the owner's running app, a 1080p video sat on one frame for at least 12 seconds while the time and the lyrics moved on. The player reported nothing wrong. Minutes later another video in the same app was moving normally.
+- **Ruled out:**
+  - The video itself and its size: the same video at 1080p played outside the app three times without a gap (100 s, 75 s from the middle, 250 s straight), a new frame at every check.
+  - YouTube's speed limit: a continuous request (how Apple's player asks) is served at about twice the stream's average rate (6.3 Mbit/s for a 3.2 Mbit/s stream), while 10 MB pieces arrive at over 300 Mbit/s. But this video's busiest 5 seconds need 1.9 times its average, so it never runs dry at that limit, from any starting point.
+  - Two picture layers on one player (only the newest draws): the screen underneath was the Downloads list, which has none.
+  - A busy Mac: the processor was 60% idle.
+- **Not ruled out:** the picture layer losing hold after the window was covered or the app left and returned to; a hiccup in the picture stream's connection that Apple's player doesn't recover from when picture and sound are two joined streams.
+- **Added, so it mends itself and says what happened:** the player counts new frames while a video plays. None for 3 seconds of playing, and it fetches the picture afresh from where the song is (a seek in place) and has the layer take hold of the player again; at most three times a video. Each time it writes a line to `~/Library/Caches/org.musicorganizer.app/player.log` (the app's own cache folder, not the library). If the picture freezes and that file has no line, frames were still arriving and the fault is in the layer.
+  - The rule was tried against two minutes of real playback with a pause and three jumps: the longest gap between frames was 0.17 s, and it never fired.
+- Also seen: YouTube Music's "official video" for one song is partly an upright phone clip. It's the artist's own upload, so the rule accepts it.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)
