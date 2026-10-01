@@ -50,6 +50,7 @@
   - *Accounts:* YouTube, Apple Music and Spotify, each shown as coming.
   - *Lyrics:* **Find Missing Lyrics**, which runs the engine's `lyrics --missing` plan with a progress bar and a tally at the end.
 - **Engine:** the daily download cap's default is now **250** (was 300), and it can't be set above 300, whatever `config.json` says. RPC: `settings.get` and `settings.set` (`daily_cap`). `library.tracks` also gives `source`, which is how the app knows a download.
+- Fix, same day: the app opened only its Settings window, and quit when that was closed. The Settings scene had been put first, and the first scene is the one opened at launch. The main window is first again.
 - Noted, not built: lyrics for a song being played from YouTube Music (see the layout plan).
 - Not checked in the running app by Claude (the owner asked for the app not to be opened); the owner is trying each build themselves.
 

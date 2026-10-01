@@ -12,9 +12,7 @@ struct MusicOrganizerApp: App {
     }
 
     var body: some Scene {
-        Settings {
-            SettingsView().environment(model)
-        }
+        // The main window comes first: the first scene is the one opened at launch.
         Window("Music Organizer", id: "main") {
             RootView()
                 .environment(model)
@@ -50,6 +48,9 @@ struct MusicOrganizerApp: App {
                     model.player.cycleRepeat()
                 }
             }
+        }
+        Settings {
+            SettingsView().environment(model)
         }
     }
 }
