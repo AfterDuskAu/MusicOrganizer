@@ -8,8 +8,6 @@ struct FullScreenVideo: View {
     @Environment(AppModel.self) private var model
     @State private var controlsShown = true
     @State private var hiding: Task<Void, Never>?
-    /// This view put the window into macOS's full screen, so it takes it out again.
-    @State private var tookTheScreen = false
 
     var body: some View {
         let player = model.player
@@ -28,42 +26,18 @@ struct FullScreenVideo: View {
                 }
                 .transition(.opacity)
             }
-            // Always there, though never seen: Esc works with the controls put away too.
-            Button("Leave Full Screen") { model.videoFullScreen = false }
-                .keyboardShortcut(.cancelAction)
-                .opacity(0)
-                .frame(width: 0, height: 0)
-                .accessibilityHidden(true)
         }
         .ignoresSafeArea()
         .environment(\.colorScheme, .dark)
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) { model.videoFullScreen = false }
+        .onTapGesture(count: 2) { model.setVideoFullScreen(false) }
         .onContinuousHover { phase in
             if case .active = phase { wake() }
         }
-        .onAppear {
-            if let window = NSApp.keyWindow ?? NSApp.mainWindow,
-                !window.styleMask.contains(.fullScreen)
-            {
-                tookTheScreen = true
-                window.toggleFullScreen(nil)
-            }
-            wake()
-        }
+        .onAppear { wake() }
         .onDisappear {
             hiding?.cancel()
             NSCursor.setHiddenUntilMouseMoves(false)
-            if tookTheScreen, let window = NSApp.keyWindow ?? NSApp.mainWindow,
-                window.styleMask.contains(.fullScreen)
-            {
-                window.toggleFullScreen(nil)
-            }
-        }
-        // Leaving macOS's full screen by its own means (the green button) leaves this too.
-        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didExitFullScreenNotification)) { _ in
-            tookTheScreen = false
-            model.videoFullScreen = false
         }
     }
 
@@ -85,10 +59,15 @@ struct FullScreenVideo: View {
     private func top(_ player: Player) -> some View {
         HStack(spacing: 12) {
             Button {
-                model.videoFullScreen = false
+                model.setVideoFullScreen(false)
             } label: {
                 Label("Leave Full Screen", systemImage: "arrow.down.right.and.arrow.up.left")
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(.white.opacity(0.18), in: Capsule())
+                    .contentShape(Capsule())
             }
+            .buttonStyle(.plain)
             .help("Back to the app (Esc)")
             if let track = player.current {
                 Text("\(track.title) · \(track.artistName)")

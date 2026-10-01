@@ -59,7 +59,13 @@ from musicorg.errors import (
     YouTubeRefusedError,
 )
 from musicorg.naming import STAGING_DIR
-from musicorg.normalize import SOFT_VERSION_KINDS, Parsed, compare_key, parse_title
+from musicorg.normalize import (
+    SOFT_VERSION_KINDS,
+    Parsed,
+    compare_key,
+    parse_title,
+    render_versions,
+)
 
 log = logging.getLogger(__name__)
 
@@ -270,7 +276,13 @@ def _thumbnails(raw: Any) -> tuple[tuple[str, int, int], ...]:
 # ---- lyrics and pictures (step 10) ------------------------------------------------------
 
 
-def find_video(title: str, artist: str, *, cache: SearchCache | None = None) -> Candidate | None:
+def find_video(
+    title: str,
+    artist: str,
+    *,
+    versions: tuple[str, ...] = (),
+    cache: SearchCache | None = None,
+) -> Candidate | None:
     """The official music video YouTube Music has for a song, or None (v0.2). One
     "videos" search, cached for 30 days like a song search.
 
@@ -280,10 +292,20 @@ def find_video(title: str, artist: str, *, cache: SearchCache | None = None) -> 
     the original), and an artist in common. Uploads by other people (lyric videos,
     fan edits: `MUSIC_VIDEO_TYPE_UGC`) are never taken, so plenty of songs have none.
 
+    `versions` are version tokens known from somewhere other than the title ("remix",
+    "remix:somebody", "slowed"): a rip named "Song R" can carry the plain title "Song"
+    in its tags, and must not get the original's video. A remix by nobody in particular
+    matches no video at all, since which remix it is can't be told.
+
     Checked against ytmusicapi 1.12.3: a "videos" result carries `resultType` "video",
     `videoId`, `title`, `artists[].name`, `videoType` and `duration_seconds`, and no
     album."""
-    query = f"{artist} {title}".strip()
+    wanted = parse_title(title)
+    hard = _hard_versions(wanted) | {
+        v for v in versions if v.partition(":")[0] not in SOFT_VERSION_KINDS
+    }
+    extra = render_versions(sorted(hard - _hard_versions(wanted)))
+    query = " ".join(part for part in (artist, title, extra) if part).strip()
     key = query_key(query)
     cache_key = f"videos {key}"
     raw = None if cache is None else cache.cached_search(cache_key, max_age_days=SEARCH_CACHE_DAYS)
@@ -293,22 +315,24 @@ def find_video(title: str, artist: str, *, cache: SearchCache | None = None) -> 
             cache.put_search(cache_key, raw)
     if not isinstance(raw, list):
         raise YouTubeError(f"YouTube Music's search for {query!r} gave an answer we can't read.")
-    wanted = parse_title(title)
     for result in raw:
         if not isinstance(result, dict) or result.get("videoType") != OFFICIAL_VIDEO:
             continue
         duration = _int(result.get("duration_seconds")) or parse_length(result.get("duration"))
         found = _from_track(result, duration=duration)
-        if found is not None and _same_song(wanted, artist, found):
+        if found is not None and _same_song(wanted, artist, found, hard):
             return found
     return None
 
 
-def _same_song(wanted: Parsed, artist: str, found: Candidate) -> bool:
+def _same_song(
+    wanted: Parsed, artist: str, found: Candidate, versions: set[str] | None = None
+) -> bool:
+    """`versions`: the song's hard version tokens, when more is known than its title says."""
     theirs = parse_title(found.title)
     if compare_key(wanted.title) != compare_key(theirs.title) or not compare_key(wanted.title):
         return False
-    if _hard_versions(wanted) != _hard_versions(theirs):
+    if (_hard_versions(wanted) if versions is None else versions) != _hard_versions(theirs):
         return False
     credit = f" {_artist_key(artist)} "
     return any(f" {_artist_key(name)} " in credit for name in found.artists if _artist_key(name))

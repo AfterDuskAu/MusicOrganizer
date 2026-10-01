@@ -206,6 +206,26 @@ def test_daily_cap_survives_a_restart(lib: Library, clock: FakeClock, yt: FakeYo
     assert queue.status(lib.paths, now=clock.t, config=cfg)["daily_count"] == 3
 
 
+def test_what_the_owner_asked_for_by_hand_runs_before_a_long_batch(
+    lib: Library, clock: FakeClock
+) -> None:
+    """Saving one video queued behind a thousand lyrics look-ups waited for all of them."""
+    _, lyrics_ids = enqueue(lib, 3, kind="lyrics")
+    _, download_ids = enqueue(lib, 1, kind="download")
+    _, more_lyrics = enqueue(lib, 1, kind="lyrics")
+    _, edit_ids = enqueue(lib, 1, kind="edit")
+    order: list[int] = []
+
+    def note(ctx: Any) -> Outcome:
+        order.append(ctx.job["id"])
+        return Outcome.done()
+
+    kinds = {kind: Kind(note, network=False) for kind in ("lyrics", "download", "edit")}
+    result = run(lib, clock, kinds=kinds)
+    assert result.counts == {"done": 6}
+    assert order == [*download_ids, *edit_ids, *lyrics_ids, *more_lyrics]
+
+
 def test_jobs_without_downloads_skip_the_pace(lib: Library, clock: FakeClock) -> None:
     enqueue(lib, 3, kind="adopt")
     kinds = {"adopt": Kind(lambda ctx: Outcome.done(), network=False)}

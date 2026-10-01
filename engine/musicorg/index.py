@@ -572,6 +572,9 @@ def open_index(paths: LibraryPaths, *, write: bool) -> Index:
 # ---- queue.sqlite (step 09a) -----------------------------------------------------------
 
 QUEUE_SCHEMA_VERSION = 1
+# Jobs the owner asks for one at a time and waits on (the app's Download, Save Video and
+# Edit Details). They run before the batches that work through the whole library.
+FIRST_KINDS = ("download", "edit")
 
 _QUEUE_TABLES = """
 CREATE TABLE jobs (
@@ -740,11 +743,16 @@ class QueueStore:
         return [_job(row) for row in self._rows(sql + " ORDER BY id", params)]
 
     def next_ready(self, now: str) -> dict[str, Any] | None:
-        """The oldest queued job whose retry time (if any) has come."""
+        """The next queued job whose retry time (if any) has come: the oldest of the
+        kinds the owner asks for one at a time and waits on (`FIRST_KINDS`), then the
+        oldest of the rest. So saving one song isn't stuck behind an hour-long run
+        through the whole library."""
+        marks = ", ".join("?" for _ in FIRST_KINDS)
         rows = self._rows(
             "SELECT * FROM jobs WHERE state = 'queued' "
-            "AND (next_attempt_at IS NULL OR next_attempt_at <= ?) ORDER BY id LIMIT 1",
-            (now,),
+            "AND (next_attempt_at IS NULL OR next_attempt_at <= ?) "
+            f"ORDER BY CASE WHEN kind IN ({marks}) THEN 0 ELSE 1 END, id LIMIT 1",
+            (now, *FIRST_KINDS),
         )
         return _job(rows[0]) if rows else None
 

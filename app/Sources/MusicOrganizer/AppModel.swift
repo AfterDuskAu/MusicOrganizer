@@ -57,8 +57,12 @@ final class AppModel {
     var namePrompt: NamePrompt?
     /// The song whose details are being edited by hand.
     var editing: Track?
-    /// The video has the whole screen.
-    var videoFullScreen = false
+    /// The video has the whole screen (`setVideoFullScreen`).
+    private(set) var videoFullScreen = false
+    /// The app put its window into macOS's full screen for the video, so it takes it
+    /// out again afterwards. Kept here, not in the view: the view is rebuilt as the
+    /// window changes, and forgot.
+    @ObservationIgnored private var tookTheScreen = false
 
     // The YouTube Music search page.
     var youtubeQuery = ""
@@ -119,8 +123,11 @@ final class AppModel {
             }
             // A song with no artist to its name can't be told from others of its title.
             guard let artist = track.artist ?? track.albumArtist else { return nil }
-            let found = try await connection.call(
-                "youtube.video", ["title": track.title, "artist": artist], as: VideoAnswer.self)
+            var asked: [String: Any] = ["title": track.title, "artist": artist]
+            // A library song's file says which version it is (a rip named "Song R" is a
+            // remix, whatever its title says), so a remix never gets the original's video.
+            if track.videoId == nil { asked["path"] = track.path }
+            let found = try await connection.call("youtube.video", asked, as: VideoAnswer.self)
             return SongVideo(found)
         }
     }
@@ -133,6 +140,16 @@ final class AppModel {
             forName: NSApplication.willTerminateNotification, object: nil, queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.stopEngine() }
+        }
+        // Leaving macOS's full screen by its own means (the green button, the menu)
+        // puts the video back in the page as well.
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.didExitFullScreenNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.tookTheScreen = false
+                self?.videoFullScreen = false
+            }
         }
         await connect()
     }
@@ -410,17 +427,46 @@ final class AppModel {
     }
 
     /// Download one song into the library. Only ever called by the owner's click.
-    func download(_ result: SearchResult) {
-        guard downloads[result.videoId] != .working else { return }
-        downloads[result.videoId] = .working
+    func download(_ result: SearchResult) { downloadSong(result.videoId) }
+
+    /// Download a YouTube Music song (by its id) into the library.
+    func downloadSong(_ videoId: String) {
+        guard downloads[videoId] != .working else { return }
+        downloads[videoId] = .working
         Task {
             do {
-                try await run(plan: "download", ["video_ids": [result.videoId]])
-                downloads[result.videoId] = nil  // it now shows as "in your library"
+                try await run(plan: "download", ["video_ids": [videoId]])
+                downloads[videoId] = nil  // it now shows as "in your library"
             } catch {
-                downloads[result.videoId] = .failed(error.localizedDescription)
+                downloads[videoId] = .failed(error.localizedDescription)
             }
         }
+    }
+
+    // MARK: the video on the whole screen
+
+    /// Give the video the whole screen, or bring the app back. The window goes into
+    /// macOS's full screen for it, and comes out again if it went in for this.
+    func setVideoFullScreen(_ on: Bool) {
+        guard on != videoFullScreen else { return }
+        videoFullScreen = on
+        guard let window = mainWindow else { return }
+        let isFull = window.styleMask.contains(.fullScreen)
+        if on {
+            if !isFull {
+                tookTheScreen = true
+                window.toggleFullScreen(nil)
+            }
+        } else if tookTheScreen {
+            tookTheScreen = false
+            if isFull { window.toggleFullScreen(nil) }
+        }
+    }
+
+    /// The library's window (not Settings, and not a sheet).
+    private var mainWindow: NSWindow? {
+        NSApp.windows.first { $0.isVisible && $0.canBecomeMain && $0.styleMask.contains(.resizable) }
+            ?? NSApp.mainWindow
     }
 
     /// Save the video that's playing into the library, whole, at the picture size
@@ -610,6 +656,16 @@ final class AppModel {
     private func installSpaceBar() {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            // Esc leaves the video's full screen, whatever has the keyboard's attention
+            // (a button's own shortcut wasn't reliable there).
+            if event.keyCode == 53 {
+                let left = MainActor.assumeIsolated { () -> Bool in
+                    guard let self, self.videoFullScreen else { return false }
+                    self.setVideoFullScreen(false)
+                    return true
+                }
+                return left ? nil : event
+            }
             guard event.keyCode == 49,
                 event.modifierFlags.intersection([.command, .option, .control]).isEmpty
             else { return event }

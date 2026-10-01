@@ -119,6 +119,31 @@ def test_a_video_of_another_version_or_artist_isnt_the_songs() -> None:
     )
 
 
+def test_a_remix_never_gets_the_originals_video() -> None:
+    """A library copy can be titled plainly while the rip it came from was "Song R" or
+    "Song (Somebody Remix)": the version comes with the request, not from the title."""
+    fixtures = Path(__file__).parent / "fixtures" / "ytm"
+    recorded = youtube.read_recording(fixtures, "videos", "j cole work out")
+
+    class Cache:
+        def cached_search(self, key: str, *, max_age_days: float) -> Any | None:
+            # The search for "... remix" finds what the plain search finds: the original.
+            return recorded if key == "videos j cole work out remix" else None
+
+        def put_search(self, key: str, response: Any) -> None:
+            pytest.fail("nothing new to keep")
+
+    assert youtube.find_video("Work Out", "J. Cole", versions=("remix",), cache=Cache()) is None
+    # A remaster or an explicit mark is still the same recording.
+    same = youtube.find_video("Work Out", "J. Cole", versions=("remaster:2011", "explicit"))
+    assert same is not None and same.video_id == "W5hSdGt2M8w"
+    # Which remix is known: its own official video is found, by the right words.
+    remix = youtube.find_video("Crave You", "Flight Facilities", versions=("remix:adventure club",))
+    assert remix is not None and "Adventure Club Remix" in remix.title
+    assert youtube.find_video("Crave You (Adventure Club Remix)", "Flight Facilities",
+                              versions=("remix:adventure club",)) == remix  # fmt: skip
+
+
 def test_video_searches_are_cached_apart_from_song_searches(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

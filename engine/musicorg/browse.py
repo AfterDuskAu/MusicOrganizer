@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,7 @@ from musicorg import naming, tags
 from musicorg.errors import AudioError, NotFoundError, OutsideLibraryError
 from musicorg.index import Index
 from musicorg.library import Library
+from musicorg.normalize import parse_filename
 
 log = logging.getLogger(__name__)
 
@@ -82,6 +84,20 @@ def lyrics(lib: Library, rel_path: str) -> dict[str, str | None]:
     synced = lrc.read_text(encoding="utf-8", errors="replace") if lrc.is_file() else None
     plain = tags.read_tags(path).lyrics
     return {"synced": synced, "plain": plain if isinstance(plain, str) else None}
+
+
+def version_tokens(lib: Library, rel_path: str) -> tuple[str, ...]:
+    """What's known about which version of a song a library file is ("remix",
+    "remix:somebody", "live"…): its version tag, and what the name of the rip it was
+    copied from says. A copy not identified yet keeps the rip's own title tag, which can
+    be the plain title while the rip is called "Song R" or "Song (Somebody Remix)"."""
+    found = tags.read_tags(track_path(lib, rel_path))
+    tokens = list(found.version) if isinstance(found.version, list) else []
+    if isinstance(found.origin_path, str) and found.origin_path:
+        name = re.split(r"[\\/]", found.origin_path)[-1]
+        stem = name.rsplit(".", 1)[0] if "." in name else name
+        tokens += parse_filename(stem).version_tokens
+    return tuple(dict.fromkeys(tokens))
 
 
 def track_path(lib: Library, rel_path: str) -> Path:

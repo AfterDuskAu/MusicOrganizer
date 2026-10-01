@@ -490,6 +490,24 @@ def test_stream_jobs_and_the_new_plan_kinds(
         ],
     }  # fmt: skip
     assert result(opened, "youtube.video", title="cLOUDs", artist="J. Cole") == {"found": False}
+    # A library song's path tells its version: the rip was "Work Out R", a remix, so the
+    # original's video isn't its video.
+    from musicorg import browse
+
+    seen: list[tuple[str, ...]] = []
+    real = youtube.find_video
+
+    def find(title: str, artist: str, **kw: Any) -> Any:
+        seen.append(kw["versions"])
+        return None if kw["versions"] else real(title, artist, **kw)
+
+    monkeypatch.setattr(youtube, "find_video", find)
+    monkeypatch.setattr(browse, "version_tokens", lambda lib, path: ("remix",))
+    asked_with_path = result(
+        opened, "youtube.video", title="Work Out", artist="J. Cole", path="Music/A/Work Out.mp3"
+    )
+    assert asked_with_path == {"found": False} and seen == [("remix",)]
+    monkeypatch.setattr(youtube, "find_video", real)
     assert asked == ["W5hSdGt2M8w"]  # nothing more is asked about a song with no video
     sizes = ()  # a video with no picture the app can show
     assert result(opened, "youtube.video", title="Work Out", artist="J. Cole") == {"found": False}

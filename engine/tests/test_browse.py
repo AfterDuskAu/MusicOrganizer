@@ -87,6 +87,22 @@ def test_a_saved_video_is_marked_as_one(filled: Library, video_mp4: Path) -> Non
     assert by_path[rel]["source_id"] == "videoVVVVVV" and by_path[rel]["duration_s"] > 19
 
 
+def test_a_songs_version_comes_from_its_tag_and_its_rips_name(
+    lib: Library, samples: dict[str, Path]
+) -> None:
+    plain = add(lib, samples, SONG, title="Song", musicorg_id="t_1",
+                origin_path="/somewhere/rips/Song R.mp3")  # fmt: skip
+    assert browse.version_tokens(lib, SONG) == ("remix",)
+    tags.write_tags(plain, tags.TrackTags(origin_path="C:\\Rips\\Band - Song (Somebody Remix).mp3"))
+    assert browse.version_tokens(lib, SONG) == ("remix:somebody",)
+    tags.write_tags(plain, tags.TrackTags(version=["live"], origin_path="/rips/Song.mp3"))
+    assert browse.version_tokens(lib, SONG) == ("live",)
+    add(lib, samples, OTHER, title="Other")  # no version tag, and no rip behind it
+    assert browse.version_tokens(lib, OTHER) == ()
+    with pytest.raises(OutsideLibraryError):
+        browse.version_tokens(lib, "../elsewhere.mp3")
+
+
 def test_details_are_read_once_then_come_from_the_index(
     filled: Library, monkeypatch: pytest.MonkeyPatch
 ) -> None:

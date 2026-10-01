@@ -142,6 +142,17 @@
 - **Checked for real:** one video (144p, 7 MB) saved into a scratch library from YouTube in 9 seconds, with the right streams, tags and cover; then undone. Apple's player, on its own, read that file's cover and played its picture, at the right length. **Not checked in the running app:** Save Video, the Videos list, playing a saved video there, and the stepper. The owner had the app open and had said to stop driving it earlier this evening, so these are for the owner to try.
 - Not built: videos in the YouTube Music search page (a Songs / Videos switch was suggested; the owner hasn't said), and moving one download into the library by hand.
 
+2026-10-01, 9:30 pm. The owner's notes after trying video and Save Video.
+
+- **Fix: a remix got the original's video.** The owner's rip "Black Out Days R.mp3" ("R" is the owner's mark for a remix) is in the library as an unconfirmed copy whose title tag is the plain "Black Out Days", so the app asked for the plain song's video. The same for "Bones [Epic Remix]" and "Bad Habits (Leahy & Mack Remix)".
+  - `youtube.video` takes the library song's `path`. The engine reads the song's version from its version tag and from the name of the rip it was copied from (`browse.version_tokens`), and `youtube.find_video(…, versions=…)` uses it: a remix only matches a video of that same remix, and a remix by nobody in particular matches none. The words of a known remix go into the search.
+- **Fix: Save Video sat waiting for minutes.** It was queued behind a "Find Missing Lyrics" run of 1,098 songs started three minutes earlier: the queue ran jobs strictly oldest first. Now what the owner asks for one at a time and waits on (plan kinds `download` and `edit`) runs before the batches that work through the whole library. No change to `queue.sqlite`'s shape.
+- **With Video on, a song starts at once** and its video takes over when it has loaded (owner: no waiting in silence). A video as long as the song takes over at the same place; any other starts from its beginning, as before.
+- **"Cover" is now "Song"** on the Song / Video switch.
+- **Leaving Full Screen:** Esc didn't work (it relied on an unseen button's shortcut). Esc is now caught by the app itself whenever the video has the screen, and the app, not the view, remembers that it put the window into macOS's full screen, so it reliably takes it out again. The Leave Full Screen button is bigger. **Not checked: Claude can't try full screen without taking over the owner's screen, and the owner was using the app.**
+- **Download Song Too**, beside Save Video, for a song being played from YouTube Music: it downloads the song itself (sound only, with its album details), as the Download button on the YouTube Music page does. A song already in the library doesn't show it.
+- Noted, not built (the owner's question): swapping a library song's audio for YouTube Music's (`docs/roadmap/0.2-app-layout.md`).
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

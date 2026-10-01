@@ -71,7 +71,7 @@ struct NowPlayingView: View {
             .aspectRatio(16.0 / 9.0, contentMode: .fit)
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .shadow(color: .black.opacity(0.5), radius: 24, y: 10)
-            .onTapGesture(count: 2) { model.videoFullScreen = true }
+            .onTapGesture(count: 2) { model.setVideoFullScreen(true) }
     }
 
     @ViewBuilder
@@ -122,22 +122,27 @@ private struct VideoControls: View {
                     "Show",
                     selection: Binding(get: { player.pictureWanted }, set: { player.setVideo($0) })
                 ) {
-                    Text("Cover").tag(false)
+                    Text("Song").tag(false)
                     Text("Video").tag(true)
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
                 .fixedSize()
-                .help("Show the song's cover, or its official video from YouTube")
+                .help("Play the song with its cover, or its official video from YouTube")
                 if player.showsPicture {
                     QualityMenu()  // only for a video played from YouTube
                     Button("Full Screen", systemImage: "arrow.up.left.and.arrow.down.right") {
-                        model.videoFullScreen = true
+                        model.setVideoFullScreen(true)
                     }
                     .help("Give the video the whole screen (Esc brings it back)")
                 }
                 if let video = player.video {
                     SaveVideoButton(video: video)
+                    // The song itself, for a song being played from YouTube Music: a
+                    // video is a different file, and often a different cut.
+                    if let songId = player.current?.videoId {
+                        SaveSongButton(videoId: songId)
+                    }
                 }
             }
             if let note = player.videoNote {
@@ -185,6 +190,39 @@ private struct SaveVideoButton: View {
                     .help(
                         "Save this video in your library at \(video.quality.label). It counts "
                             + "as one of the day's downloads.")
+            }
+        }
+    }
+}
+
+/// Download the song too, beside its video: the audio alone, as any downloaded song.
+private struct SaveSongButton: View {
+    let videoId: String
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        if model.everything.videoIDs.contains(videoId) {
+            Label("Song Saved", systemImage: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+                .font(.callout)
+                .help("This song is in your library")
+        } else {
+            switch model.downloads[videoId] {
+            case .working:
+                HStack(spacing: 6) {
+                    ProgressView().controlSize(.small)
+                    Text("Downloading…").font(.callout).foregroundStyle(.secondary)
+                }
+            case .failed(let why):
+                Button("Try Again", systemImage: "exclamationmark.triangle") {
+                    model.downloadSong(videoId)
+                }
+                .help(why)
+            case nil:
+                Button("Download Song Too", systemImage: "music.note") {
+                    model.downloadSong(videoId)
+                }
+                .help("Save the song itself (sound only, with its album details) in your library")
             }
         }
     }

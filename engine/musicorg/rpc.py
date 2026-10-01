@@ -752,8 +752,12 @@ class Server:
         """A song's official music video, to play in the app: its sound, and its picture
         in each size on offer. Nothing is saved."""
         title, artist = need(params, "title", str), need(params, "artist", str)
+        path = want(params, "path", str)
+        # A library song says more about its version than its title does (a rip named
+        # "Song R" is a remix): without it a remix would get the original's video.
+        versions = browse.version_tokens(self._library(), path) if path else ()
         with self._index(write=True) as index:  # the index keeps the search's answer
-            match = youtube.find_video(title, artist, cache=index)
+            match = youtube.find_video(title, artist, versions=versions, cache=index)
         if match is None:
             return {"found": False}
         found = youtube.video(match.video_id)

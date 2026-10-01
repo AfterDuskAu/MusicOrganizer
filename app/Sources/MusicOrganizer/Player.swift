@@ -71,6 +71,11 @@ final class Player {
     /// Goes up whenever something new is started, so an answer from YouTube that arrives
     /// after the owner has moved on is dropped.
     @ObservationIgnored private var ticket = 0
+    /// The same, for a video being looked for while the song already plays: starting
+    /// the song's sound mustn't drop it, and a new song or "Song" must.
+    @ObservationIgnored private var videoTicket = 0
+    /// Nothing is playing because a video that stopped working is being fetched again.
+    @ObservationIgnored private var waitingForVideo = false
     /// How many fresh addresses have been asked for since this song was started.
     @ObservationIgnored private var retries = 0
     private static let maxRetries = 2
@@ -200,6 +205,7 @@ final class Player {
 
     func stop() {
         ticket += 1
+        videoTicket += 1
         audio.pause()
         audio.replaceCurrentItem(with: nil)
         queue.play([])
@@ -227,22 +233,19 @@ final class Player {
         videoOn = on
         guard let track = current else { return }
         if on {
-            // The sound carries on while the video is looked for, if there is any yet.
-            let nothingYet = isFetching || audio.currentItem == nil
-            startVideo(
-                track, at: exactTime, interrupt: nothingYet, playing: nothingYet || isPlaying)
+            // The sound carries on (or goes on loading) while the video is looked for.
+            startVideo(track, at: exactTime, interrupt: false, playing: isPlaying)
             return
         }
+        videoTicket += 1  // a video still being looked for isn't wanted any more
         videoNote = nil
         let showing = loaded == .video && audio.currentItem != nil
         let keepsTime = video?.keepsTime ?? false
         video = nil
         if showing {
             startSound(track, at: keepsTime ? exactTime : 0, playing: isPlaying)
-        } else if isFetching {  // it was waiting for its video
+        } else if waitingForVideo {  // nothing else is on its way: play the song
             startSound(track, at: 0, playing: true)
-        } else {
-            ticket += 1  // a video still being looked for isn't wanted any more
         }
     }
 
@@ -293,16 +296,20 @@ final class Player {
         video = nil
         videoNote = nil
         pictureHidden = false
-        if videoOn, !track.isVideo {  // a saved video needs nothing from YouTube
-            startVideo(track, at: 0, interrupt: true, playing: true)
-        } else {
-            startSound(track, at: 0, playing: true)
+        videoTicket += 1
+        // The song itself always starts at once. With Video on, its video is looked for
+        // meanwhile and takes over when it's ready (owner, 2026-10-01: no waiting in
+        // silence). A saved video needs nothing from YouTube.
+        startSound(track, at: 0, playing: true)
+        if videoOn, !track.isVideo {
+            startVideo(track, at: 0, interrupt: false, playing: true)
         }
     }
 
     /// The song's own sound: the library's file, or YouTube's audio for a song that
     /// isn't in the library.
     private func startSound(_ track: Track, at position: Double, playing: Bool) {
+        waitingForVideo = false
         if let videoId = track.videoId {
             startFromYouTube(track, videoId, at: position, playing: playing)
             return
@@ -360,10 +367,10 @@ final class Player {
         }
     }
 
-    /// The song's official video, picture and sound. With `interrupt`, nothing plays
-    /// while it's looked for (a song that's only starting); without, the sound that's
-    /// on carries on until the video is ready to take over. A song with no video plays
-    /// as it always does.
+    /// The song's official video, picture and sound. Without `interrupt`, whatever is
+    /// playing (or still loading) carries on until the video is ready to take over; a
+    /// song with no video just plays on. With `interrupt` (a video that stopped working
+    /// and is being started again), nothing plays while it's looked for.
     ///
     /// `position` is a place in the song, unless `inVideoTime` says it's one in the
     /// video (a video being started again where it stopped).
@@ -375,33 +382,43 @@ final class Player {
             if interrupt { startSound(track, at: position, playing: playing) }
             return
         }
-        let mine = nextTicket()
-        if interrupt { wait(for: track, at: position) }
+        videoTicket += 1
+        let mine = videoTicket
+        if interrupt {
+            ticket += 1
+            wait(for: track, at: position)
+            waitingForVideo = true
+        }
         videoNote = "Looking for this song's video…"
         Task {
             do {
                 guard let found = try await lookUpVideo(of: track) else {
-                    guard ticket == mine else { return }
+                    guard videoTicket == mine, current == track else { return }
                     videoNote = "YouTube Music has no official video for this song."
                     if interrupt {
                         startSound(track, at: inVideoTime ? 0 : position, playing: playing)
                     }
                     return
                 }
-                guard ticket == mine else { return }
+                guard videoTicket == mine, current == track else { return }
                 let quality = found.quality(for: videoPreference)
                 let item = try await Self.joined(found, quality)
-                guard ticket == mine else { return }
+                guard videoTicket == mine, current == track else { return }
                 let keepsTime = found.keepsTime(with: track.durationS)
-                // A video that isn't the song second for second starts at its beginning.
-                let place = interrupt ? position : exactTime
+                // The song's sound may still be loading (a song from YouTube): then the
+                // video simply starts. Otherwise it takes over where the song is, if
+                // it's the song second for second, and from its beginning if not.
+                let soundOn = !isFetching && audio.currentItem != nil
+                let place = interrupt ? position : soundOn ? exactTime : 0
+                let goOn = interrupt ? playing : soundOn ? isPlaying : true
+                ticket += 1  // the song's own sound, if it's still on its way, is dropped
                 video = ShowingVideo(source: found, quality: quality, keepsTime: keepsTime)
                 videoNote = nil
                 begin(
                     track, item, .video, at: keepsTime || inVideoTime ? place : 0,
-                    playing: interrupt ? playing : isPlaying, length: found.length)
+                    playing: goOn, length: found.length)
             } catch {
-                guard ticket == mine else { return }
+                guard videoTicket == mine, current == track else { return }
                 videos[track.id] = nil  // its addresses may be the trouble: ask afresh
                 if retries < Self.maxRetries {
                     retries += 1
@@ -484,6 +501,7 @@ final class Player {
     ) {
         problem = nil
         isFetching = false
+        waitingForVideo = false
         loaded = kind
         watch(item)
         audio.replaceCurrentItem(with: item)
