@@ -10,8 +10,13 @@ upgraded, so a playlist survives a tidy.
         "favourites": {track_id: {"since": ISO time}},
         "plays": {track_id: {"count": 3, "last_played": ISO time}},
         "playlists": [{"id": "pl_…", "name": "…", "created_at": ISO time,
-                       "track_ids": [track_id, …]}]      # in the owner's order
+                       "track_ids": [track_id, …]}],     # in the owner's order
+        "library": {track_id: {"since": ISO time}}       # downloads moved into the main library
     }
+
+A download stays under Discover → Downloads until the owner moves it into the main
+library (or sets the app to show all downloads there). That's the owner's sorting, not a
+fact about the recording, and no file moves, so it's kept here too.
 
 Every function takes the open library (its lock must be held to change anything) and
 returns plain data in the shapes docs/ENGINE_API.md gives.
@@ -32,7 +37,8 @@ MAX_NAME = 200
 
 
 def get(lib: Library) -> dict[str, Any]:
-    """Everything, cleaned of anything malformed: `{favourites, plays, playlists}`."""
+    """Everything, cleaned of anything malformed: `{favourites, plays, playlists,
+    library}`."""
     return _shown(_read(lib.load_state().data))
 
 
@@ -47,6 +53,22 @@ def set_favourite(lib: Library, track_id: str, on: bool) -> list[str]:
             data["favourites"].pop(track_id, None)
         st.data[KEY] = data
     return _shown(data)["favourites"]
+
+
+def move(lib: Library, track_ids: list[str], *, to_library: bool) -> list[str]:
+    """Move downloads into the main library's lists, or back under Downloads. Returns
+    the ids that are in the main library now."""
+    for track_id in track_ids:
+        _check_id(track_id)
+    with state.edit(lib.paths.state_file) as st:
+        data = _read(st.data)
+        for track_id in track_ids:
+            if to_library:
+                data["library"].setdefault(track_id, {"since": _now()})
+            else:
+                data["library"].pop(track_id, None)
+        st.data[KEY] = data
+    return _shown(data)["library"]
 
 
 def played(lib: Library, track_id: str) -> dict[str, Any]:
@@ -134,7 +156,13 @@ def _read(data: dict[str, Any]) -> dict[str, Any]:
     favourites = raw.get("favourites")
     plays = raw.get("plays")
     playlists = raw.get("playlists")
+    moved = raw.get("library")
     return {
+        "library": {
+            k: {"since": v.get("since") if isinstance(v, dict) else None}
+            for k, v in (moved.items() if isinstance(moved, dict) else [])
+            if isinstance(k, str) and k
+        },
         "favourites": {
             k: {"since": v.get("since") if isinstance(v, dict) else None}
             for k, v in (favourites.items() if isinstance(favourites, dict) else [])
@@ -162,6 +190,7 @@ def _shown(data: dict[str, Any]) -> dict[str, Any]:
         "favourites": [track_id for track_id, _ in recent],
         "plays": data["plays"],
         "playlists": data["playlists"],
+        "library": sorted(data["library"]),
     }
 
 

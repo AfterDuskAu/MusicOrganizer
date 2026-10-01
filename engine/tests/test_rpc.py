@@ -513,6 +513,9 @@ def test_stream_jobs_and_the_new_plan_kinds(
     assert result(opened, "youtube.video", title="Work Out", artist="J. Cole") == {"found": False}
     assert code(opened, "youtube.video", title="Work Out") == rpc.INVALID_PARAMS
     assert result(opened, "queue.jobs", batch_id="b_nothing") == {"jobs": []}
+    assert result(opened, "queue.downloads") == {"downloads": []}
+    assert code(opened, "queue.dismiss", job_id=12345) == rpc.NOT_FOUND
+    assert code(opened, "queue.dismiss") == rpc.INVALID_PARAMS
     assert code(opened, "plan.create", kind="download") == rpc.INVALID_PARAMS
     assert code(opened, "plan.create", kind="download", options={"video_ids": []}) == (
         rpc.INVALID_PARAMS

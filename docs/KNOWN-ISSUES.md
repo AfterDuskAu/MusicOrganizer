@@ -51,6 +51,9 @@ The owner named these and parked them: nothing here is built until the owner say
 
 ### The video player (built 2026-10-01): what's still rough
 
+- **Full Screen, the Downloads strip, dragging a download onto Library, and View → Columns have never been tried by Claude in the running app** (the owner was using it, and had said to stop driving it). The owner's own tries are the test so far.
+- **Song tables are now built row by row** so that downloaded rows can be dragged. Fix A-1's smoothness was measured before this; it hasn't been measured since. If scrolling feels worse, taking dragging out again (the right-click menu does the same job) is the first thing to try.
+
 - **Finding a video can take 20 seconds**, not only the 5 to 12 first measured (seen 2026-10-01 while the research workers were also using YouTube from this Mac).
 - **Switching between Cover and Video hitches for about 0.2 s** (measured: the player's own work takes 0 ms; the screen laying itself out again, lyrics included, is the rest). The same size as the lyrics panel's hitch above.
 - **The first look-up of a video takes 5 to 12 seconds:** one search and one yt-dlp look-up, each behind the 1.5-second rate limiter. The next song's video is looked up ahead of time; a song jumped to by hand waits.

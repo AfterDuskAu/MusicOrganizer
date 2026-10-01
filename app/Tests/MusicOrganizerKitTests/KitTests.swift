@@ -168,6 +168,43 @@ final class LibraryTests: XCTestCase {
                        SidebarChoice.write(SidebarChoice.all))
     }
 
+    func testUnfinishedDownloads() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let json = """
+            {"downloads": [
+              {"job_id": 7, "batch_id": "b_1", "state": "running", "reason": null, "message": null,
+               "video_id": "abcdefghijk", "title": "Song", "artists": ["Band", "Guest"],
+               "video": true, "height": 720, "fps": 30, "thumbnail": null},
+              {"job_id": 6, "batch_id": "b_0", "state": "needs_review", "reason": "duration_mismatch",
+               "message": null, "video_id": "zyxwvutsrqp", "title": null, "artists": [],
+               "video": false, "height": null, "fps": null, "thumbnail": null}]}
+            """
+        let found = try decoder.decode(DownloadsAnswer.self, from: Data(json.utf8)).downloads
+        XCTAssertEqual(found.map(\.id), [7, 6])
+        XCTAssertTrue(found[0].isActive && found[0].isRunning && found[0].video)
+        XCTAssertEqual(found[0].artistName, "Band, Guest")
+        XCTAssertEqual(found[0].progressNote, "Downloading…")
+        XCTAssertNil(found[0].problem)
+        XCTAssertFalse(found[1].isActive)
+        XCTAssertEqual(found[1].name, "zyxwvutsrqp")
+        XCTAssertEqual(found[1].problem, "duration mismatch")
+        XCTAssertEqual(PendingDownload(jobId: 1, state: "queued").progressNote, "Waiting its turn…")
+        XCTAssertEqual(PendingDownload(jobId: 1, state: "failed", message: "No.").problem, "No.")
+    }
+
+    func testListeningReadsMovedDownloadsAndOlderAnswers() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let now = try decoder.decode(
+            Listening.self,
+            from: Data(#"{"favourites": [], "plays": {}, "playlists": [], "library": ["t_1"]}"#.utf8))
+        XCTAssertEqual(now.library, ["t_1"])
+        let older = try decoder.decode(
+            Listening.self, from: Data(#"{"favourites": [], "plays": {}, "playlists": []}"#.utf8))
+        XCTAssertNil(older.library)
+    }
+
     func testASavedVideoIsMarked() throws {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase

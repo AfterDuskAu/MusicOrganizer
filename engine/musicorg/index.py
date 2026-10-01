@@ -728,8 +728,12 @@ class QueueStore:
         state: str | None = None,
         batch_id: str | None = None,
         plan_id: str | None = None,
+        kind: str | None = None,
     ) -> list[dict[str, Any]]:
         where, params = [], []
+        if kind is not None:
+            where.append("kind = ?")
+            params.append(kind)
         if plan_id is not None:
             where.append("plan_id = ?")
             params.append(plan_id)
@@ -789,6 +793,18 @@ class QueueStore:
             (batch_id,),
         )
         return int(rows[0]["n"]) if rows else 0
+
+    def cancel_job(self, job_id: int, now: str, *, states: tuple[str, ...]) -> bool:
+        """Mark one job `cancelled`, if it's in one of `states`. False if it wasn't (it
+        started, or ended, meanwhile)."""
+        marks = ", ".join("?" for _ in states)
+        with self._writing() as conn:
+            cur = conn.execute(
+                f"UPDATE jobs SET state = 'cancelled', updated_at = ? "
+                f"WHERE id = ? AND state IN ({marks})",
+                (now, job_id, *states),
+            )
+        return cur.rowcount == 1
 
     def cancel_queued(self, batch_id: str, now: str) -> int:
         with self._writing() as conn:

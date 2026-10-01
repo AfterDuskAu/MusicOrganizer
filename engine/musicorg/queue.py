@@ -633,6 +633,63 @@ def add_jobs(lib: Library, jobs: list[dict[str, Any]]) -> list[int]:
         return store.add_jobs(jobs, _iso(datetime.now(UTC)))
 
 
+# ---- the owner's own downloads, for the app's Downloads page (v0.2) ---------------------
+
+UNFINISHED = ("queued", "running", "failed", "needs_review")
+
+
+def downloads(paths: LibraryPaths) -> list[dict[str, Any]]:
+    """The downloads the owner asked for (plan kind `download`) that haven't arrived:
+    waiting, downloading, or ended without the song. Newest first. Needs no lock."""
+    with open_queue(paths, write=False) as store:
+        jobs = [job for job in store.jobs(kind="download") if job["state"] in UNFINISHED]
+    return [_download_row(job) for job in reversed(jobs)]
+
+
+def _download_row(job: dict[str, Any]) -> dict[str, Any]:
+    ops = job["payload"].get("ops") if isinstance(job.get("payload"), dict) else None
+    op = ops[0] if isinstance(ops, list) and ops and isinstance(ops[0], dict) else {}
+    params = op.get("params") if isinstance(op.get("params"), dict) else {}
+    candidate = params.get("candidate") if isinstance(params.get("candidate"), dict) else {}
+    video = op.get("action") == "download_video"
+    return {
+        "job_id": job["id"],
+        "batch_id": job["batch_id"],
+        "state": job["state"],
+        "reason": job["reason"],
+        "message": job["last_error"],
+        "video_id": params.get("video_id"),
+        "title": candidate.get("title"),
+        "artists": [a for a in candidate.get("artists") or [] if isinstance(a, str)],
+        "video": video,
+        "height": params.get("height") if video else None,
+        "fps": params.get("fps") if video else None,
+        "thumbnail": candidate.get("thumbnail"),
+    }
+
+
+def dismiss_download(lib: Library, job_id: int) -> None:
+    """Take one of the owner's downloads off the list: one still waiting is cancelled
+    before it starts, one that ended without the song is just no longer shown. One
+    that's downloading right now can't be stopped. Needs the library's lock."""
+    if not lib.writable:
+        raise RuntimeError("dismissing a download needs the library open for writing")
+    with open_queue(lib.paths, write=True) as store:
+        job = store.job(job_id)
+        if job is None or job["kind"] != "download" or job["state"] not in UNFINISHED:
+            raise NotFoundError("That download isn't on the list any more.")
+        if not store.cancel_job(
+            job_id, _iso(datetime.now(UTC)), states=("queued", "failed", "needs_review")
+        ):
+            raise UserError("That one is downloading right now, so it can't be removed.")
+        finished = store.open_jobs(job["batch_id"]) == 0
+    if finished:
+        try:
+            fileops.close_batch(lib, job["batch_id"])
+        except NotFoundError:
+            pass
+
+
 class BatchJobs:
     """The queue's side of `fileops.undo`: cancel a batch's queued jobs, and count its
     running ones. Used while holding the library's lock."""

@@ -11,7 +11,7 @@ from musicorg.library import Library
 
 
 def test_nothing_yet(lib: Library) -> None:
-    assert listening.get(lib) == {"favourites": [], "plays": {}, "playlists": []}
+    assert listening.get(lib) == {"favourites": [], "plays": {}, "playlists": [], "library": []}
 
 
 def test_favourites_most_recent_first(lib: Library, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -53,11 +53,24 @@ def test_playlists(lib: Library) -> None:
         listening.set_playlist_tracks(lib, second["id"], [])
 
 
+def test_downloads_moved_into_the_main_library_and_back(lib: Library) -> None:
+    assert listening.move(lib, ["t_2", "t_1"], to_library=True) == ["t_1", "t_2"]
+    assert listening.move(lib, ["t_1"], to_library=True) == ["t_1", "t_2"]  # already there
+    assert listening.get(lib)["library"] == ["t_1", "t_2"]
+    assert listening.move(lib, ["t_2", "t_9"], to_library=False) == ["t_1"]
+    with pytest.raises(UserError):
+        listening.move(lib, ["t_3", ""], to_library=True)
+    assert listening.get(lib)["library"] == ["t_1"]  # nothing half done
+    listening.set_favourite(lib, "t_1", True)  # the other lists are kept beside it
+    assert listening.get(lib)["library"] == ["t_1"]
+
+
 def test_the_rest_of_state_json_is_untouched_and_damage_is_dropped(lib: Library) -> None:
     with state.edit(lib.paths.state_file) as st:
         st.data["decisions"] = {"i_1": {"decision": "skip"}}
         st.data["listening"] = {
             "favourites": "nonsense",
+            "library": ["t_1"],
             "plays": {"t_1": {"count": "x"}},
             "playlists": [
                 {"id": "pl_1", "name": "Kept", "track_ids": [1, "t_1"]},
@@ -66,7 +79,7 @@ def test_the_rest_of_state_json_is_untouched_and_damage_is_dropped(lib: Library)
             ],
         }
     found = listening.get(lib)
-    assert found["favourites"] == [] and found["plays"] == {}
+    assert found["favourites"] == [] and found["plays"] == {} and found["library"] == []
     assert found["playlists"] == [
         {"id": "pl_1", "name": "Kept", "created_at": None, "track_ids": ["t_1"]}
     ]
@@ -92,3 +105,7 @@ def test_rpc_methods(server: rpc.Server, lib: Library) -> None:  # noqa: F811
     assert code(server, "playlist.create", name=" ") == rpc.USER_ERROR
     assert code(server, "playlist.set_tracks", playlist_id="x", track_ids=[1]) == rpc.INVALID_PARAMS
     assert code(server, "listening.favourite", track_id="t_1") == rpc.INVALID_PARAMS
+    assert result(server, "listening.move", track_ids=["t_1"], to="library") == {"library": ["t_1"]}
+    assert result(server, "listening.get")["library"] == ["t_1"]
+    assert result(server, "listening.move", track_ids=["t_1"], to="downloads") == {"library": []}
+    assert code(server, "listening.move", track_ids=["t_1"], to="elsewhere") == rpc.INVALID_PARAMS

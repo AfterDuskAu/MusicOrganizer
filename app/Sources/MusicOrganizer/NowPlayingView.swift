@@ -174,7 +174,7 @@ private struct SaveVideoButton: View {
                 .font(.callout)
                 .help("This video is in your library")
         } else {
-            switch model.downloads[videoId] {
+            switch model.downloadState(of: videoId) {
             case .working:
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.small)
@@ -207,7 +207,7 @@ private struct SaveSongButton: View {
                 .font(.callout)
                 .help("This song is in your library")
         } else {
-            switch model.downloads[videoId] {
+            switch model.downloadState(of: videoId) {
             case .working:
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.small)

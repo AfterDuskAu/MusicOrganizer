@@ -36,6 +36,10 @@ struct MusicOrganizerApp: App {
                     .keyboardShortcut("r")
                     .disabled(model.phase != .ready)
             }
+            // View → Columns: what's shown beside each song, for every list at once.
+            CommandGroup(after: .sidebar) {
+                ColumnsMenu()
+            }
             CommandMenu("Controls") {
                 Button(model.player.isPlaying ? "Pause" : "Play") { model.player.toggle() }
                     .keyboardShortcut("p")

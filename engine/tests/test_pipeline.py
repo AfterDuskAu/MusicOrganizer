@@ -36,7 +36,7 @@ from musicorg import (
     youtube,
 )
 from musicorg.config import Config
-from musicorg.errors import OutsideLibraryError, PlanOutOfDateError, UserError
+from musicorg.errors import NotFoundError, OutsideLibraryError, PlanOutOfDateError, UserError
 from musicorg.index import Index, open_index, open_queue
 from musicorg.library import Library
 from musicorg.youtube import Album, AlbumTrack
@@ -1481,6 +1481,64 @@ def test_a_saved_video_stays_a_video(
     renamed = lib.paths.music / "Videos" / "Band" / "New Name.mp4"
     assert tags.read_tags(renamed).title == "New Name"
     assert tags.probe(renamed).height == 240
+
+
+# ---- the owner's unfinished downloads (v0.2) ---------------------------------------------
+
+
+def test_unfinished_downloads_are_listed_and_can_be_dismissed(
+    lib: Library, index: Index, downloads: FakeDownloads, videos: FakeVideoDownloads,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:  # fmt: skip
+    song = candidate(VIDEO_A, "Melody", ("Band",), SECONDS + 60, album="Tunes")  # wrong length
+    video = candidate(VIDEO_V, "Melody", ("Band", "Guest"), SECONDS, album=None)
+    monkeypatch.setattr(youtube, "get_track", lambda vid: song if vid == VIDEO_A else video)
+    assert queue.downloads(lib.paths) == []
+
+    plan = pipeline.plan_download(lib, index, [VIDEO_A], [{"video_id": VIDEO_V, "height": 240}])
+    batch_id = pipeline.apply(lib, index, plan.plan_id).batch_id
+    waiting = queue.downloads(lib.paths)
+    assert [(d["video_id"], d["state"], d["video"], d["height"]) for d in waiting] == [
+        (VIDEO_V, "queued", True, 240),
+        (VIDEO_A, "queued", False, None),
+    ]  # fmt: skip  (newest first)
+    assert waiting[0]["title"] == "Melody" and waiting[0]["artists"] == ["Band", "Guest"]
+
+    # The video is taken off the list before it starts: it's never downloaded.
+    queue.dismiss_download(lib, waiting[0]["job_id"])
+    run_queue(lib)
+    assert videos.calls == [] and music_files(lib) == []
+    (failed,) = queue.downloads(lib.paths)  # the song didn't pass its checks
+    assert (failed["video_id"], failed["state"], failed["reason"]) == (
+        VIDEO_A, "needs_review", "duration_mismatch",
+    )  # fmt: skip
+    assert "long" in failed["message"]
+
+    # Dismissed, it's no longer shown; and it can't be dismissed twice.
+    queue.dismiss_download(lib, failed["job_id"])
+    assert queue.downloads(lib.paths) == []
+    with pytest.raises(NotFoundError):
+        queue.dismiss_download(lib, failed["job_id"])
+    assert {job["state"] for job in jobs(lib)} == {"cancelled"}
+    assert fileops.read_journal(lib)[batch_id].status == "closed"
+
+
+def test_a_download_dismissed_while_waiting_closes_its_batch(
+    lib: Library, index: Index, videos: FakeVideoDownloads
+) -> None:
+    plan = pipeline.plan_download(lib, index, [], [{"video_id": VIDEO_V, "height": 240}])
+    batch_id = pipeline.apply(lib, index, plan.plan_id).batch_id
+    (waiting,) = queue.downloads(lib.paths)
+    queue.dismiss_download(lib, waiting["job_id"])
+    assert fileops.read_journal(lib)[batch_id].status == "closed"
+    # A job that's running can't be taken away from under itself.
+    plan = pipeline.plan_download(lib, index, [], [{"video_id": VIDEO_V, "height": 240}])
+    pipeline.apply(lib, index, plan.plan_id)
+    (waiting,) = queue.downloads(lib.paths)
+    with open_queue(lib.paths, write=True) as store:
+        store.update_job(waiting["job_id"], "2026-10-01T00:00:00Z", state="running")
+    with pytest.raises(UserError, match="downloading right now"):
+        queue.dismiss_download(lib, waiting["job_id"])
 
 
 # ---- edits by hand (v0.2) --------------------------------------------------------------

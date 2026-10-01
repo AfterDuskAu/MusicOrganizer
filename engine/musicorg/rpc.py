@@ -246,6 +246,7 @@ class Server:
             "listening.get": self.listening_get,
             "listening.favourite": self.listening_favourite,
             "listening.played": self.listening_played,
+            "listening.move": self.listening_move,
             "playlist.create": self.playlist_create,
             "playlist.rename": self.playlist_rename,
             "playlist.delete": self.playlist_delete,
@@ -269,6 +270,8 @@ class Server:
             "youtube.video": self.youtube_video,
             "lyrics.find": self.lyrics_find,
             "queue.jobs": self.queue_jobs,
+            "queue.downloads": self.queue_downloads,
+            "queue.dismiss": self.queue_dismiss,
             "settings.get": self.settings_get,
             "settings.set": self.settings_set,
         }
@@ -512,6 +515,13 @@ class Server:
 
     def listening_played(self, params: dict[str, Any]) -> dict[str, Any]:
         return listening.played(self._library(), need(params, "track_id", str))
+
+    def listening_move(self, params: dict[str, Any]) -> dict[str, Any]:
+        ids, to = need(params, "track_ids", list), need(params, "to", str)
+        if to not in ("library", "downloads"):
+            raise RpcError(INVALID_PARAMS, "to should be library or downloads.")
+        moved = listening.move(self._library(), ids, to_library=to == "library")
+        return {"library": moved}
 
     def playlist_create(self, params: dict[str, Any]) -> dict[str, Any]:
         name = need(params, "name", str)
@@ -796,6 +806,14 @@ class Server:
         return {"jobs": [{"job_id": job["id"], "kind": job["kind"], "state": job["state"],
                           "reason": job["reason"], "message": job["last_error"]}
                          for job in jobs]}  # fmt: skip
+
+    def queue_downloads(self, params: dict[str, Any]) -> dict[str, Any]:
+        return {"downloads": queue.downloads(self._library().paths)}
+
+    def queue_dismiss(self, params: dict[str, Any]) -> dict[str, Any]:
+        lib = self._library()
+        queue.dismiss_download(lib, need(params, "job_id", int))
+        return {"downloads": queue.downloads(lib.paths)}
 
     def search_ytmusic(self, params: dict[str, Any]) -> dict[str, Any]:
         query = need(params, "query", str).strip()

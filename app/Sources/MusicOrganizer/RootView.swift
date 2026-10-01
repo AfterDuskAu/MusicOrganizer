@@ -304,6 +304,11 @@ struct MainView: View {
                 ForEach(entries, id: \.self) { entry in
                     Label(entry.title, systemImage: entry.symbol)
                         .badge(entry == .unconfirmed ? waiting : 0)
+                        // A download dragged here moves into the main library.
+                        .dropDestination(for: String.self) { ids, _ in
+                            model.moveDownloads(ids, toLibrary: true)
+                            return true
+                        }
                         .contextMenu {
                             Button("Remove from Sidebar") { remove(entry, from: shown) }
                                 .disabled(shown.count <= 1)
@@ -337,8 +342,17 @@ struct MainView: View {
             }
             Section("Discover", isExpanded: $openDiscover) {
                 ForEach([SidebarItem.whatsNew, .find, .downloads], id: \.self) { entry in
-                    Label(entry.title, systemImage: entry.symbol)
-                        .badge(entry == .downloads ? model.downloaded.count : 0)
+                    if entry == .downloads {
+                        Label(entry.title, systemImage: entry.symbol)
+                            .badge(model.downloaded.count + model.pending.filter(\.isActive).count)
+                            // Dragged back here, a download leaves the main library's lists.
+                            .dropDestination(for: String.self) { ids, _ in
+                                model.moveDownloads(ids, toLibrary: false)
+                                return true
+                            }
+                    } else {
+                        Label(entry.title, systemImage: entry.symbol)
+                    }
                 }
             }
             Section(isExpanded: $openPlaylists) {
@@ -463,6 +477,18 @@ struct MainView: View {
         .clipped()
     }
 
+    private func downloadsList(active: Bool) -> some View {
+        SongList(
+            source: .downloads, title: "Downloads",
+            empty: "Songs and videos you download from YouTube Music show up here.",
+            note: model.keepDownloadsSeparate
+                ? "Downloaded songs and videos stay here, apart from your main library. To move "
+                    + "one in, drag it onto Library in the sidebar, or right-click → Move to Library."
+                : "Downloaded songs are also in your main library, and videos under "
+                    + "Library → Videos (Settings → General).",
+            isActive: active)
+    }
+
     @ViewBuilder
     private func page(_ entry: SidebarItem, active: Bool) -> some View {
         switch entry {
@@ -508,15 +534,10 @@ struct MainView: View {
             // (parked Fix A-3 will give it the owner's layout).
             NowPlayingView(isShown: .constant(true), closable: false, isActive: active)
         case .downloads:
-            SongList(
-                source: .downloads, title: "Downloads",
-                empty: "Songs and videos you download from YouTube Music show up here.",
-                note: model.keepDownloadsSeparate
-                    ? "Downloaded songs and videos stay here, apart from your main library. "
-                        + "Settings → General can put them in the main library instead."
-                    : "Downloaded songs are also in your main library, and videos under "
-                        + "Library → Videos (Settings → General).",
-                isActive: active)
+            VStack(spacing: 0) {
+                PendingDownloads()
+                downloadsList(active: active)
+            }
         case .whatsNew:
             Message(
                 symbol: "sparkles", title: "What's New is coming",

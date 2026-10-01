@@ -74,7 +74,14 @@ final class AppModel {
     static let youtubeStep = 25
     static let youtubeMost = 100
     private(set) var youtubeProblem: String?
-    private(set) var downloads: [String: DownloadState] = [:]
+    /// The owner's downloads that haven't arrived: waiting, downloading, or ended without
+    /// the song. The engine's own list, so it's still right after the app restarts.
+    private(set) var pending: [PendingDownload] = []
+    /// Asked for a moment ago: the engine's list doesn't have them yet (by video id).
+    private(set) var starting = Set<String>()
+    /// Downloads that couldn't even be queued, and why (by video id).
+    private(set) var startProblems: [String: String] = [:]
+    @ObservationIgnored private var watchingDownloads = false
 
     enum DownloadState: Equatable {
         case working
@@ -230,6 +237,9 @@ final class AppModel {
             _ = try await connection.call("library.open", ["root": folder.path])
             try await load()
             phase = .ready
+            // Downloads asked for before the app was last closed carry on in the engine.
+            await refreshDownloads()
+            watchDownloads()
         } catch {
             phase = .failed(error.localizedDescription)
         }
@@ -245,31 +255,66 @@ final class AppModel {
         let list = try await connection.call("library.tracks", as: TrackList.self)
         root = URL(fileURLWithPath: list.root)
         player.root = root
-        await arrange(list.tracks)
-        status = try? await connection.call("library.status", as: LibraryStatus.self)
+        // Before the songs are sorted: it says which downloads were moved into the library.
         if let found = try? await connection.call("listening.get", as: Listening.self) {
             listening = found
             favourites = Set(found.favourites)
             playsVersion += 1
         }
+        await arrange(list.tracks)
+        status = try? await connection.call("library.status", as: LibraryStatus.self)
     }
 
     /// Sort the songs into what each part of the app shows.
     private func arrange(_ tracks: [Track]) async {
         let separate = keepDownloadsSeparate
-        let (all, main) = await Task.detached {
-            let all = Library(tracks: tracks)
-            // A video is never among the songs, albums or artists: it has its own list.
-            let main = Library(tracks: tracks.filter { !$0.isVideo && !(separate && $0.isDownload) })
-            return (all, main)
+        let moved = Set(listening.library ?? [])
+        let sorted = await Task.detached {
+            () -> (all: Library, main: Library, downloads: [Track], videos: [Track]) in
+            // A download is in the main library once the owner moved it there, or when
+            // downloads aren't kept apart at all.
+            let inMain: (Track) -> Bool = {
+                !$0.isDownload || !separate || ($0.trackId.map(moved.contains) ?? false)
+            }
+            return (
+                Library(tracks: tracks),
+                // A video is never among the songs, albums or artists: it has its own list.
+                Library(tracks: tracks.filter { !$0.isVideo && inMain($0) }),
+                tracks.filter { $0.isDownload && !(separate && inMain($0)) }
+                    .sorted { ($0.acquired ?? "", $1.path) > ($1.acquired ?? "", $0.path) },
+                tracks.filter { $0.isVideo && inMain($0) }
+                    .sorted { (sortKey($0.title), $0.path) < (sortKey($1.title), $1.path) }
+            )
         }.value
-        everything = all
-        library = main
+        everything = sorted.all
+        library = sorted.main
         libraryVersion += 1
-        downloaded = tracks.filter(\.isDownload)
-            .sorted { ($0.acquired ?? "", $1.path) > ($1.acquired ?? "", $0.path) }
-        videos = separate ? [] : tracks.filter(\.isVideo)
-            .sorted { (sortKey($0.title), $0.path) < (sortKey($1.title), $1.path) }
+        downloaded = sorted.downloads
+        videos = sorted.videos
+    }
+
+    /// Whether a downloaded song or video has been moved into the main library.
+    func isMoved(_ track: Track) -> Bool {
+        track.trackId.map { (listening.library ?? []).contains($0) } ?? false
+    }
+
+    /// Move downloads into the main library's lists, or back under Downloads. No file
+    /// moves: it's where they're listed.
+    func moveDownloads(_ trackIds: [String], toLibrary: Bool) {
+        let ids = trackIds.filter { !$0.isEmpty }
+        guard !ids.isEmpty, let connection = engine?.connection else { return }
+        Task {
+            do {
+                let moved = try await connection.call(
+                    "listening.move",
+                    ["track_ids": ids, "to": toLibrary ? "library" : "downloads"],
+                    as: MovedAnswer.self)
+                listening.library = moved.library
+                await arrange(everything.tracks)
+            } catch {
+                notice = error.localizedDescription
+            }
+        }
     }
 
     private func engineSaid(_ method: String) async {
@@ -431,16 +476,111 @@ final class AppModel {
 
     /// Download a YouTube Music song (by its id) into the library.
     func downloadSong(_ videoId: String) {
-        guard downloads[videoId] != .working else { return }
-        downloads[videoId] = .working
+        startDownload(videoId, ["video_ids": [videoId]])
+    }
+
+    /// What a Download or Save Video button should say about this video id.
+    func downloadState(of videoId: String) -> DownloadState? {
+        if starting.contains(videoId) { return .working }
+        if let found = pending.first(where: { $0.videoId == videoId }) {
+            return found.isActive ? .working : .failed(found.problem ?? "It didn't work.")
+        }
+        return startProblems[videoId].map(DownloadState.failed)
+    }
+
+    /// Queue a download and return at once: it then shows at the top of Discover →
+    /// Downloads until it arrives.
+    private func startDownload(_ videoId: String, _ options: [String: Any]) {
+        guard downloadState(of: videoId) != .working, let connection = engine?.connection
+        else { return }
+        starting.insert(videoId)
+        startProblems[videoId] = nil
         Task {
             do {
-                try await run(plan: "download", ["video_ids": [videoId]])
-                downloads[videoId] = nil  // it now shows as "in your library"
+                // An earlier try that ended badly leaves the list: this one takes its place.
+                for old in pending where old.videoId == videoId && !old.isActive {
+                    _ = try? await connection.call(
+                        "queue.dismiss", ["job_id": old.jobId], as: DownloadsAnswer.self)
+                }
+                let plan = try await connection.call(
+                    "plan.create", ["kind": "download", "options": options], as: PlanAnswer.self)
+                guard plan.summary.operations > 0 else { throw Self.nothingToDo(plan) }
+                _ = try await connection.call(
+                    "plan.apply", ["plan_id": plan.planId], as: BatchAnswer.self)
             } catch {
-                downloads[videoId] = .failed(error.localizedDescription)
+                startProblems[videoId] = error.localizedDescription
+            }
+            await refreshDownloads()
+            starting.remove(videoId)
+            watchDownloads()
+        }
+    }
+
+    /// Ask the engine which downloads haven't arrived. One that was on its way and is
+    /// off the list has arrived: the library is read again, and it shows as a song.
+    func refreshDownloads() async {
+        guard let connection = engine?.connection,
+            let found = try? await connection.call("queue.downloads", as: DownloadsAnswer.self)
+        else { return }
+        let onTheirWay = Set(pending.filter(\.isActive).map(\.jobId))
+        if pending != found.downloads { pending = found.downloads }
+        if !onTheirWay.subtracting(found.downloads.map(\.jobId)).isEmpty { try? await load() }
+    }
+
+    /// Keep asking, once a second, while anything is on its way.
+    func watchDownloads() {
+        guard !watchingDownloads, pending.contains(where: \.isActive) else { return }
+        watchingDownloads = true
+        Task {
+            while pending.contains(where: \.isActive) {
+                try? await Task.sleep(for: .seconds(1))
+                await refreshDownloads()
+            }
+            watchingDownloads = false
+        }
+    }
+
+    /// Try a download again that ended without the song.
+    func retry(_ download: PendingDownload) {
+        guard let videoId = download.videoId else { return }
+        if download.video, let height = download.height {
+            var wanted: [String: Any] = ["video_id": videoId, "height": height]
+            if let fps = download.fps { wanted["fps"] = fps }
+            startDownload(videoId, ["videos": [wanted]])
+        } else {
+            startDownload(videoId, ["video_ids": [videoId]])
+        }
+    }
+
+    /// Take a download off the list: one still waiting is cancelled before it starts.
+    func dismiss(_ download: PendingDownload) {
+        guard let connection = engine?.connection else { return }
+        Task {
+            do {
+                pending = try await connection.call(
+                    "queue.dismiss", ["job_id": download.jobId], as: DownloadsAnswer.self
+                ).downloads
+            } catch {
+                notice = error.localizedDescription
+                await refreshDownloads()
             }
         }
+    }
+
+    /// Save the video that's playing into the library, whole, at the picture size
+    /// that's showing. It lands in Downloads, like a downloaded song.
+    func saveVideo(_ showing: ShowingVideo) {
+        let wanted: [String: Any] = [
+            "video_id": showing.source.videoId, "height": showing.quality.height,
+            "fps": showing.quality.fps,
+        ]
+        startDownload(showing.source.videoId, ["videos": [wanted]])
+    }
+
+    private static func nothingToDo(_ plan: PlanAnswer) -> RPCError {
+        let why = plan.summary.skipped?.keys.sorted().first?
+            .replacingOccurrences(of: "_", with: " ")
+        return RPCError(code: 0, message: "Nothing to do" + (why.map { " (\($0))." } ?? "."))
     }
 
     // MARK: the video on the whole screen
@@ -469,25 +609,6 @@ final class AppModel {
             ?? NSApp.mainWindow
     }
 
-    /// Save the video that's playing into the library, whole, at the picture size
-    /// that's showing. It lands in Downloads, like a downloaded song.
-    func saveVideo(_ showing: ShowingVideo) {
-        let videoId = showing.source.videoId
-        guard downloads[videoId] != .working else { return }
-        downloads[videoId] = .working
-        let wanted: [String: Any] = [
-            "video_id": videoId, "height": showing.quality.height, "fps": showing.quality.fps,
-        ]
-        Task {
-            do {
-                try await run(plan: "download", ["videos": [wanted]])
-                downloads[videoId] = nil  // it now shows as saved
-            } catch {
-                downloads[videoId] = .failed(error.localizedDescription)
-            }
-        }
-    }
-
     /// Make a plan, apply it, and wait for its jobs to end. Throws what went wrong, in
     /// the engine's own plain words. The library is reloaded afterwards.
     @discardableResult
@@ -500,10 +621,7 @@ final class AppModel {
         }
         let plan = try await connection.call(
             "plan.create", ["kind": kind, "options": options], as: PlanAnswer.self)
-        guard plan.summary.operations > 0 else {
-            let why = plan.summary.skipped?.keys.sorted().first?.replacingOccurrences(of: "_", with: " ")
-            throw RPCError(code: 0, message: "Nothing to do" + (why.map { " (\($0))." } ?? "."))
-        }
+        guard plan.summary.operations > 0 else { throw Self.nothingToDo(plan) }
         let batch = try await connection.call(
             "plan.apply", ["plan_id": plan.planId], as: BatchAnswer.self)
         var jobs: [JobsAnswer.Job] = []

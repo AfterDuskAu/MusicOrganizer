@@ -113,7 +113,7 @@ private struct ResultRow: View {
                 .foregroundStyle(.green)
                 .font(.callout)
         } else {
-            switch model.downloads[result.videoId] {
+            switch model.downloadState(of: result.videoId) {
             case .working:
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.small)

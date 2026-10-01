@@ -153,6 +153,17 @@
 - **Download Song Too**, beside Save Video, for a song being played from YouTube Music: it downloads the song itself (sound only, with its album details), as the Download button on the YouTube Music page does. A song already in the library doesn't show it.
 - Noted, not built (the owner's question): swapping a library song's audio for YouTube Music's (`docs/roadmap/0.2-app-layout.md`).
 
+2026-10-01, 9:45 pm. Downloads you can see, move and try again; Columns in the menu bar.
+
+- **A download shows at the top of Discover → Downloads from the moment it's asked for** (the owner's design): its name, song or video, and a bar that keeps moving while it waits its turn or downloads. When it arrives it becomes a row in the list below. One that ended without the song stays, in red, with **Try Again** and an **✕** to take it off the list; an ✕ on one still waiting cancels it before it starts.
+  - The list is the engine's own (`queue.downloads`: the unfinished jobs of plan kind `download`), so it's still right after the app is closed and opened, and switching songs can't lose a download. `queue.dismiss` takes one off (it becomes `cancelled`); one that's downloading that moment is refused.
+  - The bar doesn't show how far along a download is: the engine doesn't report that yet.
+  - Download, Save Video and Download Song Too now return at once and read their state from this list.
+- **Moving a download into the main library:** drag it from Downloads onto any Library entry in the sidebar, or right-click → **Move to Library** (and **Move Back to Downloads**, or drag it back onto Downloads). A moved song joins Songs, Albums, Artists and the rest; a moved video joins Library → Videos. No file moves: `listening.move` keeps the owner's choice in `state.json` (`"library"`), by `MUSICORG_ID`.
+  - Only downloaded rows can be dragged; every other row is as it was.
+- **Columns is in the menu bar: View → Columns.** It's off the top of each list.
+- **Not checked in the running app** (the owner was using it): the Downloads strip, Try Again and ✕, dragging, and the View menu. The engine side of each is tested.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

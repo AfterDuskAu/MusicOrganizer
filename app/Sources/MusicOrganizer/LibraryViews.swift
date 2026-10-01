@@ -21,6 +21,41 @@ extension Track {
 
 // MARK: lists of songs
 
+/// The columns of a song table that can be shown or hidden: the same choice for every
+/// list, made from the menu bar (View → Columns).
+enum SongColumns {
+    /// (saved name, title)
+    static let optional: [(id: String, title: String)] = [
+        ("artist", "Artist"), ("album", "Album"), ("year", "Year"), ("genre", "Genre"),
+        ("quality", "Quality"), ("added", "Added"), ("plays", "Plays"), ("time", "Time"),
+    ]
+    /// Hidden until the owner asks for them.
+    static let hiddenAtFirst: Set<String> = ["genre", "quality", "added"]
+
+    static func isShown(_ id: String, in columns: TableColumnCustomization<TrackRow>) -> Bool {
+        switch columns[visibility: id] {
+        case .visible: true
+        case .hidden: false
+        default: !hiddenAtFirst.contains(id)
+        }
+    }
+}
+
+/// View → Columns in the menu bar: what's shown beside each song, in every list.
+struct ColumnsMenu: View {
+    @AppStorage("songColumns") private var columns = TableColumnCustomization<TrackRow>()
+
+    var body: some View {
+        Menu("Columns") {
+            ForEach(SongColumns.optional, id: \.id) { column in
+                Toggle(column.title, isOn: Binding(
+                    get: { SongColumns.isShown(column.id, in: columns) },
+                    set: { columns[visibility: column.id] = $0 ? .visible : .hidden }))
+            }
+        }
+    }
+}
+
 /// One line of a song table. Its id is its place in the list before any search or sort,
 /// because a playlist may hold the same song twice.
 struct TrackRow: Identifiable, Sendable {
@@ -64,22 +99,6 @@ struct SongList: View {
     @State private var sortOrder: [KeyPathComparator<TrackRow>] = []
     /// Which columns show, and in what order: the owner's choice, kept for every list.
     @AppStorage("songColumns") private var columns = TableColumnCustomization<TrackRow>()
-
-    /// The columns that can be shown or hidden, as (saved name, title).
-    private static let optional: [(id: String, title: String)] = [
-        ("artist", "Artist"), ("album", "Album"), ("year", "Year"), ("genre", "Genre"),
-        ("quality", "Quality"), ("added", "Added"), ("plays", "Plays"), ("time", "Time"),
-    ]
-    /// Hidden until the owner asks for them.
-    private static let hiddenAtFirst: Set<String> = ["genre", "quality", "added"]
-
-    private func isShown(_ id: String) -> Bool {
-        switch columns[visibility: id] {
-        case .visible: true
-        case .hidden: false
-        default: !Self.hiddenAtFirst.contains(id)
-        }
-    }
 
     private var playlist: Playlist? {
         if case .playlist(let id) = source { model.playlist(id) } else { nil }
@@ -170,17 +189,6 @@ struct SongList: View {
                 }
             }
             Spacer()
-            Menu {
-                ForEach(Self.optional, id: \.id) { column in
-                    Toggle(column.title, isOn: Binding(
-                        get: { isShown(column.id) },
-                        set: { columns[visibility: column.id] = $0 ? .visible : .hidden }))
-                }
-            } label: {
-                Label("Columns", systemImage: "tablecells")
-            }
-            .fixedSize()
-            .help("Choose what's shown beside each song")
             Button("Play", systemImage: "play.fill") { model.player.play(rows.map(\.track)) }
                 .help("Play these songs in order")
             Button("Shuffle", systemImage: "shuffle") { model.player.playShuffled(rows.map(\.track)) }
@@ -192,7 +200,10 @@ struct SongList: View {
     }
 
     private var table: some View {
-Table(rows, selection: $selection, sortOrder: $sortOrder, columnCustomization: $columns) {
+Table(
+            of: TrackRow.self, selection: $selection, sortOrder: $sortOrder,
+            columnCustomization: $columns
+        ) {
             TableColumn("") { row in
                 // Table cells don't inherit the window's environment on macOS.
                 FavouriteButton(track: row.track).environment(model)
@@ -249,6 +260,17 @@ Table(rows, selection: $selection, sortOrder: $sortOrder, columnCustomization: $
             }
             .width(52)
             .customizationID("time")
+        } rows: {
+            ForEach(rows) { row in
+                // A download can be dragged onto the sidebar: onto the Library to move it
+                // there, or back onto Downloads. What's carried is the song's id. Other
+                // rows stay plain, as they were.
+                if row.track.isDownload, let id = row.track.trackId {
+                    TableRow(row).draggable(id)
+                } else {
+                    TableRow(row)
+                }
+            }
         }
         .background(FixedRows(height: 34))
         .contextMenu(forSelectionType: Int.self) { ids in
@@ -268,6 +290,16 @@ Table(rows, selection: $selection, sortOrder: $sortOrder, columnCustomization: $
             Button("Play") { model.player.play(rows.map(\.track), startAt: index) }
             if picked.count == 1 {
                 Button("Edit Details…") { model.editing = first.track }
+            }
+            // Downloads kept under Discover can be moved into the main library, and back.
+            let downloads = songs.filter(\.isDownload)
+            if model.keepDownloadsSeparate, !downloads.isEmpty {
+                let ids = downloads.compactMap(\.trackId)
+                if downloads.allSatisfy(model.isMoved) {
+                    Button("Move Back to Downloads") { model.moveDownloads(ids, toLibrary: false) }
+                } else {
+                    Button("Move to Library") { model.moveDownloads(ids, toLibrary: true) }
+                }
             }
             Divider()
             if songs.allSatisfy(model.isFavourite) {

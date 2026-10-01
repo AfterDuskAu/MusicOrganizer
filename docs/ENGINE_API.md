@@ -98,6 +98,7 @@ Exit codes:
 | `listening.get` | — | `Listening`: the owner's favourites, play counts and playlists (v0.2), kept in `state.json` |
 | `listening.favourite` | `{ "track_id", "on" }` | `{ "favourites": [track_id] }` (most recent first) |
 | `listening.played` | `{ "track_id" }` (the app sends it when a song has played to its end) | `{ "count", "last_played" }` |
+| `listening.move` | `{ "track_ids": [..], "to": "library" \| "downloads" }` | `{ "library": [track_id] }`: the downloads the owner has moved into the main library's lists (v0.2). No file moves; it's the owner's sorting, kept in `state.json`. |
 | `playlist.create` | `{ "name" }` | `{ "playlists": [Playlist] }` |
 | `playlist.rename` | `{ "playlist_id", "name" }` | `{ "playlists": [Playlist] }` |
 | `playlist.delete` | `{ "playlist_id" }` (only the list goes; its songs are untouched) | `{ "playlists": [Playlist] }` |
@@ -120,10 +121,12 @@ Exit codes:
 | `youtube.video` | `{ "title", "artist", "path"? }` (the song; `path` for a library song, so its version is read from its tags and the name of the rip it came from: a remix never gets the original's video) | `{ "found": false }` when YouTube Music has no official video for the song (only a video it marks as the artist's own counts, of the same version of the song; other people's uploads never do). Otherwise `{ "found": true, "video_id", "title", "duration_s", "http_headers", "audio_url", "qualities": [{ "label", "height", "fps", "url" }] }`: the video's sound (format 140) and its picture in each size the app can show (H.264, 144p to 1080p, the sharpest first), as separate addresses the app plays together. Nothing is downloaded or saved. The addresses expire, so the app asks again when one stops working; the search behind it is kept for 30 days. |
 | `lyrics.find` | `{ "title", "artist"?, "album"?, "duration_s"?, "video_id"? }` | `{ "synced", "plain", "source" }`: lyrics for a song being played from YouTube Music (LRCLIB, then YouTube Music), with the usual length and version checks. Nothing is saved; either may be null. |
 | `queue.jobs` | `{ "batch_id" }` | `{ "jobs": [{ "job_id", "kind", "state", "reason", "message" }] }`: how a batch's jobs ended, so the app can say what happened to a download or an edit |
+| `queue.downloads` | — | `{ "downloads": [{ "job_id", "batch_id", "state", "reason", "message", "video_id", "title", "artists", "video", "height", "fps", "thumbnail" }] }`: the owner's own downloads (plan kind `download`) that haven't arrived, newest first: `queued`, `running`, or ended `failed` / `needs_review` (v0.2, for the app's Downloads page) |
+| `queue.dismiss` | `{ "job_id" }` | the same as `queue.downloads`. Takes one download off that list: one still `queued` is cancelled before it starts, one that ended without the song is no longer shown (both become `cancelled`). One that's `running` is refused. |
 | `settings.get` | — | `{ "daily_cap", "daily_cap_default", "daily_cap_max" }`: the engine's settings the app shows (kept in `config.json`) |
 | `settings.set` | `{ "daily_cap"? }` (1 to `daily_cap_max`, which is 500; the app offers steps of 50) | the same as `settings.get`. A new cap applies from the next queue run. |
 
-**RPC-only:** `plan.create` with kind `edit` (the app's Edit Details sheet), `youtube.stream`, `youtube.video`, `lyrics.find`, `listening.*`, `playlist.*`.
+**RPC-only:** `plan.create` with kind `edit` (the app's Edit Details sheet), `youtube.stream`, `youtube.video`, `lyrics.find`, `listening.*`, `playlist.*`, `queue.downloads`, `queue.dismiss`.
 
 **CLI-only in v0.1** (RPC comes with the v0.2 app when needed): `sources.remove`, `index.rebuild`, `report`, `review export/import`, `lyrics`, `artwork`, `doctor`.
 
@@ -175,7 +178,7 @@ Standard JSON-RPC codes, plus:
   "video": false, "height": null }               // a saved video (in Music/Videos/): true, and its picture's height
 
 // Listening and Playlist (v0.2). Songs are named by `track_id` (MUSICORG_ID), which survives renames.
-{ "favourites": ["t_…"], "plays": { "t_…": { "count": 3, "last_played": "2026-10-01T03:00:00Z" } },
+{ "favourites": ["t_…"], "library": ["t_…"], "plays": { "t_…": { "count": 3, "last_played": "2026-10-01T03:00:00Z" } },
   "playlists": [ { "id": "pl_…", "name": "Road trip", "created_at": "…", "track_ids": ["t_…"] } ] }
 
 // ReviewItem

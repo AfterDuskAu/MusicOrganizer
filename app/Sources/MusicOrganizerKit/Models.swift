@@ -201,14 +201,78 @@ public struct Listening: Decodable, Sendable {
     public var favourites: [String]  // most recent first
     public var plays: [String: PlayCount]
     public var playlists: [Playlist]
+    /// Downloads the owner has moved into the main library's lists.
+    public var library: [String]?
 
     public static let empty = Listening(favourites: [], plays: [:], playlists: [])
 
-    public init(favourites: [String], plays: [String: PlayCount], playlists: [Playlist]) {
+    public init(
+        favourites: [String], plays: [String: PlayCount], playlists: [Playlist],
+        library: [String] = []
+    ) {
         self.favourites = favourites
         self.plays = plays
         self.playlists = playlists
+        self.library = library
     }
+}
+
+public struct MovedAnswer: Decodable, Sendable {
+    public let library: [String]
+}
+
+/// One of the owner's downloads that hasn't arrived (`queue.downloads`): waiting its
+/// turn, downloading, or ended without the song.
+public struct PendingDownload: Decodable, Identifiable, Equatable, Sendable {
+    public let jobId: Int
+    public let state: String
+    public let reason: String?
+    public let message: String?
+    public let videoId: String?
+    public let title: String?
+    public let artists: [String]
+    public let video: Bool
+    public let height: Int?
+    public let fps: Int?
+    public let thumbnail: String?
+
+    public init(
+        jobId: Int, state: String, reason: String? = nil, message: String? = nil,
+        videoId: String? = nil, title: String? = nil, artists: [String] = [], video: Bool = false,
+        height: Int? = nil, fps: Int? = nil, thumbnail: String? = nil
+    ) {
+        self.jobId = jobId
+        self.state = state
+        self.reason = reason
+        self.message = message
+        self.videoId = videoId
+        self.title = title
+        self.artists = artists
+        self.video = video
+        self.height = height
+        self.fps = fps
+        self.thumbnail = thumbnail
+    }
+
+    public var id: Int { jobId }
+    /// Still to come: waiting its turn, or downloading now.
+    public var isActive: Bool { state == "queued" || state == "running" }
+    public var isRunning: Bool { state == "running" }
+    public var name: String { title ?? videoId ?? "Download" }
+    public var artistName: String { artists.joined(separator: ", ") }
+    /// Why it ended without the song, in the engine's plain words. Nil while it's active.
+    public var problem: String? {
+        guard !isActive else { return nil }
+        return message ?? reason?.replacingOccurrences(of: "_", with: " ") ?? "It didn't work."
+    }
+    /// What the list says while it's on its way.
+    public var progressNote: String {
+        isRunning ? "Downloading…" : "Waiting its turn…"
+    }
+}
+
+public struct DownloadsAnswer: Decodable, Sendable {
+    public let downloads: [PendingDownload]
 }
 
 public struct FavouritesAnswer: Decodable, Sendable {
