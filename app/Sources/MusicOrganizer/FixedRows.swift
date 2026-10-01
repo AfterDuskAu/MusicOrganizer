@@ -33,27 +33,39 @@ struct FixedRows: NSViewRepresentable {
             DispatchQueue.main.async { [weak self] in self?.apply() }
         }
 
-        /// The nearest table: the first one inside the closest ancestor that has one.
+        /// Find the table this view sits behind and fix its row height. It must be that
+        /// table and no other: the first version took the first table it came across,
+        /// which could be another page's list (the YouTube results, whose taller rows
+        /// were then squashed). So a table only counts if it has several columns, as a
+        /// song table does and a plain list doesn't, and fills exactly the space this
+        /// view fills.
         func apply() {
+            guard window != nil else { return }
+            let mine = convert(bounds, to: nil)
             var ancestor = superview
-            while let view = ancestor {
-                if let table = Self.table(in: view) {
-                    if table.usesAutomaticRowHeights || table.rowHeight != height {
-                        table.usesAutomaticRowHeights = false
-                        table.rowHeight = height
+            var climbed = 0
+            while let view = ancestor, climbed < 12 {
+                for table in Self.tables(in: view) where table.numberOfColumns > 1 {
+                    guard let scroll = table.enclosingScrollView else { continue }
+                    let theirs = scroll.convert(scroll.bounds, to: nil)
+                    if abs(theirs.minX - mine.minX) < 2, abs(theirs.minY - mine.minY) < 2,
+                        abs(theirs.width - mine.width) < 2, abs(theirs.height - mine.height) < 2
+                    {
+                        if table.usesAutomaticRowHeights || table.rowHeight != height {
+                            table.usesAutomaticRowHeights = false
+                            table.rowHeight = height
+                        }
+                        return
                     }
-                    return
                 }
                 ancestor = view.superview
+                climbed += 1
             }
         }
 
-        private static func table(in view: NSView) -> NSTableView? {
-            if let table = view as? NSTableView { return table }
-            for child in view.subviews {
-                if let found = table(in: child) { return found }
-            }
-            return nil
+        private static func tables(in view: NSView) -> [NSTableView] {
+            if let table = view as? NSTableView { return [table] }
+            return view.subviews.flatMap(tables(in:))
         }
     }
 }

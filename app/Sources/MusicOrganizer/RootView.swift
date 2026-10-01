@@ -204,7 +204,7 @@ struct MainView: View {
                     .navigationSplitViewColumnWidth(min: 180, ideal: 210, max: 280)
                 } detail: {
                     NavigationStack(path: pathBinding) {
-                        pages
+                        pagesWithLyrics
                             .navigationTitle(title(of: current))
                             .navigationDestination(for: Album.self) {
                                 AlbumPage(album: $0).environment(model)
@@ -231,13 +231,6 @@ struct MainView: View {
                 .onChange(of: item, initial: true) { opened(current) }
                 .onChange(of: model.searchText) { paths[current] = NavigationPath() }
                 .onChange(of: model.listening.playlists) { forgetDeletedPlaylists() }
-                // The lyrics panel isn't a fixture: it's there only while a song with
-                // lyrics is on, and never beside a page that shows the lyrics itself.
-                .inspector(isPresented: lyricsPanel) {
-                    LyricsView()
-                        .environment(model)
-                        .inspectorColumnWidth(min: 260, ideal: 340, max: 520)
-                }
             }
             // An overlay, so the big cover and lyrics can never change the window's layout.
             .overlay {
@@ -375,18 +368,28 @@ struct MainView: View {
 
     private var current: SidebarItem { item ?? .songs }
 
-    private var lyricsPanel: Binding<Bool> {
-        Binding(
-            get: {
-                showLyrics && model.lyrics.hasLyrics && model.player.current != nil
-                    && current != .visualizer && !showNowPlaying
-            },
-            set: { shown in
-                // Only the owner closing the panel by hand turns lyrics off.
-                if !shown, model.lyrics.hasLyrics, current != .visualizer, !showNowPlaying {
-                    showLyrics = false
-                }
-            })
+    /// The lyrics panel isn't a fixture: it's there only while a song with lyrics is on,
+    /// and never beside a page that shows the lyrics itself.
+    private var lyricsPanelShown: Bool {
+        showLyrics && model.lyrics.hasLyrics && model.player.current != nil
+            && current != .visualizer && !showNowPlaying
+    }
+
+    /// The pages, with the lyrics beside them when there are lyrics to show. The panel
+    /// is put there in one step: sliding it in made the song table lay itself out again
+    /// for every frame of the slide, which looked like a glitch.
+    private var pagesWithLyrics: some View {
+        HStack(spacing: 0) {
+            pages
+            if lyricsPanelShown {
+                Divider()
+                LyricsView()
+                    .environment(model)
+                    .frame(width: 320)
+                    .background(.background.secondary)
+            }
+        }
+        .transaction { $0.animation = nil }
     }
 
     private var pathBinding: Binding<NavigationPath> {
@@ -427,12 +430,18 @@ struct MainView: View {
             ForEach(visited, id: \.self) { entry in
                 let active = entry == current
                 page(entry, active: active)
-                    .opacity(active ? 1 : 0)
+                    // A page that isn't showing is moved far out of sight, not made
+                    // invisible: for an invisible view SwiftUI takes its AppKit views
+                    // (a whole song table) out of the window and puts them all back
+                    // when it shows again, which froze the app on every switch.
+                    .offset(x: active ? 0 : 30_000)
                     .allowsHitTesting(active)
                     .accessibilityHidden(!active)
-                    .zIndex(active ? 1 : 0)
+                // No zIndex either: changing which page is on top also made AppKit take
+                // every page's views out and put them back (profiled 2026-10-02).
             }
         }
+        .clipped()
     }
 
     @ViewBuilder
@@ -469,9 +478,7 @@ struct MainView: View {
         case .visualizer:
             // The song that's playing, with its cover and lyrics: the player's own tab
             // (parked Fix A-3 will give it the owner's layout).
-            if active {
-                NowPlayingView(isShown: .constant(true), closable: false)
-            }
+            NowPlayingView(isShown: .constant(true), closable: false)
         case .downloads:
             SongList(
                 source: .downloads, title: "Downloads",

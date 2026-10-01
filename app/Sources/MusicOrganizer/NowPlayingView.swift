@@ -59,12 +59,16 @@ struct NowPlayingView: View {
 
     /// The cover, blurred right out, under a dark wash: the screen takes the album's colour.
     private func backdrop(_ track: Track?) -> some View {
-        // Color.black sets the size; the blurred cover only fills it, and is clipped to it.
+        // Color.black sets the size. The cover is blurred while it's still tiny and only
+        // then stretched to fill: blurring it at full window size was heavy enough to
+        // make opening this screen stutter.
         Color.black
             .overlay {
                 CoverView(track: track, size: .small, corner: 0)
-                    .scaledToFill()
-                    .blur(radius: 80)
+                    .frame(width: 48, height: 48)
+                    .blur(radius: 6)
+                    .drawingGroup()
+                    .scaleEffect(80)  // far bigger than any window; the edges are cut off
                     .opacity(0.55)
             }
             .clipped()

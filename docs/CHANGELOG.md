@@ -73,6 +73,15 @@
 - **Signing:** `scripts/build_app.sh` signs with a certificate named "Music Organizer Dev" when the owner has made one (`docs/SIGNING.md`), so macOS remembers which folders the app may use instead of asking after every build. The owner made it on 2026-10-02; the next start was not held up.
 - Checked in the running app: the magnifying glass and search bar, the panel staying away with nothing playing, a YouTube song bringing up timed lyrics, and Local Visualizer with no second lyrics panel.
 
+2026-10-02, night. Two faults the owner found in the day's work, both from Fix A-1's own changes.
+
+- **The YouTube results were squashed together.** `FixedRows` took the first table it came across, which could be another page's list, and gave it the song table's row height. It now only touches a table with several columns that fills exactly the space the helper fills.
+- **Switching pages, and the lyrics panel opening, froze the app** (0.3 to 0.8 s per switch, measured). Three causes, found by profiling:
+  - Pages kept alive were hidden with opacity 0 and reordered with zIndex. For an invisible view SwiftUI takes its AppKit views out of the window and puts them all back when it shows again, and a change of order does the same. Hidden pages are now moved far out of sight instead, and never reordered.
+  - The lyrics panel was an inspector that slid in, making the song table lay itself out for every frame of the slide. It's now a plain column placed in one step.
+  - Local Visualizer was rebuilt on every visit and blurred its backdrop at full window size. It's now kept like the other pages, and blurs a tiny picture before stretching it.
+- Measured after: six switches between open pages gave one stall of 104 ms (before: a stall of 126 to 415 ms on every switch). With a song on, where the lyrics panel comes and goes and the table changes width, a switch still stalls for 120 to 185 ms. The first visit to a page still takes 0.3 to 0.5 s while its table is built.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)
