@@ -265,6 +265,23 @@
 - **Wording:** the plan's script says "weighted towards the artists you listen to most". The engine's ranking leans to the artists the owner *has* most of, so the guide says that.
 - **Not tried in the running app** (the owner's Mac was busy with another test): no click, and nothing was asked of YouTube. Here: the engine's Discover tests (31), the app's own tests (32) and two low-priority builds. The full suite ran in CI.
 
+2026-10-02, 9:30 am. **Downloads grouped by genre** (the owner's sketch: each genre named on the left, a box of its songs beside it, each line "Song Name - Artist - Date Added"), **and song lists whose columns stay put**.
+
+- **Discover → Downloads** is now laid out as the sketch: a label for each genre (with how many songs), and beside it a box listing that genre's downloads, newest first, each with its name, artist and the day it was added. The genre with the newest download comes first; songs with no genre are last, under "No genre yet". Double-click plays; right-click is the same menu as every list (Edit Details…, Move to Library, Delete…); a row can still be dragged onto Library. The strip of downloads on their way stays at the top.
+  - **This answers the plan's open question** ("genre then month, or month then genre?"): genre, with the date beside each song and no month level.
+  - It's how the page is laid out, not a folder: the files stay where downloads already go (`Music/`). The `Discovered/` folder of `docs/roadmap/0.4-discover.md` is still not built; whether it's still wanted is the owner's to say.
+  - Genres written differently are one group: "Hip-Hop/Rap", "hip hop" and "Hip Hop" are all Hip Hop (the first genre a tag names, whatever its capitals and hyphens), named the way most of the songs spell it. "Rap" stays its own group, as in the sketch.
+- **A download now gets a genre tag.** YouTube Music gives none, so until now every download had none.
+  - A song found by Discover takes the genre it was found under: the genre that was asked for (spelled as the owner's own files spell it), or the genre tag of the owner's song whose radio it came from. `discover.suggest` gives each pick a `genre`, and it travels with the pick through `plan.create` into the tag.
+  - Any other download (and a saved video) takes the genre the owner's own songs by that artist are tagged with, the commonest one; downloads' own genres don't count towards that, so a guess can't feed on guesses.
+  - With neither, it has no genre, and Edit Details… can give it one. Downloads made before today have none unless given one by hand.
+- **Song lists: the columns no longer move about** (the owner: "it gets larger, and smaller depending on the input, and if it's accessing the library for the first time in that session").
+  - The cause, seen in a picture of the list: a table starts every column at its "ideal" width whatever room it has (at the usual window size the Time column was cut off at the edge), and only shares the room out again when something next changes size. With three stretchy columns (Title, Artist, Album) the result differed from one opening to the next.
+  - Now every column but Title has a set width, and Title's starting width is worked out from the room there is, so the columns fit exactly from the first moment and are in the same places in every list. As the window changes, only Title takes up or gives back the room.
+  - Lost by this: Artist and Album can't be dragged wider or narrower any more.
+  - A first try (changing the title's width as the window changed) moved the headings and not the rows; it was caught in a picture and replaced.
+- **Checked:** both pages were looked at with the hidden copy of the app on a scratch library (three pictures: Downloads; Songs at the usual width; Songs after widening the window). Nothing was clicked, and the owner's copy wasn't touched. `MUSICORG_SNAPSHOT_WIDTH` was added to the developer's snapshot mode for the widening.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

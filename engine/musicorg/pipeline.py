@@ -1473,7 +1473,8 @@ def plan_download(
 
     `known` are tracks as the engine gave them out a moment ago (Discover's picks, in the
     Candidate shape). One of those isn't looked up on YouTube Music again, so a plan for
-    fifty picks is made at once instead of in over a minute.
+    fifty picks is made at once instead of in over a minute. A pick's `genre` (the genre
+    it was found under) goes into the plan, and from there into the song's genre tag.
 
     There's no rip behind them, so nothing is replaced and the fingerprint gate has
     nothing to compare; every other check on a download applies. What's already in the
@@ -1481,6 +1482,7 @@ def plan_download(
     ops: list[fileops.PlanOp] = []
     skipped: dict[str, int] = {}
     given: dict[str, Candidate] = {}
+    genres: dict[str, str] = {}  # the genre a pick was found under (Discover)
     for data in known or []:
         try:
             candidate = Candidate.from_dict(data)
@@ -1493,6 +1495,9 @@ def plan_download(
             and all(isinstance(name, str) for name in candidate.artists)
         ):
             given[candidate.video_id] = candidate
+            genre = data.get("genre")
+            if isinstance(genre, str) and 0 < len(genre.strip()) <= MAX_GENRE_CHARS:
+                genres[candidate.video_id] = " ".join(genre.split())
 
     def look_up(video_id: object) -> Candidate | None:
         if not isinstance(video_id, str) or not youtube.VIDEO_ID.fullmatch(video_id):
@@ -1510,12 +1515,10 @@ def plan_download(
     for video_id in dict.fromkeys(video_ids):
         found = look_up(video_id)
         if found is not None:
-            ops.append(
-                fileops.PlanOp(
-                    action="download",
-                    params={"video_id": video_id, "candidate": found.to_dict()},
-                )
-            )
+            params = {"video_id": video_id, "candidate": found.to_dict()}
+            if video_id in genres:
+                params["genre"] = genres[video_id]
+            ops.append(fileops.PlanOp(action="download", params=params))
     size = sum((op.params["candidate"].get("duration_s") or 0) * BYTES_PER_SECOND for op in ops)
     seen: set[str] = set()
     for wanted in videos or []:
@@ -1585,6 +1588,10 @@ def download_job(ctx: JobContext) -> Outcome:
             year=_year(album.year),
             track=album.track,
             track_total=album.track_total if album.track else None,
+            # YouTube Music gives no genre. A song found by Discover takes the genre it
+            # was found under; any other takes the one the owner's own songs by the
+            # artist have. With neither it has none, and can be given one by hand.
+            genre=op.params.get("genre") or browse.artist_genre(index, candidate.artists),
             explicit=candidate.is_explicit,
             lyrics=extras.lyrics,
             cover=extras.cover,
@@ -1632,6 +1639,7 @@ def _download_video(ctx: JobContext, op: fileops.PlanOp) -> Outcome:
             title=candidate.title,
             artist=artist,
             album_artist=first,
+            genre=browse.artist_genre(index, candidate.artists),
             explicit=candidate.is_explicit,
             cover=cover.data if cover else None,
             cover_mime=cover.mime if cover else None,
@@ -1835,6 +1843,7 @@ def edit_job(ctx: JobContext) -> Outcome:
 # ---- taking a download out of the library (v0.2) ---------------------------------------
 
 MAX_REMOVE = 500
+MAX_GENRE_CHARS = 60
 
 
 def plan_remove(lib: Library, index: Index, rel_paths: list[str]) -> fileops.Plan:

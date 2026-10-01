@@ -124,6 +124,7 @@ class _Start:
     video_id: str | None = None
     artist_radio: bool = False
     listed_on: str | None = None  # the YouTube Music playlist it was taken from
+    genre: str | None = None  # the owner's genre tag on the song a radio starts from
 
 
 @dataclass
@@ -134,6 +135,7 @@ class _Source:
     label: str
     starts: list[_Start] = field(default_factory=list)
     used: int = 0
+    genre: str | None = None  # the genre that was asked for, as the owner spells it
 
 
 @dataclass
@@ -288,7 +290,12 @@ def suggest(
         )
     return {
         "picks": [
-            {**entry.candidate.to_dict(), "why": _why(entry, owned), "hits": len(entry.hits)}
+            {
+                **entry.candidate.to_dict(),
+                "why": _why(entry, owned),
+                "hits": len(entry.hits),
+                "genre": _pick_genre(entry),
+            }
             for entry in picks
         ],
         "wanted": count,
@@ -413,8 +420,9 @@ def _genre(
     """The owner's songs of this genre that YouTube Music is known to have; with too few
     of those to go on, YouTube Music's own playlist for the genre."""
     mine = [row for row in songs if _video_id(row) and _is_genre(_genre_tag(row), name)]
+    spelled = _spelled(name, songs)
     if len(mine) >= MIN_RADIOS:
-        return _Source("genre", name, _starts(_shuffled(mine, weight, rng)))
+        return _Source("genre", name, _starts(_shuffled(mine, weight, rng)), genre=spelled)
     try:
         playlist = youtube.genre_playlist(name, cache=index)
     except _skippable() as exc:
@@ -424,7 +432,7 @@ def _genre(
         if not mine:
             notes.append(f"YouTube Music has no playlist of its own for “{name}”.")
             return None
-        return _Source("genre", name, _starts(_shuffled(mine, weight, rng)))
+        return _Source("genre", name, _starts(_shuffled(mine, weight, rng)), genre=spelled)
     # Official audio first: its radio is official audio too. A music video has to be
     # looked up as a song before a radio can start from it.
     tracks = list(playlist.tracks)
@@ -439,7 +447,20 @@ def _genre(
         )
         for c in tracks
     ]
-    return _Source("genre", name, _starts(_shuffled(mine, weight, rng)) + listed)
+    return _Source("genre", name, _starts(_shuffled(mine, weight, rng)) + listed, genre=spelled)
+
+
+def _spelled(name: str, songs: list[dict[str, Any]]) -> str:
+    """A genre as the owner's files spell it ("Hip-Hop/Rap" for "hip hop"): the commonest
+    tag of theirs that means it. With none, the words as typed, capitals added if there
+    were none."""
+    tags_used = Counter(
+        tag for tag in (_genre_tag(row) for row in songs) if tag and _is_genre(tag, name)
+    )
+    if tags_used:
+        return max(tags_used, key=lambda tag: (tags_used[tag], tag))
+    name = " ".join(name.split())
+    return name if name != name.lower() else name.title()
 
 
 def _genre_tag(row: dict[str, Any]) -> str:
@@ -463,7 +484,10 @@ def _is_genre(tag: str, wanted: str) -> bool:
 def _starts(rows: list[dict[str, Any]]) -> list[_Start]:
     return [
         _Start(
-            title=row.get("title") or "", artist=row.get("artist") or "", video_id=_video_id(row)
+            title=row.get("title") or "",
+            artist=row.get("artist") or "",
+            video_id=_video_id(row),
+            genre=_genre_tag(row) or None,
         )
         for row in rows
         if row.get("title")
@@ -607,6 +631,14 @@ def _spread(ranked: list[_Found], count: int, exempt: set[str]) -> list[_Found]:
         if len(picks) == count:
             return picks
     return picks + held[: count - len(picks)]
+
+
+def _pick_genre(entry: _Found) -> str | None:
+    """The genre a pick was found under, if that's known: the genre that was asked for,
+    or the owner's tag on the song whose radio it was nearest the top of. It goes with
+    the pick into a download, so the downloaded song can be filed under it."""
+    source, start, _ = min(entry.hits.values(), key=lambda hit: hit[2])
+    return source.genre or start.genre
 
 
 def _why(entry: _Found, owned: _Owned) -> str:

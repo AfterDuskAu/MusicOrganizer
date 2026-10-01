@@ -36,6 +36,15 @@ enum Snapshot {
 
     private static func take(into folder: URL) {
         for window in NSApp.windows where window.canBecomeMain {
+            // `MUSICORG_SNAPSHOT_WIDTH=<points>`: after the first picture the window
+            // is made this wide, to see a page follow the change.
+            if taken == 1, let wanted = ProcessInfo.processInfo.environment["MUSICORG_SNAPSHOT_WIDTH"],
+                let width = Double(wanted)
+            {
+                var frame = window.frame
+                frame.size.width = width
+                window.setFrame(frame, display: true)
+            }
             guard let view = window.contentView,
                 let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds)
             else { continue }

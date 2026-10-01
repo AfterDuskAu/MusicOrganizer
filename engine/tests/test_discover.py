@@ -216,6 +216,31 @@ def test_a_genre_the_owner_has_none_of_comes_from_youtube_music(lib: Library) ->
     )
 
 
+# ---- the genre a pick is found under ----------------------------------------------------------
+
+
+def test_a_pick_carries_the_genre_it_was_found_under(lib: Library) -> None:
+    own(lib, NUMB, IN_THE_END, genre="Alternative Rock")
+    own(lib, BRING_ME, genre="Rock/Pop")
+    own(lib, TEEN_SPIRIT, genre="rock")
+    # From the owner's songs: the tag of the song whose radio the pick was nearest the top of.
+    found = suggest(lib, Seed("library"), count=30)
+    genres = {pick["genre"] for pick in found["picks"]}
+    assert genres <= {"Alternative Rock", "Rock/Pop", "rock"} and "Alternative Rock" in genres
+    # A genre that was asked for: every pick is filed under it, spelled as the owner's
+    # own files spell it (the commonest of their tags that mean it).
+    asked = suggest(lib, Seed("genre", "rock"), count=10)
+    assert {pick["genre"] for pick in asked["picks"]} == {"Alternative Rock"}
+    # A genre the owner has none of: as typed, with capitals.
+    assert {pick["genre"] for pick in suggest(lib, Seed("genre", "jazz"), count=5)["picks"]} == {
+        "Jazz"
+    }
+    assert discover._spelled("r&b", []) == "R&B" and discover._spelled("EDM", []) == "EDM"
+    # An artist says nothing about genre.
+    by_artist = suggest(lib, Seed("artist", "linkin park"), count=5)
+    assert {pick["genre"] for pick in by_artist["picks"]} == {None}
+
+
 # ---- whatever the owner typed (the guided mode) ----------------------------------------------
 
 
@@ -427,5 +452,13 @@ def test_rpc_a_plan_for_picks_asks_youtube_nothing(opened: rpc.Server) -> None: 
     ops = result(opened, "plan.get", plan_id=plan["plan_id"])["plan"]["operations"]
     assert [op["params"]["video_id"] for op in ops] == wanted
     assert ops[0]["params"]["candidate"]["title"] == picks[0]["title"]
+    assert all("genre" not in op["params"] for op in ops)  # these songs have no genre tag
+    # A pick's genre goes into the plan (and from there into the song's tag).
+    tagged = [{**picks[0], "genre": "  Hip  Hop "}, {**picks[1], "genre": 7},
+              {**picks[2], "genre": "x" * 61}]  # fmt: skip
+    plan = result(opened, "plan.create", kind="download",
+                  options={"video_ids": wanted, "candidates": tagged})  # fmt: skip
+    ops = result(opened, "plan.get", plan_id=plan["plan_id"])["plan"]["operations"]
+    assert [op["params"].get("genre") for op in ops] == ["Hip Hop", None, None]
     bad = {"video_ids": wanted, "candidates": ["nonsense"]}
     assert code(opened, "plan.create", kind="download", options=bad) == rpc.USER_ERROR

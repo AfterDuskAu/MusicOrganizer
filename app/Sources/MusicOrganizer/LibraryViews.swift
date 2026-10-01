@@ -31,6 +31,32 @@ enum SongColumns {
     ]
     /// Hidden until the owner asks for them.
     static let hiddenAtFirst: Set<String> = ["genre", "quality", "added"]
+    /// Each column's width. They're all set, not left to the table: a table that
+    /// shares the room out itself starts every column at its "ideal" width whatever
+    /// the window's (cutting the last one off, or leaving a gap), and only puts that
+    /// right when something next changes size, so the columns were in different
+    /// places from one opening of a list to the next.
+    static let widths: [String: CGFloat] = [
+        "artist": 190, "album": 210, "year": 46, "genre": 110, "quality": 70, "added": 90,
+        "plays": 40, "time": 52,
+    ]
+    static let favouriteWidth: CGFloat = 20
+    static let titleLeast: CGFloat = 200
+    /// What the table puts around each column, and at its two ends (measured).
+    static let between: CGFloat = 17
+    static let ends: CGFloat = 44
+
+    /// The title's width: whatever the columns that are showing leave of the table's.
+    /// In a window too narrow for them all, the title keeps its least width and the
+    /// table scrolls sideways.
+    static func titleWidth(
+        in tableWidth: CGFloat, _ columns: TableColumnCustomization<TrackRow>
+    ) -> CGFloat {
+        let showing = optional.filter { isShown($0.id, in: columns) }
+        let taken = showing.reduce(favouriteWidth) { $0 + (widths[$1.id] ?? 0) }
+        let gaps = between * CGFloat(showing.count + 2) + ends
+        return max(titleLeast, (tableWidth - taken - gaps).rounded(.down))
+    }
 
     static func isShown(_ id: String, in columns: TableColumnCustomization<TrackRow>) -> Bool {
         switch columns[visibility: id] {
@@ -97,6 +123,8 @@ struct SongList: View {
     @State private var ready = false
     @State private var selection = Set<Int>()
     @State private var sortOrder: [KeyPathComparator<TrackRow>] = []
+    /// How wide the table's room was when it was made (see `table`).
+    @State private var madeAtWidth: CGFloat?
     /// Which columns show, and in what order: the owner's choice, kept for every list.
     @AppStorage("songColumns") private var columns = TableColumnCustomization<TrackRow>()
 
@@ -200,7 +228,20 @@ struct SongList: View {
     }
 
     private var table: some View {
-Table(
+        // A table starts every column at its "ideal" width whatever room it has, so
+        // the title's is worked out from the room there is when the table is made.
+        // After that it's left alone: the title is the one column that can stretch,
+        // and the table itself gives it or takes from it as the window changes.
+        // (Changing a column's width on a table that's already up moved its headings
+        // and not its rows.)
+        GeometryReader { space in
+            table(titleWidth: SongColumns.titleWidth(in: madeAtWidth ?? space.size.width, columns))
+                .onAppear { if madeAtWidth == nil { madeAtWidth = space.size.width } }
+        }
+    }
+
+    private func table(titleWidth: CGFloat) -> some View {
+        Table(
             of: TrackRow.self, selection: $selection, sortOrder: $sortOrder,
             columnCustomization: $columns
         ) {
@@ -214,36 +255,39 @@ Table(
             TableColumn("Title", value: \.track.title) { row in
                 SongTitle(track: row.track).environment(model)
             }
-            .width(min: 200, ideal: 320)
+            // Every other column has a set width, so the columns are in the same places
+            // in every list, however long the names are and whenever the list is opened
+            // (owner, 2026-10-02): the title takes what they leave.
+            .width(min: SongColumns.titleLeast, ideal: titleWidth)
             .customizationID("title")
             .disabledCustomizationBehavior(.visibility)
             TableColumn("Artist", value: \.track.artistName)
-                .width(min: 100, ideal: 200)
+                .width(SongColumns.widths["artist"]!)
                 .customizationID("artist")
             TableColumn("Album", value: \.track.albumName)
-                .width(min: 100, ideal: 200)
+                .width(SongColumns.widths["album"]!)
                 .customizationID("album")
             TableColumn("Year", value: \.track.sortYear) { row in
                 Text(row.track.year.map(String.init) ?? "").foregroundStyle(.secondary)
             }
-            .width(46)
+            .width(SongColumns.widths["year"]!)
             .customizationID("year")
             TableColumn("Genre", value: \.track.sortGenre) { row in
                 Text(row.track.sortGenre).foregroundStyle(.secondary)
             }
-            .width(min: 60, ideal: 110)
+            .width(SongColumns.widths["genre"]!)
             .defaultVisibility(.hidden)
             .customizationID("genre")
             TableColumn("Quality", value: \.track.quality) { row in
                 Text(row.track.quality).foregroundStyle(.secondary)
             }
-            .width(70)
+            .width(SongColumns.widths["quality"]!)
             .defaultVisibility(.hidden)
             .customizationID("quality")
             TableColumn("Added", value: \.track.sortAdded) { row in
                 Text(row.track.addedDay).foregroundStyle(.secondary)
             }
-            .width(90)
+            .width(SongColumns.widths["added"]!)
             .defaultVisibility(.hidden)
             .customizationID("added")
             TableColumn("Plays", value: \.plays) { row in
@@ -251,14 +295,14 @@ Table(
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
-            .width(40)
+            .width(SongColumns.widths["plays"]!)
             .customizationID("plays")
             TableColumn("Time", value: \.track.sortDuration) { row in
                 Text(clockTime(row.track.durationS))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
-            .width(52)
+            .width(SongColumns.widths["time"]!)
             .customizationID("time")
         } rows: {
             ForEach(rows) { row in
@@ -285,48 +329,11 @@ Table(
     @ViewBuilder
     private func menu(for ids: Set<Int>) -> some View {
         let picked = rows.filter { ids.contains($0.id) }
-        let songs = picked.map(\.track)
         if let first = picked.first, let index = rows.firstIndex(where: { $0.id == first.id }) {
-            Button("Play") { model.player.play(rows.map(\.track), startAt: index) }
-            if picked.count == 1 {
-                Button("Edit Details…") { model.editing = first.track }
-                if !first.track.isVideo {
-                    // The button is here; what it does is still to be decided (owner,
-                    // 2026-10-01: the checks come first).
-                    Button("Swap Audio…") { model.explainSwap(of: first.track) }
-                }
+            SongActions(songs: picked.map(\.track)) {
+                model.player.play(rows.map(\.track), startAt: index)
             }
-            // Downloads kept under Discover can be moved into the main library, and back.
-            let downloads = songs.filter(\.isDownload)
-            if model.keepDownloadsSeparate, !downloads.isEmpty {
-                let ids = downloads.compactMap(\.trackId)
-                if downloads.allSatisfy(model.isMoved) {
-                    Button("Move Back to Downloads") { model.moveDownloads(ids, toLibrary: false) }
-                } else {
-                    Button("Move to Library") { model.moveDownloads(ids, toLibrary: true) }
-                }
-            }
-            // A download can be deleted (it goes to the Trash). The owner's own songs can't.
-            if !downloads.isEmpty, downloads.count == songs.count {
-                Button(downloads.count == 1 ? "Delete…" : "Delete \(downloads.count) Downloads…",
-                       role: .destructive
-                ) {
-                    model.deletingDownloads = downloads
-                }
-            }
-            Divider()
-            if songs.allSatisfy(model.isFavourite) {
-                Button("Remove from Favourites") { model.setFavourite(songs, false) }
-            } else {
-                Button("Add to Favourites") { model.setFavourite(songs, true) }
-            }
-            Menu("Add to Playlist") {
-                ForEach(model.listening.playlists) { playlist in
-                    Button(playlist.name) { model.add(songs, to: playlist) }
-                }
-                if !model.listening.playlists.isEmpty { Divider() }
-                Button("New Playlist…") { model.newPlaylist(with: songs) }
-            }
+            .environment(model)
             if let playlist, playlist.trackIds.count == total {
                 Divider()
                 // Row ids are places in the playlist, so these act on exactly those lines.
@@ -352,6 +359,58 @@ Table(
         ids.swapAt(place, target)
         model.setTracks(ids, of: playlist)
         selection = [target]
+    }
+}
+
+/// What can be done with the songs picked in a list: the right-click menu every list of
+/// songs shares.
+struct SongActions: View {
+    let songs: [Track]
+    let play: () -> Void
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        Button("Play", action: play)
+        if songs.count == 1, let only = songs.first {
+            Button("Edit Details…") { model.editing = only }
+            if !only.isVideo {
+                // The button is here; what it does is still to be decided (owner,
+                // 2026-10-01: the checks come first).
+                Button("Swap Audio…") { model.explainSwap(of: only) }
+            }
+        }
+        // Downloads kept under Discover can be moved into the main library, and back.
+        let downloads = songs.filter(\.isDownload)
+        if model.keepDownloadsSeparate, !downloads.isEmpty {
+            let ids = downloads.compactMap(\.trackId)
+            if downloads.allSatisfy(model.isMoved) {
+                Button("Move Back to Downloads") { model.moveDownloads(ids, toLibrary: false) }
+            } else {
+                Button("Move to Library") { model.moveDownloads(ids, toLibrary: true) }
+            }
+        }
+        // A download can be deleted (it goes to the Trash). The owner's own songs can't.
+        if !downloads.isEmpty, downloads.count == songs.count {
+            Button(
+                downloads.count == 1 ? "Delete…" : "Delete \(downloads.count) Downloads…",
+                role: .destructive
+            ) {
+                model.deletingDownloads = downloads
+            }
+        }
+        Divider()
+        if songs.allSatisfy(model.isFavourite) {
+            Button("Remove from Favourites") { model.setFavourite(songs, false) }
+        } else {
+            Button("Add to Favourites") { model.setFavourite(songs, true) }
+        }
+        Menu("Add to Playlist") {
+            ForEach(model.listening.playlists) { playlist in
+                Button(playlist.name) { model.add(songs, to: playlist) }
+            }
+            if !model.listening.playlists.isEmpty { Divider() }
+            Button("New Playlist…") { model.newPlaylist(with: songs) }
+        }
     }
 }
 

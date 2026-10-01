@@ -469,7 +469,7 @@ final class SongVideoTests: XCTestCase {
               "album": "Album", "album_browse_id": "MPRE", "duration_s": 187, "is_explicit": null,
               "is_official_audio": true, "video_type": "MUSIC_VIDEO_TYPE_ATV", "year": "2003",
               "thumbnail": "https://example.invalid/t.jpg",
-              "why": "On the radio for 3 of your songs", "hits": 3}],
+              "why": "On the radio for 3 of your songs", "hits": 3, "genre": "Hip Hop"}],
              "wanted": 10, "radios": 4, "seeds": [], "note": null}
             """
         let decoder = JSONDecoder()
@@ -485,7 +485,7 @@ final class SongVideoTests: XCTestCase {
         XCTAssertEqual(
             Set(back.keys),
             ["video_id", "title", "artists", "album", "album_browse_id", "duration_s",
-             "video_type", "year", "thumbnail"])
+             "video_type", "year", "thumbnail", "genre"])
         XCTAssertEqual(back["video_id"] as? String, "abcdefghijk")
         XCTAssertEqual(back["duration_s"] as? Int, 187)
         XCTAssertEqual(back["artists"] as? [String], ["A", "B"])
@@ -516,6 +516,32 @@ final class SongVideoTests: XCTestCase {
             ElsewhereLink.soundCloud.url(title: "A & B", artist: "C")?.absoluteString,
             "https://soundcloud.com/search?q=C%20A%20%26%20B")
         XCTAssertNil(ElsewhereLink.spotify.url(title: " ", artist: ""))
+    }
+
+    func testDownloadsAreGroupedByGenre() {
+        func song(_ title: String, _ genre: String?, _ added: String) -> Track {
+            Track(path: "Music/\(title).m4a", title: title, genre: genre, acquired: added)
+        }
+        let groups = Genres.groups([
+            song("a", "Hip-Hop/Rap", "2026-10-02T09:00:00Z"),
+            song("b", nil, "2026-10-02T08:00:00Z"),
+            song("c", "Indie", "2026-10-01T10:00:00Z"),
+            song("d", "hip hop", "2026-09-30T10:00:00Z"),
+            song("e", "Rap", "2026-10-01T12:00:00Z"),
+            song("f", "Hip Hop", "2026-09-29T10:00:00Z"),
+            song("g", "Hip Hop", "2026-09-28T10:00:00Z"),
+            song("h", " ", "2026-09-27T10:00:00Z"),
+        ])
+        // The group with the newest song first; songs with no genre last.
+        XCTAssertEqual(groups.map(\.name), ["Hip Hop", "Rap", "Indie", ""])
+        // One group for every way of writing it, named as most of its songs spell it,
+        // its songs in the order they were given.
+        XCTAssertEqual(groups[0].tracks.map(\.title), ["a", "d", "f", "g"])
+        XCTAssertEqual(groups[3].tracks.map(\.title), ["b", "h"])
+        XCTAssertEqual(Genres.key("R & B"), Genres.key("r&b"))
+        XCTAssertEqual(Genres.key("Electronica/Dance"), "electronica")
+        XCTAssertEqual(Genres.key(nil), "")
+        XCTAssertEqual(Genres.groups([]), [])
     }
 
     func testTheGuidesWords() {

@@ -528,18 +528,6 @@ struct MainView: View {
         return note
     }
 
-    private func downloadsList(active: Bool) -> some View {
-        SongList(
-            source: .downloads, title: "Downloads",
-            empty: "Songs and videos you download from YouTube Music show up here.",
-            note: model.keepDownloadsSeparate
-                ? "Downloaded songs and videos stay here, apart from your main library. To move "
-                    + "one in, drag it onto Library in the sidebar, or right-click → Move to Library."
-                : "Downloaded songs are also in your main library, and videos under "
-                    + "Library → Videos (Settings → General).",
-            isActive: active)
-    }
-
     @ViewBuilder
     private func page(_ entry: SidebarItem, active: Bool) -> some View {
         switch entry {
@@ -587,7 +575,7 @@ struct MainView: View {
         case .downloads:
             VStack(spacing: 0) {
                 PendingDownloads()
-                downloadsList(active: active)
+                DownloadsByGenre()
             }
         case .whatsNew:
             WhatsNewView()

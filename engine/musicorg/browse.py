@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -98,6 +99,33 @@ def version_tokens(lib: Library, rel_path: str) -> tuple[str, ...]:
         stem = name.rsplit(".", 1)[0] if "." in name else name
         tokens += parse_filename(stem).version_tokens
     return tuple(dict.fromkeys(tokens))
+
+
+def artist_genre(index: Index, artists: tuple[str, ...] | list[str]) -> str | None:
+    """The genre the owner's own songs by these artists are tagged with: the commonest
+    one, counting only songs that came from the owner's files (a downloaded song's
+    genre may itself have been worked out this way). None if they have none. It's what
+    a newly downloaded song by the artist is filed under."""
+    from musicorg.youtube import artist_key
+
+    wanted = {key for key in (artist_key(name) for name in artists) if key}
+    if not wanted:
+        return None
+    found: Counter[str] = Counter()
+    for row in index.library_tracks():
+        if row["source"] == "youtube_music" and row.get("match") is None:
+            continue  # a download
+        credit = f" {artist_key(row.get('artist') or '')} "
+        if not any(f" {key} " in credit for key in wanted):
+            continue
+        try:
+            details = json.loads(row.get("details_json") or "{}")
+        except ValueError:
+            continue
+        genre = details.get("genre") if isinstance(details, dict) else None
+        if isinstance(genre, str) and genre.strip():
+            found[genre.strip()] += 1
+    return max(found, key=lambda genre: (found[genre], genre)) if found else None
 
 
 def track_path(lib: Library, rel_path: str) -> Path:

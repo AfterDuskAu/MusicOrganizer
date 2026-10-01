@@ -21,6 +21,7 @@ from index_support import add_candidates, add_item, add_source, candidate
 
 from musicorg import (
     artwork,
+    browse,
     cli,
     fileops,
     library,
@@ -1540,6 +1541,47 @@ def test_a_download_dismissed_while_waiting_closes_its_batch(
         store.update_job(waiting["job_id"], "2026-10-01T00:00:00Z", state="running")
     with pytest.raises(UserError, match="downloading right now"):
         queue.dismiss_download(lib, waiting["job_id"])
+
+
+def test_a_download_is_given_a_genre(
+    lib: Library, index: Index, downloads: FakeDownloads, samples: dict[str, Path],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:  # fmt: skip
+    found = {
+        VIDEO_B: candidate(VIDEO_B, "Other", ("Band",), SECONDS, album="Tunes"),
+        VIDEO_A: candidate(VIDEO_A, "Melody", ("Band",), SECONDS, album="Tunes"),
+    }
+    monkeypatch.setattr(youtube, "get_track", lambda video_id: found.get(video_id))
+
+    def genre_of(video_id: str) -> object:
+        (row,) = index.library_tracks_with_source_id(video_id)
+        return tags.read_tags(lib.root.joinpath(*row["rel_path"].split("/"))).genre
+
+    # Found by Discover under a genre: that's its genre.
+    known = [{**found[VIDEO_B].to_dict(), "genre": "Hip Hop"}]
+    plan = pipeline.plan_download(lib, index, [VIDEO_B], known=known)
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    assert genre_of(VIDEO_B) == "Hip Hop"
+
+    # Downloaded by name: the genre the owner's own songs by the artist have. A
+    # download's genre (the one above) doesn't count towards that.
+    browse.tracks(lib, index)  # reads each file's details into the index, as the app does
+    assert browse.artist_genre(index, ("Band",)) is None
+    mine = lib.paths.music / "Band" / "Unsorted" / "Mine.mp3"  # one of the owner's own
+    mine.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(samples["mp3"], mine)
+    tags.write_tags(mine, tags.TrackTags(title="Mine", artist="Band & Friend", genre="Rock",
+                                         musicorg_id="t_mine", source="rip_copy"))  # fmt: skip
+    scan.scan_library(lib, index)
+    browse.tracks(lib, index)
+    assert browse.artist_genre(index, ("Somebody", "The Band")) == "Rock"
+    assert browse.artist_genre(index, ("Friendly",)) is None
+    assert browse.artist_genre(index, ()) is None
+    plan = pipeline.plan_download(lib, index, [VIDEO_A])
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    assert genre_of(VIDEO_A) == "Rock"
 
 
 # ---- deleting a download (v0.2) ---------------------------------------------------------
