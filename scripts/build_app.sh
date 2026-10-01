@@ -47,7 +47,21 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 </plist>
 PLIST
 
-codesign --force --sign - "$APP" >/dev/null 2>&1 || true
+# macOS remembers "may this app use the Desktop / Downloads / Music folder?" per app, and
+# tells apps apart by their signature. Signed "ad hoc" (the fallback below), every changed
+# build is a new app to macOS, so it asks all over again at the next start. Signed with a
+# certificate that stays the same, it asks once. docs/SIGNING.md says how to make that
+# certificate (one minute, once); it's found here by its name.
+IDENTITY="Music Organizer Dev"
+if security find-identity -p codesigning 2>/dev/null | grep -q "\"$IDENTITY\""; then
+    codesign --force --sign "$IDENTITY" "$APP" >/dev/null 2>&1 \
+        || { echo "Signing with \"$IDENTITY\" failed; see docs/SIGNING.md." >&2; exit 1; }
+    echo "Signed as \"$IDENTITY\": macOS will remember the folders you allowed."
+else
+    codesign --force --sign - "$APP" >/dev/null 2>&1 || true
+    echo "Not signed with a lasting identity, so macOS may ask about folders again after"
+    echo "each new build. docs/SIGNING.md fixes that in a minute."
+fi
 
 echo "Built: $APP"
 if [ "${1:-}" = "--open" ]; then
