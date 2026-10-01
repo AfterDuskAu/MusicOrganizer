@@ -476,3 +476,15 @@ def test_stream_jobs_and_the_new_plan_kinds(
         rpc.NOT_FOUND
     )
     assert code(opened, "plan.create", kind="edit", options={"path": "../x.mp3"}) == rpc.OUTSIDE
+
+
+def test_settings(opened: rpc.Server) -> None:
+    assert result(opened, "settings.get") == {
+        "daily_cap": 250, "daily_cap_default": 250, "daily_cap_max": 300,
+    }  # fmt: skip
+    assert result(opened, "settings.set", daily_cap=120)["daily_cap"] == 120
+    assert result(opened, "settings.get")["daily_cap"] == 120
+    assert result(opened, "queue.status")["daily_cap"] == 120
+    for bad in (0, 301):
+        assert code(opened, "settings.set", daily_cap=bad) == rpc.USER_ERROR
+    assert result(opened, "settings.get")["daily_cap"] == 120

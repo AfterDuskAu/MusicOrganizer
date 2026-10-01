@@ -18,7 +18,28 @@ final class AppModel {
     }
 
     private(set) var phase: Phase = .starting
+    /// The main library's lists. Without the owner's downloads, if they're kept separate.
     private(set) var library = Library.empty
+    /// Every song, wherever it's shown: for favourites, playlists and "is it mine already?".
+    private(set) var everything = Library.empty
+    /// Songs downloaded from YouTube Music, newest first (Discover → Downloads).
+    private(set) var downloaded: [Track] = []
+    /// Settings → General: downloads stay under Discover until the owner says otherwise.
+    var keepDownloadsSeparate = UserDefaults.standard.object(forKey: "keepDownloadsSeparate")
+        as? Bool ?? true
+    {
+        didSet {
+            UserDefaults.standard.set(keepDownloadsSeparate, forKey: "keepDownloadsSeparate")
+            Task { await arrange(everything.tracks) }
+        }
+    }
+    private(set) var engineSettings: EngineSettings?
+    private(set) var lyricsSearch: LyricsSearch?
+
+    enum LyricsSearch: Equatable {
+        case working(done: Int, total: Int)
+        case finished(String)
+    }
     private(set) var status: LibraryStatus?
     private(set) var root: URL?
     private(set) var engineVersion: String?
@@ -70,7 +91,7 @@ final class AppModel {
             guard let url = URL(string: found.url) else {
                 throw RPCError(code: 0, message: "YouTube's answer couldn't be read.")
             }
-            return (url, found.httpHeaders)
+            return (url, found.httpHeaders, found.durationS)
         }
     }
 
@@ -175,15 +196,28 @@ final class AppModel {
     private func load() async throws {
         guard let connection = engine?.connection else { return }
         let list = try await connection.call("library.tracks", as: TrackList.self)
-        let built = await Task.detached { Library(tracks: list.tracks) }.value
         root = URL(fileURLWithPath: list.root)
         player.root = root
-        library = built
+        await arrange(list.tracks)
         status = try? await connection.call("library.status", as: LibraryStatus.self)
         if let found = try? await connection.call("listening.get", as: Listening.self) {
             listening = found
             favourites = Set(found.favourites)
         }
+    }
+
+    /// Sort the songs into what each part of the app shows.
+    private func arrange(_ tracks: [Track]) async {
+        let separate = keepDownloadsSeparate
+        let (all, main) = await Task.detached {
+            let all = Library(tracks: tracks)
+            let main = separate ? Library(tracks: tracks.filter { !$0.isDownload }) : all
+            return (all, main)
+        }.value
+        everything = all
+        library = main
+        downloaded = tracks.filter(\.isDownload)
+            .sorted { ($0.acquired ?? "", $1.path) > ($1.acquired ?? "", $0.path) }
     }
 
     private func engineSaid(_ method: String) async {
@@ -241,7 +275,9 @@ final class AppModel {
 
     func playlist(_ id: String) -> Playlist? { listening.playlists.first { $0.id == id } }
 
-    func tracks(in playlist: Playlist) -> [Track] { library.tracks(withIDs: playlist.trackIds) }
+    func tracks(in playlist: Playlist) -> [Track] { everything.tracks(withIDs: playlist.trackIds) }
+
+    var favouriteSongs: [Track] { everything.tracks(withIDs: listening.favourites) }
 
     /// Ask for a name, then make the playlist (with `tracks` in it, if any).
     func newPlaylist(with tracks: [Track] = []) {
@@ -353,7 +389,11 @@ final class AppModel {
 
     /// Make a plan, apply it, and wait for its jobs to end. Throws what went wrong, in
     /// the engine's own plain words. The library is reloaded afterwards.
-    func run(plan kind: String, _ options: [String: Any]) async throws {
+    @discardableResult
+    func run(
+        plan kind: String, _ options: [String: Any],
+        progress: ((_ done: Int, _ total: Int) -> Void)? = nil
+    ) async throws -> [JobsAnswer.Job] {
         guard let connection = engine?.connection else {
             throw RPCError(code: RPCError.closed, message: "The engine isn't running.")
         }
@@ -367,17 +407,62 @@ final class AppModel {
             "plan.apply", ["plan_id": plan.planId], as: BatchAnswer.self)
         var jobs: [JobsAnswer.Job] = []
         repeat {
-            try await Task.sleep(for: .milliseconds(700))
+            // A long run is asked about less often: each answer lists every job.
+            try await Task.sleep(for: .milliseconds(plan.summary.operations > 50 ? 3000 : 700))
             jobs = try await connection.call(
                 "queue.jobs", ["batch_id": batch.batchId], as: JobsAnswer.self
             ).jobs
+            progress?(jobs.filter(\.isOver).count, jobs.count)
         } while !jobs.allSatisfy(\.isOver)
         try? await load()
+        if progress != nil { return jobs }  // a long run reports its own tally
         if let failed = jobs.first(where: { !$0.worked }) {
             throw RPCError(
                 code: 0,
                 message: failed.message ?? failed.reason?.replacingOccurrences(of: "_", with: " ")
                     ?? "It didn't work.")
+        }
+        return jobs
+    }
+
+    // MARK: settings
+
+    func loadSettings() {
+        guard let connection = engine?.connection else { return }
+        Task {
+            engineSettings = try? await connection.call("settings.get", as: EngineSettings.self)
+        }
+    }
+
+    func setDailyCap(_ downloads: Int) {
+        guard let connection = engine?.connection else { return }
+        Task {
+            do {
+                engineSettings = try await connection.call(
+                    "settings.set", ["daily_cap": downloads], as: EngineSettings.self)
+            } catch {
+                notice = error.localizedDescription
+            }
+        }
+    }
+
+    /// Look up lyrics for every song that has none (LRCLIB, then YouTube Music).
+    func findMissingLyrics() {
+        if case .working = lyricsSearch { return }
+        lyricsSearch = .working(done: 0, total: 0)
+        Task {
+            do {
+                let jobs = try await run(plan: "lyrics", ["missing": true]) { done, total in
+                    self.lyricsSearch = .working(done: done, total: total)
+                }
+                let tally = lyricsTally(jobs)
+                lyricsSearch = .finished(
+                    "Looked up \(jobs.count.formatted()) songs: \(tally.timed.formatted()) got timed "
+                        + "lyrics, \(tally.plain.formatted()) got plain lyrics, and "
+                        + "\(tally.none.formatted()) weren't found.")
+            } catch {
+                lyricsSearch = .finished(error.localizedDescription)
+            }
         }
     }
 
@@ -401,7 +486,7 @@ final class AppModel {
         try await run(plan: "edit", options)
         Covers.shared.forgetAll()  // a cover may have changed
         if player.current?.trackId == track.trackId, let id = track.trackId,
-            let now = library.tracks(withIDs: [id]).first
+            let now = everything.tracks(withIDs: [id]).first
         {
             showLyrics(for: now)
         }

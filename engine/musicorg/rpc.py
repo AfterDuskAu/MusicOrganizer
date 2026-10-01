@@ -57,6 +57,7 @@ from musicorg import (
     tags,
     youtube,
 )
+from musicorg.config import MAX_DAILY_CAP, THROTTLE_DEFAULTS, Config, save_daily_cap
 from musicorg.errors import (
     LibraryLockedError,
     MusicOrgError,
@@ -86,6 +87,15 @@ USER_ERROR = -32000  # the request couldn't be done; `message` says why
 LOCKED, OUTSIDE, TOOL_MISSING, YOUTUBE_PAUSED, PLAN_OUT_OF_DATE, NOT_FOUND, BUSY = (
     -32001, -32002, -32003, -32004, -32005, -32006, -32007,
 )  # fmt: skip
+
+
+def _settings(config: Config) -> dict[str, Any]:
+    """The settings the app shows (v0.2): the engine's own, kept in config.json."""
+    return {
+        "daily_cap": config.throttle()["daily_cap"],
+        "daily_cap_default": THROTTLE_DEFAULTS["daily_cap"],
+        "daily_cap_max": MAX_DAILY_CAP,
+    }
 
 
 class Stop(BaseException):
@@ -256,6 +266,8 @@ class Server:
             "search.ytmusic": self.search_ytmusic,
             "youtube.stream": self.youtube_stream,
             "queue.jobs": self.queue_jobs,
+            "settings.get": self.settings_get,
+            "settings.set": self.settings_set,
         }
 
     # -- the loop --
@@ -716,6 +728,15 @@ class Server:
         return self._start_job("journal.undo", work)
 
     # -- search --
+
+    def settings_get(self, params: dict[str, Any]) -> dict[str, Any]:
+        return _settings(Config.load())
+
+    def settings_set(self, params: dict[str, Any]) -> dict[str, Any]:
+        cap = want(params, "daily_cap", int)
+        if cap is not None:
+            return _settings(save_daily_cap(cap))  # config.py does its own writing (rule 3)
+        return _settings(Config.load())
 
     def youtube_stream(self, params: dict[str, Any]) -> dict[str, Any]:
         found = youtube.stream(need(params, "video_id", str))

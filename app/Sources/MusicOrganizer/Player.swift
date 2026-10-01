@@ -36,7 +36,7 @@ final class Player {
     /// A song played to its end (not skipped): that's what counts as a play.
     @ObservationIgnored var onFinished: ((Track) -> Void)?
     /// Where a YouTube video's audio can be played from (the engine asks YouTube).
-    @ObservationIgnored var findStream: ((String) async throws -> (URL, [String: String]))?
+    @ObservationIgnored var findStream: ((String) async throws -> (URL, [String: String], Double?))?
     @ObservationIgnored private let audio = AVPlayer()
     @ObservationIgnored private var observers: [Any] = []
 
@@ -173,10 +173,11 @@ final class Player {
         publishNowPlaying()
         Task {
             do {
-                let (url, headers) = try await findStream(videoId)
+                let (url, headers, length) = try await findStream(videoId)
                 guard current == track else { return }  // another song was chosen meanwhile
                 let asset = AVURLAsset(url: url, options: ["AVURLAssetHTTPHeaderFieldsKey": headers])
                 begin(track, AVPlayerItem(asset: asset))
+                if clock.duration <= 0, let length { clock.duration = length }
             } catch {
                 guard current == track else { return }
                 isFetching = false
@@ -205,12 +206,20 @@ final class Player {
 
     private func tick(_ seconds: Double) {
         guard current != nil, seconds.isFinite else { return }
-        clock.time = seconds
-        if let length = audio.currentItem?.duration.seconds, length.isFinite, length > 0,
+        if current?.videoId != nil {
+            // YouTube's stream claims to be twice as long as the song (its second half is
+            // silence), so the length YouTube Music gave is the one that counts: the
+            // song ends there.
+            if clock.duration > 0, seconds >= clock.duration - 0.2 {
+                finished(audio.currentItem)
+                return
+            }
+        } else if let length = audio.currentItem?.duration.seconds, length.isFinite, length > 0,
             abs(length - clock.duration) > 0.5
         {
             clock.duration = length
         }
+        clock.time = seconds
         onTick?(seconds)
     }
 

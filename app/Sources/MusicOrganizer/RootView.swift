@@ -59,8 +59,22 @@ struct Message<Buttons: View>: View {
 enum SidebarItem: Hashable {
     case songs, albums, artists
     case favourites, recentlyAdded, mostPlayed, unconfirmed
+    case whatsNew, find, youtube, downloads
     case playlist(String)
-    case youtube
+
+    /// The Library entry saved under this name (`SidebarChoice`).
+    init?(libraryEntry name: String) {
+        switch name {
+        case "songs": self = .songs
+        case "albums": self = .albums
+        case "artists": self = .artists
+        case "favourites": self = .favourites
+        case "mostPlayed": self = .mostPlayed
+        case "recentlyAdded": self = .recentlyAdded
+        case "unconfirmed": self = .unconfirmed
+        default: return nil
+        }
+    }
 
     var title: String {
         switch self {
@@ -71,8 +85,11 @@ enum SidebarItem: Hashable {
         case .recentlyAdded: "Recently Added"
         case .mostPlayed: "Most Played"
         case .unconfirmed: "Not Identified Yet"
+        case .whatsNew: "What's New"
+        case .find: "Find"
+        case .youtube: "Search YouTube Music"
+        case .downloads: "Downloads"
         case .playlist: "Playlist"
-        case .youtube: "YouTube Music"
         }
     }
 
@@ -85,8 +102,11 @@ enum SidebarItem: Hashable {
         case .recentlyAdded: "clock"
         case .mostPlayed: "chart.bar"
         case .unconfirmed: "questionmark.circle"
-        case .playlist: "music.note.list"
+        case .whatsNew: "sparkles"
+        case .find: "wand.and.stars"
         case .youtube: "magnifyingglass"
+        case .downloads: "arrow.down.circle"
+        case .playlist: "music.note.list"
         }
     }
 }
@@ -98,6 +118,8 @@ struct MainView: View {
     @State private var showNowPlaying = false
     @State private var deleting: Playlist?
     @AppStorage("showLyrics") private var showLyrics = false
+    /// The Library entries the owner keeps in the sidebar, in order.
+    @AppStorage("sidebarLibrary") private var savedEntries = SidebarChoice.write(SidebarChoice.all)
 
     var body: some View {
         @Bindable var model = model
@@ -170,23 +192,49 @@ struct MainView: View {
     }
 
     private var sidebar: some View {
-        List(selection: $item) {
-            Section("Library") {
-                row(.songs)
-                row(.albums)
-                row(.artists)
-            }
-            Section("Collections") {
-                row(.favourites)
-                row(.recentlyAdded)
-                row(.mostPlayed)
-                let waiting = model.library.unconfirmed.count
-                if waiting > 0 {
-                    row(.unconfirmed).badge(waiting)
+        let shown = SidebarChoice.read(savedEntries)
+        let hidden = SidebarChoice.hidden(shown)
+        let waiting = model.library.unconfirmed.count
+        return List(selection: $item) {
+            Section {
+                ForEach(shown, id: \.self) { name in
+                    if let entry = SidebarItem(libraryEntry: name),
+                        entry != .unconfirmed || waiting > 0  // nothing waiting: nothing to show
+                    {
+                        row(entry)
+                            .badge(entry == .unconfirmed ? waiting : 0)
+                            .contextMenu {
+                                Button("Remove from Sidebar") { remove(name, from: shown) }
+                                    .disabled(shown.count <= 1)
+                            }
+                    }
+                }
+            } header: {
+                header("Library") {
+                    Menu {
+                        ForEach(hidden, id: \.self) { name in
+                            if let entry = SidebarItem(libraryEntry: name) {
+                                Button(entry.title) {
+                                    savedEntries = SidebarChoice.write(
+                                        SidebarChoice.adding(name, to: shown))
+                                }
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                    .menuStyle(.borderlessButton)
+                    .menuIndicator(.hidden)
+                    .fixedSize()
+                    .disabled(hidden.isEmpty)
+                    .help(hidden.isEmpty ? "Everything is already shown" : "Add an entry to the sidebar")
                 }
             }
-            Section("Find") {
+            Section("Discover") {
+                row(.whatsNew)
+                row(.find)
                 row(.youtube)
+                row(.downloads).badge(model.downloaded.count)
             }
             Section {
                 ForEach(model.listening.playlists) { playlist in
@@ -203,8 +251,28 @@ struct MainView: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
             } header: {
-                Text("Playlists")
+                header("Playlists") {
+                    Button { model.newPlaylist() } label: { Image(systemName: "plus") }
+                        .buttonStyle(.borderless)
+                        .help("New playlist")
+                }
             }
+        }
+    }
+
+    private func header(_ title: String, @ViewBuilder button: () -> some View) -> some View {
+        HStack {
+            Text(title)
+            Spacer()
+            button()
+        }
+        .padding(.trailing, 6)
+    }
+
+    private func remove(_ name: String, from shown: [String]) {
+        savedEntries = SidebarChoice.write(shown.filter { $0 != name })
+        if item == SidebarItem(libraryEntry: name) {
+            item = shown.first { $0 != name }.flatMap(SidebarItem.init(libraryEntry:))
         }
     }
 
@@ -224,7 +292,7 @@ struct MainView: View {
             ArtistsView()
         case .favourites:
             SongList(
-                title: "Favourites", tracks: library.tracks(withIDs: model.listening.favourites),
+                title: "Favourites", tracks: model.favouriteSongs,
                 empty: "Click the heart beside a song and it shows up here.")
         case .recentlyAdded:
             SongList(
@@ -242,6 +310,27 @@ struct MainView: View {
                     + "They get their official names, covers and lyrics once they're identified.")
         case .youtube:
             YouTubeSearchView()
+        case .downloads:
+            SongList(
+                title: "Downloads", tracks: model.downloaded,
+                empty: "Songs you download from YouTube Music show up here.",
+                note: model.keepDownloadsSeparate
+                    ? "Downloaded songs stay here, apart from your main library. "
+                        + "Settings → General can put them in the main library instead."
+                    : "Downloaded songs are also in your main library (Settings → General).")
+        case .whatsNew:
+            Message(
+                symbol: "sparkles", title: "What's New is coming",
+                text: "New songs matched to your library will be listed here. It arrives with Discover."
+            ) {}
+        case .find:
+            Message(
+                symbol: "wand.and.stars", title: "Find is coming",
+                text: "Pick an artist, a genre and how many songs you want, and get recommendations. "
+                    + "It arrives with Discover. Until then, Search YouTube Music finds any song by name."
+            ) {
+                Button("Search YouTube Music") { item = .youtube }
+            }
         case .playlist(let id):
             if let playlist = model.playlist(id) {
                 SongList(
@@ -293,6 +382,7 @@ private struct StatusFooter: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
+        HStack(alignment: .bottom) {
         VStack(alignment: .leading, spacing: 3) {
             Text("\(model.library.tracks.count.formatted()) songs")
             if let status = model.status, status.waitingForReview > 0 {
@@ -302,6 +392,14 @@ private struct StatusFooter: View {
             if let version = model.engineVersion {
                 Text("Engine \(version)").foregroundStyle(.tertiary)
             }
+        }
+        Spacer()
+        SettingsLink {
+            Image(systemName: "gearshape").font(.title3)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.secondary)
+        .help("Settings")
         }
         .font(.caption)
         .frame(maxWidth: .infinity, alignment: .leading)

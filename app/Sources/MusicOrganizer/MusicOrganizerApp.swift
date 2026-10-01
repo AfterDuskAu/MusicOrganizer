@@ -12,6 +12,9 @@ struct MusicOrganizerApp: App {
     }
 
     var body: some Scene {
+        Settings {
+            SettingsView().environment(model)
+        }
         Window("Music Organizer", id: "main") {
             RootView()
                 .environment(model)

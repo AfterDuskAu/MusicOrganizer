@@ -31,10 +31,12 @@ THROTTLE_DEFAULTS = {
     "quiet_start_downloads": 20,
     "quiet_start_min_s": 20,
     "quiet_start_max_s": 40,
-    "daily_cap": 300,
+    # 250, not the 300 the research found safe: a margin on purpose (owner, 2026-10-01).
+    "daily_cap": 250,
     # How long the whole queue waits after YouTube refuses us (step 09a).
     "youtube_pause_hours": 6,
 }
+MAX_DAILY_CAP = 300  # the most the owner may raise `daily_cap` to
 # The fingerprint gate's thresholds (step 08). Conservative until step 09b calibrates them.
 # `match_ber` and `uncertain_ber` are bit error rates; the rest come from the research on the
 # owner's rips (Sep 2026): extra audio at either end of a rip was at most 7 s (start) and
@@ -175,7 +177,17 @@ class Config:
             for key, value in chosen.items():
                 if key in values and isinstance(value, int) and not isinstance(value, bool):
                     values[key] = value
+        values["daily_cap"] = min(max(values["daily_cap"], 1), MAX_DAILY_CAP)
         return values
+
+    def set_daily_cap(self, downloads: int) -> None:
+        """The owner's own limit on downloads in 24 hours: 1 to MAX_DAILY_CAP."""
+        if isinstance(downloads, bool) or not 1 <= downloads <= MAX_DAILY_CAP:
+            raise ConfigError(f"Downloads per day should be a number from 1 to {MAX_DAILY_CAP}.")
+        chosen = self.data.get("throttle")
+        if not isinstance(chosen, dict):
+            chosen = self.data["throttle"] = {}
+        chosen["daily_cap"] = downloads
 
     def fingerprint(self) -> dict[str, float]:
         """The fingerprint gate's thresholds: the defaults, with any set in config.json."""
@@ -266,3 +278,11 @@ def _fsync_dir(folder: Path) -> None:
         pass
     finally:
         os.close(fd)
+
+
+def save_daily_cap(downloads: int) -> Config:
+    """Set the owner's downloads-per-day limit in config.json and save it."""
+    config = Config.load()
+    config.set_daily_cap(downloads)
+    config.save()
+    return config

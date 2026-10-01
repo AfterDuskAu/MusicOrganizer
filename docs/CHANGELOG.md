@@ -40,6 +40,19 @@
 - 2026-10-01, late: the YouTube Music page has "Show 25 More" (the same search with a bigger limit; `search.ytmusic` now allows up to 100), and Recently Added is no longer capped at 200. The owner's design for the sidebar and Settings is written up in `docs/roadmap/0.2-app-layout.md`.
 - **Not checked in the running app.** The owner asked for the app not to be opened and the Mac left idle (other work needed it), so these screens are compiled and the logic under them is tested, but nobody has clicked through them yet. To check: playing a search result (AVPlayer with YouTube's address), the Download button, and the Edit Details sheet.
 
+2026-10-02. The owner's layout for the sidebar and Settings (`docs/roadmap/0.2-app-layout.md`), and a fix.
+
+- **Fix: a song played from YouTube Music showed twice its length and went silent halfway.** Apple's player reads YouTube's format-140 stream as twice as long as the song. The app now trusts the length YouTube Music gives: the slider uses it, and the song ends there and the next one starts. Downloaded files aren't affected (yt-dlp repairs the container when it saves one).
+- **Sidebar, to the owner's layout:** Library (with a "+" to add entries back, and "Remove from Sidebar" on each entry), Discover (What's New and Find as "coming" pages, Search YouTube Music, Downloads), Playlists (with a "+"), and a cog wheel for Settings. The owner's choice of Library entries is remembered.
+- **Settings window** (the cog, or ⌘,):
+  - *General:* downloaded songs go to **Discover Downloads** (the default: they stay out of the main library's lists) or **All Library**. This is parked Fix A-2 as a switch, done in the app: no file moves either way. The library folder is shown here too.
+  - *Quality:* 128 kbps (256 is shown as coming), and **downloads per day**.
+  - *Accounts:* YouTube, Apple Music and Spotify, each shown as coming.
+  - *Lyrics:* **Find Missing Lyrics**, which runs the engine's `lyrics --missing` plan with a progress bar and a tally at the end.
+- **Engine:** the daily download cap's default is now **250** (was 300), and it can't be set above 300, whatever `config.json` says. RPC: `settings.get` and `settings.set` (`daily_cap`). `library.tracks` also gives `source`, which is how the app knows a download.
+- Noted, not built: lyrics for a song being played from YouTube Music (see the layout plan).
+- Not checked in the running app by Claude (the owner asked for the app not to be opened); the owner is trying each build themselves.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

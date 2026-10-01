@@ -136,6 +136,31 @@ final class LibraryTests: XCTestCase {
         XCTAssertTrue(library.videoIDs.contains(result.videoId))
     }
 
+    func testSidebarChoices() {
+        XCTAssertEqual(SidebarChoice.read(nil), SidebarChoice.all)
+        XCTAssertEqual(SidebarChoice.read(""), SidebarChoice.all)
+        XCTAssertEqual(SidebarChoice.read("songs,nonsense,artists,songs"), ["songs", "artists"])
+        XCTAssertEqual(SidebarChoice.hidden(["songs", "artists"]),
+                       ["albums", "favourites", "mostPlayed", "recentlyAdded", "unconfirmed"])
+        XCTAssertEqual(SidebarChoice.adding("albums", to: ["songs", "artists"]),
+                       ["songs", "albums", "artists"])
+        XCTAssertEqual(SidebarChoice.write(["songs", "artists"]), "songs,artists")
+    }
+
+    func testDownloadsAndLyricsTally() {
+        XCTAssertTrue(Track(path: "a", title: "A", source: "youtube_music").isDownload)
+        XCTAssertFalse(Track(path: "a", title: "A", match: "auto_exact", source: "youtube_music").isDownload)
+        XCTAssertFalse(Track(path: "a", title: "A", source: "rip_copy").isDownload)
+        let jobs = [
+            JobsAnswer.Job(state: "done", message: "synced from LRCLIB"),
+            JobsAnswer.Job(state: "done", message: "plain from YouTube Music"),
+            JobsAnswer.Job(state: "done", message: "not_found"),
+            JobsAnswer.Job(state: "failed", message: "synced"),
+        ]
+        let tally = lyricsTally(jobs)
+        XCTAssertEqual([tally.timed, tally.plain, tally.none], [1, 1, 2])
+    }
+
     func testClockTime() {
         XCTAssertEqual(clockTime(187.9), "3:07")
         XCTAssertEqual(clockTime(3765), "1:02:45")

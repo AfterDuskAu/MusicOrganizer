@@ -20,6 +20,8 @@ public struct Track: Decodable, Identifiable, Hashable, Sendable {
     public let durationS: Double?
     public let explicit: Bool
     public let onlyCopy: Bool
+    /// Where the audio came from: "rip_copy", "youtube_music"…
+    public let source: String?
     /// The YouTube video this song came from, if it came from one.
     public let sourceId: String?
     public let match: String?
@@ -45,6 +47,8 @@ public struct Track: Decodable, Identifiable, Hashable, Sendable {
     public var hasCover: Bool { cover != nil || embeddedCover || artUrl != nil }
     /// Copied in under its own name, still waiting to be identified.
     public var isUnconfirmed: Bool { match == "unconfirmed" }
+    /// Downloaded from YouTube Music because the owner asked for it (no rip behind it).
+    public var isDownload: Bool { source == "youtube_music" && match == nil }
 
     public init(
         path: String, title: String, artist: String? = nil, albumArtist: String? = nil,
@@ -53,7 +57,7 @@ public struct Track: Decodable, Identifiable, Hashable, Sendable {
         onlyCopy: Bool = false, match: String? = nil, format: String? = nil,
         bitrateKbps: Int? = nil, cover: String? = nil, embeddedCover: Bool = false,
         lyrics: Lyrics = .none, trackId: String? = nil, acquired: String? = nil,
-        sourceId: String? = nil, artUrl: String? = nil
+        sourceId: String? = nil, artUrl: String? = nil, source: String? = nil
     ) {
         self.trackId = trackId
         self.path = path
@@ -71,6 +75,7 @@ public struct Track: Decodable, Identifiable, Hashable, Sendable {
         self.match = match
         self.acquired = acquired
         self.sourceId = sourceId
+        self.source = source
         self.artUrl = artUrl
         self.format = format
         self.bitrateKbps = bitrateKbps
@@ -119,6 +124,14 @@ public struct SearchAnswer: Decodable, Sendable {
 public struct StreamAnswer: Decodable, Sendable {
     public let url: String
     public let httpHeaders: [String: String]
+    public let durationS: Double?
+}
+
+/// `settings.get`: the engine's own settings that the app shows.
+public struct EngineSettings: Decodable, Equatable, Sendable {
+    public let dailyCap: Int
+    public let dailyCapDefault: Int
+    public let dailyCapMax: Int
 }
 
 public struct PlanAnswer: Decodable, Sendable {
@@ -139,6 +152,12 @@ public struct JobsAnswer: Decodable, Sendable {
         public let state: String
         public let reason: String?
         public let message: String?
+
+        public init(state: String, reason: String? = nil, message: String? = nil) {
+            self.state = state
+            self.reason = reason
+            self.message = message
+        }
 
         public var isOver: Bool { state != "queued" && state != "running" }
         public var worked: Bool { state == "done" }
@@ -333,6 +352,42 @@ public struct Library: Sendable {
     public func album(of track: Track) -> Album? {
         albums.first { $0.id == track.folder }
     }
+}
+
+/// The sidebar's Library entries the owner has chosen, saved as text ("songs,artists").
+/// Unknown names are dropped, and an empty or missing value gives the standard set.
+public enum SidebarChoice {
+    public static let all = [
+        "songs", "albums", "artists", "favourites", "mostPlayed", "recentlyAdded", "unconfirmed",
+    ]
+
+    public static func read(_ saved: String?) -> [String] {
+        guard let saved else { return all }
+        var seen = Set<String>()
+        let kept = saved.split(separator: ",").map(String.init)
+            .filter { all.contains($0) && seen.insert($0).inserted }
+        return kept.isEmpty ? all : kept
+    }
+
+    public static func write(_ entries: [String]) -> String { entries.joined(separator: ",") }
+
+    /// The entries not shown, in the standard order: what "+" offers.
+    public static func hidden(_ shown: [String]) -> [String] { all.filter { !shown.contains($0) } }
+
+    /// Add an entry back in its standard place among those shown.
+    public static func adding(_ entry: String, to shown: [String]) -> [String] {
+        all.filter { shown.contains($0) || $0 == entry }
+    }
+}
+
+/// How a "find missing lyrics" run went, from its jobs' messages.
+public func lyricsTally(_ jobs: [JobsAnswer.Job]) -> (timed: Int, plain: Int, none: Int) {
+    var timed = 0, plain = 0
+    for job in jobs where job.worked {
+        let message = job.message ?? ""
+        if message.hasPrefix("synced") { timed += 1 } else if message.hasPrefix("plain") { plain += 1 }
+    }
+    return (timed, plain, jobs.count - timed - plain)
 }
 
 /// Lower case, no accents: for comparing and searching.

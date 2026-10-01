@@ -175,7 +175,7 @@ def test_the_pace_between_downloads(lib: Library, clock: FakeClock, yt: FakeYouT
 
 def test_default_pace() -> None:
     t = Config(None, Path("x")).throttle()
-    assert (t["pause_min_s"], t["pause_max_s"], t["daily_cap"]) == (8, 25, 300)
+    assert (t["pause_min_s"], t["pause_max_s"], t["daily_cap"]) == (8, 25, 250)
     assert (t["quiet_start_downloads"], t["quiet_start_min_s"], t["quiet_start_max_s"]) == (
         20,
         20,
@@ -481,7 +481,7 @@ def test_cli_queue_commands(lib: Library, capsys: pytest.CaptureFixture[str]) ->
     root = str(lib.root)
     assert cli.main(["--library", root, "queue", "status"]) == 0
     out = capsys.readouterr().out
-    assert "Queue: idle." in out and "2 queued" in out and "0 of 300" in out
+    assert "Queue: idle." in out and "2 queued" in out and "0 of 250" in out
 
     assert cli.main(["--library", root, "queue", "pause"]) == 0
     assert "Queue: paused (by you)." in capsys.readouterr().out

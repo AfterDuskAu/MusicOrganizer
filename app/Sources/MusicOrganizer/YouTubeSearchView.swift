@@ -110,7 +110,7 @@ private struct ResultRow: View {
 
     @ViewBuilder
     private var status: some View {
-        if model.library.videoIDs.contains(result.videoId) {
+        if model.everything.videoIDs.contains(result.videoId) {
             Label("In your library", systemImage: "checkmark.circle.fill")
                 .foregroundStyle(.green)
                 .font(.callout)

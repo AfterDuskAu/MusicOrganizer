@@ -118,6 +118,8 @@ Exit codes:
 | `search.ytmusic` | `{ "query", "limit"?: 10 }` (limit 1–100; the app's "show more" asks again with a bigger limit) | `{ "results": [Candidate] }` (`score` null; `candidate_id` made from the videoId) |
 | `youtube.stream` | `{ "video_id" }` | `{ "url", "http_headers", "duration_s" }`: where the app can play the song's audio (format 140) from right now. Nothing is downloaded or saved. The address expires, so the app asks each time it plays. |
 | `queue.jobs` | `{ "batch_id" }` | `{ "jobs": [{ "job_id", "kind", "state", "reason", "message" }] }`: how a batch's jobs ended, so the app can say what happened to a download or an edit |
+| `settings.get` | — | `{ "daily_cap", "daily_cap_default", "daily_cap_max" }`: the engine's settings the app shows (kept in `config.json`) |
+| `settings.set` | `{ "daily_cap"? }` (1 to `daily_cap_max`, which is 300) | the same as `settings.get`. A new cap applies from the next queue run. |
 
 **RPC-only:** `plan.create` with kind `edit` (the app's Edit Details sheet), `youtube.stream`, `listening.*`, `playlist.*`.
 
@@ -165,7 +167,7 @@ Standard JSON-RPC codes, plus:
 // The app plays the file and shows the cover by reading them; it never writes to them.
 { "track_id": "t_…", "path": "Music/Artist/Album (2020)/01 Song.m4a", "title": "…", "artist": "…",
   "album_artist": "…", "album": "…", "year": 2020, "track": 1, "disc": 1, "genre": "…",
-  "duration_s": 228.1, "explicit": false, "only_copy": false, "source_id": "videoId or null", "match": "auto_details", "acquired": "2026-09-30T10:00:00Z",
+  "duration_s": 228.1, "explicit": false, "only_copy": false, "source": "rip_copy", "source_id": "videoId or null", "match": "auto_details", "acquired": "2026-09-30T10:00:00Z",
   "format": "mp3", "bitrate_kbps": 320, "cover": "Music/Artist/Album (2020)/cover.jpg",
   "embedded_cover": true, "lyrics": "synced" }   // lyrics: "synced" | "plain" | "none"
 
