@@ -52,6 +52,8 @@ A SwiftUI app that starts the engine and talks to it (`musicorg serve`). Code in
 - **Every song playable (owner's choice A):** rips not identified yet are in the library under their own names, marked "not identified yet", and are upgraded in place when they're identified.
 - **A daily player (owner's choice B):** favourites, play counts and Most Played, Recently Added, playlists, and a full-window "now playing" screen with large lyrics.
 
+**Parked by the owner (2026-10-01):** Fix A-1 (the app feels rough), Fix A-2 (automatic downloads stay out of the main library) and Fix A-3 (a real media player tab). All three are written up in `docs/KNOWN-ISSUES.md`.
+
 **Still to build, roughly in this order** (the owner decides after using the first slice):
 
 - **Review queue in the app:**

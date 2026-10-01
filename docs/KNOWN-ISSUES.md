@@ -21,7 +21,11 @@ Most of these came from comparing the engine with the Photonizer project's lesso
   - Proposed: one read-only review session of fileops' guard, reserve-then-replace, recovery and undo; the pipeline's commit and undo; queue recovery; and state.json writes.
   - Run it after 09b's calibration run and before `plan replace` without `--stage-only`. Decide: yes or no.
 
-## The Mac app (owner's notes after first use, 2026-10-01; to fix later)
+## Parked fixes for the Mac app (owner, 2026-10-01)
+
+The owner named these and parked them: nothing here is built until the owner says so.
+
+### Fix A-1: the app feels rough
 
 - **It feels glitchy and slow:** slow to scroll, slow to follow clicks.
   - Likely causes to measure first (Photonizer's rule: measure before fixing): the song table is filtered and sorted again every time anything on screen changes; every visible row starts its own cover load; the player bar and the rows all redraw when the playing song changes.
@@ -31,6 +35,26 @@ Most of these came from comparing the engine with the Photonizer project's lesso
 - **A rip whose file name has no extension can't be copied in.** One of 1,063 unconfirmed copies failed this way on 2026-10-01: the file's name ends "(320 kbps (2)" with no ".mp3", so the staged copy's "extension" is everything after the first dot in "Y2meta.app". The scan knows it's an MP3; the adopt should name the staged copy by the detected format, not the file name.
 - **"Reading your library…" takes a minute or more after a big import.** The first `library.tracks` after new songs arrive reads each new file's tags from disk, and on the iMac's disk that is slow for files not read recently (about 90 seconds for 1,062 new songs on 2026-10-01; this was also the unexplained slow first launch). After that it's instant. Fix: the adopt and replace jobs already hold each song's tags, so they should store the app's details in the index as they go; and the app should show progress instead of a bare spinner.
 - **Unconfirmed copies keep junk from the rip's own tags**, such as an album called after a download site. They're fixed when the song is identified; a clean-up of obvious junk could come sooner.
+
+### Fix A-2: automatic downloads stay out of the main library
+
+For when the app can download songs from YouTube by itself (Discover, v0.4).
+
+- A song downloaded automatically must **not** show up in the library's Recently Added, or anywhere in the main library.
+- It goes to **Discovery → Recently Added → Songs** instead.
+- It stays separate until the owner chooses. The owner is offered two options: bring the songs into the main music library, or keep them separate to sort later.
+- For the engine this means a discovered song needs its own marker (and its own folder, as `docs/roadmap/0.4-discover.md` already plans: `Discovered/<Genre>/<YYYY-MM Month>/`), and the main library's lists (Songs, Albums, Artists, Recently Added, Most Played) must leave marked songs out until they're accepted.
+
+### Fix A-3: a real media player tab
+
+The full-window "now playing" screen exists, but the owner wants a proper **tab** for it, to open later and lay out the way they want.
+
+- **A lyrics section** with the album cover (or the song's picture) as the background. Nice, but simple.
+- **A way to put lyrics in by hand**, for a song with no lyrics or the wrong ones.
+- **The sidebar's entries (Songs, Artists, Albums…) can be added or removed** by the owner.
+- **The columns of information beside each song can be added or removed** by the owner.
+- The layout is the owner's to decide when they sit down with it: build the pieces so they can be arranged, don't fix a design.
+- Engine work this needs: a way to save lyrics the owner typed (a new write, through `fileops`, journaled and undoable like any other), and somewhere to keep the owner's layout choices (the app's own settings, not the library).
 
 ## For later steps
 
