@@ -253,6 +253,18 @@
 - For the record: timing a video never counted against the daily download limit (that counts songs and videos saved through the queue). What it cost was 1 to 3 requests to YouTube the first time a video was played.
 - Not tried in the running app: the owner's Mac was busy with another test, so only the engine's tests for this (34) and one build were run here, at low priority; the full suite ran in CI.
 
+2026-10-02, 9 am. **Discover's guided mode** ("What music would you like today?": section 6 of `docs/roadmap/0.4-discover.md`).
+
+- **The app:** Find has a **Guide Me…** button. It asks three things, one at a time, as a short conversation: what music (type a kind of music or an artist, or pick Surprise Me, What I Play Most, or one of six genres), just play it or download it, and how many (10, 25, 50, 100, 250, or any number to 500).
+  - **Just play it** plays the picks from YouTube Music as a play queue and saves nothing.
+  - **Download it** finds the picks, then says what it found and what it will take ("I found 237 hip hop songs… It takes about 2½ hours, paced so YouTube doesn't refuse this Mac"; and over how many days, if it's more than the daily limit). Nothing is queued until **Start** is clicked.
+  - Either way the picks are also on the Find page afterwards, as if its own boxes had been filled in.
+- **It adds no logic of its own**, as the plan says: the same `discover.suggest`, the same plan and queue. The one new thing is in the engine:
+  - **A new seed kind, `typed`** (added to the enums): whatever was typed, without saying whether it's a genre or an artist. It's a genre if the owner has four or more songs tagged with it, or it's one of about sixty names genres go by. Otherwise it's an artist, if YouTube Music has one of exactly that name (one request, kept for 30 days). Failing both, YouTube Music's own playlists are searched for it. The answer's `seeds` say what it turned out to be, which is how the guide can say "hip hop songs" or "songs by Linkin Park and artists like them".
+  - The names come first on purpose: there are artists called "Jazz" and "Pop".
+- **Wording:** the plan's script says "weighted towards the artists you listen to most". The engine's ranking leans to the artists the owner *has* most of, so the guide says that.
+- **Not tried in the running app** (the owner's Mac was busy with another test): no click, and nothing was asked of YouTube. Here: the engine's Discover tests (31), the app's own tests (32) and two low-priority builds. The full suite ran in CI.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

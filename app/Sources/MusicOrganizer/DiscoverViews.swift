@@ -53,6 +53,8 @@ struct FindView: View {
     @AppStorage("findGenre") private var genre = ""
     @State private var playlistId = ""
     @State private var otherCount = ""
+    /// The guided "What music would you like today?" is open.
+    @State private var guiding = false
 
     enum Start: String, CaseIterable, Identifiable {
         case artist, genre, playlist, mostPlayed, topArtist, library
@@ -88,6 +90,11 @@ struct FindView: View {
                     .labelsHidden()
                     .fixedSize()
                     detail
+                    Spacer()
+                    Button("Guide Me…", systemImage: "bubble.left.and.bubble.right") {
+                        guiding = true
+                    }
+                    .help("Three questions instead of these boxes: what music, play or download, how many")
                 }
                 HStack(spacing: 10) {
                     Text("How many").foregroundStyle(.secondary)
@@ -124,11 +131,15 @@ struct FindView: View {
             } else {
                 Message(
                     symbol: "wand.and.stars", title: "Find songs you don't have",
-                    text: "Choose where to start from and how many songs you'd like. Play any of "
-                        + "them straight away; nothing is saved unless you click Download."
-                ) {}
+                    text: "Choose where to start from and how many songs you'd like, or let the "
+                        + "guide ask you. Play any of them straight away; nothing is saved unless "
+                        + "you click Download."
+                ) {
+                    Button("Guide Me…") { guiding = true }
+                }
             }
         }
+        .sheet(isPresented: $guiding) { GuideSheet().environment(model) }
         .onAppear {
             if playlistId.isEmpty { playlistId = model.listening.playlists.first?.id ?? "" }
         }

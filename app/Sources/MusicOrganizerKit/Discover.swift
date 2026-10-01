@@ -8,6 +8,9 @@ public enum DiscoverSeed: Hashable, Sendable {
     case playlist(String)  // its id
     case artist(String)
     case genre(String)
+    /// Whatever the owner typed when asked what music they'd like: the engine works
+    /// out whether it's a genre or an artist.
+    case typed(String)
 
     /// The seed as `discover.suggest` takes it.
     public var params: [String: String] {
@@ -18,6 +21,7 @@ public enum DiscoverSeed: Hashable, Sendable {
         case .playlist(let id): ["kind": "playlist", "playlist_id": id]
         case .artist(let name): ["kind": "artist", "name": name]
         case .genre(let name): ["kind": "genre", "name": name]
+        case .typed(let words): ["kind": "typed", "name": words]
         }
     }
 
@@ -75,10 +79,61 @@ public struct DiscoverPick: Decodable, Identifiable, Hashable, Sendable {
 
 /// `discover.suggest`: the picks, and anything to tell the owner about them.
 public struct DiscoverAnswer: Decodable, Sendable {
+    /// A starting point as the engine took it: typed words come back as the genre or
+    /// the artist they turned out to be.
+    public struct Seed: Decodable, Equatable, Sendable {
+        public let kind: String
+        public let label: String
+
+        public init(kind: String, label: String) {
+            self.kind = kind
+            self.label = label
+        }
+    }
+
     public let picks: [DiscoverPick]
     public let wanted: Int
     public let radios: Int
     public let note: String?
+    public let seeds: [Seed]?
+}
+
+/// The words of the guided "What music would you like today?": what was found, and
+/// what downloading it will take. The guide adds no logic of its own to Discover; it
+/// asks the same questions the Find page has boxes for.
+public enum Guided {
+    public static let counts = [10, 25, 50, 100, 250]
+    public static let most = 500
+
+    /// "250" → 250. Nil for anything that isn't a number from 1 to 500.
+    public static func count(from typed: String) -> Int? {
+        guard let number = Int(typed.trimmingCharacters(in: .whitespaces)),
+            (1...most).contains(number)
+        else { return nil }
+        return number
+    }
+
+    /// "237 hip hop songs", "50 songs by Linkin Park and artists like them".
+    public static func what(_ count: Int, from seeds: [DiscoverAnswer.Seed]) -> String {
+        let songs = count == 1 ? "song" : "songs"
+        guard seeds.count == 1, let seed = seeds.first else { return "\(count) \(songs)" }
+        switch seed.kind {
+        case "genre": return "\(count) \(seed.label.lowercased()) \(songs)"
+        case "artist": return "\(count) \(songs) by \(seed.label) and artists like them"
+        case "playlist": return "\(count) \(songs) like the ones in \(seed.label)"
+        case "most_played": return "\(count) \(songs) like the ones you play most"
+        default: return "\(count) \(songs) like the ones in your library"
+        }
+    }
+
+    /// What the owner is told before a download starts.
+    public static func downloadNote(minutes: Int, days: Int) -> String {
+        var note = "They're weighted towards the artists you have most of, and skip anything "
+            + "you already have. It takes \(roughTime(minutes: minutes)), paced so YouTube "
+            + "doesn't refuse this Mac."
+        if days > 1 { note += " Your daily limit spreads them over \(days) days." }
+        return note
+    }
 }
 
 /// Where else a song can be looked at: a search for it on another service. Plain links,
@@ -112,11 +167,11 @@ public enum ElsewhereLink: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
-/// How long a batch of downloads will take, in words: "about 25 minutes", "about 2 hours".
+/// How long a batch of downloads will take, in words: "about 25 minutes", "about 2½ hours".
 public func roughTime(minutes: Int) -> String {
     if minutes < 1 { return "under a minute" }
     if minutes == 1 { return "about a minute" }
     if minutes < 90 { return "about \(minutes) minutes" }
-    let hours = (Double(minutes) / 60).rounded()
-    return "about \(Int(hours)) hours"
+    let halves = Int((Double(minutes) / 30).rounded())  // to the nearest half hour
+    return "about \(halves / 2)\(halves % 2 == 1 ? "½" : "") hours"
 }

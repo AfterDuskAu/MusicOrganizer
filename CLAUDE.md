@@ -111,4 +111,4 @@ All states, decisions and tag values are defined **once**, in `docs/ENGINE_API.m
 
 Spotify/Apple Music import, weekly mix, phone/Subsonic server, packaging, signing, notarization, Windows app shell, accounts and cloud anything.
 
-**Discover was started early, on 2026-10-01, at the owner's request** (it was on this list). Built: `discover.suggest`, and the app's What's New and Find pages. Still not yet, from its plan (`docs/roadmap/0.4-discover.md`): the guided "What music would you like today?" mode, the `Discovered/` folder and its tag (a contract change), and Last.fm as a second source.
+**Discover was started early, on 2026-10-01, at the owner's request** (it was on this list). Built: `discover.suggest`, the app's What's New and Find pages, and the guided "What music would you like today?" mode. Still not yet, from its plan (`docs/roadmap/0.4-discover.md`): the `Discovered/` folder and its tag (a contract change), and Last.fm as a second source.

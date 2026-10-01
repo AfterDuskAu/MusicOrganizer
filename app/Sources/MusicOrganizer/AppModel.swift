@@ -549,34 +549,52 @@ final class AppModel {
     /// Several picks at once. It's a batch, so the plan comes first: how many and how
     /// long. Nothing is queued until the owner says yes (`confirmBatch`).
     func planDownloads(_ picks: [DiscoverPick]) {
-        let wanted = picks.filter(canDownload)
-        guard !wanted.isEmpty, let connection = engine?.connection else { return }
         Task {
             do {
-                let plan = try await connection.call(
-                    "plan.create",
-                    [
-                        "kind": "download",
-                        "options": [
-                            "video_ids": wanted.map(\.videoId),
-                            "candidates": wanted.map(\.candidate),
-                        ],
-                    ], as: PlanAnswer.self)
-                guard plan.summary.operations > 0 else { throw Self.nothingToDo(plan) }
-                batch = BatchDownload(
-                    planId: plan.planId, videoIds: wanted.map(\.videoId),
-                    count: plan.summary.downloads ?? plan.summary.operations,
-                    minutes: plan.summary.estMinutes ?? 0, days: plan.summary.days ?? 1)
+                batch = try await plan(downloading: picks)
             } catch {
                 notice = error.localizedDescription
             }
         }
     }
 
+    /// A plan for downloading these picks (the ones not already here or on their way):
+    /// how many, about how long, over how many days. Nothing is queued by this.
+    func plan(downloading picks: [DiscoverPick]) async throws -> BatchDownload {
+        let wanted = picks.filter(canDownload)
+        guard let connection = engine?.connection else {
+            throw RPCError(code: RPCError.closed, message: "The engine isn't running.")
+        }
+        guard !wanted.isEmpty else {
+            throw RPCError(code: 0, message: "All of those are in your library already, or on their way.")
+        }
+        let plan = try await connection.call(
+            "plan.create",
+            [
+                "kind": "download",
+                "options": [
+                    "video_ids": wanted.map(\.videoId),
+                    "candidates": wanted.map(\.candidate),
+                ],
+            ], as: PlanAnswer.self)
+        guard plan.summary.operations > 0 else { throw Self.nothingToDo(plan) }
+        return BatchDownload(
+            planId: plan.planId, videoIds: wanted.map(\.videoId),
+            count: plan.summary.downloads ?? plan.summary.operations,
+            minutes: plan.summary.estMinutes ?? 0, days: plan.summary.days ?? 1)
+    }
+
     /// The owner said yes: the planned downloads go to the queue.
     func confirmBatch() {
-        guard let batch, let connection = engine?.connection else { return }
+        guard let batch else { return }
         self.batch = nil
+        start(batch)
+    }
+
+    /// Queue a planned batch of downloads. They show at the top of Discover → Downloads
+    /// until they arrive.
+    func start(_ batch: BatchDownload) {
+        guard let connection = engine?.connection else { return }
         starting.formUnion(batch.videoIds)
         Task {
             do {

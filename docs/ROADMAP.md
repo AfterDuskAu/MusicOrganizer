@@ -94,7 +94,7 @@ A SwiftUI app that starts the engine and talks to it (`musicorg serve`). Code in
 
 Plan: [`docs/roadmap/0.4-discover.md`](roadmap/0.4-discover.md).
 
-**Built (2026-10-01):** picks from the whole library, most played, the top artist, a playlist, a named artist and similar bands, or a genre; the What's New and Find pages, with a grid of cards to play, download one by one, or download several together after seeing the plan. **Still to build:** the guided mode, the `Discovered/` inbox, Last.fm as a second source. The plan's own list follows.
+**Built (2026-10-01):** picks from the whole library, most played, the top artist, a playlist, a named artist and similar bands, or a genre; the What's New and Find pages, with a grid of cards to play, download one by one, or download several together after seeing the plan. The guided "What music would you like today?" mode was added on 2026-10-02. **Still to build:** the `Discovered/` inbox, Last.fm as a second source. The plan's own list follows.
 
 - Recommendations from a playlist, the whole library, most played, or an artist and similar bands.
 - A grid of cards: play in the app first, with small Spotify, Apple Music and SoundCloud logos, and download on demand.

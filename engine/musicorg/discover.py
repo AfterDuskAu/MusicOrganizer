@@ -14,6 +14,8 @@ Where the picks come from (all through `musicorg.youtube` and its rate limiter, 
   play. More is wanted than one radio holds → radios of the artist's songs follow.
 - a genre: the owner's own songs tagged with it are where the radios start; with too
   few of those, YouTube Music's own playlist for the genre gives the starting songs.
+- words the owner typed (the guided "What music would you like today?"): worked out
+  to be a genre or an artist (`_typed`), then as above.
 
 How they're ranked:
 
@@ -53,7 +55,7 @@ from musicorg.youtube import Candidate
 
 log = logging.getLogger(__name__)
 
-SEED_KINDS = ("library", "most_played", "top_artist", "playlist", "artist", "genre")
+SEED_KINDS = ("library", "most_played", "top_artist", "playlist", "artist", "genre", "typed")
 MAX_COUNT = 500
 MAX_SEEDS = 8
 MIN_RADIOS = 4  # fewer starting points and "found on several radios" means nothing
@@ -70,13 +72,30 @@ SAME_GENRE = (
     frozenset({"electronic", "electronica"}),
 )
 
+# What kinds of music are called, as `compare_key` spells them: typed words that are one
+# of these are a genre without asking (there are artists called "Jazz" and "Pop").
+GENRE_NAMES = frozenset(
+    compare_key(name)
+    for name in (
+        "hip hop", "hiphop", "rap", "trap", "drill", "grime", "r&b", "rnb", "soul", "funk",
+        "pop", "k-pop", "kpop", "j-pop", "rock", "hard rock", "classic rock", "indie",
+        "indie rock", "alternative", "alt rock", "punk", "emo", "grunge", "metal",
+        "heavy metal", "electronic", "electronica", "dance", "edm", "house", "techno",
+        "trance", "dubstep", "drum and bass", "ambient", "lo-fi", "lofi", "chill",
+        "reggae", "dancehall", "ska", "latin", "reggaeton", "afrobeats", "african",
+        "folk", "acoustic", "country", "americana", "bluegrass", "jazz", "blues", "gospel",
+        "christian", "classical", "opera", "soundtrack", "soundtracks", "disco", "bollywood",
+    )
+)  # fmt: skip
+
 Progress = Callable[[int, int], None]
 
 
 @dataclass(frozen=True)
 class Seed:
-    """Where picks start from. `value` is a playlist's id, an artist's name or a genre;
-    the other kinds have none."""
+    """Where picks start from. `value` is a playlist's id, an artist's name, a genre, or
+    (`typed`) whatever the owner typed when asked what music they'd like; the other
+    kinds have none."""
 
     kind: str
     value: str | None = None
@@ -87,7 +106,7 @@ class Seed:
             raise UserError(f"A seed's kind should be one of: {', '.join(SEED_KINDS)}.")
         kind = data["kind"]
         value = data.get("playlist_id") if kind == "playlist" else data.get("name")
-        if kind in ("playlist", "artist", "genre"):
+        if kind in ("playlist", "artist", "genre", "typed"):
             if not isinstance(value, str) or not value.strip():
                 what = "a playlist_id" if kind == "playlist" else "a name"
                 raise UserError(f"A {kind} seed needs {what}.")
@@ -341,7 +360,46 @@ def _source(
     if seed.kind == "artist":
         name = seed.value or ""
         return _Source("artist", name, [_Start(artist=name, artist_radio=True)])
+    if seed.kind == "typed":
+        return _typed(seed.value or "", songs, weight, index, rng, notes)
     return _genre(seed.value or "", songs, weight, index, rng, notes)
+
+
+def _typed(
+    words: str,
+    songs: list[dict[str, Any]],
+    weight: Callable[[dict[str, Any]], float],
+    index: Index,
+    rng: random.Random,
+    notes: list[str],
+) -> _Source | None:
+    """What the owner typed when asked "What music would you like today?": a genre or an
+    artist, and they needn't say which.
+
+    It's a genre if the owner has songs tagged with it, or it's one of the names genres
+    go by. Otherwise it's an artist if YouTube Music has one of exactly that name
+    (which costs one request, kept for 30 days). Failing both, YouTube Music's own
+    playlists are searched for it as for any genre."""
+    is_genre = compare_key(words) in GENRE_NAMES or (
+        sum(1 for row in songs if _video_id(row) and _is_genre(_genre_tag(row), words))
+        >= MIN_RADIOS
+    )
+    if not is_genre:
+        try:
+            artist = youtube.artist_radio(words, cache=index)
+        except _skippable() as exc:
+            log.warning("discover: looking for an artist called %r: %s", words, exc)
+            artist = None
+        if artist is not None:
+            return _Source("artist", artist.name, [_Start(artist=artist.name, artist_radio=True)])
+    quiet: list[str] = []
+    found = _genre(words, songs, weight, index, rng, quiet)
+    if found is None:
+        notes.append(
+            f"YouTube Music has no artist and no playlist of its own called “{words}”. "
+            "Try an artist's name, or a kind of music such as rock or hip hop."
+        )
+    return found
 
 
 def _genre(

@@ -216,6 +216,40 @@ def test_a_genre_the_owner_has_none_of_comes_from_youtube_music(lib: Library) ->
     )
 
 
+# ---- whatever the owner typed (the guided mode) ----------------------------------------------
+
+
+def test_typed_words_are_worked_out_to_be_a_genre_or_an_artist(
+    lib: Library, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A kind of music by name: a genre, without asking whether an artist is called that.
+    assert suggest(lib, Seed("typed", "Jazz"), count=5)["seeds"] == [
+        {"kind": "genre", "label": "Jazz", "radios": 4}
+    ]
+    # An artist YouTube Music has by exactly that name.
+    found = suggest(lib, Seed("typed", "linkin park"), count=5)
+    assert found["seeds"] == [{"kind": "artist", "label": "Linkin Park", "radios": 4}]
+    assert {pick["why"] for pick in found["picks"]} <= {"By Linkin Park", "Similar to Linkin Park"}
+    # Neither: it says so, and what to try.
+    monkeypatch.setattr(youtube, "genre_playlist", lambda name, cache=None: None)
+    with pytest.raises(UserError, match="no artist and no playlist of its own called"):
+        suggest(lib, Seed("typed", "Zzyzx Qwfp Band"))
+    assert Seed.from_dict({"kind": "typed", "name": " hip hop "}) == Seed("typed", "hip hop")
+    with pytest.raises(UserError):
+        Seed.from_dict({"kind": "typed"})
+
+
+def test_typed_words_the_owner_has_songs_tagged_with_are_a_genre(
+    lib: Library, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # "Alternative Rock" isn't on the list of names genres go by, but it's the owner's
+    # own tag: their songs of it are where it starts, and nothing is searched for.
+    own(lib, *FOUR, genre="Alternative Rock")
+    monkeypatch.setattr(youtube, "artist_radio", lambda *a, **kw: pytest.fail("not an artist"))
+    found = suggest(lib, Seed("typed", "alternative rock"), count=5)
+    assert found["seeds"] == [{"kind": "genre", "label": "alternative rock", "radios": 4}]
+
+
 @pytest.mark.parametrize(
     ("tag", "wanted", "same"),
     [

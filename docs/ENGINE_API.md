@@ -15,7 +15,7 @@ The engine has two front doors onto the **same functions**. The CLI is for the o
 | **Job state** | `queued` · `running` · `done` · `failed` · `needs_review` · `cancelled` |
 | **Queue state** | `running` · `idle` · `paused` · `paused_by_youtube` |
 | **Plan kind** | `replace` · `adopt` · `lyrics` · `artwork` · `tidy` (step 09d: duplicates and preferred names) · `download` (v0.2: songs the owner asked for, with no rip behind them) · `edit` (v0.2: the owner's own corrections to one song) · `remove` (v0.2: downloads the owner doesn't want, sent to the Trash) |
-| **Discover seed** (`discover.suggest`, v0.4) | `library` (the whole library; also "just recommend") · `most_played` · `top_artist` (the artist played most; with nothing played, the one with the most songs) · `playlist` (+`playlist_id`) · `artist` (+`name`: that artist and similar ones) · `genre` (+`name`) |
+| **Discover seed** (`discover.suggest`, v0.4) | `library` (the whole library; also "just recommend") · `most_played` · `top_artist` (the artist played most; with nothing played, the one with the most songs) · `playlist` (+`playlist_id`) · `artist` (+`name`: that artist and similar ones) · `genre` (+`name`) · `typed` (+`name`: whatever the owner typed when asked what music they'd like; the engine works out whether it's a genre or an artist, and the answer's `seeds` say which) |
 | **Batch kind** | a plan kind · `undo` · `demo` (the manual-check scripts in `scripts/`) |
 | **Batch status** | `open` (running, or an open batch from `apply`) · `closed` · `interrupted` (closed by recovery after a crash) |
 | **Journal operation** | `commit` · `copy_in` · `supersede` · `restore` (back from `_Replaced/`, by undo) · `move` · `trash` · `write_tags` · `write_sidecar` |

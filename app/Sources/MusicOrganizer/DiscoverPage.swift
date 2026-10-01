@@ -20,6 +20,9 @@ final class DiscoverPage {
     private(set) var problem: String?
     /// Something the engine wants said about the picks ("Found 37 new songs, not 50…").
     private(set) var note: String?
+    /// The starting points as the engine took them (typed words come back as the genre
+    /// or the artist they turned out to be).
+    private(set) var seeds: [DiscoverAnswer.Seed] = []
     /// False until the first request has been made.
     private(set) var hasAsked = false
     /// The picks ticked for "Download Selected".
@@ -37,24 +40,31 @@ final class DiscoverPage {
     /// Ask for picks. `different` starts from other songs than last time; without it the
     /// same request on the same day gives the same picks, at once.
     func find(_ seeds: [DiscoverSeed], count: Int, different: Bool = false) {
-        guard !working, !seeds.isEmpty, let ask else { return }
+        Task { await run(seeds, count: count, different: different) }
+    }
+
+    /// The same, waited for: true if picks came back (the guide asks this way, and
+    /// carries on when they have).
+    @discardableResult
+    func run(_ seeds: [DiscoverSeed], count: Int, different: Bool = false) async -> Bool {
+        guard !working, !seeds.isEmpty, let ask else { return false }
         if different { round += 1 }
         last = (seeds, count)
         hasAsked = true
         working = true
         problem = nil
         (done, of) = (0, 0)
-        let shuffle = "\(Self.today()) \(round)"
-        Task {
-            do {
-                let answer = try await ask(seeds, count, shuffle, name)
-                picks = answer.picks
-                note = answer.note
-                selected = []
-            } catch {
-                problem = error.localizedDescription
-            }
-            working = false
+        defer { working = false }
+        do {
+            let answer = try await ask(seeds, count, "\(Self.today()) \(round)", name)
+            picks = answer.picks
+            note = answer.note
+            self.seeds = answer.seeds ?? []
+            selected = []
+            return true
+        } catch {
+            problem = error.localizedDescription
+            return false
         }
     }
 

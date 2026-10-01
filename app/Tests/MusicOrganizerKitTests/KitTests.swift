@@ -518,11 +518,38 @@ final class SongVideoTests: XCTestCase {
         XCTAssertNil(ElsewhereLink.spotify.url(title: " ", artist: ""))
     }
 
+    func testTheGuidesWords() {
+        XCTAssertEqual(DiscoverSeed.typed("Hip hop").params, ["kind": "typed", "name": "Hip hop"])
+        XCTAssertEqual(Guided.count(from: " 250 "), 250)
+        XCTAssertNil(Guided.count(from: "0"))
+        XCTAssertNil(Guided.count(from: "501"))
+        XCTAssertNil(Guided.count(from: "lots"))
+        typealias Seed = DiscoverAnswer.Seed
+        XCTAssertEqual(
+            Guided.what(237, from: [Seed(kind: "genre", label: "Hip hop")]), "237 hip hop songs")
+        XCTAssertEqual(
+            Guided.what(50, from: [Seed(kind: "artist", label: "Linkin Park")]),
+            "50 songs by Linkin Park and artists like them")
+        XCTAssertEqual(
+            Guided.what(1, from: [Seed(kind: "library", label: "your library")]),
+            "1 song like the ones in your library")
+        XCTAssertEqual(
+            Guided.what(10, from: [Seed(kind: "most_played", label: "your most played")]),
+            "10 songs like the ones you play most")
+        XCTAssertEqual(Guided.what(10, from: []), "10 songs")
+        XCTAssertTrue(Guided.downloadNote(minutes: 150, days: 1).contains("about 2½ hours"))
+        XCTAssertFalse(Guided.downloadNote(minutes: 150, days: 1).contains("daily limit"))
+        XCTAssertTrue(Guided.downloadNote(minutes: 400, days: 2).contains("over 2 days"))
+    }
+
     func testRoughTime() {
         XCTAssertEqual(roughTime(minutes: 0), "under a minute")
         XCTAssertEqual(roughTime(minutes: 1), "about a minute")
         XCTAssertEqual(roughTime(minutes: 25), "about 25 minutes")
         XCTAssertEqual(roughTime(minutes: 89), "about 89 minutes")
         XCTAssertEqual(roughTime(minutes: 130), "about 2 hours")
+        XCTAssertEqual(roughTime(minutes: 150), "about 2½ hours")
+        XCTAssertEqual(roughTime(minutes: 90), "about 1½ hours")
+        XCTAssertEqual(roughTime(minutes: 600), "about 10 hours")
     }
 }
