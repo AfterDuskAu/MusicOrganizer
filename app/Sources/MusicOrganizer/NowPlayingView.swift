@@ -5,6 +5,8 @@ import SwiftUI
 /// enough to read from across the room.
 struct NowPlayingView: View {
     @Binding var isShown: Bool
+    /// False when it's a page of its own (the Local Visualizer), not laid over the library.
+    var closable = true
     @Environment(AppModel.self) private var model
 
     var body: some View {
@@ -36,16 +38,18 @@ struct NowPlayingView: View {
             .padding(.horizontal, 40)
             .padding(.top, 52)
             .padding(.bottom, 24)
-            Button { isShown = false } label: {
-                Image(systemName: "chevron.down.circle.fill")
-                    .font(.title)
-                    .foregroundStyle(.secondary)
+            if closable {
+                Button { isShown = false } label: {
+                    Image(systemName: "chevron.down.circle.fill")
+                        .font(.title)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .keyboardShortcut(.cancelAction)
+                .help("Back to the library (Esc)")
+                .padding(.leading, 16)
+                .padding(.top, 44)  // below the window's close, minimise and zoom buttons
             }
-            .buttonStyle(.plain)
-            .keyboardShortcut(.cancelAction)
-            .help("Back to the library (Esc)")
-            .padding(.leading, 16)
-            .padding(.top, 44)  // below the window's close, minimise and zoom buttons
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background { backdrop(track) }

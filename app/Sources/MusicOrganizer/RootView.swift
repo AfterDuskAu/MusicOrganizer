@@ -59,8 +59,13 @@ struct Message<Buttons: View>: View {
 enum SidebarItem: Hashable {
     case songs, albums, artists
     case favourites, recentlyAdded, mostPlayed, unconfirmed
-    case whatsNew, find, youtube, downloads
+    case visualizer, whatsNew, find, youtube, downloads
     case playlist(String)
+
+    /// The name this Library entry is saved under (`SidebarChoice`).
+    var libraryName: String? {
+        SidebarChoice.all.first { SidebarItem(libraryEntry: $0) == self }
+    }
 
     /// The Library entry saved under this name (`SidebarChoice`).
     init?(libraryEntry name: String) {
@@ -87,7 +92,8 @@ enum SidebarItem: Hashable {
         case .unconfirmed: "Not Identified Yet"
         case .whatsNew: "What's New"
         case .find: "Find"
-        case .youtube: "Search YouTube Music"
+        case .youtube: "YouTube Music"
+        case .visualizer: "Local Visualizer"
         case .downloads: "Downloads"
         case .playlist: "Playlist"
         }
@@ -104,7 +110,8 @@ enum SidebarItem: Hashable {
         case .unconfirmed: "questionmark.circle"
         case .whatsNew: "sparkles"
         case .find: "wand.and.stars"
-        case .youtube: "magnifyingglass"
+        case .youtube: "play.rectangle"
+        case .visualizer: "waveform"
         case .downloads: "arrow.down.circle"
         case .playlist: "music.note.list"
         }
@@ -120,6 +127,11 @@ struct MainView: View {
     @AppStorage("showLyrics") private var showLyrics = false
     /// The Library entries the owner keeps in the sidebar, in order.
     @AppStorage("sidebarLibrary") private var savedEntries = SidebarChoice.write(SidebarChoice.all)
+    // Each group of the sidebar folds away, and stays as it was left.
+    @AppStorage("openLibrary") private var openLibrary = true
+    @AppStorage("openMedia") private var openMedia = true
+    @AppStorage("openDiscover") private var openDiscover = true
+    @AppStorage("openPlaylists") private var openPlaylists = true
 
     var body: some View {
         @Bindable var model = model
@@ -195,19 +207,19 @@ struct MainView: View {
         let shown = SidebarChoice.read(savedEntries)
         let hidden = SidebarChoice.hidden(shown)
         let waiting = model.library.unconfirmed.count
+        // The rows are SidebarItems themselves, so a click selects one. (Looping over
+        // their saved names instead made every Library row unclickable.)
+        let entries = shown.compactMap(SidebarItem.init(libraryEntry:))
+            .filter { $0 != .unconfirmed || waiting > 0 }  // nothing waiting: nothing to show
         return List(selection: $item) {
-            Section {
-                ForEach(shown, id: \.self) { name in
-                    if let entry = SidebarItem(libraryEntry: name),
-                        entry != .unconfirmed || waiting > 0  // nothing waiting: nothing to show
-                    {
-                        row(entry)
-                            .badge(entry == .unconfirmed ? waiting : 0)
-                            .contextMenu {
-                                Button("Remove from Sidebar") { remove(name, from: shown) }
-                                    .disabled(shown.count <= 1)
-                            }
-                    }
+            Section(isExpanded: $openLibrary) {
+                ForEach(entries, id: \.self) { entry in
+                    Label(entry.title, systemImage: entry.symbol)
+                        .badge(entry == .unconfirmed ? waiting : 0)
+                        .contextMenu {
+                            Button("Remove from Sidebar") { remove(entry, from: shown) }
+                                .disabled(shown.count <= 1)
+                        }
                 }
             } header: {
                 header("Library") {
@@ -230,20 +242,27 @@ struct MainView: View {
                     .help(hidden.isEmpty ? "Everything is already shown" : "Add an entry to the sidebar")
                 }
             }
-            Section("Discover") {
-                row(.whatsNew)
-                row(.find)
-                row(.youtube)
-                row(.downloads).badge(model.downloaded.count)
+            Section("Media", isExpanded: $openMedia) {
+                ForEach([SidebarItem.visualizer, .youtube], id: \.self) { entry in
+                    Label(entry.title, systemImage: entry.symbol)
+                }
             }
-            Section {
-                ForEach(model.listening.playlists) { playlist in
-                    Label(playlist.name, systemImage: SidebarItem.playlist("").symbol)
-                        .tag(SidebarItem.playlist(playlist.id))
-                        .contextMenu {
-                            Button("Rename…") { model.rename(playlist) }
-                            Button("Delete…", role: .destructive) { deleting = playlist }
-                        }
+            Section("Discover", isExpanded: $openDiscover) {
+                ForEach([SidebarItem.whatsNew, .find, .downloads], id: \.self) { entry in
+                    Label(entry.title, systemImage: entry.symbol)
+                        .badge(entry == .downloads ? model.downloaded.count : 0)
+                }
+            }
+            Section(isExpanded: $openPlaylists) {
+                ForEach(model.listening.playlists.map { SidebarItem.playlist($0.id) }, id: \.self) {
+                    entry in
+                    if case .playlist(let id) = entry, let playlist = model.playlist(id) {
+                        Label(playlist.name, systemImage: entry.symbol)
+                            .contextMenu {
+                                Button("Rename…") { model.rename(playlist) }
+                                Button("Delete…", role: .destructive) { deleting = playlist }
+                            }
+                    }
                 }
                 Button { model.newPlaylist() } label: {
                     Label("New Playlist…", systemImage: "plus")
@@ -258,6 +277,7 @@ struct MainView: View {
                 }
             }
         }
+        .listStyle(.sidebar)
     }
 
     private func header(_ title: String, @ViewBuilder button: () -> some View) -> some View {
@@ -269,15 +289,12 @@ struct MainView: View {
         .padding(.trailing, 6)
     }
 
-    private func remove(_ name: String, from shown: [String]) {
+    private func remove(_ entry: SidebarItem, from shown: [String]) {
+        guard let name = entry.libraryName else { return }
         savedEntries = SidebarChoice.write(shown.filter { $0 != name })
-        if item == SidebarItem(libraryEntry: name) {
+        if item == entry {
             item = shown.first { $0 != name }.flatMap(SidebarItem.init(libraryEntry:))
         }
-    }
-
-    private func row(_ item: SidebarItem) -> some View {
-        Label(item.title, systemImage: item.symbol).tag(item)
     }
 
     @ViewBuilder
@@ -310,6 +327,11 @@ struct MainView: View {
                     + "They get their official names, covers and lyrics once they're identified.")
         case .youtube:
             YouTubeSearchView()
+        case .visualizer:
+            // The song that's playing, with its cover and lyrics: the player's own tab
+            // (parked Fix A-3 will give it the owner's layout).
+            NowPlayingView(isShown: .constant(true), closable: false)
+                .navigationTitle("Local Visualizer")
         case .downloads:
             SongList(
                 title: "Downloads", tracks: model.downloaded,
@@ -327,9 +349,9 @@ struct MainView: View {
             Message(
                 symbol: "wand.and.stars", title: "Find is coming",
                 text: "Pick an artist, a genre and how many songs you want, and get recommendations. "
-                    + "It arrives with Discover. Until then, Search YouTube Music finds any song by name."
+                    + "It arrives with Discover. Until then, YouTube Music (under Media) finds any song by name."
             ) {
-                Button("Search YouTube Music") { item = .youtube }
+                Button("Open YouTube Music") { item = .youtube }
             }
         case .playlist(let id):
             if let playlist = model.playlist(id) {
