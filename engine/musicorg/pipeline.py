@@ -1451,6 +1451,7 @@ def _music_rel(lib: Library, path: Path) -> Path:
 
 EDIT_TEXT = ("title", "artist", "album_artist", "album", "genre")
 EDIT_NUMBERS = {"year": (1000, 2100), "track": (1, 999)}
+EDIT_FLAGS = ("explicit",)
 MAX_LYRICS_CHARS = 100_000
 
 
@@ -1550,8 +1551,10 @@ def plan_edit(
 ) -> fileops.Plan:
     """A plan for the owner's own corrections to one song (v0.2):
 
-    - `changes`: title, artist, album_artist, album, genre (text), year, track (numbers).
-      None or "" clears a field; a song always keeps a title.
+    - `changes`: title, artist, album_artist, album, genre (text), year, track (numbers),
+      explicit (true or false). None or "" clears a field; a song always keeps a title.
+      `explicit` is the owner's to correct: for a rip it was copied from the match on
+      YouTube Music, and nothing checks that the owner's own audio isn't the clean edit.
     - `lyrics_text`: the song's lyrics. Timed lyrics (`[mm:ss.xx]words` lines) become its
       `.lrc`, with their words in the tags; anything else is plain lyrics, and a `.lrc`
       that was there is set aside as wrong. "" removes the lyrics. None leaves them.
@@ -1578,6 +1581,9 @@ def plan_edit(
                 isinstance(value, bool) or not isinstance(value, int) or not low <= value <= high
             ):
                 raise UserError(f"{name} should be a number from {low} to {high}, or empty.")
+        elif name in EDIT_FLAGS:
+            if value is not None and not isinstance(value, bool):
+                raise UserError(f"{name} should be true or false.")
         else:
             raise UserError(f"{name!r} can't be edited.")
         if value != getattr(current, name):

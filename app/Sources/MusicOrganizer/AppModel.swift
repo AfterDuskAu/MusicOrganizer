@@ -55,6 +55,8 @@ final class AppModel {
     var namePrompt: NamePrompt?
     /// The song whose details are being edited by hand.
     var editing: Track?
+    /// The video has the whole screen.
+    var videoFullScreen = false
 
     // The YouTube Music search page.
     var youtubeQuery = ""

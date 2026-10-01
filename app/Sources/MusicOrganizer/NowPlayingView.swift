@@ -1,8 +1,8 @@
 import MusicOrganizerKit
 import SwiftUI
 
-/// The whole window given to the song that's playing: its cover, and its lyrics large
-/// enough to read from across the room.
+/// The whole window given to the song that's playing: its cover or its video, and its
+/// lyrics large enough to read from across the room.
 struct NowPlayingView: View {
     @Binding var isShown: Bool
     /// False when it's a page of its own (the Local Visualizer), not laid over the library.
@@ -13,48 +13,13 @@ struct NowPlayingView: View {
 
     var body: some View {
         let track = model.player.current
-        let showsVideo = isActive && model.player.video != nil
+        // In full screen the picture is drawn there, not here as well.
+        let showsVideo = isActive && model.player.video != nil && !model.videoFullScreen
         ZStack(alignment: .topLeading) {
-            HStack(spacing: 40) {
-                VStack(spacing: 14) {
-                    if showsVideo {
-                        VideoSurface(player: model.player.screen)
-                            .aspectRatio(16.0 / 9.0, contentMode: .fit)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .shadow(color: .black.opacity(0.5), radius: 24, y: 10)
-                    } else {
-                        CoverView(track: track, size: .large, corner: 12)
-                            .frame(maxWidth: 420, maxHeight: 420)
-                            .shadow(color: .black.opacity(0.5), radius: 24, y: 10)
-                    }
-                    if let track {
-                        VStack(spacing: 4) {
-                            Text(track.title).font(.title.weight(.bold)).multilineTextAlignment(.center)
-                            Text(track.artistName).font(.title3).foregroundStyle(.secondary)
-                            if !track.albumName.isEmpty {
-                                Text(track.albumName).font(.callout).foregroundStyle(.tertiary)
-                            }
-                        }
-                        FavouriteButton(track: track)
-                            .font(.title2)
-                    } else {
-                        Text("Nothing playing").font(.title2).foregroundStyle(.secondary)
-                    }
-                    VideoControls()
-                }
-                .frame(maxWidth: .infinity)
-                // A video gets the room: the lyrics move over, or make way if there are none.
-                if !showsVideo {
-                    LyricsView(large: true)
-                        .frame(maxWidth: .infinity)
-                } else if model.lyrics.hasLyrics {
-                    LyricsView(large: false)
-                        .frame(width: 320)
-                }
-            }
-            .padding(.horizontal, 40)
-            .padding(.top, 52)
-            .padding(.bottom, 24)
+            sideBySide(track, showsVideo: showsVideo)
+                .padding(.horizontal, 40)
+                .padding(.top, 52)
+                .padding(.bottom, 24)
             if closable {
                 Button { isShown = false } label: {
                     Image(systemName: "chevron.down.circle.fill")
@@ -63,6 +28,7 @@ struct NowPlayingView: View {
                 }
                 .buttonStyle(.plain)
                 .keyboardShortcut(.cancelAction)
+                .disabled(model.videoFullScreen)  // Esc leaves full screen first
                 .help("Back to the library (Esc)")
                 .padding(.leading, 16)
                 .padding(.top, 44)  // below the window's close, minimise and zoom buttons
@@ -72,6 +38,57 @@ struct NowPlayingView: View {
         .background { backdrop(track) }
         .clipped()
         .environment(\.colorScheme, .dark)
+    }
+
+    /// The cover (or the video) on the left, the lyrics on the right.
+    private func sideBySide(_ track: Track?, showsVideo: Bool) -> some View {
+        HStack(spacing: 40) {
+            VStack(spacing: 14) {
+                if showsVideo {
+                    picture
+                } else {
+                    CoverView(track: track, size: .large, corner: 12)
+                        .frame(maxWidth: 420, maxHeight: 420)
+                        .shadow(color: .black.opacity(0.5), radius: 24, y: 10)
+                }
+                names(track)
+                VideoControls()
+            }
+            .frame(maxWidth: .infinity)
+            // A video gets the room: the lyrics move over, or make way if there are none.
+            if !showsVideo {
+                LyricsView(large: true)
+                    .frame(maxWidth: .infinity)
+            } else if model.lyrics.hasLyrics {
+                LyricsView(large: false)
+                    .frame(width: 320)
+            }
+        }
+    }
+
+    private var picture: some View {
+        VideoSurface(player: model.player.screen)
+            .aspectRatio(16.0 / 9.0, contentMode: .fit)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .shadow(color: .black.opacity(0.5), radius: 24, y: 10)
+            .onTapGesture(count: 2) { model.videoFullScreen = true }
+    }
+
+    @ViewBuilder
+    private func names(_ track: Track?) -> some View {
+        if let track {
+            VStack(spacing: 4) {
+                Text(track.title).font(.title.weight(.bold)).multilineTextAlignment(.center)
+                Text(track.artistName).font(.title3).foregroundStyle(.secondary)
+                if !track.albumName.isEmpty {
+                    Text(track.albumName).font(.callout).foregroundStyle(.tertiary)
+                }
+            }
+            FavouriteButton(track: track)
+                .font(.title2)
+        } else {
+            Text("Nothing playing").font(.title2).foregroundStyle(.secondary)
+        }
     }
 
     /// The cover, blurred right out, under a dark wash: the screen takes the album's colour.
@@ -92,7 +109,8 @@ struct NowPlayingView: View {
     }
 }
 
-/// Cover or video, and the size of the video's picture, as on YouTube.
+/// Cover or video; and for a video, the size of its picture (as on YouTube) and a way to
+/// give it the whole screen.
 private struct VideoControls: View {
     @Environment(AppModel.self) private var model
 
@@ -110,25 +128,12 @@ private struct VideoControls: View {
                 .labelsHidden()
                 .fixedSize()
                 .help("Show the song's cover, or its official video from YouTube")
-                if let video = player.video {
-                    Menu(video.quality.label) {
-                        // Toggles, so the menu ticks the one that's chosen.
-                        Toggle(
-                            "Best (\(video.source.qualities[0].label))",
-                            isOn: Binding(
-                                get: { player.videoPreference == nil },
-                                set: { _ in player.setQuality(nil) }))
-                        Divider()
-                        ForEach(video.source.qualities) { quality in
-                            Toggle(
-                                quality.label,
-                                isOn: Binding(
-                                    get: { player.videoPreference != nil && quality == video.quality },
-                                    set: { _ in player.setQuality(quality) }))
-                        }
+                if player.video != nil {
+                    QualityMenu()
+                    Button("Full Screen", systemImage: "arrow.up.left.and.arrow.down.right") {
+                        model.videoFullScreen = true
                     }
-                    .fixedSize()
-                    .help("The size of the video's picture")
+                    .help("Give the video the whole screen (Esc brings it back)")
                 }
             }
             if let note = player.videoNote {
@@ -144,5 +149,34 @@ private struct VideoControls: View {
             }
         }
         .padding(.top, 6)
+    }
+}
+
+/// The picture sizes the video comes in, the sharpest first.
+struct QualityMenu: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let player = model.player
+        if let video = player.video {
+            Menu(video.quality.label) {
+                // Toggles, so the menu ticks the one that's chosen.
+                Toggle(
+                    "Best (\(video.source.qualities[0].label))",
+                    isOn: Binding(
+                        get: { player.videoPreference == nil },
+                        set: { _ in player.setQuality(nil) }))
+                Divider()
+                ForEach(video.source.qualities) { quality in
+                    Toggle(
+                        quality.label,
+                        isOn: Binding(
+                            get: { player.videoPreference != nil && quality == video.quality },
+                            set: { _ in player.setQuality(quality) }))
+                }
+            }
+            .fixedSize()
+            .help("The size of the video's picture")
+        }
     }
 }

@@ -6,10 +6,15 @@ Most of these came from comparing the engine with the Photonizer project's lesso
 
 ## Needs the owner's decision
 
-- **Saving a song's video (MP4) needs the rules changed first** (owner, 2026-10-01: saved videos show under Discover → Downloads, and under Library → Videos once moved into the library).
-  - Rule 6 in `CLAUDE.md` says the library only ever takes YouTube's format 140 (audio), with no other format. A video file is a picture stream (H.264, up to 1080p) joined to that same format-140 sound by ffmpeg without converting either. The joining is a repackage, which rule 6 allows; the picture stream is what the rule has no words for.
-  - The library contract has no place for videos: which folder they live in, how they're named, how they're tagged and indexed, and what "moved into the library" does on disk (Discover → Downloads is a list in the app today, not a folder).
-  - To decide: OK to change rule 6 and the contract for videos? Which picture size is saved (the best up to 1080p, or the size chosen in the player)? Does a video count toward the daily download limit like a song (it's 50 to 200 MB)?
+- **Saving a song's video (MP4): decided in part, not built** (owner, 2026-10-01).
+  - Decided: saved videos show under Discover → Downloads, and under Library → Videos once moved into the library. **Rule 6 may be changed** to allow a video file (an H.264 picture stream, up to 1080p, joined to the format-140 sound by ffmpeg without converting either). **The size saved is the one chosen in the player.**
+  - Still to settle, with Claude's suggestions:
+    - *Does a video count toward the daily download limit* (250 a day, 300 at most)? Suggested: yes, as one download. The limit is about how often YouTube is asked, not about size.
+    - *Where a video is found to save:* suggested, a Songs / Videos switch on the YouTube Music page (videos kept apart from songs, as YouTube Music keeps them), and a Save Video button beside the video on the Local Visualizer.
+    - *A saved video needs no separate audio copy:* its sound is inside it, at the same quality as a downloaded song, and the app can play it with or without the picture. A music video is often a different cut from the album song, so the song stays its own download.
+    - The library contract's part: which folder videos live in, how they're named, tagged and indexed, and what "moved into the library" does (Discover → Downloads is a list in the app today, not a folder).
+  - Sizes, from one 4-minute official video (2026-10-01): 1080p about 100 MB, 720p about 35 MB, 480p about 22 MB, 360p about 15 MB; the song alone is about 4 MB. A video that is a still picture is far smaller (under 10 MB at 1080p).
+- **The "E" on a rip is copied from the match, not heard** (owner, 2026-10-01: a song marked explicit whose audio is the censored edit). When a rip gets its official details, it gets YouTube Music's explicit mark too, and the matcher prefers the explicit listing. A censored and an uncensored copy of a song sound the same to the fingerprint check. The owner can untick Explicit in Edit Details. For the song-identification research: can the two edits be told apart at all (the lyrics' muted words, the clean listing's length)? And should a rip's mark be left unset rather than guessed?
 - **Moving or renaming the rips folder loses review work.**
   - A source's id comes from its path (`state.source_id`), and every item id comes from the source id plus the file's path (`index.item_id`).
   - So after a move, or a drive mounting under a new name, rescanning makes new items: the old decisions, rejections and fingerprint results no longer attach. "Superseded" and "adopted" are keyed by the old absolute path too.
@@ -51,6 +56,7 @@ The owner named these and parked them: nothing here is built until the owner say
 
 ### The video player (built 2026-10-01): what's still rough
 
+- **Finding a video can take 20 seconds**, not only the 5 to 12 first measured (seen 2026-10-01 while the research workers were also using YouTube from this Mac).
 - **Switching between Cover and Video hitches for about 0.2 s** (measured: the player's own work takes 0 ms; the screen laying itself out again, lyrics included, is the rest). The same size as the lyrics panel's hitch above.
 - **The first look-up of a video takes 5 to 12 seconds:** one search and one yt-dlp look-up, each behind the 1.5-second rate limiter. The next song's video is looked up ahead of time; a song jumped to by hand waits.
 - **The video isn't large** in a small window: it shares the page with the lyrics. The player tab's layout is the owner's to decide (Fix A-3).

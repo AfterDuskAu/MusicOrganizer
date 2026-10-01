@@ -53,7 +53,7 @@ A SwiftUI app that starts the engine and talks to it (`musicorg serve`). Code in
 - **A daily player (owner's choice B):** favourites, play counts and Most Played, Recently Added, playlists, and a full-window "now playing" screen with large lyrics.
 - **YouTube Music in the app:** search, play anything without saving it, and download a song only when asked.
 - **Fix a song by hand:** names, cover and lyrics, from a song's right-click menu. (Built but not yet tried in the running app: see the changelog.)
-- **A song's official video** on the Local Visualizer, in the app's own player: Cover / Video, and a menu of picture sizes up to 1080p. Saving a video isn't built (it needs a rule change: `docs/KNOWN-ISSUES.md`).
+- **A song's official video** on the Local Visualizer, in the app's own player: Cover / Video, a menu of picture sizes up to 1080p, and Full Screen. Saving a video isn't built yet (the owner has OK'd the rule change; what's left to settle is in `docs/KNOWN-ISSUES.md`).
 - **A YouTube song that won't start** is noticed and tried again with a fresh address.
 
 **The owner's layout for the sidebar and Settings** is in [`roadmap/0.2-app-layout.md`](roadmap/0.2-app-layout.md).

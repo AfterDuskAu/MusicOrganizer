@@ -1404,6 +1404,21 @@ def test_a_cover_chosen_by_hand(lib: Library, index: Index, adopted: Path, tmp_p
         pipeline.plan_edit(lib, index, rel, cover_file=tmp_path / "missing.jpg")
 
 
+def test_editing_the_explicit_mark(lib: Library, index: Index, adopted: Path) -> None:
+    """The mark comes from the match, not from listening: the owner can put it right."""
+    rel = PurePosixPath(*adopted.relative_to(lib.root).parts).as_posix()
+    was = tags.read_tags(adopted).explicit
+    for value in (not was, None):
+        plan = pipeline.plan_edit(lib, index, rel, changes={"explicit": value})
+        pipeline.apply(lib, index, plan.plan_id)
+        run_queue(lib)
+        assert adopted.exists()  # the mark isn't part of the name: the file stays put
+        assert tags.read_tags(adopted).explicit is value
+    for wrong in (1, "yes"):
+        with pytest.raises(UserError, match="true or false"):
+            pipeline.plan_edit(lib, index, rel, changes={"explicit": wrong})
+
+
 def test_edits_that_are_refused(lib: Library, index: Index, adopted: Path) -> None:
     rel = PurePosixPath(*adopted.relative_to(lib.root).parts).as_posix()
     current = tags.read_tags(adopted)

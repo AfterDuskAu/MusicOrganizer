@@ -110,6 +110,14 @@
 - Fix (a test only): one queue test pretended it was 2 am on 1 October 2026 and paused its queue "until 8 am", then asked the real clock whether the pause still held. It began failing when that morning passed. Its pretend clock is now in the year 2100.
 - Not built: saving a video (MP4). The owner has said where saved videos should show; it needs a change to rule 6 and the library contract first (`docs/KNOWN-ISSUES.md` → "Needs the owner's decision").
 
+2026-10-01, 8:30 pm. Full screen for the video, and an "E" the owner can put right.
+
+- **Full Screen** for a song's video: a button beside the picture-size menu, or a double click on the picture. The video takes the whole window and the window goes to macOS's full screen; play, pause, next, the position slider, volume and the size menu come up when the mouse moves and go away after three seconds; Esc or a double click brings the app back.
+  - **Fit to Screen was built and taken out again the same evening**, at the owner's word: the video beside the lyrics was fine as it was.
+  - Checked in the running app only as far as: the video filled the window and the controls hid themselves. Claude's test ran with the app in the background, where the window isn't sent to macOS's full screen, and then the owner said to stop. **Not checked: the real full screen, Esc, and the controls.**
+- **Edit Details has an Explicit tick box** (`plan.create` kind `edit` takes `explicit`: true or false). The owner found a song marked "E" whose audio is the censored version. The mark on a rip is copied from the match on YouTube Music (which lists the explicit version first, the owner's own rule), and the engine can't hear which edit the owner's file is. Tested in the engine; not tried in the running app.
+- **The owner's decisions on saving a video (MP4):** rule 6 may be changed to allow it, and the size saved is the one chosen in the player. Still to settle before it's built: `docs/KNOWN-ISSUES.md`.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

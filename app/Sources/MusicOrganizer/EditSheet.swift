@@ -16,6 +16,7 @@ struct EditSheet: View {
     @State private var genre = ""
     @State private var year = ""
     @State private var number = ""
+    @State private var explicit = false
     @State private var lyrics = ""
     @State private var lyricsAsLoaded: String?
     @State private var coverFile: URL?
@@ -54,6 +55,10 @@ struct EditSheet: View {
                         TextField("Year", text: $year).frame(width: 130)
                         TextField("Track", text: $number).frame(width: 130)
                     }
+                    Toggle("Explicit", isOn: $explicit)
+                        .help(
+                            "The E beside a song. For your own rips it was copied from the match "
+                                + "on YouTube Music, so a censored copy can be marked wrongly: untick it here.")
                 }
                 .frame(width: 380)
             }
@@ -110,6 +115,7 @@ struct EditSheet: View {
             genre = track.genre ?? ""
             year = track.year.map(String.init) ?? ""
             number = track.track.map(String.init) ?? ""
+            explicit = track.explicit
             let text = await model.lyricsText(for: track)
             lyrics = text
             lyricsAsLoaded = text
@@ -168,6 +174,7 @@ struct EditSheet: View {
                 return
             }
         }
+        if explicit != track.explicit { changes["explicit"] = explicit }
         let newLyrics = lyricsAsLoaded != nil && lyrics != lyricsAsLoaded ? lyrics : nil
         if changes.isEmpty && newLyrics == nil && coverFile == nil {
             dismiss()

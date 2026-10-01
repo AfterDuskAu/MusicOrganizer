@@ -126,7 +126,7 @@ struct PlayerBar: View {
 }
 
 /// The position slider. It watches the clock by itself, so the rest of the bar stays put.
-private struct Scrubber: View {
+struct Scrubber: View {
     let player: Player
     @State private var dragging: Double?
 
