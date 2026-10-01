@@ -50,7 +50,7 @@ For when the app can download songs from YouTube by itself (Discover, v0.4).
 The full-window "now playing" screen exists, but the owner wants a proper **tab** for it, to open later and lay out the way they want.
 
 - **A lyrics section** with the album cover (or the song's picture) as the background. Nice, but simple.
-- **A way to put lyrics in by hand**, for a song with no lyrics or the wrong ones.
+- **A way to put lyrics in by hand**, for a song with no lyrics or the wrong ones. *Built 2026-10-01 as Edit Details… (right-click a song); it still needs its place in the player tab.*
 - **The sidebar's entries (Songs, Artists, Albums…) can be added or removed** by the owner.
 - **The columns of information beside each song can be added or removed** by the owner.
 - The layout is the owner's to decide when they sit down with it: build the pieces so they can be arranged, don't fix a design.

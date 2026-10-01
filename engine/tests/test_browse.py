@@ -58,7 +58,7 @@ def test_tracks_carry_what_a_screen_needs(filled: Library) -> None:
         "album_artist": "Band", "album": "Album", "year": 2020, "track": 1, "disc": 1,
         "genre": "Rock", "explicit": True, "match": "auto_details", "acquired": None,
         "format": "mp3",
-        "bitrate_kbps": 320, "embedded_cover": False, "only_copy": False,
+        "bitrate_kbps": 320, "embedded_cover": False, "only_copy": False, "source_id": None,
         "cover": "Music/Band/Album (2020)/cover.jpg", "lyrics": "synced",
     }  # fmt: skip
     other = found[OTHER]

@@ -119,6 +119,9 @@ struct SongList: View {
         let songs = picked.map(\.track)
         if let first = picked.first, let index = rows.firstIndex(where: { $0.id == first.id }) {
             Button("Play") { model.player.play(rows.map(\.track), startAt: index) }
+            if picked.count == 1 {
+                Button("Edit Details…") { model.editing = first.track }
+            }
             Divider()
             if songs.allSatisfy(model.isFavourite) {
                 Button("Remove from Favourites") { model.setFavourite(songs, false) }
@@ -296,6 +299,7 @@ struct AlbumPage: View {
         .contextMenu(forSelectionType: Track.ID.self) { ids in
             if let index = index(of: ids) {
                 Button("Play") { model.player.play(album.tracks, startAt: index) }
+                Button("Edit Details…") { model.editing = album.tracks[index] }
             }
         } primaryAction: { ids in
             if let index = index(of: ids) { model.player.play(album.tracks, startAt: index) }

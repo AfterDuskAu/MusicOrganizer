@@ -67,7 +67,7 @@ from musicorg.errors import (
     YouTubeBlockedError,
     YouTubePausedError,
 )
-from musicorg.index import open_index
+from musicorg.index import open_index, open_queue
 
 log = logging.getLogger(__name__)
 
@@ -75,6 +75,7 @@ PROTOCOL = "2.0"
 SHUTDOWN_GRACE_S = 10.0
 PROGRESS_INTERVAL_S = 0.25  # at most 4 job.progress a second per job
 REVIEW_STATES = ("review", "not_found", "matched_auto")
+SLOW_METHODS = frozenset({"youtube.stream", "search.ytmusic"})
 RPC_DECISIONS = ("accept", "candidate", "url", "only_copy", "skip", "reject")
 
 # Error codes (docs/ENGINE_API.md → Errors).
@@ -253,6 +254,8 @@ class Server:
             "journal.batches": self.journal_batches,
             "journal.undo": self.journal_undo,
             "search.ytmusic": self.search_ytmusic,
+            "youtube.stream": self.youtube_stream,
+            "queue.jobs": self.queue_jobs,
         }
 
     # -- the loop --
@@ -281,6 +284,14 @@ class Server:
         if isinstance(message, list):
             self._error(None, RpcError(INVALID_REQUEST, "Batch requests (arrays) aren't accepted."))
             return
+        if isinstance(message, dict) and message.get("method") in SLOW_METHODS and self.greeted:
+            # A YouTube lookup takes seconds: answer it from its own thread, so the app's
+            # other requests (lyrics, a favourite) aren't kept waiting behind it.
+            threading.Thread(target=self._answer, args=(message,), daemon=True).start()
+            return
+        self._answer(message)
+
+    def _answer(self, message: Any) -> None:
         reply = self.handle(message)
         if reply is not None:
             self.writer.send(reply)
@@ -637,9 +648,21 @@ class Server:
                 plan = pipeline.plan_artwork(lib, index, missing=bool(options.get("missing")))
             elif kind == "tidy":
                 plan = pipeline.plan_tidy(lib, index)
+            elif kind == "download":
+                ids = need(options, "video_ids", list)
+                plan = pipeline.plan_download(lib, index, ids)
+            elif kind == "edit":
+                cover = want(options, "cover_file", str)
+                plan = pipeline.plan_edit(
+                    lib, index, need(options, "path", str),
+                    changes=want(options, "changes", dict, {}),
+                    lyrics_text=want(options, "lyrics", str),
+                    cover_file=Path(cover).expanduser() if cover else None,
+                )  # fmt: skip
             else:
                 raise RpcError(
-                    INVALID_PARAMS, "kind should be replace, adopt, lyrics, artwork or tidy."
+                    INVALID_PARAMS,
+                    "kind should be replace, adopt, lyrics, artwork, tidy, download or edit.",
                 )
         summary = dict(plan.summary)
         for key in ("operations", "downloads", "est_minutes", "low_confidence_adopts"):
@@ -693,6 +716,18 @@ class Server:
         return self._start_job("journal.undo", work)
 
     # -- search --
+
+    def youtube_stream(self, params: dict[str, Any]) -> dict[str, Any]:
+        found = youtube.stream(need(params, "video_id", str))
+        return {"url": found.url, "http_headers": found.headers, "duration_s": found.duration_s}
+
+    def queue_jobs(self, params: dict[str, Any]) -> dict[str, Any]:
+        batch_id = need(params, "batch_id", str)
+        with open_queue(self._library().paths, write=False) as store:
+            jobs = store.jobs(batch_id=batch_id)
+        return {"jobs": [{"job_id": job["id"], "kind": job["kind"], "state": job["state"],
+                          "reason": job["reason"], "message": job["last_error"]}
+                         for job in jobs]}  # fmt: skip
 
     def search_ytmusic(self, params: dict[str, Any]) -> dict[str, Any]:
         query = need(params, "query", str).strip()

@@ -20,6 +20,8 @@ public struct Track: Decodable, Identifiable, Hashable, Sendable {
     public let durationS: Double?
     public let explicit: Bool
     public let onlyCopy: Bool
+    /// The YouTube video this song came from, if it came from one.
+    public let sourceId: String?
     public let match: String?
     /// When the song came into the library (ISO time, so text order is time order).
     public let acquired: String?
@@ -28,15 +30,19 @@ public struct Track: Decodable, Identifiable, Hashable, Sendable {
     public let cover: String?
     public let embeddedCover: Bool
     public let lyrics: Lyrics
+    /// A picture on the web: only for a song played from YouTube Music, not in the library.
+    public let artUrl: String?
 
     public var id: String { path }
+    /// Set for a song played straight from YouTube Music: its path is "yt:<videoId>".
+    public var videoId: String? { path.hasPrefix("yt:") ? String(path.dropFirst(3)) : nil }
     public var artistName: String { artist ?? albumArtist ?? "Unknown Artist" }
     public var albumName: String { album ?? "" }
     /// The folder the file is in: one folder is one album.
     public var folder: String {
         path.lastIndex(of: "/").map { String(path[..<$0]) } ?? ""
     }
-    public var hasCover: Bool { cover != nil || embeddedCover }
+    public var hasCover: Bool { cover != nil || embeddedCover || artUrl != nil }
     /// Copied in under its own name, still waiting to be identified.
     public var isUnconfirmed: Bool { match == "unconfirmed" }
 
@@ -46,7 +52,8 @@ public struct Track: Decodable, Identifiable, Hashable, Sendable {
         genre: String? = nil, durationS: Double? = nil, explicit: Bool = false,
         onlyCopy: Bool = false, match: String? = nil, format: String? = nil,
         bitrateKbps: Int? = nil, cover: String? = nil, embeddedCover: Bool = false,
-        lyrics: Lyrics = .none, trackId: String? = nil, acquired: String? = nil
+        lyrics: Lyrics = .none, trackId: String? = nil, acquired: String? = nil,
+        sourceId: String? = nil, artUrl: String? = nil
     ) {
         self.trackId = trackId
         self.path = path
@@ -63,6 +70,8 @@ public struct Track: Decodable, Identifiable, Hashable, Sendable {
         self.onlyCopy = onlyCopy
         self.match = match
         self.acquired = acquired
+        self.sourceId = sourceId
+        self.artUrl = artUrl
         self.format = format
         self.bitrateKbps = bitrateKbps
         self.cover = cover
@@ -79,6 +88,62 @@ public struct TrackList: Decodable, Sendable {
 public struct TrackLyrics: Decodable, Sendable {
     public let synced: String?
     public let plain: String?
+}
+
+/// One result of a YouTube Music search (the engine's Candidate).
+public struct SearchResult: Decodable, Identifiable, Hashable, Sendable {
+    public let videoId: String
+    public let title: String
+    public let artists: [String]
+    public let album: String?
+    public let durationS: Double?
+    public let isExplicit: Bool?
+    public let thumbnail: String?
+
+    public var id: String { videoId }
+
+    /// The result as a song the player can play, straight from YouTube Music.
+    public var track: Track {
+        Track(
+            path: "yt:\(videoId)", title: title,
+            artist: artists.isEmpty ? nil : artists.joined(separator: ", "), album: album,
+            durationS: durationS, explicit: isExplicit ?? false, sourceId: videoId,
+            artUrl: thumbnail)
+    }
+}
+
+public struct SearchAnswer: Decodable, Sendable {
+    public let results: [SearchResult]
+}
+
+public struct StreamAnswer: Decodable, Sendable {
+    public let url: String
+    public let httpHeaders: [String: String]
+}
+
+public struct PlanAnswer: Decodable, Sendable {
+    public struct Summary: Decodable, Sendable {
+        public let operations: Int
+        public let skipped: [String: Int]?
+    }
+    public let planId: String
+    public let summary: Summary
+}
+
+public struct BatchAnswer: Decodable, Sendable {
+    public let batchId: String
+}
+
+public struct JobsAnswer: Decodable, Sendable {
+    public struct Job: Decodable, Sendable {
+        public let state: String
+        public let reason: String?
+        public let message: String?
+
+        public var isOver: Bool { state != "queued" && state != "running" }
+        public var worked: Bool { state == "done" }
+    }
+    public let jobs: [Job]
 }
 
 public struct PlayCount: Decodable, Equatable, Sendable {
@@ -168,6 +233,8 @@ public struct Library: Sendable {
     public let artists: [Artist]  // by name
     private let searchText: [String: String]  // track path → folded "title artist album"
     private let byID: [String: Track]
+    /// The YouTube videos the library's songs came from: "is this one mine already?"
+    public let videoIDs: Set<String>
 
     public static let empty = Library(tracks: [])
 
@@ -212,6 +279,7 @@ public struct Library: Sendable {
             if let id = track.trackId { ids[id] = track }
         }
         byID = ids
+        videoIDs = Set(tracks.compactMap(\.sourceId))
     }
 
     /// The songs with these ids, in that order; ids no longer in the library are left out.

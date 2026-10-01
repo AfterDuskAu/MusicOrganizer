@@ -206,3 +206,50 @@ def test_live_download(lib: Library) -> None:
     outside = [p for p in lib.root.rglob("*") if p.is_file() and lib.paths.staging not in p.parents]
     assert all(lib.paths.engine in p.parents for p in outside)
     assert [p for p in folder.iterdir()] == [path]
+
+
+# ---- stream: where the app plays a song from (v0.2) ------------------------------------
+
+
+class StreamYDL:
+    info: Any = {}
+    calls: list[tuple[str, bool]] = []
+
+    def __init__(self, opts: dict[str, Any]) -> None:
+        self.opts = opts
+
+    def __enter__(self) -> StreamYDL:
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        return None
+
+    def extract_info(self, url: str, download: bool = True) -> Any:
+        StreamYDL.calls.append((url, download))
+        if isinstance(StreamYDL.info, Exception):
+            raise StreamYDL.info
+        return StreamYDL.info
+
+
+def test_stream_gives_an_address_and_downloads_nothing(
+    fake_ydl: Callable[[str | None], None], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    StreamYDL.calls = []
+    StreamYDL.info = {"url": "https://example.invalid/audio", "format_id": "140",
+                      "duration": 187, "http_headers": {"User-Agent": "x"}}  # fmt: skip
+    monkeypatch.setattr(youtube, "_make_ydl", StreamYDL)
+    found = youtube.stream("abcdefghijk")
+    assert found == youtube.Stream("https://example.invalid/audio", {"User-Agent": "x"}, 187.0)
+    assert StreamYDL.calls == [("https://www.youtube.com/watch?v=abcdefghijk", False)]
+
+    with pytest.raises(YouTubeError):
+        youtube.stream("not an id")
+    StreamYDL.info = {"url": "https://example.invalid/audio", "format_id": "251"}
+    with pytest.raises(FormatUnavailableError):
+        youtube.stream("abcdefghijk")
+    StreamYDL.info = {"format_id": "140"}
+    with pytest.raises(DownloadError):
+        youtube.stream("abcdefghijk")
+    StreamYDL.info = yt_dlp.utils.DownloadError("Video unavailable")
+    with pytest.raises(VideoUnavailableError):
+        youtube.stream("abcdefghijk")

@@ -26,6 +26,19 @@
 - `library.tracks` also gives `acquired` (when the song came into the library).
 - **The app:** Favourites, Recently Added, Most Played and Not Identified Yet in the sidebar; playlists (new, rename, delete, add songs, remove, move up and down); a heart beside every song; a Plays column; a full-window "now playing" screen with the cover and large lyrics (click the cover in the player bar; Esc closes it).
 
+2026-10-01, evening. The owner's next two choices: search YouTube Music from the app, and fix a song by hand (which covers the lyrics part of parked Fix A-3).
+
+- **Play from YouTube Music without saving anything:** `youtube.stream(video_id)` asks yt-dlp where a song's format-140 audio can be played from (no download), through the shared rate limiter, and the app's player plays that address. RPC: `youtube.stream`. Checked live once against yt-dlp: the address answers range requests as `audio/mp4`. `youtube.stream` and `search.ytmusic` are answered from their own thread, so a slow YouTube lookup doesn't hold up the app's other requests.
+- **Download when asked:** a new plan kind, `download` (`musicorg plan download <video_id>…`, and the app's Download button). No rip is behind it, so nothing is replaced and the fingerprint gate (rule 7) has nothing to compare; every other download check applies (format 140 only, AAC, bitrate, length), and a download that fails them isn't kept. The song gets its official details, lyrics and cover like any other, with `MUSICORG_SOURCE=youtube_music` and no `MUSICORG_MATCH`. These go to the main library because the owner clicked for each one; parked Fix A-2 is about *automatic* downloads, which don't exist yet.
+- **Fix a song by hand:** a new plan kind, `edit` (RPC only). Title, artist, album, album artist, genre, year and track; a cover from a picture on the computer; lyrics typed or pasted.
+  - Timed lyrics become the song's `.lrc` with their words in the tags. Plain lyrics go in the tags, and a `.lrc` that was there is set aside in `_Replaced/` as the wrong one. Empty text removes the lyrics.
+  - A chosen cover is embedded and becomes the album folder's `cover.jpg`; a different one already there is set aside, because here the owner has chosen.
+  - The file moves to the folder and name its new details give, keeping its `MUSICORG_ID`, so favourites and playlists follow it. Undo puts everything back.
+  - Deviation: the owner's picture is a new kind of outside file the engine reads (rule 10 names only `copy_in` sources and scan inputs). It's read once, when the plan is made, never changed, and the prepared cover travels inside the plan.
+- `queue.jobs` (RPC): how a batch's jobs ended, so the app can say why a download or an edit didn't work. `library.tracks` also gives `source_id`.
+- **The app:** a YouTube Music page in the sidebar (search, play, Download, "In your library"), and Edit Details… on a song's right-click menu.
+- **Not checked in the running app.** The owner asked for the app not to be opened and the Mac left idle (other work needed it), so these screens are compiled and the logic under them is tested, but nobody has clicked through them yet. To check: playing a search result (AVPlayer with YouTube's address), the Download button, and the Edit Details sheet.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

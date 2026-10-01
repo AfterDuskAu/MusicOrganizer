@@ -19,6 +19,8 @@ final class Player {
     private(set) var queue = PlayQueue()
     private(set) var current: Track?
     private(set) var isPlaying = false
+    /// Waiting for YouTube to say where the song can be played from.
+    private(set) var isFetching = false
     var problem: String?
     var volume: Float = UserDefaults.standard.object(forKey: "volume") as? Float ?? 1 {
         didSet {
@@ -33,6 +35,8 @@ final class Player {
     @ObservationIgnored var onTick: ((Double) -> Void)?
     /// A song played to its end (not skipped): that's what counts as a play.
     @ObservationIgnored var onFinished: ((Track) -> Void)?
+    /// Where a YouTube video's audio can be played from (the engine asks YouTube).
+    @ObservationIgnored var findStream: ((String) async throws -> (URL, [String: String]))?
     @ObservationIgnored private let audio = AVPlayer()
     @ObservationIgnored private var observers: [Any] = []
 
@@ -76,7 +80,7 @@ final class Player {
     }
 
     func toggle() {
-        guard current != nil else { return }
+        guard current != nil, !isFetching else { return }
         if isPlaying {
             audio.pause()
             isPlaying = false
@@ -130,6 +134,7 @@ final class Player {
         queue.play([])
         current = nil
         isPlaying = false
+        isFetching = false
         clock.time = 0
         clock.duration = 0
         onTrackChange?(nil)
@@ -139,20 +144,58 @@ final class Player {
     // MARK: playing
 
     private func start(_ track: Track?) {
-        guard let track, let root else { return }
+        guard let track else { return }
+        if let videoId = track.videoId {
+            startFromYouTube(track, videoId)
+            return
+        }
+        guard let root else { return }
         let url = root.appendingPathComponent(track.path)
         guard FileManager.default.isReadableFile(atPath: url.path) else {
             problem = "“\(track.title)” isn't where the library says it is. Try File → Reload Library."
             return
         }
+        begin(track, AVPlayerItem(url: url))
+    }
+
+    /// Nothing is saved: the audio is played from YouTube's own address for it.
+    private func startFromYouTube(_ track: Track, _ videoId: String) {
+        guard let findStream else { return }
+        audio.pause()
+        audio.replaceCurrentItem(with: nil)
+        current = track
+        isPlaying = false
+        isFetching = true
         problem = nil
-        audio.replaceCurrentItem(with: AVPlayerItem(url: url))
+        clock.time = 0
+        clock.duration = track.durationS ?? 0
+        onTrackChange?(track)
+        publishNowPlaying()
+        Task {
+            do {
+                let (url, headers) = try await findStream(videoId)
+                guard current == track else { return }  // another song was chosen meanwhile
+                let asset = AVURLAsset(url: url, options: ["AVURLAssetHTTPHeaderFieldsKey": headers])
+                begin(track, AVPlayerItem(asset: asset))
+            } catch {
+                guard current == track else { return }
+                isFetching = false
+                problem = "“\(track.title)” can't be played from YouTube: \(error.localizedDescription)"
+            }
+        }
+    }
+
+    private func begin(_ track: Track, _ item: AVPlayerItem) {
+        problem = nil
+        isFetching = false
+        audio.replaceCurrentItem(with: item)
         audio.play()
+        let changed = current != track
         current = track
         isPlaying = true
         clock.time = 0
         clock.duration = track.durationS ?? 0
-        onTrackChange?(track)
+        if changed { onTrackChange?(track) }
         publishNowPlaying()
         Task {
             let image = await Covers.shared.load(track, root: root, size: .large)

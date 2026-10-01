@@ -60,6 +60,7 @@ enum SidebarItem: Hashable {
     case songs, albums, artists
     case favourites, recentlyAdded, mostPlayed, unconfirmed
     case playlist(String)
+    case youtube
 
     var title: String {
         switch self {
@@ -71,6 +72,7 @@ enum SidebarItem: Hashable {
         case .mostPlayed: "Most Played"
         case .unconfirmed: "Not Identified Yet"
         case .playlist: "Playlist"
+        case .youtube: "YouTube Music"
         }
     }
 
@@ -84,6 +86,7 @@ enum SidebarItem: Hashable {
         case .mostPlayed: "chart.bar"
         case .unconfirmed: "questionmark.circle"
         case .playlist: "music.note.list"
+        case .youtube: "magnifyingglass"
         }
     }
 }
@@ -142,6 +145,7 @@ struct MainView: View {
         }
         .animation(.easeInOut(duration: 0.25), value: showNowPlaying)
         .sheet(item: $model.namePrompt) { NameSheet(prompt: $0) }
+        .sheet(item: $model.editing) { EditSheet(track: $0).environment(model) }
         .alert(
             "That didn't work", isPresented: Binding(
                 get: { model.notice != nil }, set: { if !$0 { model.notice = nil } })
@@ -180,6 +184,9 @@ struct MainView: View {
                 if waiting > 0 {
                     row(.unconfirmed).badge(waiting)
                 }
+            }
+            Section("Find") {
+                row(.youtube)
             }
             Section {
                 ForEach(model.listening.playlists) { playlist in
@@ -233,6 +240,8 @@ struct MainView: View {
                 empty: "Every song has been identified.",
                 note: "These songs are here under their own names, so you can play them. "
                     + "They get their official names, covers and lyrics once they're identified.")
+        case .youtube:
+            YouTubeSearchView()
         case .playlist(let id):
             if let playlist = model.playlist(id) {
                 SongList(

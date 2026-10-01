@@ -25,26 +25,36 @@ final class Covers {
         "\(track.cover ?? track.path)|\(size.rawValue)" as NSString
     }
 
+    func forgetAll() { cache.removeAllObjects() }
+
     /// Already in memory? Asked while a view is built, so a cached cover never flashes
     /// a placeholder.
     func cached(_ track: Track, _ size: CoverSize) -> NSImage? {
         cache.object(forKey: key(track, size))
     }
 
-    func load(_ track: Track, root: URL, size: CoverSize) async -> NSImage? {
+    func load(_ track: Track, root: URL?, size: CoverSize) async -> NSImage? {
         let key = key(track, size)
         if let image = cache.object(forKey: key) { return image }
         guard track.hasCover else { return nil }
-        let sidecar = track.cover.map { root.appendingPathComponent($0) }
-        let audio = root.appendingPathComponent(track.path)
         let pixels = size.rawValue
+        let remote = track.artUrl.flatMap(URL.init(string:))
+        let sidecar = root.flatMap { root in track.cover.map { root.appendingPathComponent($0) } }
+        let audio = track.videoId == nil ? root?.appendingPathComponent(track.path) : nil
         let decoded = await Task.detached(priority: .userInitiated) { () -> CGImage? in
+            if let remote {  // a YouTube Music song's picture
+                guard remote.scheme == "https",
+                    let (data, _) = try? await URLSession.shared.data(from: remote),
+                    let source = CGImageSourceCreateWithData(data as CFData, nil)
+                else { return nil }
+                return Self.thumbnail(source, pixels)
+            }
             if let sidecar, let source = CGImageSourceCreateWithURL(sidecar as CFURL, nil),
                 let image = Self.thumbnail(source, pixels)
             {
                 return image
             }
-            guard let data = await Self.embeddedPicture(audio),
+            guard let audio, let data = await Self.embeddedPicture(audio),
                 let source = CGImageSourceCreateWithData(data as CFData, nil)
             else { return nil }
             return Self.thumbnail(source, pixels)
@@ -104,8 +114,8 @@ struct CoverView: View {
         .aspectRatio(1, contentMode: .fit)
         .clipShape(RoundedRectangle(cornerRadius: corner))
         .task(id: key) {
-            guard let track, let root = model.root else { return }
-            if let image = await Covers.shared.load(track, root: root, size: size) {
+            guard let track else { return }
+            if let image = await Covers.shared.load(track, root: model.root, size: size) {
                 loaded = (key, image)
             }
         }

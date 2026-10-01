@@ -28,6 +28,20 @@ final class AppModel {
     var notice: String?
     /// A name being asked for: a new playlist, or a new name for one.
     var namePrompt: NamePrompt?
+    /// The song whose details are being edited by hand.
+    var editing: Track?
+
+    // The YouTube Music search page.
+    var youtubeQuery = ""
+    private(set) var youtubeResults: [SearchResult] = []
+    private(set) var youtubeSearching = false
+    private(set) var youtubeProblem: String?
+    private(set) var downloads: [String: DownloadState] = [:]
+
+    enum DownloadState: Equatable {
+        case working
+        case failed(String)
+    }
     var searchText = ""
 
     let player = Player()
@@ -42,6 +56,17 @@ final class AppModel {
         player.onTrackChange = { [weak self] track in self?.showLyrics(for: track) }
         player.onTick = { [weak self] time in self?.lyrics.follow(time) }
         player.onFinished = { [weak self] track in self?.countPlay(of: track) }
+        player.findStream = { [weak self] videoId in
+            guard let connection = self?.engine?.connection else {
+                throw RPCError(code: RPCError.closed, message: "The engine isn't running.")
+            }
+            let found = try await connection.call(
+                "youtube.stream", ["video_id": videoId], as: StreamAnswer.self)
+            guard let url = URL(string: found.url) else {
+                throw RPCError(code: 0, message: "YouTube's answer couldn't be read.")
+            }
+            return (url, found.httpHeaders)
+        }
     }
 
     // MARK: starting and stopping
@@ -275,6 +300,96 @@ final class AppModel {
         }
     }
 
+    // MARK: YouTube Music: search, play, download when asked
+
+    func searchYouTube() {
+        let query = youtubeQuery.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty, !youtubeSearching, let connection = engine?.connection else { return }
+        youtubeSearching = true
+        youtubeProblem = nil
+        Task {
+            do {
+                let found = try await connection.call(
+                    "search.ytmusic", ["query": query, "limit": 25], as: SearchAnswer.self)
+                youtubeResults = found.results
+                if found.results.isEmpty { youtubeProblem = "Nothing found for “\(query)”." }
+            } catch {
+                youtubeProblem = error.localizedDescription
+            }
+            youtubeSearching = false
+        }
+    }
+
+    /// Download one song into the library. Only ever called by the owner's click.
+    func download(_ result: SearchResult) {
+        guard downloads[result.videoId] != .working else { return }
+        downloads[result.videoId] = .working
+        Task {
+            do {
+                try await run(plan: "download", ["video_ids": [result.videoId]])
+                downloads[result.videoId] = nil  // it now shows as "in your library"
+            } catch {
+                downloads[result.videoId] = .failed(error.localizedDescription)
+            }
+        }
+    }
+
+    /// Make a plan, apply it, and wait for its jobs to end. Throws what went wrong, in
+    /// the engine's own plain words. The library is reloaded afterwards.
+    func run(plan kind: String, _ options: [String: Any]) async throws {
+        guard let connection = engine?.connection else {
+            throw RPCError(code: RPCError.closed, message: "The engine isn't running.")
+        }
+        let plan = try await connection.call(
+            "plan.create", ["kind": kind, "options": options], as: PlanAnswer.self)
+        guard plan.summary.operations > 0 else {
+            let why = plan.summary.skipped?.keys.sorted().first?.replacingOccurrences(of: "_", with: " ")
+            throw RPCError(code: 0, message: "Nothing to do" + (why.map { " (\($0))." } ?? "."))
+        }
+        let batch = try await connection.call(
+            "plan.apply", ["plan_id": plan.planId], as: BatchAnswer.self)
+        var jobs: [JobsAnswer.Job] = []
+        repeat {
+            try await Task.sleep(for: .milliseconds(700))
+            jobs = try await connection.call(
+                "queue.jobs", ["batch_id": batch.batchId], as: JobsAnswer.self
+            ).jobs
+        } while !jobs.allSatisfy(\.isOver)
+        try? await load()
+        if let failed = jobs.first(where: { !$0.worked }) {
+            throw RPCError(
+                code: 0,
+                message: failed.message ?? failed.reason?.replacingOccurrences(of: "_", with: " ")
+                    ?? "It didn't work.")
+        }
+    }
+
+    // MARK: fixing a song by hand
+
+    /// The lyrics as the owner would edit them: the timed ones if there are any.
+    func lyricsText(for track: Track) async -> String {
+        guard let connection = engine?.connection, track.lyrics != .none,
+            let found = try? await connection.call(
+                "library.lyrics", ["path": track.path], as: TrackLyrics.self)
+        else { return "" }
+        return found.synced ?? found.plain ?? ""
+    }
+
+    func saveEdit(
+        of track: Track, changes: [String: Any], lyrics: String?, coverFile: URL?
+    ) async throws {
+        var options: [String: Any] = ["path": track.path, "changes": changes]
+        if let lyrics { options["lyrics"] = lyrics }
+        if let coverFile { options["cover_file"] = coverFile.path }
+        try await run(plan: "edit", options)
+        Covers.shared.forgetAll()  // a cover may have changed
+        if player.current?.trackId == track.trackId, let id = track.trackId,
+            let now = library.tracks(withIDs: [id]).first
+        {
+            showLyrics(for: now)
+        }
+    }
+
     // MARK: lyrics
 
     private func showLyrics(for track: Track?) {
@@ -282,7 +397,7 @@ final class AppModel {
             lyrics.show(.nothingPlaying, for: nil)
             return
         }
-        guard track.lyrics != .none, let connection = engine?.connection else {
+        guard track.lyrics != .none, track.videoId == nil, let connection = engine?.connection else {
             lyrics.show(.missing, for: track.path)
             return
         }

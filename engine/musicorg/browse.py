@@ -57,6 +57,7 @@ def tracks(lib: Library, index: Index) -> list[dict[str, Any]]:
             "title": details["title"] or path.stem,
             "duration_s": row["duration_s"],
             "only_copy": bool(row["only_copy"]),
+            "source_id": row["source_id"],
             "cover": f"{rel.rsplit('/', 1)[0]}/{naming.COVER_NAME}" if covers[folder] else None,
             "lyrics": "synced" if synced else "plain" if details["plain_lyrics"] else "none",
         })  # fmt: skip

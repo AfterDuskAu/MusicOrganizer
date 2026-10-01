@@ -453,3 +453,26 @@ def test_the_test_client_runs_end_to_end(tmp_path: Path) -> None:
     text = done.stdout.decode("utf-8", errors="replace")
     assert done.returncode == 0, text + done.stderr.decode("utf-8", errors="replace")
     assert "job.finished" in text and "Everything worked" in text
+
+
+def test_stream_jobs_and_the_new_plan_kinds(
+    opened: rpc.Server, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from musicorg import youtube
+
+    monkeypatch.setattr(
+        youtube, "stream", lambda video_id: youtube.Stream("https://example.invalid/a", {}, 9.0)
+    )
+    assert result(opened, "youtube.stream", video_id="abcdefghijk") == {
+        "url": "https://example.invalid/a", "http_headers": {}, "duration_s": 9.0,
+    }  # fmt: skip
+    assert code(opened, "youtube.stream") == rpc.INVALID_PARAMS
+    assert result(opened, "queue.jobs", batch_id="b_nothing") == {"jobs": []}
+    assert code(opened, "plan.create", kind="download") == rpc.INVALID_PARAMS
+    assert code(opened, "plan.create", kind="download", options={"video_ids": ["bad id"]}) == (
+        rpc.USER_ERROR
+    )
+    assert code(opened, "plan.create", kind="edit", options={"path": "Music/none.mp3"}) == (
+        rpc.NOT_FOUND
+    )
+    assert code(opened, "plan.create", kind="edit", options={"path": "../x.mp3"}) == rpc.OUTSIDE

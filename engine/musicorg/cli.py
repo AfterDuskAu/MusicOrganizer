@@ -221,6 +221,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="Calibration: download and compare, keep the downloads in _Staging/calibration, "
         "and change nothing else.",
     )
+    p = add(plan, "download", "Plan downloading YouTube Music songs you name.", _cmd_plan_download)
+    p.add_argument("video_ids", nargs="+", metavar="video_id", help="A YouTube video id.")
     p = add(plan, "adopt", "Plan copying only-copy rips into the library.", _cmd_plan_adopt)
     p.add_argument(
         "--include-not-found", action="store_true", help="Also copy in every not-found rip."
@@ -805,6 +807,13 @@ def _cmd_plan_adopt(args: argparse.Namespace) -> int:
     return _print_new_plan(plan, args.json)
 
 
+def _cmd_plan_download(args: argparse.Namespace) -> int:
+    with library.open(_library_root(args), write=True, command="plan download") as lib:
+        with open_index(lib.paths, write=False) as index:
+            plan = pipeline.plan_download(lib, index, args.video_ids)
+    return _print_new_plan(plan, args.json)
+
+
 def _cmd_plan_show(args: argparse.Namespace) -> int:
     with library.open(_library_root(args), write=False) as lib:
         plan = pipeline.show(lib, args.plan_id)
@@ -920,6 +929,10 @@ def _print_plan_summary(plan: fileops.Plan) -> None:
     elif plan.kind == "artwork":
         print(f"  {s.get('operations', 0):,} song(s) to give a cover, from "
               f"{s.get('albums', 0):,} album(s) or picture(s)")  # fmt: skip
+    elif plan.kind == "download":
+        print(f"  {s.get('downloads', 0):,} song(s) to download from YouTube Music")
+    elif plan.kind == "edit":
+        print("  1 song to edit")
     elif plan.kind == "replace":
         print(
             f"  {s.get('operations', 0):,} rip(s) to replace, {s.get('downloads', 0):,} download(s)"

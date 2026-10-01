@@ -502,16 +502,10 @@ def download_options(dest: Path, progress: ProgressHook | None = None) -> dict[s
             progress(int(done), int(total) if total else None)
 
     return {
-        "format": DOWNLOAD_FORMAT,
+        **_base_options(),
         "paths": {"home": str(dest), "temp": str(dest)},
         "outtmpl": {"default": "%(id)s.%(ext)s"},
         "ffmpeg_location": str(tools.require("ffmpeg")),
-        "js_runtimes": {"deno": {"path": str(tools.require("deno"))}},
-        "cachedir": str(ensure_app_dir(app_dirs().cache) / "yt-dlp"),
-        "noplaylist": True,
-        "quiet": True,
-        "noprogress": True,
-        "logger": _YtDlpLog(),
         "progress_hooks": [hook],
         "postprocessors": [],  # none; yt-dlp's own M4A container fix-up still runs
         "overwrites": False,
@@ -519,8 +513,65 @@ def download_options(dest: Path, progress: ProgressHook | None = None) -> dict[s
         # a download kept in _Staging for 24 hours isn't cleaned up at once (step 09b).
         # Already off when yt-dlp is used from Python; said here so it stays off.
         "updatetime": False,
+    }
+
+
+def _base_options() -> dict[str, Any]:
+    """What every yt-dlp call shares: format 140 only, deno, our cache folder, quiet."""
+    return {
+        "format": DOWNLOAD_FORMAT,
+        "js_runtimes": {"deno": {"path": str(tools.require("deno"))}},
+        "cachedir": str(ensure_app_dir(app_dirs().cache) / "yt-dlp"),
+        "noplaylist": True,
+        "quiet": True,
+        "noprogress": True,
+        "logger": _YtDlpLog(),
         "socket_timeout": SOCKET_TIMEOUT_S,
     }
+
+
+@dataclass(frozen=True)
+class Stream:
+    """Where a video's audio can be played from right now, without saving it."""
+
+    url: str
+    headers: dict[str, str]  # what the player must send with its requests
+    duration_s: float | None
+
+
+def stream(video_id: str) -> Stream:
+    """The address of a video's format-140 audio, for the app to play (v0.2). Nothing is
+    downloaded or written. The address is YouTube's and stops working after a few
+    hours, so it's asked for each time a song is played, through the shared rate limiter.
+
+    Raises the same errors as `download_audio`."""
+    if not VIDEO_ID.fullmatch(video_id):
+        raise YouTubeError(f"{video_id!r} isn't a YouTube video id.")
+    url = f"https://www.youtube.com/watch?v={video_id}"
+
+    def run() -> Any:
+        with _make_ydl(_base_options()) as ydl:
+            return ydl.extract_info(url, download=False)
+
+    try:
+        info = limiter().call(run)
+    except (YouTubePausedError, ReplayMissError):
+        raise
+    except Exception as exc:
+        raise download_problem(video_id, exc) from exc
+    address = info.get("url") if isinstance(info, dict) else None
+    if not isinstance(address, str) or not address.startswith("https://"):
+        raise DownloadError(f"YouTube gave no address to play {video_id} from.")
+    if str(info.get("format_id") or "") != DOWNLOAD_FORMAT:
+        raise FormatUnavailableError(f"YouTube doesn't offer {video_id} in the format we play.")
+    headers = info.get("http_headers")
+    return Stream(
+        url=address,
+        headers={str(k): str(v) for k, v in headers.items()} if isinstance(headers, dict) else {},
+        duration_s=float(info["duration"])
+        if isinstance(info.get("duration"), int | float)
+        else None,
+    )
 
 
 def download_problem(video_id: str, exc: BaseException) -> Exception:

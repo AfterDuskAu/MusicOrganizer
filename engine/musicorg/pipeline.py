@@ -44,6 +44,7 @@ staging → check → tag → commit, through `fileops`, journaled and undoable.
 
 from __future__ import annotations
 
+import base64
 import csv
 import io
 import json
@@ -58,6 +59,7 @@ from typing import Any
 
 from musicorg import (
     artwork,
+    browse,
     fileops,
     fingerprint,
     lyrics,
@@ -1445,6 +1447,224 @@ def _music_rel(lib: Library, path: Path) -> Path:
     return path.relative_to(lib.paths.music)
 
 
+# ---- a download the owner asked for, and edits by hand (v0.2) -----------------------
+
+EDIT_TEXT = ("title", "artist", "album_artist", "album", "genre")
+EDIT_NUMBERS = {"year": (1000, 2100), "track": (1, 999)}
+MAX_LYRICS_CHARS = 100_000
+
+
+def plan_download(lib: Library, index: Index, video_ids: list[str]) -> fileops.Plan:
+    """A plan downloading these YouTube Music songs into the library: the app's
+    "download" button (v0.2). There's no rip behind them, so nothing is replaced and the
+    fingerprint gate has nothing to compare; every other check on a download applies.
+    A song already in the library is left out."""
+    ops: list[fileops.PlanOp] = []
+    skipped: dict[str, int] = {}
+    for video_id in dict.fromkeys(video_ids):
+        if not isinstance(video_id, str) or not youtube.VIDEO_ID.fullmatch(video_id):
+            raise UserError(f"{video_id!r} isn't a YouTube video id.")
+        if index.library_tracks_with_source_id(video_id):
+            skipped["already_in_library"] = skipped.get("already_in_library", 0) + 1
+            continue
+        found = youtube.get_track(video_id)
+        if found is None:
+            skipped["not_on_youtube_music"] = skipped.get("not_on_youtube_music", 0) + 1
+            continue
+        ops.append(
+            fileops.PlanOp(
+                action="download", params={"video_id": video_id, "candidate": found.to_dict()}
+            )
+        )
+    size = sum((op.params["candidate"].get("duration_s") or 0) * BYTES_PER_SECOND for op in ops)
+    summary = {
+        "operations": len(ops),
+        "downloads": len(ops),
+        "est_minutes": estimate_minutes(len(ops), 0),
+        "days": download_days(len(ops)),
+        "disk_mb": round(size / 1e6, 1),
+        "low_confidence_adopts": 0,
+        "skipped": skipped,
+    }
+    plan = fileops.new_plan("download", ops, summary)
+    fileops.save_plan(lib, plan)
+    return plan
+
+
+def download_job(ctx: JobContext) -> Outcome:
+    (op,) = _ops(ctx.payload)
+    video_id = str(op.params["video_id"])
+    candidate = Candidate.from_dict(op.params["candidate"])
+    with open_index(ctx.lib.paths, write=True) as index:
+        if index.library_tracks_with_source_id(video_id):
+            return Outcome.done("Already in the library.")
+        path, info = ctx.download(video_id)
+        problem = _check_download(path, info, candidate)
+        if problem is not None:
+            return Outcome.needs_review(*problem)
+        names = state.names(ctx.lib.load_state().data)
+        candidate = _preferred(candidate, names)
+        album = _preferred_album(_album(candidate, index), names)
+        probe = tags.probe(path)
+        extras = _extras(ExtrasQuery(candidate, album, probe.duration_s, (), index))
+        new_tags = tags.TrackTags(
+            title=candidate.title,
+            artist=", ".join(candidate.artists) or None,
+            album_artist=album.artist,
+            album=album.title,
+            year=_year(album.year),
+            track=album.track,
+            track_total=album.track_total if album.track else None,
+            explicit=candidate.is_explicit,
+            lyrics=extras.lyrics,
+            cover=extras.cover,
+            cover_mime=extras.cover_mime if extras.cover else None,
+            schema=tags.SCHEMA_VERSION,
+            musicorg_id=tags.new_track_id(),
+            source="youtube_music",
+            source_id=candidate.video_id,
+            source_format=str(info["format_id"]),
+            source_bitrate=probe.bitrate_kbps,
+            acquired=_now(),
+        )
+        fileops.write_tags(ctx.batch, path, new_tags)
+        meta = naming.TrackMeta(
+            title=candidate.title, artist=", ".join(candidate.artists) or None,
+            album_artist=album.artist, album=album.title, year=album.year, track=album.track,
+            compilation=album.artist == naming.VARIOUS_ARTISTS, ext=path.suffix,
+        )  # fmt: skip
+        final = fileops.commit(ctx.batch, path, naming.library_path(meta, ctx.lib.root))
+        index.put_library_tracks([_track_row(ctx.lib, final, new_tags, probe.duration_s)])
+        _write_sidecars(ctx, final, extras)
+    return Outcome.done(f"Downloaded as {final.name}.")
+
+
+def plan_edit(
+    lib: Library,
+    index: Index,
+    rel_path: str,
+    *,
+    changes: dict[str, Any] | None = None,
+    lyrics_text: str | None = None,
+    cover_file: Path | None = None,
+) -> fileops.Plan:
+    """A plan for the owner's own corrections to one song (v0.2):
+
+    - `changes`: title, artist, album_artist, album, genre (text), year, track (numbers).
+      None or "" clears a field; a song always keeps a title.
+    - `lyrics_text`: the song's lyrics. Timed lyrics (`[mm:ss.xx]words` lines) become its
+      `.lrc`, with their words in the tags; anything else is plain lyrics, and a `.lrc`
+      that was there is set aside as wrong. "" removes the lyrics. None leaves them.
+    - `cover_file`: a picture on this computer. It's read here, once, and never changed;
+      the plan carries the prepared cover.
+
+    The file moves to the folder and name its new details give. Like every change, it
+    runs through the queue as a journaled batch, so `undo` puts it all back."""
+    path = browse.track_path(lib, rel_path)
+    current = tags.read_tags(path)
+    if not isinstance(current.musicorg_id, str):
+        raise UserError("That file isn't one the library manages, so it can't be edited here.")
+    cleaned: dict[str, Any] = {}
+    for name, value in (changes or {}).items():
+        if name in EDIT_TEXT:
+            if value is not None and not isinstance(value, str):
+                raise UserError(f"{name} should be text.")
+            value = " ".join(value.split()) if value else None
+            if name == "title" and value is None:
+                raise UserError("A song needs a title.")
+        elif name in EDIT_NUMBERS:
+            low, high = EDIT_NUMBERS[name]
+            if value is not None and (
+                isinstance(value, bool) or not isinstance(value, int) or not low <= value <= high
+            ):
+                raise UserError(f"{name} should be a number from {low} to {high}, or empty.")
+        else:
+            raise UserError(f"{name!r} can't be edited.")
+        if value != getattr(current, name):
+            cleaned[name] = value
+    params: dict[str, Any] = {"musicorg_id": current.musicorg_id, "changes": cleaned}
+    if lyrics_text is not None:
+        if len(lyrics_text) > MAX_LYRICS_CHARS:
+            raise UserError("Those lyrics are too long to save.")
+        params["lyrics"] = lyrics_text.replace("\r\n", "\n").replace("\r", "\n").strip()
+    if cover_file is not None:
+        try:
+            if cover_file.stat().st_size > youtube.IMAGE_MAX_BYTES:
+                raise UserError("That picture is too big to use as a cover.")
+            picture = cover_file.read_bytes()
+        except OSError as exc:
+            raise UserError(f"That picture couldn't be read: {exc.strerror or exc}.") from exc
+        try:
+            art = artwork.prepare(picture)
+        except YouTubeError as exc:
+            raise UserError("That file isn't a picture that can be used as a cover.") from exc
+        params["cover_b64"] = base64.b64encode(art.data).decode("ascii")
+    if not cleaned and "lyrics" not in params and "cover_b64" not in params:
+        raise UserError("Nothing would change.")
+
+    here = PurePosixPath(_rel_path(lib, path))
+    target = here
+    if any(name in cleaned for name in (*TIDY_FIELDS, "year", "track")):
+        after = {name: cleaned.get(name, getattr(current, name)) for name in TIDY_FIELDS}
+        after.update({n: cleaned[n] if n in cleaned else getattr(current, n)
+                      for n in ("year", "track")})  # fmt: skip
+        meta = naming.TrackMeta(
+            title=_str(after["title"]), artist=_str(after["artist"]),
+            album_artist=_str(after["album_artist"]), album=_str(after["album"]),
+            year=after["year"] if isinstance(after["year"], int) else None,
+            track=after["track"] if isinstance(after["track"], int) else None,
+            compilation=after["album_artist"] == naming.VARIOUS_ARTISTS, ext=path.suffix,
+            source_file=path.name,
+        )  # fmt: skip
+        target = PurePosixPath(naming.MUSIC_DIR, *naming.library_path(meta, lib.root).parts)
+    op = fileops.PlanOp(
+        action="edit", source=fileops.FileCheck.of(lib, path), target=target.as_posix(),
+        params=params,
+    )  # fmt: skip
+    summary = {"operations": 1, "downloads": 0, "est_minutes": 1, "days": 0, "disk_mb": 0,
+               "low_confidence_adopts": 0, "fields": sorted(cleaned),
+               "lyrics": "lyrics" in params, "cover": "cover_b64" in params}  # fmt: skip
+    plan = fileops.new_plan("edit", [op], summary)
+    fileops.save_plan(lib, plan)
+    return plan
+
+
+def _str(value: object) -> str | None:
+    return value if isinstance(value, str) else None
+
+
+def edit_job(ctx: JobContext) -> Outcome:
+    (op,) = _ops(ctx.payload)
+    path = _same_file(ctx.lib, op)
+    if path is None:
+        return Outcome.needs_review(FILE_CHANGED, "The file has moved or changed since the plan.")
+    change = tags.TrackTags(
+        **{k: tags.REMOVE if v is None else v for k, v in op.params["changes"].items()}
+    )
+    text = op.params.get("lyrics")
+    synced = lyrics.check_lrc(text) if text else None
+    if text is not None:
+        change.lyrics = (lyrics.plain_from(synced) if synced else text) or tags.REMOVE
+    cover = base64.b64decode(op.params["cover_b64"]) if op.params.get("cover_b64") else None
+    if cover is not None:
+        change.cover, change.cover_mime = cover, tags.JPEG
+    fileops.write_tags(ctx.batch, path, change)
+
+    lrc = path.with_suffix(".lrc")
+    if synced:
+        fileops.write_sidecar(ctx.batch, path, ".lrc", synced.encode("utf-8"))
+    elif text is not None and lrc.is_file():
+        fileops.supersede(ctx.batch, lrc)  # the timed lyrics were the wrong ones
+    if cover is not None:
+        old = path.parent / naming.COVER_NAME
+        if old.is_file() and old.read_bytes() != cover:
+            fileops.supersede(ctx.batch, old)  # the owner chose this album's cover
+        fileops.write_sidecar(ctx.batch, path, naming.COVER_NAME, cover)
+    with open_index(ctx.lib.paths, write=True) as index:
+        moved = _rename(ctx, index, replace(op, params={**op.params, "changes": {}}), path)
+    return Outcome.done(f"Edited: {moved.message}")
+
+
 # ---- lyrics and covers for the library (step 10) ------------------------------------
 
 WORK_S_PER_LYRICS = 3  # LRCLIB's pace (one request a second), sometimes YouTube Music too
@@ -1761,6 +1981,18 @@ def describe(plan: fileops.Plan) -> list[str]:
         elif op.action == "adopt":
             unsure = "" if op.params.get("trusted") else "  [keeps the rip's own names]"
             lines.append(f"{op.op_id:>5}  adopt    {rip}  →  {op.target}{unsure}")
+        elif op.action == "download":
+            c = op.params["candidate"]
+            artists = ", ".join(c.get("artists") or [])
+            lines.append(f"{op.op_id:>5}  download {artists} – {c.get('title', '')} "
+                         f"({op.params['video_id']})")  # fmt: skip
+        elif op.action == "edit":
+            assert op.source is not None
+            what = [f"{k}: {v if v is not None else '(cleared)'}"
+                    for k, v in op.params["changes"].items()]  # fmt: skip
+            what += ["lyrics"] if "lyrics" in op.params else []
+            what += ["cover"] if "cover_b64" in op.params else []
+            lines.append(f"{op.op_id:>5}  edit     {op.source.path}  ({', '.join(what)})")
         elif op.action == "adopt_unconfirmed":
             lines.append(f"{op.op_id:>5}  adopt    {rip}  →  {op.target}  [unconfirmed: stays "
                          "in review]")  # fmt: skip
@@ -1795,3 +2027,5 @@ queue.register("adopt", adopt_job, network=False)
 queue.register("lyrics", lyrics_job, network=False)
 queue.register("artwork", artwork_job, network=False)
 queue.register("tidy", tidy_job, network=False)
+queue.register("download", download_job, network=True)
+queue.register("edit", edit_job, network=False)

@@ -12,7 +12,7 @@ import subprocess
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 import pytest
@@ -36,7 +36,7 @@ from musicorg import (
     youtube,
 )
 from musicorg.config import Config
-from musicorg.errors import PlanOutOfDateError, UserError
+from musicorg.errors import OutsideLibraryError, PlanOutOfDateError, UserError
 from musicorg.index import Index, open_index, open_queue
 from musicorg.library import Library
 from musicorg.youtube import Album, AlbumTrack
@@ -1262,3 +1262,156 @@ def test_an_unconfirmed_copy_that_turns_out_to_be_a_duplicate_is_set_aside(
     assert item_state(index, good)[0] == "adopted"
     assert item_state(index, worse)[0] == "superseded"
     assert len(index.library_tracks()) == 1
+
+
+# ---- a download the owner asked for (v0.2) --------------------------------------------
+
+
+def test_a_song_downloaded_on_request(
+    lib: Library, index: Index, downloads: FakeDownloads, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    found = {VIDEO_A: candidate(VIDEO_A, "Melody", ("Band",), SECONDS, album="Tunes")}
+    monkeypatch.setattr(youtube, "get_track", lambda video_id: found.get(video_id))
+
+    plan = pipeline.plan_download(lib, index, [VIDEO_A, VIDEO_A, "goneGONEgon"])
+    assert (plan.kind, plan.summary["downloads"]) == ("download", 1)
+    assert plan.summary["skipped"] == {"not_on_youtube_music": 1}
+    assert "download Band – Melody" in pipeline.describe(plan)[0]
+    batch_id = pipeline.apply(lib, index, plan.plan_id).batch_id
+    run_queue(lib)
+
+    assert [f for f in music_files(lib) if f.endswith(".m4a")] == [
+        "Band/Tunes (2020)/03 Melody.m4a"
+    ]
+    written = tags.read_tags(lib.paths.music / "Band" / "Tunes (2020)" / "03 Melody.m4a")
+    assert (written.title, written.artist, written.album, written.track) == (
+        "Melody", "Band", "Tunes", 3,
+    )  # fmt: skip
+    assert (written.source, written.source_id, written.source_format) == (
+        "youtube_music", VIDEO_A, "140",
+    )  # fmt: skip
+    assert written.match is None and written.origin_path is None
+    assert isinstance(written.musicorg_id, str)
+    assert downloads.calls == [VIDEO_A]
+
+    # Asked for again: it's in the library, so nothing is planned.
+    again = pipeline.plan_download(lib, index, [VIDEO_A])
+    assert again.operations == [] and again.summary["skipped"] == {"already_in_library": 1}
+    with pytest.raises(UserError):
+        pipeline.plan_download(lib, index, ["not a video id"])
+
+    pipeline.undo(lib, batch_id)
+    assert [f for f in music_files(lib) if f.endswith(".m4a")] == []
+    assert index.library_tracks() == []
+
+
+def test_a_download_that_isnt_what_was_asked_for_is_not_kept(
+    lib: Library, index: Index, downloads: FakeDownloads, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    wrong_length = candidate(VIDEO_A, "Melody", ("Band",), SECONDS + 60, album="Tunes")
+    monkeypatch.setattr(youtube, "get_track", lambda video_id: wrong_length)
+    plan = pipeline.plan_download(lib, index, [VIDEO_A])
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    assert music_files(lib) == []
+    (job,) = jobs(lib)
+    assert (job["state"], job["reason"]) == ("needs_review", "duration_mismatch")
+
+
+# ---- edits by hand (v0.2) --------------------------------------------------------------
+
+
+def edit(lib: Library, index: Index, rel: str, **kw: Any) -> str:
+    plan = pipeline.plan_edit(lib, index, rel, **kw)
+    batch_id = pipeline.apply(lib, index, plan.plan_id).batch_id
+    run_queue(lib)
+    return batch_id
+
+
+def test_editing_names_retags_and_moves_the_song(lib: Library, index: Index, adopted: Path) -> None:
+    rel = PurePosixPath(*adopted.relative_to(lib.root).parts).as_posix()
+    before = tags.read_tags(adopted)
+    adopted.with_suffix(".lrc").write_text("[00:01.00]Made-up line\n", encoding="utf-8")
+
+    plan = pipeline.plan_edit(lib, index, rel, changes={
+        "title": "  New   Name ", "artist": "Other Band", "album_artist": "Other Band",
+        "album": None, "year": 1999, "track": None, "genre": "Jazz"})  # fmt: skip
+    assert "edit" in pipeline.describe(plan)[0]
+    batch_id = pipeline.apply(lib, index, plan.plan_id).batch_id
+    run_queue(lib)
+
+    final = lib.paths.music / "Other Band" / "Unsorted" / "New Name.mp3"
+    written = tags.read_tags(final)
+    assert (written.title, written.artist, written.album, written.year, written.genre) == (
+        "New Name", "Other Band", None, 1999, "Jazz",
+    )  # fmt: skip
+    assert written.musicorg_id == before.musicorg_id
+    assert final.with_suffix(".lrc").is_file()  # its lyrics moved with it
+    assert not adopted.exists()
+    assert [t["rel_path"] for t in index.library_tracks()] == [
+        "Music/Other Band/Unsorted/New Name.mp3"
+    ]
+
+    pipeline.undo(lib, batch_id)
+    back = tags.read_tags(adopted)
+    assert (back.title, back.artist, back.album, back.year) == (
+        before.title, before.artist, before.album, before.year,
+    )  # fmt: skip
+    assert adopted.with_suffix(".lrc").is_file() and not final.exists()
+
+
+def test_lyrics_put_in_by_hand(lib: Library, index: Index, adopted: Path) -> None:
+    rel = PurePosixPath(*adopted.relative_to(lib.root).parts).as_posix()
+    lrc = adopted.with_suffix(".lrc")
+
+    edit(lib, index, rel, lyrics_text="[00:01.00]First made-up line\r\n[00:05.50]Second\n")
+    assert lrc.read_text(encoding="utf-8") == "[00:01.00]First made-up line\n[00:05.50]Second"
+    assert tags.read_tags(adopted).lyrics == "First made-up line\nSecond"
+
+    # Plain words replace them, and the timed file (the wrong lyrics) is set aside.
+    edit(lib, index, rel, lyrics_text="Just the words\nof the song")
+    assert not lrc.exists()
+    assert tags.read_tags(adopted).lyrics == "Just the words\nof the song"
+    assert len(list(lib.paths.replaced.rglob("*.lrc"))) == 1
+
+    edit(lib, index, rel, lyrics_text="")
+    assert tags.read_tags(adopted).lyrics is None
+    assert adopted.is_file()  # only lyrics changed: the song didn't move
+
+
+def test_a_cover_chosen_by_hand(lib: Library, index: Index, adopted: Path, tmp_path: Path) -> None:
+    rel = PurePosixPath(*adopted.relative_to(lib.root).parts).as_posix()
+    picture = tmp_path / "front.jpg"
+    picture.write_bytes(cover(900))
+    (adopted.parent / "cover.jpg").write_bytes(cover(300))
+    original = picture.read_bytes()
+
+    batch_id = edit(lib, index, rel, cover_file=picture)
+    embedded = tags.read_tags(adopted).cover
+    assert isinstance(embedded, bytes) and embedded[:2] == b"\xff\xd8"
+    assert (adopted.parent / "cover.jpg").read_bytes() == embedded
+    assert len(list(lib.paths.replaced.rglob("cover.jpg"))) == 1  # the old one, kept aside
+    assert picture.read_bytes() == original  # the owner's picture is only read
+
+    pipeline.undo(lib, batch_id)
+    assert (adopted.parent / "cover.jpg").read_bytes() == cover(300)
+
+    not_a_picture = tmp_path / "notes.txt"
+    not_a_picture.write_text("hello")
+    with pytest.raises(UserError, match="isn't a picture"):
+        pipeline.plan_edit(lib, index, rel, cover_file=not_a_picture)
+    with pytest.raises(UserError, match="couldn't be read"):
+        pipeline.plan_edit(lib, index, rel, cover_file=tmp_path / "missing.jpg")
+
+
+def test_edits_that_are_refused(lib: Library, index: Index, adopted: Path) -> None:
+    rel = PurePosixPath(*adopted.relative_to(lib.root).parts).as_posix()
+    current = tags.read_tags(adopted)
+    for changes in ({"title": ""}, {"title": None}, {"year": 3}, {"track": "4"},
+                    {"musicorg_id": "t_x"}, {"artist": 5}):  # fmt: skip
+        with pytest.raises(UserError):
+            pipeline.plan_edit(lib, index, rel, changes=changes)
+    with pytest.raises(UserError, match="Nothing would change"):
+        pipeline.plan_edit(lib, index, rel, changes={"title": current.title})
+    with pytest.raises(OutsideLibraryError):
+        pipeline.plan_edit(lib, index, "../elsewhere.mp3", changes={"title": "X"})

@@ -285,6 +285,11 @@ def to_lrc(lines: Iterable[tuple[int, str]]) -> str:
     return "\n".join(out) + "\n"
 
 
+def plain_from(synced: str | None) -> str | None:
+    """The words of timed lyrics, without their times."""
+    return _plain_from(synced)
+
+
 def _plain_from(synced: str | None) -> str | None:
     if not synced:
         return None

@@ -115,6 +115,27 @@ final class LibraryTests: XCTestCase {
         XCTAssertEqual(listening.playlists[0].trackIds, ["t_1", "t_2"])
     }
 
+    func testASearchResultBecomesAPlayableSong() throws {
+        let json = """
+            {"results": [{"candidate_id": "c_1", "video_id": "abcdefghijk", "title": "Song",
+              "artists": ["A", "B"], "album": "Album", "album_browse_id": "MPRE", "duration_s": 187,
+              "is_explicit": null, "is_official_audio": true, "thumbnail": "https://example.invalid/t.jpg",
+              "score": null, "reasons": [], "version_tokens": []}]}
+            """
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let result = try decoder.decode(SearchAnswer.self, from: Data(json.utf8)).results[0]
+        let track = result.track
+        XCTAssertEqual(track.videoId, "abcdefghijk")
+        XCTAssertEqual(track.artistName, "A, B")
+        XCTAssertEqual(track.durationS, 187)
+        XCTAssertTrue(track.hasCover)
+        XCTAssertNil(track.trackId)
+        XCTAssertNil(Track(path: "Music/A/B/1.mp3", title: "One").videoId)
+        let library = Library(tracks: [Track(path: "Music/A/B/1.mp3", title: "One", sourceId: "abcdefghijk")])
+        XCTAssertTrue(library.videoIDs.contains(result.videoId))
+    }
+
     func testClockTime() {
         XCTAssertEqual(clockTime(187.9), "3:07")
         XCTAssertEqual(clockTime(3765), "1:02:45")

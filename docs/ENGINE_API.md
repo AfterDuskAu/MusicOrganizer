@@ -14,8 +14,8 @@ The engine has two front doors onto the **same functions**. The CLI is for the o
 | **Fingerprint verdict** (step 08, `fingerprint.compare`) | `match` · `uncertain` (→ review reason `fingerprint_uncertain`) · `different` (→ `fingerprint_mismatch`) |
 | **Job state** | `queued` · `running` · `done` · `failed` · `needs_review` · `cancelled` |
 | **Queue state** | `running` · `idle` · `paused` · `paused_by_youtube` |
-| **Plan kind** | `replace` · `adopt` · `lyrics` · `artwork` · `tidy` (step 09d: duplicates and preferred names) |
-| **Batch kind** | a plan kind (`replace` · `adopt` · `lyrics` · `artwork` · `tidy`) · `undo` · `demo` (the manual-check scripts in `scripts/`) |
+| **Plan kind** | `replace` · `adopt` · `lyrics` · `artwork` · `tidy` (step 09d: duplicates and preferred names) · `download` (v0.2: songs the owner asked for, with no rip behind them) · `edit` (v0.2: the owner's own corrections to one song) |
+| **Batch kind** | a plan kind · `undo` · `demo` (the manual-check scripts in `scripts/`) |
 | **Batch status** | `open` (running, or an open batch from `apply`) · `closed` · `interrupted` (closed by recovery after a crash) |
 | **Journal operation** | `commit` · `copy_in` · `supersede` · `restore` (back from `_Replaced/`, by undo) · `move` · `trash` · `write_tags` · `write_sidecar` |
 | **Undo step status** | `planned` (dry run) · `done` · `skipped` (already undone, or the file is gone) · `manual` (restore from the Trash by hand) |
@@ -58,6 +58,7 @@ Global options:
 | `musicorg plan adopt [--include-not-found] [--matched] [--unconfirmed]` | Dry-run plan: copy `only_copy` items (and optionally all `not_found`) into `Music/`. `--matched` (09c) also copies in `matched_auto` and `matched_user` rips, keeping the owner's own audio, with their match's official details; nothing is downloaded. `--unconfirmed` (v0.2) also copies in every `review` and `not_found` rip under its own names, tagged `unconfirmed`, without changing its state; a later adopt of the same rip upgrades that copy in place. | yes | 09b, 09c, v0.2 |
 | `musicorg plan tidy` | Dry-run plan: songs the library has twice keep their best copy (lossless; then a CD or iTunes rip over a YouTube conversion; then bitrate; then size; the other goes to `_Replaced/`, its rip linked to the kept file), and the owner's preferred names go into tags and folder names (with the `.lrc` and `cover.jpg`) | yes | 09d |
 | `musicorg names list` / `set <original> <preferred>` / `remove <original>` | The owner's preferred spellings, e.g. `JAŸ-Z` → `Jay Z`. New songs use them at once; `plan tidy` applies them to the library. | `set`/`remove`: yes | 09d |
+| `musicorg plan download <video_id>…` | Dry-run plan: download these YouTube Music songs into the library (v0.2; the app's Download button). No rip is involved, so nothing is replaced. Songs already in the library are left out. | yes | v0.2 |
 | `musicorg plan show <plan_id>` | Print operations and summary | no | 09b |
 | `musicorg plan calibration [--out <dir>]` | Write `calibration-pairs.csv` (default `Reports/`) from the `--stage-only` downloads, `same` left for the owner to fill in | no | 09b |
 | `musicorg apply <plan_id>` | Validate and enqueue; prints the `batch_id` | yes | 09b |
@@ -107,7 +108,7 @@ Exit codes:
 | `match.run` | `{ "limit"?, "rescan"? }` | `{ "job_id" }` |
 | `review.list` | `{ "state"?: "review"\|"not_found"\|"matched_auto", "offset"?: 0, "limit"?: 50 }` (limit 1–500) | `{ "items": [ReviewItem], "total" }` |
 | `review.decide` | `{ "item_id", "decision", "candidate_id"?, "url"?, "metadata"? }`. `accept` without `candidate_id` takes candidate 1; `metadata` holds `artist_fix`, `title_fix`, `album_fix`, `art_url` for `only_copy`. | `{ "item": ReviewItem }` |
-| `plan.create` | `{ "kind", "options"? }`. Kinds and options: `replace` (`only`, `limit`, `stage_only`), `adopt` (`include_not_found`, `matched`, `unconfirmed`), `lyrics` and `artwork` (`missing`), `tidy` (none), as the CLI's flags. | `{ "plan_id", "summary": { "operations", "downloads", "est_minutes", "low_confidence_adopts", … } }` (the plan's whole summary) |
+| `plan.create` | `{ "kind", "options"? }`. Kinds and options: `replace` (`only`, `limit`, `stage_only`), `adopt` (`include_not_found`, `matched`, `unconfirmed`), `lyrics` and `artwork` (`missing`), `tidy` (none), as the CLI's flags; `download` (`video_ids`: a list); `edit` (`path`, plus any of `changes`: an object of `title`, `artist`, `album_artist`, `album`, `genre`, `year`, `track`, where null or "" clears a field; `lyrics`: text, timed or plain, "" removes them; `cover_file`: a picture on this computer). | `{ "plan_id", "summary": { "operations", "downloads", "est_minutes", "low_confidence_adopts", … } }` (the plan's whole summary) |
 | `plan.get` | `{ "plan_id" }` | `{ "plan" }` |
 | `plan.apply` | `{ "plan_id" }` | `{ "batch_id" }` (jobs go to the queue, and the queue worker starts) |
 | `queue.status` | — | `{ "state", "reason"?, "resume_at"?, "queued", "running", "done", "failed", "needs_review", "daily_count", "daily_cap" }` |
@@ -115,6 +116,10 @@ Exit codes:
 | `journal.batches` | `{ "limit"? }` | `{ "batches": [..] }` |
 | `journal.undo` | `{ "batch_id", "dry_run"?: true }` (a dry run unless `dry_run` is `false`) | `{ "operations": [..] }` for a dry run, else `{ "job_id" }` |
 | `search.ytmusic` | `{ "query", "limit"?: 10 }` (limit 1–50) | `{ "results": [Candidate] }` (`score` null; `candidate_id` made from the videoId) |
+| `youtube.stream` | `{ "video_id" }` | `{ "url", "http_headers", "duration_s" }`: where the app can play the song's audio (format 140) from right now. Nothing is downloaded or saved. The address expires, so the app asks each time it plays. |
+| `queue.jobs` | `{ "batch_id" }` | `{ "jobs": [{ "job_id", "kind", "state", "reason", "message" }] }`: how a batch's jobs ended, so the app can say what happened to a download or an edit |
+
+**RPC-only:** `plan.create` with kind `edit` (the app's Edit Details sheet), `youtube.stream`, `listening.*`, `playlist.*`.
 
 **CLI-only in v0.1** (RPC comes with the v0.2 app when needed): `sources.remove`, `index.rebuild`, `report`, `review export/import`, `lyrics`, `artwork`, `doctor`.
 
@@ -160,7 +165,7 @@ Standard JSON-RPC codes, plus:
 // The app plays the file and shows the cover by reading them; it never writes to them.
 { "track_id": "t_…", "path": "Music/Artist/Album (2020)/01 Song.m4a", "title": "…", "artist": "…",
   "album_artist": "…", "album": "…", "year": 2020, "track": 1, "disc": 1, "genre": "…",
-  "duration_s": 228.1, "explicit": false, "only_copy": false, "match": "auto_details", "acquired": "2026-09-30T10:00:00Z",
+  "duration_s": 228.1, "explicit": false, "only_copy": false, "source_id": "videoId or null", "match": "auto_details", "acquired": "2026-09-30T10:00:00Z",
   "format": "mp3", "bitrate_kbps": 320, "cover": "Music/Artist/Album (2020)/cover.jpg",
   "embedded_cover": true, "lyrics": "synced" }   // lyrics: "synced" | "plain" | "none"
 
