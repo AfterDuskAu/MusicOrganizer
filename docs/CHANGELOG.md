@@ -37,6 +37,7 @@
   - Deviation: the owner's picture is a new kind of outside file the engine reads (rule 10 names only `copy_in` sources and scan inputs). It's read once, when the plan is made, never changed, and the prepared cover travels inside the plan.
 - `queue.jobs` (RPC): how a batch's jobs ended, so the app can say why a download or an edit didn't work. `library.tracks` also gives `source_id`.
 - **The app:** a YouTube Music page in the sidebar (search, play, Download, "In your library"), and Edit Details… on a song's right-click menu.
+- 2026-10-01, late: the YouTube Music page has "Show 25 More" (the same search with a bigger limit; `search.ytmusic` now allows up to 100), and Recently Added is no longer capped at 200. The owner's design for the sidebar and Settings is written up in `docs/roadmap/0.2-app-layout.md`.
 - **Not checked in the running app.** The owner asked for the app not to be opened and the Mac left idle (other work needed it), so these screens are compiled and the logic under them is tested, but nobody has clicked through them yet. To check: playing a search result (AVPlayer with YouTube's address), the Download button, and the Edit Details sheet.
 
 ## 0.1.1 — in progress

@@ -288,11 +288,9 @@ public struct Library: Sendable {
     }
 
     /// Newest first: what came into the library most recently.
-    public func recentlyAdded(limit: Int = 200) -> [Track] {
-        Array(
-            tracks.filter { $0.acquired != nil }
-                .sorted { ($0.acquired ?? "", $1.path) > ($1.acquired ?? "", $0.path) }
-                .prefix(limit))
+    public func recentlyAdded() -> [Track] {
+        tracks.filter { $0.acquired != nil }
+            .sorted { ($0.acquired ?? "", $1.path) > ($1.acquired ?? "", $0.path) }
     }
 
     /// The most played first; songs never played are left out.

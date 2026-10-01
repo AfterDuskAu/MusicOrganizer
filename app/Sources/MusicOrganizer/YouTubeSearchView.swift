@@ -36,9 +36,25 @@ struct YouTubeSearchView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 let results = model.youtubeResults
-                List(Array(results.enumerated()), id: \.element.id) { index, result in
-                    ResultRow(result: result) {
-                        model.player.play(results.map(\.track), startAt: index)
+                List {
+                    ForEach(Array(results.enumerated()), id: \.element.id) { index, result in
+                        ResultRow(result: result) {
+                            model.player.play(results.map(\.track), startAt: index)
+                        }
+                    }
+                    if model.youtubeHasMore {
+                        HStack {
+                            Spacer()
+                            if model.youtubeSearching {
+                                ProgressView().controlSize(.small)
+                            } else {
+                                Button("Show \(AppModel.youtubeStep) More", systemImage: "chevron.down") {
+                                    model.moreFromYouTube()
+                                }
+                            }
+                            Spacer()
+                        }
+                        .padding(.vertical, 6)
                     }
                 }
             }

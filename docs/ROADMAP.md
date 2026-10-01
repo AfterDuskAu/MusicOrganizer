@@ -54,6 +54,8 @@ A SwiftUI app that starts the engine and talks to it (`musicorg serve`). Code in
 - **YouTube Music in the app:** search, play anything without saving it, and download a song only when asked.
 - **Fix a song by hand:** names, cover and lyrics, from a song's right-click menu. (Built but not yet tried in the running app: see the changelog.)
 
+**The owner's layout for the sidebar and Settings** is in [`roadmap/0.2-app-layout.md`](roadmap/0.2-app-layout.md).
+
 **Parked by the owner (2026-10-01):** Fix A-1 (the app feels rough), Fix A-2 (automatic downloads stay out of the main library) and Fix A-3 (a real media player tab). All three are written up in `docs/KNOWN-ISSUES.md`.
 
 **Still to build, roughly in this order** (the owner decides after using the first slice):

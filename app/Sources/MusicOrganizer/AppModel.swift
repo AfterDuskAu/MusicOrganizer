@@ -35,6 +35,11 @@ final class AppModel {
     var youtubeQuery = ""
     private(set) var youtubeResults: [SearchResult] = []
     private(set) var youtubeSearching = false
+    /// How many results the last search asked for, and whether asking for more may find more.
+    private(set) var youtubeLimit = AppModel.youtubeStep
+    private(set) var youtubeHasMore = false
+    static let youtubeStep = 25
+    static let youtubeMost = 100
     private(set) var youtubeProblem: String?
     private(set) var downloads: [String: DownloadState] = [:]
 
@@ -303,6 +308,15 @@ final class AppModel {
     // MARK: YouTube Music: search, play, download when asked
 
     func searchYouTube() {
+        runYouTubeSearch(limit: Self.youtubeStep)
+    }
+
+    /// The same search again, asking for the next lot of results as well.
+    func moreFromYouTube() {
+        runYouTubeSearch(limit: min(youtubeLimit + Self.youtubeStep, Self.youtubeMost))
+    }
+
+    private func runYouTubeSearch(limit: Int) {
         let query = youtubeQuery.trimmingCharacters(in: .whitespaces)
         guard !query.isEmpty, !youtubeSearching, let connection = engine?.connection else { return }
         youtubeSearching = true
@@ -310,8 +324,11 @@ final class AppModel {
         Task {
             do {
                 let found = try await connection.call(
-                    "search.ytmusic", ["query": query, "limit": 25], as: SearchAnswer.self)
+                    "search.ytmusic", ["query": query, "limit": limit], as: SearchAnswer.self)
                 youtubeResults = found.results
+                youtubeLimit = limit
+                // A full page means there may be more; YouTube Music is asked for at most 100.
+                youtubeHasMore = found.results.count >= limit && limit < Self.youtubeMost
                 if found.results.isEmpty { youtubeProblem = "Nothing found for “\(query)”." }
             } catch {
                 youtubeProblem = error.localizedDescription

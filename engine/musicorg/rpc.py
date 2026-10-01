@@ -734,8 +734,8 @@ class Server:
         limit = want(params, "limit", int, 10)
         if not query:
             raise RpcError(INVALID_PARAMS, "query is empty.")
-        if not 1 <= limit <= 50:
-            raise RpcError(INVALID_PARAMS, "limit must be 1 to 50.")
+        if not 1 <= limit <= 100:
+            raise RpcError(INVALID_PARAMS, "limit must be 1 to 100.")
         found = youtube.search_songs(query, limit)
         results = []
         for c in found:

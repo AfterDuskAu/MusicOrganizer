@@ -115,7 +115,7 @@ Exit codes:
 | `queue.pause` / `queue.resume` | — | `{ "state" }` |
 | `journal.batches` | `{ "limit"? }` | `{ "batches": [..] }` |
 | `journal.undo` | `{ "batch_id", "dry_run"?: true }` (a dry run unless `dry_run` is `false`) | `{ "operations": [..] }` for a dry run, else `{ "job_id" }` |
-| `search.ytmusic` | `{ "query", "limit"?: 10 }` (limit 1–50) | `{ "results": [Candidate] }` (`score` null; `candidate_id` made from the videoId) |
+| `search.ytmusic` | `{ "query", "limit"?: 10 }` (limit 1–100; the app's "show more" asks again with a bigger limit) | `{ "results": [Candidate] }` (`score` null; `candidate_id` made from the videoId) |
 | `youtube.stream` | `{ "video_id" }` | `{ "url", "http_headers", "duration_s" }`: where the app can play the song's audio (format 140) from right now. Nothing is downloaded or saved. The address expires, so the app asks each time it plays. |
 | `queue.jobs` | `{ "batch_id" }` | `{ "jobs": [{ "job_id", "kind", "state", "reason", "message" }] }`: how a batch's jobs ended, so the app can say what happened to a download or an edit |
 
