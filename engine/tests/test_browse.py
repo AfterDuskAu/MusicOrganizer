@@ -59,12 +59,32 @@ def test_tracks_carry_what_a_screen_needs(filled: Library) -> None:
         "genre": "Rock", "explicit": True, "match": "auto_details", "acquired": None,
         "format": "mp3",
         "bitrate_kbps": 320, "embedded_cover": False, "only_copy": False,
-        "source": None, "source_id": None,
+        "source": None, "source_id": None, "video": False, "height": None,
         "cover": "Music/Band/Album (2020)/cover.jpg", "lyrics": "synced",
     }  # fmt: skip
     other = found[OTHER]
     assert (other["lyrics"], other["explicit"], other["year"]) == ("plain", False, None)
     assert other["cover"] == song["cover"]  # one cover.jpg per album folder
+
+
+def test_a_saved_video_is_marked_as_one(filled: Library, video_mp4: Path) -> None:
+    rel = "Music/Videos/Band/Song.mp4"
+    video = filled.root.joinpath(*rel.split("/"))
+    video.parent.mkdir(parents=True)
+    shutil.copyfile(video_mp4, video)
+    details = tags.TrackTags(title="Song", artist="Band", musicorg_id="t_v",
+                             source="youtube_music", source_id="videoVVVVVV")  # fmt: skip
+    tags.write_tags(video, details)
+    (video.parent / "cover.jpg").write_bytes(b"\xff\xd8stray")  # not a video's cover
+    with open_index(filled.paths, write=True) as index:
+        scan.scan_library(filled, index)
+        by_path = {t["path"]: t for t in browse.tracks(filled, index)}
+        again = {t["path"]: t for t in browse.tracks(filled, index)}  # from the index now
+    for found in (by_path, again):
+        assert (found[rel]["video"], found[rel]["height"], found[rel]["cover"]) == (True, 240, None)
+        assert (found[SONG]["video"], found[SONG]["height"]) == (False, None)
+        assert found[SONG]["cover"] == "Music/Band/Album (2020)/cover.jpg"
+    assert by_path[rel]["source_id"] == "videoVVVVVV" and by_path[rel]["duration_s"] > 19
 
 
 def test_details_are_read_once_then_come_from_the_index(

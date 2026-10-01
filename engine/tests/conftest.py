@@ -375,3 +375,20 @@ def _vorbis(ffmpeg: Path) -> tuple[str, ...]:
     if re.search(r"\slibvorbis\s", encoders):
         return ("-c:a", "libvorbis", "-q:a", "4", "-ac", "2")
     return ("-c:a", "vorbis", "-strict", "experimental", "-ac", "2")
+
+
+@pytest.fixture(scope="session")
+def video_mp4(
+    audio: AudioFixtures, ffmpeg_path: Path, tmp_path_factory: pytest.TempPathFactory
+) -> Path:
+    """A saved video's stand-in: melody A's sound, as delivered, under a small H.264
+    test picture (240 lines), in one MP4."""
+    path = tmp_path_factory.mktemp("video") / "melody_a.mp4"
+    _ffmpeg(
+        ffmpeg_path,
+        "-f", "lavfi", "-i", f"testsrc=size=320x240:rate=12:duration={MELODY_SECONDS}",
+        "-i", str(audio.melody_a_m4a),
+        "-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p",
+        "-c:a", "copy", "-shortest", str(path),
+    )  # fmt: skip
+    return path

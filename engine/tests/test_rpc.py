@@ -496,6 +496,20 @@ def test_stream_jobs_and_the_new_plan_kinds(
     assert code(opened, "youtube.video", title="Work Out") == rpc.INVALID_PARAMS
     assert result(opened, "queue.jobs", batch_id="b_nothing") == {"jobs": []}
     assert code(opened, "plan.create", kind="download") == rpc.INVALID_PARAMS
+    assert code(opened, "plan.create", kind="download", options={"video_ids": []}) == (
+        rpc.INVALID_PARAMS
+    )
+    # A video to save whole: its id and the picture size chosen in the player.
+    monkeypatch.setattr(
+        youtube, "get_track",
+        lambda video_id: youtube.Candidate(video_id, "Melody", ("Band",), None, None, 245,
+                                           None, youtube.OFFICIAL_VIDEO),
+    )  # fmt: skip
+    planned = result(opened, "plan.create", kind="download",
+                     options={"videos": [{"video_id": "abcdefghijk", "height": 720}]})  # fmt: skip
+    assert (planned["summary"]["downloads"], planned["summary"]["videos"]) == (1, 1)
+    odd_size = {"videos": [{"video_id": "abcdefghijk", "height": 700}]}
+    assert code(opened, "plan.create", kind="download", options=odd_size) == rpc.USER_ERROR
     assert code(opened, "plan.create", kind="download", options={"video_ids": ["bad id"]}) == (
         rpc.USER_ERROR
     )
@@ -507,14 +521,15 @@ def test_stream_jobs_and_the_new_plan_kinds(
 
 def test_settings(opened: rpc.Server) -> None:
     assert result(opened, "settings.get") == {
-        "daily_cap": 250, "daily_cap_default": 250, "daily_cap_max": 300,
+        "daily_cap": 250, "daily_cap_default": 250, "daily_cap_max": 500,
     }  # fmt: skip
     assert result(opened, "settings.set", daily_cap=120)["daily_cap"] == 120
     assert result(opened, "settings.get")["daily_cap"] == 120
     assert result(opened, "queue.status")["daily_cap"] == 120
-    for bad in (0, 301):
+    for bad in (0, 501):
         assert code(opened, "settings.set", daily_cap=bad) == rpc.USER_ERROR
     assert result(opened, "settings.get")["daily_cap"] == 120
+    assert result(opened, "settings.set", daily_cap=500)["daily_cap"] == 500  # the most
 
 
 def test_lyrics_for_a_song_played_from_youtube(

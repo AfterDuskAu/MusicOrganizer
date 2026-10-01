@@ -71,6 +71,8 @@ def test_get_track() -> None:
         "Crave You (feat. Giselle)", ("Flight Facilities",), 235)  # fmt: skip
     assert track.is_explicit is None  # the watch playlist doesn't say
     assert track.year == "2013"
+    # A watch playlist's track calls its pictures `thumbnail`; the largest is kept.
+    assert track.thumbnail is not None and track.thumbnail.startswith("https://")
     # A video that doesn't exist: ytmusicapi raises "No content returned by the server".
     assert youtube.get_track("zzzzzzzzzzz") is None
 

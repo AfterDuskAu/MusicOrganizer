@@ -290,10 +290,15 @@ def scan(
     return result
 
 
-def _walk(root: Path, walk: _Walk) -> Iterator[tuple[str, Path, os.stat_result]]:
+def _walk(
+    root: Path, walk: _Walk, *, videos: bool = False
+) -> Iterator[tuple[str, Path, os.stat_result]]:
     """Audio files under `root`: (path relative to root with `/`, path, stat). Folder and
     file links are skipped, never followed, and so are hidden files and folders, junk
-    names, and any library (a folder holding `.musicorg`)."""
+    names, and any library (a folder holding `.musicorg`).
+
+    With `videos` (the library's own Music/ folder), the saved videos in `Videos/` are
+    found too. In a source folder an .mp4 is never taken for a rip."""
     folders = [root]
     while folders:
         folder = folders.pop()
@@ -325,7 +330,10 @@ def _walk(root: Path, walk: _Walk) -> Iterator[tuple[str, Path, os.stat_result]]
                     walk.libraries.append(str(path))
                     continue
                 folders.append(path)
-            elif stat.S_ISREG(info.st_mode) and Path(name).suffix.lower() in AUDIO_EXTENSIONS:
+            elif stat.S_ISREG(info.st_mode) and (
+                Path(name).suffix.lower() in AUDIO_EXTENSIONS
+                or (videos and naming.is_video_path(_rel(root, path)))
+            ):
                 yield _rel(root, path), path, info
 
 
@@ -439,7 +447,7 @@ def scan_library(lib: Library, index: Index) -> int:
     Returns how many."""
     rows = []
     walk = _Walk(skip=frozenset())
-    for rel, path, info in _walk(lib.paths.music, walk):
+    for rel, path, info in _walk(lib.paths.music, walk, videos=True):
         found = tags.read_tags(path)
         try:
             duration = tags.probe(path).duration_s

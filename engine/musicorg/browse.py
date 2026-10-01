@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from musicorg import naming, tags
-from musicorg.errors import NotFoundError, OutsideLibraryError
+from musicorg.errors import AudioError, NotFoundError, OutsideLibraryError
 from musicorg.index import Index
 from musicorg.library import Library
 
@@ -38,9 +38,10 @@ def tracks(lib: Library, index: Index) -> list[dict[str, Any]]:
             info = path.stat()
         except OSError:
             continue  # the index is a cache: a file that has gone just isn't shown
+        video = naming.is_video_path(rel)
         details = _stored(row, info.st_size, info.st_mtime_ns)
         if details is None:
-            details = _details(path)
+            details = _details(path, video=video)
             fresh.append({"rel_path": rel, "size": info.st_size, "mtime_ns": info.st_mtime_ns,
                           "title": details["title"], "artist": details["artist"],
                           "album": details["album"],
@@ -59,7 +60,12 @@ def tracks(lib: Library, index: Index) -> list[dict[str, Any]]:
             "only_copy": bool(row["only_copy"]),
             "source": row["source"],
             "source_id": row["source_id"],
-            "cover": f"{rel.rsplit('/', 1)[0]}/{naming.COVER_NAME}" if covers[folder] else None,
+            "video": video,
+            "height": details.get("height") if video else None,
+            # A video's cover is its own picture, inside the file; the folder has none.
+            "cover": f"{rel.rsplit('/', 1)[0]}/{naming.COVER_NAME}"
+            if covers[folder] and not video
+            else None,
             "lyrics": "synced" if synced else "plain" if details["plain_lyrics"] else "none",
         })  # fmt: skip
     index.set_track_details(fresh)
@@ -98,8 +104,14 @@ def _stored(row: dict[str, Any], size: int, mtime_ns: int) -> dict[str, Any] | N
     return details if isinstance(details, dict) and details.get("v") == DETAILS_VERSION else None
 
 
-def _details(path: Path) -> dict[str, Any]:
+def _details(path: Path, *, video: bool = False) -> dict[str, Any]:
     found = tags.read_tags(path)
+    height = None
+    if video:
+        try:
+            height = tags.probe(path).height
+        except (AudioError, NotFoundError):
+            height = None
 
     def text(value: object) -> str | None:
         return value if isinstance(value, str) and value else None
@@ -124,4 +136,5 @@ def _details(path: Path) -> dict[str, Any]:
         "bitrate_kbps": number(found.source_bitrate),
         "embedded_cover": isinstance(found.cover, bytes),
         "plain_lyrics": text(found.lyrics) is not None,
+        **({"height": height} if video else {}),  # only a video's row carries it
     }

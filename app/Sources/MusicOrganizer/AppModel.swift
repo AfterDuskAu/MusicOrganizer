@@ -22,8 +22,10 @@ final class AppModel {
     private(set) var library = Library.empty
     /// Every song, wherever it's shown: for favourites, playlists and "is it mine already?".
     private(set) var everything = Library.empty
-    /// Songs downloaded from YouTube Music, newest first (Discover → Downloads).
+    /// Songs and videos downloaded from YouTube Music, newest first (Discover → Downloads).
     private(set) var downloaded: [Track] = []
+    /// Saved videos (Library → Videos). Empty while downloads are kept under Discover.
+    private(set) var videos: [Track] = []
     /// Settings → General: downloads stay under Discover until the owner says otherwise.
     var keepDownloadsSeparate = UserDefaults.standard.object(forKey: "keepDownloadsSeparate")
         as? Bool ?? true
@@ -240,7 +242,8 @@ final class AppModel {
         let separate = keepDownloadsSeparate
         let (all, main) = await Task.detached {
             let all = Library(tracks: tracks)
-            let main = separate ? Library(tracks: tracks.filter { !$0.isDownload }) : all
+            // A video is never among the songs, albums or artists: it has its own list.
+            let main = Library(tracks: tracks.filter { !$0.isVideo && !(separate && $0.isDownload) })
             return (all, main)
         }.value
         everything = all
@@ -248,6 +251,8 @@ final class AppModel {
         libraryVersion += 1
         downloaded = tracks.filter(\.isDownload)
             .sorted { ($0.acquired ?? "", $1.path) > ($1.acquired ?? "", $0.path) }
+        videos = separate ? [] : tracks.filter(\.isVideo)
+            .sorted { (sortKey($0.title), $0.path) < (sortKey($1.title), $1.path) }
     }
 
     private func engineSaid(_ method: String) async {
@@ -414,6 +419,25 @@ final class AppModel {
                 downloads[result.videoId] = nil  // it now shows as "in your library"
             } catch {
                 downloads[result.videoId] = .failed(error.localizedDescription)
+            }
+        }
+    }
+
+    /// Save the video that's playing into the library, whole, at the picture size
+    /// that's showing. It lands in Downloads, like a downloaded song.
+    func saveVideo(_ showing: ShowingVideo) {
+        let videoId = showing.source.videoId
+        guard downloads[videoId] != .working else { return }
+        downloads[videoId] = .working
+        let wanted: [String: Any] = [
+            "video_id": videoId, "height": showing.quality.height, "fps": showing.quality.fps,
+        ]
+        Task {
+            do {
+                try await run(plan: "download", ["videos": [wanted]])
+                downloads[videoId] = nil  // it now shows as saved
+            } catch {
+                downloads[videoId] = .failed(error.localizedDescription)
             }
         }
     }

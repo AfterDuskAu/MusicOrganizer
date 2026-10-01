@@ -10,7 +10,7 @@ import json
 import shutil
 import subprocess
 from collections.abc import Iterator
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -1316,6 +1316,171 @@ def test_a_download_that_isnt_what_was_asked_for_is_not_kept(
     assert music_files(lib) == []
     (job,) = jobs(lib)
     assert (job["state"], job["reason"]) == ("needs_review", "duration_mismatch")
+
+
+# ---- a video saved whole (v0.2) ----------------------------------------------------------
+
+VIDEO_V = "videoVVVVVV"
+
+
+@dataclass
+class FakeVideoDownloads:
+    """youtube.download_video's stand-in: copies the video fixture into the job's folder."""
+
+    source: Path
+    calls: list[tuple[str, int, int | None]] = field(default_factory=list)
+    format_id: str = "133+140"
+
+    def __call__(
+        self, video_id: str, dest: Path, *, height: int, fps: int | None = None,
+        progress: Any = None,
+    ) -> tuple[Path, dict[str, Any]]:  # fmt: skip
+        self.calls.append((video_id, height, fps))
+        target = Path(dest) / f"{video_id}.mp4"
+        shutil.copyfile(self.source, target)
+        return target, {"id": video_id, "format_id": self.format_id}
+
+
+@pytest.fixture
+def videos(monkeypatch: pytest.MonkeyPatch, video_mp4: Path, fpcalc: Path) -> FakeVideoDownloads:
+    fake = FakeVideoDownloads(video_mp4)
+    monkeypatch.setattr(youtube, "download_video", fake)
+    found = candidate(VIDEO_V, "Melody", ("Band", "Guest"), SECONDS, album=None,
+                      video_type=youtube.OFFICIAL_VIDEO)  # fmt: skip
+    monkeypatch.setattr(
+        youtube, "get_track", lambda video_id: found if video_id == VIDEO_V else None
+    )
+    return fake
+
+
+def save_video(lib: Library, index: Index, height: int = 240) -> str:
+    plan = pipeline.plan_download(lib, index, [], [{"video_id": VIDEO_V, "height": height}])
+    batch_id = pipeline.apply(lib, index, plan.plan_id).batch_id
+    run_queue(lib)
+    return batch_id
+
+
+def test_a_video_saved_on_request(
+    lib: Library, index: Index, videos: FakeVideoDownloads, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from fileops_support import image
+
+    from musicorg import artwork
+
+    monkeypatch.setattr(artwork, "art_from_url", lambda url: pytest.fail("no picture to fetch"))
+    plan = pipeline.plan_download(
+        lib, index, [],
+        [{"video_id": VIDEO_V, "height": 240}, {"video_id": VIDEO_V, "height": 240},
+         {"video_id": "goneGONEgon", "height": 240}],
+    )  # fmt: skip
+    assert (plan.kind, plan.summary["downloads"], plan.summary["videos"]) == ("download", 1, 1)
+    assert plan.summary["skipped"] == {"not_on_youtube_music": 1}
+    assert plan.summary["disk_mb"] > 0
+    assert "video    Band, Guest – Melody (videoVVVVVV, 240p)" in pipeline.describe(plan)[0]
+    batch_id = pipeline.apply(lib, index, plan.plan_id).batch_id
+    result = run_queue(lib)
+
+    # In its own folder, under the first artist, with no album, year or number.
+    assert music_files(lib) == ["Videos/Band/Melody.mp4"]
+    saved = lib.paths.music / "Videos" / "Band" / "Melody.mp4"
+    written = tags.read_tags(saved)
+    assert (written.title, written.artist, written.album_artist, written.album) == (
+        "Melody", "Band, Guest", "Band", None,
+    )  # fmt: skip
+    assert (written.source, written.source_id, written.source_format) == (
+        "youtube_music", VIDEO_V, "133+140",
+    )  # fmt: skip
+    assert written.match is None and isinstance(written.musicorg_id, str)
+    assert written.source_bitrate is not None and 90 <= written.source_bitrate <= 160
+    # Exactly what was delivered: tagging changed neither the sound nor the picture.
+    assert tags.audio_hash(saved) == tags.audio_hash(videos.source)
+    assert videos.calls == [(VIDEO_V, 240, None)]
+    (row,) = index.library_tracks()
+    assert row["rel_path"] == "Music/Videos/Band/Melody.mp4" and row["source_id"] == VIDEO_V
+    # It counted as one download toward the day's limit, like a song.
+    assert result.counts == {"done": 1}
+    assert queue.status(lib.paths)["daily_count"] == 1
+
+    again = pipeline.plan_download(lib, index, [], [{"video_id": VIDEO_V, "height": 240}])
+    assert again.operations == [] and again.summary["skipped"] == {"already_in_library": 1}
+
+    pipeline.undo(lib, batch_id)
+    assert music_files(lib) == [] and index.library_tracks() == []
+
+    # With a picture to fetch, the video's own frame becomes its cover.
+    monkeypatch.setattr(
+        artwork, "art_from_url", lambda url: artwork.Art(image("JPEG", size=32), 32, 32)
+    )
+    with_picture = candidate(VIDEO_V, "Melody", ("Band",), SECONDS, album=None)
+    with_picture = replace(with_picture, thumbnail="https://example.invalid/frame.jpg")
+    monkeypatch.setattr(youtube, "get_track", lambda video_id: with_picture)
+    save_video(lib, index)
+    assert isinstance(tags.read_tags(saved).cover, bytes)
+    assert music_files(lib) == ["Videos/Band/Melody.mp4"]  # and no cover.jpg beside it
+
+
+def test_a_video_plan_refuses_what_it_cant_do(
+    lib: Library, index: Index, videos: FakeVideoDownloads
+) -> None:
+    for wrong in ({"video_id": VIDEO_V}, {"video_id": VIDEO_V, "height": 700},
+                  {"video_id": VIDEO_V, "height": "720"}, {"video_id": VIDEO_V, "height": True},
+                  {"video_id": VIDEO_V, "height": 720, "fps": "60"}, "videoVVVVVV"):  # fmt: skip
+        with pytest.raises(UserError, match="height|fps"):
+            pipeline.plan_download(lib, index, [], [wrong])  # type: ignore[list-item]
+    with pytest.raises(UserError, match="video id"):
+        pipeline.plan_download(lib, index, [], [{"video_id": "not a video id", "height": 720}])
+
+
+@pytest.mark.parametrize(
+    ("height", "format_id", "reason"),
+    [
+        (480, "133+140", "video_format_unavailable"),  # the file is 240 lines, not 480
+        (240, "133+251", "video_format_unavailable"),  # the sound isn't format 140
+        (240, "18", "video_format_unavailable"),  # one combined stream, not what's kept
+    ],
+)
+def test_a_video_that_isnt_what_was_asked_for_is_not_kept(
+    lib: Library, index: Index, videos: FakeVideoDownloads, height: int, format_id: str,
+    reason: str,
+) -> None:  # fmt: skip
+    videos.format_id = format_id
+    save_video(lib, index, height)
+    assert music_files(lib) == [] and index.library_tracks() == []
+    (job,) = jobs(lib)
+    assert (job["state"], job["reason"]) == ("needs_review", reason)
+
+
+def test_a_video_of_the_wrong_length_is_not_kept(
+    lib: Library, index: Index, videos: FakeVideoDownloads, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    longer = candidate(VIDEO_V, "Melody", ("Band",), SECONDS + 60, album=None)
+    monkeypatch.setattr(youtube, "get_track", lambda video_id: longer)
+    save_video(lib, index)
+    assert music_files(lib) == []
+    (job,) = jobs(lib)
+    assert (job["state"], job["reason"]) == ("needs_review", "duration_mismatch")
+
+
+def test_a_saved_video_stays_a_video(
+    lib: Library, index: Index, videos: FakeVideoDownloads
+) -> None:
+    """Tidying, lyrics, covers and edits by hand all leave it in Videos/, untouched by
+    what's meant for songs."""
+    save_video(lib, index)
+    rel = "Music/Videos/Band/Melody.mp4"
+
+    assert pipeline.plan_tidy(lib, index).operations == []  # not "renamed" into an album
+    lyrics_plan = pipeline.plan_lyrics(lib, index, missing=True)
+    assert lyrics_plan.operations == [] and lyrics_plan.summary["skipped"] == {"video": 1}
+    art_plan = pipeline.plan_artwork(lib, index)
+    assert art_plan.operations == [] and art_plan.summary["skipped"] == {"video": 1}
+
+    # A new title renames it where it is; an album doesn't move it into Music/<Artist>/.
+    edit(lib, index, rel, changes={"title": "New Name", "album": "Some Album", "track": 4})
+    assert music_files(lib) == ["Videos/Band/New Name.mp4"]
+    renamed = lib.paths.music / "Videos" / "Band" / "New Name.mp4"
+    assert tags.read_tags(renamed).title == "New Name"
+    assert tags.probe(renamed).height == 240
 
 
 # ---- edits by hand (v0.2) --------------------------------------------------------------

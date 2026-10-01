@@ -8,6 +8,9 @@
   queue calls it (rule 8: downloads happen only through the throttled queue).
 - `stream(video_id)`, `find_video(title, artist)` and `video(video_id)`: where the app can
   play a song, or its official video, from right now (v0.2). Nothing is downloaded.
+- `download_video(video_id, dest_dir, height=...)`: a video as one MP4, its picture
+  joined to the format-140 sound without converting either (v0.2). Queue only, like
+  `download_audio`.
 
 Every request goes through one rate limiter per process (`limiter()`): at most one
 request per 1.5 s (±0.5 s jitter), exponential backoff when YouTube refuses (HTTP 429)
@@ -529,12 +532,48 @@ def download_audio(
     FormatUnavailableError (format 140 not offered), or DownloadError (`network` set for
     network-level failures). Goes through the shared rate limiter.
     """
+    return _download(video_id, Path(dest_dir), download_options(Path(dest_dir), progress))
+
+
+def download_video(
+    video_id: str,
+    dest_dir: Path,
+    *,
+    height: int,
+    fps: int | None = None,
+    progress: ProgressHook | None = None,
+) -> tuple[Path, dict[str, Any]]:
+    """Download a video as one MP4 into `dest_dir` (a folder from `fileops.stage_dir`):
+    its H.264 picture at exactly `height` (the faster frame rate if `fps` is above 30),
+    joined to its format-140 sound. yt-dlp has ffmpeg join the two without converting
+    either: a repackage, which rule 6 allows. There's no fallback: a size YouTube
+    doesn't offer is FormatUnavailableError, and nothing else is fetched in its place.
+    Returns the file and yt-dlp's info (`format_id` is like "137+140").
+
+    The same errors, rate limiter and staging rule as `download_audio`."""
+    if isinstance(height, bool) or not isinstance(height, int) or not 100 <= height <= 4320:
+        raise YouTubeError(f"{height!r} isn't a picture height.")
+    pace = "[fps>30]" if fps is not None and fps > 30 else "[fps<=?30]"
+    picture = f"bestvideo[vcodec^=avc1][ext=mp4][protocol=https][height={height}]{pace}"
+    opts = {
+        **download_options(Path(dest_dir), progress),
+        "format": f"{picture}+{DOWNLOAD_FORMAT}",
+        "merge_output_format": "mp4",
+    }
+    try:
+        return _download(video_id, Path(dest_dir), opts)
+    except FormatUnavailableError:
+        raise FormatUnavailableError(
+            f"YouTube doesn't offer {video_id} as a {height}p picture the library keeps "
+            "(H.264 in MP4, with the usual sound). No other format is used."
+        ) from None
+
+
+def _download(video_id: str, dest: Path, opts: dict[str, Any]) -> tuple[Path, dict[str, Any]]:
     if not VIDEO_ID.fullmatch(video_id):
         raise YouTubeError(f"{video_id!r} isn't a YouTube video id.")
-    dest = Path(dest_dir)
     if not dest.is_dir() or STAGING_DIR not in dest.parts:
         raise ValueError(f"{dest} isn't a folder in _Staging (use fileops.stage_dir)")
-    opts = download_options(dest, progress)
     url = f"https://www.youtube.com/watch?v={video_id}"
 
     def run() -> Any:
@@ -815,7 +854,9 @@ def _from_track(track: dict[str, Any], *, duration: int | None) -> Candidate | N
         return None
     album = track.get("album") if isinstance(track.get("album"), dict) else {}
     explicit = track.get("isExplicit")
-    thumbnails = [t for t in track.get("thumbnails") or [] if isinstance(t, dict) and t.get("url")]
+    # A search result says `thumbnails`; a watch playlist's track says `thumbnail`.
+    pictures = track.get("thumbnails") or track.get("thumbnail") or []
+    thumbnails = [t for t in pictures if isinstance(t, dict) and t.get("url")]
     largest = max(thumbnails, key=lambda t: t.get("width") or 0, default=None)
     return Candidate(
         video_id=video_id,

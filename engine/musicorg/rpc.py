@@ -664,8 +664,11 @@ class Server:
             elif kind == "tidy":
                 plan = pipeline.plan_tidy(lib, index)
             elif kind == "download":
-                ids = need(options, "video_ids", list)
-                plan = pipeline.plan_download(lib, index, ids)
+                ids = want(options, "video_ids", list, [])
+                videos = want(options, "videos", list, [])
+                if not ids and not videos:
+                    raise RpcError(INVALID_PARAMS, "Give video_ids, videos, or both.")
+                plan = pipeline.plan_download(lib, index, ids, videos)
             elif kind == "edit":
                 cover = want(options, "cover_file", str)
                 plan = pipeline.plan_edit(

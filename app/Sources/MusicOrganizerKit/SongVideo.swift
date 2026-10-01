@@ -55,6 +55,7 @@ public struct SongVideo: Equatable, Sendable {
     public struct Quality: Identifiable, Hashable, Sendable {
         public let label: String  // "1080p", "720p60"
         public let height: Int
+        public let fps: Int
         public let url: URL
 
         public var id: String { label }
@@ -74,7 +75,7 @@ public struct SongVideo: Equatable, Sendable {
         else { return nil }
         let qualities = (answer.qualities ?? []).compactMap { quality in
             URL(string: quality.url).map {
-                Quality(label: quality.label, height: quality.height, url: $0)
+                Quality(label: quality.label, height: quality.height, fps: quality.fps, url: $0)
             }
         }
         guard !qualities.isEmpty else { return nil }

@@ -82,7 +82,7 @@ struct Message<Buttons: View>: View {
 
 /// What the sidebar can show.
 enum SidebarItem: Hashable {
-    case songs, albums, artists
+    case songs, albums, artists, videos
     case favourites, recentlyAdded, mostPlayed, unconfirmed
     case visualizer, whatsNew, find, youtube, downloads
     case playlist(String)
@@ -126,6 +126,7 @@ enum SidebarItem: Hashable {
         case "songs": self = .songs
         case "albums": self = .albums
         case "artists": self = .artists
+        case "videos": self = .videos
         case "favourites": self = .favourites
         case "mostPlayed": self = .mostPlayed
         case "recentlyAdded": self = .recentlyAdded
@@ -139,6 +140,7 @@ enum SidebarItem: Hashable {
         case .songs: "Songs"
         case .albums: "Albums"
         case .artists: "Artists"
+        case .videos: "Videos"
         case .favourites: "Favourites"
         case .recentlyAdded: "Recently Added"
         case .mostPlayed: "Most Played"
@@ -157,6 +159,7 @@ enum SidebarItem: Hashable {
         case .songs: "music.note"
         case .albums: "square.stack"
         case .artists: "music.mic"
+        case .videos: "film"
         case .favourites: "heart"
         case .recentlyAdded: "clock"
         case .mostPlayed: "chart.bar"
@@ -186,6 +189,8 @@ struct MainView: View {
     @AppStorage("showLyrics") private var showLyrics = false
     /// The Library entries the owner keeps in the sidebar, in order.
     @AppStorage("sidebarLibrary") private var savedEntries = SidebarChoice.write(SidebarChoice.all)
+    /// The Library entries the owner has been offered so far: a new one is shown once.
+    @AppStorage("sidebarSeen") private var seenEntries: String?
     // Each group of the sidebar folds away, and stays as it was left.
     @AppStorage("openLibrary") private var openLibrary = true
     @AppStorage("openMedia") private var openMedia = true
@@ -229,6 +234,13 @@ struct MainView: View {
                     }
                 }
                 .onChange(of: item, initial: true) { opened(current) }
+                .onAppear {
+                    let caughtUp = SidebarChoice.catchUp(saved: savedEntries, seen: seenEntries)
+                    if caughtUp.seen != seenEntries {
+                        savedEntries = caughtUp.entries
+                        seenEntries = caughtUp.seen
+                    }
+                }
                 .onChange(of: model.searchText) { paths[current] = NavigationPath() }
                 .onChange(of: model.listening.playlists) { forgetDeletedPlaylists() }
             }
@@ -480,6 +492,15 @@ struct MainView: View {
                 note: "These songs are here under their own names, so you can play them. "
                     + "They get their official names, covers and lyrics once they're identified.",
                 isActive: active)
+        case .videos:
+            SongList(
+                source: .videos, title: "Videos",
+                empty: model.keepDownloadsSeparate
+                    ? "Saved videos are under Discover → Downloads. Settings → General "
+                        + "(All Library) lists them here instead."
+                    : "Videos you save show up here. Play a song on the Local Visualizer, "
+                        + "switch to Video, and click Save Video.",
+                isActive: active)
         case .youtube:
             YouTubeSearchView()
         case .visualizer:
@@ -489,11 +510,12 @@ struct MainView: View {
         case .downloads:
             SongList(
                 source: .downloads, title: "Downloads",
-                empty: "Songs you download from YouTube Music show up here.",
+                empty: "Songs and videos you download from YouTube Music show up here.",
                 note: model.keepDownloadsSeparate
-                    ? "Downloaded songs stay here, apart from your main library. "
+                    ? "Downloaded songs and videos stay here, apart from your main library. "
                         + "Settings → General can put them in the main library instead."
-                    : "Downloaded songs are also in your main library (Settings → General).",
+                    : "Downloaded songs are also in your main library, and videos under "
+                        + "Library → Videos (Settings → General).",
                 isActive: active)
         case .whatsNew:
             Message(

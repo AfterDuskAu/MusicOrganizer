@@ -12,6 +12,9 @@ The engine guarantees everything in this document. It's written so that if the a
         01 <Title>.m4a
         01 <Title>.lrc          synced lyrics sidecar, same base name
         cover.jpg               album front cover
+    Videos/                     saved videos (v0.2), apart from the songs
+      <Artist>/
+        <Title>.mp4             picture and sound in one file; its cover is inside it
   _Replaced/                    library files superseded by an upgrade or undo; mirrors Music/ paths; never auto-purged
   _Staging/                     engine scratch space: downloads and tag writes in progress
     calibration/                fingerprint calibration downloads (step 09b); never auto-cleaned
@@ -54,6 +57,7 @@ Music/<Album Artist>/<Album> (<Year>)/<Track> <Title>.<ext>
 - **Length:**
   - Each component: at most **120 characters and at most 200 bytes in UTF-8**. Truncate on a character boundary, title first, and keep the extension.
   - The full absolute path under `_Replaced/`, which is the longest variant, must fit in **259 characters on Windows**. `naming` computes the budget from the actual root and truncates the title to fit. `init` warns on Windows if the root is longer than 60 characters.
+- **Saved videos** (v0.2): `Music/Videos/<Artist>/<Title>.mp4`. The artist is the album artist tag (the video's first artist), falling back as above. A video has no album, year or track number in its name, no `.lrc` and no `cover.jpg` (its cover is embedded). The same sanitising, length limits and collision rule apply. A video is recognised by where it is: an `.mp4` inside `Music/Videos/`. So that an artist called "Videos" doesn't land there, that one artist's folder is named `Videos (artist)`.
 - **Collisions:** if the target exists and is not the same file, use ` (2)`, ` (3)` and so on before the extension. Compare case-insensitively (macOS and Windows defaults are case-insensitive). The reservation is atomic (section 6.4).
 
 ## 3. Formats
@@ -61,6 +65,7 @@ Music/<Album Artist>/<Album> (<Year>)/<Track> <Title>.<ext>
 | Source | Stored as | Notes |
 |---|---|---|
 | YouTube Music download | `.m4a` (AAC, **format 140 only**) | Exactly as downloaded. Container fix-up allowed, no re-encode. No fallback to other formats. |
+| YouTube Music video, saved whole (v0.2) | `.mp4`: one H.264 picture stream (144p to 1080p, the size the owner chose) and the **format 140** sound | Each stream exactly as downloaded, joined by ffmpeg without re-encoding. No fallback to another codec or size. Tagged like an M4A. Counts as one download. |
 | Only-copy rip: MP3, M4A, FLAC, OGG, Opus | copied as is | Tags fixed on the copy only. |
 | Matched rip kept as the owner's own audio (step 09c): MP3, M4A, FLAC, OGG, Opus | copied as is | The copy gets the match's official details. No download, so no fingerprint check: only AUTO matches and the owner's own choices. |
 | Only-copy rip: WebM, raw AAC, WAV | **not adopted in v0.1** | Still matched and replaceable; counted in the report as `unsupported_format`. |
@@ -174,6 +179,7 @@ It's written atomically (temp file, fsync, rename) after every batch and every r
 7. **Verified copies and tag writes.**
    - `copy_in` verifies that the copy's SHA-256 equals the source's before committing.
    - Tag writes hash the decoded audio **fresh** before and after: `ffmpeg -v error -i <file> -map 0:a:0 -f md5 -`. A mismatch rolls back and fails loudly.
+   - For a saved video the picture counts too: the picture stream's data is hashed as stored (`-map 0:V:0 -c copy -f md5 -`; decoding it would take minutes), and both hashes must match.
 8. **Undo.**
    - Every batch has a `batch_id`. `musicorg undo <batch_id>` first cancels the batch's queued jobs (it refuses while one is running), then reverses its done operations in reverse order, using the journal's before-states.
    - A tag write restores the before-state **exactly**: fields that were absent before are removed.

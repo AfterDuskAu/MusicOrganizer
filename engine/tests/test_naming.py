@@ -516,3 +516,35 @@ def test_library_paths_layout() -> None:
     assert paths.lock_file == Path("/lib/.musicorg/lock")
     assert paths.lock_info_file == Path("/lib/.musicorg/lock.info")
     assert paths.managed == (paths.music, paths.replaced, paths.staging, paths.engine)
+
+
+def test_a_saved_video_goes_in_the_videos_folder() -> None:
+    root = PurePath("/lib")
+    meta = TrackMeta(title="Work Out", artist="Solo, Guest", album_artist="Solo",
+                     album="An Album", year=2011, track=3, ext="m4a")  # fmt: skip
+    # No album, year or track number in a video's name, and always .mp4.
+    assert naming.video_path(meta, root) == Path("Videos", "Solo", "Work Out.mp4")
+    assert naming.video_path(TrackMeta(title="A/B: C?"), root) == Path(
+        "Videos", "Unknown Artist", "A_B_ C_.mp4"
+    )
+    long = naming.video_path(TrackMeta(title="x" * 300, artist="Band"), root)
+    assert long.parts[:2] == ("Videos", "Band") and len(long.name) <= naming.MAX_CHARS
+    # An artist who happens to be called "Videos" doesn't land among the videos.
+    song = naming.library_path(TrackMeta(title="Song", artist="videos", ext="mp3"), root)
+    assert song.parts[0] == "videos (artist)"
+
+
+@pytest.mark.parametrize(
+    ("rel", "video"),
+    [
+        ("Music/Videos/Band/Song.mp4", True),
+        ("Videos/Band/Song.mp4", True),
+        ("Music\\Videos\\Band\\Song.MP4", True),
+        ("Music/Band/Videos/Song.mp4", False),  # an album called Videos
+        ("Music/Videos/Band/Song.m4a", False),
+        ("Music/Band/Album/Song.mp4", False),
+        ("Videos.mp4", False),
+    ],
+)
+def test_which_paths_are_saved_videos(rel: str, video: bool) -> None:
+    assert naming.is_video_path(rel) is video

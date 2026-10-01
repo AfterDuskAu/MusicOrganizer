@@ -149,10 +149,40 @@ final class LibraryTests: XCTestCase {
         XCTAssertEqual(SidebarChoice.read(""), SidebarChoice.all)
         XCTAssertEqual(SidebarChoice.read("songs,nonsense,artists,songs"), ["songs", "artists"])
         XCTAssertEqual(SidebarChoice.hidden(["songs", "artists"]),
-                       ["albums", "favourites", "mostPlayed", "recentlyAdded", "unconfirmed"])
+                       ["albums", "videos", "favourites", "mostPlayed", "recentlyAdded", "unconfirmed"])
         XCTAssertEqual(SidebarChoice.adding("albums", to: ["songs", "artists"]),
                        ["songs", "albums", "artists"])
         XCTAssertEqual(SidebarChoice.write(["songs", "artists"]), "songs,artists")
+    }
+
+    func testANewSidebarEntryIsShownOnceWithoutAsking() {
+        // A choice saved before Videos existed gains it, in its standard place.
+        let first = SidebarChoice.catchUp(saved: "songs,artists,favourites", seen: nil)
+        XCTAssertEqual(first.entries, "songs,artists,videos,favourites")
+        XCTAssertEqual(first.seen, SidebarChoice.write(SidebarChoice.all))
+        // Removed by the owner afterwards, it stays removed.
+        let later = SidebarChoice.catchUp(saved: "songs,artists,favourites", seen: first.seen)
+        XCTAssertEqual(later.entries, "songs,artists,favourites")
+        // Nothing saved at all: every entry.
+        XCTAssertEqual(SidebarChoice.catchUp(saved: nil, seen: nil).entries,
+                       SidebarChoice.write(SidebarChoice.all))
+    }
+
+    func testASavedVideoIsMarked() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let json = """
+            {"track_id": "t", "path": "Music/Videos/Band/Song.mp4", "title": "Song",
+             "explicit": false, "only_copy": false, "embedded_cover": true, "lyrics": "none",
+             "source": "youtube_music", "video": true, "height": 720}
+            """
+        let video = try decoder.decode(Track.self, from: Data(json.utf8))
+        XCTAssertTrue(video.isVideo)
+        XCTAssertEqual(video.height, 720)
+        XCTAssertTrue(video.isDownload)
+        // An engine answer from before videos existed still reads: it's a song.
+        let old = json.replacingOccurrences(of: #", "video": true, "height": 720"#, with: "")
+        XCTAssertFalse(try decoder.decode(Track.self, from: Data(old.utf8)).isVideo)
     }
 
     func testDownloadsAndLyricsTally() {

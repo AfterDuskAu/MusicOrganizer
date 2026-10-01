@@ -56,13 +56,15 @@ from mutagen.oggvorbis import OggVorbis
 
 from musicorg import tools
 from musicorg.errors import AudioError, NotFoundError, UserError
+from musicorg.naming import VIDEO_SUFFIX
 
 log = logging.getLogger(__name__)
 
 SCHEMA_VERSION = 1
 
 # Contract section 3: tags are read and written for these...
-WRITABLE_SUFFIXES = frozenset({".m4a", ".mp3", ".flac", ".ogg", ".opus"})
+# .mp4 is a saved video (v0.2): the same tags as an M4A, beside a picture stream.
+WRITABLE_SUFFIXES = frozenset({".m4a", ".mp4", ".mp3", ".flac", ".ogg", ".opus"})
 # ...and these are indexed but not adopted in v0.1, so their tags aren't read.
 NOT_ADOPTED_SUFFIXES = frozenset({".webm", ".aac", ".wav"})
 
@@ -270,7 +272,7 @@ def check_writable(path: PurePath | str) -> None:
     if suffix not in WRITABLE_SUFFIXES:
         raise UserError(
             f"Music Organizer doesn't write tags to {suffix or 'files without an extension'} "
-            f"files ({Path(path).name}). It writes M4A, MP3, FLAC, Ogg and Opus."
+            f"files ({Path(path).name}). It writes M4A, MP4, MP3, FLAC, Ogg and Opus."
         )
 
 
@@ -497,13 +499,16 @@ def from_record(changes: dict[str, Any], cover: bytes | None = None) -> TrackTag
 
 @dataclass(frozen=True)
 class Probe:
-    """What ffprobe says about a file's first audio stream."""
+    """What ffprobe says about a file's first audio stream, and about its picture if
+    it's a video (a cover embedded in a song isn't a picture stream)."""
 
     codec: str | None
     duration_s: float | None
     bitrate_kbps: int | None
     sample_rate: int | None
     channels: int | None
+    video_codec: str | None = None
+    height: int | None = None
 
 
 def probe(path: PurePath | str) -> Probe:
@@ -532,20 +537,49 @@ def probe(path: PurePath | str) -> Probe:
     if stream is None:
         raise AudioError(f"{path.name} has no audio in it.")
     fmt = info.get("format", {})
-    bit_rate = _number(stream.get("bit_rate")) or _number(fmt.get("bit_rate"))
+    picture = next((s for s in info.get("streams", []) if _is_picture_stream(s)), None)
+    # In a video the file's overall bitrate is mostly the picture's, so it can't stand
+    # in for the audio's.
+    bit_rate = _number(stream.get("bit_rate")) or (
+        None if picture else _number(fmt.get("bit_rate"))
+    )
     return Probe(
         codec=stream.get("codec_name"),
         duration_s=_number(stream.get("duration")) or _number(fmt.get("duration")),
         bitrate_kbps=round(bit_rate / 1000) if bit_rate else None,
         sample_rate=int(_number(stream.get("sample_rate")) or 0) or None,
         channels=stream.get("channels"),
+        video_codec=picture.get("codec_name") if picture else None,
+        height=int(_number(picture.get("height")) or 0) or None if picture else None,
+    )
+
+
+def _is_picture_stream(stream: Any) -> bool:
+    """A moving picture, not a song's embedded cover (which ffprobe also lists as a
+    video stream, marked `attached_pic`)."""
+    return (
+        isinstance(stream, dict)
+        and stream.get("codec_type") == "video"
+        and not (stream.get("disposition") or {}).get("attached_pic")
     )
 
 
 def audio_hash(path: PurePath | str) -> str:
     """MD5 of the decoded audio of the first audio stream, as hex. Always computed fresh:
-    it's how a tag write proves the audio didn't change (contract 6.7)."""
+    it's how a tag write proves the audio didn't change (contract 6.7).
+
+    For a saved video (.mp4 with a picture stream) the picture counts too: the hash is
+    the audio's, then ":" and the MD5 of the picture stream's data as stored (not
+    decoded, which would take minutes)."""
     path = Path(path)
+    sound = _stream_hash(path, ["-map", "0:a:0"])
+    if path.suffix.lower() != VIDEO_SUFFIX or probe(path).video_codec is None:
+        return sound
+    # 0:V:0 is the first video stream that isn't an attached picture.
+    return f"{sound}:{_stream_hash(path, ['-map', '0:V:0', '-c', 'copy'])}"
+
+
+def _stream_hash(path: Path, select: list[str]) -> str:
     output = _run(
         [
             str(_tool("ffmpeg")),
@@ -554,8 +588,7 @@ def audio_hash(path: PurePath | str) -> str:
             "-nostdin",
             "-i",
             str(path),
-            "-map",
-            "0:a:0",
+            *select,
             "-f",
             "md5",
             "-",

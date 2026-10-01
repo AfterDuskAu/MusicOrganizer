@@ -31,7 +31,7 @@ struct TrackRow: Identifiable, Sendable {
 
 /// Which songs a list shows.
 enum SongSource: Hashable, Sendable {
-    case all, favourites, recentlyAdded, mostPlayed, unconfirmed, downloads
+    case all, favourites, recentlyAdded, mostPlayed, unconfirmed, downloads, videos
     case playlist(String)
 }
 
@@ -122,7 +122,7 @@ struct SongList: View {
         guard isActive else { return }
         let (source, sortOrder, search) = (source, sortOrder, model.searchText)
         let (library, everything) = (model.library, model.everything)
-        let (plays, downloaded) = (model.listening.plays, model.downloaded)
+        let (plays, downloaded, videos) = (model.listening.plays, model.downloaded, model.videos)
         let members = key.members
         let worked = await Task.detached(priority: .userInitiated) {
             () -> (rows: [TrackRow], total: Int) in
@@ -133,6 +133,7 @@ struct SongList: View {
                 case .mostPlayed: library.mostPlayed(plays)
                 case .unconfirmed: library.unconfirmed
                 case .downloads: downloaded
+                case .videos: videos
                 case .favourites, .playlist: everything.tracks(withIDs: members)
                 }
             let wanted = Set(everything.filter(tracks, search).map(\.path))
@@ -151,12 +152,17 @@ struct SongList: View {
         ready = true
     }
 
+    private func counted(_ total: Int) -> String {
+        let (one, many) = source == .videos ? ("video", "videos") : ("song", "songs")
+        return total == 1 ? "1 \(one)" : "\(total.formatted()) \(many)"
+    }
+
     private var header: some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(title).font(.title2.weight(.semibold)).lineLimit(1)
-                    Text(total == 1 ? "1 song" : "\(total.formatted()) songs")
+                    Text(counted(total))
                         .foregroundStyle(.secondary)
                 }
                 if let note {
@@ -343,6 +349,11 @@ struct SongTitle: View {
                 Image(systemName: "e.square.fill")
                     .foregroundStyle(.secondary)
                     .help("Explicit")
+            }
+            if track.isVideo {
+                Image(systemName: "film")
+                    .foregroundStyle(.secondary)
+                    .help("A saved video" + (track.height.map { " (\($0)p)" } ?? ""))
             }
             if track.isUnconfirmed {
                 Image(systemName: "questionmark.circle")

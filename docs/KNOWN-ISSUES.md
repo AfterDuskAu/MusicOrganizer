@@ -6,13 +6,9 @@ Most of these came from comparing the engine with the Photonizer project's lesso
 
 ## Needs the owner's decision
 
-- **Saving a song's video (MP4): decided in part, not built** (owner, 2026-10-01).
-  - Decided: saved videos show under Discover → Downloads, and under Library → Videos once moved into the library. **Rule 6 may be changed** to allow a video file (an H.264 picture stream, up to 1080p, joined to the format-140 sound by ffmpeg without converting either). **The size saved is the one chosen in the player.** **Songs and videos share one daily limit** (250 a day, 300 at most): a video counts as one download.
-  - Still to settle, with Claude's suggestions:
-    - *Where a video is found to save:* suggested, a Songs / Videos switch on the YouTube Music page (videos kept apart from songs, as YouTube Music keeps them), and a Save Video button beside the video on the Local Visualizer.
-    - *A saved video needs no separate audio copy:* its sound is inside it, at the same quality as a downloaded song, and the app can play it with or without the picture. A music video is often a different cut from the album song, so the song stays its own download.
-    - The library contract's part: which folder videos live in, how they're named, tagged and indexed, and what "moved into the library" does (Discover → Downloads is a list in the app today, not a folder).
-  - Sizes, from one 4-minute official video (2026-10-01): 1080p about 100 MB, 720p about 35 MB, 480p about 22 MB, 360p about 15 MB; the song alone is about 4 MB. A video that is a still picture is far smaller (under 10 MB at 1080p).
+- **Saved videos live in `Music/Videos/`, not in a folder beside `Music/`** (built 2026-10-01). The owner asked for "a separate folder of videos". Inside `Music/` every safety rule already covers them; a top-level `Videos/` means changing `fileops` itself (its guard, commit, supersede, restore and undo all assume `Music/`) with the full set of crash tests. Decide: is `Music/Videos/` fine, or should the top-level folder be done as its own step?
+- **Videos in the YouTube Music search page** (suggested, not answered): a Songs / Videos switch there, so a video can be found and saved without first playing its song. Today a video is saved from the Local Visualizer.
+- **Sizes of saved videos**, from one 4-minute official video (2026-10-01): 1080p about 100 MB, 720p about 35 MB, 480p about 22 MB, 360p about 15 MB, 144p 7 MB; the song alone is about 4 MB. A video that is a still picture is far smaller.
 - **The "E" on a rip is copied from the match, not heard** (owner, 2026-10-01: a song marked explicit whose audio is the censored edit). When a rip gets its official details, it gets YouTube Music's explicit mark too, and the matcher prefers the explicit listing. A censored and an uncensored copy of a song sound the same to the fingerprint check. The owner can untick Explicit in Edit Details. For the song-identification research: can the two edits be told apart at all (the lyrics' muted words, the clean listing's length)? And should a rip's mark be left unset rather than guessed?
 - **Moving or renaming the rips folder loses review work.**
   - A source's id comes from its path (`state.source_id`), and every item id comes from the source id plus the file's path (`index.item_id`).

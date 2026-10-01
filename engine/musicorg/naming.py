@@ -10,14 +10,18 @@ import re
 import sys
 import unicodedata
 from collections.abc import Iterator
-from dataclasses import dataclass
-from pathlib import Path, PurePath
+from dataclasses import dataclass, replace
+from pathlib import Path, PurePath, PurePosixPath
 
 from musicorg.errors import PathTooLongError
 
 # ---- layout (contract section 1) -------------------------------------------------------
 
 MUSIC_DIR = "Music"
+# Saved videos live in `Music/Videos/<Artist>/<Title>.mp4` (contract section 2). Inside
+# Music/, so every fileops operation and guard covers them as it does a song.
+VIDEOS_DIR = "Videos"
+VIDEO_SUFFIX = ".mp4"
 REPLACED_DIR = "_Replaced"
 STAGING_DIR = "_Staging"
 CALIBRATION_DIR = "calibration"
@@ -214,11 +218,43 @@ def library_path(meta: TrackMeta, root: PurePath, *, platform: str | None = None
     then the album, then the artist, none below 10 characters. If even that can't fit,
     PathTooLongError explains that the library folder's path is too long.
     """
+    return _path(meta, root, platform, top=None)
+
+
+def video_path(meta: TrackMeta, root: PurePath, *, platform: str | None = None) -> Path:
+    """Where a saved video goes, relative to the library's Music/ folder:
+    `Videos/<Artist>/<Title>.mp4`, with the same sanitising and length limits as a song.
+    A video has no album, year or track number in its name."""
+    artist = safe_component(meta.album_artist or "") or safe_component(meta.artist or "")
+    plain = replace(
+        meta, album=artist or UNKNOWN_ARTIST, year=None, track=None, disc=None,
+        disc_total=None, compilation=False, ext=VIDEO_SUFFIX,
+    )  # fmt: skip
+    return _path(plain, root, platform, top=VIDEOS_DIR)
+
+
+def is_video_path(rel: PurePath | str) -> bool:
+    """Whether a path under Music/ (with or without the leading "Music") is a saved
+    video: an .mp4 inside `Videos/`."""
+    parts = PurePosixPath(str(rel).replace("\\", "/")).parts
+    if parts and parts[0] == MUSIC_DIR:
+        parts = parts[1:]
+    return (
+        len(parts) >= 2
+        and parts[0].casefold() == VIDEOS_DIR.casefold()
+        and parts[-1].lower().endswith(VIDEO_SUFFIX)
+    )
+
+
+def _path(meta: TrackMeta, root: PurePath, platform: str | None, *, top: str | None) -> Path:
+    """`library_path`, or with `top` the same rules under that fixed first folder."""
     ext = _extension(meta.ext)
     album = _clean(meta.album or "")
     year = _year(meta.year)
 
-    if album and meta.compilation:
+    if top is not None:
+        artist_dir = top
+    elif album and meta.compilation:
         artist_dir = VARIOUS_ARTISTS
     else:
         artist_dir = (
@@ -226,6 +262,8 @@ def library_path(meta: TrackMeta, root: PurePath, *, platform: str | None = None
             or safe_component(meta.artist or "")
             or UNKNOWN_ARTIST
         )
+        if artist_dir.casefold() == VIDEOS_DIR.casefold():
+            artist_dir += " (artist)"  # `Videos/` is where saved videos live
 
     if album:
         year_part = f" ({year})" if year else ""

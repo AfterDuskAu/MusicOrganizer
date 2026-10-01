@@ -8,7 +8,7 @@ The engine has two front doors onto the **same functions**. The CLI is for the o
 |---|---|
 | **Item state** (external rips) | `new` · `matched_auto` · `matched_user` · `review` · `not_found` · `only_copy` · `skipped` · `unsupported_format` · `superseded` · `adopted` |
 | **Item flag** (set by `scan`) | `not_adoptable` (WebM, raw AAC or WAV: replaceable, not adoptable in v0.1) · `suspect_upscale` (an MP3 of 256 kbps or more with signs of a YouTube source; a heuristic) · `unreadable` (ffprobe couldn't read the audio) |
-| **Review reasons** (stored with `review` items) | `version_mismatch` · `duration_mismatch` · `artist_mismatch` · `title_fuzzy` · `not_official_audio` · `low_parse_confidence` · `fingerprint_mismatch` · `fingerprint_uncertain` · `format_140_unavailable` · `video_unavailable` · `file_changed` · `url_low_score` |
+| **Review reasons** (stored with `review` items) | `version_mismatch` · `duration_mismatch` · `artist_mismatch` · `title_fuzzy` · `not_official_audio` · `low_parse_confidence` · `fingerprint_mismatch` · `fingerprint_uncertain` · `format_140_unavailable` · `video_format_unavailable` (v0.2: a saved video that isn't the picture size and streams asked for) · `video_unavailable` · `file_changed` · `url_low_score` |
 | **CSV decision** (`review import`) | `accept` · `cand:<n>` · `url` · `only_copy` · `skip` · `reject:<n>` |
 | **RPC decision** (`review.decide`) | `accept` · `candidate` (+`candidate_id`) · `url` (+`url`) · `only_copy` · `skip` · `reject` (+`candidate_id`) |
 | **Fingerprint verdict** (step 08, `fingerprint.compare`) | `match` · `uncertain` (→ review reason `fingerprint_uncertain`) · `different` (→ `fingerprint_mismatch`) |
@@ -24,7 +24,7 @@ The engine has two front doors onto the **same functions**. The CLI is for the o
 
 A fingerprint mismatch puts the item back in `review` with reason `fingerprint_mismatch`. The gate's result is kept in `state.json` (`gate`): a `different` video is never proposed for that rip again, and an `uncertain` one never goes AUTO again.
 
-A download that isn't what was asked for also goes to review: not format 140, not AAC, or under 100 kbps → `format_140_unavailable`; more than 2 s longer or shorter than YouTube Music said → `duration_mismatch`.
+A download that isn't what was asked for also goes to review: not format 140, not AAC, or under 100 kbps → `format_140_unavailable`; more than 2 s longer or shorter than YouTube Music said → `duration_mismatch`. A saved video is checked the same way: not H.264 at the height asked for, not joined to format-140 AAC sound → `video_format_unavailable`; the wrong length → `duration_mismatch`. Nothing that fails is kept.
 
 ## 1. CLI (`musicorg`)
 
@@ -58,7 +58,7 @@ Global options:
 | `musicorg plan adopt [--include-not-found] [--matched] [--unconfirmed]` | Dry-run plan: copy `only_copy` items (and optionally all `not_found`) into `Music/`. `--matched` (09c) also copies in `matched_auto` and `matched_user` rips, keeping the owner's own audio, with their match's official details; nothing is downloaded. `--unconfirmed` (v0.2) also copies in every `review` and `not_found` rip under its own names, tagged `unconfirmed`, without changing its state; a later adopt of the same rip upgrades that copy in place. | yes | 09b, 09c, v0.2 |
 | `musicorg plan tidy` | Dry-run plan: songs the library has twice keep their best copy (lossless; then a CD or iTunes rip over a YouTube conversion; then bitrate; then size; the other goes to `_Replaced/`, its rip linked to the kept file), and the owner's preferred names go into tags and folder names (with the `.lrc` and `cover.jpg`) | yes | 09d |
 | `musicorg names list` / `set <original> <preferred>` / `remove <original>` | The owner's preferred spellings, e.g. `JAŸ-Z` → `Jay Z`. New songs use them at once; `plan tidy` applies them to the library. | `set`/`remove`: yes | 09d |
-| `musicorg plan download <video_id>…` | Dry-run plan: download these YouTube Music songs into the library (v0.2; the app's Download button). No rip is involved, so nothing is replaced. Songs already in the library are left out. | yes | v0.2 |
+| `musicorg plan download [<video_id>…] [--video ID:HEIGHT]…` | Dry-run plan: download these YouTube Music songs into the library (v0.2; the app's Download button). No rip is involved, so nothing is replaced. Songs already in the library are left out. `--video` saves a video whole into `Music/Videos/`, its picture at that height (the app's Save Video button). | yes | v0.2 |
 | `musicorg plan show <plan_id>` | Print operations and summary | no | 09b |
 | `musicorg plan calibration [--out <dir>]` | Write `calibration-pairs.csv` (default `Reports/`) from the `--stage-only` downloads, `same` left for the owner to fill in | no | 09b |
 | `musicorg apply <plan_id>` | Validate and enqueue; prints the `batch_id` | yes | 09b |
@@ -108,7 +108,7 @@ Exit codes:
 | `match.run` | `{ "limit"?, "rescan"? }` | `{ "job_id" }` |
 | `review.list` | `{ "state"?: "review"\|"not_found"\|"matched_auto", "offset"?: 0, "limit"?: 50 }` (limit 1–500) | `{ "items": [ReviewItem], "total" }` |
 | `review.decide` | `{ "item_id", "decision", "candidate_id"?, "url"?, "metadata"? }`. `accept` without `candidate_id` takes candidate 1; `metadata` holds `artist_fix`, `title_fix`, `album_fix`, `art_url` for `only_copy`. | `{ "item": ReviewItem }` |
-| `plan.create` | `{ "kind", "options"? }`. Kinds and options: `replace` (`only`, `limit`, `stage_only`), `adopt` (`include_not_found`, `matched`, `unconfirmed`), `lyrics` and `artwork` (`missing`), `tidy` (none), as the CLI's flags; `download` (`video_ids`: a list); `edit` (`path`, plus any of `changes`: an object of `title`, `artist`, `album_artist`, `album`, `genre`, `year`, `track`, `explicit` (true or false), where null or "" clears a field; `lyrics`: text, timed or plain, "" removes them; `cover_file`: a picture on this computer). | `{ "plan_id", "summary": { "operations", "downloads", "est_minutes", "low_confidence_adopts", … } }` (the plan's whole summary) |
+| `plan.create` | `{ "kind", "options"? }`. Kinds and options: `replace` (`only`, `limit`, `stage_only`), `adopt` (`include_not_found`, `matched`, `unconfirmed`), `lyrics` and `artwork` (`missing`), `tidy` (none), as the CLI's flags; `download` (`video_ids`: a list of songs; and/or `videos`: a list of `{ "video_id", "height", "fps"? }`, each a video saved whole into `Music/Videos/` with its picture at that height: 144, 240, 360, 480, 720 or 1080); `edit` (`path`, plus any of `changes`: an object of `title`, `artist`, `album_artist`, `album`, `genre`, `year`, `track`, `explicit` (true or false), where null or "" clears a field; `lyrics`: text, timed or plain, "" removes them; `cover_file`: a picture on this computer). | `{ "plan_id", "summary": { "operations", "downloads", "est_minutes", "low_confidence_adopts", … } }` (the plan's whole summary) |
 | `plan.get` | `{ "plan_id" }` | `{ "plan" }` |
 | `plan.apply` | `{ "plan_id" }` | `{ "batch_id" }` (jobs go to the queue, and the queue worker starts) |
 | `queue.status` | — | `{ "state", "reason"?, "resume_at"?, "queued", "running", "done", "failed", "needs_review", "daily_count", "daily_cap" }` |
@@ -121,7 +121,7 @@ Exit codes:
 | `lyrics.find` | `{ "title", "artist"?, "album"?, "duration_s"?, "video_id"? }` | `{ "synced", "plain", "source" }`: lyrics for a song being played from YouTube Music (LRCLIB, then YouTube Music), with the usual length and version checks. Nothing is saved; either may be null. |
 | `queue.jobs` | `{ "batch_id" }` | `{ "jobs": [{ "job_id", "kind", "state", "reason", "message" }] }`: how a batch's jobs ended, so the app can say what happened to a download or an edit |
 | `settings.get` | — | `{ "daily_cap", "daily_cap_default", "daily_cap_max" }`: the engine's settings the app shows (kept in `config.json`) |
-| `settings.set` | `{ "daily_cap"? }` (1 to `daily_cap_max`, which is 300) | the same as `settings.get`. A new cap applies from the next queue run. |
+| `settings.set` | `{ "daily_cap"? }` (1 to `daily_cap_max`, which is 500; the app offers steps of 50) | the same as `settings.get`. A new cap applies from the next queue run. |
 
 **RPC-only:** `plan.create` with kind `edit` (the app's Edit Details sheet), `youtube.stream`, `youtube.video`, `lyrics.find`, `listening.*`, `playlist.*`.
 
@@ -171,7 +171,8 @@ Standard JSON-RPC codes, plus:
   "album_artist": "…", "album": "…", "year": 2020, "track": 1, "disc": 1, "genre": "…",
   "duration_s": 228.1, "explicit": false, "only_copy": false, "source": "rip_copy", "source_id": "videoId or null", "match": "auto_details", "acquired": "2026-09-30T10:00:00Z",
   "format": "mp3", "bitrate_kbps": 320, "cover": "Music/Artist/Album (2020)/cover.jpg",
-  "embedded_cover": true, "lyrics": "synced" }   // lyrics: "synced" | "plain" | "none"
+  "embedded_cover": true, "lyrics": "synced",    // lyrics: "synced" | "plain" | "none"
+  "video": false, "height": null }               // a saved video (in Music/Videos/): true, and its picture's height
 
 // Listening and Playlist (v0.2). Songs are named by `track_id` (MUSICORG_ID), which survives renames.
 { "favourites": ["t_…"], "plays": { "t_…": { "count": 3, "last_played": "2026-10-01T03:00:00Z" } },

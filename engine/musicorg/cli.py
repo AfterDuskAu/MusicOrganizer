@@ -221,8 +221,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="Calibration: download and compare, keep the downloads in _Staging/calibration, "
         "and change nothing else.",
     )
-    p = add(plan, "download", "Plan downloading YouTube Music songs you name.", _cmd_plan_download)
-    p.add_argument("video_ids", nargs="+", metavar="video_id", help="A YouTube video id.")
+    p = add(
+        plan, "download", "Plan downloading YouTube Music songs, or videos, you name.",
+        _cmd_plan_download,
+    )  # fmt: skip
+    p.add_argument("video_ids", nargs="*", metavar="video_id", help="A song's YouTube video id.")
+    p.add_argument(
+        "--video",
+        action="append",
+        default=[],
+        metavar="ID:HEIGHT",
+        help="Save this video whole, its picture at this height (e.g. W5hSdGt2M8w:720). "
+        "May be given more than once.",
+    )
     p = add(plan, "adopt", "Plan copying only-copy rips into the library.", _cmd_plan_adopt)
     p.add_argument(
         "--include-not-found", action="store_true", help="Also copy in every not-found rip."
@@ -808,9 +819,17 @@ def _cmd_plan_adopt(args: argparse.Namespace) -> int:
 
 
 def _cmd_plan_download(args: argparse.Namespace) -> int:
+    videos = []
+    for wanted in args.video:
+        video_id, _, height = wanted.partition(":")
+        if not height.isdigit():
+            raise UserError(f"--video takes ID:HEIGHT (like W5hSdGt2M8w:720), not {wanted!r}.")
+        videos.append({"video_id": video_id, "height": int(height)})
+    if not args.video_ids and not videos:
+        raise UserError("Name at least one song's video id, or a video with --video.")
     with library.open(_library_root(args), write=True, command="plan download") as lib:
         with open_index(lib.paths, write=False) as index:
-            plan = pipeline.plan_download(lib, index, args.video_ids)
+            plan = pipeline.plan_download(lib, index, args.video_ids, videos)
     return _print_new_plan(plan, args.json)
 
 
@@ -930,7 +949,9 @@ def _print_plan_summary(plan: fileops.Plan) -> None:
         print(f"  {s.get('operations', 0):,} song(s) to give a cover, from "
               f"{s.get('albums', 0):,} album(s) or picture(s)")  # fmt: skip
     elif plan.kind == "download":
-        print(f"  {s.get('downloads', 0):,} song(s) to download from YouTube Music")
+        videos = s.get("videos", 0)
+        print(f"  {s.get('downloads', 0) - videos:,} song(s) and {videos:,} video(s) to "
+              "download from YouTube Music")  # fmt: skip
     elif plan.kind == "edit":
         print("  1 song to edit")
     elif plan.kind == "replace":

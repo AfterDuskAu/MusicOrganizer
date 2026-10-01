@@ -15,7 +15,7 @@ struct FullScreenVideo: View {
         let player = model.player
         ZStack {
             Color.black
-            if player.video != nil {
+            if player.showsPicture {
                 VideoSurface(player: player.screen)
             } else {
                 noVideo(player)

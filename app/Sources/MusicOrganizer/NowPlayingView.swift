@@ -14,7 +14,7 @@ struct NowPlayingView: View {
     var body: some View {
         let track = model.player.current
         // In full screen the picture is drawn there, not here as well.
-        let showsVideo = isActive && model.player.video != nil && !model.videoFullScreen
+        let showsVideo = isActive && model.player.showsPicture && !model.videoFullScreen
         ZStack(alignment: .topLeading) {
             sideBySide(track, showsVideo: showsVideo)
                 .padding(.horizontal, 40)
@@ -119,7 +119,8 @@ private struct VideoControls: View {
         VStack(spacing: 8) {
             HStack(spacing: 10) {
                 Picker(
-                    "Show", selection: Binding(get: { player.videoOn }, set: { player.setVideo($0) })
+                    "Show",
+                    selection: Binding(get: { player.pictureWanted }, set: { player.setVideo($0) })
                 ) {
                     Text("Cover").tag(false)
                     Text("Video").tag(true)
@@ -128,12 +129,15 @@ private struct VideoControls: View {
                 .labelsHidden()
                 .fixedSize()
                 .help("Show the song's cover, or its official video from YouTube")
-                if player.video != nil {
-                    QualityMenu()
+                if player.showsPicture {
+                    QualityMenu()  // only for a video played from YouTube
                     Button("Full Screen", systemImage: "arrow.up.left.and.arrow.down.right") {
                         model.videoFullScreen = true
                     }
                     .help("Give the video the whole screen (Esc brings it back)")
+                }
+                if let video = player.video {
+                    SaveVideoButton(video: video)
                 }
             }
             if let note = player.videoNote {
@@ -149,6 +153,40 @@ private struct VideoControls: View {
             }
         }
         .padding(.top, 6)
+    }
+}
+
+/// Keep the video that's playing: saved whole, at the picture size that's showing.
+private struct SaveVideoButton: View {
+    let video: ShowingVideo
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let videoId = video.source.videoId
+        if model.everything.videoIDs.contains(videoId) {
+            Label("Saved", systemImage: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+                .font(.callout)
+                .help("This video is in your library")
+        } else {
+            switch model.downloads[videoId] {
+            case .working:
+                HStack(spacing: 6) {
+                    ProgressView().controlSize(.small)
+                    Text("Saving…").font(.callout).foregroundStyle(.secondary)
+                }
+            case .failed(let why):
+                Button("Try Again", systemImage: "exclamationmark.triangle") {
+                    model.saveVideo(video)
+                }
+                .help(why)
+            case nil:
+                Button("Save Video", systemImage: "arrow.down.circle") { model.saveVideo(video) }
+                    .help(
+                        "Save this video in your library at \(video.quality.label). It counts "
+                            + "as one of the day's downloads.")
+            }
+        }
     }
 }
 

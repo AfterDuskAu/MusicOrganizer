@@ -46,16 +46,18 @@ private struct GeneralSettings: View {
     var body: some View {
         @Bindable var model = model
         Form {
-            Picker("Songs you download go to", selection: $model.keepDownloadsSeparate) {
+            Picker("Songs and videos you download go to", selection: $model.keepDownloadsSeparate) {
                 Text("Discover Downloads").tag(true)
                 Text("All Library").tag(false)
             }
             .pickerStyle(.radioGroup)
             SideNote(
-                "Discover Downloads keeps downloaded songs apart from your main library, under "
-                    + "Discover → Downloads, so you can sort them later. All Library also shows "
-                    + "them in Songs, Artists, Recently Added and the rest. You can switch at any "
-                    + "time; no file is moved either way.")
+                "Discover Downloads keeps what you download apart from your main library, under "
+                    + "Discover → Downloads, so you can sort it later. All Library also shows "
+                    + "the songs in Songs, Artists, Recently Added and the rest, and the videos "
+                    + "under Library → Videos. You can switch at any time; no file is moved "
+                    + "either way. On disk, songs are in the library's Music folder by artist "
+                    + "and album, and videos in Music/Videos.")
             LabeledContent("Library folder") {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(model.root?.path ?? "Not chosen").textSelection(.enabled)
@@ -69,7 +71,8 @@ private struct GeneralSettings: View {
 
 private struct QualitySettings: View {
     @Environment(AppModel.self) private var model
-    @State private var typed = ""
+    /// The limit moves in steps of this many.
+    private static let step = 50
 
     var body: some View {
         let settings = model.engineSettings
@@ -86,39 +89,51 @@ private struct QualitySettings: View {
                         + "YouTube account will turn this on; that isn't built yet.")
             }
             Section {
-                LabeledContent("Downloads per day") {
-                    HStack {
-                        TextField("", text: $typed)
-                            .frame(width: 70)
-                            .multilineTextAlignment(.trailing)
-                            .onSubmit(save)
-                        Button("Set", action: save)
-                            .disabled(Int(typed) == settings?.dailyCap || settings == nil)
-                    }
-                }
                 if let settings {
+                    Stepper(
+                        value: Binding(
+                            get: { settings.dailyCap },
+                            // A limit typed in an older version (say 275) moves to the
+                            // nearest step in the direction of the click.
+                            set: { new in
+                                let step = Self.step
+                                let snapped =
+                                    new > settings.dailyCap
+                                    ? (settings.dailyCap / step + 1) * step
+                                    : ((settings.dailyCap - 1) / step) * step
+                                model.setDailyCap(min(max(snapped, step), settings.dailyCapMax))
+                            }),
+                        in: Self.step...settings.dailyCapMax, step: Self.step
+                    ) {
+                        LabeledContent("Downloads per day") {
+                            Text("\(settings.dailyCap)").monospacedDigit().fontWeight(.medium)
+                        }
+                    }
                     SideNote(
-                        "The standard download rate is \(settings.dailyCapMax) songs per 24 hours. "
-                            + "We keep it at \(settings.dailyCapDefault) on purpose, to avoid trouble "
-                            + "with YouTube. You can raise it at your own risk. It can't go above "
-                            + "\(settings.dailyCapMax).")
+                        "Songs and videos count alike. The standard is \(settings.dailyCapDefault) "
+                            + "in 24 hours, kept low on purpose to avoid trouble with YouTube. It "
+                            + "can be changed in steps of \(Self.step), up to \(settings.dailyCapMax).")
+                    if settings.dailyCap > settings.dailyCapDefault {
+                        Label {
+                            Text(
+                                "Above \(settings.dailyCapDefault) there is a high risk that YouTube "
+                                    + "refuses this Mac for some hours. While it does, nothing can "
+                                    + "be downloaded, and songs and videos may not play from "
+                                    + "YouTube either. Downloads wait and carry on by themselves "
+                                    + "afterwards; how long the wait is, is up to YouTube.")
+                        } icon: {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                        }
+                        .font(.callout)
+                        .foregroundStyle(.orange)
+                    }
+                } else {
+                    LabeledContent("Downloads per day") { ProgressView().controlSize(.small) }
                 }
             }
         }
         .formStyle(.grouped)
         .onAppear { model.loadSettings() }
-        .onChange(of: settings, initial: true) { typed = settings.map { String($0.dailyCap) } ?? "" }
-    }
-
-    private func save() {
-        guard let settings = model.engineSettings else { return }
-        guard let number = Int(typed.trimmingCharacters(in: .whitespaces)),
-            (1...settings.dailyCapMax).contains(number)
-        else {
-            typed = String(settings.dailyCap)  // not a number we can use: put the old one back
-            return
-        }
-        model.setDailyCap(number)
     }
 }
 

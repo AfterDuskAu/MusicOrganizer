@@ -495,3 +495,52 @@ def test_opus_pictures_are_base64_blocks(copy_of: Callable[[str], Path]) -> None
     path = copy_of("opus")
     tags.write_tags(path, TrackTags(cover=image("JPEG")))
     assert len(OggOpus(path).tags["METADATA_BLOCK_PICTURE"]) == 1
+
+
+# ---- a saved video (.mp4 with a picture stream) -----------------------------------------
+
+
+def test_a_videos_picture_is_probed_and_a_songs_cover_isnt_one(
+    video_mp4: Path, copy_of: Callable[[str], Path]
+) -> None:
+    found = tags.probe(video_mp4)
+    assert (found.codec, found.video_codec, found.height) == ("aac", "h264", 240)
+    # The audio's own bitrate, not the whole file's (which is mostly picture).
+    assert found.bitrate_kbps is not None and 90 <= found.bitrate_kbps <= 160
+    song = copy_of("m4a")
+    tags.write_tags(song, TrackTags(cover=image("jpeg")))
+    assert tags.probe(song).video_codec is None  # an embedded cover isn't a video
+
+
+def test_tagging_a_video_changes_neither_its_sound_nor_its_picture(
+    video_mp4: Path, tmp_path: Path
+) -> None:
+    video = tmp_path / "video.mp4"
+    video.write_bytes(video_mp4.read_bytes())
+    before = tags.audio_hash(video)
+    sound, _, picture = before.partition(":")
+    assert re.fullmatch(r"[0-9a-f]{32}", sound) and re.fullmatch(r"[0-9a-f]{32}", picture)
+
+    tags.write_tags(video, TrackTags(
+        title="Made-up Video", artist="Nobody", explicit=True, cover=image("jpeg"),
+        musicorg_id=tags.new_track_id(), source="youtube_music", source_id="abcdefghijk",
+        source_format="133+140"))  # fmt: skip
+    written = tags.read_tags(video)
+    assert (written.title, written.artist, written.explicit, written.source_format) == (
+        "Made-up Video", "Nobody", True, "133+140",
+    )  # fmt: skip
+    assert written.warnings == []
+    assert tags.audio_hash(video) == before
+    assert tags.probe(video).height == 240  # the cover didn't become "the picture"
+
+    # Damage in the stored data (picture or sound) never passes as "unchanged".
+    data = bytearray(video.read_bytes())
+    middle = len(data) // 3
+    data[middle : middle + 4000] = bytes(4000)
+    other = tmp_path / "other.mp4"
+    other.write_bytes(bytes(data))
+    try:
+        damaged: str | None = tags.audio_hash(other)
+    except AudioError:
+        damaged = None
+    assert damaged != before

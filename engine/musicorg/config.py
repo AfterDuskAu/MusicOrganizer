@@ -32,11 +32,15 @@ THROTTLE_DEFAULTS = {
     "quiet_start_min_s": 20,
     "quiet_start_max_s": 40,
     # 250, not the 300 the research found safe: a margin on purpose (owner, 2026-10-01).
+    # Songs and videos count alike.
     "daily_cap": 250,
     # How long the whole queue waits after YouTube refuses us (step 09a).
     "youtube_pause_hours": 6,
 }
-MAX_DAILY_CAP = 300  # the most the owner may raise `daily_cap` to
+# The most the owner may raise `daily_cap` to (owner, 2026-10-01; it was 300). 500 is the
+# most the research ever ran with; above 250 the app warns that YouTube may refuse this
+# computer for some hours.
+MAX_DAILY_CAP = 500
 # The fingerprint gate's thresholds (step 08). Conservative until step 09b calibrates them.
 # `match_ber` and `uncertain_ber` are bit error rates; the rest come from the research on the
 # owner's rips (Sep 2026): extra audio at either end of a rip was at most 7 s (start) and

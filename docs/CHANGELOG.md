@@ -118,6 +118,30 @@
 - **Edit Details has an Explicit tick box** (`plan.create` kind `edit` takes `explicit`: true or false). The owner found a song marked "E" whose audio is the censored version. The mark on a rip is copied from the match on YouTube Music (which lists the explicit version first, the owner's own rule), and the engine can't hear which edit the owner's file is. Tested in the engine; not tried in the running app.
 - **The owner's decisions on saving a video (MP4):** rule 6 may be changed to allow it, and the size saved is the one chosen in the player. Still to settle before it's built: `docs/KNOWN-ISSUES.md`.
 
+2026-10-01, 9:15 pm. **Saving a video**, and a daily limit that can go to 500.
+
+- **Rule 6 changed, with the owner's OK** (`CLAUDE.md`, and the contract's sections 1 to 3 and 6): a saved video is the one other thing a download may be. One H.264 picture stream, at the size chosen in the player (144p to 1080p), joined by ffmpeg to the format-140 sound without converting either, as an MP4. No fallback: a size YouTube doesn't offer that way goes to review.
+- **Where a video lives: `Music/Videos/<Artist>/<Title>.mp4`** (the owner: "a separate folder of videos").
+  - Deviation, for the owner to know: the folder is inside `Music/`, not beside it. Every file operation, guard, journal entry and undo in `fileops` works on `Music/`; a second top-level folder would mean changing that safety code and all its tests. Inside `Music/`, a video is covered by all of it from the first day. A top-level `Videos/` can still be done later as its own step.
+  - A video is recognised by where it is. An artist who happens to be called "Videos" gets the folder `Videos (artist)`.
+- **Engine:**
+  - `youtube.download_video(video_id, dest, height=…, fps=…)`: yt-dlp fetches exactly that picture and format 140 and joins them (its own merger: a repackage). Queue only, like a song.
+  - Plan kind `download` takes `videos` beside `video_ids` (`musicorg plan download --video ID:HEIGHT`). A video counts as **one download** for the pace and the daily limit (owner: songs and videos share the limit).
+  - Checks before anything is kept: H.264 at the height asked for, AAC sound from format 140 at 100 kbps or more, the length YouTube Music gave within 2 s. Otherwise `video_format_unavailable` (a new review reason) or `duration_mismatch`, and nothing is kept.
+  - Tags as for a song (title, artists, the first artist as album artist, source, id), with the video's own picture embedded as its cover. No album, no lyrics, no `cover.jpg`: those belong to the song, which is often a different cut.
+  - `tags`: `.mp4` is read and written; `probe` reports a picture stream's codec and height (a song's embedded cover isn't one); the "nothing changed" hash of a video covers its picture data as well as its decoded sound.
+  - The library scan (and so an index rebuild) finds `Music/Videos/`; an `.mp4` in a source folder is still never taken for a rip. Undo, tidy and Edit Details keep a video in `Videos/`; the lyrics and cover plans leave videos out.
+  - `library.tracks`: `video` and `height`.
+  - Fix found on the way: a track looked up by its id never had a picture, because a watch playlist calls it `thumbnail` and a search `thumbnails` (ytmusicapi 1.12.3).
+- **The app:**
+  - **Save Video** beside the picture-size menu on the Local Visualizer: saves the video that's playing at the size that's showing. It then says "Saved".
+  - Saved videos are listed with the songs under **Discover → Downloads** (a film mark beside the title). With Settings → General on "All Library" they're listed under **Library → Videos** instead of among the songs. Videos never appear in Songs, Albums, Artists, Recently Added or Most Played.
+  - A saved video plays with its picture on the Local Visualizer (Cover hides it; Full Screen works). Nothing comes from YouTube for it.
+  - The sidebar shows the new Videos entry once without being asked; removed, it stays removed.
+- **Settings → Quality, downloads per day:** a stepper in steps of 50, from 50 to **500** (it was a typed number, 300 at most). 250 stays the standard. Above 250 the window warns in orange that there's a high risk of YouTube refusing this Mac for some hours. Engine: `MAX_DAILY_CAP` is 500.
+- **Checked for real:** one video (144p, 7 MB) saved into a scratch library from YouTube in 9 seconds, with the right streams, tags and cover; then undone. Apple's player, on its own, read that file's cover and played its picture, at the right length. **Not checked in the running app:** Save Video, the Videos list, playing a saved video there, and the stepper. The owner had the app open and had said to stop driving it earlier this evening, so these are for the owner to try.
+- Not built: videos in the YouTube Music search page (a Songs / Videos switch was suggested; the owner hasn't said), and moving one download into the library by hand.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

@@ -34,6 +34,9 @@ public struct Track: Decodable, Identifiable, Hashable, Sendable {
     public let lyrics: Lyrics
     /// A picture on the web: only for a song played from YouTube Music, not in the library.
     public let artUrl: String?
+    /// A saved video (`Music/Videos/…mp4`), and the height of its picture in lines.
+    public let video: Bool?
+    public let height: Int?
 
     public var id: String { path }
     /// Set for a song played straight from YouTube Music: its path is "yt:<videoId>".
@@ -49,6 +52,8 @@ public struct Track: Decodable, Identifiable, Hashable, Sendable {
     public var isUnconfirmed: Bool { match == "unconfirmed" }
     /// Downloaded from YouTube Music because the owner asked for it (no rip behind it).
     public var isDownload: Bool { source == "youtube_music" && match == nil }
+    /// A video saved in the library: it plays with its picture, and has its own list.
+    public var isVideo: Bool { video == true }
 
     public init(
         path: String, title: String, artist: String? = nil, albumArtist: String? = nil,
@@ -57,7 +62,8 @@ public struct Track: Decodable, Identifiable, Hashable, Sendable {
         onlyCopy: Bool = false, match: String? = nil, format: String? = nil,
         bitrateKbps: Int? = nil, cover: String? = nil, embeddedCover: Bool = false,
         lyrics: Lyrics = .none, trackId: String? = nil, acquired: String? = nil,
-        sourceId: String? = nil, artUrl: String? = nil, source: String? = nil
+        sourceId: String? = nil, artUrl: String? = nil, source: String? = nil,
+        video: Bool? = nil, height: Int? = nil
     ) {
         self.trackId = trackId
         self.path = path
@@ -77,6 +83,8 @@ public struct Track: Decodable, Identifiable, Hashable, Sendable {
         self.sourceId = sourceId
         self.source = source
         self.artUrl = artUrl
+        self.video = video
+        self.height = height
         self.format = format
         self.bitrateKbps = bitrateKbps
         self.cover = cover
@@ -358,6 +366,12 @@ public struct Library: Sendable {
 /// Unknown names are dropped, and an empty or missing value gives the standard set.
 public enum SidebarChoice {
     public static let all = [
+        "songs", "albums", "artists", "videos", "favourites", "mostPlayed", "recentlyAdded",
+        "unconfirmed",
+    ]
+    /// The entries the first version of the sidebar had: what a choice saved before
+    /// "seen" was kept had been offered.
+    static let original = [
         "songs", "albums", "artists", "favourites", "mostPlayed", "recentlyAdded", "unconfirmed",
     ]
 
@@ -377,6 +391,17 @@ public enum SidebarChoice {
     /// Add an entry back in its standard place among those shown.
     public static func adding(_ entry: String, to shown: [String]) -> [String] {
         all.filter { shown.contains($0) || $0 == entry }
+    }
+
+    /// An entry this version brings (Videos) is shown once without being asked for:
+    /// the owner's saved choice is from before it existed, so it can't have been
+    /// removed on purpose. `seen` lists the entries already offered (nil: the original
+    /// ones). Returns the choice and the "seen" list to save.
+    public static func catchUp(saved: String?, seen: String?) -> (entries: String, seen: String) {
+        let offered = seen.map { $0.split(separator: ",").map(String.init) } ?? original
+        var shown = read(saved)
+        for entry in all where !offered.contains(entry) { shown = adding(entry, to: shown) }
+        return (write(shown), write(all))
     }
 }
 

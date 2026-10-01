@@ -97,6 +97,9 @@ TRUSTED_PARSE = 0.8  # below this, an adopt keeps the rip's own title and artist
 MIN_BITRATE_KBPS = 100
 DURATION_TOLERANCE_S = 2
 BYTES_PER_SECOND = 16_000  # format 140 is about 128 kbps
+# Roughly what a video's picture takes, by height, for a plan's size estimate (measured on
+# one official video, 2026-10-01; a video that's a still picture takes far less).
+VIDEO_KBPS = {144: 100, 240: 190, 360: 370, 480: 580, 720: 1030, 1080: 3200}
 WORK_S_PER_DOWNLOAD = 10  # download, check, fingerprint, tag: a rough figure for estimates
 WORK_S_PER_ADOPT = 2
 WORK_S_PER_DETAILS = 4  # an adopt with official details: a copy plus an album lookup
@@ -1305,8 +1308,8 @@ def plan_tidy(lib: Library, index: Index) -> fileops.Plan:
             compilation=after["album_artist"] == naming.VARIOUS_ARTISTS, ext=path.suffix,
             source_file=path.name,
         )  # fmt: skip
-        target = PurePosixPath(naming.MUSIC_DIR, *naming.library_path(meta, lib.root).parts)
         here = PurePosixPath(track["rel_path"])
+        target = _ideal_path(lib, meta, here)
         if not changes:
             if target == here or not _just_a_number_added(here, target):
                 continue
@@ -1455,32 +1458,74 @@ EDIT_FLAGS = ("explicit",)
 MAX_LYRICS_CHARS = 100_000
 
 
-def plan_download(lib: Library, index: Index, video_ids: list[str]) -> fileops.Plan:
-    """A plan downloading these YouTube Music songs into the library: the app's
-    "download" button (v0.2). There's no rip behind them, so nothing is replaced and the
-    fingerprint gate has nothing to compare; every other check on a download applies.
-    A song already in the library is left out."""
+def plan_download(
+    lib: Library,
+    index: Index,
+    video_ids: list[str],
+    videos: list[dict[str, Any]] | None = None,
+) -> fileops.Plan:
+    """A plan downloading these from YouTube Music into the library (v0.2): songs (the
+    app's "download" button), and `videos`, each `{"video_id", "height", "fps"?}`: a video
+    saved whole, its picture at that height (the app's "save video" button).
+
+    There's no rip behind them, so nothing is replaced and the fingerprint gate has
+    nothing to compare; every other check on a download applies. What's already in the
+    library is left out."""
     ops: list[fileops.PlanOp] = []
     skipped: dict[str, int] = {}
-    for video_id in dict.fromkeys(video_ids):
+
+    def look_up(video_id: object) -> Candidate | None:
         if not isinstance(video_id, str) or not youtube.VIDEO_ID.fullmatch(video_id):
             raise UserError(f"{video_id!r} isn't a YouTube video id.")
         if index.library_tracks_with_source_id(video_id):
             skipped["already_in_library"] = skipped.get("already_in_library", 0) + 1
-            continue
+            return None
         found = youtube.get_track(video_id)
         if found is None:
             skipped["not_on_youtube_music"] = skipped.get("not_on_youtube_music", 0) + 1
+        return found
+
+    for video_id in dict.fromkeys(video_ids):
+        found = look_up(video_id)
+        if found is not None:
+            ops.append(
+                fileops.PlanOp(
+                    action="download",
+                    params={"video_id": video_id, "candidate": found.to_dict()},
+                )
+            )
+    size = sum((op.params["candidate"].get("duration_s") or 0) * BYTES_PER_SECOND for op in ops)
+    seen: set[str] = set()
+    for wanted in videos or []:
+        video_id = wanted.get("video_id") if isinstance(wanted, dict) else None
+        height, fps = (wanted.get("height"), wanted.get("fps")) if video_id else (None, None)
+        if isinstance(height, bool) or not isinstance(height, int) or height not in VIDEO_KBPS:
+            sizes = ", ".join(str(h) for h in VIDEO_KBPS)
+            raise UserError(f"A video's height should be one of {sizes}.")
+        if fps is not None and (isinstance(fps, bool) or not isinstance(fps, int)):
+            raise UserError("A video's fps should be a whole number.")
+        if video_id in seen:
+            continue
+        seen.add(str(video_id))
+        found = look_up(video_id)
+        if found is None:
             continue
         ops.append(
             fileops.PlanOp(
-                action="download", params={"video_id": video_id, "candidate": found.to_dict()}
-            )
+                action="download_video",
+                params={
+                    "video_id": video_id,
+                    "candidate": found.to_dict(),
+                    "height": height,
+                    "fps": fps,
+                },
+            )  # fmt: skip
         )
-    size = sum((op.params["candidate"].get("duration_s") or 0) * BYTES_PER_SECOND for op in ops)
+        size += (found.duration_s or 0) * (VIDEO_KBPS[height] * 125 + BYTES_PER_SECOND)
     summary = {
         "operations": len(ops),
         "downloads": len(ops),
+        "videos": sum(op.action == "download_video" for op in ops),
         "est_minutes": estimate_minutes(len(ops), 0),
         "days": download_days(len(ops)),
         "disk_mb": round(size / 1e6, 1),
@@ -1494,6 +1539,8 @@ def plan_download(lib: Library, index: Index, video_ids: list[str]) -> fileops.P
 
 def download_job(ctx: JobContext) -> Outcome:
     (op,) = _ops(ctx.payload)
+    if op.action == "download_video":
+        return _download_video(ctx, op)
     video_id = str(op.params["video_id"])
     candidate = Candidate.from_dict(op.params["candidate"])
     with open_index(ctx.lib.paths, write=True) as index:
@@ -1538,6 +1585,98 @@ def download_job(ctx: JobContext) -> Outcome:
         index.put_library_tracks([_track_row(ctx.lib, final, new_tags, probe.duration_s)])
         _write_sidecars(ctx, final, extras)
     return Outcome.done(f"Downloaded as {final.name}.")
+
+
+def _download_video(ctx: JobContext, op: fileops.PlanOp) -> Outcome:
+    """Save a video whole: `Music/Videos/<Artist>/<Title>.mp4`, tagged like a song, with
+    the video's own picture as its cover. No lyrics and no folder cover: those belong
+    to the song, which is often a different cut."""
+    video_id = str(op.params["video_id"])
+    candidate = Candidate.from_dict(op.params["candidate"])
+    height = int(op.params["height"])
+    with open_index(ctx.lib.paths, write=True) as index:
+        if index.library_tracks_with_source_id(video_id):
+            return Outcome.done("Already in the library.")
+        path, info = ctx.download_video(video_id, height, op.params.get("fps"))
+        problem = _check_video(path, info, candidate, height)
+        if problem is not None:
+            return Outcome.needs_review(*problem)
+        candidate = _preferred(candidate, state.names(ctx.lib.load_state().data))
+        probe = tags.probe(path)
+        cover = _video_cover(candidate)
+        artist = ", ".join(candidate.artists) or None
+        first = candidate.artists[0] if candidate.artists else None
+        new_tags = tags.TrackTags(
+            title=candidate.title,
+            artist=artist,
+            album_artist=first,
+            explicit=candidate.is_explicit,
+            cover=cover.data if cover else None,
+            cover_mime=cover.mime if cover else None,
+            schema=tags.SCHEMA_VERSION,
+            musicorg_id=tags.new_track_id(),
+            source="youtube_music",
+            source_id=candidate.video_id,
+            source_format=str(info["format_id"]),
+            source_bitrate=probe.bitrate_kbps,
+            acquired=_now(),
+        )
+        fileops.write_tags(ctx.batch, path, new_tags)
+        meta = naming.TrackMeta(title=candidate.title, artist=artist, album_artist=first)
+        final = fileops.commit(ctx.batch, path, naming.video_path(meta, ctx.lib.root))
+        index.put_library_tracks([_track_row(ctx.lib, final, new_tags, probe.duration_s)])
+    return Outcome.done(f"Saved the video as {final.name}.")
+
+
+def _check_video(
+    path: Path, info: dict[str, Any], candidate: Candidate, height: int
+) -> tuple[str, str] | None:
+    """Is this the video we asked for? (review reason, message), or None if it is."""
+    delivered = str(info.get("format_id") or "")
+    picture, _, sound = delivered.partition("+")
+    if not picture or sound != youtube.DOWNLOAD_FORMAT:
+        return (
+            "video_format_unavailable",
+            f"YouTube delivered format {delivered or 'unknown'}, not a picture joined to "
+            "sound format 140; nothing is kept.",
+        )
+    probe = tags.probe(path)  # AudioError: the queue retries
+    if (probe.video_codec or "").lower() != "h264" or probe.height != height:
+        return ("video_format_unavailable",
+                f"The download's picture is {probe.video_codec or 'unknown'} at "
+                f"{probe.height or 'an unknown'} lines, not H.264 at {height}.")  # fmt: skip
+    if (probe.codec or "").lower() != "aac":
+        return ("video_format_unavailable",
+                f"The download's audio is {probe.codec or 'unknown'}, not AAC.")  # fmt: skip
+    if probe.bitrate_kbps is not None and probe.bitrate_kbps < MIN_BITRATE_KBPS:
+        return ("video_format_unavailable",
+                f"The download's audio is only {probe.bitrate_kbps} kbps (at least "
+                f"{MIN_BITRATE_KBPS} expected).")  # fmt: skip
+    expected = candidate.duration_s
+    if expected is not None and probe.duration_s is not None:
+        if abs(probe.duration_s - expected) > DURATION_TOLERANCE_S:
+            return ("duration_mismatch",
+                    f"The download is {probe.duration_s:.0f} s long; YouTube Music said "
+                    f"{expected} s.")  # fmt: skip
+    return None
+
+
+def _video_cover(candidate: Candidate) -> artwork.Art | None:
+    """The video's own picture, as its cover. A video without one is still saved."""
+    if not candidate.thumbnail:
+        return None
+    try:
+        return artwork.art_from_url(candidate.thumbnail)
+    except (UserError, OSError) as exc:
+        log.warning("No cover for the video %s: %s", candidate.video_id, exc)
+        return None
+
+
+def _ideal_path(lib: Library, meta: naming.TrackMeta, here: PurePosixPath) -> PurePosixPath:
+    """Where a library file belongs, from the library root: a saved video stays in
+    `Music/Videos/`, a song goes by its artist and album."""
+    build = naming.video_path if naming.is_video_path(here) else naming.library_path
+    return PurePosixPath(naming.MUSIC_DIR, *build(meta, lib.root).parts)
 
 
 def plan_edit(
@@ -1622,7 +1761,7 @@ def plan_edit(
             compilation=after["album_artist"] == naming.VARIOUS_ARTISTS, ext=path.suffix,
             source_file=path.name,
         )  # fmt: skip
-        target = PurePosixPath(naming.MUSIC_DIR, *naming.library_path(meta, lib.root).parts)
+        target = _ideal_path(lib, meta, here)
     op = fileops.PlanOp(
         action="edit", source=fileops.FileCheck.of(lib, path), target=target.as_posix(),
         params=params,
@@ -1729,6 +1868,10 @@ def plan_lyrics(lib: Library, index: Index, *, missing: bool = False) -> fileops
     officials = _officials(lib, index)
     ops, skipped = [], {}
     for track, path in _library_files(lib, index):
+        if naming.is_video_path(track["rel_path"]):
+            # A song's lyrics are timed to the song; its video is often a different cut.
+            skipped["video"] = skipped.get("video", 0) + 1
+            continue
         current = tags.read_tags(path)
         if missing and (current.lyrics or path.with_suffix(".lrc").exists()):
             skipped["has_lyrics"] = skipped.get("has_lyrics", 0) + 1
@@ -1764,6 +1907,9 @@ def plan_artwork(lib: Library, index: Index, *, missing: bool = False) -> fileop
     ops, skipped = [], {}
     albums: set[str] = set()
     for track, path in _library_files(lib, index):
+        if naming.is_video_path(track["rel_path"]):
+            skipped["video"] = skipped.get("video", 0) + 1  # it keeps its own picture
+            continue
         official, candidate = _official_for(officials, track)
         browse_id = (candidate or {}).get("album_browse_id")
         if not browse_id and not official.art_url:
@@ -1896,7 +2042,7 @@ def _touched_paths(record: fileops.BatchRecord | None) -> set[str]:
         for value in (op.result_path, op.intent.get("src"), op.intent.get("dst"),
                       op.intent.get("path")):  # fmt: skip
             if isinstance(value, str) and value.startswith(naming.MUSIC_DIR + "/"):
-                if Path(value).suffix.lower() in ADOPT_SUFFIXES:
+                if Path(value).suffix.lower() in ADOPT_SUFFIXES or naming.is_video_path(value):
                     found.add(value)
     return found
 
@@ -1992,6 +2138,11 @@ def describe(plan: fileops.Plan) -> list[str]:
             artists = ", ".join(c.get("artists") or [])
             lines.append(f"{op.op_id:>5}  download {artists} – {c.get('title', '')} "
                          f"({op.params['video_id']})")  # fmt: skip
+        elif op.action == "download_video":
+            c = op.params["candidate"]
+            artists = ", ".join(c.get("artists") or [])
+            lines.append(f"{op.op_id:>5}  video    {artists} – {c.get('title', '')} "
+                         f"({op.params['video_id']}, {op.params['height']}p)")  # fmt: skip
         elif op.action == "edit":
             assert op.source is not None
             what = [f"{k}: {v if v is not None else '(cleared)'}"

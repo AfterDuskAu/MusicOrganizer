@@ -301,3 +301,67 @@ def test_video_lists_the_pictures_the_app_can_show(
     StreamYDL.info = None
     with pytest.raises(DownloadError):
         youtube.video("abcdefghijk")
+
+
+# ---- download_video: a video saved whole (v0.2) ----------------------------------------
+
+
+class VideoYDL(FakeYoutubeDL):
+    """yt-dlp fetching a picture and a sound and leaving one joined `<id>.mp4`."""
+
+    def extract_info(self, url: str, download: bool = True) -> dict[str, Any]:
+        FakeYoutubeDL.calls.append(self.opts)
+        if self.error:
+            raise yt_dlp.utils.DownloadError(self.error)
+        video_id = url.rsplit("v=", 1)[1]
+        final = Path(self.opts["paths"]["home"]) / f"{video_id}.mp4"
+        final.write_bytes(b"\0" * 9000)
+        for hook in self.opts["progress_hooks"]:
+            hook({"status": "finished", "downloaded_bytes": 9000, "total_bytes": 9000})
+        return {"id": video_id, "format_id": "136+140", "ext": "mp4",
+                "requested_downloads": [{"filepath": str(final)}]}  # fmt: skip
+
+
+def test_download_video_asks_for_one_picture_size_joined_to_format_140(
+    fake_ydl: Callable[..., None], dest: Path, lib: Library, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(youtube, "_make_ydl", lambda opts: VideoYDL(opts))
+    before = youtube.limiter().requests
+    path, info = youtube.download_video(VIDEO, dest, height=720)
+    assert path == (dest / f"{VIDEO}.mp4").resolve()
+    assert info["format_id"] == "136+140"
+    assert youtube.limiter().requests == before + 1
+    written = [p for p in lib.root.rglob("*") if p.is_file() and lib.paths.staging in p.parents]
+    assert written == [path]  # nowhere but the staging folder
+
+    opts = FakeYoutubeDL.calls[0]
+    # H.264 in MP4, served whole, at exactly this height; never a "best available".
+    assert opts["format"] == (
+        "bestvideo[vcodec^=avc1][ext=mp4][protocol=https][height=720][fps<=?30]+140"
+    )
+    assert opts["merge_output_format"] == "mp4"
+    assert opts["postprocessors"] == []  # joined by yt-dlp's own merger: no converting
+    assert opts["paths"] == {"home": str(dest), "temp": str(dest)}
+    assert opts["ffmpeg_location"].endswith("ffmpeg")
+
+    youtube.download_video(VIDEO, dest, height=1080, fps=60)
+    assert "[height=1080][fps>30]+140" in FakeYoutubeDL.calls[1]["format"]
+
+
+def test_download_video_refuses_what_it_cant_do(
+    fake_ydl: Callable[..., None], dest: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    for height in (0, 99, True, "720", 5000):
+        with pytest.raises(YouTubeError, match="picture height"):
+            youtube.download_video(VIDEO, dest, height=height)  # type: ignore[arg-type]
+    with pytest.raises(YouTubeError):
+        youtube.download_video("not an id", dest, height=720)
+    with pytest.raises(ValueError, match="_Staging"):
+        youtube.download_video(VIDEO, tmp_path, height=720)
+    monkeypatch.setattr(
+        youtube, "_make_ydl",
+        lambda opts: VideoYDL(opts, "ERROR: [youtube] x: Requested format is not available"),
+    )  # fmt: skip
+    with pytest.raises(FormatUnavailableError, match="720p picture"):
+        youtube.download_video(VIDEO, dest, height=720)
+    assert len(FakeYoutubeDL.calls) == 1  # asked once: nothing else is tried in its place

@@ -8,6 +8,7 @@ isn't audio at all.
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
 from collections.abc import Callable
@@ -322,6 +323,26 @@ def test_a_rebuild_recomputes_what_the_cache_held(lib: Library, rips: Path) -> N
         index.set_state(index.items()[0]["id"], "review", ["title_fuzzy"])
         scan.rebuild(lib, index)
         assert {i["state"] for i in index.items()} == {"new"}  # a cache: recomputed later
+
+
+def test_saved_videos_are_the_librarys_and_never_a_rip(
+    lib: Library, index: Index, rips: Path, video_mp4: Path
+) -> None:
+    """A rebuild finds the videos in Music/Videos/ again (files are the truth), but an
+    .mp4 in a source folder, or anywhere else in Music/, isn't taken for a song."""
+    saved = lib.paths.music / "Videos" / "Band" / "Song.mp4"
+    stray = lib.paths.music / "Band" / "Album" / "Clip.mp4"
+    for path in (saved, stray, rips / "Videos" / "Band" / "Home Movie.mp4"):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(video_mp4, path)
+    tags.write_tags(saved, tags.TrackTags(title="Song", artist="Band", musicorg_id="t_v"))
+    add(lib, index, rips)
+    result = scan.rebuild(lib, index)
+    assert result.library_tracks == 1
+    (row,) = index.library_tracks()
+    assert (row["rel_path"], row["musicorg_id"]) == ("Music/Videos/Band/Song.mp4", "t_v")
+    assert row["duration_s"] == pytest.approx(20, abs=0.5)
+    assert "Home Movie.mp4" not in items_by_name(index)
 
 
 def test_a_rebuild_with_no_sources(lib: Library, index: Index) -> None:

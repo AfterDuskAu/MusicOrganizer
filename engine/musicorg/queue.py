@@ -164,6 +164,25 @@ class JobContext:
         finally:
             self._runner.downloaded()
 
+    def download_video(
+        self,
+        video_id: str,
+        height: int,
+        fps: int | None = None,
+        progress: youtube.ProgressHook | None = None,
+    ) -> tuple[Path, dict[str, Any]]:
+        """Download a video (its picture at `height`, joined to its sound) into this
+        job's staging folder. One download, for the pace and the daily cap, like a song."""
+        self._runner.wait_for_download_turn()
+        self._runner.count_download()
+        self.downloaded += 1
+        try:
+            return youtube.download_video(
+                video_id, self.staging(), height=height, fps=fps, progress=progress
+            )
+        finally:
+            self._runner.downloaded()
+
 
 def staging_name(job_id: int) -> str:
     return f"job-{job_id}"

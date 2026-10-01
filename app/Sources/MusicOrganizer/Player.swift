@@ -50,6 +50,8 @@ final class Player {
     private(set) var videoNote: String?
     /// The picture size last chosen. Nil is "the best there is".
     private(set) var videoPreference = Player.savedPreference()
+    /// The owner switched a saved video to its cover: its sound plays on, unseen.
+    private(set) var pictureHidden = false
 
     @ObservationIgnored var root: URL?
     @ObservationIgnored var onTrackChange: ((Track?) -> Void)?
@@ -112,6 +114,12 @@ final class Player {
 
     /// The player itself, for the view that shows a video's picture.
     var screen: AVPlayer { audio }
+
+    /// There's a picture to show: a video from YouTube, or a saved video's own.
+    var showsPicture: Bool { video != nil || (current?.isVideo == true && !pictureHidden) }
+
+    /// What the Cover / Video switch says. A saved video counts as "Video" by itself.
+    var pictureWanted: Bool { current?.isVideo == true ? !pictureHidden : videoOn }
 
     /// False while a video that isn't the song second for second is playing: the song's
     /// timed lyrics don't fit it.
@@ -210,6 +218,11 @@ final class Player {
 
     /// Show the song's official video, or go back to its cover.
     func setVideo(_ on: Bool) {
+        if current?.isVideo == true {
+            // A saved video is its own file: the switch only shows or hides its picture.
+            pictureHidden = !on
+            return
+        }
         guard on != videoOn else { return }
         videoOn = on
         guard let track = current else { return }
@@ -279,7 +292,8 @@ final class Player {
         retries = 0
         video = nil
         videoNote = nil
-        if videoOn {
+        pictureHidden = false
+        if videoOn, !track.isVideo {  // a saved video needs nothing from YouTube
             startVideo(track, at: 0, interrupt: true, playing: true)
         } else {
             startSound(track, at: 0, playing: true)
@@ -422,7 +436,7 @@ final class Player {
     /// Finding a video takes YouTube five to ten seconds. The next song's is looked for
     /// while this one plays, so one video follows another without a silence.
     private func lookAhead() {
-        guard videoOn, let next = queue.upNext.first else { return }
+        guard videoOn, let next = queue.upNext.first, !next.isVideo else { return }
         Task { _ = try? await lookUpVideo(of: next) }
     }
 
