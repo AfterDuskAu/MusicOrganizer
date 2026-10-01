@@ -65,6 +65,14 @@
 - `MUSICORG_STALLS=1` turns on a stall detector (`StallWatch`) that prints every freeze of 100 ms or more.
 - The loading screen explains itself after 6 seconds (a possible macOS permission prompt, or new songs being read).
 
+2026-10-02, evening. The owner's notes on search and the lyrics panel, and signing.
+
+- **Search is a button:** the search field is gone from every page's toolbar. A magnifying glass beside the sidebar button (or ⌘F) opens a search bar under the toolbar; Done or Esc closes it and clears the search. The YouTube Music page keeps its own search box.
+- **The lyrics panel is no longer a fixture.** With lyrics switched on (the bubble button), the panel beside the library appears only while a song is on and its lyrics were found, and goes when there's nothing to show. It never appears beside Local Visualizer or the full-size now-playing screen, which show the lyrics themselves.
+- **Lyrics for a song played from YouTube Music:** `lyrics.find` (RPC) looks them up the same way as for library songs (LRCLIB, then YouTube Music, with the length and version checks) and saves nothing. The panel appears when they arrive.
+- **Signing:** `scripts/build_app.sh` signs with a certificate named "Music Organizer Dev" when the owner has made one (`docs/SIGNING.md`), so macOS remembers which folders the app may use instead of asking after every build. The owner made it on 2026-10-02; the next start was not held up.
+- Checked in the running app: the magnifying glass and search bar, the panel staying away with nothing playing, a YouTube song bringing up timed lyrics, and Local Visualizer with no second lyrics panel.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

@@ -488,3 +488,24 @@ def test_settings(opened: rpc.Server) -> None:
     for bad in (0, 301):
         assert code(opened, "settings.set", daily_cap=bad) == rpc.USER_ERROR
     assert result(opened, "settings.get")["daily_cap"] == 120
+
+
+def test_lyrics_for_a_song_played_from_youtube(
+    opened: rpc.Server, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from musicorg import lyrics
+
+    asked: list[lyrics.Query] = []
+
+    def find(query: lyrics.Query, *, cache: Any = None) -> lyrics.Found:
+        asked.append(query)
+        return lyrics.Found("synced", plain="Made-up", synced="[00:01.00]Made-up", source="LRCLIB")
+
+    monkeypatch.setattr(lyrics, "find", find)
+    found = result(opened, "lyrics.find", title="Song", artist="Band", duration_s=187,
+                   video_id="abcdefghijk")  # fmt: skip
+    assert found == {"synced": "[00:01.00]Made-up", "plain": "Made-up", "source": "LRCLIB"}
+    assert (asked[0].title, asked[0].artist, asked[0].duration_s, asked[0].video_id) == (
+        "Song", "Band", 187.0, "abcdefghijk",
+    )  # fmt: skip
+    assert code(opened, "lyrics.find") == rpc.INVALID_PARAMS

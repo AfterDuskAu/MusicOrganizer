@@ -73,6 +73,10 @@ final class AppModel {
         case failed(String)
     }
     var searchText = ""
+    /// The search field is tucked away behind a magnifying glass until it's wanted.
+    var searching = false {
+        didSet { if !searching { searchText = "" } }
+    }
 
     let player = Player()
     let lyrics = LyricsModel()
@@ -506,14 +510,25 @@ final class AppModel {
             lyrics.show(.nothingPlaying, for: nil)
             return
         }
-        guard track.lyrics != .none, track.videoId == nil, let connection = engine?.connection else {
+        guard let connection = engine?.connection, track.lyrics != .none || track.videoId != nil
+        else {
             lyrics.show(.missing, for: track.path)
             return
         }
         lyrics.show(.loading, for: track.path)
         Task {
-            let found = try? await connection.call(
-                "library.lyrics", ["path": track.path], as: TrackLyrics.self)
+            let found: TrackLyrics?
+            if let videoId = track.videoId {
+                // Played from YouTube Music: looked up for now, and never saved.
+                var asked: [String: Any] = ["title": track.title, "video_id": videoId]
+                if let artist = track.artist { asked["artist"] = artist }
+                if let album = track.album { asked["album"] = album }
+                if let length = track.durationS { asked["duration_s"] = length }
+                found = try? await connection.call("lyrics.find", asked, as: TrackLyrics.self)
+            } else {
+                found = try? await connection.call(
+                    "library.lyrics", ["path": track.path], as: TrackLyrics.self)
+            }
             guard lyrics.trackPath == track.path else { return }  // the song changed meanwhile
             let lines = found?.synced.map(LRC.parse) ?? []
             if !lines.isEmpty {
@@ -574,6 +589,14 @@ final class LyricsModel {
     private(set) var state: State = .nothingPlaying
     private(set) var trackPath: String?
     private(set) var currentLine: Int?
+
+    /// There are lyrics to show right now: a song is on, and its words were found.
+    var hasLyrics: Bool {
+        switch state {
+        case .synced, .plain: true
+        default: false
+        }
+    }
 
     func show(_ state: State, for path: String?) {
         self.state = state

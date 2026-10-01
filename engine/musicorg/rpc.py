@@ -47,6 +47,7 @@ from musicorg import (
     library,
     listening,
     logging_setup,
+    lyrics,
     match,
     pipeline,
     queue,
@@ -76,7 +77,7 @@ PROTOCOL = "2.0"
 SHUTDOWN_GRACE_S = 10.0
 PROGRESS_INTERVAL_S = 0.25  # at most 4 job.progress a second per job
 REVIEW_STATES = ("review", "not_found", "matched_auto")
-SLOW_METHODS = frozenset({"youtube.stream", "search.ytmusic"})
+SLOW_METHODS = frozenset({"youtube.stream", "search.ytmusic", "lyrics.find"})
 RPC_DECISIONS = ("accept", "candidate", "url", "only_copy", "skip", "reject")
 
 # Error codes (docs/ENGINE_API.md → Errors).
@@ -265,6 +266,7 @@ class Server:
             "journal.undo": self.journal_undo,
             "search.ytmusic": self.search_ytmusic,
             "youtube.stream": self.youtube_stream,
+            "lyrics.find": self.lyrics_find,
             "queue.jobs": self.queue_jobs,
             "settings.get": self.settings_get,
             "settings.set": self.settings_set,
@@ -741,6 +743,21 @@ class Server:
     def youtube_stream(self, params: dict[str, Any]) -> dict[str, Any]:
         found = youtube.stream(need(params, "video_id", str))
         return {"url": found.url, "http_headers": found.headers, "duration_s": found.duration_s}
+
+    def lyrics_find(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Lyrics for a song being played from YouTube Music. Looked up, never saved."""
+        length = want(params, "duration_s", (int, float))
+        query = lyrics.Query(
+            title=need(params, "title", str),
+            artist=want(params, "artist", str, "") or "",
+            album=want(params, "album", str),
+            duration_s=float(length) if length is not None else None,
+            video_id=want(params, "video_id", str),
+            official_s=float(length) if length is not None else None,
+        )
+        with self._index(write=True) as index:  # the index keeps the answer for next time
+            found = lyrics.find(query, cache=index)
+        return {"synced": found.synced, "plain": found.plain, "source": found.source}
 
     def queue_jobs(self, params: dict[str, Any]) -> dict[str, Any]:
         batch_id = need(params, "batch_id", str)

@@ -112,7 +112,10 @@ struct PlayerBar: View {
                 Image(systemName: "quote.bubble")
                     .foregroundStyle(showLyrics ? Color.accentColor : .primary)
             }
-            .help("Lyrics")
+            .help(
+                showLyrics
+                    ? "Lyrics are on: they appear beside the library whenever the song playing has them"
+                    : "Lyrics are off")
             Button { showQueue.toggle() } label: { Image(systemName: "list.bullet") }
                 .help("Up next")
                 .popover(isPresented: $showQueue, arrowEdge: .top) { UpNext().environment(model) }

@@ -214,11 +214,26 @@ struct MainView: View {
                             }
                     }
                 }
-                .searchable(text: $model.searchText, prompt: "Songs, artists, albums")
+                .toolbar {
+                    // Search lives behind this button, beside the sidebar button, so no
+                    // page carries a search field it isn't using.
+                    ToolbarItem(placement: .navigation) {
+                        Button {
+                            model.searching.toggle()
+                        } label: {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundStyle(model.searching ? Color.accentColor : .primary)
+                        }
+                        .keyboardShortcut("f")
+                        .help(model.searching ? "Close search" : "Search your library (⌘F)")
+                    }
+                }
                 .onChange(of: item, initial: true) { opened(current) }
                 .onChange(of: model.searchText) { paths[current] = NavigationPath() }
                 .onChange(of: model.listening.playlists) { forgetDeletedPlaylists() }
-                .inspector(isPresented: $showLyrics) {
+                // The lyrics panel isn't a fixture: it's there only while a song with
+                // lyrics is on, and never beside a page that shows the lyrics itself.
+                .inspector(isPresented: lyricsPanel) {
                     LyricsView()
                         .environment(model)
                         .inspectorColumnWidth(min: 260, ideal: 340, max: 520)
@@ -360,6 +375,20 @@ struct MainView: View {
 
     private var current: SidebarItem { item ?? .songs }
 
+    private var lyricsPanel: Binding<Bool> {
+        Binding(
+            get: {
+                showLyrics && model.lyrics.hasLyrics && model.player.current != nil
+                    && current != .visualizer && !showNowPlaying
+            },
+            set: { shown in
+                // Only the owner closing the panel by hand turns lyrics off.
+                if !shown, model.lyrics.hasLyrics, current != .visualizer, !showNowPlaying {
+                    showLyrics = false
+                }
+            })
+    }
+
     private var pathBinding: Binding<NavigationPath> {
         Binding(
             get: { paths[current] ?? NavigationPath() },
@@ -384,6 +413,16 @@ struct MainView: View {
     /// Every page opened so far, one on top of the other, with only the chosen one
     /// showing. A hidden page keeps its place but does no work.
     private var pages: some View {
+        VStack(spacing: 0) {
+            if model.searching, current != .youtube, current != .visualizer {
+                SearchBar()
+                Divider()
+            }
+            stackedPages
+        }
+    }
+
+    private var stackedPages: some View {
         ZStack {
             ForEach(visited, id: \.self) { entry in
                 let active = entry == current
@@ -464,6 +503,34 @@ struct MainView: View {
                 Text("That playlist has gone.").foregroundStyle(.secondary)
             }
         }
+    }
+}
+
+/// The library search field, shown under the toolbar when the magnifying glass is on.
+private struct SearchBar: View {
+    @Environment(AppModel.self) private var model
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        @Bindable var model = model
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+            TextField("Search your songs, artists and albums", text: $model.searchText)
+                .textFieldStyle(.plain)
+                .focused($focused)
+                .onExitCommand { model.searching = false }
+            if !model.searchText.isEmpty {
+                Button { model.searchText = "" } label: { Image(systemName: "xmark.circle.fill") }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+                    .help("Clear")
+            }
+            Button("Done") { model.searching = false }
+                .controlSize(.small)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .onAppear { focused = true }
     }
 }
 
