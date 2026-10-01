@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.0 (in progress): the Mac app
+
+2026-10-01. The owner put the library clean-up on hold until the song-identification research is back, and asked for an app to use now.
+
+- **The app** (`app/`, built by `scripts/build_app.sh`): songs, albums and artists with covers, search, a player with shuffle, repeat, "up next" and the media keys, and timed lyrics that follow the song. It starts `musicorg serve` itself and never writes inside the library.
+- **Engine, for the app:** `library.tracks` (every song with the details a screen needs) and `library.lyrics` (a song's `.lrc` text and its plain lyrics), from a new read-only module, `browse`.
+- **The index is now version 2:** `library_tracks` gained a `details_json` column, where `browse` keeps what it read from each file's tags, beside the size and modified time it was read at. A version 1 index is upgraded in place the next time the library is opened for writing. No rebuild, so the matcher's saved work is kept. The first `library.tracks` reads every file's tags once (about 8 seconds for 812 songs on the iMac); after that it takes under a tenth of a second.
+- **CI** builds the app and runs its tests on both Macs.
+- Deviations: `CLAUDE.md`'s "Not in v0.1" list became "Not yet", since the Mac app is no longer on it. SwiftUI table cells don't inherit the window's environment on macOS, so the app passes its model to them by hand.
+- Not built yet: the review queue in the app, searching and downloading from YouTube Music, playlists, play history, settings. Decisions for the owner are in `docs/ROADMAP.md`.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

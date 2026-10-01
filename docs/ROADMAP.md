@@ -1,6 +1,6 @@
 # Roadmap
 
-Where Music Organizer is and what comes next. The owner decides what goes in each version; the detailed plans live in `docs/roadmap/`. Updated 2026-10-01.
+Where Music Organizer is and what comes next. The owner decides what goes in each version; the detailed plans live in `docs/roadmap/`. Updated 2026-10-01 (the Mac app's first slice).
 
 ## Where things stand (v0.1.0, released 2026-09-30)
 
@@ -16,9 +16,9 @@ Where Music Organizer is and what comes next. The owner decides what goes in eac
   - 1,012 rips waiting in review, and 61 not found
   - 9 review decisions saved on 2026-09-30 (4 matches chosen, 5 skipped), not yet brought into the library
 
-## Now: finish the owner's library (v0.1.x)
+## On hold: finish the owner's library (v0.1.x)
 
-The owner is waiting for the song-identification research to finish before reviewing the rest.
+On hold since 2026-10-01 (owner): it waits for the song-identification research, so detection can be made more reliable with what it finds. The app comes first.
 
 1. **Finish the song-identification research.**
    - It lives in `~/Developer/MusicOrganizer-research`, outside this public repo because it lists the owner's music.
@@ -39,28 +39,33 @@ The owner is waiting for the song-identification research to finish before revie
    - daily backups of `state.json`, which holds the review decisions
    - a focused safety check of the code before any batch of hundreds of songs
 
-## v0.2: the Mac app
+## Now: v0.2, the Mac app
 
-A SwiftUI app that starts the engine and talks to it (`musicorg serve`).
+A SwiftUI app that starts the engine and talks to it (`musicorg serve`). Code in `app/`; build it with `scripts/build_app.sh --open`.
 
-- **Library:** albums with covers, artists, songs, and search. The throwaway preview from 2026-09-30 showed the idea.
-- **Player:**
-  - a mini and a full player
-  - a karaoke view with the timed lyrics, the current line lit up; tap a line to jump there
-  - This is also where the timed lyrics finally get their listening check.
+**Built (2026-10-01), the first usable slice:**
+
+- Songs (sortable, with covers), Albums (a grid, then an album's page) and Artists, and a search box over all three.
+- A player: play, pause, next, previous, a position slider, volume, shuffle, repeat, "up next", the space bar and the keyboard's media keys.
+- Lyrics beside the library: timed lines light up as they're sung, and a click on a line jumps there.
+- The sidebar shows how many songs there are and how many rips still wait for review.
+
+**Still to build, roughly in this order** (the owner decides after using the first slice):
+
 - **Review queue in the app:**
   - listen to the rip and a match side by side
   - use, reject, only copy, or paste a link
   - see the fingerprint result where there is one
 - **Search box** that plays anything from YouTube Music, and a "download the official version" button on a song. **Downloads only happen when the owner asks** (2026-09-30).
+- **A full-window "now playing" view:** the big cover with the karaoke lyrics. This is also where the timed lyrics get their listening check.
 - **Settings:** preferred names (like "Jay Z"), the library folder, the queue.
+- **What the engine is doing:** the queue, the journal's batches and Undo, in a window.
 - Decisions to make first:
   - **Playlists:** how they're stored. The suggestion is `.m3u8` files in a `Playlists/` folder, so the files stay the source of truth.
   - **Play history:** needed for "most played" and for Discover.
-- Built with the Photonizer project's lessons on staying responsive:
+- Photonizer's lessons on staying responsive, for when the library is much bigger (812 songs sort instantly today):
   - stable list rows
   - sorting off the main thread
-  - an album-art memory cache
   - "a stall is the main thread blocked 100 ms or more"
 
 ## v0.3: imports for friends

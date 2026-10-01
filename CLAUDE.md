@@ -6,6 +6,8 @@ Standing rules for every Claude Code session in this project. Read this file, `d
 
 A personal music app that replaces Spotify, Apple Music and YouTube Music for a home library. Music comes from YouTube Music, and the app turns it into a clean, permanent, tagged library of files. This repo's `engine/` is the part with no UI. It scans, matches, downloads, tags and protects the library. From v0.2 a Mac app (SwiftUI) sits on top, and later a Windows app. Both talk to the engine over JSON-RPC.
 
+**v0.2 (from 2026-10-01): the Mac app** lives in `app/`, a Swift package: `MusicOrganizerKit` (the engine connection, the library's shape, the play queue, the lyrics parser, all tested without a window) and `MusicOrganizer` (the SwiftUI screens). `scripts/build_app.sh` builds `app/build/Music Organizer.app`. **The app never writes inside the library:** it reads audio and cover files to play and show them, and every change goes through the engine over JSON-RPC. What the app needs from the library, it asks the engine for (`library.tracks`, `library.lyrics`); it doesn't parse tags or the index itself.
+
 The owner builds with Claude Code and is not a professional programmer. Prefer boring, obvious code with good error messages over clever code. The development machine is an **Intel iMac**.
 
 ## Non-negotiable rules (the library contract)
@@ -53,6 +55,7 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
   - `queue`: persistent job queue
   - `pipeline`: download → verify → tag → commit, and adopt
   - `lyrics` and `artwork`
+  - `browse`: what the app shows: the library's tracks with their details, and a track's lyrics (read-only)
   - `report`
   - `review` and `review_web`: the review spreadsheet, and the local review page
   - `rpc`: the JSON-RPC server
@@ -97,8 +100,9 @@ All states, decisions and tag values are defined **once**, in `docs/ENGINE_API.m
 1. The step's **Acceptance** checks pass, run for real.
 2. `pytest` is green locally and in CI on all three runners, and `ruff check` is clean.
 3. `docs/CHANGELOG.md` has a short entry: what was added, and any deviation from the docs and why.
-4. Nothing from the "Not in v0.1" list was built.
+4. Nothing from the "Not yet" list was built.
+5. For app changes: `swift build` and `swift test` pass in `app/`, and the change was looked at in the running app.
 
-## Not in v0.1
+## Not yet (see `docs/ROADMAP.md` for the version each belongs to)
 
-UI work (one exception: the local review page, `musicorg review serve`, which the owner asked for at the step 07 checkpoint; the Mac app stays v0.2), Spotify/Apple Music import, Discover and recommendations, weekly mix, phone/Subsonic server, packaging, signing, notarization, Windows app shell, accounts and cloud anything.
+Spotify/Apple Music import, Discover and recommendations, weekly mix, phone/Subsonic server, packaging, signing, notarization, Windows app shell, accounts and cloud anything.

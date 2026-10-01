@@ -84,7 +84,7 @@ Exit codes:
 - Long operations return `{ "job_id" }` immediately, then report progress through notifications. Only one long operation runs at a time besides the queue worker; another returns error -32007.
 - JSON-RPC batch requests (arrays) are rejected with -32600.
 
-### Methods (v0.1)
+### Methods (v0.1, plus `library.tracks` and `library.lyrics` from v0.2)
 
 | Method | Params | Result |
 |---|---|---|
@@ -92,6 +92,8 @@ Exit codes:
 | `library.init` | `{ "root" }` | `{ "status", "warnings": [..] }` |
 | `library.open` | `{ "root" }` | `{ "status" }` |
 | `library.status` | — | `{ "items_by_state": {..}, "tracks", "only_copy", "queue": {..}, "warnings": [..] }` |
+| `library.tracks` | — | `{ "root", "tracks": [Track] }`: every song in the library, for the app's screens (v0.2). Slow the first time (it reads each file's tags once), instant afterwards. |
+| `library.lyrics` | `{ "path" }` (a Track's `path`) | `{ "synced", "plain" }`: the text of the song's `.lrc`, and the lyrics in its tags. Either may be null. |
 | `sources.add` | `{ "path" }` | `{ "source" }` |
 | `sources.list` | — | `{ "sources": [..] }` |
 | `sources.scan` | `{ "source_ids"?: [..] }` | `{ "job_id" }` |
@@ -146,6 +148,14 @@ Standard JSON-RPC codes, plus:
   "album_browse_id": "MPRE…", "duration_s": 228, "is_official_audio": true, "is_explicit": false,
   "version_tokens": ["remix:adventure club"], "score": 0.917,
   "reasons": ["artist exact", "title exact", "version match", "duration Δ1s"] }
+
+// Track (v0.2). `path` and `cover` are relative to the library root, with `/` separators.
+// The app plays the file and shows the cover by reading them; it never writes to them.
+{ "track_id": "t_…", "path": "Music/Artist/Album (2020)/01 Song.m4a", "title": "…", "artist": "…",
+  "album_artist": "…", "album": "…", "year": 2020, "track": 1, "disc": 1, "genre": "…",
+  "duration_s": 228.1, "explicit": false, "only_copy": false, "match": "auto_details",
+  "format": "mp3", "bitrate_kbps": 320, "cover": "Music/Artist/Album (2020)/cover.jpg",
+  "embedded_cover": true, "lyrics": "synced" }   // lyrics: "synced" | "plain" | "none"
 
 // ReviewItem
 { "item_id": "i_3fa2…", "source_path": "…", "parsed": { "artist": "…", "title": "…", "version_tokens": [..], "confidence": 0.9 },

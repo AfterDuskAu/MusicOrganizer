@@ -42,6 +42,7 @@ from typing import IO, Any
 
 from musicorg import (
     __version__,
+    browse,
     fileops,
     library,
     logging_setup,
@@ -227,6 +228,8 @@ class Server:
             "library.init": self.library_init,
             "library.open": self.library_open,
             "library.status": self.library_status,
+            "library.tracks": self.library_tracks,
+            "library.lyrics": self.library_lyrics,
             "sources.add": self.sources_add,
             "sources.list": self.sources_list,
             "sources.scan": self.sources_scan,
@@ -455,6 +458,14 @@ class Server:
         return {"items_by_state": found["items_by_state"], "tracks": found["tracks"],
                 "only_copy": only_copy, "queue": found["queue"],
                 "warnings": found["warnings"]}  # fmt: skip
+
+    def library_tracks(self, params: dict[str, Any]) -> dict[str, Any]:
+        lib = self._library()
+        with self._index(write=True) as index:
+            return {"root": str(lib.root), "tracks": browse.tracks(lib, index)}
+
+    def library_lyrics(self, params: dict[str, Any]) -> dict[str, Any]:
+        return browse.lyrics(self._library(), need(params, "path", str))
 
     # -- sources, scan, match --
 

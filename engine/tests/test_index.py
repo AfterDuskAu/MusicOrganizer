@@ -109,4 +109,4 @@ def test_reset_empties_only_the_index(lib: Library) -> None:
         assert index.sources() == {}
     assert lib.paths.queue_file.read_bytes() == b"queue"
     with closing(sqlite3.connect(lib.paths.index_file)) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone() == (1,)
+        assert conn.execute("PRAGMA user_version").fetchone() == (index_module.SCHEMA_VERSION,)

@@ -26,7 +26,7 @@ from typing import Any
 from musicorg.errors import LibraryIndexError
 from musicorg.naming import LibraryPaths
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2  # 2: library_tracks.details_json, for the app's library list (v0.2)
 
 _TABLES = """
 CREATE TABLE sources (
@@ -71,7 +71,8 @@ CREATE TABLE library_tracks (
     source TEXT,
     source_id TEXT,
     only_copy INTEGER NOT NULL DEFAULT 0,
-    origin_path TEXT
+    origin_path TEXT,
+    details_json TEXT
 );
 CREATE INDEX library_tracks_id ON library_tracks (musicorg_id);
 CREATE INDEX library_tracks_origin ON library_tracks (origin_path);
@@ -163,6 +164,11 @@ class Index:
             if version == 0 and not self._tables():
                 with conn:
                     conn.executescript(_TABLES)
+                    conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
+                return
+            if version == 1:  # version 2 only added a column: no rebuild needed
+                with conn:
+                    conn.execute("ALTER TABLE library_tracks ADD COLUMN details_json TEXT")
                     conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
                 return
         except sqlite3.DatabaseError as exc:
@@ -498,6 +504,24 @@ class Index:
             "SELECT * FROM library_tracks WHERE source_id = ? ORDER BY rel_path", (source_id,)
         )
         return [dict(row) for row in rows]
+
+    def set_track_details(self, rows: Iterable[dict[str, Any]]) -> None:
+        """Store what the app shows for a track (`browse`), with the size and mtime it
+        was read at. Each row: rel_path, size, mtime_ns, title, artist, album,
+        details_json."""
+        batch = [
+            (r["size"], r["mtime_ns"], r["title"], r["artist"], r["album"], r["details_json"],
+             r["rel_path"])
+            for r in rows
+        ]  # fmt: skip
+        if not batch:
+            return
+        with self.transaction() as conn:
+            conn.executemany(
+                "UPDATE library_tracks SET size = ?, mtime_ns = ?, title = ?, artist = ?, "
+                "album = ?, details_json = ? WHERE rel_path = ?",
+                batch,
+            )
 
     def remove_library_tracks(self, rel_paths: Iterable[str]) -> int:
         batch = [(p,) for p in rel_paths]

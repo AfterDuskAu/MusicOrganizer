@@ -88,3 +88,19 @@ jobs:
 
       - name: pytest
         run: pytest engine
+
+  app:
+    # The Mac app (v0.2): build it and run the tests of everything that needs no window.
+    name: mac app (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15-intel, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: swift build
+        run: swift build --package-path app
+      - name: swift test
+        run: swift test --package-path app

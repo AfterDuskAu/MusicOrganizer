@@ -2,7 +2,7 @@
 
 A personal music app that turns YouTube Music into a clean, permanent, tagged library of files on your own disk.
 
-This repo holds the **engine** (`engine/`, Python, no UI). It scans, matches, downloads, tags and protects the library. A Mac app arrives in v0.2 and talks to the engine over JSON-RPC.
+This repo holds the **engine** (`engine/`, Python, no UI). It scans, matches, downloads, tags and protects the library. The **Mac app** (`app/`, Swift, v0.2 in progress) plays the library and talks to the engine over JSON-RPC: build and open it with `scripts/build_app.sh --open` (needs Xcode).
 
 **Status:** v0.1 in progress, built one step at a time from `prompts/`. See `prompts/README.md` for the order and the roadmap.
 
