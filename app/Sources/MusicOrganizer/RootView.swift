@@ -9,7 +9,7 @@ struct RootView: View {
         case .starting:
             ProgressView("Starting…")
         case .loading:
-            ProgressView("Reading your library…")
+            LoadingView()
         case .needsLibrary:
             Message(
                 symbol: "music.note.house", title: "Where is your library?",
@@ -26,6 +26,31 @@ struct RootView: View {
             }
         case .ready:
             MainView()
+        }
+    }
+}
+
+/// "Reading your library…", with a hint if it goes on for long.
+private struct LoadingView: View {
+    @State private var slow = false
+
+    var body: some View {
+        VStack(spacing: 12) {
+            ProgressView("Reading your library…")
+            if slow {
+                Text(
+                    "Still waiting. If macOS is asking whether Music Organizer may use the folder "
+                        + "your library is in, choose Allow. New songs are also read once, which "
+                        + "can take a minute after a big import.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 420)
+            }
+        }
+        .task {
+            try? await Task.sleep(for: .seconds(6))
+            slow = true
         }
     }
 }
@@ -61,6 +86,34 @@ enum SidebarItem: Hashable {
     case favourites, recentlyAdded, mostPlayed, unconfirmed
     case visualizer, whatsNew, find, youtube, downloads
     case playlist(String)
+
+    /// A name for this entry that can be saved, and read back with `init(key:)`.
+    var key: String {
+        switch self {
+        case .playlist(let id): "playlist:\(id)"
+        case .visualizer: "visualizer"
+        case .whatsNew: "whatsNew"
+        case .find: "find"
+        case .youtube: "youtube"
+        case .downloads: "downloads"
+        default: libraryName ?? "songs"
+        }
+    }
+
+    init(key: String) {
+        if key.hasPrefix("playlist:") {
+            self = .playlist(String(key.dropFirst(9)))
+            return
+        }
+        switch key {
+        case "visualizer": self = .visualizer
+        case "whatsNew": self = .whatsNew
+        case "find": self = .find
+        case "youtube": self = .youtube
+        case "downloads": self = .downloads
+        default: self = SidebarItem(libraryEntry: key) ?? .songs
+        }
+    }
 
     /// The name this Library entry is saved under (`SidebarChoice`).
     var libraryName: String? {
@@ -120,8 +173,14 @@ enum SidebarItem: Hashable {
 
 struct MainView: View {
     @Environment(AppModel.self) private var model
-    @State private var item: SidebarItem? = .songs
-    @State private var path = NavigationPath()
+    @State private var item: SidebarItem? = SidebarItem(
+        key: UserDefaults.standard.string(forKey: "lastSection") ?? "songs")
+    /// The pages opened so far. They're kept, hidden, when another is chosen, so each
+    /// one is exactly as it was left: scrolled to the same place, with the same
+    /// selection and sort (Fix A-1).
+    @State private var visited: [SidebarItem] = []
+    /// What's been opened inside each page (an album, an artist), page by page.
+    @State private var paths: [SidebarItem: NavigationPath] = [:]
     @State private var showNowPlaying = false
     @State private var deleting: Playlist?
     @AppStorage("showLyrics") private var showLyrics = false
@@ -144,8 +203,9 @@ struct MainView: View {
                     }
                     .navigationSplitViewColumnWidth(min: 180, ideal: 210, max: 280)
                 } detail: {
-                    NavigationStack(path: $path) {
-                        detail
+                    NavigationStack(path: pathBinding) {
+                        pages
+                            .navigationTitle(title(of: current))
                             .navigationDestination(for: Album.self) {
                                 AlbumPage(album: $0).environment(model)
                             }
@@ -155,8 +215,9 @@ struct MainView: View {
                     }
                 }
                 .searchable(text: $model.searchText, prompt: "Songs, artists, albums")
-                .onChange(of: item) { path = NavigationPath() }
-                .onChange(of: model.searchText) { path = NavigationPath() }
+                .onChange(of: item, initial: true) { opened(current) }
+                .onChange(of: model.searchText) { paths[current] = NavigationPath() }
+                .onChange(of: model.listening.playlists) { forgetDeletedPlaylists() }
                 .inspector(isPresented: $showLyrics) {
                     LyricsView()
                         .environment(model)
@@ -297,49 +358,90 @@ struct MainView: View {
         }
     }
 
+    private var current: SidebarItem { item ?? .songs }
+
+    private var pathBinding: Binding<NavigationPath> {
+        Binding(
+            get: { paths[current] ?? NavigationPath() },
+            set: { paths[current] = $0 })
+    }
+
+    private func title(of entry: SidebarItem) -> String {
+        if case .playlist(let id) = entry { model.playlist(id)?.name ?? "Playlist" } else { entry.title }
+    }
+
+    private func opened(_ entry: SidebarItem) {
+        if !visited.contains(entry) { visited.append(entry) }
+        UserDefaults.standard.set(entry.key, forKey: "lastSection")
+    }
+
+    private func forgetDeletedPlaylists() {
+        visited.removeAll { entry in
+            if case .playlist(let id) = entry { model.playlist(id) == nil } else { false }
+        }
+    }
+
+    /// Every page opened so far, one on top of the other, with only the chosen one
+    /// showing. A hidden page keeps its place but does no work.
+    private var pages: some View {
+        ZStack {
+            ForEach(visited, id: \.self) { entry in
+                let active = entry == current
+                page(entry, active: active)
+                    .opacity(active ? 1 : 0)
+                    .allowsHitTesting(active)
+                    .accessibilityHidden(!active)
+                    .zIndex(active ? 1 : 0)
+            }
+        }
+    }
+
     @ViewBuilder
-    private var detail: some View {
-        let library = model.library
-        switch item ?? .songs {
+    private func page(_ entry: SidebarItem, active: Bool) -> some View {
+        switch entry {
         case .songs:
-            SongList(title: "Songs", tracks: library.tracks, empty: "No songs in the library yet.")
+            SongList(source: .all, title: "Songs", empty: "No songs in the library yet.", isActive: active)
         case .albums:
             AlbumsView()
         case .artists:
             ArtistsView()
         case .favourites:
             SongList(
-                title: "Favourites", tracks: model.favouriteSongs,
-                empty: "Click the heart beside a song and it shows up here.")
+                source: .favourites, title: "Favourites",
+                empty: "Click the heart beside a song and it shows up here.", isActive: active)
         case .recentlyAdded:
             SongList(
-                title: "Recently Added", tracks: library.recentlyAdded(),
-                empty: "Nothing has been added yet.")
+                source: .recentlyAdded, title: "Recently Added",
+                empty: "Nothing has been added yet.", isActive: active)
         case .mostPlayed:
             SongList(
-                title: "Most Played", tracks: library.mostPlayed(model.listening.plays),
-                empty: "Songs you play all the way through are counted and show up here.")
+                source: .mostPlayed, title: "Most Played",
+                empty: "Songs you play all the way through are counted and show up here.",
+                isActive: active)
         case .unconfirmed:
             SongList(
-                title: "Not Identified Yet", tracks: library.unconfirmed,
+                source: .unconfirmed, title: "Not Identified Yet",
                 empty: "Every song has been identified.",
                 note: "These songs are here under their own names, so you can play them. "
-                    + "They get their official names, covers and lyrics once they're identified.")
+                    + "They get their official names, covers and lyrics once they're identified.",
+                isActive: active)
         case .youtube:
             YouTubeSearchView()
         case .visualizer:
             // The song that's playing, with its cover and lyrics: the player's own tab
             // (parked Fix A-3 will give it the owner's layout).
-            NowPlayingView(isShown: .constant(true), closable: false)
-                .navigationTitle("Local Visualizer")
+            if active {
+                NowPlayingView(isShown: .constant(true), closable: false)
+            }
         case .downloads:
             SongList(
-                title: "Downloads", tracks: model.downloaded,
+                source: .downloads, title: "Downloads",
                 empty: "Songs you download from YouTube Music show up here.",
                 note: model.keepDownloadsSeparate
                     ? "Downloaded songs stay here, apart from your main library. "
                         + "Settings → General can put them in the main library instead."
-                    : "Downloaded songs are also in your main library (Settings → General).")
+                    : "Downloaded songs are also in your main library (Settings → General).",
+                isActive: active)
         case .whatsNew:
             Message(
                 symbol: "sparkles", title: "What's New is coming",
@@ -356,8 +458,8 @@ struct MainView: View {
         case .playlist(let id):
             if let playlist = model.playlist(id) {
                 SongList(
-                    title: playlist.name, tracks: model.tracks(in: playlist),
-                    empty: "Right-click any song and choose Add to Playlist.", playlist: playlist)
+                    source: .playlist(id), title: playlist.name,
+                    empty: "Right-click any song and choose Add to Playlist.", isActive: active)
             } else {
                 Text("That playlist has gone.").foregroundStyle(.secondary)
             }

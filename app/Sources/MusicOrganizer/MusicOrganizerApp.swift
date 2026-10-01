@@ -1,4 +1,5 @@
 import AppKit
+import MusicOrganizerKit
 import SwiftUI
 
 @main
@@ -9,6 +10,7 @@ struct MusicOrganizerApp: App {
         // Started as a plain program (`swift run`) the app would have no Dock icon or
         // menu bar; in the built app this changes nothing.
         NSApplication.shared.setActivationPolicy(.regular)
+        StallWatch.shared.startIfAsked()
     }
 
     var body: some Scene {

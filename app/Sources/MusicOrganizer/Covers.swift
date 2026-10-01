@@ -41,6 +41,13 @@ final class Covers {
         let remote = track.artUrl.flatMap(URL.init(string:))
         let sidecar = root.flatMap { root in track.cover.map { root.appendingPathComponent($0) } }
         let audio = track.videoId == nil ? root?.appendingPathComponent(track.path) : nil
+        // A few at a time: a fast scroll asks for dozens of covers at once, and decoding
+        // them all together is what made scrolling stutter (Fix A-1). A row that has
+        // scrolled away gives up its turn.
+        await Self.gate.enter()
+        defer { Task { await Self.gate.leave() } }
+        if Task.isCancelled { return nil }
+        if let image = cache.object(forKey: key) { return image }
         let decoded = await Task.detached(priority: .userInitiated) { () -> CGImage? in
             if let remote {  // a YouTube Music song's picture
                 guard remote.scheme == "https",
@@ -49,21 +56,63 @@ final class Covers {
                 else { return nil }
                 return Self.thumbnail(source, pixels)
             }
-            if let sidecar, let source = CGImageSourceCreateWithURL(sidecar as CFURL, nil),
-                let image = Self.thumbnail(source, pixels)
+            // Small covers are kept in the app's own cache folder (never the library), so
+            // a cover is only cut down from its full size once.
+            let original = sidecar ?? audio
+            let saved = size == .large ? nil : original.flatMap { Self.savedThumbnail(for: $0, pixels) }
+            if let saved, let source = CGImageSourceCreateWithURL(saved as CFURL, nil),
+                let image = CGImageSourceCreateImageAtIndex(source, 0, nil)
             {
                 return image
             }
-            guard let audio, let data = await Self.embeddedPicture(audio),
+            var made: CGImage?
+            if let sidecar, let source = CGImageSourceCreateWithURL(sidecar as CFURL, nil) {
+                made = Self.thumbnail(source, pixels)
+            }
+            if made == nil, let audio, let data = await Self.embeddedPicture(audio),
                 let source = CGImageSourceCreateWithData(data as CFData, nil)
-            else { return nil }
-            return Self.thumbnail(source, pixels)
+            {
+                made = Self.thumbnail(source, pixels)
+            }
+            if let made, let saved { Self.save(made, to: saved) }
+            return made
         }.value
         guard let decoded else { return nil }
         let image = NSImage(
             cgImage: decoded, size: NSSize(width: decoded.width / 2, height: decoded.height / 2))
         cache.setObject(image, forKey: key, cost: decoded.bytesPerRow * decoded.height)
         return image
+    }
+
+    private static let gate = Gate(4)
+
+    /// Where the small copy of this cover is kept: named after the original's path, size
+    /// and modified time, so a changed cover gets a new small copy.
+    private nonisolated static func savedThumbnail(for original: URL, _ pixels: Int) -> URL? {
+        guard let folder = thumbnailFolder,
+            let values = try? original.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey]),
+            let changed = values.contentModificationDate
+        else { return nil }
+        let name = "\(original.path)|\(values.fileSize ?? 0)|\(changed.timeIntervalSince1970)|\(pixels)"
+        var hash: UInt64 = 14_695_981_039_346_656_037  // FNV-1a: a short, stable name
+        for byte in name.utf8 { hash = (hash ^ UInt64(byte)) &* 1_099_511_628_211 }
+        return folder.appendingPathComponent(String(hash, radix: 16) + ".jpg")
+    }
+
+    private nonisolated static let thumbnailFolder: URL? = {
+        guard let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+        else { return nil }
+        let folder = caches.appendingPathComponent("org.musicorganizer.app/covers", isDirectory: true)
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        return folder
+    }()
+
+    private nonisolated static func save(_ image: CGImage, to file: URL) {
+        guard let out = CGImageDestinationCreateWithURL(file as CFURL, "public.jpeg" as CFString, 1, nil)
+        else { return }
+        CGImageDestinationAddImage(
+            out, image, [kCGImageDestinationLossyCompressionQuality: 0.85] as CFDictionary)
+        CGImageDestinationFinalize(out)
     }
 
     private nonisolated static func thumbnail(_ source: CGImageSource, _ pixels: Int) -> CGImage? {
@@ -83,6 +132,26 @@ final class Covers {
             from: metadata, filteredByIdentifier: .commonIdentifierArtwork)
         guard let picture = pictures.first else { return nil }
         return try? await picture.load(.dataValue)
+    }
+}
+
+/// Lets a fixed number of jobs run at once; the rest wait their turn.
+actor Gate {
+    private var free: Int
+    private var waiting: [CheckedContinuation<Void, Never>] = []
+
+    init(_ slots: Int) { free = slots }
+
+    func enter() async {
+        if free > 0 {
+            free -= 1
+            return
+        }
+        await withCheckedContinuation { waiting.append($0) }
+    }
+
+    func leave() {
+        if waiting.isEmpty { free += 1 } else { waiting.removeFirst().resume() }
     }
 }
 

@@ -59,8 +59,6 @@ struct YouTubeSearchView: View {
                 }
             }
         }
-        .navigationTitle("YouTube Music")
-        .navigationSubtitle("Play from YouTube; download only when you ask")
     }
 }
 

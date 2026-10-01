@@ -49,12 +49,15 @@ private struct TimedLyrics: View {
         let current = model.lyrics.currentLine
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: large ? 22 : 14) {
+                // Every line is laid out once and never changes size: the line being sung
+                // is shown by brightness alone. (Bold text and a lazily built list made
+                // the lyrics jump about as they scrolled: Fix A-1.)
+                VStack(alignment: .leading, spacing: large ? 22 : 14) {
                     ForEach(lines) { line in
-                        let sung = line.id == current
                         Text(line.text.isEmpty ? "♪" : line.text)
-                            .font((large ? Font.largeTitle : .title2).weight(sung ? .bold : .medium))
-                            .foregroundStyle(sung ? .primary : .tertiary)
+                            .font((large ? Font.largeTitle : .title2).weight(.semibold))
+                            .foregroundStyle(.primary)
+                            .opacity(line.id == current ? 1 : 0.3)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .contentShape(Rectangle())
                             .onTapGesture { model.player.seek(to: line.time) }
@@ -62,11 +65,12 @@ private struct TimedLyrics: View {
                     }
                 }
                 .padding(.horizontal, 20)
-                .padding(.vertical, 120)
+                .padding(.vertical, 160)
+                .animation(.easeInOut(duration: 0.3), value: current)
             }
             .onChange(of: current) {
                 guard let current else { return }
-                withAnimation(.easeInOut(duration: 0.35)) {
+                withAnimation(.easeInOut(duration: 0.6)) {
                     proxy.scrollTo(current, anchor: .center)
                 }
             }

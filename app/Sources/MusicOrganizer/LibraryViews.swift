@@ -9,70 +9,142 @@ extension Track {
 
 // MARK: lists of songs
 
-/// One line of a song table. Its id is its place in the list, because a playlist may
-/// hold the same song twice.
-struct TrackRow: Identifiable {
+/// One line of a song table. Its id is its place in the list before any search or sort,
+/// because a playlist may hold the same song twice.
+struct TrackRow: Identifiable, Sendable {
     let id: Int
     let track: Track
     let plays: Int
 }
 
+/// Which songs a list shows.
+enum SongSource: Hashable, Sendable {
+    case all, favourites, recentlyAdded, mostPlayed, unconfirmed, downloads
+    case playlist(String)
+}
+
+/// Everything a list's rows are worked out from. The rows are only worked out again
+/// when one of these changes: never because of a click or a redraw (Fix A-1).
+private struct RowsKey: Hashable {
+    let source: SongSource
+    let active: Bool
+    let library: Int
+    let plays: Int
+    let members: [String]  // the favourites, or a playlist's songs, in order
+    let search: String
+    let sort: [String]
+}
+
 /// A page of songs: every list in the app (all songs, favourites, a playlist…) is one.
 struct SongList: View {
+    let source: SongSource
     let title: String
-    let tracks: [Track]
     let empty: String
     var note: String?
-    var playlist: Playlist?
+    /// False while another page is showing: the list keeps its place but does no work.
+    let isActive: Bool
 
     @Environment(AppModel.self) private var model
+    @State private var rows: [TrackRow] = []
+    @State private var total = 0
+    @State private var ready = false
     @State private var selection = Set<Int>()
     @State private var sortOrder: [KeyPathComparator<TrackRow>] = []
 
-    var body: some View {
-        let shown = model.songs(in: tracks)
-        let unsorted = shown.enumerated().map {
-            TrackRow(id: $0.offset, track: $0.element, plays: model.playCount($0.element))
-        }
-        // No column chosen: the list's own order (a playlist's, or newest first).
-        let rows = sortOrder.isEmpty ? unsorted : unsorted.sorted(using: sortOrder)
-        VStack(spacing: 0) {
-            if let note {
-                Text(note)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                Divider()
+    private var playlist: Playlist? {
+        if case .playlist(let id) = source { model.playlist(id) } else { nil }
+    }
+
+    private var key: RowsKey {
+        let members: [String] =
+            switch source {
+            case .favourites: model.listening.favourites
+            case .playlist: playlist?.trackIds ?? []
+            default: []
             }
-            if tracks.isEmpty {
+        return RowsKey(
+            source: source, active: isActive, library: model.libraryVersion,
+            plays: model.playsVersion, members: members, search: model.searchText,
+            sort: sortOrder.map { "\($0.keyPath) \($0.order)" })
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            header
+            Divider()
+            if !ready {
+                Color.clear
+            } else if total == 0 {
                 Text(empty)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if rows.isEmpty {
                 ContentUnavailableView.search(text: model.searchText)
             } else {
-                table(rows)
+                table
             }
         }
-        .navigationTitle(title)
-        .navigationSubtitle(tracks.count == 1 ? "1 song" : "\(tracks.count.formatted()) songs")
-        .toolbar {
-            ToolbarItemGroup {
-                Button("Play", systemImage: "play.fill") {
-                    model.player.play(rows.map(\.track))
-                }
-                .help("Play these songs in order")
-                Button("Shuffle", systemImage: "shuffle") {
-                    model.player.playShuffled(rows.map(\.track))
-                }
-                .help("Play these songs in a random order")
-            }
-        }
+        .task(id: key) { await workOutRows() }
     }
 
-    private func table(_ rows: [TrackRow]) -> some View {
+    /// Filter and sort off the main thread, then show the result in one go.
+    private func workOutRows() async {
+        guard isActive else { return }
+        let (source, sortOrder, search) = (source, sortOrder, model.searchText)
+        let (library, everything) = (model.library, model.everything)
+        let (plays, downloaded) = (model.listening.plays, model.downloaded)
+        let members = key.members
+        let worked = await Task.detached(priority: .userInitiated) {
+            () -> (rows: [TrackRow], total: Int) in
+            let tracks: [Track] =
+                switch source {
+                case .all: library.tracks
+                case .recentlyAdded: library.recentlyAdded()
+                case .mostPlayed: library.mostPlayed(plays)
+                case .unconfirmed: library.unconfirmed
+                case .downloads: downloaded
+                case .favourites, .playlist: everything.tracks(withIDs: members)
+                }
+            let wanted = Set(everything.filter(tracks, search).map(\.path))
+            var rows: [TrackRow] = []
+            rows.reserveCapacity(tracks.count)
+            for (place, track) in tracks.enumerated() where wanted.contains(track.path) {
+                let count = track.trackId.flatMap { plays[$0]?.count } ?? 0
+                rows.append(TrackRow(id: place, track: track, plays: count))
+            }
+            // No column chosen: the list's own order (a playlist's, or newest first).
+            return (sortOrder.isEmpty ? rows : rows.sorted(using: sortOrder), tracks.count)
+        }.value
+        guard !Task.isCancelled else { return }
+        rows = worked.rows
+        total = worked.total
+        ready = true
+    }
+
+    private var header: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(title).font(.title2.weight(.semibold)).lineLimit(1)
+                    Text(total == 1 ? "1 song" : "\(total.formatted()) songs")
+                        .foregroundStyle(.secondary)
+                }
+                if let note {
+                    Text(note).font(.callout).foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+            Button("Play", systemImage: "play.fill") { model.player.play(rows.map(\.track)) }
+                .help("Play these songs in order")
+            Button("Shuffle", systemImage: "shuffle") { model.player.playShuffled(rows.map(\.track)) }
+                .help("Play these songs in a random order")
+        }
+        .disabled(rows.isEmpty)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+    }
+
+    private var table: some View {
         Table(rows, selection: $selection, sortOrder: $sortOrder) {
             TableColumn("") { row in
                 // Table cells don't inherit the window's environment on macOS.
@@ -104,8 +176,9 @@ struct SongList: View {
             }
             .width(52)
         }
+        .background(FixedRows(height: 34))
         .contextMenu(forSelectionType: Int.self) { ids in
-            menu(for: ids, in: rows)
+            menu(for: ids)
         } primaryAction: { ids in
             if let first = ids.first, let index = rows.firstIndex(where: { $0.id == first }) {
                 model.player.play(rows.map(\.track), startAt: index)
@@ -114,7 +187,7 @@ struct SongList: View {
     }
 
     @ViewBuilder
-    private func menu(for ids: Set<Int>, in rows: [TrackRow]) -> some View {
+    private func menu(for ids: Set<Int>) -> some View {
         let picked = rows.filter { ids.contains($0.id) }
         let songs = picked.map(\.track)
         if let first = picked.first, let index = rows.firstIndex(where: { $0.id == first.id }) {
@@ -135,7 +208,7 @@ struct SongList: View {
                 if !model.listening.playlists.isEmpty { Divider() }
                 Button("New Playlist…") { model.newPlaylist(with: songs) }
             }
-            if let playlist, model.searchText.isEmpty {
+            if let playlist, playlist.trackIds.count == total {
                 Divider()
                 // Row ids are places in the playlist, so these act on exactly those lines.
                 Button("Remove from This Playlist") {
@@ -143,7 +216,7 @@ struct SongList: View {
                     model.setTracks(kept.map(\.element), of: playlist)
                     selection = []
                 }
-                if picked.count == 1, sortOrder.isEmpty {
+                if picked.count == 1, sortOrder.isEmpty, model.searchText.isEmpty {
                     Button("Move Up") { move(first.id, by: -1, in: playlist) }
                         .disabled(first.id == 0)
                     Button("Move Down") { move(first.id, by: 1, in: playlist) }

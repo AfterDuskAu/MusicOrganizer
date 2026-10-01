@@ -33,6 +33,10 @@ final class AppModel {
             Task { await arrange(everything.tracks) }
         }
     }
+    /// Goes up whenever the songs change, so lists know to work themselves out again.
+    private(set) var libraryVersion = 0
+    /// Goes up whenever a play is counted.
+    private(set) var playsVersion = 0
     private(set) var engineSettings: EngineSettings?
     private(set) var lyricsSearch: LyricsSearch?
 
@@ -203,6 +207,7 @@ final class AppModel {
         if let found = try? await connection.call("listening.get", as: Listening.self) {
             listening = found
             favourites = Set(found.favourites)
+            playsVersion += 1
         }
     }
 
@@ -216,6 +221,7 @@ final class AppModel {
         }.value
         everything = all
         library = main
+        libraryVersion += 1
         downloaded = tracks.filter(\.isDownload)
             .sorted { ($0.acquired ?? "", $1.path) > ($1.acquired ?? "", $0.path) }
     }
@@ -270,6 +276,7 @@ final class AppModel {
             let count = try await connection.call(
                 "listening.played", ["track_id": id], as: PlayCount.self)
             self.listening.plays[id] = count
+            self.playsVersion += 1
         }
     }
 

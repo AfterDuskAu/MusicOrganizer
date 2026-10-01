@@ -56,6 +56,15 @@
 - Noted, not built: lyrics for a song being played from YouTube Music (see the layout plan).
 - Not checked in the running app by Claude (the owner asked for the app not to be opened); the owner is trying each build themselves.
 
+2026-10-02, later. **Fix A-1: the app feels right** (the owner's three notes). Measured before and after; the numbers are in `docs/KNOWN-ISSUES.md`.
+
+- **Clicks and scrolling:** table rows have one fixed height (`FixedRows`), which removed the freeze on every click. A list's rows are worked out off the main thread, and only when its songs, the search, the sort or the play counts change, never because of a click. Covers load four at a time, give up their turn when their row scrolls away, and small ones are kept in the app's own cache folder so each is cut down from full size once.
+- **Lyrics** no longer jump: every line keeps one size and weight, the line being sung is shown by brightness alone, and the view makes one smooth scroll per line.
+- **Remembering where you were:** each page opened from the sidebar is kept, hidden, when another is chosen, so it comes back scrolled to the same place with the same selection and sort. What was opened inside a page (an album, an artist) is remembered page by page. The app reopens on the section it was closed on.
+- Each list now has its own heading with Play and Shuffle, instead of buttons in the window's toolbar.
+- `MUSICORG_STALLS=1` turns on a stall detector (`StallWatch`) that prints every freeze of 100 ms or more.
+- The loading screen explains itself after 6 seconds (a possible macOS permission prompt, or new songs being read).
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)
