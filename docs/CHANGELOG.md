@@ -164,6 +164,15 @@
 - **Columns is in the menu bar: View → Columns.** It's off the top of each list.
 - **Not checked in the running app** (the owner was using it): the Downloads strip, Try Again and ✕, dragging, and the View menu. The engine side of each is tested.
 
+2026-10-01, 10:45 pm. Lyrics timed to the video, and a Swap Audio button with nothing behind it yet.
+
+- **Lyrics that follow the video** (owner: most videos showed no timed lyrics). When a video takes over and the song's own timed lyrics don't fit it (the video has an intro or a scene), or the song has none, the app asks `lyrics.find` for lyrics by the **video's** length and id. LRCLIB keeps lyrics by length, and people time them to the music video's cut too; YouTube Music's own lyrics are asked second. Found, they replace the song's while the video plays, and the song's own come back with Song. Nothing is saved.
+  - Checked against four real videos before building: all four had lyrics timed to the video's length (the first line at 0:09 for a video with a 9-second intro, at 0:36 for one with a long opening scene). YouTube Music alone had only untimed words for three of them. A fifth look-up got "try again later" from LRCLIB, which was busy with the owner's lyrics run.
+  - The note "the lyrics aren't timed" now shows only when none were found for the video.
+  - A saved video, which keeps no lyrics of its own, gets its lyrics the same way when it's played.
+- **Swap Audio…** is on a song's right-click menu (owner: "build a swap button, its implementation comes later"). It explains what it will do and changes nothing. What must be true before a file is replaced is the owner's to decide; the questions are in `docs/roadmap/0.2-app-layout.md`.
+- Not checked in the running app.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

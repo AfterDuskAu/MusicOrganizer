@@ -276,6 +276,14 @@ struct MainView: View {
         } message: {
             Text(model.notice ?? "")
         }
+        .alert(
+            model.info?.title ?? "", isPresented: Binding(
+                get: { model.info != nil }, set: { if !$0 { model.info = nil } })
+        ) {
+            Button("OK") {}
+        } message: {
+            Text(model.info?.text ?? "")
+        }
         .confirmationDialog(
             "Delete the playlist “\(deleting?.name ?? "")”?",
             isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })

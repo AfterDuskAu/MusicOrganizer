@@ -57,6 +57,13 @@ final class AppModel {
     var namePrompt: NamePrompt?
     /// The song whose details are being edited by hand.
     var editing: Track?
+    /// Something to explain to the owner that isn't a failure (a feature that's coming).
+    var info: Info?
+
+    struct Info {
+        let title: String
+        let text: String
+    }
     /// The video has the whole screen (`setVideoFullScreen`).
     private(set) var videoFullScreen = false
     /// The app put its window into macOS's full screen for the video, so it takes it
@@ -108,10 +115,14 @@ final class AppModel {
         player.onTick = { [weak self] time in
             guard let self else { return }
             // A music video with an intro isn't the song second for second, so the
-            // song's timed lyrics are shown without a line lit up.
-            if lyrics.timed != player.lyricsInTime { lyrics.timed = player.lyricsInTime }
+            // song's timed lyrics are shown without a line lit up; lyrics found for the
+            // video itself are timed to it.
+            let videoId = player.video?.source.videoId
+            let inTime = player.lyricsInTime || (videoId != nil && lyrics.forVideo == videoId)
+            if lyrics.timed != inTime { lyrics.timed = inTime }
             lyrics.follow(time)
         }
+        player.onVideoChange = { [weak self] showing in self?.showLyrics(forVideo: showing) }
         player.onFinished = { [weak self] track in self?.countPlay(of: track) }
         player.findStream = { [weak self] videoId in
             guard let connection = self?.engine?.connection else {
@@ -729,6 +740,21 @@ final class AppModel {
         }
     }
 
+    // MARK: swapping a song's audio (not built yet)
+
+    /// Swap Audio has its button and nothing behind it yet: the owner is deciding which
+    /// checks must pass before a file may be replaced. Nothing is changed.
+    func explainSwap(of track: Track) {
+        info = Info(
+            title: "Swap Audio is coming",
+            text: "This will replace “\(track.title)” with YouTube Music's official audio, "
+                + "keeping its names, cover, lyrics, favourites and playlists, and keeping your "
+                + "old file so it can be undone.\n\nIt isn't switched on yet. The checks that "
+                + "have to pass first are still being decided: that it's the same song, the same "
+                + "version, the same recording, and really the better copy. Nothing has been "
+                + "changed.")
+    }
+
     // MARK: lyrics
 
     private func showLyrics(for track: Track?) {
@@ -736,7 +762,10 @@ final class AppModel {
             lyrics.show(.nothingPlaying, for: nil)
             return
         }
-        guard let connection = engine?.connection, track.lyrics != .none || track.videoId != nil
+        // Looked up for now and never saved: a song played from YouTube Music, and a
+        // saved video (which keeps no lyrics of its own).
+        let lookUpId = track.videoId ?? (track.isVideo ? track.sourceId : nil)
+        guard let connection = engine?.connection, track.lyrics != .none || lookUpId != nil
         else {
             lyrics.show(.missing, for: track.path)
             return
@@ -744,9 +773,8 @@ final class AppModel {
         lyrics.show(.loading, for: track.path)
         Task {
             let found: TrackLyrics?
-            if let videoId = track.videoId {
-                // Played from YouTube Music: looked up for now, and never saved.
-                var asked: [String: Any] = ["title": track.title, "video_id": videoId]
+            if let lookUpId {
+                var asked: [String: Any] = ["title": track.title, "video_id": lookUpId]
                 if let artist = track.artist { asked["artist"] = artist }
                 if let album = track.album { asked["album"] = album }
                 if let length = track.durationS { asked["duration_s"] = length }
@@ -755,7 +783,8 @@ final class AppModel {
                 found = try? await connection.call(
                     "library.lyrics", ["path": track.path], as: TrackLyrics.self)
             }
-            guard lyrics.trackPath == track.path else { return }  // the song changed meanwhile
+            // The song changed meanwhile, or lyrics timed to its video are already up.
+            guard lyrics.trackPath == track.path, lyrics.forVideo == nil else { return }
             let lines = found?.synced.map(LRC.parse) ?? []
             if !lines.isEmpty {
                 lyrics.show(.synced(lines), for: track.path)
@@ -765,6 +794,37 @@ final class AppModel {
             } else {
                 lyrics.show(.missing, for: track.path)
             }
+        }
+    }
+
+    /// A song's video is often not the song second for second (an intro, a scene in the
+    /// middle), so the song's timed lyrics don't fit it; and many songs have no timed
+    /// lyrics at all. Lyrics timed to the video itself are looked for (LRCLIB keeps
+    /// them by length, and people time them to the video's cut too; then YouTube
+    /// Music's own). Found, they replace the song's while the video plays. Nothing is
+    /// saved.
+    private func showLyrics(forVideo showing: ShowingVideo?) {
+        guard let track = player.current else { return }
+        guard let showing else {
+            if lyrics.forVideo != nil { showLyrics(for: track) }  // the song's own again
+            return
+        }
+        // The song's own timed lyrics fit a video that's the song second for second.
+        if showing.keepsTime, track.lyrics == .synced { return }
+        guard let connection = engine?.connection, let artist = track.artist ?? track.albumArtist
+        else { return }
+        let videoId = showing.source.videoId
+        let asked: [String: Any] = [
+            "title": track.title, "artist": artist, "duration_s": showing.source.length,
+            "video_id": videoId,
+        ]
+        Task {
+            let found = try? await connection.call("lyrics.find", asked, as: TrackLyrics.self)
+            guard player.video?.source.videoId == videoId, player.current == track else { return }
+            let lines = found?.synced.map(LRC.parse) ?? []
+            guard !lines.isEmpty else { return }  // none timed to it: the song's words stay
+            lyrics.show(.synced(lines), for: track.path, forVideo: videoId)
+            lyrics.follow(player.clock.time)
         }
     }
 
@@ -836,6 +896,8 @@ final class LyricsModel {
 
     private(set) var state: State = .nothingPlaying
     private(set) var trackPath: String?
+    /// Set when these lyrics are timed to the song's video (by its id), not the song.
+    private(set) var forVideo: String?
     private(set) var currentLine: Int?
     /// False while the lyrics' times don't fit what's playing (a music video that isn't
     /// the song second for second): no line is lit up then.
@@ -851,9 +913,10 @@ final class LyricsModel {
         }
     }
 
-    func show(_ state: State, for path: String?) {
+    func show(_ state: State, for path: String?, forVideo videoId: String? = nil) {
         self.state = state
         trackPath = path
+        forVideo = videoId
         currentLine = nil
     }
 

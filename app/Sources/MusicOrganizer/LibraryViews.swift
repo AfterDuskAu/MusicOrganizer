@@ -290,6 +290,11 @@ Table(
             Button("Play") { model.player.play(rows.map(\.track), startAt: index) }
             if picked.count == 1 {
                 Button("Edit Details…") { model.editing = first.track }
+                if !first.track.isVideo {
+                    // The button is here; what it does is still to be decided (owner,
+                    // 2026-10-01: the checks come first).
+                    Button("Swap Audio…") { model.explainSwap(of: first.track) }
+                }
             }
             // Downloads kept under Discover can be moved into the main library, and back.
             let downloads = songs.filter(\.isDownload)

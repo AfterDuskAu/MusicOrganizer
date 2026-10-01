@@ -45,7 +45,12 @@ final class Player {
     /// starts: while it's on, a song's sound comes from its video, not the library's file.
     private(set) var videoOn = false
     /// The video that's playing, when there is one.
-    private(set) var video: ShowingVideo?
+    private(set) var video: ShowingVideo? {
+        didSet {
+            // A different video (or none): not a different size of the same one.
+            if oldValue?.source.videoId != video?.source.videoId { onVideoChange?(video) }
+        }
+    }
     /// What to say where the video would be: still looking, or why there's none.
     private(set) var videoNote: String?
     /// The picture size last chosen. Nil is "the best there is".
@@ -56,6 +61,8 @@ final class Player {
     @ObservationIgnored var root: URL?
     @ObservationIgnored var onTrackChange: ((Track?) -> Void)?
     @ObservationIgnored var onTick: ((Double) -> Void)?
+    /// A video took over from the song, or the song is back (nil).
+    @ObservationIgnored var onVideoChange: ((ShowingVideo?) -> Void)?
     /// A song played to its end (not skipped): that's what counts as a play.
     @ObservationIgnored var onFinished: ((Track) -> Void)?
     /// Where a YouTube video's audio can be played from (the engine asks YouTube).
