@@ -365,3 +365,121 @@ def test_download_video_refuses_what_it_cant_do(
     with pytest.raises(FormatUnavailableError, match="720p picture"):
         youtube.download_video(VIDEO, dest, height=720)
     assert len(FakeYoutubeDL.calls) == 1  # asked once: nothing else is tried in its place
+
+
+# ---- a video's captions and sound, for timing lyrics to it (v0.2) ------------------------
+
+
+def captioned() -> dict[str, Any]:
+    def formats(name: str) -> list[dict[str, str]]:
+        return [{"ext": "vtt", "url": f"https://example.invalid/{name}.vtt"},
+                {"ext": "json3", "url": f"https://example.invalid/{name}.json3"}]  # fmt: skip
+
+    return {
+        "url": "https://example.invalid/audio?clen=20000000&x=1", "format_id": "140",
+        "duration": 187, "http_headers": {"User-Agent": "x"},
+        "subtitles": {
+            "fr": formats("fr"), "en-nP7-2PuUl7o": formats("en"), "es-419": formats("es"),
+            "pt-BR": formats("pt"), "live_chat": formats("chat"),
+            "de": [{"ext": "vtt", "url": "https://example.invalid/de.vtt"}],  # no json3
+        },
+        "automatic_captions": {
+            "en-orig": formats("auto"), "en": formats("auto-en"), "fr": formats("auto-fr"),
+            "ja": [{"ext": "vtt", "protocol": "m3u8_native", "url": "https://example.invalid/x"}],
+        },
+    }  # fmt: skip
+
+
+def test_sources_lists_the_sound_and_the_captions_worth_trying(
+    fake_ydl: Callable[[str | None], None], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    StreamYDL.calls = []
+    StreamYDL.info = captioned()
+    monkeypatch.setattr(youtube, "_make_ydl", StreamYDL)
+    monkeypatch.setattr(youtube, "_recent", {})
+    found = youtube.sources("abcdefghijk")
+    assert found.audio is not None and found.audio.duration_s == 187.0
+    # The uploader's own first, English before the rest, three at most; then YouTube's
+    # speech recognition (the "-orig" track, not its translations).
+    assert [(t.kind, t.language) for t in found.captions] == [
+        ("manual", "en-nP7-2PuUl7o"), ("manual", "fr"), ("manual", "es-419"),
+        ("automatic", "en-orig"),
+    ]  # fmt: skip
+    assert found.captions[0].url == "https://example.invalid/en.json3"
+    # Asked about a moment ago (the app is playing it): YouTube isn't asked again…
+    assert youtube.sources("abcdefghijk") == found and len(StreamYDL.calls) == 1
+    # … but an address to play from is always asked for afresh.
+    youtube.stream("abcdefghijk")
+    assert len(StreamYDL.calls) == 2
+
+    StreamYDL.info = {"format_id": "251", "url": "https://example.invalid/opus"}
+    bare = youtube.sources("lmnopqrstuv")
+    assert bare.audio is None and bare.captions == ()
+
+
+class FakeResponse:
+    def __init__(self, status: int, content: bytes = b"") -> None:
+        self.status_code, self.content = status, content
+
+    def json(self) -> Any:
+        import json
+
+        return json.loads(self.content)
+
+    def raise_for_status(self) -> None:
+        import requests
+
+        raise requests.exceptions.HTTPError(f"HTTP {self.status_code}")
+
+
+def test_fetch_audio_asks_in_ranges_and_keeps_nothing(
+    fake_ydl: Callable[[str | None], None], monkeypatch: pytest.MonkeyPatch, lib: Library
+) -> None:
+    import requests
+
+    asked: list[str] = []
+
+    def get(url: str, **kw: Any) -> FakeResponse:
+        asked.append(url)
+        low, high = map(int, url.rsplit("&range=", 1)[1].split("-"))
+        return FakeResponse(200, bytes(high - low + 1))
+
+    monkeypatch.setattr(requests, "get", get)
+    stream = youtube.Stream("https://example.invalid/a?clen=20000000&x=1", {"User-Agent": "x"}, 1.0)
+    before = [p for p in lib.root.rglob("*") if p.is_file()]
+    assert len(youtube.fetch_audio(stream)) == 20_000_000
+    # Three pieces of at most 8 MB: one range of 13 MB was slowed to a crawl.
+    assert [a.rsplit("&range=", 1)[1] for a in asked] == [
+        "0-8388607", "8388608-16777215", "16777216-19999999",
+    ]  # fmt: skip
+    assert [p for p in lib.root.rglob("*") if p.is_file()] == before  # nothing written
+
+    for bad in ("https://example.invalid/a?x=1", "https://example.invalid/a?clen=90000000"):
+        with pytest.raises(DownloadError):
+            youtube.fetch_audio(youtube.Stream(bad, {}, 1.0))
+    monkeypatch.setattr(requests, "get", lambda url, **kw: FakeResponse(403))
+    with pytest.raises(DownloadError, match="HTTP 403"):
+        youtube.fetch_audio(stream)
+    monkeypatch.setattr(requests, "get", lambda url, **kw: FakeResponse(200, b"short"))
+    with pytest.raises(DownloadError):
+        youtube.fetch_audio(stream)
+
+
+def test_fetch_captions(
+    fake_ydl: Callable[[str | None], None], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import requests
+
+    track = youtube.CaptionTrack("manual", "en", "https://example.invalid/en.json3")
+    monkeypatch.setattr(requests, "get", lambda url, **kw: FakeResponse(200, b'{"events": []}'))
+    assert youtube.fetch_captions(track) == {"events": []}
+    monkeypatch.setattr(requests, "get", lambda url, **kw: FakeResponse(200, b"<html>"))
+    with pytest.raises(YouTubeError, match="couldn't be read"):
+        youtube.fetch_captions(track)
+    monkeypatch.setattr(requests, "get", lambda url, **kw: FakeResponse(404))
+    with pytest.raises(YouTubeError, match="HTTP 404"):
+        youtube.fetch_captions(track)
+    big = b" " * (youtube.CAPTION_MAX_BYTES + 1)
+    monkeypatch.setattr(requests, "get", lambda url, **kw: FakeResponse(200, big))
+    with pytest.raises(YouTubeError, match="too large"):
+        youtube.fetch_captions(track)

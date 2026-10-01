@@ -140,9 +140,10 @@ final class Player {
     /// What the Cover / Video switch says. A saved video counts as "Video" by itself.
     var pictureWanted: Bool { current?.isVideo == true ? !pictureHidden : videoOn }
 
-    /// False while a video that isn't the song second for second is playing: the song's
-    /// timed lyrics don't fit it.
-    var lyricsInTime: Bool { loaded != .video || video?.keepsTime ?? true }
+    /// The sound that's playing is a video's own (from YouTube), not the song's. A video
+    /// is rarely the song second for second, so the song's timed lyrics don't fit it
+    /// until they've been timed to the video.
+    var soundIsVideo: Bool { loaded == .video }
 
     // MARK: what the screens call
 

@@ -62,6 +62,7 @@ from musicorg import (
     browse,
     fileops,
     fingerprint,
+    listening,
     lyrics,
     naming,
     queue,
@@ -1831,6 +1832,87 @@ def edit_job(ctx: JobContext) -> Outcome:
     return Outcome.done(f"Edited: {moved.message}")
 
 
+# ---- taking a download out of the library (v0.2) ---------------------------------------
+
+MAX_REMOVE = 500
+
+
+def plan_remove(lib: Library, index: Index, rel_paths: list[str]) -> fileops.Plan:
+    """A plan sending downloads to the system Trash (the app's "Delete" on Discover →
+    Downloads): songs and videos the owner downloaded from YouTube Music and doesn't want.
+
+    Only a download can go this way: a file whose `MUSICORG_SOURCE` is `youtube_music`
+    with no rip behind it (no `MUSICORG_MATCH`), which can be downloaded again. A song
+    that came from the owner's own rips is refused: it may be the only good copy.
+
+    Each file goes to the Trash with its `.lrc`; the album's `cover.jpg` goes too when no
+    other song is left in its folder. The song also leaves the owner's favourites, play
+    counts and playlists. Journaled like every change. Undo can't bring a
+    file back from the Trash (it says so: restore it by hand), which is why the app asks
+    before it does this."""
+    if not rel_paths:
+        raise UserError("Choose the downloads to delete.")
+    if len(rel_paths) > MAX_REMOVE:
+        raise UserError(f"That's too many to delete at once (the limit is {MAX_REMOVE}).")
+    ops = []
+    for rel in dict.fromkeys(rel_paths):
+        if not isinstance(rel, str):
+            raise UserError("A path should be text.")
+        path = browse.track_path(lib, rel)
+        found = tags.read_tags(path)
+        if not isinstance(found.musicorg_id, str):
+            raise UserError(f"{path.name} isn't a file the library manages.")
+        if found.source != "youtube_music" or found.match is not None:
+            raise UserError(
+                f"“{found.title or path.stem}” came from your own files, not from a download, "
+                "so it isn't deleted here."
+            )
+        ops.append(
+            fileops.PlanOp(
+                action="remove",
+                source=fileops.FileCheck.of(lib, path),
+                params={
+                    "musicorg_id": found.musicorg_id,
+                    "title": found.title if isinstance(found.title, str) else path.stem,
+                    "artist": found.artist if isinstance(found.artist, str) else None,
+                },
+            )
+        )
+    summary = {"operations": len(ops), "downloads": 0, "est_minutes": 1, "days": 0,
+               "disk_mb": 0, "low_confidence_adopts": 0}  # fmt: skip
+    plan = fileops.new_plan("remove", ops, summary)
+    fileops.save_plan(lib, plan)
+    return plan
+
+
+def remove_job(ctx: JobContext) -> Outcome:
+    (op,) = _ops(ctx.payload)
+    path = _same_file(ctx.lib, op)
+    if path is None:
+        return Outcome.needs_review(FILE_CHANGED, "The file has moved or changed since the plan.")
+    found = tags.read_tags(path)
+    if found.source != "youtube_music" or found.match is not None:
+        return Outcome.needs_review(FILE_CHANGED, "It isn't a download any more.")
+    rel = _rel_path(ctx.lib, path)
+    folder = path.parent
+    lrc = path.with_suffix(".lrc")
+    fileops.trash(ctx.batch, path)
+    if lrc.is_file():
+        fileops.trash(ctx.batch, lrc)
+    # The album's cover goes with its last song; a folder with nothing left goes too.
+    cover = folder / naming.COVER_NAME
+    others = [
+        entry for entry in folder.iterdir() if entry.is_file() and naming.is_audio_name(entry.name)
+    ]
+    if not others and cover.is_file():
+        fileops.trash(ctx.batch, cover)
+    fileops.remove_empty_folders(ctx.lib, folder)
+    with open_index(ctx.lib.paths, write=True) as index:
+        index.remove_library_tracks([rel])
+    listening.forget(ctx.lib, [str(op.params["musicorg_id"])])
+    return Outcome.done(f"{path.name} is in the Trash.")
+
+
 # ---- lyrics and covers for the library (step 10) ------------------------------------
 
 WORK_S_PER_LYRICS = 3  # LRCLIB's pace (one request a second), sometimes YouTube Music too
@@ -2171,6 +2253,9 @@ def describe(plan: fileops.Plan) -> list[str]:
             what += ["lyrics"] if "lyrics" in op.params else []
             what += ["cover"] if "cover_b64" in op.params else []
             lines.append(f"{op.op_id:>5}  edit     {op.source.path}  ({', '.join(what)})")
+        elif op.action == "remove":
+            assert op.source is not None
+            lines.append(f"{op.op_id:>5}  delete   {op.source.path}  (to the Trash)")
         elif op.action == "adopt_unconfirmed":
             lines.append(f"{op.op_id:>5}  adopt    {rip}  →  {op.target}  [unconfirmed: stays "
                          "in review]")  # fmt: skip
@@ -2207,3 +2292,4 @@ queue.register("artwork", artwork_job, network=False)
 queue.register("tidy", tidy_job, network=False)
 queue.register("download", download_job, network=True)
 queue.register("edit", edit_job, network=False)
+queue.register("remove", remove_job, network=False)

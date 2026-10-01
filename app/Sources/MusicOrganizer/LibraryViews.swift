@@ -306,6 +306,14 @@ Table(
                     Button("Move to Library") { model.moveDownloads(ids, toLibrary: true) }
                 }
             }
+            // A download can be deleted (it goes to the Trash). The owner's own songs can't.
+            if !downloads.isEmpty, downloads.count == songs.count {
+                Button(downloads.count == 1 ? "Delete…" : "Delete \(downloads.count) Downloads…",
+                       role: .destructive
+                ) {
+                    model.deletingDownloads = downloads
+                }
+            }
             Divider()
             if songs.allSatisfy(model.isFavourite) {
                 Button("Remove from Favourites") { model.setFavourite(songs, false) }

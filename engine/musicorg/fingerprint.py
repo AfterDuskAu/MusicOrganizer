@@ -155,6 +155,28 @@ def fingerprint(path: PurePath | str, length_s: int = 0, *, index: Index | None 
     return fp
 
 
+def fingerprint_bytes(data: bytes, name: str = "the audio") -> RawFP:
+    """The raw fingerprint of audio held in memory (an M4A as YouTube serves it), all of
+    it. fpcalc reads it from its standard input, so nothing is written anywhere (v0.2:
+    lining a video's sound up with a song's). Checked with fpcalc 1.6.1: the same file
+    read this way gives the same items as read from disk."""
+    command = [str(_fpcalc()), "-raw", "-json", "-length", "0", "-"]
+    try:
+        result = subprocess.run(
+            command, input=data, capture_output=True, timeout=FPCALC_TIMEOUT_S, check=False
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise AudioError(f"Couldn't fingerprint {name}: {exc}") from exc
+    text = result.stdout.decode("utf-8", errors="replace")
+    if result.returncode != 0:
+        fp = _mostly_read(text, name)
+        if fp is None:
+            detail = result.stderr.decode("utf-8", errors="replace").strip().splitlines()[-1:]
+            raise AudioError(f"Couldn't fingerprint {name}: {(detail or ['no details'])[0]}")
+        return fp
+    return parse_fpcalc_json(text, name)
+
+
 def _mostly_read(text: str, name: str) -> RawFP | None:
     """fpcalc stops with an error at a damaged spot in a file (an old rip with a missing
     MP3 frame header), but it still prints what it read up to there. That fingerprint is

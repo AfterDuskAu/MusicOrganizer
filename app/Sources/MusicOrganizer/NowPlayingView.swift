@@ -150,10 +150,13 @@ private struct VideoControls: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-            } else if let video = player.video, !video.keepsTime, model.lyrics.hasLyrics,
-                model.lyrics.forVideo != video.source.videoId
+            } else if player.video != nil, model.lyrics.hasLyrics,
+                model.lyrics.videoTiming != .none
             {
-                Text("The video isn't the same length as the song, so the lyrics aren't timed.")
+                Text(
+                    model.lyrics.videoTiming == .working
+                        ? "Timing the lyrics to this video…"
+                        : "The lyrics couldn't be timed to this video, so no line is lit up.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

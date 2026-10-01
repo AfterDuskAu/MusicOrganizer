@@ -954,6 +954,8 @@ def _print_plan_summary(plan: fileops.Plan) -> None:
               "download from YouTube Music")  # fmt: skip
     elif plan.kind == "edit":
         print("  1 song to edit")
+    elif plan.kind == "remove":
+        print(f"  {s.get('operations', 0):,} download(s) to send to the Trash")
     elif plan.kind == "replace":
         print(
             f"  {s.get('operations', 0):,} rip(s) to replace, {s.get('downloads', 0):,} download(s)"

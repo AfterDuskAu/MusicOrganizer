@@ -98,7 +98,9 @@ STAGING = (naming.STAGING_DIR,)
 ENGINE = (naming.ENGINE_DIR,)
 
 # docs/ENGINE_API.md → Enums.
-PLAN_KINDS = frozenset({"replace", "adopt", "lyrics", "artwork", "tidy", "download", "edit"})
+PLAN_KINDS = frozenset(
+    {"replace", "adopt", "lyrics", "artwork", "tidy", "download", "edit", "remove"}
+)
 BATCH_KINDS = PLAN_KINDS | {"undo", "demo"}
 OPERATIONS = (
     "commit", "copy_in", "supersede", "restore", "move", "trash", "write_tags", "write_sidecar",

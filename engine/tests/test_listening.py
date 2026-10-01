@@ -53,6 +53,21 @@ def test_playlists(lib: Library) -> None:
         listening.set_playlist_tracks(lib, second["id"], [])
 
 
+def test_a_song_that_left_the_library_is_forgotten(lib: Library) -> None:
+    (made,) = listening.create_playlist(lib, "Mix")
+    listening.set_playlist_tracks(lib, made["id"], ["t_1", "t_2", "t_1", "t_3"])
+    for track_id in ("t_1", "t_2"):
+        listening.set_favourite(lib, track_id, True)
+        listening.played(lib, track_id)
+    listening.move(lib, ["t_1", "t_2"], to_library=True)
+    listening.forget(lib, ["t_1", "t_9"])
+    found = listening.get(lib)
+    assert found["favourites"] == ["t_2"] and list(found["plays"]) == ["t_2"]
+    assert found["library"] == ["t_2"]
+    assert found["playlists"][0]["track_ids"] == ["t_2", "t_3"]
+    listening.forget(lib, [])  # nothing to do
+
+
 def test_downloads_moved_into_the_main_library_and_back(lib: Library) -> None:
     assert listening.move(lib, ["t_2", "t_1"], to_library=True) == ["t_1", "t_2"]
     assert listening.move(lib, ["t_1"], to_library=True) == ["t_1", "t_2"]  # already there

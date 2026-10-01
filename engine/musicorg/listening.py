@@ -71,6 +71,22 @@ def move(lib: Library, track_ids: list[str], *, to_library: bool) -> list[str]:
     return _shown(data)["library"]
 
 
+def forget(lib: Library, track_ids: list[str]) -> None:
+    """Take songs that have left the library (deleted downloads) out of everything here:
+    favourites, play counts, playlists and the moved-to-library list."""
+    gone = set(track_ids)
+    if not gone:
+        return
+    with state.edit(lib.paths.state_file) as st:
+        data = _read(st.data)
+        for name in ("favourites", "plays", "library"):
+            for track_id in gone:
+                data[name].pop(track_id, None)
+        for playlist in data["playlists"]:
+            playlist["track_ids"] = [t for t in playlist["track_ids"] if t not in gone]
+        st.data[KEY] = data
+
+
 def played(lib: Library, track_id: str) -> dict[str, Any]:
     """Count one play of a song. Returns its `{count, last_played}`."""
     _check_id(track_id)

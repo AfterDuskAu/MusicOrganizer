@@ -284,6 +284,21 @@ struct MainView: View {
         } message: {
             Text(model.info?.text ?? "")
         }
+        .confirmationDialog(
+            Self.deleteQuestion(model.deletingDownloads ?? []),
+            isPresented: Binding(
+                get: { model.deletingDownloads != nil },
+                set: { if !$0 { model.deletingDownloads = nil } })
+        ) {
+            Button("Move to Trash", role: .destructive) {
+                if let tracks = model.deletingDownloads { model.deleteDownloads(tracks) }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(
+                "It goes to the Trash with its lyrics, and comes off your playlists and "
+                    + "favourites. You can download it again.")
+        }
         // Several downloads at once are a batch: the plan is shown before anything is queued.
         .alert(
             model.batch.map { "Download \($0.count) \($0.count == 1 ? "song" : "songs")?" } ?? "",
@@ -494,6 +509,13 @@ struct MainView: View {
             }
         }
         .clipped()
+    }
+
+    private static func deleteQuestion(_ tracks: [Track]) -> String {
+        if tracks.count == 1, let only = tracks.first {
+            return "Delete “\(only.title)”\(only.isVideo ? " (the video)" : "")?"
+        }
+        return "Delete \(tracks.count) downloads?"
     }
 
     /// What a batch of downloads will take, said before the owner agrees to it.

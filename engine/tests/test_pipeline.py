@@ -24,6 +24,7 @@ from musicorg import (
     cli,
     fileops,
     library,
+    listening,
     lyrics,
     match,
     naming,
@@ -1539,6 +1540,100 @@ def test_a_download_dismissed_while_waiting_closes_its_batch(
         store.update_job(waiting["job_id"], "2026-10-01T00:00:00Z", state="running")
     with pytest.raises(UserError, match="downloading right now"):
         queue.dismiss_download(lib, waiting["job_id"])
+
+
+# ---- deleting a download (v0.2) ---------------------------------------------------------
+
+
+def test_a_download_can_be_deleted(
+    lib: Library, index: Index, downloads: FakeDownloads, fake_trash: Any,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:  # fmt: skip
+    found = {VIDEO_A: candidate(VIDEO_A, "Melody", ("Band",), SECONDS, album="Tunes")}
+    monkeypatch.setattr(youtube, "get_track", lambda video_id: found.get(video_id))
+    plan = pipeline.plan_download(lib, index, [VIDEO_A])
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    song = lib.paths.music / "Band" / "Tunes (2020)" / "03 Melody.m4a"
+    song.with_suffix(".lrc").write_text("[00:01.00]Made-up line\n", encoding="utf-8")
+    (song.parent / "cover.jpg").write_bytes(b"\xff\xd8cover")
+    rel = "Music/Band/Tunes (2020)/03 Melody.m4a"
+    track_id = str(tags.read_tags(song).musicorg_id)
+    listening.set_favourite(lib, track_id, True)
+
+    plan = pipeline.plan_remove(lib, index, [rel, rel])
+    assert (plan.kind, plan.summary["operations"]) == ("remove", 1)
+    assert pipeline.describe(plan) == [f"    1  delete   {rel}  (to the Trash)"]
+    batch_id = pipeline.apply(lib, index, plan.plan_id).batch_id
+    run_queue(lib)
+
+    # The song, its lyrics and (as the album's last song) its cover are in the Trash,
+    # and the folders that held only them are gone.
+    assert music_files(lib) == []
+    assert not (lib.paths.music / "Band").exists()
+    assert sorted(path.name for path in fake_trash.sent) == [
+        "03 Melody.lrc", "03 Melody.m4a", "cover.jpg",
+    ]  # fmt: skip
+    assert index.library_tracks() == []
+    assert listening.get(lib)["favourites"] == []  # it isn't a favourite any more
+    record = fileops.read_journal(lib)[batch_id]
+    assert (record.kind, record.status) == ("remove", "closed")
+    assert [op.op for op in record.ops] == ["trash", "trash", "trash"]
+    # It can be downloaded again: nothing says it's still here.
+    assert pipeline.plan_download(lib, index, [VIDEO_A]).summary["downloads"] == 1
+    # Undo can't reach into the Trash: it says to put the files back by hand.
+    steps = pipeline.undo(lib, batch_id, dry_run=True).steps
+    assert {step.status for step in steps} == {"manual"}
+
+
+def test_the_album_cover_stays_while_another_song_is_there(
+    lib: Library, index: Index, downloads: FakeDownloads, fake_trash: Any,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:  # fmt: skip
+    found = {
+        VIDEO_A: candidate(VIDEO_A, "Melody", ("Band",), SECONDS, album="Tunes"),
+        VIDEO_B: candidate(VIDEO_B, "Other", ("Band",), SECONDS, album="Tunes"),
+    }
+    monkeypatch.setattr(youtube, "get_track", lambda video_id: found.get(video_id))
+    plan = pipeline.plan_download(lib, index, [VIDEO_A, VIDEO_B])
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    (first, second) = sorted(f for f in music_files(lib) if f.endswith(".m4a"))
+    folder = (lib.paths.music / first).parent
+    (folder / "cover.jpg").write_bytes(b"\xff\xd8cover")
+
+    plan = pipeline.plan_remove(lib, index, [f"Music/{first}"])
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    assert sorted(music_files(lib)) == sorted([second, f"{PurePosixPath(second).parent}/cover.jpg"])
+    assert [t["rel_path"] for t in index.library_tracks()] == [f"Music/{second}"]
+
+
+def test_only_a_download_can_be_deleted(lib: Library, index: Index, adopted: Path) -> None:
+    rel = PurePosixPath(*adopted.relative_to(lib.root).parts).as_posix()
+    with pytest.raises(UserError, match="came from your own files"):
+        pipeline.plan_remove(lib, index, [rel])  # the owner's own rip, copied in
+    with pytest.raises(UserError, match="Choose the downloads"):
+        pipeline.plan_remove(lib, index, [])
+    with pytest.raises(NotFoundError):
+        pipeline.plan_remove(lib, index, ["Music/Nobody/nothing.m4a"])
+    with pytest.raises(OutsideLibraryError):
+        pipeline.plan_remove(lib, index, ["../outside.m4a"])
+    assert adopted.is_file()
+
+
+def test_a_saved_video_can_be_deleted(
+    lib: Library, index: Index, videos: FakeVideoDownloads, fake_trash: Any
+) -> None:
+    save_video(lib, index)
+    (rel,) = [t["rel_path"] for t in index.library_tracks()]
+    assert naming.is_video_path(rel)
+    plan = pipeline.plan_remove(lib, index, [rel])
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    assert index.library_tracks() == []
+    assert [path.suffix for path in fake_trash.sent] == [".mp4"]
+    assert not (lib.paths.music / naming.VIDEOS_DIR).exists()
 
 
 # ---- edits by hand (v0.2) --------------------------------------------------------------

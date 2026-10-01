@@ -57,6 +57,7 @@ from musicorg import (
     state,
     status,
     tags,
+    videolyrics,
     youtube,
 )
 from musicorg.config import MAX_DAILY_CAP, THROTTLE_DEFAULTS, Config, save_daily_cap
@@ -79,8 +80,9 @@ SHUTDOWN_GRACE_S = 10.0
 PROGRESS_INTERVAL_S = 0.25  # at most 4 job.progress a second per job
 REVIEW_STATES = ("review", "not_found", "matched_auto")
 SLOW_METHODS = frozenset(
-    {"youtube.stream", "youtube.video", "search.ytmusic", "lyrics.find", "discover.suggest"}
-)
+    {"youtube.stream", "youtube.video", "search.ytmusic", "lyrics.find", "lyrics.for_video",
+     "discover.suggest"}
+)  # fmt: skip
 RPC_DECISIONS = ("accept", "candidate", "url", "only_copy", "skip", "reject")
 
 # Error codes (docs/ENGINE_API.md → Errors).
@@ -272,6 +274,7 @@ class Server:
             "youtube.stream": self.youtube_stream,
             "youtube.video": self.youtube_video,
             "lyrics.find": self.lyrics_find,
+            "lyrics.for_video": self.lyrics_for_video,
             "discover.suggest": self.discover_suggest,
             "queue.jobs": self.queue_jobs,
             "queue.downloads": self.queue_downloads,
@@ -692,10 +695,13 @@ class Server:
                     lyrics_text=want(options, "lyrics", str),
                     cover_file=Path(cover).expanduser() if cover else None,
                 )  # fmt: skip
+            elif kind == "remove":
+                plan = pipeline.plan_remove(lib, index, need(options, "paths", list))
             else:
                 raise RpcError(
                     INVALID_PARAMS,
-                    "kind should be replace, adopt, lyrics, artwork, tidy, download or edit.",
+                    "kind should be replace, adopt, lyrics, artwork, tidy, download, edit or "
+                    "remove.",
                 )
         summary = dict(plan.summary)
         for key in ("operations", "downloads", "est_minutes", "low_confidence_adopts"):
@@ -819,6 +825,26 @@ class Server:
         lib = self._library()
         queue.dismiss_download(lib, need(params, "job_id", int))
         return {"downloads": queue.downloads(lib.paths)}
+
+    def lyrics_for_video(self, params: dict[str, Any]) -> dict[str, Any]:
+        """A song's lyrics timed to its video, for the app to show while the video
+        plays: the video's sound lined up with the song's, checked against the video's
+        captions. Looked up and worked out, never saved in the library."""
+        video_length = want(params, "video_duration_s", (int, float))
+        song_length = want(params, "song_duration_s", (int, float))
+        with self._index(write=True) as index:  # the index keeps what's worked out
+            found = videolyrics.for_video(
+                self._library(), index,
+                title=need(params, "title", str),
+                artist=want(params, "artist", str, "") or "",
+                video_id=need(params, "video_id", str),
+                video_duration_s=float(video_length) if video_length is not None else None,
+                song_path=want(params, "song_path", str),
+                song_video_id=want(params, "song_video_id", str),
+                song_duration_s=float(song_length) if song_length is not None else None,
+                video_path=want(params, "video_path", str),
+            )  # fmt: skip
+        return found.to_dict()
 
     def discover_suggest(self, params: dict[str, Any]) -> dict[str, Any]:
         """Songs the owner doesn't have, found from ones they do (Discover, v0.4).

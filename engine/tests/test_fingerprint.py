@@ -108,6 +108,24 @@ def test_whole_file_by_default(fpcalc: Path, audio: AudioFixtures) -> None:
     assert len(first.items) < len(whole.items) * 0.7
 
 
+def test_audio_held_in_memory_fingerprints_like_the_file(
+    fpcalc: Path, audio: AudioFixtures, ffmpeg_path: Path, tmp_path: Path
+) -> None:
+    # As YouTube serves a stream: the index of the file at its start, so it can be read
+    # from beginning to end without seeking.
+    served = tmp_path / "served.m4a"
+    subprocess.run(
+        [str(ffmpeg_path), "-v", "error", "-i", str(audio.melody_a_m4a), "-c", "copy",
+         "-movflags", "+faststart", str(served)],
+        check=True,
+    )  # fmt: skip
+    from_file = fp.fingerprint(served)
+    from_memory = fp.fingerprint_bytes(served.read_bytes())
+    assert from_memory.items == from_file.items and len(from_memory.items) > 120
+    with pytest.raises(AudioError):
+        fp.fingerprint_bytes(b"not audio at all")
+
+
 def test_cache_in_the_index(
     fpcalc: Path,
     audio: AudioFixtures,

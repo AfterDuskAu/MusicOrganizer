@@ -538,6 +538,11 @@ def test_stream_jobs_and_the_new_plan_kinds(
         rpc.NOT_FOUND
     )
     assert code(opened, "plan.create", kind="edit", options={"path": "../x.mp3"}) == rpc.OUTSIDE
+    assert code(opened, "plan.create", kind="remove", options={"paths": ["Music/none.m4a"]}) == (
+        rpc.NOT_FOUND
+    )
+    assert code(opened, "plan.create", kind="remove", options={"paths": []}) == rpc.USER_ERROR
+    assert code(opened, "plan.create", kind="remove", options={}) == rpc.INVALID_PARAMS
 
 
 def test_settings(opened: rpc.Server) -> None:

@@ -574,7 +574,7 @@ def open_index(paths: LibraryPaths, *, write: bool) -> Index:
 QUEUE_SCHEMA_VERSION = 1
 # Jobs the owner asks for one at a time and waits on (the app's Download, Save Video and
 # Edit Details). They run before the batches that work through the whole library.
-FIRST_KINDS = ("download", "edit")
+FIRST_KINDS = ("download", "edit", "remove")
 
 _QUEUE_TABLES = """
 CREATE TABLE jobs (

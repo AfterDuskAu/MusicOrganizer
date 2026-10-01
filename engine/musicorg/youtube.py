@@ -967,7 +967,27 @@ def _look_up(video_id: str) -> dict[str, Any]:
         raise download_problem(video_id, exc) from exc
     if not isinstance(info, dict):
         raise DownloadError(f"YouTube gave no address to play {video_id} from.")
+    with _recent_lock:
+        _recent[video_id] = (time.monotonic(), info)
+        for old_id in [k for k, (at, _) in _recent.items() if time.monotonic() - at > RECENT_S]:
+            del _recent[old_id]
     return info
+
+
+RECENT_S = 300.0
+_recent: dict[str, tuple[float, dict[str, Any]]] = {}
+_recent_lock = threading.Lock()
+
+
+def _looked_up_lately(video_id: str) -> dict[str, Any] | None:
+    """What YouTube said about a video in the last five minutes, if it was asked. The
+    app asks about a video to play it and, a moment later, the engine wants the same
+    video's sound and captions to time the lyrics: that needn't be a second request.
+    Only `sources` uses it. `stream` and `video` always ask afresh: they're called again
+    exactly when an address has stopped working."""
+    with _recent_lock:
+        found = _recent.get(video_id)
+    return found[1] if found is not None and time.monotonic() - found[0] <= RECENT_S else None
 
 
 def _audio_of(video_id: str, info: dict[str, Any]) -> Stream:
@@ -984,6 +1004,138 @@ def _audio_of(video_id: str, info: dict[str, Any]) -> Stream:
         if isinstance(info.get("duration"), int | float)
         else None,
     )
+
+
+# ---- a video's captions and sound, for timing lyrics to it (v0.2) ------------------------
+
+CAPTION_MAX_BYTES = 2_000_000
+MAX_MANUAL_TRACKS = 3
+
+
+@dataclass(frozen=True)
+class CaptionTrack:
+    """One of a video's caption tracks: the uploader's own (`manual`) or YouTube's speech
+    recognition (`automatic`). The address is YouTube's and expires."""
+
+    kind: str
+    language: str
+    url: str
+
+
+@dataclass(frozen=True)
+class VideoSources:
+    """What a video offers for timing lyrics to it: its sound and its captions."""
+
+    video_id: str
+    audio: Stream | None
+    captions: tuple[CaptionTrack, ...]
+
+
+def sources(video_id: str) -> VideoSources:
+    """A video's sound (format 140) and its caption tracks, in one request (none, if the
+    video was asked about in the last five minutes, as it is when it's playing). Nothing
+    is downloaded.
+
+    Checked against yt-dlp 2026.08.19 on 13 official videos (2026-10-02): `subtitles`
+    and `automatic_captions` are always filled, each a dict of language key → formats,
+    every real track offered as `json3` among others. `automatic_captions` also lists
+    translations and entries with only a `vtt` format; the speech-recognition track
+    itself has a key ending `-orig` ("en-orig"). A track's language label can't be
+    trusted (an "English" track holding the Spanish words that are sung), so the
+    caller tries the tracks against the words it has. Manual tracks come first, English
+    ones before the rest, three at most."""
+    info = _looked_up_lately(video_id) or _look_up(video_id)
+    try:
+        audio: Stream | None = _audio_of(video_id, info)
+    except DownloadError:
+        audio = None
+
+    def tracks(listing: Any, kind: str, wanted: Callable[[str], bool]) -> list[CaptionTrack]:
+        found = []
+        for language, formats in (listing if isinstance(listing, dict) else {}).items():
+            if not isinstance(language, str) or not wanted(language):
+                continue
+            for entry in formats if isinstance(formats, list) else []:
+                address = entry.get("url") if isinstance(entry, dict) else None
+                if entry.get("ext") == "json3" and isinstance(address, str):
+                    if address.startswith("https://"):
+                        found.append(CaptionTrack(kind, language, address))
+                    break
+        return found
+
+    manual = tracks(info.get("subtitles"), "manual", lambda language: language != "live_chat")
+    manual.sort(key=lambda track: not track.language.casefold().startswith("en"))
+    automatic = tracks(
+        info.get("automatic_captions"), "automatic", lambda language: language.endswith("-orig")
+    )
+    return VideoSources(video_id, audio, tuple(manual[:MAX_MANUAL_TRACKS] + automatic[:1]))
+
+
+AUDIO_MAX_BYTES = 40_000_000  # about 40 minutes: longer isn't a song's video
+AUDIO_PIECE_BYTES = 8 << 20
+_CLEN = re.compile(r"[?&]clen=(\d+)")
+
+
+def fetch_audio(stream: Stream) -> bytes:
+    """The whole of a format-140 stream, in memory, to fingerprint it (lining a video's
+    sound up with a song's). Nothing is written anywhere and nothing is kept: it's what
+    playing the stream fetches, once. Through the rate limiter, as one request.
+
+    Measured 2026-10-02: asked for plainly, YouTube serves a stream at about twice the
+    speed it plays at (two minutes for a four-minute song). Asked for as a byte range
+    in the address (`&range=0-<size>`; the size is the address's `clen`), a 4 MB song
+    arrives in 0.15 to 0.4 s. One range of 13 MB was slowed again, so it's fetched in
+    pieces of 8 MB."""
+    found = _CLEN.search(stream.url)
+    if found is None:
+        raise DownloadError("YouTube didn't say how large that audio is, so it wasn't fetched.")
+    size = int(found.group(1))
+    if not 0 < size <= AUDIO_MAX_BYTES:
+        raise DownloadError("That audio is too long to be a song's video.")
+
+    def live() -> bytes:
+        import requests
+
+        data = bytearray()
+        for low in range(0, size, AUDIO_PIECE_BYTES):
+            high = min(size, low + AUDIO_PIECE_BYTES) - 1
+            response = requests.get(
+                f"{stream.url}&range={low}-{high}", headers=stream.headers,
+                timeout=SOCKET_TIMEOUT_S,
+            )  # fmt: skip
+            if response.status_code == 429 or response.status_code >= 500:
+                response.raise_for_status()  # a slow-down: the limiter backs off
+            if response.status_code >= 400 or len(response.content) != high - low + 1:
+                raise DownloadError(
+                    f"YouTube didn't hand over that audio (HTTP {response.status_code})."
+                )
+            data += response.content
+        return bytes(data)
+
+    return limiter().call(live)
+
+
+def fetch_captions(track: CaptionTrack) -> Any:
+    """A caption track's contents (YouTube's "json3"), through the rate limiter."""
+
+    def live() -> Any:
+        import requests
+
+        response = requests.get(
+            track.url, timeout=IMAGE_TIMEOUT_S, headers={"User-Agent": USER_AGENT}
+        )
+        if response.status_code == 429 or response.status_code >= 500:
+            response.raise_for_status()  # a slow-down: the limiter backs off
+        if response.status_code >= 400:
+            raise YouTubeError(f"YouTube answered HTTP {response.status_code} for the captions.")
+        if len(response.content) > CAPTION_MAX_BYTES:
+            raise YouTubeError("Those captions are too large to be a song's.")
+        try:
+            return response.json()
+        except ValueError as exc:
+            raise YouTubeError("YouTube's captions for that video couldn't be read.") from exc
+
+    return limiter().call(live)
 
 
 def download_problem(video_id: str, exc: BaseException) -> Exception:

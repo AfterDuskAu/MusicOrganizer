@@ -6,6 +6,8 @@ Most of these came from comparing the engine with the Photonizer project's lesso
 
 ## Needs the owner's decision
 
+- **Reading a video's sound to time its lyrics (rule 8)** (built 2026-10-02). To line a song's lyrics up with its video, the engine fetches the video's audio once (about 4 MB, kept only as a fingerprint in the index's cache), through `musicorg.youtube` and its rate limiter. Rule 8 says downloads happen only through the throttled queue. This was built on the reading that a download is a file kept in the library, and that this is what playing the video already fetches. Decide: is that reading right? If not, the sound line-up is taken out and only the captions time the lyrics (about half to 85 % of official videos).
+- **Delete is offered only for downloads** (built 2026-10-02): a song that came from the owner's own rips can't be deleted from the app. Decide whether that should ever be possible, and with what safeguard.
 - **Saved videos live in `Music/Videos/`, not in a folder beside `Music/`** (built 2026-10-01). The owner asked for "a separate folder of videos". Inside `Music/` every safety rule already covers them; a top-level `Videos/` means changing `fileops` itself (its guard, commit, supersede, restore and undo all assume `Music/`) with the full set of crash tests. Decide: is `Music/Videos/` fine, or should the top-level folder be done as its own step?
 - **Videos in the YouTube Music search page** (suggested, not answered): a Songs / Videos switch there, so a video can be found and saved without first playing its song. Today a video is saved from the Local Visualizer.
 - **Sizes of saved videos**, from one 4-minute official video (2026-10-01): 1080p about 100 MB, 720p about 35 MB, 480p about 22 MB, 360p about 15 MB, 144p 7 MB; the song alone is about 4 MB. A video that is a still picture is far smaller.
@@ -50,6 +52,9 @@ The owner named these and parked them: nothing here is built until the owner say
 - **Unconfirmed copies keep junk from the rip's own tags**, such as an album called after a download site. They're fixed when the song is identified; a clean-up of obvious junk could come sooner.
 
 ### The video player (built 2026-10-01): what's still rough
+
+- **Lyrics timed to the video (2026-10-02): what it can't do.** A video with its own mix or a live take of the song, and no captions, stays untimed. So does one that plays the song 2 % or more fast or slow (a slower search that finds those was tested and left out: no real video needed it). A cut is found to about ±0.3 s, so a line that starts within a second of one can land on the wrong side. *Breezeblocks*' video is the album track to within 0.14 s: if its lyrics still look out of step, the cause is somewhere else (the lyrics themselves, or the player's clock) and hasn't been looked for.
+- **A song's lyrics can be badly timed in themselves.** 20 of LRCLIB's 21 records for *21 Questions* are one file whose last forty lines are crammed into fourteen seconds. The engine's check (`lyrics.check_lrc`) only refuses times that go backwards. On a video the label's captions now correct it; on the song alone nothing does.
 
 - **A video's picture can stop on one frame while the song goes on** (owner, 2026-10-01). Not explained: see the changelog for what was ruled out. The player now notices (no new frames for 3 s), nudges the picture, and notes it in `~/Library/Caches/org.musicorganizer.app/player.log`. Next time it happens: read that file. No line there means frames were arriving and the layer wasn't drawing them (then: re-attach the layer when the window comes back into view). A line there means the stream stopped (then: fetch the picture in 10 MB pieces, which YouTube serves 50 times faster than one long request).
 
