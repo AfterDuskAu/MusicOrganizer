@@ -67,7 +67,12 @@ A SwiftUI app that starts the engine and talks to it (`musicorg serve`). Code in
     - **YouTube:** an opt-in sign-in using the browser's login, for age-restricted songs and, with YouTube Music Premium, the 256 kbps AAC audio. A spare account is suggested, since an account used for downloading can be restricted. To be tested before it's promised.
     - **Spotify and Apple Music:** for bringing playlists and libraries across (v0.3), never for their audio, which is locked. The export-file route needs no sign-in and stays the default.
     - Logins are kept in the Mac's Keychain or the app's config folder, never in the library or the repo.
-- **Better audio from YouTube** (owner asked, 2026-10-01): keep YouTube's Opus audio (about 160 kbps) as it is, without converting it, as an option beside AAC. Needs a change to rule 6 (format 140 only), a remux instead of a re-encode, and a way for the app to play Opus. Converting Opus to another format is never done: it lowers quality.
+- **Download quality, as a setting** (owner, 2026-10-01). Three choices:
+  - **Standard, 128 kbps AAC** (the default; what the engine does today).
+  - **Better, about 160 kbps Opus:** YouTube's Opus audio kept exactly as it is, repackaged without converting it. Converting is never done: it lowers quality.
+  - **Best, 256 kbps AAC:** only with YouTube Music Premium, signed in under Settings → Accounts. To be tested before it's promised.
+  - Checked on the iMac (macOS 15) on 2026-10-01: Apple's player opens and decodes Opus both as an `.opus` file and inside an MP4 file, so the app needs no second player. YouTube's own WebM packaging doesn't play, so a repackage (no re-encode) is needed. Only a 3-second test tone was tried, not a real download in the app, and not macOS 14.
+  - Needs the owner's OK to change rule 6 in `CLAUDE.md` ("format 140 only, no fallback"), and each quality needs its own download checks.
 - **What the engine is doing:** the queue, the journal's batches and Undo, in a window.
 - **Reordering a playlist by dragging**, and exporting one as an `.m3u8` file.
 - Photonizer's lessons on staying responsive, for when the library is much bigger (812 songs sort instantly today):
