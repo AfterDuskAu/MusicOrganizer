@@ -113,6 +113,19 @@ public struct SearchResult: Decodable, Identifiable, Hashable, Sendable {
     public let isExplicit: Bool?
     public let thumbnail: String?
 
+    public init(
+        videoId: String, title: String, artists: [String], album: String? = nil,
+        durationS: Double? = nil, isExplicit: Bool? = nil, thumbnail: String? = nil
+    ) {
+        self.videoId = videoId
+        self.title = title
+        self.artists = artists
+        self.album = album
+        self.durationS = durationS
+        self.isExplicit = isExplicit
+        self.thumbnail = thumbnail
+    }
+
     public var id: String { videoId }
 
     /// The result as a song the player can play, straight from YouTube Music.
@@ -146,6 +159,11 @@ public struct PlanAnswer: Decodable, Sendable {
     public struct Summary: Decodable, Sendable {
         public let operations: Int
         public let skipped: [String: Int]?
+        /// For a plan of downloads: how many, roughly how long the queue will take, and
+        /// how many days the daily limit spreads them over.
+        public let downloads: Int?
+        public let estMinutes: Int?
+        public let days: Int?
     }
     public let planId: String
     public let summary: Summary

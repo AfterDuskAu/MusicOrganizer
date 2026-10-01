@@ -1,0 +1,625 @@
+{
+ "kind": "radio",
+ "key": "9ZlXvKOuPdg",
+ "request": "9ZlXvKOuPdg",
+ "recorded_at": "2026-10-01T13:38:41Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [
+  "feedback tokens",
+  "everything but the tracks' fields the engine reads",
+  "all but the first 25 tracks"
+ ],
+ "error": null,
+ "response": {
+  "tracks": [
+   {
+    "videoId": "9ZlXvKOuPdg",
+    "title": "Can't Buy Me Love",
+    "artists": [
+     {
+      "name": "Taurey Butler",
+      "id": "UCEzVmv1A-NAo24bJxlb6ktw"
+     }
+    ],
+    "album": {
+     "name": "One of the Others",
+     "id": "MPREb_DeWwECKVI8d"
+    },
+    "length": "4:03",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/ZOV_Gy2tXe7yudciR_201reTCBCRHBarKbDC1Q_5_hafLpiOMAglwimltP9V868quDCVdO11ULjSar6Nkw=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "tOMGYm9jRe0",
+    "title": "Swappin’ Lies",
+    "artists": [
+     {
+      "name": "Taurey Butler",
+      "id": "UCEzVmv1A-NAo24bJxlb6ktw"
+     }
+    ],
+    "album": {
+     "name": "Swappin’ Lies",
+     "id": "MPREb_2lnX1x6c8ZH"
+    },
+    "length": "2:41",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/YPKMF3x4-HTcWGfiq8ua3IEeVb1aMScREixscifxMxOFa1zaTLR_4Pz2B8U8iiJvSwjwjXhj0evZHpkl=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "DAN2TQjQOpY",
+    "title": "Down the Memory Lane",
+    "artists": [
+     {
+      "name": "Magnus Ludvigsson",
+      "id": "UCDwf78XSCjVelHml8YEE7ww"
+     }
+    ],
+    "album": {
+     "name": "Down the Memory Lane",
+     "id": "MPREb_c3kS1ZGaCVS"
+    },
+    "length": "3:24",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/Mw7hOyemX4GEgV0UthqllLJcWwbIEUIX_gcfNvq5vfjlNuFwirfhkUPTRpikh_cWWolSAo5kshOzRx0=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "RvYBRrIE6m0",
+    "title": "Moonlight Serenade",
+    "artists": [
+     {
+      "name": "Enzo Orefice trio",
+      "id": "UCDLbKhmIsf48arsxDcP0LaA"
+     }
+    ],
+    "album": {
+     "name": "Talking About Jazz, Pt. 2",
+     "id": "MPREb_pj1Gi7eqD00"
+    },
+    "length": "2:32",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2021",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/HG0LlOuXazmavHHgT-QiULNxuRTQcdt4UOK3cNP_1G87zXv6Xd5mDV3FVdvZnTtJUHqk9qacEX7OugM=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "krmdOa_b5h0",
+    "title": "Coastal Mirage at Dawn",
+    "artists": [
+     {
+      "name": "Cafe lounge resort",
+      "id": "UC5HcB7wLVotYnpMESBh2kjA"
+     }
+    ],
+    "album": {
+     "name": "Stylish BGM at a Seaside Cafe",
+     "id": "MPREb_Mew81V5zUfM"
+    },
+    "length": "3:20",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2024",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/-VE6jBcHt3vzO5stxk9lB3qKuQs6IKIl-Wz6r63wjZikD8uYRg2yhwses89Aqy3euHuLoPsauY3lDOewww=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "_rVgBfXspeM",
+    "title": "Vacqueyras",
+    "artists": [
+     {
+      "name": "Bladverk Band",
+      "id": "UCIMfjFlOVMwQDeAVk7bHYEg"
+     }
+    ],
+    "album": {
+     "name": "Varenne",
+     "id": "MPREb_gbv1OJ4MYeC"
+    },
+    "length": "3:06",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/1mwBDEMStB0HdpKnQBJvPxnPNGSq9dlgYNGylvN6dXkKZaVkFwDdI5zuSsS4ranyJieKXZ74DSMtmecCTw=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "oy3fY1nJa3I",
+    "title": "Michael Sees Mae",
+    "artists": [
+     {
+      "name": "Robert Glasper",
+      "id": "UCLFHVgbSwvTgM1PcsOCvHjw"
+     }
+    ],
+    "album": {
+     "name": "The Photograph (Original Motion Picture Soundtrack)",
+     "id": "MPREb_MYNu4v3vCOo"
+    },
+    "length": "1:16",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2020",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/9tF7_1ESjQmiuhIB7NxxD69cQhA5dWJ7yGZbgAv2ZNNLsSKJAF2ZQgaPrZ3C6f2jKeg1eDDwBb8wDk3W=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "cK7Vqo6VZjI",
+    "title": "Mar-cia",
+    "artists": [
+     {
+      "name": "Stan Getz",
+      "id": "UCITWDrIiWv0Y-zj8xrvoY-Q"
+     }
+    ],
+    "album": {
+     "name": "Stan Getz Quartets",
+     "id": "MPREb_tCdXZrhBgNy"
+    },
+    "length": "2:40",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "1991",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/H3acmWHtDxxkVm9AMtoVSfeTAveq4bsiF4EPw-VrRZnQjgdTE85FqtF0HatC9fv58F5dh-bfOzl_0Isj=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "QSyFxup96wA",
+    "title": "Estate",
+    "artists": [
+     {
+      "name": "Eddie Higgins Trio",
+      "id": "UCgEIyVHg3gwh6ocI-ArSACg"
+     }
+    ],
+    "album": {
+     "name": "BEWITCHED",
+     "id": "MPREb_jt6q3wodpAt"
+    },
+    "length": "3:39",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2001",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/71vZHEzBNq_M68P6-hOpom03b6uzT6WScSG_20gYeADAo4nwJ6cHZ6xjKgtOyXBUi5CYWU131uM9z8cC=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "ZnTlaNueeUU",
+    "title": "Song For Fraser",
+    "artists": [
+     {
+      "name": "Kamasi Washington",
+      "id": "UC0G-IaG6Q0eawu8N_6OAZxw"
+     }
+    ],
+    "album": {
+     "name": "Becoming (Music from the Netflix Original Documentary)",
+     "id": "MPREb_NpgFhS4LiYO"
+    },
+    "length": "2:21",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2020",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/K6oVn3-GlsrN8RAdJPJUZuOL7YcTKPErzqXkS5-XOyWTV-mnCq0QFfkH1Vv9mfnXgQctbPiIeKZSCgli=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "8PR69q7ayPE",
+    "title": "Sisyphean Task",
+    "artists": [
+     {
+      "name": "Taurey Butler",
+      "id": "UCEzVmv1A-NAo24bJxlb6ktw"
+     }
+    ],
+    "album": {
+     "name": "Sisyphean Task",
+     "id": "MPREb_6sy1D1FvwwI"
+    },
+    "length": "4:31",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/FAt6-TBtzzBOGvdMZn_pKsg7yEvKsuJuCqXPNZFPRjjEF-b0dtqWSaE2qywTxCt2UlptIor7E0sD9iZC=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "82S231633yw",
+    "title": "Sweet Morning",
+    "artists": [
+     {
+      "name": "Richard Freeman",
+      "id": "UCzjnNiZBlSaaEU5G0KkfXBA"
+     }
+    ],
+    "album": {
+     "name": "Sweet Morning",
+     "id": "MPREb_ZLw0YcttZBB"
+    },
+    "length": "3:36",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2020",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/hGDdTEL37aJ6Il-g4RagQyNtsGK30gl2QcL_i3yNmpq7hDkubMbkV3d_r7LBxF6ZhTTY9WOAgOvJiilD=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "hld5v6lX448",
+    "title": "Day Dream",
+    "artists": [
+     {
+      "name": "Bill Charlap Trio",
+      "id": "UCq3_a46fd8ci-pAEVlReiIg"
+     }
+    ],
+    "album": {
+     "name": "Street Of Dreams",
+     "id": "MPREb_09oDy31hX1m"
+    },
+    "length": "6:14",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2021",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/FSvCf9kT_7X48Wv_3RfCBv6m1WJ1kVLSXe5WRO0K_AYiaxb0ZcSESKit819U5zSdhLtsquO2fPHnrzpEYw=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "732lZBy0La0",
+    "title": "Fantastic, That's You",
+    "artists": [
+     {
+      "name": "Johnny Hodges",
+      "id": "UCcQc-cBJhYq08uHGKEUHd2w"
+     },
+     {
+      "name": "Earl Hines",
+      "id": "UCBeBkWYRI18waVif35oF77g"
+     }
+    ],
+    "album": {
+     "name": "Stride Right",
+     "id": "MPREb_3PYPMp0gJvd"
+    },
+    "length": "3:03",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2005",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/gVyXMxm8ocjODEf52JOaVo5pZgG0ngbtv2WutlrnnjZk4xJO1mbSZCG7UaNTBcwnkbSMp4y5UGO0Q5g=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "SU3ZsF8-gNw",
+    "title": "Artis' Truth",
+    "artists": [
+     {
+      "name": "Taurey Butler",
+      "id": "UCEzVmv1A-NAo24bJxlb6ktw"
+     }
+    ],
+    "album": {
+     "name": "One of the Others",
+     "id": "MPREb_DeWwECKVI8d"
+    },
+    "length": "6:13",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/ZOV_Gy2tXe7yudciR_201reTCBCRHBarKbDC1Q_5_hafLpiOMAglwimltP9V868quDCVdO11ULjSar6Nkw=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "oa1YHlv29zI",
+    "title": "Miyako",
+    "artists": [
+     {
+      "name": "The Uptown Players",
+      "id": "UCCjYyGMHkqLT0e-Kw4ebbmw"
+     }
+    ],
+    "album": {
+     "name": "Miyako",
+     "id": "MPREb_4L1FvVx65Vv"
+    },
+    "length": "3:25",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/xqZeqmiDx2ejynm7D9dmV4AOfC8m908VUyPt7rGGG05lRpiAflVWSHrlzcnbb3i7Un6fFSNvAOadLSU=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "frYLvC0mM50",
+    "title": "When Sunny Gets Blue",
+    "artists": [
+     {
+      "name": "McCoy Tyner",
+      "id": "UCry80POSt0-Wwzfn1geo9_A"
+     }
+    ],
+    "album": {
+     "name": "Today And Tomorrow",
+     "id": "MPREb_I4xhBTPlaLe"
+    },
+    "length": "4:43",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "1964",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/Fp7-uuxwyYVEpVN0H7hTfEP2kIbRnrhAEQI__HQKZz_TluN4JucRN-j3mvNOSp3nOmraOFxNtcm7ZAo=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "1YnGq3UfnZI",
+    "title": "A Gentle Reminder",
+    "artists": [
+     {
+      "name": "Rainy Days Trio",
+      "id": "UCwtMFH2ripYqDNh1cT3DYIA"
+     }
+    ],
+    "album": {
+     "name": "Lonesome Road",
+     "id": "MPREb_OG4i8pURrpx"
+    },
+    "length": "3:30",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/5kini04Y8l9h37cIBu_xnItBjXbW6CE_4ZUzYCBBug1iJ-BWc2rqiN6OvSizW99SiGxuFyROOf1TstF1=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "CRz43pQG1Qo",
+    "title": "Laini's Love",
+    "artists": [
+     {
+      "name": "Taurey Butler",
+      "id": "UCEzVmv1A-NAo24bJxlb6ktw"
+     }
+    ],
+    "album": {
+     "name": "One of the Others",
+     "id": "MPREb_DeWwECKVI8d"
+    },
+    "length": "5:04",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/ZOV_Gy2tXe7yudciR_201reTCBCRHBarKbDC1Q_5_hafLpiOMAglwimltP9V868quDCVdO11ULjSar6Nkw=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "nwta9P9Zlfg",
+    "title": "Akaishi",
+    "artists": [
+     {
+      "name": "Moonside Trio",
+      "id": "UCn8grVlii7pLGxGnpHP2UHw"
+     }
+    ],
+    "album": {
+     "name": "Akaishi",
+     "id": "MPREb_NI6UoyYbip7"
+    },
+    "length": "3:51",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/4YAms3BjV7TMZNbJJKx3uPhNGf_I1Jfr110l_wuGTDeZ8AD9-K3b5969tMveJtgjrYqbEqHJKsN13wR9=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "JiP7jKdAhD0",
+    "title": "In A Sentimental Mood",
+    "artists": [
+     {
+      "name": "Duke Ellington",
+      "id": "UCvwUPRgFawNNBdQg497gHJw"
+     },
+     {
+      "name": "John Coltrane",
+      "id": "UCH4T2kv7rr9qnuP0DOXLxMA"
+     }
+    ],
+    "album": {
+     "name": "Duke Ellington & John Coltrane",
+     "id": "MPREb_uxjivVUKkfa"
+    },
+    "length": "4:16",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2007",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/pcijENJYz2T7FHGX-2dSCRqLH84gCYrEYFp-Ow_zpvKV2_MH5LaKv0_GU_Y2PXFTEu5_CUvZt27bz1iNjw=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "7bAHUwO-HMo",
+    "title": "Satisfaction (feat. Living Coffee)",
+    "artists": [
+     {
+      "name": "CORNER POT",
+      "id": "UCzzCKpW5Br91OmInrHeBrfA"
+     }
+    ],
+    "album": {
+     "name": "No Sugar",
+     "id": "MPREb_nCZzBGhZUw8"
+    },
+    "length": "2:36",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/sLxtIY-cf9iKF141hs5ef0z6V9azX3qju2PZjLeO2ejXAQ9Pmk9bwQ0OzGseTQZkIWzKPye3jpIvWlUNig=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "_37dnvuYELE",
+    "title": "I Can Only Be Me",
+    "artists": [
+     {
+      "name": "Taurey Butler",
+      "id": "UCEzVmv1A-NAo24bJxlb6ktw"
+     }
+    ],
+    "album": {
+     "name": "One of the Others",
+     "id": "MPREb_DeWwECKVI8d"
+    },
+    "length": "6:24",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/ZOV_Gy2tXe7yudciR_201reTCBCRHBarKbDC1Q_5_hafLpiOMAglwimltP9V868quDCVdO11ULjSar6Nkw=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "6yTDaCqqu8Y",
+    "title": "Melodic Wave",
+    "artists": [
+     {
+      "name": "JaJaJazz",
+      "id": "UCEcPZTaL7zBUbq4MVEpUvYQ"
+     }
+    ],
+    "album": {
+     "name": "New York Café",
+     "id": "MPREb_3RoZhX3abJN"
+    },
+    "length": "3:29",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/xJ2ME95hJcwCdBuQqABu8aa8TSCUKu3a7MnxsQosBjD7R_KDqfCiEejxg9ViX13fU_z59ZJoVXQYjvRO=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "fWwKMVntXSA",
+    "title": "It Could Happen to You",
+    "artists": [
+     {
+      "name": "Gary Smith",
+      "id": "UCO3v7jA4Wc8osS2ROgIqF9g"
+     }
+    ],
+    "album": {
+     "name": "It Could Happen to You",
+     "id": "MPREb_DnkMlSjyhMP"
+    },
+    "length": "3:23",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/SpyLtObfM2TqjndxzPhry-2Rf9u-3ztm9l0aNszd5FHTpoVX_yw7W6auaauwvKQIZFi4iNsksvargLg=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   }
+  ]
+ }
+}

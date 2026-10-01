@@ -1,0 +1,617 @@
+{
+ "kind": "radio",
+ "key": "Rstp2cKOntE",
+ "request": "Rstp2cKOntE",
+ "recorded_at": "2026-10-01T13:39:02Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [
+  "feedback tokens",
+  "everything but the tracks' fields the engine reads",
+  "all but the first 25 tracks"
+ ],
+ "error": null,
+ "response": {
+  "tracks": [
+   {
+    "videoId": "Rstp2cKOntE",
+    "title": "What's New",
+    "artists": [
+     {
+      "name": "ENZO OREFICE trio",
+      "id": "UCDLbKhmIsf48arsxDcP0LaA"
+     }
+    ],
+    "album": {
+     "name": "What's New?",
+     "id": "MPREb_0fTVlYQyy7o"
+    },
+    "length": "3:47",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2024",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/frDtRe3euT55zG7vUQZs-8Fkk0RyqSllQZ58luPFY6US24SS19DTelDezqEJX6bVfTRmUgKL0yuTHrk=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "RvYBRrIE6m0",
+    "title": "Moonlight Serenade",
+    "artists": [
+     {
+      "name": "Enzo Orefice trio",
+      "id": "UCDLbKhmIsf48arsxDcP0LaA"
+     }
+    ],
+    "album": {
+     "name": "Talking About Jazz, Pt. 2",
+     "id": "MPREb_pj1Gi7eqD00"
+    },
+    "length": "2:32",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2021",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/HG0LlOuXazmavHHgT-QiULNxuRTQcdt4UOK3cNP_1G87zXv6Xd5mDV3FVdvZnTtJUHqk9qacEX7OugM=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "V4Qwk3CJ65E",
+    "title": "Relaxing Jazz",
+    "artists": [
+     {
+      "name": "Jazz Music Zone",
+      "id": "UCmFl0kWoKkk9sBXGLRoMKSQ"
+     }
+    ],
+    "album": {
+     "name": "Restaurant Jazz",
+     "id": "MPREb_azAKFABBnhd"
+    },
+    "length": "2:34",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/X8yC-hbJVbnhS72o2mAmyrgeXR2W0_P4nHTQe4fb7Tu-ayVjq4xshAu_bmwFc46tBs2aDSw6pTU84kI_=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "VZf78zaCH3E",
+    "title": "Vintage Jazz Club Guitar Jazz",
+    "artists": [
+     {
+      "name": "C.O.D.J",
+      "id": "UCC8UVg-inVXkL1PiP1v-GjA"
+     }
+    ],
+    "album": {
+     "name": "Chill Out Dinner Jazz",
+     "id": "MPREb_MitIY9dySoS"
+    },
+    "length": "1:44",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2019",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/F0zWTI-Boj5QzkyOrbl3wN4XsSIZs89dSXwp7ZELiM8HVbOciByXdjaI-yeGb7j3z30vrdih6s2jr9Gq=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "iznw-YkikLo",
+    "title": "Blue In Green",
+    "artists": [
+     {
+      "name": "Lee Davis",
+      "id": "UCvomtGK64ILgw5MvPfup19w"
+     }
+    ],
+    "album": {
+     "name": "Blue In Green",
+     "id": "MPREb_KnzQc9DTPZN"
+    },
+    "length": "4:03",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/Do3JtpJwdKAToC7BSDGO9gchXR3LLCU_ji3ZhsjzjdI2pl0lw-URRx_SI-6ssqbGrAG_rSQx2Mqwtp66XQ=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "BqH0Om2wNi0",
+    "title": "Nature Boy",
+    "artists": [
+     {
+      "name": "Enzo Orefice trio",
+      "id": "UCDLbKhmIsf48arsxDcP0LaA"
+     }
+    ],
+    "album": {
+     "name": "Nature Boy",
+     "id": "MPREb_LGS9dMYXi70"
+    },
+    "length": "4:15",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2025",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/ikyFDMxYvoRGLbC4bYWLudfWgfohdV_VvO2nQhd5DEykALsuce57vzeA0ZaCGdztbsRbGM4StNet4SA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "zf6u_DUZEGw",
+    "title": "Soul and Mind",
+    "artists": [
+     {
+      "name": "E's Jammy Jams",
+      "id": "UCqB5WMs4Flb6-1Akyuo49vA"
+     }
+    ],
+    "album": {
+     "name": "Soul and Mind",
+     "id": "MPREb_8n0TfmiPkCp"
+    },
+    "length": "2:20",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2016",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/U3yX7Zs53bdY6Talo8egW_Jnc80oCeWTXOtKN6JVRjKnY14xs8tnc5Zvvew5JTUjl9EGNNR_kw9pJCoJ=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "dCEqWuhBaMA",
+    "title": "Background for Classic Weekend",
+    "artists": [
+     {
+      "name": "Bossa Nova Jazz",
+      "id": "UC9oLZrmA6M9pce73hqE26-w"
+     }
+    ],
+    "album": {
+     "name": "Magnificent Ambiance for Saturday and Sleep",
+     "id": "MPREb_pjvwTsgnPkp"
+    },
+    "length": "1:55",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/En-LKhR-dXwrwVG7s9WKWGmyotEz9-BGYEl6So4SQKZxoSxroRAoAFvnQn01wYHlBenWZ2kPAHNtOugt=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "L48_GvXH818",
+    "title": "Festive Winter (feat. Cafe Music BGM channel)",
+    "artists": [
+     {
+      "name": "JUTESETS",
+      "id": "UCH4tMgL83vy2ZwplHdBNyDg"
+     }
+    ],
+    "album": {
+     "name": "Winter London",
+     "id": "MPREb_PHdQYFxsw3w"
+    },
+    "length": "2:17",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/ALmlGrrM8KRw5kHnoEXwkginnd7PCKMczGX2wY-Q7wQ-ulGV5aLHLWLq5x1faqfoNLvIWYxdhV1re09isw=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "_0l9eM6OMgk",
+    "title": "We'll Be Together Again",
+    "artists": [
+     {
+      "name": "Enzo Orefice trio",
+      "id": "UCDLbKhmIsf48arsxDcP0LaA"
+     }
+    ],
+    "album": {
+     "name": "Talking About Jazz, Pt. 8",
+     "id": "MPREb_TFm37lBoltC"
+    },
+    "length": "3:50",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/_Zy4rbkltg5suFjUseQvUu2X7gLoviJQOVDvLYmchni_j4XsyfLamLBTIYiffR7u28w0EHhxpU4iGHI=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "W6Q8QCGwsbM",
+    "title": "BREAKFAST CAFFÈ (Jazz Piano Instrumental)",
+    "artists": [
+     {
+      "name": "BEST BKK THAILAND",
+      "id": "UC5M2Gh55XOORA07LtZDBrIA"
+     }
+    ],
+    "album": {
+     "name": "BREAKFAST CAFFÈ (Jazz Piano Instrumental)",
+     "id": "MPREb_sH0jglsrXSd"
+    },
+    "length": "2:22",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2026",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/D4rsGMQFkp5BxhcIKra3yNDlcfBHuTR8BdPVtn4G14TrMEymqF2AGF8sbJiU-ePvcWIlrvkC1fQEFSM8Vw=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "435DK25spEY",
+    "title": "Jazzy Wind",
+    "artists": [
+     {
+      "name": "Cafe Music BGM channel",
+      "id": "UCPehsEuB0pG2pS1yAmz_erg"
+     }
+    ],
+    "album": {
+     "name": "Jazz Leaves",
+     "id": "MPREb_HgHlEzUKUrU"
+    },
+    "length": "3:05",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2019",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/x3d2265DkRoBdaED-9yYgTeWi3E6iSEAJFeUhTP_rHl5C-v9ofQX5sIn4w_PkZGrpE8Z1Hy2Yq4-PFg=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "I9fCka4b47o",
+    "title": "Jazz Collective",
+    "artists": [
+     {
+      "name": "Instrumental Jazz Music",
+      "id": "UCK0Effn5DxyGjrMlVuqo2Sg"
+     }
+    ],
+    "album": {
+     "name": "Instrumental Jazz Music Collection",
+     "id": "MPREb_rpDUZiuryvH"
+    },
+    "length": "2:05",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2019",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/2OvwficUiRax_yun8xiclbYVkxZeoekxJ7vMAOsORRoHcCM1DN9-k1ZsTQcdI2b8meg-lcI1xHc0XBD3zA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "Bzsd9Mo3WTc",
+    "title": "Rachid",
+    "artists": [
+     {
+      "name": "Enzo Orefice trio",
+      "id": "UCDLbKhmIsf48arsxDcP0LaA"
+     }
+    ],
+    "album": {
+     "name": "Rachid",
+     "id": "MPREb_NJoophdg4NP"
+    },
+    "length": "4:09",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/d6Q15Ekb1vKW_Effh2lRPyj4dM2sQIO_AP6koO6_bpWftIx8sb3w3ieebyvwBlZ3bZiXZf3cpsDAwT0=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "DUC4ufU8m5k",
+    "title": "Quiet Place",
+    "artists": [
+     {
+      "name": "BGM channel",
+      "id": "UCDdb4AqZh6QGwmlVsIvCsJA"
+     }
+    ],
+    "album": {
+     "name": "Café Jazz ~Jazz Radio~",
+     "id": "MPREb_tCTnrGriBDr"
+    },
+    "length": "2:45",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2019",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/S_FnjP4Miat65VBw1RH0fgi8-18H-CKPFBRar2RHylww4tIevRi6qwN_YUQKCb-QyC_WdX4IXepBrvRt=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "Ocs8VxiLlxE",
+    "title": "Like Someone in Love",
+    "artists": [
+     {
+      "name": "Tate Jackson Trio",
+      "id": "UCqWEMUqasloVay1s8FNhrlQ"
+     }
+    ],
+    "album": {
+     "name": "Like Someone in Love",
+     "id": "MPREb_B5185ASqaWM"
+    },
+    "length": "3:36",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2020",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/T-kAcYFd7jLJ0b0MhKPn3EFVe5g54VnH8FyK7eiV7-BEPom5Cs6rIRH0seR0a2ZvZfh5Qq1G8dm-E9xv=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "ZnTlaNueeUU",
+    "title": "Song For Fraser",
+    "artists": [
+     {
+      "name": "Kamasi Washington",
+      "id": "UC0G-IaG6Q0eawu8N_6OAZxw"
+     }
+    ],
+    "album": {
+     "name": "Becoming (Music from the Netflix Original Documentary)",
+     "id": "MPREb_NpgFhS4LiYO"
+    },
+    "length": "2:21",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2020",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/K6oVn3-GlsrN8RAdJPJUZuOL7YcTKPErzqXkS5-XOyWTV-mnCq0QFfkH1Vv9mfnXgQctbPiIeKZSCgli=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "nQgoUgdKCj0",
+    "title": "Blackbird",
+    "artists": [
+     {
+      "name": "ENZO OREFICE trio",
+      "id": "UCDLbKhmIsf48arsxDcP0LaA"
+     }
+    ],
+    "album": {
+     "name": "Blackbird",
+     "id": "MPREb_HCwaF64fWgD"
+    },
+    "length": "2:18",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2024",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/t8WlLoQNBWLoqFO2MiksOwBAyHiRiAK4-L_yL4TTe7NiBim_KrUhvMoBoaniH-Z67ZUBvz0hUbbz_ACcmQ=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "ZXSK2VgCjQo",
+    "title": "Fletcher's Song In Club",
+    "artists": [
+     {
+      "name": "Justin Hurwitz",
+      "id": "UC2Qhpr5OGrn9skA6N5LBPGQ"
+     }
+    ],
+    "album": {
+     "name": "Whiplash (Original Motion Picture Soundtrack)",
+     "id": "MPREb_QEZq678MKrI"
+    },
+    "length": "1:30",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2014",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/FlWSTcr0fTAyFnPIWdbnc_0MzDVCHGOjQ9UdaDIaPZM0e2N9AV_qdquYDPNOcNmz8EkKrdOc10gzJCAO=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "r5A48k1eMe0",
+    "title": "Marquise",
+    "artists": [
+     {
+      "name": "Bladverk Band",
+      "id": "UCIMfjFlOVMwQDeAVk7bHYEg"
+     }
+    ],
+    "album": {
+     "name": "Marquise",
+     "id": "MPREb_WxllgRs1rnT"
+    },
+    "length": "3:17",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2026",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/JhCSHl0nHlx8drPtSuKFmIz5LF0JyB-EH7vijAX2dPNL-WdpvmBtwH2iAJSJrJcMcZwakyg4WkZQfR6I=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "krmdOa_b5h0",
+    "title": "Coastal Mirage at Dawn",
+    "artists": [
+     {
+      "name": "Cafe lounge resort",
+      "id": "UC5HcB7wLVotYnpMESBh2kjA"
+     }
+    ],
+    "album": {
+     "name": "Stylish BGM at a Seaside Cafe",
+     "id": "MPREb_Mew81V5zUfM"
+    },
+    "length": "3:20",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2024",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/-VE6jBcHt3vzO5stxk9lB3qKuQs6IKIl-Wz6r63wjZikD8uYRg2yhwses89Aqy3euHuLoPsauY3lDOewww=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "jPe9JP6JqP8",
+    "title": "Alice in Wonderland",
+    "artists": [
+     {
+      "name": "Enzo Orefice trio",
+      "id": "UCDLbKhmIsf48arsxDcP0LaA"
+     }
+    ],
+    "album": {
+     "name": "Alice in Wonderland",
+     "id": "MPREb_EO0EGel13mR"
+    },
+    "length": "4:24",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2024",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/-G0x7De9eeXbzYj3jqfeME0Ua7jzdzOSYstuQPvapeCcLEHjJTYalhbvNPOuhsC40P3Lb8ngLLbFr_7M=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "bXhjk3Mku-I",
+    "title": "Moon River",
+    "artists": [
+     {
+      "name": "The Sweetgreens",
+      "id": "UC2g5UWwYVQSl3HOeQh5Bdcg"
+     }
+    ],
+    "album": {
+     "name": "Moon River",
+     "id": "MPREb_Q9e4jj4HrlX"
+    },
+    "length": "3:14",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2020",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/Th0ceNgwKN21hG-SQxIrp_4X9mbD6AvvbpfJ6y45qDHCMxjkCCPxTerLFJf9nBe48IumFd9aIpvprdwATQ=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "0J8NXNdjlE4",
+    "title": "In The Wee Small Hours Of The Morning",
+    "artists": [
+     {
+      "name": "Beegie Adair",
+      "id": "UCoo--2S9dy3HEd9l3UElC0w"
+     }
+    ],
+    "album": {
+     "name": "The Frank Sinatra Collection",
+     "id": "MPREb_mbAs1iZWt2P"
+    },
+    "length": "3:04",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "1997",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/yhGLmMDMGLDyRCfRdsOdDXnePmNsdfS_4kztth3r4sBw9Ct2Q4RXgqcPNgXJSVqhsTGq2VnC2yXItKY=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "6k_awKMLPN8",
+    "title": "Misty",
+    "artists": [
+     {
+      "name": "Carl Winther Trio",
+      "id": "UCNA8pRxY4D5gjZ-EDHvcLeg"
+     }
+    ],
+    "album": {
+     "name": "Relaxin'",
+     "id": "MPREb_xBdw1XSwPry"
+    },
+    "length": "4:33",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/VDZhzo4EB7a2Yg0BJg7ys6w7AvcCPq6f369CpwNxlaBNZ6Ci9NGftSf6n9RbVsn4RMGhEqfQgZx-4SI=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   }
+  ]
+ }
+}

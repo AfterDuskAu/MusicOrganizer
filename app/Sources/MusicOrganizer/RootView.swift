@@ -284,6 +284,17 @@ struct MainView: View {
         } message: {
             Text(model.info?.text ?? "")
         }
+        // Several downloads at once are a batch: the plan is shown before anything is queued.
+        .alert(
+            model.batch.map { "Download \($0.count) \($0.count == 1 ? "song" : "songs")?" } ?? "",
+            isPresented: Binding(
+                get: { model.batch != nil }, set: { if !$0 { model.batch = nil } })
+        ) {
+            Button("Download") { model.confirmBatch() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(model.batch.map(Self.batchNote) ?? "")
+        }
         .confirmationDialog(
             "Delete the playlist “\(deleting?.name ?? "")”?",
             isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })
@@ -485,6 +496,16 @@ struct MainView: View {
         .clipped()
     }
 
+    /// What a batch of downloads will take, said before the owner agrees to it.
+    private static func batchNote(_ batch: AppModel.BatchDownload) -> String {
+        var note = "It takes \(roughTime(minutes: batch.minutes)), paced so YouTube doesn't refuse "
+            + "this Mac. The songs show up under Discover → Downloads as they arrive."
+        if batch.days > 1 {
+            note += " Your daily limit spreads them over \(batch.days) days."
+        }
+        return note
+    }
+
     private func downloadsList(active: Bool) -> some View {
         SongList(
             source: .downloads, title: "Downloads",
@@ -547,18 +568,9 @@ struct MainView: View {
                 downloadsList(active: active)
             }
         case .whatsNew:
-            Message(
-                symbol: "sparkles", title: "What's New is coming",
-                text: "New songs matched to your library will be listed here. It arrives with Discover."
-            ) {}
+            WhatsNewView()
         case .find:
-            Message(
-                symbol: "wand.and.stars", title: "Find is coming",
-                text: "Pick an artist, a genre and how many songs you want, and get recommendations. "
-                    + "It arrives with Discover. Until then, YouTube Music (under Media) finds any song by name."
-            ) {
-                Button("Open YouTube Music") { item = .youtube }
-            }
+            FindView()
         case .playlist(let id):
             if let playlist = model.playlist(id) {
                 SongList(

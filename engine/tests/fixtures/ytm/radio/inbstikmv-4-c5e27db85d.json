@@ -1,0 +1,617 @@
+{
+ "kind": "radio",
+ "key": "INBstIKmV_4",
+ "request": "INBstIKmV_4",
+ "recorded_at": "2026-10-01T13:38:37Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [
+  "feedback tokens",
+  "everything but the tracks' fields the engine reads",
+  "all but the first 25 tracks"
+ ],
+ "error": null,
+ "response": {
+  "tracks": [
+   {
+    "videoId": "INBstIKmV_4",
+    "title": "Lying from You",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Meteora 20th Anniversary Edition",
+     "id": "MPREb_DOhy8PyMH41"
+    },
+    "length": "2:56",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/YhfFgdvtwfIcLi_2H54RP15T3IPiUZnNtlwvlomHsAmAMQMZhgXu11HoFWPcWAiJRfdChtrqrGRbQl3idA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "Oh6CMuaDhmU",
+    "title": "Figure.09",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Meteora 20th Anniversary Edition",
+     "id": "MPREb_DOhy8PyMH41"
+    },
+    "length": "3:18",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/YhfFgdvtwfIcLi_2H54RP15T3IPiUZnNtlwvlomHsAmAMQMZhgXu11HoFWPcWAiJRfdChtrqrGRbQl3idA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "LMsBHDoC51c",
+    "title": "My Way",
+    "artists": [
+     {
+      "name": "Limp Bizkit",
+      "id": "UCXe06VQdj4l_LyuUGh__DQg"
+     }
+    ],
+    "album": {
+     "name": "Chocolate Starfish And The Hot Dog Flavored Water",
+     "id": "MPREb_isdHayivN53"
+    },
+    "length": "4:33",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2000",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/6LNef5JKBLTBgNUiJyizF7dN23nHUrhqFu7bMisArZhfLEcuPcIIdiDDQSCEhnlZ_2RBO372Pqlaho6J=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "pcAKbKUBUOQ",
+    "title": "The Diary of Jane (Single Version)",
+    "artists": [
+     {
+      "name": "Breaking Benjamin",
+      "id": "UCgdqrZsRnxy1qGIusPhQEyg"
+     }
+    ],
+    "album": {
+     "name": "Phobia",
+     "id": "MPREb_T9HRQU8kO2b"
+    },
+    "length": "3:21",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2006",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/RaWjFGrdyuHz6ZsCgRPn14r5dBiRzASvuJIYMx6D92bNvX87puN2mktdmjfieTeiIq66EoxJHHSvqXU=w544-h544-s-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "ysho2xTWUYo",
+    "title": "Animal I Have Become",
+    "artists": [
+     {
+      "name": "Three Days Grace",
+      "id": "UCfgRkxIufLnYKicOY8aJQ2g"
+     }
+    ],
+    "album": {
+     "name": "One-X",
+     "id": "MPREb_Ud22GpRvwl8"
+    },
+    "length": "3:52",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2006",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/lw9aD4EPCJ-HiAPpZTwVlmYfEJrWM_mf4Qgn-6ZdYLvfx5JBnAXO5InwzrAm3L3rAcXpyF8bx351BLnQ=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "ri7tBErY1rM",
+    "title": "Don't Stay",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Meteora 20th Anniversary Edition",
+     "id": "MPREb_DOhy8PyMH41"
+    },
+    "length": "3:09",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/YhfFgdvtwfIcLi_2H54RP15T3IPiUZnNtlwvlomHsAmAMQMZhgXu11HoFWPcWAiJRfdChtrqrGRbQl3idA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "e-2251_at-k",
+    "title": "Aerials",
+    "artists": [
+     {
+      "name": "System Of A Down",
+      "id": "UCDJftX2zx_UT_QSnBGIF96w"
+     }
+    ],
+    "album": {
+     "name": "Toxicity",
+     "id": "MPREb_3n9jhahGRLv"
+    },
+    "length": "3:56",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2001",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/-YmkgDfUd9e-8_VXC90fpar-i-wa06PsUja6tb2qYR7CJLQGe8T_pJKyzW_AkuGqgQMSEMqI2VCjocM=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "j2R6uT7uLFg",
+    "title": "Last Resort",
+    "artists": [
+     {
+      "name": "Papa Roach",
+      "id": "UCRiFekze9Yx5zDDjAVrYvbg"
+     }
+    ],
+    "album": {
+     "name": "Infest",
+     "id": "MPREb_cv3dgfHNJ1j"
+    },
+    "length": "3:20",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2000",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/UOqZS25iQnlpJCJLtweobidchyC_hG3x-abJj0l-ATFzK4-esEaK8WHGKaj4saMFiPE6ndzu98bpZoE=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "B2lmOei7qfk",
+    "title": "Duality",
+    "artists": [
+     {
+      "name": "Slipknot",
+      "id": "UCh9xZWuDWSMeedunotdYYrQ"
+     }
+    ],
+    "album": {
+     "name": "Vol. 3: The Subliminal Verses (Special Edition)",
+     "id": "MPREb_JIeBuqZHdWY"
+    },
+    "length": "4:13",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2004",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/NcBCPN1E4DVzkJ6qHmV-KXdxEBYNmvrGJ9OiwbLNDV-CwKVA9nmlFmwybpWohcbSfLl_BYcXzwhqzdyrEQ=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "MFmhftOjiA8",
+    "title": "Somewhere I Belong",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Meteora 20th Anniversary Edition",
+     "id": "MPREb_DOhy8PyMH41"
+    },
+    "length": "3:35",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/YhfFgdvtwfIcLi_2H54RP15T3IPiUZnNtlwvlomHsAmAMQMZhgXu11HoFWPcWAiJRfdChtrqrGRbQl3idA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "-eGM0IJc70Y",
+    "title": "Bring Me To Life",
+    "artists": [
+     {
+      "name": "Evanescence",
+      "id": "UC1ObIyFsDJn62iAZYLWcNxA"
+     }
+    ],
+    "album": {
+     "name": "Fallen",
+     "id": "MPREb_Ol2Ip1ndtbE"
+    },
+    "length": "3:56",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2003",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/DMgrzZ84TP0DawBf7NwNbqzQg2-TY_prMUPh7WvjTOOPLxyiTryNgzxBFCkyZhKG0H8agCdcwitxSm8=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "nIxxdRaWoBs",
+    "title": "The Kill",
+    "artists": [
+     {
+      "name": "Thirty Seconds To Mars",
+      "id": "UCK2kzYT3yR6LV_Pji5TDrgA"
+     }
+    ],
+    "album": {
+     "name": "A Beautiful Lie",
+     "id": "MPREb_0sPSzJVG7Ic"
+    },
+    "length": "3:52",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2005",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/TicxJGyYHkWvVfNrfXn95OYK3FVmRTsk5iFgz6AD-yT1QmWlXdVuPwY_1xT8rFL3eSoKvl_IZk1fNMwo=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "8tq2NGmK9HY",
+    "title": "Everlong",
+    "artists": [
+     {
+      "name": "Foo Fighters",
+      "id": "UCwDw2KaS8jRUxAPScL2U8og"
+     }
+    ],
+    "album": {
+     "name": "The Essential Foo Fighters",
+     "id": "MPREb_dGi3U6BpJvG"
+    },
+    "length": "4:11",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/_jQU9Olmekv5J4cjOznIiqnskT6CcAT0nJSeHg9z9SIImxgHwnCO5GKn2jf7kZj5zAspNFBrgwtDaBc=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "84J_XmGkX48",
+    "title": "Papercut",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Hybrid Theory (Bonus Edition)",
+     "id": "MPREb_m10OjDmOhfv"
+    },
+    "length": "3:05",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2000",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/lkNJVMp3siDfSw_zVYj3tE6fQS7G6Gj2gzoxrIwS7K4TwqmL_uSBb9-PKACNLIP_7XLQib4tC5XwWbpD=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "ihgc5LQbjg8",
+    "title": "Freak On a Leash",
+    "artists": [
+     {
+      "name": "Korn",
+      "id": "UCdSgOgQ0WtelXBMKF3tDsqg"
+     }
+    ],
+    "album": {
+     "name": "Follow The Leader",
+     "id": "MPREb_juYedhgZbpn"
+    },
+    "length": "4:16",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "1998",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/4SvxoyJf8oscWyfPEN3sQsiTpzcQ_4ko4x0ywY_-p4GNkLql4RQJh0GfF85Bumm8O2ODKfhsS2tya1Px0Q=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "Bn96ZZpHfLo",
+    "title": "Monster",
+    "artists": [
+     {
+      "name": "Skillet",
+      "id": "UCUHYrf3BF5yI9QdRw09__BA"
+     }
+    ],
+    "album": {
+     "name": "Monster",
+     "id": "MPREb_P6NmSCbYzQJ"
+    },
+    "length": "2:59",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2009",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/thBJL8OesvCSZFTnA0Ric-gO9Q5_U-akGzjIpDH6xHmJHFA3uEpgyef5rcDUDCgSbkznC2EOGarw6Ow=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "WVggAoXfBc4",
+    "title": "Decadence",
+    "artists": [
+     {
+      "name": "Disturbed",
+      "id": "UCMHHDXMvnMKRzuEKtMe8ZRA"
+     }
+    ],
+    "album": {
+     "name": "Ten Thousand Fists",
+     "id": "MPREb_OUe9AkTwFDj"
+    },
+    "length": "3:25",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2005",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/9KTDSKJGBEgYkxEJEQoQ0q-d18yvlJgJ1Da5PaJCEPAV0wWcPCXMwUGtQAXTP1m2qO-HMVwJGYuQ-osE=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "HVV3X6PrL1k",
+    "title": "From the Inside",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Meteora 20th Anniversary Edition",
+     "id": "MPREb_DOhy8PyMH41"
+    },
+    "length": "2:56",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/YhfFgdvtwfIcLi_2H54RP15T3IPiUZnNtlwvlomHsAmAMQMZhgXu11HoFWPcWAiJRfdChtrqrGRbQl3idA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "PIF4So6xcU8",
+    "title": "My Own Summer (Shove It)",
+    "artists": [
+     {
+      "name": "Deftones",
+      "id": "UCXQtyZ6gWbOYR5B8Sc2sr3g"
+     }
+    ],
+    "album": {
+     "name": "Around the Fur",
+     "id": "MPREb_ldHH2TnjL9l"
+    },
+    "length": "3:35",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "1997",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/DdcS7T7t989quTN5ZeqoJVIKdIKHNi78on-fC_MReXCpUptj9Vt73ZLtx6bG8LxsVWmO79W5Ksk2xUyc=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "Wo7qhT7lBXw",
+    "title": "Like a Stone",
+    "artists": [
+     {
+      "name": "Audioslave",
+      "id": "UCQCq16x84FeLx0tARDtEaFg"
+     }
+    ],
+    "album": {
+     "name": "Audioslave",
+     "id": "MPREb_sKBiaU7Sxit"
+    },
+    "length": "4:54",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2002",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/18UOq6eFFZp1koL5e0r-Kk5ZkoL91ObrEmDnnuJ_o96QQLepghgIU6UeFv191PojG4aHASMQXz3dsB0=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "iYcbfc_UB6M",
+    "title": "Bodies",
+    "artists": [
+     {
+      "name": "Drowning Pool",
+      "id": "UCdA8Grr5tyqrCUk2uPeWrAA"
+     }
+    ],
+    "album": {
+     "name": "Sinner",
+     "id": "MPREb_A8BjSiOkU1a"
+    },
+    "length": "3:22",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2001",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/8CyF4WOKajW6GBNqoLYeVr1qCRTvji_R_joczoPj_yIk5oiL__yp_ljg_slHjpMQFiRrDe-NJ3sXDbuopA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "TV5vfYOiwYU",
+    "title": "Points of Authority",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Hybrid Theory (Bonus Edition)",
+     "id": "MPREb_m10OjDmOhfv"
+    },
+    "length": "3:21",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2000",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/lkNJVMp3siDfSw_zVYj3tE6fQS7G6Gj2gzoxrIwS7K4TwqmL_uSBb9-PKACNLIP_7XLQib4tC5XwWbpD=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "ujpvNvSgcic",
+    "title": "All The Things She Said",
+    "artists": [
+     {
+      "name": "t.A.T.u.",
+      "id": "UChTBSId6VeDfiIEuRvqTO6A"
+     }
+    ],
+    "album": {
+     "name": "200 KM/H In The Wrong Lane (10th Anniversary Edition)",
+     "id": "MPREb_hT6Nb9AwkZs"
+    },
+    "length": "3:35",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2002",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/n8aFpqvOnv5621rSyW93rCiXeZwJSDJ4oRfIRYdPKwzYfrsC__ffzT2SVuPY4Uf4hI3jvLYp7uJ9t8-9kA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "weqK155M_4o",
+    "title": "You're Gonna Go Far, Kid",
+    "artists": [
+     {
+      "name": "The Offspring",
+      "id": "UCQVUXQu8RpxhihAMla6ke5A"
+     }
+    ],
+    "album": {
+     "name": "Rise And Fall, Rage And Grace",
+     "id": "MPREb_YQUhhmMbR62"
+    },
+    "length": "2:58",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2008",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/RFQM79EAVSD8l5C2Xvt_C9SBhgANcIBFeq3nHLV7tbxEZOXfz3_hPQS2FyTc2gH6JK_GTK1QS77aSu61=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "h2cd5JyPR5o",
+    "title": "The Only",
+    "artists": [
+     {
+      "name": "Static-X",
+      "id": "UCDssrdgCuRtfpjfMc_hsYRw"
+     }
+    ],
+    "album": {
+     "name": "Shadow Zone",
+     "id": "MPREb_g6GwtcGLCJk"
+    },
+    "length": "2:52",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2003",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/A7cpkCYPiiuvefrVz8QZIQp7M1SulZaEzLRIU661YKECHGovOYPjzdDIRECTmk_8y9d2-ouK2s22ka-p=w544-h544-s-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   }
+  ]
+ }
+}

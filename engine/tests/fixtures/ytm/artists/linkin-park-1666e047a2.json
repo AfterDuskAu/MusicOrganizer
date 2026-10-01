@@ -1,0 +1,53 @@
+{
+ "kind": "artists",
+ "key": "linkin park",
+ "request": "Linkin Park",
+ "recorded_at": "2026-10-01T13:35:57Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [
+  "everything but artist, browseId, radioId"
+ ],
+ "error": null,
+ "response": [
+  {
+   "artist": "Linkin Park",
+   "browseId": "UCxgN32UVVztKAQd2HkXzBtw",
+   "radioId": "RDEMww6ZEHgLhQ-8eu_x7Z-FJw"
+  },
+  {
+   "artist": "JAŸ-Z",
+   "browseId": "UCbJG1HvzgzaMe_15xfiUyWw",
+   "radioId": "RDEMkW9c9ePizmNg24CYqGpmHA"
+  },
+  {
+   "artist": "Tribal Ink",
+   "browseId": "UCX88BcBzgpKYI6PZMa_6bDg",
+   "radioId": "RDEMpqzDrFcgn_c3j_FRypS2yA"
+  },
+  {
+   "artist": "Fort Minor",
+   "browseId": "UCpa0tuBlH5evXaVIQ0yPfCg",
+   "radioId": "RDEMitcq4QmJFT-i3Xid5FGIPQ"
+  },
+  {
+   "artist": "Chester Bennington",
+   "browseId": "UCR76iWurhf2z7pAfinSnIPw",
+   "radioId": "RDEMWTsb4EjPbA8LpSoVgXp6ZQ"
+  },
+  {
+   "artist": "Steve Aoki",
+   "browseId": "UCLZzDSuaR-nu8ARUU4ydcYQ",
+   "radioId": "RDEMwUyhR6bgLZsBwp9my8SxtA"
+  },
+  {
+   "artist": "Kiiara",
+   "browseId": "UCrPdKp2si6D1nbbAPqdDdoA",
+   "radioId": "RDEMZ_C1NWrz182Ox_kowrpKtQ"
+  },
+  {
+   "artist": "Dead By Sunrise",
+   "browseId": "UCEzg_n3-u2ODF6ENDAIrGXA",
+   "radioId": "RDEMxAu5NyiRwoCZqNy8pZoyFg"
+  }
+ ]
+}

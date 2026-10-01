@@ -11,6 +11,8 @@
 - `download_video(video_id, dest_dir, height=...)`: a video as one MP4, its picture
   joined to the format-140 sound without converting either (v0.2). Queue only, like
   `download_audio`.
+- `radio(video_id)`, `artist_radio(name)` and `genre_playlist(name)`: songs like a song,
+  like an artist, and of a genre, for Discover (v0.4). Lookups only.
 
 Every request goes through one rate limiter per process (`limiter()`): at most one
 request per 1.5 s (±0.5 s jitter), exponential backoff when YouTube refuses (HTTP 429)
@@ -29,6 +31,12 @@ Facts from the recorded responses (ytmusicapi 1.12.3), which the code relies on:
 - An album's tracks can carry *different* videoIds from the ones search gives for the
   same songs (often the music video, `MUSIC_VIDEO_TYPE_OMV`), so `find_track` falls back
   to the title and duration. There's no disc number.
+- A song's radio (`get_watch_playlist(videoId, radio=True)`) is about 50 tracks, the
+  song itself first, nearly all official audio. An artist's radio (the `radioId` an
+  "artists" search result carries, as a `playlistId`) is about 100, a quarter of them the
+  artist's own. `get_mood_playlists` fails on every genre page (a KeyError inside
+  ytmusicapi), so a genre is found by searching "featured_playlists"; those playlists
+  are mostly music videos, not official audio.
 """
 
 from __future__ import annotations
@@ -73,6 +81,10 @@ REPLAY_ENV = "MUSICORG_REPLAY_DIR"
 OFFICIAL_AUDIO = "MUSIC_VIDEO_TYPE_ATV"
 OFFICIAL_VIDEO = "MUSIC_VIDEO_TYPE_OMV"
 SEARCH_CACHE_DAYS = 30
+RADIO_CACHE_DAYS = 7  # a radio changes from day to day; a week keeps the picks steady
+RADIO_SONGS = 50
+ARTIST_RADIO_SONGS = 100
+GENRE_PLAYLIST_SONGS = 100
 
 MIN_INTERVAL_S = 1.5
 JITTER_S = 0.5
@@ -334,11 +346,11 @@ def _same_song(
         return False
     if (_hard_versions(wanted) if versions is None else versions) != _hard_versions(theirs):
         return False
-    credit = f" {_artist_key(artist)} "
-    return any(f" {_artist_key(name)} " in credit for name in found.artists if _artist_key(name))
+    credit = f" {artist_key(artist)} "
+    return any(f" {artist_key(name)} " in credit for name in found.artists if artist_key(name))
 
 
-def _artist_key(name: str) -> str:
+def artist_key(name: str) -> str:
     """An artist's name for comparing, without "the": the library may say "Notorious
     B.I.G." where YouTube Music says "The Notorious B.I.G."."""
     key = compare_key(name)
@@ -349,6 +361,212 @@ def _hard_versions(parsed: Parsed) -> set[str]:
     """The version words that make it a different recording ("remix", "live"), without
     the ones that don't ("remaster", "explicit")."""
     return {t for t in parsed.version_tokens if t.partition(":")[0] not in SOFT_VERSION_KINDS}
+
+
+# ---- songs like a song, an artist or a genre (Discover, v0.4) ----------------------------
+
+RADIO_TRACK_KEEP = ("videoId", "title", "artists", "album", "length", "duration",
+                    "duration_seconds", "isExplicit", "videoType", "year", "thumbnail",
+                    "thumbnails")  # fmt: skip
+
+
+def trim_tracks(raw: Any) -> dict[str, Any]:
+    """A watch playlist's or a playlist's answer, cut down to its tracks and the fields
+    the engine reads: what's cached and what's recorded for tests."""
+    tracks = raw.get("tracks") if isinstance(raw, dict) else None
+    kept = [
+        {key: track[key] for key in RADIO_TRACK_KEEP if track.get(key) is not None}
+        for track in (tracks if isinstance(tracks, list) else [])
+        if isinstance(track, dict)
+    ]
+    for track in kept:  # one picture each, the largest: a radio is 50 tracks
+        for key in ("thumbnail", "thumbnails"):
+            pictures = [t for t in track.get(key) or [] if isinstance(t, dict) and t.get("url")]
+            if pictures:
+                track[key] = [max(pictures, key=lambda t: t.get("width") or 0)]
+    title = raw.get("title") if isinstance(raw, dict) else None
+    return {"tracks": kept, **({"title": title} if isinstance(title, str) else {})}
+
+
+def _tracks(raw: Any) -> list[Candidate]:
+    found = []
+    for track in trim_tracks(raw)["tracks"]:
+        duration = _int(track.get("duration_seconds")) or parse_length(
+            track.get("length") or track.get("duration")
+        )
+        candidate = _from_track(track, duration=duration)
+        if candidate is not None:
+            found.append(candidate)
+    return found
+
+
+def radio(video_id: str, *, cache: SearchCache | None = None) -> list[Candidate]:
+    """YouTube Music's radio for a song: about 50 songs like it, in its order, the song
+    itself first. One request; the answer is kept for a week."""
+    key = f"radio {video_id}"
+    raw = None if cache is None else cache.cached_search(key, max_age_days=RADIO_CACHE_DAYS)
+    if raw is None:
+        raw = trim_tracks(
+            _fetch(
+                "radio",
+                video_id,
+                lambda client: client.get_watch_playlist(
+                    videoId=video_id, radio=True, limit=RADIO_SONGS
+                ),
+            )
+        )
+        if cache is not None:
+            cache.put_search(key, raw)
+    return _tracks(raw)
+
+
+@dataclass(frozen=True)
+class ArtistRadio:
+    """An artist as YouTube Music names them, and the songs on their radio: their own
+    and other artists' that their listeners play."""
+
+    name: str
+    tracks: tuple[Candidate, ...]
+
+
+def artist_radio(name: str, *, cache: SearchCache | None = None) -> ArtistRadio | None:
+    """The radio of the artist YouTube Music finds for `name`, or None if it finds no
+    artist by that name. Two requests (the artist, then the radio); the artist is kept
+    for 30 days and the radio for a week.
+
+    Only an artist whose name is the one asked for is taken ("the" aside): a search for
+    a name YouTube Music doesn't know returns other artists, and their radio would be a
+    surprise."""
+    key = query_key(name)
+    if not key:
+        return None
+    cache_key = f"artists {key}"
+    raw = None if cache is None else cache.cached_search(cache_key, max_age_days=SEARCH_CACHE_DAYS)
+    if raw is None:
+        raw = _fetch("artists", key, lambda client: client.search(name, filter="artists", limit=5))
+        raw = [
+            {k: r.get(k) for k in ("artist", "browseId", "radioId")}
+            for r in (raw if isinstance(raw, list) else [])
+            if isinstance(r, dict)
+        ]
+        if cache is not None:
+            cache.put_search(cache_key, raw)
+    wanted = artist_key(name)
+    found = next(
+        (
+            r
+            for r in (raw if isinstance(raw, list) else [])
+            if isinstance(r, dict)
+            and isinstance(r.get("artist"), str)
+            and isinstance(r.get("radioId"), str)
+            and artist_key(r["artist"]) == wanted
+        ),
+        None,
+    )
+    if found is None:
+        return None
+    radio_id = found["radioId"]
+    radio_key = f"artist radio {radio_id}"
+    tracks = (
+        None if cache is None else cache.cached_search(radio_key, max_age_days=RADIO_CACHE_DAYS)
+    )
+    if tracks is None:
+        tracks = trim_tracks(
+            _fetch(
+                "artist-radio",
+                radio_id,
+                lambda client: client.get_watch_playlist(
+                    playlistId=radio_id, limit=ARTIST_RADIO_SONGS
+                ),
+            )
+        )
+        if cache is not None:
+            cache.put_search(radio_key, tracks)
+    return ArtistRadio(name=found["artist"], tracks=tuple(_tracks(tracks)))
+
+
+@dataclass(frozen=True)
+class GenrePlaylist:
+    """A playlist YouTube Music itself made for a genre. Its tracks are mostly music
+    videos (`MUSIC_VIDEO_TYPE_OMV`), a few official audio."""
+
+    title: str
+    tracks: tuple[Candidate, ...]
+
+
+def genre_playlist(name: str, *, cache: SearchCache | None = None) -> GenrePlaylist | None:
+    """YouTube Music's own playlist for a genre ("hip hop", "indie"), or None if it has
+    none. Two requests (the search, then the playlist), both kept for 30 days.
+
+    Only a playlist by YouTube Music is taken, never a listener's (`_genre_choice`)."""
+    key = query_key(name)
+    if not key:
+        return None
+    cache_key = f"genre {key}"
+    raw = None if cache is None else cache.cached_search(cache_key, max_age_days=SEARCH_CACHE_DAYS)
+    if raw is None:
+        raw = _fetch(
+            "genre",
+            key,
+            lambda client: client.search(name, filter="featured_playlists", limit=20),
+        )
+        raw = [
+            {k: r.get(k) for k in ("title", "browseId", "author")}
+            for r in (raw if isinstance(raw, list) else [])
+            if isinstance(r, dict)
+        ]
+        if cache is not None:
+            cache.put_search(cache_key, raw)
+    found = _genre_choice(raw, key)
+    if found is None:
+        return None
+    playlist_id = found["browseId"].removeprefix("VL")
+    playlist_key = f"playlist {playlist_id}"
+    tracks = (
+        None if cache is None else cache.cached_search(playlist_key, max_age_days=SEARCH_CACHE_DAYS)
+    )
+    if tracks is None:
+        tracks = trim_tracks(
+            _fetch(
+                "playlist",
+                playlist_id,
+                lambda client: client.get_playlist(playlist_id, limit=GENRE_PLAYLIST_SONGS),
+            )
+        )
+        if cache is not None:
+            cache.put_search(playlist_key, tracks)
+    title = tracks.get("title") if isinstance(tracks, dict) else None
+    return GenrePlaylist(
+        title=title if isinstance(title, str) and title else str(found.get("title") or name),
+        tracks=tuple(_tracks(tracks)),
+    )
+
+
+def _genre_choice(raw: Any, genre_key: str) -> dict[str, Any] | None:
+    """Which of the playlists found is the genre's. The search returns all sorts ("Aussie
+    Hip-Hop Golds", "Hip-Hop Christmas", "00s German Rap Essentials", in a different
+    order each time), so: one named for the genre and its hits ("Hip Hop Hits 2024")
+    first, then the shortest name with the genre in it, then whatever came first."""
+    listed = [
+        r
+        for r in (raw if isinstance(raw, list) else [])
+        if isinstance(r, dict)
+        and isinstance(r.get("browseId"), str)
+        and r.get("author") == "YouTube Music"
+    ]
+    named = [r for r in listed if f" {genre_key} " in f" {compare_key(r.get('title'))} "]
+    hits = [r for r in named if " hits " in f" {compare_key(r.get('title'))} "]
+    if hits:
+        return hits[0]
+    if named:
+        return min(named, key=lambda r: len(str(r.get("title"))))
+    return listed[0] if listed else None
+
+
+def same_song(title: str, artist: str, found: Candidate) -> bool:
+    """Whether a YouTube Music track is this song: the same title and version, and an
+    artist in common."""
+    return _same_song(parse_title(title), artist, found)
 
 
 @dataclass(frozen=True)

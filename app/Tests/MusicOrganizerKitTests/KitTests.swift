@@ -460,4 +460,69 @@ final class SongVideoTests: XCTestCase {
         XCTAssertFalse(video.keepsTime(with: 236))  // the video has an intro
         XCTAssertFalse(video.keepsTime(with: nil))
     }
+
+    // MARK: Discover
+
+    func testAPickIsPlayableAndGoesBackAsTheEngineGaveIt() throws {
+        let json = """
+            {"picks": [{"video_id": "abcdefghijk", "title": "Song", "artists": ["A", "B"],
+              "album": "Album", "album_browse_id": "MPRE", "duration_s": 187, "is_explicit": null,
+              "is_official_audio": true, "video_type": "MUSIC_VIDEO_TYPE_ATV", "year": "2003",
+              "thumbnail": "https://example.invalid/t.jpg",
+              "why": "On the radio for 3 of your songs", "hits": 3}],
+             "wanted": 10, "radios": 4, "seeds": [], "note": null}
+            """
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let answer = try decoder.decode(DiscoverAnswer.self, from: Data(json.utf8))
+        let pick = answer.picks[0]
+        XCTAssertEqual(pick.why, "On the radio for 3 of your songs")
+        XCTAssertEqual(pick.artistName, "A, B")
+        XCTAssertEqual(pick.result.track.videoId, "abcdefghijk")
+        XCTAssertEqual(pick.result.track.durationS, 187)
+        XCTAssertNil(answer.note)
+        let back = pick.candidate
+        XCTAssertEqual(
+            Set(back.keys),
+            ["video_id", "title", "artists", "album", "album_browse_id", "duration_s",
+             "video_type", "year", "thumbnail"])
+        XCTAssertEqual(back["video_id"] as? String, "abcdefghijk")
+        XCTAssertEqual(back["duration_s"] as? Int, 187)
+        XCTAssertEqual(back["artists"] as? [String], ["A", "B"])
+        XCTAssertTrue(JSONSerialization.isValidJSONObject(back))
+    }
+
+    func testDiscoverSeeds() {
+        XCTAssertEqual(DiscoverSeed.library.params, ["kind": "library"])
+        XCTAssertEqual(DiscoverSeed.mostPlayed.params, ["kind": "most_played"])
+        XCTAssertEqual(DiscoverSeed.topArtist.params, ["kind": "top_artist"])
+        XCTAssertEqual(
+            DiscoverSeed.playlist("pl_1").params, ["kind": "playlist", "playlist_id": "pl_1"])
+        XCTAssertEqual(DiscoverSeed.genre("hip hop").params, ["kind": "genre", "name": "hip hop"])
+        XCTAssertEqual(
+            DiscoverSeed.artists(" Linkin Park, Korn ;linkin park,, "),
+            [.artist("Linkin Park"), .artist("Korn")])
+        XCTAssertEqual(DiscoverSeed.artists("  "), [])
+    }
+
+    func testLinksToASongElsewhere() {
+        XCTAssertEqual(
+            ElsewhereLink.spotify.url(title: "What's New?", artist: "AC/DC")?.absoluteString,
+            "https://open.spotify.com/search/AC/DC%20What's%20New%3F")
+        XCTAssertEqual(
+            ElsewhereLink.appleMusic.url(title: "Numb", artist: "Linkin Park")?.absoluteString,
+            "https://music.apple.com/search?term=Linkin%20Park%20Numb")
+        XCTAssertEqual(
+            ElsewhereLink.soundCloud.url(title: "A & B", artist: "C")?.absoluteString,
+            "https://soundcloud.com/search?q=C%20A%20%26%20B")
+        XCTAssertNil(ElsewhereLink.spotify.url(title: " ", artist: ""))
+    }
+
+    func testRoughTime() {
+        XCTAssertEqual(roughTime(minutes: 0), "under a minute")
+        XCTAssertEqual(roughTime(minutes: 1), "about a minute")
+        XCTAssertEqual(roughTime(minutes: 25), "about 25 minutes")
+        XCTAssertEqual(roughTime(minutes: 89), "about 89 minutes")
+        XCTAssertEqual(roughTime(minutes: 130), "about 2 hours")
+    }
 }

@@ -1,0 +1,309 @@
+{
+ "kind": "playlist",
+ "key": "RDCLAK5uy_neriXH6JbZPr7Pf4LOi5bGQP-_lWRZXs4",
+ "request": "jazz",
+ "recorded_at": "2026-10-01T13:36:03Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [
+  "everything but the tracks' fields the engine reads",
+  "all but the first 12 tracks"
+ ],
+ "error": null,
+ "response": {
+  "tracks": [
+   {
+    "videoId": "FcG3HxiOMJE",
+    "title": "I See Your Face Before Me (From The Album Setting The Pace)",
+    "artists": [
+     {
+      "name": "John Coltrane",
+      "id": "UCH4T2kv7rr9qnuP0DOXLxMA"
+     }
+    ],
+    "duration": "10:00",
+    "duration_seconds": 600,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "thumbnails": [
+     {
+      "url": "https://i.ytimg.com/vi/FcG3HxiOMJE/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3kFHQbxfCqWaJX7tPCWJbytjOJQJA",
+      "width": 400,
+      "height": 225
+     }
+    ]
+   },
+   {
+    "videoId": "Rstp2cKOntE",
+    "title": "What's New",
+    "artists": [
+     {
+      "name": "ENZO OREFICE trio",
+      "id": "UCDLbKhmIsf48arsxDcP0LaA"
+     }
+    ],
+    "album": {
+     "name": "What's New?",
+     "id": "MPREb_0fTVlYQyy7o"
+    },
+    "duration": "3:47",
+    "duration_seconds": 227,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/frDtRe3euT55zG7vUQZs-8Fkk0RyqSllQZ58luPFY6US24SS19DTelDezqEJX6bVfTRmUgKL0yuTHrk=w120-h120-l90-rj",
+      "width": 120,
+      "height": 120
+     }
+    ]
+   },
+   {
+    "videoId": "xQUMmya8gy8",
+    "title": "Once When I Was Very Young",
+    "artists": [
+     {
+      "name": "Dave Brubeck Quartet",
+      "id": "UCMBevFAp40kVlvIcOvzv5Bw"
+     }
+    ],
+    "album": {
+     "name": "Once When I Was Very Young",
+     "id": "MPREb_eYhcG62fjGK"
+    },
+    "duration": "4:00",
+    "duration_seconds": 240,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/EJjHXBh9VNQRB_BzNKN3ERwwC273lZQZTOIQhYrBRGfIMCE9HDGcN4XdTE2JVHBGcCqwJADA1WLst_3K=w120-h120-l90-rj",
+      "width": 120,
+      "height": 120
+     }
+    ]
+   },
+   {
+    "videoId": "CNtvBCWwobs",
+    "title": "Nature Boy",
+    "artists": [
+     {
+      "name": "David Hazeltine",
+      "id": "UCds586mSWhbXE04JOB1jruQ"
+     }
+    ],
+    "album": {
+     "name": "Life's Love Songs",
+     "id": "MPREb_gpup3we3aGN"
+    },
+    "duration": "6:13",
+    "duration_seconds": 373,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/oCzkgtUQVp04T2o9IjOxgeXxrHRq_I8fwP1Zv7hR3aX3dZG7nGe0ONbStitZ5hr9SseRn59IfavSSP-S=w120-h120-l90-rj",
+      "width": 120,
+      "height": 120
+     }
+    ]
+   },
+   {
+    "videoId": "GlHsckrAAa4",
+    "title": "In Your Own Sweet Way (Take 1)",
+    "artists": [
+     {
+      "name": "Bill Evans",
+      "id": "UCriB97bZopXsBHVYOQEIIZg"
+     }
+    ],
+    "duration": "6:59",
+    "duration_seconds": 419,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "thumbnails": [
+     {
+      "url": "https://i.ytimg.com/vi/GlHsckrAAa4/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3k0FPLGja9H7Jq3Qk6wTidCWinuXw",
+      "width": 400,
+      "height": 225
+     }
+    ]
+   },
+   {
+    "videoId": "DAN2TQjQOpY",
+    "title": "Down the Memory Lane",
+    "artists": [
+     {
+      "name": "Magnus Ludvigsson",
+      "id": "UCDwf78XSCjVelHml8YEE7ww"
+     }
+    ],
+    "album": {
+     "name": "Down the Memory Lane",
+     "id": "MPREb_c3kS1ZGaCVS"
+    },
+    "duration": "3:24",
+    "duration_seconds": 204,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/Mw7hOyemX4GEgV0UthqllLJcWwbIEUIX_gcfNvq5vfjlNuFwirfhkUPTRpikh_cWWolSAo5kshOzRx0=w120-h120-l90-rj",
+      "width": 120,
+      "height": 120
+     }
+    ]
+   },
+   {
+    "videoId": "-0ktGHavDRk",
+    "title": "Homecoming",
+    "artists": [
+     {
+      "name": "David Hazeltine",
+      "id": "UCds586mSWhbXE04JOB1jruQ"
+     }
+    ],
+    "album": {
+     "name": "Homecoming",
+     "id": "MPREb_MNwTVklE3LJ"
+    },
+    "duration": "7:10",
+    "duration_seconds": 430,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/jdJNuGQ8v4u8LGJqio7ILDJnqLDt7RdBosIQ5QimN3cVrSq_8JWcUnKc-9ZEBQaj1_M7NsXkf4mjUD0=w120-h120-l90-rj",
+      "width": 120,
+      "height": 120
+     }
+    ]
+   },
+   {
+    "videoId": "_rVgBfXspeM",
+    "title": "Vacqueyras",
+    "artists": [
+     {
+      "name": "Bladverk Band",
+      "id": "UCIMfjFlOVMwQDeAVk7bHYEg"
+     }
+    ],
+    "album": {
+     "name": "Varenne",
+     "id": "MPREb_gbv1OJ4MYeC"
+    },
+    "duration": "3:06",
+    "duration_seconds": 186,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/1mwBDEMStB0HdpKnQBJvPxnPNGSq9dlgYNGylvN6dXkKZaVkFwDdI5zuSsS4ranyJieKXZ74DSMtmecCTw=w120-h120-l90-rj",
+      "width": 120,
+      "height": 120
+     }
+    ]
+   },
+   {
+    "videoId": "ReWDun-ihxo",
+    "title": "One Hundred Ways (feat. Pat Bergeson)",
+    "artists": [
+     {
+      "name": "The Jeff Steinberg Jazz Ensemble",
+      "id": "UC2ZnBFtFmarNnzsYcPomIVg"
+     }
+    ],
+    "album": {
+     "name": "Cocktail Lounge: Easy Jazz 80s",
+     "id": "MPREb_hyXThKtQeDA"
+    },
+    "duration": "4:16",
+    "duration_seconds": 256,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/dlrZs1TX4DuJOI9fTkQQ4lH_Mm98T1E0p8RLo0n7bGSqgFt3fcLkMysfnUacSD3OD-xbS2k50B45irnF=w120-h120-l90-rj",
+      "width": 120,
+      "height": 120
+     }
+    ]
+   },
+   {
+    "videoId": "9ZlXvKOuPdg",
+    "title": "Can't Buy Me Love",
+    "artists": [
+     {
+      "name": "Taurey Butler",
+      "id": "UCEzVmv1A-NAo24bJxlb6ktw"
+     }
+    ],
+    "album": {
+     "name": "One of the Others",
+     "id": "MPREb_DeWwECKVI8d"
+    },
+    "duration": "4:03",
+    "duration_seconds": 243,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/ZOV_Gy2tXe7yudciR_201reTCBCRHBarKbDC1Q_5_hafLpiOMAglwimltP9V868quDCVdO11ULjSar6Nkw=w120-h120-l90-rj",
+      "width": 120,
+      "height": 120
+     }
+    ]
+   },
+   {
+    "videoId": "zbdQCqcWe9w",
+    "title": "Dog",
+    "artists": [
+     {
+      "name": "Fredrik Svabø",
+      "id": "UCZkfbXZaAwFKdicHe1B-JHg"
+     }
+    ],
+    "album": {
+     "name": "Kingo's Treat",
+     "id": "MPREb_Lqz5e8pcpSE"
+    },
+    "duration": "2:39",
+    "duration_seconds": 159,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/84oCYIZR06qTJYHXwOufclRTQFPXiG0JXT9LsCZOEJ77HOq5d7dwFwFa_I3BrcAcQT4_CwNPJy7mLW4=w120-h120-l90-rj",
+      "width": 120,
+      "height": 120
+     }
+    ]
+   },
+   {
+    "videoId": "fWwKMVntXSA",
+    "title": "It Could Happen to You",
+    "artists": [
+     {
+      "name": "Gary Smith",
+      "id": "UCO3v7jA4Wc8osS2ROgIqF9g"
+     }
+    ],
+    "album": {
+     "name": "It Could Happen to You",
+     "id": "MPREb_DnkMlSjyhMP"
+    },
+    "duration": "3:23",
+    "duration_seconds": 203,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/SpyLtObfM2TqjndxzPhry-2Rf9u-3ztm9l0aNszd5FHTpoVX_yw7W6auaauwvKQIZFi4iNsksvargLg=w120-h120-l90-rj",
+      "width": 120,
+      "height": 120
+     }
+    ]
+   }
+  ],
+  "title": "Cozy Jazz"
+ }
+}

@@ -110,8 +110,8 @@ def test_a_video_of_another_version_or_artist_isnt_the_songs() -> None:
     assert youtube._same_song(
         parse_title("Crave You (Adventure Club Remix)"), "The Flight Facilities", remix
     )
-    assert youtube._artist_key("The Notorious B.I.G.") == youtube._artist_key("Notorious B.I.G.")
-    assert youtube._artist_key("The The") == "the the"
+    assert youtube.artist_key("The Notorious B.I.G.") == youtube.artist_key("Notorious B.I.G.")
+    assert youtube.artist_key("The The") == "the the"
     assert youtube._same_song(  # a remaster is the same recording, and so is a second artist
         parse_title("Crave You - Adventure Club Remix (2019 Remaster)"),
         "Flight Facilities, Giselle",
@@ -342,3 +342,88 @@ def test_the_pause_message_names_a_time() -> None:
 def test_live_search() -> None:
     results = youtube.search_songs("Flight Facilities Crave You")
     assert any(c.is_official_audio and "Flight Facilities" in c.artists for c in results)
+
+
+# ---- songs like a song, an artist or a genre (Discover, v0.4) ----------------------------
+
+
+class AgedCache:
+    """A cache that remembers how old an answer each lookup would accept."""
+
+    def __init__(self) -> None:
+        self.kept: dict[str, Any] = {}
+        self.ages: dict[str, float] = {}
+
+    def cached_search(self, key: str, *, max_age_days: float) -> Any | None:
+        self.ages[key] = max_age_days
+        return self.kept.get(key)
+
+    def put_search(self, key: str, response: Any) -> None:
+        self.kept[key] = response
+
+
+def test_a_songs_radio(monkeypatch: pytest.MonkeyPatch) -> None:
+    cache = AgedCache()
+    tracks = youtube.radio("5qZQEq_C3vc", cache=cache)
+    assert len(tracks) == 25  # the recording keeps the first 25 of about 50
+    first = tracks[0]
+    assert (first.video_id, first.title, first.artists) == ("5qZQEq_C3vc", "Numb", ("Linkin Park",))
+    assert first.duration_s == 188 and first.is_official_audio  # from "3:08"
+    assert first.album and first.album_browse_id and first.year == "2003"
+    assert first.thumbnail and first.thumbnail.startswith("https://")
+    assert first.is_explicit is None  # a watch playlist doesn't say
+    assert len({t.video_id for t in tracks}) == 25
+    # Kept for a week, cut down to what's read; asked for once.
+    assert cache.ages == {"radio 5qZQEq_C3vc": 7}
+    kept = cache.kept["radio 5qZQEq_C3vc"]["tracks"][0]
+    assert set(kept) <= set(youtube.RADIO_TRACK_KEEP) and len(kept["thumbnail"]) == 1
+    monkeypatch.setattr(youtube, "_fetch", lambda *a: pytest.fail("asked YouTube again"))
+    assert youtube.radio("5qZQEq_C3vc", cache=cache) == tracks
+
+
+def test_an_artists_radio() -> None:
+    cache = AgedCache()
+    found = youtube.artist_radio("linkin park", cache=cache)
+    assert found is not None and found.name == "Linkin Park"
+    assert len(found.tracks) == 30
+    theirs = [t for t in found.tracks if t.artists == ("Linkin Park",)]
+    assert 3 <= len(theirs) < len(found.tracks)  # their songs, and other bands'
+    assert cache.ages["artists linkin park"] == 30
+    assert [age for key, age in cache.ages.items() if key.startswith("artist radio ")] == [7]
+    # Only an artist by that name: the search for one nobody has returns other artists.
+    assert youtube.artist_radio("Zzyzx Qwfp Band") is None
+    assert youtube.artist_radio("  ") is None
+
+
+def test_a_genres_playlist() -> None:
+    found = youtube.genre_playlist("Jazz")
+    assert found is not None and found.title == "Cozy Jazz"
+    assert len(found.tracks) == 12
+    kinds = {t.video_type for t in found.tracks}
+    assert kinds == {youtube.OFFICIAL_AUDIO, youtube.OFFICIAL_VIDEO}  # mostly not songs
+    assert all(t.duration_s for t in found.tracks)
+
+
+def test_which_playlist_is_the_genres() -> None:
+    def listed(*titles: str, author: str = "YouTube Music") -> list[dict[str, str]]:
+        return [{"title": t, "browseId": f"VL{n}", "author": author} for n, t in enumerate(titles)]
+
+    def choice(found: list[dict[str, str]]) -> str | None:
+        chosen = youtube._genre_choice(found, "hip hop")
+        return chosen["title"] if chosen else None
+
+    mixed = listed("Aussie Hip-Hop Golds", "Lofi Loft", "Hip Hop Hits 2024", "Hip Hop Hits 2021",
+                   "Trending Hip-Hop", "Hip-Hop Christmas")  # fmt: skip
+    assert choice(mixed) == "Hip Hop Hits 2024"  # named for the genre and its hits
+    assert choice(mixed[:2] + mixed[4:]) == "Trending Hip-Hop"  # else the shortest name with it
+    assert choice(listed("Lofi Loft", "Pega a Visão")) == "Lofi Loft"  # else the first
+    assert choice(listed("Hip Hop Hits 2024", author="Somebody")) is None  # never a listener's
+    assert choice([]) is None and choice("nonsense") is None  # type: ignore[arg-type]
+
+
+def test_same_song() -> None:
+    numb = youtube.radio("5qZQEq_C3vc")[0]
+    assert youtube.same_song("Numb", "Linkin Park", numb)
+    assert youtube.same_song("numb (Remastered)", "LINKIN PARK feat. Somebody", numb)
+    assert not youtube.same_song("Numb (Live)", "Linkin Park", numb)
+    assert not youtube.same_song("Numb", "Somebody Else", numb)

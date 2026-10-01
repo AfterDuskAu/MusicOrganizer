@@ -1,0 +1,621 @@
+{
+ "kind": "radio",
+ "key": "zbdQCqcWe9w",
+ "request": "zbdQCqcWe9w",
+ "recorded_at": "2026-10-01T13:38:52Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [
+  "feedback tokens",
+  "everything but the tracks' fields the engine reads",
+  "all but the first 25 tracks"
+ ],
+ "error": null,
+ "response": {
+  "tracks": [
+   {
+    "videoId": "zbdQCqcWe9w",
+    "title": "Dog",
+    "artists": [
+     {
+      "name": "Fredrik Svabø",
+      "id": "UCZkfbXZaAwFKdicHe1B-JHg"
+     }
+    ],
+    "album": {
+     "name": "Kingo's Treat",
+     "id": "MPREb_Lqz5e8pcpSE"
+    },
+    "length": "2:39",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2025",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/84oCYIZR06qTJYHXwOufclRTQFPXiG0JXT9LsCZOEJ77HOq5d7dwFwFa_I3BrcAcQT4_CwNPJy7mLW4=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "-GPlnZr8L0k",
+    "title": "Transition from Bunk Beds",
+    "artists": [
+     {
+      "name": "Fredrik Svabø",
+      "id": "UCZkfbXZaAwFKdicHe1B-JHg"
+     }
+    ],
+    "album": {
+     "name": "Kingo's Treat",
+     "id": "MPREb_Lqz5e8pcpSE"
+    },
+    "length": "1:13",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2025",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/84oCYIZR06qTJYHXwOufclRTQFPXiG0JXT9LsCZOEJ77HOq5d7dwFwFa_I3BrcAcQT4_CwNPJy7mLW4=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "3lY6lTejA6s",
+    "title": "Summersurf",
+    "artists": [
+     {
+      "name": "Löwenzahnhonig",
+      "id": "UC-_tYrRlYrtTc95DIZpLtLA"
+     }
+    ],
+    "album": {
+     "name": "Summersurf",
+     "id": "MPREb_ClqlL0qSoJ1"
+    },
+    "length": "1:51",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2025",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/xJcnSCrFBQfxGARL0fnkYT_TYXuiyUj4XHpwP1iR2Gwt97hZ2FDhxDSJC7zzCCvF69FrjySVt5mKhYNQ=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "oy3fY1nJa3I",
+    "title": "Michael Sees Mae",
+    "artists": [
+     {
+      "name": "Robert Glasper",
+      "id": "UCLFHVgbSwvTgM1PcsOCvHjw"
+     }
+    ],
+    "album": {
+     "name": "The Photograph (Original Motion Picture Soundtrack)",
+     "id": "MPREb_MYNu4v3vCOo"
+    },
+    "length": "1:16",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2020",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/9tF7_1ESjQmiuhIB7NxxD69cQhA5dWJ7yGZbgAv2ZNNLsSKJAF2ZQgaPrZ3C6f2jKeg1eDDwBb8wDk3W=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "1KfawjwA6Gs",
+    "title": "wondering why",
+    "artists": [
+     {
+      "name": "yeemz",
+      "id": "UCBZtsgT-ZzEfazmfbqBvEgQ"
+     }
+    ],
+    "album": {
+     "name": "wondering why",
+     "id": "MPREb_jeXbndV27ow"
+    },
+    "length": "2:07",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/ZnMfwIe8UHZwgp1YccxTWOQGUuNVEcko8diDdIaMV9lTGsNuJo98eDfdB9XnyNZ1CJhGtxnlOxDgGWRsIQ=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "DXvlYl5DLpI",
+    "title": "I Wish You Love",
+    "artists": [
+     {
+      "name": "Laufey",
+      "id": "UCJtROTPxo3qnEzww8JyDxuA"
+     }
+    ],
+    "album": {
+     "name": "Typical of Me EP",
+     "id": "MPREb_ShI474YlY0B"
+    },
+    "length": "2:36",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2021",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/QFzBUljYo8MqDM7CJz83TOis3bPFju74xr29YurtkJAd4zTTK1WeAV70joVxMk0zgrnXUs1V_cHvKEJ2=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "bo1YAeC5v0g",
+    "title": "Without You",
+    "artists": [
+     {
+      "name": "Rio Romeo",
+      "id": "UCOAQEe0vf63U86pPU-jPFzg"
+     }
+    ],
+    "album": {
+     "name": "Without You",
+     "id": "MPREb_EIiMMr8yjse"
+    },
+    "length": "1:01",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2025",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/2BfLL3xuTYVVarROzxbnliozoMgG2C4KH9ieyfEzy9_jGxsfpM6ZWhH3SaO8KXix2hwpxkfOWQTOSkA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "KnlHOSTezJM",
+    "title": "Wondrous Place",
+    "artists": [
+     {
+      "name": "Drug Store Romeos",
+      "id": "UCG25vPXWznUSCuvHWpuYI9w"
+     }
+    ],
+    "album": {
+     "name": "Wondrous Place",
+     "id": "MPREb_QT0P92H8OWy"
+    },
+    "length": "2:14",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/7tvVVlcZgZxyGCF0MQA-9A_xQRxkIljAZf4WP3qklVDS5ntlJkwOM45xKJDTWKF8Pi33VM-3LsLDUZc=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "xnKhzzTN2Ic",
+    "title": "To Love a Boy",
+    "artists": [
+     {
+      "name": "Maya Hawke",
+      "id": "UCpCdLTLfDakfXAI29jeytkg"
+     }
+    ],
+    "album": {
+     "name": "To Love a Boy / Stay Open",
+     "id": "MPREb_9LbjKPQp7yV"
+    },
+    "length": "2:18",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2019",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/e4djiIW4SYcg2TmiidaoibRTIipygE-5WYwTk9SLnqhOync6vuXMytCS12Y68lAJCDpdNm8QhmnrhHdR=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "YzakggWwTos",
+    "title": "Walk with You",
+    "artists": [
+     {
+      "name": "Kylie Dailey",
+      "id": "UCUqUtUUuvCak6FCckYsg_Pw"
+     }
+    ],
+    "album": {
+     "name": "Way Past Taken",
+     "id": "MPREb_9SNmyGp21Nx"
+    },
+    "length": "2:36",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2025",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/vgLJ7clRPYukSaXimZoGjuL9oviEbDyi0FzzHqP8E4tTkpue1wyxzxPXJvythJjEvc2o0Ws-ahiCXxmc=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "mcdO9UP0hp8",
+    "title": "Je te laisserai des mots",
+    "artists": [
+     {
+      "name": "Patrick Watson",
+      "id": "UCFJ1R4X54jF5cxa5amBi6hA"
+     }
+    ],
+    "album": {
+     "name": "Je te laisserai des mots",
+     "id": "MPREb_kwvyZ8zD3E4"
+    },
+    "length": "2:41",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2010",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/ZTvNqnpgodbacMHsPvGfq2HUQJFomTEBg1LKrsMld83HO-FDIVsFNcbN8901VHwnQ4j0pqZevJ1oi7Cn=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "CSo0rfnWUQM",
+    "title": "Glue Song",
+    "artists": [
+     {
+      "name": "beabadoobee",
+      "id": "UCcGMuu89vageEKV8zUKhwdA"
+     }
+    ],
+    "album": {
+     "name": "Glue Song",
+     "id": "MPREb_3a3zuOUOUQf"
+    },
+    "length": "2:16",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/c8OuVVbT_D3XawZsXoBh5QeAs52RWUYzgO8x_Ly0eGvhFECErbLrLnlUvK2IUCH3RlQtTsb9tDnm0SI=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "xVphCxygR1c",
+    "title": "nuance",
+    "artists": [
+     {
+      "name": "Luca minor",
+      "id": "UC7q42_bn0xMSzPoV2cPStBw"
+     }
+    ],
+    "album": {
+     "name": "nuance",
+     "id": "MPREb_72BH6jpzrpe"
+    },
+    "length": "2:36",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/U3B84JPGJJfP54LOk-9oU_kY7av7TFcVNCHXVevm8Ur-EVpl5fXj8Sv8xywfZGaubH-l_sFKSaG9KUM=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "QUUsTUIV0lw",
+    "title": "Good Little Girl",
+    "artists": [
+     {
+      "name": "Dominurmom",
+      "id": "UCHMWbOeJvvzYR6DE7vXDy2g"
+     },
+     {
+      "name": "Trillian",
+      "id": "UCg8dEof7HG21TeNWPTIXz9A"
+     }
+    ],
+    "album": {
+     "name": "Good Little Girl",
+     "id": "MPREb_wq37gakY6yM"
+    },
+    "length": "1:56",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2024",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/X4cF2Yj4HaSCohDsV9OT9XnXJeSrUKjCrwBMIUaoo1cgVZ3WnG4NBBGGBm8X68S9AAfjPrtETAFl-864=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "HJstyRBLqBQ",
+    "title": "I Thought I Saw Your Face Today",
+    "artists": [
+     {
+      "name": "She & Him",
+      "id": "UC8CvgMoefY0bNy52qs0cPPg"
+     }
+    ],
+    "album": {
+     "name": "Volume One",
+     "id": "MPREb_HWT6d2ka3YQ"
+    },
+    "length": "2:51",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2008",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/4x0g74oT1BlBTjcdHKv4y_y9xONmI3V0sgIodjm-9nHD86MudNis5lD0DR8cMqjIsE_nDi2lhnbMuos=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "1aokooixKIo",
+    "title": "Sparks",
+    "artists": [
+     {
+      "name": "Coldplay",
+      "id": "UCIaFw5VBEK8qaW6nRpx_qnw"
+     }
+    ],
+    "album": {
+     "name": "Parachutes",
+     "id": "MPREb_oBucXyijinj"
+    },
+    "length": "3:48",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2000",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/7RK5kFu8RjjulsxsPCJ55wmJLchKaaIRAYih0ldj--RGbnOOdA0U2vmLWyVfjPW82nR-Dwm2r8PhEi61=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "fKsulVEYPoY",
+    "title": "Vienna (In Memoriam)",
+    "artists": [
+     {
+      "name": "The Army, The Navy",
+      "id": "UCPcRCcdkvAvZjk0qoHQgIsw"
+     }
+    ],
+    "album": {
+     "name": "Vienna (In Memoriam)",
+     "id": "MPREb_7g3lAKPy9RN"
+    },
+    "length": "2:24",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/lPH5dxIGE5tJnUT5tJyXfjvovUqcpM6aBPGMc3GWi0sLvkNgEz_fDEPQZd0mE9902UQPo0EiSa74nMX-1w=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "NugHQ2UdD5o",
+    "title": "T#2",
+    "artists": [
+     {
+      "name": "Fredrik Svabø",
+      "id": "UCZkfbXZaAwFKdicHe1B-JHg"
+     }
+    ],
+    "album": {
+     "name": "Kingo's Treat",
+     "id": "MPREb_Lqz5e8pcpSE"
+    },
+    "length": "1:16",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2025",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/84oCYIZR06qTJYHXwOufclRTQFPXiG0JXT9LsCZOEJ77HOq5d7dwFwFa_I3BrcAcQT4_CwNPJy7mLW4=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "-1dvJ23MeEU",
+    "title": "Lightning",
+    "artists": [
+     {
+      "name": "Sun June",
+      "id": "UCjmiY3PmFF7INAoIr4CHGcQ"
+     }
+    ],
+    "album": {
+     "name": "Bad Dream Jaguar",
+     "id": "MPREb_gG2rmFgcs1s"
+    },
+    "length": "2:49",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/tOA8ZzX_E8PgPf31EiH8kC-ekzygjAm39qA4yudwnwNPXsXk83ukDn-7hgftnBNM0Ric0xjIRIScscjR1w=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "CVG-IVfMvcc",
+    "title": "Cerita 24 Jam",
+    "artists": [
+     {
+      "name": "Nyonya Ayu",
+      "id": "UChpguf39NfbmAXKD9lwrlSQ"
+     }
+    ],
+    "album": {
+     "name": "Cerita 24 Jam",
+     "id": "MPREb_proWPw3Q3kh"
+    },
+    "length": "3:04",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2020",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/zJ4D18HfsuPNwOMDysQS10n3DiI5k804xDN0F8hnIpI53M3K5uWIadZZTV5JDnsyxGY6X6QY_iSM1YA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "7f_mlKlOLMo",
+    "title": "So Easy (To Fall In Love)",
+    "artists": [
+     {
+      "name": "Olivia Dean",
+      "id": "UC6GBKGYX6b3guHlqHLx6IzQ"
+     }
+    ],
+    "album": {
+     "name": "The Art of Loving",
+     "id": "MPREb_nd1jk6JOu9E"
+    },
+    "length": "2:49",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2025",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/dmrLFXnrV4zb8-mfiEMJJrJ5v3DXHrwgPKgISOFb39fsZ39vsLa1lMZTQmo9oxWG7p1V5cK5-51HWXaZug=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "YXmlULc7Lvs",
+    "title": "Interlude Saul",
+    "artists": [
+     {
+      "name": "Fredrik Svabø",
+      "id": "UCZkfbXZaAwFKdicHe1B-JHg"
+     }
+    ],
+    "album": {
+     "name": "Kingo's Treat",
+     "id": "MPREb_Lqz5e8pcpSE"
+    },
+    "length": "1:51",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2025",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/84oCYIZR06qTJYHXwOufclRTQFPXiG0JXT9LsCZOEJ77HOq5d7dwFwFa_I3BrcAcQT4_CwNPJy7mLW4=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "-eux4VhC8MY",
+    "title": "All I Can Say",
+    "artists": [
+     {
+      "name": "Kali Uchis",
+      "id": "UCpkgnBLJpbkVLAob1CaPZsw"
+     }
+    ],
+    "album": {
+     "name": "Sincerely,",
+     "id": "MPREb_kcqkyB2RWj7"
+    },
+    "length": "3:08",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2025",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/LBOJQ95EkS5zksqvaKR8Al8sqx_f2fOKzpLfiC42TbDnOsqgVT8VepeytUD2qIbJb8-Fasz488q2ufmjww=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "Ql13IeqrW90",
+    "title": "Foggy Sunday",
+    "artists": [
+     {
+      "name": "Bladverk Band",
+      "id": "UCIMfjFlOVMwQDeAVk7bHYEg"
+     }
+    ],
+    "album": {
+     "name": "Foggy Sunday",
+     "id": "MPREb_Y945tGXEL7N"
+    },
+    "length": "3:48",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/WfPy8mr4sefUuVvEDko5Yx62S35FlovtPA1So3B7AlFmBzTR7uaKSubaebfRorl_YBuIbcCpetcF-a-2=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "nJo5tsmcDUA",
+    "title": "Poster",
+    "artists": [
+     {
+      "name": "Enzo Orefice trio",
+      "id": "UCDLbKhmIsf48arsxDcP0LaA"
+     }
+    ],
+    "album": {
+     "name": "Talking About Jazz, Pt. 6",
+     "id": "MPREb_KLcBYy1WFM6"
+    },
+    "length": "4:23",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/W3CaS_h6E5LH4fwPd_2c802Wmk85D1RaMXR_TMWVwlJULoSJpfPlC_x2Ww_qyQ03EwDAstzBDVUdniJg=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   }
+  ]
+ }
+}

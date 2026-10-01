@@ -1,0 +1,12 @@
+{
+ "kind": "artists",
+ "key": "zzyzx qwfp band",
+ "request": "Zzyzx Qwfp Band",
+ "recorded_at": "2026-10-01T13:36:00Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [
+  "everything but artist, browseId, radioId"
+ ],
+ "error": null,
+ "response": []
+}

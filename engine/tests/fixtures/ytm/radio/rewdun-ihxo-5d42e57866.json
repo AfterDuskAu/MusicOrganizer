@@ -1,0 +1,612 @@
+{
+ "kind": "radio",
+ "key": "ReWDun-ihxo",
+ "request": "ReWDun-ihxo",
+ "recorded_at": "2026-10-01T13:38:57Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [
+  "feedback tokens",
+  "everything but the tracks' fields the engine reads",
+  "all but the first 25 tracks"
+ ],
+ "error": null,
+ "response": {
+  "tracks": [
+   {
+    "videoId": "ReWDun-ihxo",
+    "title": "One Hundred Ways (feat. Pat Bergeson)",
+    "artists": [
+     {
+      "name": "The Jeff Steinberg Jazz Ensemble",
+      "id": "UC2ZnBFtFmarNnzsYcPomIVg"
+     }
+    ],
+    "album": {
+     "name": "Cocktail Lounge: Easy Jazz 80s",
+     "id": "MPREb_hyXThKtQeDA"
+    },
+    "length": "4:16",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/dlrZs1TX4DuJOI9fTkQQ4lH_Mm98T1E0p8RLo0n7bGSqgFt3fcLkMysfnUacSD3OD-xbS2k50B45irnF=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "EH99lst2VOg",
+    "title": "How Deep Is Your Love",
+    "artists": [
+     {
+      "name": "The Jeff Steinberg Jazz Ensemble",
+      "id": "UC2ZnBFtFmarNnzsYcPomIVg"
+     }
+    ],
+    "album": {
+     "name": "Cocktail Lounge: Easy Jazz 70s",
+     "id": "MPREb_9bgxPNAYLUJ"
+    },
+    "length": "4:23",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2020",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/FpPlyYKsGXh9DXuGP2EfPwSj2mzfE6kjPSSmV6zZbWXHL8dq47ufG4QIhu1rDdIL0P03Edax1EO8Z0Pf=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "uINn4mkqL0M",
+    "title": "The Great Pumpkin Waltz",
+    "artists": [
+     {
+      "name": "Vince Guaraldi",
+      "id": "UC_DRP-u7c3iOwytg4-ddifw"
+     }
+    ],
+    "album": {
+     "name": "It's The Great Pumpkin, Charlie Brown (Original Soundtrack Recording)",
+     "id": "MPREb_vr1Lk5CbdnA"
+    },
+    "length": "2:37",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/IXXTqwNekaMTQ62-MOy6-xfOPH5fdF9UflmdElBMjcsL0g6T91AbwXkiQLEqMR1ILpNQD00OgLjuWtWB=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "eOrGawCeFRQ",
+    "title": "Positive Mood",
+    "artists": [
+     {
+      "name": "Richard Freeman",
+      "id": "UCzjnNiZBlSaaEU5G0KkfXBA"
+     }
+    ],
+    "album": {
+     "name": "Positive Mood",
+     "id": "MPREb_drL1fUUhMxr"
+    },
+    "length": "3:31",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2020",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/xIRzMzflMxgb2LmViKdCnUwnwFdO2By2u1g97w2k6QTuBJRn4ukUW1AtTljsbSmT9WJTBy3qie0tI4AC2g=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "W6Q8QCGwsbM",
+    "title": "BREAKFAST CAFFÈ (Jazz Piano Instrumental)",
+    "artists": [
+     {
+      "name": "BEST BKK THAILAND",
+      "id": "UC5M2Gh55XOORA07LtZDBrIA"
+     }
+    ],
+    "album": {
+     "name": "BREAKFAST CAFFÈ (Jazz Piano Instrumental)",
+     "id": "MPREb_sH0jglsrXSd"
+    },
+    "length": "2:22",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2026",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/D4rsGMQFkp5BxhcIKra3yNDlcfBHuTR8BdPVtn4G14TrMEymqF2AGF8sbJiU-ePvcWIlrvkC1fQEFSM8Vw=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "IuhW1A0bCFg",
+    "title": "Smooth Operator (feat. Sam Levine & Pat Bergeson)",
+    "artists": [
+     {
+      "name": "The Jeff Steinberg Jazz Ensemble",
+      "id": "UC2ZnBFtFmarNnzsYcPomIVg"
+     }
+    ],
+    "album": {
+     "name": "Cocktail Lounge: Easy Jazz 80s",
+     "id": "MPREb_hyXThKtQeDA"
+    },
+    "length": "4:09",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/dlrZs1TX4DuJOI9fTkQQ4lH_Mm98T1E0p8RLo0n7bGSqgFt3fcLkMysfnUacSD3OD-xbS2k50B45irnF=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "ZXSK2VgCjQo",
+    "title": "Fletcher's Song In Club",
+    "artists": [
+     {
+      "name": "Justin Hurwitz",
+      "id": "UC2Qhpr5OGrn9skA6N5LBPGQ"
+     }
+    ],
+    "album": {
+     "name": "Whiplash (Original Motion Picture Soundtrack)",
+     "id": "MPREb_QEZq678MKrI"
+    },
+    "length": "1:30",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2014",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/FlWSTcr0fTAyFnPIWdbnc_0MzDVCHGOjQ9UdaDIaPZM0e2N9AV_qdquYDPNOcNmz8EkKrdOc10gzJCAO=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "FwY62QLv2XE",
+    "title": "Hunky Dory",
+    "artists": [
+     {
+      "name": "BGM channel",
+      "id": "UCDdb4AqZh6QGwmlVsIvCsJA"
+     }
+    ],
+    "album": {
+     "name": "Sweet Bossa",
+     "id": "MPREb_GhnpaIMfIiC"
+    },
+    "length": "3:12",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2019",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/g3blxZKPA_2d0ZrbLQs3vh6-ovdzNvqkhcvZ9MCAObHk0Ez2NUwYBx-o-6Ez7vwYom_8JK8ok4zYlkzj=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "DmtBgPggzaA",
+    "title": "La Vie En Rose (easy solo) for Saxophone",
+    "artists": [
+     {
+      "name": "Anond Fuangfoo",
+      "id": "UCDNOOisYeMPILw4TeVCfVKg"
+     }
+    ],
+    "length": "2:17",
+    "videoType": "MUSIC_VIDEO_TYPE_UGC",
+    "thumbnail": [
+     {
+      "url": "https://i.ytimg.com/vi/DmtBgPggzaA/hq720.jpg?sqp=-oaymwEKCNUGEN8DIABIWg&rs=AMzJL3kiDHg9upQrj9VapvrQV6gKpmUz9Q",
+      "width": 853,
+      "height": 479
+     }
+    ]
+   },
+   {
+    "videoId": "NQTBgUm_RiY",
+    "title": "It Might Be You (Theme From \"Tootsie\") (feat. Sam Levine & Pat Bergeson)",
+    "artists": [
+     {
+      "name": "The Jeff Steinberg Jazz Ensemble",
+      "id": "UC2ZnBFtFmarNnzsYcPomIVg"
+     }
+    ],
+    "album": {
+     "name": "Cocktail Lounge: Easy Jazz 80s",
+     "id": "MPREb_hyXThKtQeDA"
+    },
+    "length": "4:04",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/dlrZs1TX4DuJOI9fTkQQ4lH_Mm98T1E0p8RLo0n7bGSqgFt3fcLkMysfnUacSD3OD-xbS2k50B45irnF=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "ve5au_E5qVI",
+    "title": "Sparks (Instrumental)",
+    "artists": [
+     {
+      "name": "Evan Jacobson",
+      "id": "UCOUAVd0O4_MSPVP5hN95AeA"
+     }
+    ],
+    "album": {
+     "name": "Sparks (Instrumental)",
+     "id": "MPREb_rrfu5Z1LiuH"
+    },
+    "length": "2:27",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2024",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/-pAwdluKnsy93oF736wI3_3-i2R13idxP9eVDcAmD8RnJLH3xnT_kdkO22APA0OP5vP1xeSSadCXwiI=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "krmdOa_b5h0",
+    "title": "Coastal Mirage at Dawn",
+    "artists": [
+     {
+      "name": "Cafe lounge resort",
+      "id": "UC5HcB7wLVotYnpMESBh2kjA"
+     }
+    ],
+    "album": {
+     "name": "Stylish BGM at a Seaside Cafe",
+     "id": "MPREb_Mew81V5zUfM"
+    },
+    "length": "3:20",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2024",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/-VE6jBcHt3vzO5stxk9lB3qKuQs6IKIl-Wz6r63wjZikD8uYRg2yhwses89Aqy3euHuLoPsauY3lDOewww=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "UOLEEkYO4MA",
+    "title": "Misty",
+    "artists": [
+     {
+      "name": "Erroll Garner",
+      "id": "UCs3BHE6jtTfaoDTd9yu2EDg"
+     }
+    ],
+    "album": {
+     "name": "The Original Misty",
+     "id": "MPREb_N7YCNOGbDQc"
+    },
+    "length": "2:50",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "1988",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/bX6hmP8NgwuLuB2Cvp9szXTLLMp6pMuWNSKji6AYEyfa4oOEIMs19NeAeTg6Exu33pg4GGVmgnccak7S=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "wNBewpqOcTc",
+    "title": "(I've Had) The Time Of My Life (feat. Jack Jezzro)",
+    "artists": [
+     {
+      "name": "The Jeff Steinberg Jazz Ensemble",
+      "id": "UC2ZnBFtFmarNnzsYcPomIVg"
+     }
+    ],
+    "album": {
+     "name": "Cocktail Lounge: Easy Jazz 80s",
+     "id": "MPREb_hyXThKtQeDA"
+    },
+    "length": "4:06",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/dlrZs1TX4DuJOI9fTkQQ4lH_Mm98T1E0p8RLo0n7bGSqgFt3fcLkMysfnUacSD3OD-xbS2k50B45irnF=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "V4Qwk3CJ65E",
+    "title": "Relaxing Jazz",
+    "artists": [
+     {
+      "name": "Jazz Music Zone",
+      "id": "UCmFl0kWoKkk9sBXGLRoMKSQ"
+     }
+    ],
+    "album": {
+     "name": "Restaurant Jazz",
+     "id": "MPREb_azAKFABBnhd"
+    },
+    "length": "2:34",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/X8yC-hbJVbnhS72o2mAmyrgeXR2W0_P4nHTQe4fb7Tu-ayVjq4xshAu_bmwFc46tBs2aDSw6pTU84kI_=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "RAHyU6pbjhE",
+    "title": "人生のメリーゴーランド（ハウルの動く城） - The Merry Go Round of Life",
+    "artists": [
+     {
+      "name": "Kazumi Tateishi Trio",
+      "id": "UCh6NLzrjO8bntjqcfA6Rhnw"
+     }
+    ],
+    "album": {
+     "name": "GHIBLI meets JAZZ -Memorable Songs-",
+     "id": "MPREb_PfJnglCoF1T"
+    },
+    "length": "4:28",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2011",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/2hCS0Ot1RAShEQNNqueRvosaSoKJqvLt2qiw1AXX0r3j01L211i7eWPkNr8BTmJBjuBLhDBjby5SlE9q=w544-h544-s-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "RvYBRrIE6m0",
+    "title": "Moonlight Serenade",
+    "artists": [
+     {
+      "name": "Enzo Orefice trio",
+      "id": "UCDLbKhmIsf48arsxDcP0LaA"
+     }
+    ],
+    "album": {
+     "name": "Talking About Jazz, Pt. 2",
+     "id": "MPREb_pj1Gi7eqD00"
+    },
+    "length": "2:32",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2021",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/HG0LlOuXazmavHHgT-QiULNxuRTQcdt4UOK3cNP_1G87zXv6Xd5mDV3FVdvZnTtJUHqk9qacEX7OugM=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "uPG4EXvA6LY",
+    "title": "Wonderful Tonight",
+    "artists": [
+     {
+      "name": "The Jeff Steinberg Jazz Ensemble",
+      "id": "UC2ZnBFtFmarNnzsYcPomIVg"
+     }
+    ],
+    "album": {
+     "name": "Cocktail Lounge: Easy Jazz 70s",
+     "id": "MPREb_9bgxPNAYLUJ"
+    },
+    "length": "4:58",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2020",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/FpPlyYKsGXh9DXuGP2EfPwSj2mzfE6kjPSSmV6zZbWXHL8dq47ufG4QIhu1rDdIL0P03Edax1EO8Z0Pf=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "PEvftEeJNF8",
+    "title": "野生の誘惑",
+    "artists": [
+     {
+      "name": "カフェイン中毒",
+      "id": "UCiRoaqbHdaJegFI4oy7YyUA"
+     }
+    ],
+    "album": {
+     "name": "カフェBGM ・ ジャズ洋楽、ベストスタンダード、勉強用＋集中用＋作業用BGM",
+     "id": "MPREb_9aj1SdumTSn"
+    },
+    "length": "1:57",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2019",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/0ZlTnmkNBi44Z7prx9eMV3KqyVyiTLOJIGdhXLSaEg26t96kd6EdNVTawaa5dYdkKhrH3RFV5s2atdcV=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "BGKGb81L4P4",
+    "title": "The beginning",
+    "artists": [
+     {
+      "name": "Hiromi",
+      "id": "UCMvNj-EdziRVn5BIwJV6iZg"
+     }
+    ],
+    "album": {
+     "name": "BLUE GIANT (Original Motion Picture Soundtrack)",
+     "id": "MPREb_mUH4jJvGYKe"
+    },
+    "length": "1:30",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/hlrofReyxOgT94SwDlWKGVj3Vd582aUcRS-tuksmfX8VgHtlVzSnFJYPy44jO85Pj-By9R8l8v2x2bs=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "Sq94ZEA5On4",
+    "title": "Moonlight Becomes You",
+    "artists": [
+     {
+      "name": "Eddie Higgins Trio",
+      "id": "UCgEIyVHg3gwh6ocI-ArSACg"
+     }
+    ],
+    "album": {
+     "name": "Dear Old Stockholm",
+     "id": "MPREb_RoZdSXfDyts"
+    },
+    "length": "5:07",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2014",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/BciLTsdfv_ON5tfc8Utxrj8mamBbcpxNDswDhXdLT-lNHsu2_gzUzv2KoO2MZwozojqbg7lH4IkKvFw=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "stUgPKqQXaA",
+    "title": "It Could Happen To You",
+    "artists": [
+     {
+      "name": "Laufey",
+      "id": "UCJtROTPxo3qnEzww8JyDxuA"
+     }
+    ],
+    "album": {
+     "name": "Bewitched: The Goddess Edition",
+     "id": "MPREb_rszFwcIlBVq"
+    },
+    "length": "2:08",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2024",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/5ng67aDKVal_bq7fGUY3GCshlB_tvzM8Y2OfGdDWB3W3rN2SHrR5nI2c_CXqjcXT59Ro20bYnaAh4Jsx=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "Qk6BEu2pAV4",
+    "title": "Misty",
+    "artists": [
+     {
+      "name": "Beegie Adair",
+      "id": "UCoo--2S9dy3HEd9l3UElC0w"
+     }
+    ],
+    "album": {
+     "name": "Moments To Remember",
+     "id": "MPREb_g8c81yDnKZu"
+    },
+    "length": "3:26",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2009",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/eANN5GwqDwLb1t9OJ9NIgpou2JTxSvF_37D9jnvkfhZPNPXy-XD8LGagQ93hQz3vOqR6yfLOXUJyNQCZ=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "L48_GvXH818",
+    "title": "Festive Winter (feat. Cafe Music BGM channel)",
+    "artists": [
+     {
+      "name": "JUTESETS",
+      "id": "UCH4tMgL83vy2ZwplHdBNyDg"
+     }
+    ],
+    "album": {
+     "name": "Winter London",
+     "id": "MPREb_PHdQYFxsw3w"
+    },
+    "length": "2:17",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/ALmlGrrM8KRw5kHnoEXwkginnd7PCKMczGX2wY-Q7wQ-ulGV5aLHLWLq5x1faqfoNLvIWYxdhV1re09isw=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "_0BNu7e096k",
+    "title": "'Tis Autumn",
+    "artists": [
+     {
+      "name": "Stan Getz",
+      "id": "UCITWDrIiWv0Y-zj8xrvoY-Q"
+     }
+    ],
+    "album": {
+     "name": "Stan Getz Plays",
+     "id": "MPREb_c2qVosovE9v"
+    },
+    "length": "3:15",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "1952",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/1MMb8Lf5D9f16ZMxc43GP7YRMbPwCjUW_HQ9rnF5OF5o4XvjGD0uICqCza6Qqd7lJLSr0vuurCXD2n4=w544-h544-s-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   }
+  ]
+ }
+}

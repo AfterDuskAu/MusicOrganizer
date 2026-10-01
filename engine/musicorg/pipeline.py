@@ -1463,16 +1463,35 @@ def plan_download(
     index: Index,
     video_ids: list[str],
     videos: list[dict[str, Any]] | None = None,
+    *,
+    known: list[dict[str, Any]] | None = None,
 ) -> fileops.Plan:
     """A plan downloading these from YouTube Music into the library (v0.2): songs (the
     app's "download" button), and `videos`, each `{"video_id", "height", "fps"?}`: a video
     saved whole, its picture at that height (the app's "save video" button).
+
+    `known` are tracks as the engine gave them out a moment ago (Discover's picks, in the
+    Candidate shape). One of those isn't looked up on YouTube Music again, so a plan for
+    fifty picks is made at once instead of in over a minute.
 
     There's no rip behind them, so nothing is replaced and the fingerprint gate has
     nothing to compare; every other check on a download applies. What's already in the
     library is left out."""
     ops: list[fileops.PlanOp] = []
     skipped: dict[str, int] = {}
+    given: dict[str, Candidate] = {}
+    for data in known or []:
+        try:
+            candidate = Candidate.from_dict(data)
+        except (KeyError, TypeError, AttributeError):
+            raise UserError("A candidate should be a track as the engine gave it.") from None
+        if (
+            isinstance(candidate.video_id, str)
+            and isinstance(candidate.title, str)
+            and candidate.title
+            and all(isinstance(name, str) for name in candidate.artists)
+        ):
+            given[candidate.video_id] = candidate
 
     def look_up(video_id: object) -> Candidate | None:
         if not isinstance(video_id, str) or not youtube.VIDEO_ID.fullmatch(video_id):
@@ -1480,6 +1499,8 @@ def plan_download(
         if index.library_tracks_with_source_id(video_id):
             skipped["already_in_library"] = skipped.get("already_in_library", 0) + 1
             return None
+        if video_id in given:
+            return given[video_id]
         found = youtube.get_track(video_id)
         if found is None:
             skipped["not_on_youtube_music"] = skipped.get("not_on_youtube_music", 0) + 1

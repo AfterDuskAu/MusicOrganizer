@@ -1,0 +1,617 @@
+{
+ "kind": "radio",
+ "key": "2mXNRsyTitA",
+ "request": "2mXNRsyTitA",
+ "recorded_at": "2026-10-01T13:38:38Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [
+  "feedback tokens",
+  "everything but the tracks' fields the engine reads",
+  "all but the first 25 tracks"
+ ],
+ "error": null,
+ "response": {
+  "tracks": [
+   {
+    "videoId": "2mXNRsyTitA",
+    "title": "Faint",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Meteora (Bonus Edition)",
+     "id": "MPREb_ebWSmYnO2aa"
+    },
+    "length": "2:43",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2003",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/Rqh2HDAD-Fj1-oHYqVklPGklMHIV3r6SMPMZmFE3FlLiWeBBnP3SCESfgeNdzQ-DmpCIvOGE4J0hzVxa=w544-h544-s-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "MFmhftOjiA8",
+    "title": "Somewhere I Belong",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Meteora 20th Anniversary Edition",
+     "id": "MPREb_DOhy8PyMH41"
+    },
+    "length": "3:35",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/YhfFgdvtwfIcLi_2H54RP15T3IPiUZnNtlwvlomHsAmAMQMZhgXu11HoFWPcWAiJRfdChtrqrGRbQl3idA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "Bn96ZZpHfLo",
+    "title": "Monster",
+    "artists": [
+     {
+      "name": "Skillet",
+      "id": "UCUHYrf3BF5yI9QdRw09__BA"
+     }
+    ],
+    "album": {
+     "name": "Monster",
+     "id": "MPREb_P6NmSCbYzQJ"
+    },
+    "length": "2:59",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2009",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/thBJL8OesvCSZFTnA0Ric-gO9Q5_U-akGzjIpDH6xHmJHFA3uEpgyef5rcDUDCgSbkznC2EOGarw6Ow=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "-eGM0IJc70Y",
+    "title": "Bring Me To Life",
+    "artists": [
+     {
+      "name": "Evanescence",
+      "id": "UC1ObIyFsDJn62iAZYLWcNxA"
+     }
+    ],
+    "album": {
+     "name": "Fallen",
+     "id": "MPREb_Ol2Ip1ndtbE"
+    },
+    "length": "3:56",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2003",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/DMgrzZ84TP0DawBf7NwNbqzQg2-TY_prMUPh7WvjTOOPLxyiTryNgzxBFCkyZhKG0H8agCdcwitxSm8=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "-cid1qHuy_U",
+    "title": "Chop Suey!",
+    "artists": [
+     {
+      "name": "System Of A Down",
+      "id": "UCDJftX2zx_UT_QSnBGIF96w"
+     }
+    ],
+    "album": {
+     "name": "Chop Suey!",
+     "id": "MPREb_hscoNGfCKJW"
+    },
+    "length": "3:31",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2001",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/9ExAIaDGPwcTGNSbtA8vRnUJGgO1I_8IaEmf1WDKpz7-RDLpWjXfmfn9wt6jJ5M23POPK2-lHdHUw5bz=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "dxp9w9Ggehc",
+    "title": "Numb",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Meteora 20th Anniversary Edition",
+     "id": "MPREb_DOhy8PyMH41"
+    },
+    "length": "3:08",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/YhfFgdvtwfIcLi_2H54RP15T3IPiUZnNtlwvlomHsAmAMQMZhgXu11HoFWPcWAiJRfdChtrqrGRbQl3idA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "ysho2xTWUYo",
+    "title": "Animal I Have Become",
+    "artists": [
+     {
+      "name": "Three Days Grace",
+      "id": "UCfgRkxIufLnYKicOY8aJQ2g"
+     }
+    ],
+    "album": {
+     "name": "One-X",
+     "id": "MPREb_Ud22GpRvwl8"
+    },
+    "length": "3:52",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2006",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/lw9aD4EPCJ-HiAPpZTwVlmYfEJrWM_mf4Qgn-6ZdYLvfx5JBnAXO5InwzrAm3L3rAcXpyF8bx351BLnQ=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "j2R6uT7uLFg",
+    "title": "Last Resort",
+    "artists": [
+     {
+      "name": "Papa Roach",
+      "id": "UCRiFekze9Yx5zDDjAVrYvbg"
+     }
+    ],
+    "album": {
+     "name": "Infest",
+     "id": "MPREb_cv3dgfHNJ1j"
+    },
+    "length": "3:20",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2000",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/UOqZS25iQnlpJCJLtweobidchyC_hG3x-abJj0l-ATFzK4-esEaK8WHGKaj4saMFiPE6ndzu98bpZoE=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "ljUtuoFt-8c",
+    "title": "Smells Like Teen Spirit",
+    "artists": [
+     {
+      "name": "Nirvana",
+      "id": "UCrPe3hLA51968GwxHSZ1llw"
+     }
+    ],
+    "album": {
+     "name": "Nevermind",
+     "id": "MPREb_jPOYfjGgApr"
+    },
+    "length": "5:02",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "1991",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/eyKiPBSqEu556sYTd_IyZhfxun5e_hatZ9tAyu8bnmVRgtbM3aW-SXUvhVX-d7s1oU0Yf3a38JOuYMZK5w=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "BLZWkjBXfN8",
+    "title": "In the End",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Hybrid Theory (Bonus Edition)",
+     "id": "MPREb_m10OjDmOhfv"
+    },
+    "length": "3:37",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2000",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/lkNJVMp3siDfSw_zVYj3tE6fQS7G6Gj2gzoxrIwS7K4TwqmL_uSBb9-PKACNLIP_7XLQib4tC5XwWbpD=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "pcAKbKUBUOQ",
+    "title": "The Diary of Jane (Single Version)",
+    "artists": [
+     {
+      "name": "Breaking Benjamin",
+      "id": "UCgdqrZsRnxy1qGIusPhQEyg"
+     }
+    ],
+    "album": {
+     "name": "Phobia",
+     "id": "MPREb_T9HRQU8kO2b"
+    },
+    "length": "3:21",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2006",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/RaWjFGrdyuHz6ZsCgRPn14r5dBiRzASvuJIYMx6D92bNvX87puN2mktdmjfieTeiIq66EoxJHHSvqXU=w544-h544-s-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "jd_HmLEhVqA",
+    "title": "Break Stuff",
+    "artists": [
+     {
+      "name": "Limp Bizkit",
+      "id": "UCXe06VQdj4l_LyuUGh__DQg"
+     }
+    ],
+    "album": {
+     "name": "Significant Other",
+     "id": "MPREb_hunJy8cOacc"
+    },
+    "length": "2:47",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "1999",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/q2duCD11peXAT-T_vSHmtifGAAoYf6Bo5h0TwNN1ZqcP9oJJ_h4J5oyVmzCm9j4TiJr2hvrVhDTs9OQ=w544-h544-s-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "vkvrbbtnp6s",
+    "title": "How You Remind Me",
+    "artists": [
+     {
+      "name": "Nickelback",
+      "id": "UC1T4LYUer48KhKlrru13kUg"
+     }
+    ],
+    "album": {
+     "name": "Silver Side Up",
+     "id": "MPREb_onXLvI3yJSx"
+    },
+    "length": "3:44",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2001",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/KC2tDiFdec41kaIEy0hD0BGaNbcFX6dqmz-bJKs9miDv0zGaEtbTc0x5TRStshVO8Ep_6T8mmyyJaXGbFg=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "84J_XmGkX48",
+    "title": "Papercut",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Hybrid Theory (Bonus Edition)",
+     "id": "MPREb_m10OjDmOhfv"
+    },
+    "length": "3:05",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2000",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/lkNJVMp3siDfSw_zVYj3tE6fQS7G6Gj2gzoxrIwS7K4TwqmL_uSBb9-PKACNLIP_7XLQib4tC5XwWbpD=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "G9vlxepCpyE",
+    "title": "Kryptonite",
+    "artists": [
+     {
+      "name": "3 Doors Down",
+      "id": "UC9eiPNoDEg2Ji4ESvq3IPXA"
+     }
+    ],
+    "album": {
+     "name": "The Better Life (20th Anniversary / Deluxe)",
+     "id": "MPREb_FkGa94TfBnk"
+    },
+    "length": "3:55",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2021",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/U7Zi44fvfLdD1lfPmiWGCS02guFrg0sjjjHBwiwhuW_X1G5Tl269govUyDGAVqLQtyY3ZFw-COtQO0Pq=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "lSDfCdycdvk",
+    "title": "Zombie",
+    "artists": [
+     {
+      "name": "The Cranberries",
+      "id": "UCE5eDJ9T05bGzDvJ5QYsdJQ"
+     }
+    ],
+    "album": {
+     "name": "No Need to Argue",
+     "id": "MPREb_x5zaOI0RENj"
+    },
+    "length": "5:08",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "1994",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/81cXwXuv1aOxCikSYqw5WET4FkiaNg5uKhTnDB4h0PL37adgl-1B3DBbvlopWpamwTQbt_ge9rm8pdQ-oA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "Q9BHJQZAP2o",
+    "title": "Still Waiting",
+    "artists": [
+     {
+      "name": "Sum 41",
+      "id": "UCcMcUoDPCQhtONMyuKJs-dg"
+     }
+    ],
+    "album": {
+     "name": "Does This Look Infected?",
+     "id": "MPREb_keJO6XJy5nO"
+    },
+    "length": "2:39",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2002",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/YKO8v0Sy3H6qKS0u8Vb_cajD5c9RErhNnOsWh4Z018dlTont_YVTlJu1WZrCyM7a9yV7IjhuLNY57pQ0Og=w544-h544-s-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "bSwzZoLCoZ0",
+    "title": "Bleed It Out",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Minutes to Midnight (Deluxe Edition)",
+     "id": "MPREb_o6z620qvn6F"
+    },
+    "length": "2:45",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2007",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/VM2kbbO-o8q0JXbq0xMsuXAX82VdAFjgRCYFyEWXVHjVy-Tu_t0mUNtJFbcdSpTLHFqIk0mKtUMIndQ=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "weqK155M_4o",
+    "title": "You're Gonna Go Far, Kid",
+    "artists": [
+     {
+      "name": "The Offspring",
+      "id": "UCQVUXQu8RpxhihAMla6ke5A"
+     }
+    ],
+    "album": {
+     "name": "Rise And Fall, Rage And Grace",
+     "id": "MPREb_YQUhhmMbR62"
+    },
+    "length": "2:58",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2008",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/RFQM79EAVSD8l5C2Xvt_C9SBhgANcIBFeq3nHLV7tbxEZOXfz3_hPQS2FyTc2gH6JK_GTK1QS77aSu61=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "jLKOBJR5vHs",
+    "title": "Teenagers",
+    "artists": [
+     {
+      "name": "My Chemical Romance",
+      "id": "UC527A_XB_c7XftocVOIVNeA"
+     }
+    ],
+    "album": {
+     "name": "The Black Parade",
+     "id": "MPREb_ZgWMotVlM2a"
+    },
+    "length": "2:42",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2006",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/v_9D7-qcGPdGaKb-sA5wBwpY9SXsUZdzMLFcaR_AQRsY84iQnOEfI9hKUh5B1Veb_HElggrbVRDVp5yl=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "nIxxdRaWoBs",
+    "title": "The Kill",
+    "artists": [
+     {
+      "name": "Thirty Seconds To Mars",
+      "id": "UCK2kzYT3yR6LV_Pji5TDrgA"
+     }
+    ],
+    "album": {
+     "name": "A Beautiful Lie",
+     "id": "MPREb_0sPSzJVG7Ic"
+    },
+    "length": "3:52",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2005",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/TicxJGyYHkWvVfNrfXn95OYK3FVmRTsk5iFgz6AD-yT1QmWlXdVuPwY_1xT8rFL3eSoKvl_IZk1fNMwo=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "iw35Pfqf4U8",
+    "title": "Given Up",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Minutes to Midnight",
+     "id": "MPREb_WJjOQ3cXgzB"
+    },
+    "length": "3:10",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2007",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/BtAKhqmTBoZWEQPlcF9tgpqILWNkQ4vc0tk0nlSrIpdvhW9sf9K-tQDoym1zh9Svl-8PnpFCY_6vNYg7=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "iYcbfc_UB6M",
+    "title": "Bodies",
+    "artists": [
+     {
+      "name": "Drowning Pool",
+      "id": "UCdA8Grr5tyqrCUk2uPeWrAA"
+     }
+    ],
+    "album": {
+     "name": "Sinner",
+     "id": "MPREb_A8BjSiOkU1a"
+    },
+    "length": "3:22",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2001",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/8CyF4WOKajW6GBNqoLYeVr1qCRTvji_R_joczoPj_yIk5oiL__yp_ljg_slHjpMQFiRrDe-NJ3sXDbuopA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "8tq2NGmK9HY",
+    "title": "Everlong",
+    "artists": [
+     {
+      "name": "Foo Fighters",
+      "id": "UCwDw2KaS8jRUxAPScL2U8og"
+     }
+    ],
+    "album": {
+     "name": "The Essential Foo Fighters",
+     "id": "MPREb_dGi3U6BpJvG"
+    },
+    "length": "4:11",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2022",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/_jQU9Olmekv5J4cjOznIiqnskT6CcAT0nJSeHg9z9SIImxgHwnCO5GKn2jf7kZj5zAspNFBrgwtDaBc=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "VyV54YwPAkk",
+    "title": "American Idiot",
+    "artists": [
+     {
+      "name": "Green Day",
+      "id": "UC4JNeITH4P7G51C1hJoG6vQ"
+     }
+    ],
+    "album": {
+     "name": "American Idiot",
+     "id": "MPREb_jnYA50rlu4H"
+    },
+    "length": "2:55",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2004",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/UXFGtBhmxZd0cWbwgJCsaUvLH59uZe_T_9E1plQPi_zHBuPAHTuhzz_h8I-uIYaXJMKvVfRB7gcRJFI=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   }
+  ]
+ }
+}

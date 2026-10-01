@@ -1,0 +1,113 @@
+{
+ "kind": "genre",
+ "key": "jazz",
+ "request": "jazz",
+ "recorded_at": "2026-10-01T13:36:02Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [
+  "everything but title, browseId, author"
+ ],
+ "error": null,
+ "response": [
+  {
+   "title": "Cool Jazz Moods",
+   "browseId": "VLRDCLAK5uy_l3Iir9QZmCUPLjUqyR9PmYIKkkY7YEJZA",
+   "author": "YouTube Music"
+  },
+  {
+   "title": "Cozy Jazz",
+   "browseId": "VLRDCLAK5uy_neriXH6JbZPr7Pf4LOi5bGQP-_lWRZXs4",
+   "author": "YouTube Music"
+  },
+  {
+   "title": "Modern Energetic Jazz ",
+   "browseId": "VLRDCLAK5uy_mKiUysCgZF2XA7o_mtki6NYjC_MGy55QM",
+   "author": "YouTube Music"
+  },
+  {
+   "title": "Dinner Party Jazz",
+   "browseId": "VLRDCLAK5uy_l_2hw6aZpjgIxEsMFWku27S5_WJDv9m1E",
+   "author": "YouTube Music"
+  },
+  {
+   "title": "Muted Jazz",
+   "browseId": "VLRDCLAK5uy_kL57PLcOmExjhzqGfGhvA82ZWe4fPH2c4",
+   "author": "YouTube Music"
+  },
+  {
+   "title": "Jazz Feels the Blues",
+   "browseId": "VLRDCLAK5uy_lOB7GHW5BVWDQa_ek2rB9iV6gPxs0TX_A",
+   "author": "YouTube Music"
+  },
+  {
+   "title": "Jazz Coffee Shop",
+   "browseId": "VLRDCLAK5uy_m6aBO70zO2mNRnBrz9vLCLyjMf8hsZKeE",
+   "author": "YouTube Music"
+  },
+  {
+   "title": "Divas of Jazz",
+   "browseId": "VLRDCLAK5uy_mdTxN0bl86mzbRbdr9gW6MEXhBJ8h-mME",
+   "author": "YouTube Music"
+  },
+  {
+   "title": "Mellow Jazz",
+   "browseId": "VLRDCLAK5uy_nA42_0IX0YmeKb7pLRjm_J8e2ja445Urc",
+   "author": "YouTube Music"
+  },
+  {
+   "title": "Jazz Christmas",
+   "browseId": "VLRDCLAK5uy_mHkFNBTuR8DZUj61H5XY2onS7nRujVFx8",
+   "author": "YouTube Music"
+  },
+  {
+   "title": "The Smoothest of Smooth Jazz",
+   "browseId": "VLRDCLAK5uy_nm4NA8cldZNPqj1D0ayZxfySeY89qedRs",
+   "author": "YouTube Music"
+  },
+  {
+   "title": "Jazz Remixed",
+   "browseId": "VLRDCLAK5uy_lzizecyx8V4xQU8CSIzt5qoenYgKLNCk0",
+   "author": "YouTube Music"
+  },
+  {
+   "title": "Late Night Jazz",
+   "browseId": "VLRDCLAK5uy_n2cq0PxECLzVblC6NOorWjaCtF5NwXJT4",
+   "author": "YouTube Music"
+  },
+  {
+   "title": "Jazz For The Hip-Hop Generation",
+   "browseId": "VLRDCLAK5uy_kyZ7N5lM0kUpn7NbydMRujcq4aTEesP9I",
+   "author": "YouTube Music"
+  },
+  {
+   "title": "Jazz Focus",
+   "browseId": "VLRDCLAK5uy_n7hJdfgnhIUKMgZ8afb77pS4ZF1zCAI7c",
+   "author": "YouTube Music"
+  },
+  {
+   "title": "Easy Upbeat Jazz",
+   "browseId": "VLRDCLAK5uy_kQhKviYMP4sYcy2RH3VYd-1dyW4gzrTAo",
+   "author": "YouTube Music"
+  },
+  {
+   "title": "Background Jazz",
+   "browseId": "VLRDCLAK5uy_kL7seJinYAVpulQQbre887jeaIDkrnAg0",
+   "author": "YouTube Music"
+  },
+  {
+   "title": "Bewitching Jazz",
+   "browseId": "VLRDCLAK5uy_m0U8h6HP_YFe0riaCUUWx9fMXCVPGxlso",
+   "author": "YouTube Music"
+  },
+  {
+   "title": "'10s Jazz",
+   "browseId": "VLRDCLAK5uy_lKqeKxF4FjM0MB8ywbT0n54TCTtm8jhKU",
+   "author": "YouTube Music"
+  },
+  {
+   "title": "Presenting John Coltrane",
+   "browseId": "VLRDCLAK5uy_lqesL199jtCxMoHVmvdg4y-XEwU9dKK6Q",
+   "author": "YouTube Music"
+  }
+ ]
+}

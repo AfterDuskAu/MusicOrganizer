@@ -1,0 +1,617 @@
+{
+ "kind": "radio",
+ "key": "-eGM0IJc70Y",
+ "request": "-eGM0IJc70Y",
+ "recorded_at": "2026-10-01T13:35:51Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [
+  "feedback tokens",
+  "everything but the tracks' fields the engine reads",
+  "all but the first 25 tracks"
+ ],
+ "error": null,
+ "response": {
+  "tracks": [
+   {
+    "videoId": "-eGM0IJc70Y",
+    "title": "Bring Me To Life",
+    "artists": [
+     {
+      "name": "Evanescence",
+      "id": "UC1ObIyFsDJn62iAZYLWcNxA"
+     }
+    ],
+    "album": {
+     "name": "Fallen",
+     "id": "MPREb_Ol2Ip1ndtbE"
+    },
+    "length": "3:56",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2003",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/DMgrzZ84TP0DawBf7NwNbqzQg2-TY_prMUPh7WvjTOOPLxyiTryNgzxBFCkyZhKG0H8agCdcwitxSm8=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "OOUzex9msnc",
+    "title": "Going Under",
+    "artists": [
+     {
+      "name": "Evanescence",
+      "id": "UC1ObIyFsDJn62iAZYLWcNxA"
+     }
+    ],
+    "album": {
+     "name": "Fallen",
+     "id": "MPREb_6q6voDlEdaz"
+    },
+    "length": "3:35",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2003",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/flE5VHe0QfQ9XqeDiwQslGbErboKLzh-UaK5FPfKpIHi1mzzeT8eL5IRifoOmni17oed_v8AkfPToVQDUA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "dxp9w9Ggehc",
+    "title": "Numb",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Meteora 20th Anniversary Edition",
+     "id": "MPREb_DOhy8PyMH41"
+    },
+    "length": "3:08",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2023",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/YhfFgdvtwfIcLi_2H54RP15T3IPiUZnNtlwvlomHsAmAMQMZhgXu11HoFWPcWAiJRfdChtrqrGRbQl3idA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "lSDfCdycdvk",
+    "title": "Zombie",
+    "artists": [
+     {
+      "name": "The Cranberries",
+      "id": "UCE5eDJ9T05bGzDvJ5QYsdJQ"
+     }
+    ],
+    "album": {
+     "name": "No Need to Argue",
+     "id": "MPREb_x5zaOI0RENj"
+    },
+    "length": "5:08",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "1994",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/81cXwXuv1aOxCikSYqw5WET4FkiaNg5uKhTnDB4h0PL37adgl-1B3DBbvlopWpamwTQbt_ge9rm8pdQ-oA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "vkvrbbtnp6s",
+    "title": "How You Remind Me",
+    "artists": [
+     {
+      "name": "Nickelback",
+      "id": "UC1T4LYUer48KhKlrru13kUg"
+     }
+    ],
+    "album": {
+     "name": "Silver Side Up",
+     "id": "MPREb_onXLvI3yJSx"
+    },
+    "length": "3:44",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2001",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/KC2tDiFdec41kaIEy0hD0BGaNbcFX6dqmz-bJKs9miDv0zGaEtbTc0x5TRStshVO8Ep_6T8mmyyJaXGbFg=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "NNsieYrAxkc",
+    "title": "My Immortal",
+    "artists": [
+     {
+      "name": "Evanescence",
+      "id": "UC1ObIyFsDJn62iAZYLWcNxA"
+     }
+    ],
+    "album": {
+     "name": "Fallen",
+     "id": "MPREb_6q6voDlEdaz"
+    },
+    "length": "4:34",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2003",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/flE5VHe0QfQ9XqeDiwQslGbErboKLzh-UaK5FPfKpIHi1mzzeT8eL5IRifoOmni17oed_v8AkfPToVQDUA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "RnkShwdXfyc",
+    "title": "Love The Way You Lie (feat. Rihanna)",
+    "artists": [
+     {
+      "name": "Eminem",
+      "id": "UCedvOgsKFzcK3hA5taf3KoQ"
+     }
+    ],
+    "album": {
+     "name": "Recovery",
+     "id": "MPREb_UUFKiZYr3uO"
+    },
+    "length": "4:24",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2010",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/IUuZFSUqFLMQlejTtsnLM_cB16A0T1g-savL7DYbWz5NFh2-DOw5-v9_PREJt9keX48NSan-8yUQCPM=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "BLZWkjBXfN8",
+    "title": "In the End",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Hybrid Theory (Bonus Edition)",
+     "id": "MPREb_m10OjDmOhfv"
+    },
+    "length": "3:37",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2000",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/lkNJVMp3siDfSw_zVYj3tE6fQS7G6Gj2gzoxrIwS7K4TwqmL_uSBb9-PKACNLIP_7XLQib4tC5XwWbpD=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "ph9KP2_lT5Q",
+    "title": "I Hate Everything About You",
+    "artists": [
+     {
+      "name": "Three Days Grace",
+      "id": "UCfgRkxIufLnYKicOY8aJQ2g"
+     }
+    ],
+    "album": {
+     "name": "Three Days Grace",
+     "id": "MPREb_E2Ja8J2Xq14"
+    },
+    "length": "3:52",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2003",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/koi_qw5m4V1_cRLGDAYujPRLehb08MioJkYICVDBwaynIdZ_LG-cc8Zn0ar2hvEo8gOkEMpvdkoy7G4=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "-v4OIStt-CI",
+    "title": "Everybody's Fool",
+    "artists": [
+     {
+      "name": "Evanescence",
+      "id": "UC1ObIyFsDJn62iAZYLWcNxA"
+     }
+    ],
+    "album": {
+     "name": "Fallen",
+     "id": "MPREb_6q6voDlEdaz"
+    },
+    "length": "3:16",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2003",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/flE5VHe0QfQ9XqeDiwQslGbErboKLzh-UaK5FPfKpIHi1mzzeT8eL5IRifoOmni17oed_v8AkfPToVQDUA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "ljUtuoFt-8c",
+    "title": "Smells Like Teen Spirit",
+    "artists": [
+     {
+      "name": "Nirvana",
+      "id": "UCrPe3hLA51968GwxHSZ1llw"
+     }
+    ],
+    "album": {
+     "name": "Nevermind",
+     "id": "MPREb_jPOYfjGgApr"
+    },
+    "length": "5:02",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "1991",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/eyKiPBSqEu556sYTd_IyZhfxun5e_hatZ9tAyu8bnmVRgtbM3aW-SXUvhVX-d7s1oU0Yf3a38JOuYMZK5w=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "j2R6uT7uLFg",
+    "title": "Last Resort",
+    "artists": [
+     {
+      "name": "Papa Roach",
+      "id": "UCRiFekze9Yx5zDDjAVrYvbg"
+     }
+    ],
+    "album": {
+     "name": "Infest",
+     "id": "MPREb_cv3dgfHNJ1j"
+    },
+    "length": "3:20",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2000",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/UOqZS25iQnlpJCJLtweobidchyC_hG3x-abJj0l-ATFzK4-esEaK8WHGKaj4saMFiPE6ndzu98bpZoE=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "ujpvNvSgcic",
+    "title": "All The Things She Said",
+    "artists": [
+     {
+      "name": "t.A.T.u.",
+      "id": "UChTBSId6VeDfiIEuRvqTO6A"
+     }
+    ],
+    "album": {
+     "name": "200 KM/H In The Wrong Lane (10th Anniversary Edition)",
+     "id": "MPREb_hT6Nb9AwkZs"
+    },
+    "length": "3:35",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2002",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/n8aFpqvOnv5621rSyW93rCiXeZwJSDJ4oRfIRYdPKwzYfrsC__ffzT2SVuPY4Uf4hI3jvLYp7uJ9t8-9kA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "CdrkL4d88KI",
+    "title": "Taking Over Me",
+    "artists": [
+     {
+      "name": "Evanescence",
+      "id": "UC1ObIyFsDJn62iAZYLWcNxA"
+     }
+    ],
+    "album": {
+     "name": "Fallen",
+     "id": "MPREb_6q6voDlEdaz"
+    },
+    "length": "3:50",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2003",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/flE5VHe0QfQ9XqeDiwQslGbErboKLzh-UaK5FPfKpIHi1mzzeT8eL5IRifoOmni17oed_v8AkfPToVQDUA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "y4FiCl-tUJc",
+    "title": "Demons",
+    "artists": [
+     {
+      "name": "Imagine Dragons",
+      "id": "UC0aXrjVxG5pZr99v77wZdPQ"
+     }
+    ],
+    "album": {
+     "name": "Night Visions",
+     "id": "MPREb_jsrcqx9Rvjl"
+    },
+    "length": "2:58",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2012",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/q5PWa2JVJApX31A7QU2vE4RY8i5S_ofYbfpxgDjhz5fagMAxv8ROkEpUr2OAYgYrhzYqJpv0bV94DRCb=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "pcAKbKUBUOQ",
+    "title": "The Diary of Jane (Single Version)",
+    "artists": [
+     {
+      "name": "Breaking Benjamin",
+      "id": "UCgdqrZsRnxy1qGIusPhQEyg"
+     }
+    ],
+    "album": {
+     "name": "Phobia",
+     "id": "MPREb_T9HRQU8kO2b"
+    },
+    "length": "3:21",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2006",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/RaWjFGrdyuHz6ZsCgRPn14r5dBiRzASvuJIYMx6D92bNvX87puN2mktdmjfieTeiIq66EoxJHHSvqXU=w544-h544-s-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "dSlYFtXENPo",
+    "title": "Teenage Dirtbag",
+    "artists": [
+     {
+      "name": "Wheatus",
+      "id": "UCxnxfzY2OWlxBdCRlUsR_1A"
+     }
+    ],
+    "album": {
+     "name": "Wheatus",
+     "id": "MPREb_jk9GcfjQMVY"
+    },
+    "length": "4:02",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2000",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/G5HiBWRSXVVcpGkCD10tS8J02EEAXvjAeKrVR_tzNlP0oTxWDRCY6uETpEB7U8q6OgwM8mk2lLkskbD6=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "fiAT6ri2mqg",
+    "title": "Imaginary",
+    "artists": [
+     {
+      "name": "Evanescence",
+      "id": "UC1ObIyFsDJn62iAZYLWcNxA"
+     }
+    ],
+    "album": {
+     "name": "Fallen",
+     "id": "MPREb_Ol2Ip1ndtbE"
+    },
+    "length": "4:17",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2003",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/DMgrzZ84TP0DawBf7NwNbqzQg2-TY_prMUPh7WvjTOOPLxyiTryNgzxBFCkyZhKG0H8agCdcwitxSm8=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "UYocLBXr7hQ",
+    "title": "Sk8er Boi",
+    "artists": [
+     {
+      "name": "Avril Lavigne",
+      "id": "UCdOp8DxiQw6hKZ9b2FY6hbg"
+     }
+    ],
+    "album": {
+     "name": "Let Go",
+     "id": "MPREb_BJlXJg7bV46"
+    },
+    "length": "3:24",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2002",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/MIAqmIn_RcVQpBbnF6iqTOJq0gHTiZXlcGQwEHjKrglyt0RWhCJ5USCeQtbM2JR2UTCQmpJK6QXWl5M=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "Bn96ZZpHfLo",
+    "title": "Monster",
+    "artists": [
+     {
+      "name": "Skillet",
+      "id": "UCUHYrf3BF5yI9QdRw09__BA"
+     }
+    ],
+    "album": {
+     "name": "Monster",
+     "id": "MPREb_P6NmSCbYzQJ"
+    },
+    "length": "2:59",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2009",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/thBJL8OesvCSZFTnA0Ric-gO9Q5_U-akGzjIpDH6xHmJHFA3uEpgyef5rcDUDCgSbkznC2EOGarw6Ow=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "-cid1qHuy_U",
+    "title": "Chop Suey!",
+    "artists": [
+     {
+      "name": "System Of A Down",
+      "id": "UCDJftX2zx_UT_QSnBGIF96w"
+     }
+    ],
+    "album": {
+     "name": "Chop Suey!",
+     "id": "MPREb_hscoNGfCKJW"
+    },
+    "length": "3:31",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2001",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/9ExAIaDGPwcTGNSbtA8vRnUJGgO1I_8IaEmf1WDKpz7-RDLpWjXfmfn9wt6jJ5M23POPK2-lHdHUw5bz=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "NFUB6VveDoA",
+    "title": "Call Me When You're Sober",
+    "artists": [
+     {
+      "name": "Evanescence",
+      "id": "UC1ObIyFsDJn62iAZYLWcNxA"
+     }
+    ],
+    "album": {
+     "name": "The Open Door",
+     "id": "MPREb_E7G72HD3Xsm"
+    },
+    "length": "3:35",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2006",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/-Tv0lEKMFgIxSWEayAN_Lc0OeXSMIbh2sMUVaYc6wLlm1uM64jSQvXiyxE5dwCyIoHVgc4qk3rsc2LpWfA=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "qcX9HNIHwkg",
+    "title": "One Last Breath",
+    "artists": [
+     {
+      "name": "Creed",
+      "id": "UCU5EMBTzSO9gg6p4NFu2tWw"
+     }
+    ],
+    "album": {
+     "name": "Weathered",
+     "id": "MPREb_Ly4KisUYFSR"
+    },
+    "length": "3:59",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "2001",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/K8E7UK3j_75Ha98EwROIkm4NQBthyk0e7cS81Zr8nYM2yicDRzK5Jd-TBFpSjeYBtDvxZzsnW9HjqQFn=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "UjWZGLi-1jM",
+    "title": "Kryptonite",
+    "artists": [
+     {
+      "name": "3 Doors Down",
+      "id": "UC9eiPNoDEg2Ji4ESvq3IPXA"
+     }
+    ],
+    "album": {
+     "name": "The Better Life",
+     "id": "MPREb_H0w9ZrGTPM8"
+    },
+    "length": "3:54",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "1999",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/h571-M5V1qcNX-SxU4OXfOBFtfvfKF5-SuEay8XAb4LZQHwrbG96W-WpoOhavC-WkvODCusS5dxVfgyB=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   },
+   {
+    "videoId": "Q7uiJcxIsK4",
+    "title": "Don't Speak",
+    "artists": [
+     {
+      "name": "No Doubt",
+      "id": "UCc-WjJ7FgjeD4eARSlRYqwg"
+     }
+    ],
+    "album": {
+     "name": "Tragic Kingdom",
+     "id": "MPREb_DtYBEhtCDw1"
+    },
+    "length": "4:24",
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "year": "1995",
+    "thumbnail": [
+     {
+      "url": "https://yt3.googleusercontent.com/SVfQZMgh6T3yY-VDLqcMW7rcAdOCpw7Q6lygH2-fyC1ejh7j-GK7uQIbBMz2kixySGd9MxLmcmrYamBbSw=w544-h544-s-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ]
+   }
+  ]
+ }
+}

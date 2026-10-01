@@ -52,6 +52,7 @@ A SwiftUI app that starts the engine and talks to it (`musicorg serve`). Code in
 - **Every song playable (owner's choice A):** rips not identified yet are in the library under their own names, marked "not identified yet", and are upgraded in place when they're identified.
 - **A daily player (owner's choice B):** favourites, play counts and Most Played, Recently Added, playlists, and a full-window "now playing" screen with large lyrics.
 - **YouTube Music in the app:** search, play anything without saving it, and download a song only when asked.
+- **Discover's first slice** (What's New and Find): see v0.4 below.
 - **Fix a song by hand:** names, cover and lyrics, from a song's right-click menu. (Built but not yet tried in the running app: see the changelog.)
 - **A song's official video** on the Local Visualizer, in the app's own player: Cover / Video, a menu of picture sizes up to 1080p, Full Screen, and Save Video (kept in `Music/Videos/`, listed under Downloads and Library → Videos).
 - **A YouTube song that won't start** is noticed and tried again with a fresh address.
@@ -89,9 +90,11 @@ A SwiftUI app that starts the engine and talks to it (`musicorg serve`). Code in
 - Spotify data export, Exportify CSV, Apple Music library XML, YouTube Music playlist links, most-played first.
 - Someone moving off a streaming service gets their songs as local files through the throttled download queue, 250 a day as standard, 500 at most (owner, 2026-10-01).
 
-## v0.4: Discover
+## v0.4: Discover (started early, 2026-10-01)
 
 Plan: [`docs/roadmap/0.4-discover.md`](roadmap/0.4-discover.md).
+
+**Built (2026-10-01):** picks from the whole library, most played, the top artist, a playlist, a named artist and similar bands, or a genre; the What's New and Find pages, with a grid of cards to play, download one by one, or download several together after seeing the plan. **Still to build:** the guided mode, the `Discovered/` inbox, Last.fm as a second source. The plan's own list follows.
 
 - Recommendations from a playlist, the whole library, most played, or an artist and similar bands.
 - A grid of cards: play in the app first, with small Spotify, Apple Music and SoundCloud logos, and download on demand.

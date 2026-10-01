@@ -102,6 +102,19 @@ final class AppModel {
 
     let player = Player()
     let lyrics = LyricsModel()
+    /// Discover → What's New and Discover → Find: each keeps its own picks.
+    let whatsNew = DiscoverPage(named: "whatsNew")
+    let find = DiscoverPage(named: "find")
+    /// Several downloads planned and waiting for the owner's yes (Download Selected).
+    var batch: BatchDownload?
+
+    struct BatchDownload {
+        let planId: String
+        let videoIds: [String]
+        let count: Int
+        let minutes: Int
+        let days: Int
+    }
 
     @ObservationIgnored private var engine: EngineProcess?
     @ObservationIgnored private var stopping = false
@@ -111,6 +124,12 @@ final class AppModel {
     private static let rootKey = "libraryRoot"
 
     init() {
+        for page in [whatsNew, find] {
+            page.ask = { [weak self] seeds, count, shuffle, name in
+                guard let self else { throw CancellationError() }
+                return try await self.suggest(seeds, count, shuffle, name)
+            }
+        }
         player.onTrackChange = { [weak self] track in self?.showLyrics(for: track) }
         player.onTick = { [weak self] time in
             guard let self else { return }
@@ -185,7 +204,13 @@ final class AppModel {
             self.engine = engine
             stopping = false
             engine.connection.start(
-                onNotification: { [weak self] method, _ in
+                onNotification: { [weak self] method, params in
+                    if method == "discover.progress" {
+                        let page = params["token"] as? String
+                        let (done, of) = (params["done"] as? Int ?? 0, params["of"] as? Int ?? 0)
+                        Task { @MainActor in self?.discoverSaid(page, done: done, of: of) }
+                        return
+                    }
                     Task { @MainActor in await self?.engineSaid(method) }
                 },
                 onClose: { [weak self, weak engine] in
@@ -325,6 +350,12 @@ final class AppModel {
             } catch {
                 notice = error.localizedDescription
             }
+        }
+    }
+
+    private func discoverSaid(_ name: String?, done: Int, of: Int) {
+        for page in [whatsNew, find] where page.name == name {
+            page.progress(done: done, of: of)
         }
     }
 
@@ -484,6 +515,79 @@ final class AppModel {
 
     /// Download one song into the library. Only ever called by the owner's click.
     func download(_ result: SearchResult) { downloadSong(result.videoId) }
+
+    // MARK: Discover: picks, and downloading them
+
+    /// Ask the engine for songs the owner doesn't have. Takes seconds: the engine asks
+    /// YouTube Music for several radios, at its usual careful pace.
+    private func suggest(
+        _ seeds: [DiscoverSeed], _ count: Int, _ shuffle: String, _ page: String
+    ) async throws -> DiscoverAnswer {
+        guard let connection = engine?.connection else {
+            throw RPCError(code: 0, message: "The engine isn't running.")
+        }
+        return try await connection.call(
+            "discover.suggest",
+            ["seeds": seeds.map(\.params), "count": count, "shuffle": shuffle, "token": page],
+            as: DiscoverAnswer.self)
+    }
+
+    /// Download one of Discover's picks. The engine is handed the pick back as it gave
+    /// it, so it doesn't look the song up a second time.
+    func download(_ pick: DiscoverPick) {
+        startDownload(
+            pick.videoId, ["video_ids": [pick.videoId], "candidates": [pick.candidate]])
+    }
+
+    /// Whether a pick could still be downloaded: not in the library, not on its way.
+    func canDownload(_ pick: DiscoverPick) -> Bool {
+        !everything.videoIDs.contains(pick.videoId) && downloadState(of: pick.videoId) != .working
+    }
+
+    /// Several picks at once. It's a batch, so the plan comes first: how many and how
+    /// long. Nothing is queued until the owner says yes (`confirmBatch`).
+    func planDownloads(_ picks: [DiscoverPick]) {
+        let wanted = picks.filter(canDownload)
+        guard !wanted.isEmpty, let connection = engine?.connection else { return }
+        Task {
+            do {
+                let plan = try await connection.call(
+                    "plan.create",
+                    [
+                        "kind": "download",
+                        "options": [
+                            "video_ids": wanted.map(\.videoId),
+                            "candidates": wanted.map(\.candidate),
+                        ],
+                    ], as: PlanAnswer.self)
+                guard plan.summary.operations > 0 else { throw Self.nothingToDo(plan) }
+                batch = BatchDownload(
+                    planId: plan.planId, videoIds: wanted.map(\.videoId),
+                    count: plan.summary.downloads ?? plan.summary.operations,
+                    minutes: plan.summary.estMinutes ?? 0, days: plan.summary.days ?? 1)
+            } catch {
+                notice = error.localizedDescription
+            }
+        }
+    }
+
+    /// The owner said yes: the planned downloads go to the queue.
+    func confirmBatch() {
+        guard let batch, let connection = engine?.connection else { return }
+        self.batch = nil
+        starting.formUnion(batch.videoIds)
+        Task {
+            do {
+                _ = try await connection.call(
+                    "plan.apply", ["plan_id": batch.planId], as: BatchAnswer.self)
+            } catch {
+                notice = error.localizedDescription
+            }
+            await refreshDownloads()
+            starting.subtract(batch.videoIds)
+            watchDownloads()
+        }
+    }
 
     /// Download a YouTube Music song (by its id) into the library.
     func downloadSong(_ videoId: String) {

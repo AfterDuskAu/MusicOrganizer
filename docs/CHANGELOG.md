@@ -186,6 +186,34 @@
   - The rule was tried against two minutes of real playback with a pause and three jumps: the longest gap between frames was 0.17 s, and it never fired.
 - Also seen: YouTube Music's "official video" for one song is partly an upright phone clip. It's the artist's own upload, so the rule accepts it.
 
+2026-10-01, midnight. **Discover, started** (the owner: "I'd like you to start working on Discover"). It was v0.4 and on `CLAUDE.md`'s "Not yet" list; the list now says it was started early, and what's still not built.
+
+- **Engine: `discover` (new module) and `discover.suggest`.** Seeds in (the whole library, most played, the top artist, a playlist, a named artist, a genre; up to 8 together) and a count (1 to 500); ranked picks out, each with a one-line "why". Read-only: nothing is downloaded and no file changes.
+  - Picks come from YouTube Music's **radios**: a song's radio (about 50 songs like it) for seeds made of the owner's songs, an artist's radio for a named artist (their own songs and similar bands'), and more radios started from that artist's songs when more is wanted.
+  - Ranking: a song on several of the radios first, then artists the owner has a lot of (a small push, at most 16 places), then YouTube Music's own order. One artist gets a share of the page, not all of it, unless they were asked for by name.
+  - Never suggested: a song already in the library (by YouTube id, or by title, version and artist, which also reads the name of the rip a copy came from), a candidate rejected in review, a song waiting in the download queue, the same song twice, and anything that isn't official audio.
+  - It asks for 4 to 24 radios through the rate limiter. Measured on the owner's library, read-only: 7 to 10 s for 10 to 20 picks (4 radios), 14 s for 100 picks (9 radios). 500 picks wasn't timed; at 24 radios it should be under a minute. Answers are kept in the index's search cache (a radio for a week), so the same request again is immediate. `discover.progress` notes say how far along it is.
+  - `shuffle` chooses which of the owner's songs the radios start from. The app sends the date, so a day's picks stay put until "Different Songs" is clicked.
+- **`plan.create` kind `download` takes `candidates`**: tracks the engine gave out a moment ago. They aren't looked up on YouTube Music again, so a plan for 50 picks is made at once instead of in over a minute.
+- **The app: Discover → What's New and Discover → Find** replace their "coming" pages.
+  - What's New asks by itself the first time it's opened: 10, 50 or 100 songs picked from the whole library.
+  - Find: start from an artist (or several, with commas), a genre, a playlist, the most played songs, the top artist or the whole library; 10, 50, 100, 500 or any number.
+  - Both show a grid of cards: cover, title, artist, the "why" line, length. Click the cover to play it in the app (nothing is saved), Download for one song, a tick on each card and Download Selected for several. Several at once is a batch, so the plan is shown first (how many, about how long, how many days if it's over the daily limit) and nothing is queued until Download is clicked. Each card has an "open in" menu: a search for the song on Spotify, Apple Music or SoundCloud (plain links, no account or key).
+  - Downloads land where the app's downloads already do: `Music/`, listed under Discover → Downloads.
+- **Checked against the installed ytmusicapi (1.12.3), as `CLAUDE.md` asks:**
+  - `get_watch_playlist(videoId, radio=True)`: 50 tracks, the song itself first, nearly all official audio, with `length` and no `isExplicit`.
+  - An "artists" search result carries a `radioId`; `get_watch_playlist(playlistId=radioId)` gives about 100 tracks, a quarter of them the artist's own.
+  - **`get_mood_playlists` fails on every genre page** (a KeyError inside ytmusicapi; the mood pages work). So the plan's "YouTube Music's genre lists" can't be used as written.
+  - Genre playlists found by searching "featured_playlists" work, but the search returns all sorts in a different order each time ("Aussie Hip-Hop Golds", "00s German Rap Essentials"), and their tracks are mostly music videos, not official audio.
+- **Deviations from `docs/roadmap/0.4-discover.md`:**
+  - A genre starts from **the owner's own songs tagged with that genre** (the plan left "YouTube's lists, the library's tags, or both" open). Only with fewer than four of those does it use a YouTube Music playlist, choosing one named for the genre's hits where there is one. "Hip hop" and "rap" count as one genre, as do "R&B" and "rnb".
+  - No `discover.enqueue`: picks are downloaded with the existing `plan.create` and `plan.apply`, so there's still one way in to the queue.
+  - "Open in" is a menu of three names, not a row of logos, and there's no fourth service yet.
+  - The time estimate comes with the download plan, not with the picks.
+- **Not built:** the guided mode, the `Discovered/<Genre>/<Month>/` folder and its tag (a library-contract change, with the owner's open question on its layout), Last.fm, combining different kinds of seed in the app (the engine accepts it), and a way to say "not this one" to a pick.
+- **A developer's check for the app:** `MUSICORG_SNAPSHOT=<folder>` runs the app unseen (no Dock icon, an invisible window) and saves pictures of its window, so a page can be looked at without touching the copy of the app in use. What's New and Find were looked at this way on a scratch library. **Not tried: any click** (Play, Download, the tick boxes, Download Selected and its confirmation, Find with results, the "open in" menu).
+- `scripts/record_ytm.py` records the new requests (`radio`, `artist`, `genre`). `youtube._artist_key` is now `youtube.artist_key`.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

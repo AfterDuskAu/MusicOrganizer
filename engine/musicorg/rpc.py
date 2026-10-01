@@ -43,6 +43,7 @@ from typing import IO, Any
 from musicorg import (
     __version__,
     browse,
+    discover,
     fileops,
     library,
     listening,
@@ -77,7 +78,9 @@ PROTOCOL = "2.0"
 SHUTDOWN_GRACE_S = 10.0
 PROGRESS_INTERVAL_S = 0.25  # at most 4 job.progress a second per job
 REVIEW_STATES = ("review", "not_found", "matched_auto")
-SLOW_METHODS = frozenset({"youtube.stream", "youtube.video", "search.ytmusic", "lyrics.find"})
+SLOW_METHODS = frozenset(
+    {"youtube.stream", "youtube.video", "search.ytmusic", "lyrics.find", "discover.suggest"}
+)
 RPC_DECISIONS = ("accept", "candidate", "url", "only_copy", "skip", "reject")
 
 # Error codes (docs/ENGINE_API.md → Errors).
@@ -269,6 +272,7 @@ class Server:
             "youtube.stream": self.youtube_stream,
             "youtube.video": self.youtube_video,
             "lyrics.find": self.lyrics_find,
+            "discover.suggest": self.discover_suggest,
             "queue.jobs": self.queue_jobs,
             "queue.downloads": self.queue_downloads,
             "queue.dismiss": self.queue_dismiss,
@@ -678,7 +682,8 @@ class Server:
                 videos = want(options, "videos", list, [])
                 if not ids and not videos:
                     raise RpcError(INVALID_PARAMS, "Give video_ids, videos, or both.")
-                plan = pipeline.plan_download(lib, index, ids, videos)
+                known = want(options, "candidates", list, [])
+                plan = pipeline.plan_download(lib, index, ids, videos, known=known)
             elif kind == "edit":
                 cover = want(options, "cover_file", str)
                 plan = pipeline.plan_edit(
@@ -814,6 +819,22 @@ class Server:
         lib = self._library()
         queue.dismiss_download(lib, need(params, "job_id", int))
         return {"downloads": queue.downloads(lib.paths)}
+
+    def discover_suggest(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Songs the owner doesn't have, found from ones they do (Discover, v0.4).
+        Lookups only: nothing is downloaded and the library isn't changed."""
+        seeds = [discover.Seed.from_dict(seed) for seed in need(params, "seeds", list)]
+        count = want(params, "count", int, 50)
+        shuffle = want(params, "shuffle", str, "") or ""
+        token = want(params, "token", str)
+
+        def progress(done: int, total: int) -> None:
+            self.writer.notify("discover.progress", {"token": token, "done": done, "of": total})
+
+        with self._index(write=True) as index:  # the index keeps YouTube Music's answers
+            return discover.suggest(
+                self._library(), index, seeds, count, shuffle=shuffle, progress=progress
+            )
 
     def search_ytmusic(self, params: dict[str, Any]) -> dict[str, Any]:
         query = need(params, "query", str).strip()
