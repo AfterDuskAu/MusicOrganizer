@@ -126,6 +126,58 @@ class Clock:
     uniform: Callable[[float, float], float] = field(default=random.uniform)
 
 
+# How far along the download that's running is, by job id: the bytes so far and the bytes
+# in all (None while YouTube hasn't said). Kept in memory by the process that runs the
+# queue, for `downloads()` to report. A queue run by another process (`musicorg queue
+# run` beside the app) reports none.
+_progress: dict[int, tuple[int, int | None]] = {}
+_progress_lock = threading.Lock()
+AUDIO_BYTES_PER_S = 16_200  # format 140, measured: for guessing a video's sound in advance
+
+
+class _Meter:
+    """Counts a download's bytes for `_progress`. A song is one file. A video is two,
+    its picture and then its sound: the second file's bytes follow on from the first's,
+    and until it starts its size is guessed (`expected_extra`), so the share shown
+    doesn't jump back when it does."""
+
+    def __init__(
+        self, job_id: int, forward: youtube.ProgressHook | None, expected_extra: int = 0
+    ) -> None:
+        self.job_id, self.forward = job_id, forward
+        self.before = 0  # the bytes of the files already finished
+        self.last: tuple[int, int | None] = (0, None)
+        self.extra = expected_extra
+        with _progress_lock:
+            _progress[job_id] = (0, None)
+
+    def __call__(self, done: int, total: int | None) -> None:
+        if done < self.last[0]:  # a new file has started
+            self.before += self.last[1] or self.last[0]
+            self.extra = 0
+        self.last = (done, total)
+        whole = self.before + total + self.extra if total else None
+        with _progress_lock:
+            _progress[self.job_id] = (self.before + done, whole)
+        if self.forward is not None:
+            self.forward(done, total)
+
+    def finished(self) -> None:
+        """All of it has arrived: the job goes on to check and tag it."""
+        with _progress_lock:
+            done, whole = _progress.get(self.job_id, (0, None))
+            _progress[self.job_id] = (max(done, whole or 0), max(done, whole or 0) or None)
+
+
+def progress_of(job_id: int) -> float | None:
+    """The share of a running download that has arrived (0 to 1), or None if that isn't
+    known: it hasn't started, YouTube hasn't said how big it is, or another process is
+    running the queue."""
+    with _progress_lock:
+        done, whole = _progress.get(job_id, (0, None))
+    return round(min(1.0, done / whole), 3) if whole else None
+
+
 class _DailyCapReached(Exception):
     def __init__(self, resume_at: datetime) -> None:
         super().__init__("daily cap")
@@ -159,8 +211,11 @@ class JobContext:
         self._runner.wait_for_download_turn()
         self._runner.count_download()
         self.downloaded += 1
+        meter = _Meter(self.job["id"], progress)
         try:
-            return youtube.download_audio(video_id, self.staging(), progress=progress)
+            found = youtube.download_audio(video_id, self.staging(), progress=meter)
+            meter.finished()
+            return found
         finally:
             self._runner.downloaded()
 
@@ -176,12 +231,24 @@ class JobContext:
         self._runner.wait_for_download_turn()
         self._runner.count_download()
         self.downloaded += 1
+        meter = _Meter(self.job["id"], progress, expected_extra=self._sound_bytes())
         try:
-            return youtube.download_video(
-                video_id, self.staging(), height=height, fps=fps, progress=progress
+            found = youtube.download_video(
+                video_id, self.staging(), height=height, fps=fps, progress=meter
             )
+            meter.finished()
+            return found
         finally:
             self._runner.downloaded()
+
+    def _sound_bytes(self) -> int:
+        """About how big the video's sound will be, from the length the plan recorded."""
+        ops = self.payload.get("ops")
+        op = ops[0] if isinstance(ops, list) and ops and isinstance(ops[0], dict) else {}
+        params = op.get("params") if isinstance(op.get("params"), dict) else {}
+        candidate = params.get("candidate") if isinstance(params.get("candidate"), dict) else {}
+        length = candidate.get("duration_s")
+        return int(length * AUDIO_BYTES_PER_S) if isinstance(length, int | float) else 0
 
 
 def staging_name(job_id: int) -> str:
@@ -323,7 +390,11 @@ class _Runner:
         self.report(f"Job {job['id']} ({job['kind']}): started, attempt {attempts}.")
         ctx = JobContext(self, batch, job)
         try:
-            outcome = kind.handler(ctx)
+            try:
+                outcome = kind.handler(ctx)
+            finally:
+                with _progress_lock:
+                    _progress.pop(job["id"], None)
         except _DailyCapReached:
             self._requeue(job, attempts=job["attempts"])
             raise
@@ -665,6 +736,7 @@ def _download_row(job: dict[str, Any]) -> dict[str, Any]:
         "height": params.get("height") if video else None,
         "fps": params.get("fps") if video else None,
         "thumbnail": candidate.get("thumbnail"),
+        "progress": progress_of(job["id"]) if job["state"] == "running" else None,
     }
 
 

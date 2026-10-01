@@ -623,6 +623,18 @@ final class AppModel {
         return startProblems[videoId].map(DownloadState.failed)
     }
 
+    /// What a button says while its song or video is on its way: "Downloading… 42%"
+    /// once the engine can say how far along it is.
+    func downloadNote(of videoId: String, saving: Bool = false) -> String {
+        if let found = pending.first(where: { $0.videoId == videoId && $0.isActive }) {
+            if let percent = found.percent {
+                return percent >= 100 ? "Finishing…" : "\(saving ? "Saving" : "Downloading")… \(percent)%"
+            }
+            if !found.isRunning { return "Waiting its turn…" }
+        }
+        return saving ? "Saving…" : "Downloading…"
+    }
+
     /// Queue a download and return at once: it then shows at the top of Discover →
     /// Downloads until it arrives.
     private func startDownload(_ videoId: String, _ options: [String: Any]) {

@@ -117,7 +117,10 @@ private struct ResultRow: View {
             case .working:
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.small)
-                    Text("Downloading…").font(.callout).foregroundStyle(.secondary)
+                    Text(model.downloadNote(of: result.videoId))
+                        .font(.callout)
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
                 }
             case .failed(let why):
                 Button("Try Again", systemImage: "exclamationmark.triangle") { model.download(result) }

@@ -400,7 +400,10 @@ private struct PickCard: View {
             case .working:
                 HStack(spacing: 5) {
                     ProgressView().controlSize(.small)
-                    Text("Downloading…").font(.caption).foregroundStyle(.secondary)
+                    Text(model.downloadNote(of: pick.videoId))
+                        .font(.caption)
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
                 }
             case .failed(let why):
                 Button("Try Again", systemImage: "exclamationmark.triangle") { model.download(pick) }

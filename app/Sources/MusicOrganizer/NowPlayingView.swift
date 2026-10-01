@@ -216,7 +216,10 @@ private struct SaveVideoButton: View {
             case .working:
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.small)
-                    Text("Saving…").font(.callout).foregroundStyle(.secondary)
+                    Text(model.downloadNote(of: videoId, saving: true))
+                        .font(.callout)
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
                 }
             case .failed(let why):
                 Button("Try Again", systemImage: "exclamationmark.triangle") {
@@ -249,7 +252,10 @@ private struct SaveSongButton: View {
             case .working:
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.small)
-                    Text("Downloading…").font(.callout).foregroundStyle(.secondary)
+                    Text(model.downloadNote(of: videoId))
+                        .font(.callout)
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
                 }
             case .failed(let why):
                 Button("Try Again", systemImage: "exclamationmark.triangle") {

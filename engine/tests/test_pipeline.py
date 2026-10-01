@@ -1584,6 +1584,66 @@ def test_a_download_is_given_a_genre(
     assert genre_of(VIDEO_A) == "Rock"
 
 
+# ---- how far along a download is (v0.2) ---------------------------------------------------
+
+
+def test_a_running_download_says_how_far_along_it_is(
+    lib: Library, index: Index, downloads: FakeDownloads, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    found = {VIDEO_A: candidate(VIDEO_A, "Melody", ("Band",), SECONDS, album="Tunes")}
+    monkeypatch.setattr(youtube, "get_track", lambda video_id: found.get(video_id))
+    seen: list[tuple[str, float | None]] = []
+
+    def look() -> None:
+        (row,) = queue.downloads(lib.paths)
+        seen.append((row["state"], row["progress"]))
+
+    def download(video_id: str, dest: Path, *, progress: Any = None) -> Any:
+        look()  # started, and YouTube hasn't said how big it is
+        progress(1000, 4000)
+        look()
+        progress(3000, 4000)
+        look()
+        progress(4000, 4000)
+        return downloads(video_id, dest)
+
+    monkeypatch.setattr(youtube, "download_audio", download)
+    plan = pipeline.plan_download(lib, index, [VIDEO_A])
+    pipeline.apply(lib, index, plan.plan_id)
+    (waiting,) = queue.downloads(lib.paths)
+    assert (waiting["state"], waiting["progress"]) == ("queued", None)
+    run_queue(lib)
+    assert seen == [("running", None), ("running", 0.25), ("running", 0.75)]
+    assert queue.downloads(lib.paths) == []  # it arrived
+    assert queue._progress == {}  # and nothing is remembered about it
+
+
+def test_a_videos_two_files_count_as_one_download() -> None:
+    # Its picture, then its sound: the second file's bytes follow on from the first's,
+    # and the sound's size is guessed until it starts, so the share never jumps back.
+    forwarded: list[tuple[int, int | None]] = []
+    meter = queue._Meter(7, lambda done, total: forwarded.append((done, total)),
+                         expected_extra=1000)  # fmt: skip
+    try:
+        assert queue.progress_of(7) is None  # not started
+        meter(0, None)
+        assert queue.progress_of(7) is None  # YouTube hasn't said how big it is
+        meter(4500, 9000)
+        assert queue.progress_of(7) == 0.45  # of 9000 + the 1000 guessed
+        meter(9000, 9000)
+        assert queue.progress_of(7) == 0.9
+        meter(100, 1200)  # the sound has started, and is a little bigger than guessed
+        assert queue.progress_of(7) == pytest.approx(9100 / 10200, abs=0.001)
+        meter(1200, 1200)
+        assert queue.progress_of(7) == 1.0
+        meter.finished()
+        assert queue.progress_of(7) == 1.0
+        assert forwarded[-1] == (1200, 1200) and len(forwarded) == 5
+    finally:
+        queue._progress.pop(7, None)
+    assert queue.progress_of(7) is None and queue.progress_of(12345) is None
+
+
 # ---- deleting a download (v0.2) ---------------------------------------------------------
 
 

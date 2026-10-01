@@ -256,11 +256,13 @@ public struct PendingDownload: Decodable, Identifiable, Equatable, Sendable {
     public let height: Int?
     public let fps: Int?
     public let thumbnail: String?
+    /// The share of it that has arrived, 0 to 1, while it's downloading and that's known.
+    public let progress: Double?
 
     public init(
         jobId: Int, state: String, reason: String? = nil, message: String? = nil,
         videoId: String? = nil, title: String? = nil, artists: [String] = [], video: Bool = false,
-        height: Int? = nil, fps: Int? = nil, thumbnail: String? = nil
+        height: Int? = nil, fps: Int? = nil, thumbnail: String? = nil, progress: Double? = nil
     ) {
         self.jobId = jobId
         self.state = state
@@ -273,6 +275,7 @@ public struct PendingDownload: Decodable, Identifiable, Equatable, Sendable {
         self.height = height
         self.fps = fps
         self.thumbnail = thumbnail
+        self.progress = progress
     }
 
     public var id: Int { jobId }
@@ -286,9 +289,18 @@ public struct PendingDownload: Decodable, Identifiable, Equatable, Sendable {
         guard !isActive else { return nil }
         return message ?? reason?.replacingOccurrences(of: "_", with: " ") ?? "It didn't work."
     }
-    /// What the list says while it's on its way.
+    /// The share that has arrived as a whole percentage, while that's known.
+    public var percent: Int? {
+        guard isRunning, let progress else { return nil }
+        return Int((min(max(progress, 0), 1) * 100).rounded(.down))
+    }
+
+    /// What the list says while it's on its way: "Waiting its turn…", "Downloading…",
+    /// "Downloading… 42%", and once it has all arrived, the work that's left.
     public var progressNote: String {
-        isRunning ? "Downloading…" : "Waiting its turn…"
+        guard isRunning else { return "Waiting its turn…" }
+        guard let percent else { return "Downloading…" }
+        return percent >= 100 ? "Checking and naming it…" : "Downloading… \(percent)%"
     }
 }
 

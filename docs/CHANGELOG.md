@@ -282,6 +282,13 @@
   - A first try (changing the title's width as the window changed) moved the headings and not the rows; it was caught in a picture and replaced.
 - **Checked:** both pages were looked at with the hidden copy of the app on a scratch library (three pictures: Downloads; Songs at the usual width; Songs after widening the window). Nothing was clicked, and the owner's copy wasn't touched. `MUSICORG_SNAPSHOT_WIDTH` was added to the developer's snapshot mode for the widening.
 
+2026-10-02, 9:45 am. **How far along a download is.**
+
+- **Engine:** the queue counts the bytes of the download that's running and `queue.downloads` gives each running one a `progress` (0 to 1). A video is two files (its picture, then its sound): they're counted as one, with the sound's size guessed from the video's length until it starts, so the share doesn't jump back. It's kept in memory by the process running the queue, so it's known when the app runs the queue (as it does) and not when `musicorg queue run` is used beside it.
+- **The app:** the strip at the top of Discover → Downloads fills a real bar and says "Downloading… 42%", then "Checking and naming it…" once it has all arrived. The Download and Save Video buttons say the same percentage wherever they are (the YouTube Music page, Discover's cards, the Local Visualizer). It's read once a second, as before.
+- A song is about 4 MB and arrives in a second or two, so this mostly shows on videos (a 1080p video is about 100 MB).
+- **Not tried with a real download** (nothing was asked of YouTube: the owner's Mac was busy). The engine's counting and the app's wording are tested; the bar itself hasn't been seen moving.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

@@ -41,9 +41,17 @@ struct PendingDownloads: View {
                     .help("Ask YouTube for it again")
             } else {
                 VStack(alignment: .leading, spacing: 3) {
-                    // The engine doesn't say how far along it is, only that it's busy.
-                    ProgressView().progressViewStyle(.linear)
-                    Text(download.progressNote).font(.caption).foregroundStyle(.secondary)
+                    // A bar that fills while the engine can say how far along it is; a
+                    // moving one while it waits its turn or works on what has arrived.
+                    if let progress = download.progress, download.isRunning, progress < 1 {
+                        ProgressView(value: progress).progressViewStyle(.linear)
+                    } else {
+                        ProgressView().progressViewStyle(.linear)
+                    }
+                    Text(download.progressNote)
+                        .font(.caption)
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity)
             }

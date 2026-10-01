@@ -518,6 +518,32 @@ final class SongVideoTests: XCTestCase {
         XCTAssertNil(ElsewhereLink.spotify.url(title: " ", artist: ""))
     }
 
+    func testADownloadSaysHowFarAlongItIs() throws {
+        let json = """
+            {"downloads": [
+              {"job_id": 1, "batch_id": "b", "state": "running", "reason": null, "message": null,
+               "video_id": "abcdefghijk", "title": "Song", "artists": ["A"], "video": false,
+               "height": null, "fps": null, "thumbnail": null, "progress": 0.428},
+              {"job_id": 2, "batch_id": "b", "state": "queued", "reason": null, "message": null,
+               "video_id": "lmnopqrstuv", "title": "Other", "artists": [], "video": true,
+               "height": 720, "fps": 30, "thumbnail": null, "progress": null}]}
+            """
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let found = try decoder.decode(DownloadsAnswer.self, from: Data(json.utf8)).downloads
+        XCTAssertEqual(found[0].percent, 42)
+        XCTAssertEqual(found[0].progressNote, "Downloading… 42%")
+        XCTAssertNil(found[1].percent)
+        XCTAssertEqual(found[1].progressNote, "Waiting its turn…")
+        XCTAssertEqual(
+            PendingDownload(jobId: 3, state: "running").progressNote, "Downloading…")
+        XCTAssertEqual(
+            PendingDownload(jobId: 3, state: "running", progress: 1).progressNote,
+            "Checking and naming it…")
+        XCTAssertNil(PendingDownload(jobId: 3, state: "queued", progress: 0.5).percent)
+        XCTAssertEqual(PendingDownload(jobId: 3, state: "running", progress: 1.7).percent, 100)
+    }
+
     func testDownloadsAreGroupedByGenre() {
         func song(_ title: String, _ genre: String?, _ added: String) -> Track {
             Track(path: "Music/\(title).m4a", title: title, genre: genre, acquired: added)
