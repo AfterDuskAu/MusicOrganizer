@@ -87,6 +87,34 @@ final class LibraryTests: XCTestCase {
         XCTAssertEqual(track.folder, "Music/A/B (2020)")
     }
 
+    func testCollections() throws {
+        let songs = [
+            Track(path: "Music/A/B/1.mp3", title: "One", trackId: "t_1", acquired: "2026-09-01T00:00:00Z"),
+            Track(path: "Music/A/B/2.mp3", title: "Two", match: "unconfirmed", trackId: "t_2",
+                  acquired: "2026-10-01T00:00:00Z"),
+            Track(path: "Music/A/B/3.mp3", title: "Three", trackId: "t_3"),
+        ]
+        let library = Library(tracks: songs)
+        XCTAssertEqual(library.tracks(withIDs: ["t_3", "gone", "t_1", "t_3"]).map(\.title),
+                       ["Three", "One", "Three"])
+        XCTAssertEqual(library.recentlyAdded().map(\.title), ["Two", "One"])
+        XCTAssertEqual(library.unconfirmed.map(\.title), ["Two"])
+        let plays = ["t_1": PlayCount(count: 2), "t_3": PlayCount(count: 5), "t_2": PlayCount(count: 0)]
+        XCTAssertEqual(library.mostPlayed(plays).map(\.title), ["Three", "One"])
+        XCTAssertEqual(library.filter(library.recentlyAdded(), "one").map(\.title), ["One"])
+
+        let json = """
+            {"favourites": ["t_2"], "plays": {"t_1": {"count": 3, "last_played": "2026-10-01T03:00:00Z"}},
+             "playlists": [{"id": "pl_1", "name": "Mix", "created_at": null, "track_ids": ["t_1", "t_2"]}]}
+            """
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let listening = try decoder.decode(Listening.self, from: Data(json.utf8))
+        XCTAssertEqual(listening.plays["t_1"], PlayCount(count: 3, lastPlayed: "2026-10-01T03:00:00Z"))
+        XCTAssertEqual(listening.playlists, [Playlist(id: "pl_1", name: "Mix", trackIds: ["t_1", "t_2"])])
+        XCTAssertEqual(listening.playlists[0].trackIds, ["t_1", "t_2"])
+    }
+
     func testClockTime() {
         XCTAssertEqual(clockTime(187.9), "3:07")
         XCTAssertEqual(clockTime(3765), "1:02:45")

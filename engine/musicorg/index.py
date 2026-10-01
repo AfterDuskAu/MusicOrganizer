@@ -26,7 +26,9 @@ from typing import Any
 from musicorg.errors import LibraryIndexError
 from musicorg.naming import LibraryPaths
 
-SCHEMA_VERSION = 2  # 2: library_tracks.details_json, for the app's library list (v0.2)
+# 2: library_tracks.details_json, for the app's library list (v0.2)
+# 3: library_tracks.match (MUSICORG_MATCH), so an `unconfirmed` copy can be told apart
+SCHEMA_VERSION = 3
 
 _TABLES = """
 CREATE TABLE sources (
@@ -72,7 +74,8 @@ CREATE TABLE library_tracks (
     source_id TEXT,
     only_copy INTEGER NOT NULL DEFAULT 0,
     origin_path TEXT,
-    details_json TEXT
+    details_json TEXT,
+    match TEXT
 );
 CREATE INDEX library_tracks_id ON library_tracks (musicorg_id);
 CREATE INDEX library_tracks_origin ON library_tracks (origin_path);
@@ -166,9 +169,11 @@ class Index:
                     conn.executescript(_TABLES)
                     conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
                 return
-            if version == 1:  # version 2 only added a column: no rebuild needed
+            if version in (1, 2):  # versions 2 and 3 only added a column: no rebuild needed
                 with conn:
-                    conn.execute("ALTER TABLE library_tracks ADD COLUMN details_json TEXT")
+                    if version == 1:
+                        conn.execute("ALTER TABLE library_tracks ADD COLUMN details_json TEXT")
+                    conn.execute("ALTER TABLE library_tracks ADD COLUMN match TEXT")
                     conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
                 return
         except sqlite3.DatabaseError as exc:

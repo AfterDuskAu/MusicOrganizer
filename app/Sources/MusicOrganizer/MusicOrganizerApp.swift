@@ -26,6 +26,9 @@ struct MusicOrganizerApp: App {
             CommandGroup(after: .newItem) {
                 Button("Choose Library Folder…") { model.chooseLibrary() }
                     .keyboardShortcut("o")
+                Button("New Playlist…") { model.newPlaylist() }
+                    .keyboardShortcut("n")
+                    .disabled(model.phase != .ready)
                 Button("Reload Library") { Task { await model.reload() } }
                     .keyboardShortcut("r")
                     .disabled(model.phase != .ready)

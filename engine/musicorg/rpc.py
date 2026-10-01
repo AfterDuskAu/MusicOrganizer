@@ -45,6 +45,7 @@ from musicorg import (
     browse,
     fileops,
     library,
+    listening,
     logging_setup,
     match,
     pipeline,
@@ -230,6 +231,13 @@ class Server:
             "library.status": self.library_status,
             "library.tracks": self.library_tracks,
             "library.lyrics": self.library_lyrics,
+            "listening.get": self.listening_get,
+            "listening.favourite": self.listening_favourite,
+            "listening.played": self.listening_played,
+            "playlist.create": self.playlist_create,
+            "playlist.rename": self.playlist_rename,
+            "playlist.delete": self.playlist_delete,
+            "playlist.set_tracks": self.playlist_set_tracks,
             "sources.add": self.sources_add,
             "sources.list": self.sources_list,
             "sources.scan": self.sources_scan,
@@ -467,6 +475,36 @@ class Server:
     def library_lyrics(self, params: dict[str, Any]) -> dict[str, Any]:
         return browse.lyrics(self._library(), need(params, "path", str))
 
+    # -- listening: favourites, play counts, playlists (v0.2) --
+
+    def listening_get(self, params: dict[str, Any]) -> dict[str, Any]:
+        return listening.get(self._library())
+
+    def listening_favourite(self, params: dict[str, Any]) -> dict[str, Any]:
+        track_id, on = need(params, "track_id", str), need(params, "on", bool)
+        return {"favourites": listening.set_favourite(self._library(), track_id, on)}
+
+    def listening_played(self, params: dict[str, Any]) -> dict[str, Any]:
+        return listening.played(self._library(), need(params, "track_id", str))
+
+    def playlist_create(self, params: dict[str, Any]) -> dict[str, Any]:
+        name = need(params, "name", str)
+        return {"playlists": listening.create_playlist(self._library(), name)}
+
+    def playlist_rename(self, params: dict[str, Any]) -> dict[str, Any]:
+        playlist_id, name = need(params, "playlist_id", str), need(params, "name", str)
+        return {"playlists": listening.rename_playlist(self._library(), playlist_id, name)}
+
+    def playlist_delete(self, params: dict[str, Any]) -> dict[str, Any]:
+        playlist_id = need(params, "playlist_id", str)
+        return {"playlists": listening.delete_playlist(self._library(), playlist_id)}
+
+    def playlist_set_tracks(self, params: dict[str, Any]) -> dict[str, Any]:
+        playlist_id, ids = need(params, "playlist_id", str), need(params, "track_ids", list)
+        if not all(isinstance(i, str) for i in ids):
+            raise RpcError(INVALID_PARAMS, "track_ids should be a list of track ids.")
+        return {"playlists": listening.set_playlist_tracks(self._library(), playlist_id, ids)}
+
     # -- sources, scan, match --
 
     def sources_add(self, params: dict[str, Any]) -> dict[str, Any]:
@@ -591,6 +629,7 @@ class Server:
                 plan = pipeline.plan_adopt(
                     lib, index, include_not_found=bool(options.get("include_not_found")),
                     matched=bool(options.get("matched")),
+                    unconfirmed=bool(options.get("unconfirmed")),
                 )  # fmt: skip
             elif kind == "lyrics":
                 plan = pipeline.plan_lyrics(lib, index, missing=bool(options.get("missing")))

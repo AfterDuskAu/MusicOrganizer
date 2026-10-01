@@ -29,6 +29,8 @@ Keys (contract section 5), each written by the step named:
 - "aliases": {compare key of an artist name in the rips: {"name": the name the owner
   confirmed is the same artist, "from": the rips' spelling, "decided_at": ISO time}}
   (step 07b: "Biggie Smalls" → "The Notorious B.I.G.")
+- "listening": the owner's favourites, play counts and playlists (v0.2); its shape is
+  in musicorg.listening
 """
 
 from __future__ import annotations

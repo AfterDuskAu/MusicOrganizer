@@ -56,7 +56,8 @@ def test_tracks_carry_what_a_screen_needs(filled: Library) -> None:
     assert song == {
         "track_id": "t_1", "path": SONG, "title": "Song", "artist": "Band",
         "album_artist": "Band", "album": "Album", "year": 2020, "track": 1, "disc": 1,
-        "genre": "Rock", "explicit": True, "match": "auto_details", "format": "mp3",
+        "genre": "Rock", "explicit": True, "match": "auto_details", "acquired": None,
+        "format": "mp3",
         "bitrate_kbps": 320, "embedded_cover": False, "only_copy": False,
         "cover": "Music/Band/Album (2020)/cover.jpg", "lyrics": "synced",
     }  # fmt: skip
@@ -110,14 +111,18 @@ def test_lyrics_only_for_songs_in_the_library(filled: Library, tmp_path: Path) -
             browse.lyrics(filled, outside)
 
 
-def test_an_index_from_v0_1_gains_the_column_in_place(filled: Library) -> None:
-    """Version 1 → 2 must not need a rebuild: that would throw away the matcher's work."""
+@pytest.mark.parametrize("version", [1, 2])
+def test_an_older_index_gains_its_columns_in_place(filled: Library, version: int) -> None:
+    """Versions 1 and 2 must not need a rebuild: that would throw away the matcher's work."""
     with closing(sqlite3.connect(filled.paths.index_file)) as conn, conn:
-        conn.execute("ALTER TABLE library_tracks DROP COLUMN details_json")
-        conn.execute("PRAGMA user_version = 1")
+        conn.execute("ALTER TABLE library_tracks DROP COLUMN match")
+        if version == 1:
+            conn.execute("ALTER TABLE library_tracks DROP COLUMN details_json")
+        conn.execute(f"PRAGMA user_version = {version}")
     assert list(listed(filled)) == [SONG, OTHER]
     with closing(sqlite3.connect(filled.paths.index_file)) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone() == (2,)
+        assert conn.execute("PRAGMA user_version").fetchone() == (3,)
+        assert conn.execute("SELECT match FROM library_tracks").fetchall()
 
 
 def test_rpc_methods(server: rpc.Server, filled: Library) -> None:  # noqa: F811

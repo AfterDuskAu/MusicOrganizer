@@ -126,7 +126,7 @@ MusicBrainz IDs use Picard's standard names and are optional in v0.1. Leave room
 
 `.musicorg/state.json` holds only what tags can't:
 
-- play history (from v0.2)
+- favourites, play counts and playlists (v0.2, `listening`), by `MUSICORG_ID`
 - review decisions, including rejected candidates, so they're never suggested again
 - registered sources with their stable ids
 - superseded-rip links (rip path → `MUSICORG_ID`)

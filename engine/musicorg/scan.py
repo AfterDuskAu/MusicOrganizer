@@ -414,7 +414,9 @@ def _state_deriver(lib: Library, index: Index) -> Callable[[str, Path], str | No
     adopted = {
         state.normalise_path(Path(t["origin_path"]))
         for t in index.library_tracks()
-        if t.get("origin_path") and t.get("source") == "rip_copy"
+        if t.get("origin_path")
+        and t.get("source") == "rip_copy"
+        and t.get("match") != "unconfirmed"  # still waiting for the owner's review
     }
 
     def derive(item: str, path: Path) -> str | None:
@@ -457,6 +459,7 @@ def scan_library(lib: Library, index: Index) -> int:
                 "source_id": _text(found.source_id),
                 "only_copy": 1 if found.only_copy is True else 0,
                 "origin_path": _text(found.origin_path),
+                "match": _text(found.match),
             }
         )
     index.put_library_tracks(rows)

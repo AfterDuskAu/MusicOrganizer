@@ -7,57 +7,175 @@ extension Track {
     var sortYear: Int { year ?? 0 }
 }
 
-// MARK: songs
+// MARK: lists of songs
 
-struct SongsView: View {
+/// One line of a song table. Its id is its place in the list, because a playlist may
+/// hold the same song twice.
+struct TrackRow: Identifiable {
+    let id: Int
+    let track: Track
+    let plays: Int
+}
+
+/// A page of songs: every list in the app (all songs, favourites, a playlist…) is one.
+struct SongList: View {
+    let title: String
+    let tracks: [Track]
+    let empty: String
+    var note: String?
+    var playlist: Playlist?
+
     @Environment(AppModel.self) private var model
-    @State private var selection = Set<Track.ID>()
-    @State private var sortOrder = [KeyPathComparator(\Track.title)]
+    @State private var selection = Set<Int>()
+    @State private var sortOrder: [KeyPathComparator<TrackRow>] = []
 
     var body: some View {
-        let songs = model.songs.sorted(using: sortOrder)
-        Group {
-            if songs.isEmpty {
+        let shown = model.songs(in: tracks)
+        let unsorted = shown.enumerated().map {
+            TrackRow(id: $0.offset, track: $0.element, plays: model.playCount($0.element))
+        }
+        // No column chosen: the list's own order (a playlist's, or newest first).
+        let rows = sortOrder.isEmpty ? unsorted : unsorted.sorted(using: sortOrder)
+        VStack(spacing: 0) {
+            if let note {
+                Text(note)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                Divider()
+            }
+            if tracks.isEmpty {
+                Text(empty)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if rows.isEmpty {
                 ContentUnavailableView.search(text: model.searchText)
             } else {
-                Table(songs, selection: $selection, sortOrder: $sortOrder) {
-                    TableColumn("Title", value: \.title) { track in
-                        // Table cells don't inherit the window's environment on macOS.
-                        SongTitle(track: track).environment(model)
-                    }
-                    .width(min: 200, ideal: 320)
-                    TableColumn("Artist", value: \.artistName)
-                        .width(min: 100, ideal: 200)
-                    TableColumn("Album", value: \.albumName)
-                        .width(min: 100, ideal: 200)
-                    TableColumn("Year", value: \.sortYear) { track in
-                        Text(track.year.map(String.init) ?? "").foregroundStyle(.secondary)
-                    }
-                    .width(46)
-                    TableColumn("Time", value: \.sortDuration) { track in
-                        Text(clockTime(track.durationS))
-                            .monospacedDigit()
-                            .foregroundStyle(.secondary)
-                    }
-                    .width(52)
-                }
-                .contextMenu(forSelectionType: Track.ID.self) { ids in
-                    if let first = ids.first, let index = songs.firstIndex(where: { $0.id == first }) {
-                        Button("Play") { model.player.play(songs, startAt: index) }
-                    }
-                } primaryAction: { ids in
-                    if let first = ids.first, let index = songs.firstIndex(where: { $0.id == first }) {
-                        model.player.play(songs, startAt: index)
-                    }
-                }
+                table(rows)
             }
         }
+        .navigationTitle(title)
+        .navigationSubtitle(tracks.count == 1 ? "1 song" : "\(tracks.count.formatted()) songs")
         .toolbar {
-            ToolbarItem {
-                Button("Shuffle All", systemImage: "shuffle") { model.player.playShuffled(songs) }
-                    .help("Play these songs in a random order")
+            ToolbarItemGroup {
+                Button("Play", systemImage: "play.fill") {
+                    model.player.play(rows.map(\.track))
+                }
+                .help("Play these songs in order")
+                Button("Shuffle", systemImage: "shuffle") {
+                    model.player.playShuffled(rows.map(\.track))
+                }
+                .help("Play these songs in a random order")
             }
         }
+    }
+
+    private func table(_ rows: [TrackRow]) -> some View {
+        Table(rows, selection: $selection, sortOrder: $sortOrder) {
+            TableColumn("") { row in
+                // Table cells don't inherit the window's environment on macOS.
+                FavouriteButton(track: row.track).environment(model)
+            }
+            .width(20)
+            TableColumn("Title", value: \.track.title) { row in
+                SongTitle(track: row.track).environment(model)
+            }
+            .width(min: 200, ideal: 320)
+            TableColumn("Artist", value: \.track.artistName)
+                .width(min: 100, ideal: 200)
+            TableColumn("Album", value: \.track.albumName)
+                .width(min: 100, ideal: 200)
+            TableColumn("Year", value: \.track.sortYear) { row in
+                Text(row.track.year.map(String.init) ?? "").foregroundStyle(.secondary)
+            }
+            .width(46)
+            TableColumn("Plays", value: \.plays) { row in
+                Text(row.plays > 0 ? String(row.plays) : "")
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+            }
+            .width(40)
+            TableColumn("Time", value: \.track.sortDuration) { row in
+                Text(clockTime(row.track.durationS))
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+            }
+            .width(52)
+        }
+        .contextMenu(forSelectionType: Int.self) { ids in
+            menu(for: ids, in: rows)
+        } primaryAction: { ids in
+            if let first = ids.first, let index = rows.firstIndex(where: { $0.id == first }) {
+                model.player.play(rows.map(\.track), startAt: index)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func menu(for ids: Set<Int>, in rows: [TrackRow]) -> some View {
+        let picked = rows.filter { ids.contains($0.id) }
+        let songs = picked.map(\.track)
+        if let first = picked.first, let index = rows.firstIndex(where: { $0.id == first.id }) {
+            Button("Play") { model.player.play(rows.map(\.track), startAt: index) }
+            Divider()
+            if songs.allSatisfy(model.isFavourite) {
+                Button("Remove from Favourites") { model.setFavourite(songs, false) }
+            } else {
+                Button("Add to Favourites") { model.setFavourite(songs, true) }
+            }
+            Menu("Add to Playlist") {
+                ForEach(model.listening.playlists) { playlist in
+                    Button(playlist.name) { model.add(songs, to: playlist) }
+                }
+                if !model.listening.playlists.isEmpty { Divider() }
+                Button("New Playlist…") { model.newPlaylist(with: songs) }
+            }
+            if let playlist, model.searchText.isEmpty {
+                Divider()
+                // Row ids are places in the playlist, so these act on exactly those lines.
+                Button("Remove from This Playlist") {
+                    let kept = playlist.trackIds.enumerated().filter { !ids.contains($0.offset) }
+                    model.setTracks(kept.map(\.element), of: playlist)
+                    selection = []
+                }
+                if picked.count == 1, sortOrder.isEmpty {
+                    Button("Move Up") { move(first.id, by: -1, in: playlist) }
+                        .disabled(first.id == 0)
+                    Button("Move Down") { move(first.id, by: 1, in: playlist) }
+                        .disabled(first.id >= playlist.trackIds.count - 1)
+                }
+            }
+        }
+    }
+
+    private func move(_ place: Int, by step: Int, in playlist: Playlist) {
+        var ids = playlist.trackIds
+        let target = place + step
+        guard ids.indices.contains(place), ids.indices.contains(target) else { return }
+        ids.swapAt(place, target)
+        model.setTracks(ids, of: playlist)
+        selection = [target]
+    }
+}
+
+/// The heart beside a song: filled when it's a favourite.
+struct FavouriteButton: View {
+    let track: Track
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let on = model.isFavourite(track)
+        Button {
+            model.setFavourite([track], !on)
+        } label: {
+            Image(systemName: on ? "heart.fill" : "heart")
+                .foregroundStyle(on ? Color.pink : Color.secondary.opacity(0.5))
+        }
+        .buttonStyle(.plain)
+        .disabled(track.trackId == nil)
+        .help(on ? "Remove from Favourites" : "Add to Favourites")
     }
 }
 
@@ -81,6 +199,11 @@ struct SongTitle: View {
                 Image(systemName: "e.square.fill")
                     .foregroundStyle(.secondary)
                     .help("Explicit")
+            }
+            if track.isUnconfirmed {
+                Image(systemName: "questionmark.circle")
+                    .foregroundStyle(.orange)
+                    .help("Not identified yet: shown under its own name")
             }
             if playing {
                 // No accent colour: it would vanish on a selected (blue) row.

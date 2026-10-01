@@ -21,6 +21,8 @@ public struct Track: Decodable, Identifiable, Hashable, Sendable {
     public let explicit: Bool
     public let onlyCopy: Bool
     public let match: String?
+    /// When the song came into the library (ISO time, so text order is time order).
+    public let acquired: String?
     public let format: String?
     public let bitrateKbps: Int?
     public let cover: String?
@@ -35,6 +37,8 @@ public struct Track: Decodable, Identifiable, Hashable, Sendable {
         path.lastIndex(of: "/").map { String(path[..<$0]) } ?? ""
     }
     public var hasCover: Bool { cover != nil || embeddedCover }
+    /// Copied in under its own name, still waiting to be identified.
+    public var isUnconfirmed: Bool { match == "unconfirmed" }
 
     public init(
         path: String, title: String, artist: String? = nil, albumArtist: String? = nil,
@@ -42,7 +46,7 @@ public struct Track: Decodable, Identifiable, Hashable, Sendable {
         genre: String? = nil, durationS: Double? = nil, explicit: Bool = false,
         onlyCopy: Bool = false, match: String? = nil, format: String? = nil,
         bitrateKbps: Int? = nil, cover: String? = nil, embeddedCover: Bool = false,
-        lyrics: Lyrics = .none, trackId: String? = nil
+        lyrics: Lyrics = .none, trackId: String? = nil, acquired: String? = nil
     ) {
         self.trackId = trackId
         self.path = path
@@ -58,6 +62,7 @@ public struct Track: Decodable, Identifiable, Hashable, Sendable {
         self.explicit = explicit
         self.onlyCopy = onlyCopy
         self.match = match
+        self.acquired = acquired
         self.format = format
         self.bitrateKbps = bitrateKbps
         self.cover = cover
@@ -74,6 +79,52 @@ public struct TrackList: Decodable, Sendable {
 public struct TrackLyrics: Decodable, Sendable {
     public let synced: String?
     public let plain: String?
+}
+
+public struct PlayCount: Decodable, Equatable, Sendable {
+    public let count: Int
+    public let lastPlayed: String?
+
+    public init(count: Int, lastPlayed: String? = nil) {
+        self.count = count
+        self.lastPlayed = lastPlayed
+    }
+}
+
+public struct Playlist: Decodable, Identifiable, Hashable, Sendable {
+    public let id: String
+    public var name: String
+    public var trackIds: [String]
+
+    public init(id: String, name: String, trackIds: [String] = []) {
+        self.id = id
+        self.name = name
+        self.trackIds = trackIds
+    }
+}
+
+/// `listening.get`: the owner's favourites, play counts and playlists. Songs are named
+/// by their track id, which stays the same when a file is renamed.
+public struct Listening: Decodable, Sendable {
+    public var favourites: [String]  // most recent first
+    public var plays: [String: PlayCount]
+    public var playlists: [Playlist]
+
+    public static let empty = Listening(favourites: [], plays: [:], playlists: [])
+
+    public init(favourites: [String], plays: [String: PlayCount], playlists: [Playlist]) {
+        self.favourites = favourites
+        self.plays = plays
+        self.playlists = playlists
+    }
+}
+
+public struct FavouritesAnswer: Decodable, Sendable {
+    public let favourites: [String]
+}
+
+public struct PlaylistsAnswer: Decodable, Sendable {
+    public let playlists: [Playlist]
 }
 
 /// `library.status`: only the parts the app shows.
@@ -116,6 +167,7 @@ public struct Library: Sendable {
     public let albums: [Album]  // by artist, then year, then title
     public let artists: [Artist]  // by name
     private let searchText: [String: String]  // track path → folded "title artist album"
+    private let byID: [String: Track]
 
     public static let empty = Library(tracks: [])
 
@@ -155,16 +207,50 @@ public struct Library: Sendable {
             text[track.path] = fold("\(track.title) \(track.artistName) \(track.albumName)")
         }
         searchText = text
+        var ids: [String: Track] = [:]
+        for track in tracks {
+            if let id = track.trackId { ids[id] = track }
+        }
+        byID = ids
     }
 
-    /// The songs matching every word of `query`, whatever the case or accents.
-    public func search(_ query: String) -> [Track] {
+    /// The songs with these ids, in that order; ids no longer in the library are left out.
+    public func tracks(withIDs ids: [String]) -> [Track] {
+        ids.compactMap { byID[$0] }
+    }
+
+    /// Newest first: what came into the library most recently.
+    public func recentlyAdded(limit: Int = 200) -> [Track] {
+        Array(
+            tracks.filter { $0.acquired != nil }
+                .sorted { ($0.acquired ?? "", $1.path) > ($1.acquired ?? "", $0.path) }
+                .prefix(limit))
+    }
+
+    /// The most played first; songs never played are left out.
+    public func mostPlayed(_ plays: [String: PlayCount], limit: Int = 200) -> [Track] {
+        let counted = tracks.compactMap { track -> (Track, Int)? in
+            guard let id = track.trackId, let count = plays[id]?.count, count > 0 else { return nil }
+            return (track, count)
+        }
+        return Array(counted.sorted { ($0.1, $1.0.path) > ($1.1, $0.0.path) }.map(\.0).prefix(limit))
+    }
+
+    public var unconfirmed: [Track] { tracks.filter(\.isUnconfirmed) }
+
+    /// `tracks`, in their order, narrowed to those matching every word of `query`.
+    public func filter(_ tracks: [Track], _ query: String) -> [Track] {
         let words = fold(query).split(separator: " ")
         if words.isEmpty { return tracks }
         return tracks.filter { track in
             guard let text = searchText[track.path] else { return false }
             return words.allSatisfy { text.contains($0) }
         }
+    }
+
+    /// The songs matching every word of `query`, whatever the case or accents.
+    public func search(_ query: String) -> [Track] {
+        filter(tracks, query)
     }
 
     public func albums(matching query: String) -> [Album] {

@@ -3,6 +3,7 @@ import SwiftUI
 
 struct PlayerBar: View {
     @Binding var showLyrics: Bool
+    @Binding var showNowPlaying: Bool
     @Environment(AppModel.self) private var model
     @State private var showQueue = false
 
@@ -35,15 +36,31 @@ struct PlayerBar: View {
 
     private func nowPlaying(_ player: Player) -> some View {
         HStack(spacing: 10) {
-            CoverView(track: player.current, size: .small, corner: 5)
-                .frame(width: 44, height: 44)
-            if let track = player.current {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(track.title).fontWeight(.medium).lineLimit(1)
-                    Text(track.artistName).font(.callout).foregroundStyle(.secondary).lineLimit(1)
+            Button {
+                showNowPlaying.toggle()
+            } label: {
+                HStack(spacing: 10) {
+                    CoverView(track: player.current, size: .small, corner: 5)
+                        .frame(width: 44, height: 44)
+                    if let track = player.current {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(track.title).fontWeight(.medium).lineLimit(1)
+                            Text(track.artistName)
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                    } else {
+                        Text("Nothing playing").foregroundStyle(.secondary)
+                    }
                 }
-            } else {
-                Text("Nothing playing").foregroundStyle(.secondary)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(player.current == nil && !showNowPlaying)
+            .help(showNowPlaying ? "Back to the library" : "Show the song full size, with its lyrics")
+            if let track = player.current {
+                FavouriteButton(track: track)
             }
         }
     }

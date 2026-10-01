@@ -20,7 +20,7 @@ The engine has two front doors onto the **same functions**. The CLI is for the o
 | **Journal operation** | `commit` · `copy_in` · `supersede` · `restore` (back from `_Replaced/`, by undo) · `move` · `trash` · `write_tags` · `write_sidecar` |
 | **Undo step status** | `planned` (dry run) · `done` · `skipped` (already undone, or the file is gone) · `manual` (restore from the Trash by hand) |
 | **`MUSICORG_SOURCE`** | `youtube_music` · `youtube` · `rip_copy` · `bandcamp` · `cd` · `itunes` · `other` |
-| **`MUSICORG_MATCH`** | `auto_exact` (AUTO match and fingerprint pass) · `user_confirmed` (owner's decision and fingerprint pass) · `manual` (adopt using the owner's `*_fix` values) · `auto_details` (step 09c: the owner's own audio with an AUTO match's official details; no fingerprint check) · `user_details` (step 09c: the same, from the owner's review choice). Absent for adopts without fixes. |
+| **`MUSICORG_MATCH`** | `auto_exact` (AUTO match and fingerprint pass) · `user_confirmed` (owner's decision and fingerprint pass) · `manual` (adopt using the owner's `*_fix` values) · `auto_details` (step 09c: the owner's own audio with an AUTO match's official details; no fingerprint check) · `user_details` (step 09c: the same, from the owner's review choice) · `unconfirmed` (v0.2: a rip copied in under its own names before it was identified, so it can be played; its item stays in `review` or `not_found`, and the copy is upgraded in place when it's decided). Absent for adopts without fixes. |
 
 A fingerprint mismatch puts the item back in `review` with reason `fingerprint_mismatch`. The gate's result is kept in `state.json` (`gate`): a `different` video is never proposed for that rip again, and an `uncertain` one never goes AUTO again.
 
@@ -55,7 +55,7 @@ Global options:
 | `musicorg journal list [--limit N]` | Recent batches (default 20) with counts and open/closed status | no | 03b |
 | `musicorg undo <batch_id> [--dry-run]` | Reverse a batch | yes | 03b, extended 09b |
 | `musicorg plan replace [--only auto\|accepted\|all-eligible] [--limit N] [--stage-only]` | Dry-run plan. `--only` defaults to `all-eligible` (AUTO matches and the owner's choices). `--limit` counts videos: one download serves every rip that matched it. `--stage-only` stops after the fingerprint step for calibration. | yes | 09b |
-| `musicorg plan adopt [--include-not-found] [--matched]` | Dry-run plan: copy `only_copy` items (and optionally all `not_found`) into `Music/`. `--matched` (09c) also copies in `matched_auto` and `matched_user` rips, keeping the owner's own audio, with their match's official details; nothing is downloaded. | yes | 09b, 09c |
+| `musicorg plan adopt [--include-not-found] [--matched] [--unconfirmed]` | Dry-run plan: copy `only_copy` items (and optionally all `not_found`) into `Music/`. `--matched` (09c) also copies in `matched_auto` and `matched_user` rips, keeping the owner's own audio, with their match's official details; nothing is downloaded. `--unconfirmed` (v0.2) also copies in every `review` and `not_found` rip under its own names, tagged `unconfirmed`, without changing its state; a later adopt of the same rip upgrades that copy in place. | yes | 09b, 09c, v0.2 |
 | `musicorg plan tidy` | Dry-run plan: songs the library has twice keep their best copy (lossless; then a CD or iTunes rip over a YouTube conversion; then bitrate; then size; the other goes to `_Replaced/`, its rip linked to the kept file), and the owner's preferred names go into tags and folder names (with the `.lrc` and `cover.jpg`) | yes | 09d |
 | `musicorg names list` / `set <original> <preferred>` / `remove <original>` | The owner's preferred spellings, e.g. `JAŸ-Z` → `Jay Z`. New songs use them at once; `plan tidy` applies them to the library. | `set`/`remove`: yes | 09d |
 | `musicorg plan show <plan_id>` | Print operations and summary | no | 09b |
@@ -94,13 +94,20 @@ Exit codes:
 | `library.status` | — | `{ "items_by_state": {..}, "tracks", "only_copy", "queue": {..}, "warnings": [..] }` |
 | `library.tracks` | — | `{ "root", "tracks": [Track] }`: every song in the library, for the app's screens (v0.2). Slow the first time (it reads each file's tags once), instant afterwards. |
 | `library.lyrics` | `{ "path" }` (a Track's `path`) | `{ "synced", "plain" }`: the text of the song's `.lrc`, and the lyrics in its tags. Either may be null. |
+| `listening.get` | — | `Listening`: the owner's favourites, play counts and playlists (v0.2), kept in `state.json` |
+| `listening.favourite` | `{ "track_id", "on" }` | `{ "favourites": [track_id] }` (most recent first) |
+| `listening.played` | `{ "track_id" }` (the app sends it when a song has played to its end) | `{ "count", "last_played" }` |
+| `playlist.create` | `{ "name" }` | `{ "playlists": [Playlist] }` |
+| `playlist.rename` | `{ "playlist_id", "name" }` | `{ "playlists": [Playlist] }` |
+| `playlist.delete` | `{ "playlist_id" }` (only the list goes; its songs are untouched) | `{ "playlists": [Playlist] }` |
+| `playlist.set_tracks` | `{ "playlist_id", "track_ids": [..] }`: the playlist's songs, in order (add, remove and reorder are all this call) | `{ "playlists": [Playlist] }` |
 | `sources.add` | `{ "path" }` | `{ "source" }` |
 | `sources.list` | — | `{ "sources": [..] }` |
 | `sources.scan` | `{ "source_ids"?: [..] }` | `{ "job_id" }` |
 | `match.run` | `{ "limit"?, "rescan"? }` | `{ "job_id" }` |
 | `review.list` | `{ "state"?: "review"\|"not_found"\|"matched_auto", "offset"?: 0, "limit"?: 50 }` (limit 1–500) | `{ "items": [ReviewItem], "total" }` |
 | `review.decide` | `{ "item_id", "decision", "candidate_id"?, "url"?, "metadata"? }`. `accept` without `candidate_id` takes candidate 1; `metadata` holds `artist_fix`, `title_fix`, `album_fix`, `art_url` for `only_copy`. | `{ "item": ReviewItem }` |
-| `plan.create` | `{ "kind", "options"? }`. Kinds and options: `replace` (`only`, `limit`, `stage_only`), `adopt` (`include_not_found`, `matched`), `lyrics` and `artwork` (`missing`), `tidy` (none), as the CLI's flags. | `{ "plan_id", "summary": { "operations", "downloads", "est_minutes", "low_confidence_adopts", … } }` (the plan's whole summary) |
+| `plan.create` | `{ "kind", "options"? }`. Kinds and options: `replace` (`only`, `limit`, `stage_only`), `adopt` (`include_not_found`, `matched`, `unconfirmed`), `lyrics` and `artwork` (`missing`), `tidy` (none), as the CLI's flags. | `{ "plan_id", "summary": { "operations", "downloads", "est_minutes", "low_confidence_adopts", … } }` (the plan's whole summary) |
 | `plan.get` | `{ "plan_id" }` | `{ "plan" }` |
 | `plan.apply` | `{ "plan_id" }` | `{ "batch_id" }` (jobs go to the queue, and the queue worker starts) |
 | `queue.status` | — | `{ "state", "reason"?, "resume_at"?, "queued", "running", "done", "failed", "needs_review", "daily_count", "daily_cap" }` |
@@ -153,9 +160,13 @@ Standard JSON-RPC codes, plus:
 // The app plays the file and shows the cover by reading them; it never writes to them.
 { "track_id": "t_…", "path": "Music/Artist/Album (2020)/01 Song.m4a", "title": "…", "artist": "…",
   "album_artist": "…", "album": "…", "year": 2020, "track": 1, "disc": 1, "genre": "…",
-  "duration_s": 228.1, "explicit": false, "only_copy": false, "match": "auto_details",
+  "duration_s": 228.1, "explicit": false, "only_copy": false, "match": "auto_details", "acquired": "2026-09-30T10:00:00Z",
   "format": "mp3", "bitrate_kbps": 320, "cover": "Music/Artist/Album (2020)/cover.jpg",
   "embedded_cover": true, "lyrics": "synced" }   // lyrics: "synced" | "plain" | "none"
+
+// Listening and Playlist (v0.2). Songs are named by `track_id` (MUSICORG_ID), which survives renames.
+{ "favourites": ["t_…"], "plays": { "t_…": { "count": 3, "last_played": "2026-10-01T03:00:00Z" } },
+  "playlists": [ { "id": "pl_…", "name": "Road trip", "created_at": "…", "track_ids": ["t_…"] } ] }
 
 // ReviewItem
 { "item_id": "i_3fa2…", "source_path": "…", "parsed": { "artist": "…", "title": "…", "version_tokens": [..], "confidence": 0.9 },

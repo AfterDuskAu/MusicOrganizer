@@ -31,6 +31,8 @@ final class Player {
     @ObservationIgnored var root: URL?
     @ObservationIgnored var onTrackChange: ((Track?) -> Void)?
     @ObservationIgnored var onTick: ((Double) -> Void)?
+    /// A song played to its end (not skipped): that's what counts as a play.
+    @ObservationIgnored var onFinished: ((Track) -> Void)?
     @ObservationIgnored private let audio = AVPlayer()
     @ObservationIgnored private var observers: [Any] = []
 
@@ -171,6 +173,7 @@ final class Player {
 
     private func finished(_ item: AVPlayerItem?) {
         guard item === audio.currentItem else { return }
+        if let current { onFinished?(current) }
         if let track = queue.advance(finished: true) {
             start(track)
         } else {  // the end of the queue

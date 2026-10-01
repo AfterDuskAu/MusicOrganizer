@@ -49,6 +49,8 @@ A SwiftUI app that starts the engine and talks to it (`musicorg serve`). Code in
 - A player: play, pause, next, previous, a position slider, volume, shuffle, repeat, "up next", the space bar and the keyboard's media keys.
 - Lyrics beside the library: timed lines light up as they're sung, and a click on a line jumps there.
 - The sidebar shows how many songs there are and how many rips still wait for review.
+- **Every song playable (owner's choice A):** rips not identified yet are in the library under their own names, marked "not identified yet", and are upgraded in place when they're identified.
+- **A daily player (owner's choice B):** favourites, play counts and Most Played, Recently Added, playlists, and a full-window "now playing" screen with large lyrics.
 
 **Still to build, roughly in this order** (the owner decides after using the first slice):
 
@@ -57,12 +59,10 @@ A SwiftUI app that starts the engine and talks to it (`musicorg serve`). Code in
   - use, reject, only copy, or paste a link
   - see the fingerprint result where there is one
 - **Search box** that plays anything from YouTube Music, and a "download the official version" button on a song. **Downloads only happen when the owner asks** (2026-09-30).
-- **A full-window "now playing" view:** the big cover with the karaoke lyrics. This is also where the timed lyrics get their listening check.
 - **Settings:** preferred names (like "Jay Z"), the library folder, the queue.
 - **What the engine is doing:** the queue, the journal's batches and Undo, in a window.
-- Decisions to make first:
-  - **Playlists:** how they're stored. The suggestion is `.m3u8` files in a `Playlists/` folder, so the files stay the source of truth.
-  - **Play history:** needed for "most played" and for Discover.
+- **Reordering a playlist by dragging**, and exporting one as an `.m3u8` file.
+- **Fixing a song in the app:** right-click to correct its name, artist or cover, or to say its lyrics are wrong.
 - Photonizer's lessons on staying responsive, for when the library is much bigger (812 songs sort instantly today):
   - stable list rows
   - sorting off the main thread

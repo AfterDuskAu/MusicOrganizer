@@ -23,7 +23,7 @@ from musicorg.library import Library
 
 log = logging.getLogger(__name__)
 
-DETAILS_VERSION = 1  # raise it when `_details` gains a field, so old rows are read again
+DETAILS_VERSION = 2  # raise it when `_details` gains a field, so old rows are read again
 
 
 def tracks(lib: Library, index: Index) -> list[dict[str, Any]]:
@@ -117,6 +117,7 @@ def _details(path: Path) -> dict[str, Any]:
         "genre": text(found.genre),
         "explicit": found.explicit is True,
         "match": text(found.match),
+        "acquired": text(found.acquired),
         "format": text(found.source_format),
         "bitrate_kbps": number(found.source_bitrate),
         "embedded_cover": isinstance(found.cover, bytes),

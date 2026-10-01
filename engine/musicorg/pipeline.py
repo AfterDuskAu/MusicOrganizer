@@ -99,6 +99,8 @@ WORK_S_PER_DOWNLOAD = 10  # download, check, fingerprint, tag: a rough figure fo
 WORK_S_PER_ADOPT = 2
 WORK_S_PER_DETAILS = 4  # an adopt with official details: a copy plus an album lookup
 DONE_STATES = ("superseded", "adopted")
+UNCONFIRMED = "unconfirmed"  # MUSICORG_MATCH of a rip copied in before it was identified
+UNCONFIRMED_STATES = ("review", "not_found")
 LOSSLESS = frozenset({"flac", "alac", "wavpack", "pcm_s16le", "pcm_s24le"})
 KEPT_DIR = "kept"
 FILE_CHANGED = "file_changed"
@@ -273,6 +275,7 @@ def plan_adopt(
     *,
     include_not_found: bool = False,
     matched: bool = False,
+    unconfirmed: bool = False,
     config: Config | None = None,
 ) -> fileops.Plan:
     """A dry-run plan copying `only_copy` rips (and with `include_not_found`, every
@@ -282,8 +285,17 @@ def plan_adopt(
 
     With `matched` (step 09c), matched rips come too, keeping their own audio, with their
     match's official details. A rip whose match the fingerprint gate turned down stays
-    out, and so does a WebM, raw AAC or WAV rip (only a download would fix those)."""
+    out, and so does a WebM, raw AAC or WAV rip (only a download would fix those).
+
+    With `unconfirmed` (v0.2), every rip still in `review` or `not_found` is copied in
+    under its own names, tagged `MUSICORG_MATCH=unconfirmed`, so it can be played now.
+    Its state doesn't change: it stays in the review queue. When it's decided later, the
+    usual adopt finds that copy and upgrades it where it is (new tags, new name) instead
+    of copying the rip a second time."""
     states = ("only_copy", "not_found") if include_not_found else ("only_copy",)
+    if unconfirmed:
+        states = tuple(dict.fromkeys(states + UNCONFIRMED_STATES))
+    copies = _unconfirmed_copies(index)
     data = lib.load_state().data
     decisions, gate = state.decisions(data), state.gate(data)
     folders = scan.source_folders(lib, index)
@@ -291,7 +303,7 @@ def plan_adopt(
     skipped: dict[str, int] = {}
     planned: set[str] = set()
     ops: list[fileops.PlanOp] = []
-    low_confidence = unsupported = size = 0
+    low_confidence = unsupported = size = waiting_count = 0
     for item in index.items_in_states(states):
         if item["id"] in busy:
             skipped["already_queued"] = skipped.get("already_queued", 0) + 1
@@ -303,6 +315,18 @@ def plan_adopt(
             skipped["rip_missing"] = skipped.get("rip_missing", 0) + 1
             continue
         suffix = _suffix(item)
+        # Not final: a rip still to be reviewed (a `not_found` one too, unless
+        # --include-not-found says to settle those now).
+        waiting = item["state"] == "review" or (
+            item["state"] == "not_found" and not include_not_found
+        )
+        prior = copies.get(state.normalise_path(rip))
+        if waiting and prior is not None:
+            skipped["already_in_library"] = skipped.get("already_in_library", 0) + 1
+            continue
+        if waiting and suffix not in ADOPT_SUFFIXES:
+            skipped["format_needs_a_download"] = skipped.get("format_needs_a_download", 0) + 1
+            continue
         if suffix not in ADOPT_SUFFIXES:
             unsupported += 1
             ops.append(fileops.PlanOp(action="unsupported", item_id=item["id"],
@@ -318,7 +342,9 @@ def plan_adopt(
             and decision[k].strip()
         }
         trusted = bool(fixes) or (item.get("parse_confidence") or 0) >= TRUSTED_PARSE
-        if not trusted:
+        if waiting:
+            waiting_count += 1
+        elif not trusted:
             low_confidence += 1
         names = _adopt_names(item, fixes, trusted, rip)
         meta = naming.TrackMeta(
@@ -326,18 +352,26 @@ def plan_adopt(
             album=names.get("album"), year=names.get("year"), track=names.get("track"),
             ext=suffix, source_file=rip.name,
         )  # fmt: skip
-        target = _free_target(lib, naming.library_path(meta, lib.root), planned)
+        ideal = naming.library_path(meta, lib.root)
+        stays = prior is not None and _fold(PurePosixPath(naming.MUSIC_DIR, *ideal.parts)) == (
+            _fold(PurePosixPath(prior))
+        )
+        target = ideal if stays else _free_target(lib, ideal, planned)
         planned.add(_fold(target))
         rel_target = PurePosixPath(naming.MUSIC_DIR, *target.parts).as_posix()
-        size += source.size
+        if prior is None:
+            size += source.size
         ops.append(
             fileops.PlanOp(
-                action="adopt",
+                action="adopt_unconfirmed" if waiting else "adopt",
                 item_id=item["id"],
                 item_state=item["state"],
                 source=source,
                 target=rel_target,
-                target_folder=fileops.FolderCheck.of(lib, lib.paths.music / target.parent),
+                # An upgrade that keeps its name has nothing new to check in the folder.
+                target_folder=None
+                if stays
+                else fileops.FolderCheck.of(lib, lib.paths.music / target.parent),
                 params={"rip": str(rip), "names": names, "fixes": fixes, "trusted": trusted},
             )
         )
@@ -388,15 +422,16 @@ def plan_adopt(
                 )  # fmt: skip
                 (ops if action == "adopt_details" else linked).append(op)
         ops.extend(linked)  # after the copies they link to
-    adopts = len(ops) - unsupported - details - duplicates
+    adopts = len(ops) - unsupported - details - duplicates - waiting_count
     summary = {
         "operations": len(ops),
         "downloads": 0,
         "adopts": adopts,
+        "unconfirmed": waiting_count,
         "with_details": details,
         "duplicates": duplicates,
         "unsupported_format": unsupported,
-        "est_minutes": estimate_minutes(0, adopts, config)
+        "est_minutes": estimate_minutes(0, adopts + waiting_count, config)
         + math.ceil(details * WORK_S_PER_DETAILS / 60),
         "days": 0,
         "disk_mb": round(size / 1e6, 1),
@@ -441,6 +476,44 @@ def _chosen(
             if c["video_id"] == wanted:
                 return c
     return candidates[0]
+
+
+def _unconfirmed_copies(index: Index) -> dict[str, str]:
+    """Rips already in the library as an unconfirmed copy: the rip's path (normalised)
+    → the copy's path, relative to the library root."""
+    return {
+        state.normalise_path(Path(t["origin_path"])): str(t["rel_path"])
+        for t in index.library_tracks()
+        if t.get("match") == UNCONFIRMED and t.get("origin_path")
+    }
+
+
+def _unconfirmed_copy(lib: Library, index: Index, rip: Path) -> Path | None:
+    """The library file that is `rip`'s unconfirmed copy, checked against its own tags
+    (the index is only a cache). None if there isn't one."""
+    rel = _unconfirmed_copies(index).get(state.normalise_path(rip))
+    if rel is None:
+        return None
+    path = lib.root / Path(*PurePosixPath(rel).parts)
+    if not path.is_file():
+        return None
+    found = tags.read_tags(path)
+    same_rip = isinstance(found.origin_path, str) and state.normalise_path(
+        Path(found.origin_path)
+    ) == state.normalise_path(rip)
+    return path if found.match == UNCONFIRMED and same_rip else None
+
+
+def _move_upgraded(ctx: JobContext, index: Index, path: Path, rel_target: Path) -> Path:
+    """Move an upgraded copy to `Music/<rel_target>` if that isn't where it is, and
+    forget its old index row. Returns where it is now."""
+    index.remove_library_tracks([_rel_path(ctx.lib, path)])
+    if _fold(_music_rel(ctx.lib, path)) == _fold(rel_target):
+        return path
+    old_folder = path.parent
+    final = fileops.move(ctx.batch, path, rel_target)
+    fileops.remove_empty_folders(ctx.lib, old_folder)
+    return final
 
 
 def _suffix(item: dict[str, Any]) -> str:
@@ -923,6 +996,7 @@ def _track_row(
         "source_id": text(written.source_id),
         "only_copy": 1 if written.only_copy is True else 0,
         "origin_path": text(written.origin_path),
+        "match": text(written.match),
     }
 
 
@@ -951,16 +1025,28 @@ def adopt_job(ctx: JobContext) -> Outcome:
             return _link_duplicate(ctx, index, op)
 
         rip = Path(op.params["rip"])
-        staged = fileops.stage_copy(ctx.batch, rip)
-        probe = tags.probe(staged)
-        current = tags.read_tags(staged)
-        new_tags = _adopt_tags(op, current, probe, rip)
-        fileops.write_tags(ctx.batch, staged, new_tags)
         assert op.target is not None
         rel = PurePosixPath(op.target).relative_to(naming.MUSIC_DIR)
-        final = fileops.commit(ctx.batch, staged, Path(*rel.parts))
+        prior = _unconfirmed_copy(ctx.lib, index, rip)
+        if op.action == "adopt_unconfirmed" and prior is not None:
+            return Outcome.done(f"Already in the library as {prior.name}.")
+        if prior is not None:  # decided since it was copied in: upgrade that copy
+            probe = tags.probe(prior)
+            current = tags.read_tags(prior)
+            new_tags = _adopt_tags(op, current, probe, rip)
+            fileops.write_tags(ctx.batch, prior, new_tags)
+            final = _move_upgraded(ctx, index, prior, Path(*rel.parts))
+        else:
+            staged = fileops.stage_copy(ctx.batch, rip)
+            probe = tags.probe(staged)
+            current = tags.read_tags(staged)
+            new_tags = _adopt_tags(op, current, probe, rip)
+            fileops.write_tags(ctx.batch, staged, new_tags)
+            final = fileops.commit(ctx.batch, staged, Path(*rel.parts))
         written = tags.merge(current, new_tags)
         index.put_library_tracks([_track_row(ctx.lib, final, written, probe.duration_s)])
+        if op.action == "adopt_unconfirmed":
+            return Outcome.done(f"Copied in, still to be reviewed, as {final.name}.")
         index.set_state(item_id, "adopted", [])
     return Outcome.done(f"Copied in as {final.name}.")
 
@@ -972,7 +1058,8 @@ def _adopt_with_details(ctx: JobContext, index: Index, op: fileops.PlanOp) -> Ou
     names = state.names(ctx.lib.load_state().data)
     candidate = _preferred(Candidate.from_dict(op.params["candidate"]), names)
     album = _preferred_album(_album(candidate, index), names)
-    staged = fileops.stage_copy(ctx.batch, rip)
+    prior = _unconfirmed_copy(ctx.lib, index, rip)
+    staged = prior if prior is not None else fileops.stage_copy(ctx.batch, rip)
     probe = tags.probe(staged)
     extras = _extras(ExtrasQuery(candidate, album, probe.duration_s, _versions(op), index))
     current = tags.read_tags(staged)
@@ -984,7 +1071,11 @@ def _adopt_with_details(ctx: JobContext, index: Index, op: fileops.PlanOp) -> Ou
         compilation=album.artist == naming.VARIOUS_ARTISTS, ext=rip.suffix.lower(),
         source_file=rip.name,
     )  # fmt: skip
-    final = fileops.commit(ctx.batch, staged, naming.library_path(meta, ctx.lib.root))
+    target = naming.library_path(meta, ctx.lib.root)
+    if prior is not None:  # copied in unconfirmed earlier: upgrade that copy where it is
+        final = _move_upgraded(ctx, index, prior, target)
+    else:
+        final = fileops.commit(ctx.batch, staged, target)
     written = tags.merge(current, change)
     index.put_library_tracks([_track_row(ctx.lib, final, written, probe.duration_s)])
     _write_sidecars(ctx, final, extras)
@@ -1049,8 +1140,10 @@ def _adopt_tags(
         acquired=_now(),
         only_copy=True,
         origin_path=str(rip),
-        match="manual" if fixes else None,
+        match="manual" if fixes else tags.REMOVE,
     )
+    if op.action == "adopt_unconfirmed":  # not decided yet: neither only-copy nor matched
+        change.only_copy, change.match = None, UNCONFIRMED
     if not isinstance(current.musicorg_id, str):
         change.musicorg_id = tags.new_track_id()
     if op.params.get("trusted"):
@@ -1082,6 +1175,11 @@ def _link_duplicate(ctx: JobContext, index: Index, op: fileops.PlanOp) -> Outcom
     for track in index.library_tracks_with_source_id(video_id):
         path = ctx.lib.root / Path(*PurePosixPath(track["rel_path"]).parts)
         if path.is_file() and track.get("musicorg_id"):
+            prior = _unconfirmed_copy(ctx.lib, index, Path(op.params["rip"]))
+            if prior is not None:  # its unconfirmed copy is now a known duplicate
+                fileops.supersede(ctx.batch, prior)
+                index.remove_library_tracks([_rel_path(ctx.lib, prior)])
+                fileops.remove_empty_folders(ctx.lib, prior.parent)
             _mark_replaced(ctx.lib, index, [op], str(track["musicorg_id"]))
             return Outcome.done(f"A duplicate of {path.name}, which is kept; linked to it.")
     return Outcome.done("Its better copy isn't in the library, so nothing was linked.")
@@ -1663,6 +1761,9 @@ def describe(plan: fileops.Plan) -> list[str]:
         elif op.action == "adopt":
             unsure = "" if op.params.get("trusted") else "  [keeps the rip's own names]"
             lines.append(f"{op.op_id:>5}  adopt    {rip}  →  {op.target}{unsure}")
+        elif op.action == "adopt_unconfirmed":
+            lines.append(f"{op.op_id:>5}  adopt    {rip}  →  {op.target}  [unconfirmed: stays "
+                         "in review]")  # fmt: skip
         elif op.action == "duplicate":
             assert op.source is not None
             lines.append(f"{op.op_id:>5}  set aside {op.source.path}  (a duplicate of "

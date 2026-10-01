@@ -22,6 +22,12 @@ final class AppModel {
     private(set) var status: LibraryStatus?
     private(set) var root: URL?
     private(set) var engineVersion: String?
+    private(set) var listening = Listening.empty
+    private(set) var favourites = Set<String>()
+    /// Something to tell the owner (a change the engine refused), shown as an alert.
+    var notice: String?
+    /// A name being asked for: a new playlist, or a new name for one.
+    var namePrompt: NamePrompt?
     var searchText = ""
 
     let player = Player()
@@ -35,6 +41,7 @@ final class AppModel {
     init() {
         player.onTrackChange = { [weak self] track in self?.showLyrics(for: track) }
         player.onTick = { [weak self] time in self?.lyrics.follow(time) }
+        player.onFinished = { [weak self] track in self?.countPlay(of: track) }
     }
 
     // MARK: starting and stopping
@@ -143,6 +150,10 @@ final class AppModel {
         player.root = root
         library = built
         status = try? await connection.call("library.status", as: LibraryStatus.self)
+        if let found = try? await connection.call("listening.get", as: Listening.self) {
+            listening = found
+            favourites = Set(found.favourites)
+        }
     }
 
     private func engineSaid(_ method: String) async {
@@ -161,6 +172,108 @@ final class AppModel {
     var songs: [Track] { library.search(searchText) }
     var albums: [Album] { library.albums(matching: searchText) }
     var artists: [Artist] { library.artists(matching: searchText) }
+
+    func songs(in collection: [Track]) -> [Track] { library.filter(collection, searchText) }
+
+    // MARK: favourites, play counts, playlists (kept by the engine in the library)
+
+    func isFavourite(_ track: Track) -> Bool {
+        track.trackId.map(favourites.contains) ?? false
+    }
+
+    func playCount(_ track: Track) -> Int {
+        track.trackId.flatMap { listening.plays[$0]?.count } ?? 0
+    }
+
+    func setFavourite(_ tracks: [Track], _ on: Bool) {
+        let ids = tracks.compactMap(\.trackId)
+        for id in ids {  // shown at once; the engine's answer then settles it
+            if on { favourites.insert(id) } else { favourites.remove(id) }
+        }
+        change { connection in
+            for id in ids {
+                let answer = try await connection.call(
+                    "listening.favourite", ["track_id": id, "on": on], as: FavouritesAnswer.self)
+                self.listening.favourites = answer.favourites
+                self.favourites = Set(answer.favourites)
+            }
+        }
+    }
+
+    private func countPlay(of track: Track) {
+        guard let id = track.trackId else { return }
+        change { connection in
+            let count = try await connection.call(
+                "listening.played", ["track_id": id], as: PlayCount.self)
+            self.listening.plays[id] = count
+        }
+    }
+
+    func playlist(_ id: String) -> Playlist? { listening.playlists.first { $0.id == id } }
+
+    func tracks(in playlist: Playlist) -> [Track] { library.tracks(withIDs: playlist.trackIds) }
+
+    /// Ask for a name, then make the playlist (with `tracks` in it, if any).
+    func newPlaylist(with tracks: [Track] = []) {
+        namePrompt = NamePrompt(title: "New Playlist", button: "Create", name: "") { name in
+            let ids = tracks.compactMap(\.trackId)
+            self.change { connection in
+                var answer = try await connection.call(
+                    "playlist.create", ["name": name], as: PlaylistsAnswer.self)
+                if !ids.isEmpty, let made = answer.playlists.last {
+                    answer = try await connection.call(
+                        "playlist.set_tracks", ["playlist_id": made.id, "track_ids": ids],
+                        as: PlaylistsAnswer.self)
+                }
+                self.listening.playlists = answer.playlists
+            }
+        }
+    }
+
+    func rename(_ playlist: Playlist) {
+        namePrompt = NamePrompt(title: "Rename Playlist", button: "Rename", name: playlist.name) {
+            name in
+            self.playlistCall("playlist.rename", ["playlist_id": playlist.id, "name": name])
+        }
+    }
+
+    func delete(_ playlist: Playlist) {
+        playlistCall("playlist.delete", ["playlist_id": playlist.id])
+    }
+
+    func add(_ tracks: [Track], to playlist: Playlist) {
+        setTracks(playlist.trackIds + tracks.compactMap(\.trackId), of: playlist)
+    }
+
+    func setTracks(_ ids: [String], of playlist: Playlist) {
+        if let index = listening.playlists.firstIndex(where: { $0.id == playlist.id }) {
+            listening.playlists[index].trackIds = ids
+        }
+        playlistCall("playlist.set_tracks", ["playlist_id": playlist.id, "track_ids": ids])
+    }
+
+    private func playlistCall(_ method: String, _ params: [String: Any]) {
+        change { connection in
+            let answer = try await connection.call(method, params, as: PlaylistsAnswer.self)
+            self.listening.playlists = answer.playlists
+        }
+    }
+
+    /// Ask the engine for a change; if it says no, say why and show what's really saved.
+    private func change(_ work: @escaping @MainActor (RPCConnection) async throws -> Void) {
+        guard let connection = engine?.connection else { return }
+        Task {
+            do {
+                try await work(connection)
+            } catch {
+                notice = error.localizedDescription
+                if let found = try? await connection.call("listening.get", as: Listening.self) {
+                    listening = found
+                    favourites = Set(found.favourites)
+                }
+            }
+        }
+    }
 
     // MARK: lyrics
 
@@ -208,6 +321,14 @@ final class AppModel {
     private var appVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.2.0"
     }
+}
+
+struct NamePrompt: Identifiable {
+    let id = UUID()
+    let title: String
+    let button: String
+    let name: String
+    let done: (String) -> Void
 }
 
 private struct Hello: Decodable {

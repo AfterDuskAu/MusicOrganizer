@@ -231,6 +231,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Also copy in matched rips, keeping your own audio, with their official "
         "details (no downloads).",
     )
+    p.add_argument(
+        "--unconfirmed",
+        action="store_true",
+        help="Also copy in rips still waiting for review or not found, under their own "
+        "names, so they can be played now. They stay in the review queue.",
+    )
     add(
         plan,
         "tidy",
@@ -790,7 +796,11 @@ def _cmd_plan_adopt(args: argparse.Namespace) -> int:
     with library.open(_library_root(args), write=True, command="plan adopt") as lib:
         with open_index(lib.paths, write=False) as index:
             plan = pipeline.plan_adopt(
-                lib, index, include_not_found=args.include_not_found, matched=args.matched
+                lib,
+                index,
+                include_not_found=args.include_not_found,
+                matched=args.matched,
+                unconfirmed=args.unconfirmed,
             )
     return _print_new_plan(plan, args.json)
 
@@ -920,6 +930,9 @@ def _print_plan_summary(plan: fileops.Plan) -> None:
             print("  Calibration only (--stage-only): nothing will be committed or replaced")
     else:
         print(f"  {s.get('adopts', 0):,} rip(s) to copy in as they are")
+        if s.get("unconfirmed"):
+            print(f"  {s['unconfirmed']:,} rip(s) still to be reviewed, copied in under their "
+                  "own names so they can be played (they stay in the review queue)")  # fmt: skip
         if s.get("duplicates"):
             print(f"  {s['duplicates']:,} duplicate rip(s) linked to the best copy, not copied")
         if s.get("matched"):

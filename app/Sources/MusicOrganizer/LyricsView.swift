@@ -4,6 +4,7 @@ import SwiftUI
 /// The lyrics beside the library: timed lines light up as they're sung, and a click on a
 /// line jumps there.
 struct LyricsView: View {
+    var large = false
     @Environment(AppModel.self) private var model
 
     var body: some View {
@@ -18,14 +19,14 @@ struct LyricsView: View {
             case .plain(let text):
                 ScrollView {
                     Text(text)
-                        .font(.title3)
+                        .font(large ? .title : .title3)
                         .lineSpacing(6)
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(20)
                 }
             case .synced(let lines):
-                TimedLyrics(lines: lines)
+                TimedLyrics(lines: lines, large: large)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -41,17 +42,18 @@ struct LyricsView: View {
 
 private struct TimedLyrics: View {
     let lines: [LyricLine]
+    let large: Bool
     @Environment(AppModel.self) private var model
 
     var body: some View {
         let current = model.lyrics.currentLine
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 14) {
+                LazyVStack(alignment: .leading, spacing: large ? 22 : 14) {
                     ForEach(lines) { line in
                         let sung = line.id == current
                         Text(line.text.isEmpty ? "♪" : line.text)
-                            .font(.title2.weight(sung ? .bold : .medium))
+                            .font((large ? Font.largeTitle : .title2).weight(sung ? .bold : .medium))
                             .foregroundStyle(sung ? .primary : .tertiary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .contentShape(Rectangle())

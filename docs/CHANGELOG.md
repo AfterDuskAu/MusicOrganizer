@@ -9,7 +9,22 @@
 - **The index is now version 2:** `library_tracks` gained a `details_json` column, where `browse` keeps what it read from each file's tags, beside the size and modified time it was read at. A version 1 index is upgraded in place the next time the library is opened for writing. No rebuild, so the matcher's saved work is kept. The first `library.tracks` reads every file's tags once (about 8 seconds for 812 songs on the iMac); after that it takes under a tenth of a second.
 - **CI** builds the app and runs its tests on both Macs.
 - Deviations: `CLAUDE.md`'s "Not in v0.1" list became "Not yet", since the Mac app is no longer on it. SwiftUI table cells don't inherit the window's environment on macOS, so the app passes its model to them by hand.
-- Not built yet: the review queue in the app, searching and downloading from YouTube Music, playlists, play history, settings. Decisions for the owner are in `docs/ROADMAP.md`.
+- Not built yet: the review queue in the app, searching and downloading from YouTube Music, settings. Decisions for the owner are in `docs/ROADMAP.md`.
+
+2026-10-01, later. After using the first slice the owner chose two things: every song playable now, then a daily player.
+
+- **Unconfirmed copies** (`musicorg plan adopt --unconfirmed`): every rip still in `review` or `not_found` is copied into the library under its own names, tagged `MUSICORG_MATCH=unconfirmed` (a new enum value), so it can be played. Its state doesn't change, so the review queue is as it was.
+  - When such a rip is decided later (a match chosen, or only-copy), the usual adopt **upgrades that copy where it is**: new tags, then a move to its new name. The rip isn't copied a second time, the track keeps its `MUSICORG_ID`, and undo puts the unconfirmed copy back.
+  - If it turns out to be a duplicate of a better copy, it's set aside in `_Replaced/`.
+  - A rescan or index rebuild doesn't mistake an unconfirmed copy for an adopted rip.
+  - WebM, raw AAC and WAV rips are left out, as with any adopt.
+  - No lyrics or covers are looked up for these: without a confirmed match there's nothing safe to look up. They keep whatever picture the rip had.
+- **The index is now version 3:** `library_tracks.match`. Versions 1 and 2 are upgraded in place.
+- **`listening`** (new module): favourites, play counts and playlists, in `state.json` under `"listening"`, by `MUSICORG_ID`, so they survive renames and upgrades. The contract already set `state.json` aside for play history. RPC: `listening.get`, `listening.favourite`, `listening.played`, `playlist.create`, `playlist.rename`, `playlist.delete`, `playlist.set_tracks`.
+  - Deviation from the roadmap's suggestion (`.m3u8` files in a `Playlists/` folder): a new folder the engine writes needs a contract change and new `fileops` operations. `state.json` needed neither. Exporting a playlist as `.m3u8` can come later as an export.
+  - A play is counted when a song plays to its end, not when it's skipped.
+- `library.tracks` also gives `acquired` (when the song came into the library).
+- **The app:** Favourites, Recently Added, Most Played and Not Identified Yet in the sidebar; playlists (new, rename, delete, add songs, remove, move up and down); a heart beside every song; a Plays column; a full-window "now playing" screen with the cover and large lyrics (click the cover in the player bar; Esc closes it).
 
 ## 0.1.1 — in progress
 

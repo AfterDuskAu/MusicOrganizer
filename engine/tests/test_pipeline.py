@@ -30,6 +30,7 @@ from musicorg import (
     pipeline,
     queue,
     review,
+    scan,
     state,
     tags,
     youtube,
@@ -1096,3 +1097,168 @@ def test_empty_folders_are_cleared(lib: Library, index: Index, adopted: Path) ->
     run_queue(lib)
     assert not (lib.paths.music / "Old Name").exists()
     assert adopted.is_file()  # a folder with a song in it is never touched
+
+
+# ---- unconfirmed copies (v0.2): play it now, review it later -------------------------
+
+
+def waiting_item(index: Index, iid: str, state_: str, confidence: float = 0.95) -> None:
+    item = index.item(iid)
+    assert item is not None
+    item["state"], item["parse_confidence"] = state_, confidence
+    index.put_items([item])
+
+
+def adopt_unconfirmed(lib: Library, index: Index) -> str:
+    plan = pipeline.plan_adopt(lib, index, unconfirmed=True)
+    batch_id = pipeline.apply(lib, index, plan.plan_id).batch_id
+    run_queue(lib)
+    return batch_id
+
+
+def test_unreviewed_rips_come_in_unconfirmed_and_stay_in_review(
+    lib: Library, index: Index, rips: Path, samples: dict[str, Path]
+) -> None:
+    in_review = own_rip(index, rips, samples["mp3"], "Band - Melody", state_="review")
+    lost = adopt_item(index, rips, samples["m4a"], "Band - Rare Song")
+    waiting_item(index, lost, "not_found")
+    webm = adopt_item(index, rips, samples["mp3"], "Band - Video")
+    waiting_item(index, webm, "review")
+    item = index.item(webm)
+    assert item is not None
+    item["ext"] = ".webm"
+    index.put_items([item])
+
+    plan = pipeline.plan_adopt(lib, index, unconfirmed=True)
+    assert (plan.summary["unconfirmed"], plan.summary["adopts"]) == (2, 0)
+    assert plan.summary["skipped"] == {"format_needs_a_download": 1}
+    assert any("[unconfirmed: stays in review]" in line for line in pipeline.describe(plan))
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+
+    assert music_files(lib) == ["Band/Unsorted/Melody.mp3", "Band/Unsorted/Rare Song.m4a"]
+    written = tags.read_tags(lib.paths.music / "Band" / "Unsorted" / "Melody.mp3")
+    assert (written.match, written.only_copy, written.source) == ("unconfirmed", None, "rip_copy")
+    assert (written.artist, written.title, written.source_id) == ("Band", "Melody", None)
+    assert written.origin_path == str(rips / "Band - Melody.mp3")
+    # Still in the review queue, and a rescan must not call them adopted.
+    assert item_state(index, in_review)[0] == "review"
+    assert item_state(index, lost)[0] == "not_found"
+    assert item_state(index, webm)[0] == "review"  # not marked unsupported: not decided
+    derive = scan._state_deriver(lib, index)
+    assert derive(in_review, rips / "Band - Melody.mp3") is None
+    assert {t["match"] for t in index.library_tracks()} == {"unconfirmed"}
+
+    # A second plan has nothing to do.
+    again = pipeline.plan_adopt(lib, index, unconfirmed=True)
+    assert again.summary["unconfirmed"] == 0
+    assert again.summary["skipped"]["already_in_library"] == 2
+
+
+def test_undo_of_unconfirmed_copies(
+    lib: Library, index: Index, rips: Path, samples: dict[str, Path]
+) -> None:
+    iid = own_rip(index, rips, samples["mp3"], "Band - Melody", state_="review")
+    batch_id = adopt_unconfirmed(lib, index)
+    pipeline.undo(lib, batch_id)
+    assert music_files(lib) == []
+    assert index.library_tracks() == []
+    assert item_state(index, iid)[0] == "review"
+
+
+def test_a_match_chosen_later_upgrades_the_unconfirmed_copy_in_place(
+    lib: Library,
+    index: Index,
+    rips: Path,
+    samples: dict[str, Path],
+    album_lookups: list[tuple[str, str]],
+) -> None:
+    iid = own_rip(index, rips, samples["mp3"], "Band - Melody", state_="review")
+    adopt_unconfirmed(lib, index)
+    first = tags.read_tags(lib.paths.music / "Band" / "Unsorted" / "Melody.mp3")
+
+    index.set_state(iid, "matched_user", [])  # the owner picked the match
+    plan = pipeline.plan_adopt(lib, index, matched=True)
+    assert plan.summary["with_details"] == 1
+    batch_id = pipeline.apply(lib, index, plan.plan_id).batch_id
+    run_queue(lib)
+
+    # One file, not two: the copy was retagged and moved, the rip wasn't copied again.
+    assert [f for f in music_files(lib) if f.endswith(".mp3")] == [
+        "Band/Tunes (2020)/03 Melody.mp3"
+    ]
+    assert not (lib.paths.music / "Band" / "Unsorted").exists()
+    written = tags.read_tags(lib.paths.music / "Band" / "Tunes (2020)" / "03 Melody.mp3")
+    assert (written.match, written.source_id, written.album) == ("user_details", VIDEO_A, "Tunes")
+    assert written.musicorg_id == first.musicorg_id  # the same library track throughout
+    assert item_state(index, iid) == ("adopted", [])
+    assert [t["rel_path"] for t in index.library_tracks()] == [
+        "Music/Band/Tunes (2020)/03 Melody.mp3"
+    ]
+    assert list(lib.paths.replaced.rglob("*.mp3")) == []
+
+    # Undo: back to the unconfirmed copy, and back in the queue it came from.
+    pipeline.undo(lib, batch_id)
+    assert [f for f in music_files(lib) if f.endswith(".mp3")] == ["Band/Unsorted/Melody.mp3"]
+    back = tags.read_tags(lib.paths.music / "Band" / "Unsorted" / "Melody.mp3")
+    assert (back.match, back.source_id, back.album) == ("unconfirmed", None, first.album)
+    assert item_state(index, iid) == ("matched_user", [])
+    assert [t["match"] for t in index.library_tracks()] == ["unconfirmed"]
+
+
+def test_only_copy_decided_later_upgrades_the_unconfirmed_copy(
+    lib: Library, index: Index, rips: Path, samples: dict[str, Path]
+) -> None:
+    kept = adopt_item(index, rips, samples["mp3"], "Band - Rare Song")
+    waiting_item(index, kept, "review")
+    renamed = adopt_item(index, rips, samples["m4a"], "Band - Odd Name")
+    waiting_item(index, renamed, "review")
+    adopt_unconfirmed(lib, index)
+
+    index.set_state(kept, "only_copy", [])
+    index.set_state(renamed, "only_copy", [])
+    with state.edit(lib.paths.state_file) as st:
+        st.data.setdefault("decisions", {})[renamed] = {
+            "decision": "only_copy", "title_fix": "Proper Name"}  # fmt: skip
+    plan = pipeline.plan_adopt(lib, index)
+    assert plan.summary["adopts"] == 2
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+
+    assert music_files(lib) == ["Band/Unsorted/Proper Name.m4a", "Band/Unsorted/Rare Song.mp3"]
+    same = tags.read_tags(lib.paths.music / "Band" / "Unsorted" / "Rare Song.mp3")
+    assert (same.only_copy, same.match) == (True, None)
+    fixed = tags.read_tags(lib.paths.music / "Band" / "Unsorted" / "Proper Name.m4a")
+    assert (fixed.only_copy, fixed.match, fixed.title) == (True, "manual", "Proper Name")
+    assert item_state(index, kept) == item_state(index, renamed) == ("adopted", [])
+    assert len(index.library_tracks()) == 2
+
+
+def test_an_unconfirmed_copy_that_turns_out_to_be_a_duplicate_is_set_aside(
+    lib: Library,
+    index: Index,
+    rips: Path,
+    samples: dict[str, Path],
+    album_lookups: list[tuple[str, str]],
+) -> None:
+    good = own_rip(index, rips, samples["m4a"], "Band - Melody", kbps=256)
+    worse = own_rip(index, rips, samples["mp3"], "band melody lyrics", state_="review", kbps=96)
+    plan = pipeline.plan_adopt(lib, index, matched=True, unconfirmed=True)
+    assert (plan.summary["with_details"], plan.summary["unconfirmed"]) == (1, 1)
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    assert len([f for f in music_files(lib) if f.endswith((".mp3", ".m4a"))]) == 2
+
+    index.set_state(worse, "matched_user", [])  # the owner says it's the same song
+    plan = pipeline.plan_adopt(lib, index, matched=True)
+    assert plan.summary["duplicates"] == 1
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+
+    assert [f for f in music_files(lib) if f.endswith((".mp3", ".m4a"))] == [
+        "Band/Tunes (2020)/03 Melody.m4a"
+    ]
+    assert len(list(lib.paths.replaced.rglob("*.mp3"))) == 1  # kept, out of the way
+    assert item_state(index, good)[0] == "adopted"
+    assert item_state(index, worse)[0] == "superseded"
+    assert len(index.library_tracks()) == 1
