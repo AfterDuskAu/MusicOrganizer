@@ -342,6 +342,7 @@ class FakeYouTube:
         self.asked: list[str] = []
         self.found = lyrics.Found("not_found")
         self.at_video_length = lyrics.Found("not_found")
+        self.at_video_length_song = lyrics.Found("not_found")
         monkeypatch.setattr(youtube, "sources", self.sources)
         monkeypatch.setattr(youtube, "fetch_audio", self.fetch_audio)
         monkeypatch.setattr(youtube, "fetch_captions", self.fetch_captions)
@@ -370,7 +371,11 @@ class FakeYouTube:
         return self.captions[video_id][int(number)][1]
 
     def find(self, query: lyrics.Query, *, cache: Any = None) -> lyrics.Found:
-        return self.found if query.video_id else self.at_video_length
+        if query.video_id:
+            return self.found  # the song's lyrics, YouTube Music's included
+        if query.duration_s == 260.0:
+            return self.at_video_length  # LRCLIB's record of the video's length
+        return self.at_video_length_song  # LRCLIB's record for the song (YouTube not asked)
 
 
 VIDEO, SONG_ID = "videoVVVVVV", "songSSSSSSS"
@@ -388,7 +393,9 @@ def fake(monkeypatch: pytest.MonkeyPatch) -> FakeYouTube:
 
 
 def timed(lib: Library, **kw: Any) -> videolyrics.Timed:
+    """What the Karaoke button asks for (`full`), unless told otherwise."""
     kw.setdefault("song_video_id", SONG_ID)
+    kw.setdefault("full", True)
     with open_index(lib.paths, write=True) as index:
         return videolyrics.for_video(lib, index, title="Song", artist="Band", video_id=VIDEO, **kw)
 
@@ -413,6 +420,29 @@ def test_lyrics_are_timed_by_the_sound(lib: Library, fake: FakeYouTube) -> None:
     # Asked again: nothing is fetched a second time.
     fake.asked.clear()
     assert timed(lib) == found and fake.asked == []
+
+
+def test_youtube_is_asked_nothing_until_its_asked_for(lib: Library, fake: FakeYouTube) -> None:
+    # A video that's simply playing: only what's known already is given.
+    assert timed(lib, full=False, video_duration_s=260.0) == videolyrics.Timed(None, settled=False)
+    assert fake.asked == []
+    # A record on LRCLIB really timed to the video is known without YouTube…
+    moved = videolyrics.to_lrc([(at + 31.0, text) for at, text in LINES])
+    fake.at_video_length = lyrics.Found("synced", synced=moved, source="LRCLIB")
+    fake.found, own = lyrics.Found("not_found"), fake.found
+    assert timed(lib, full=False, video_duration_s=260.0).synced is None  # nothing to check it by
+    fake.at_video_length_song = own  # LRCLIB's lyrics for the song itself
+    found = timed(lib, full=False, video_duration_s=260.0)
+    assert (found.how, found.synced) == ("lrclib", moved) and fake.asked == []
+    # … and the album's lyrics filed under the video's length are still refused.
+    fake.at_video_length = lyrics.Found("synced", synced=LRC, source="LRCLIB")
+    assert timed(lib, full=False, video_duration_s=260.0).synced is None and fake.asked == []
+
+    # Asked for (Karaoke): it's worked out, and from then on it's known.
+    fake.found = own
+    assert timed(lib).how == "audio" and fake.asked
+    fake.asked.clear()
+    assert timed(lib, full=False).how == "audio" and fake.asked == []
 
 
 def test_captions_that_agree_leave_the_sounds_answer(lib: Library, fake: FakeYouTube) -> None:
@@ -613,10 +643,16 @@ def test_a_video_youtube_wont_show_times_nothing(
 
 
 def test_rpc_lyrics_for_video(opened: rpc.Server, fake: FakeYouTube) -> None:  # noqa: F811
-    found = result(opened, "lyrics.for_video", title="Song", artist="Band", video_id=VIDEO,
-                   song_video_id=SONG_ID, video_duration_s=258, song_duration_s=224.5)  # fmt: skip
+    asked = dict(title="Song", artist="Band", video_id=VIDEO, song_video_id=SONG_ID,
+                 video_duration_s=258, song_duration_s=224.5)  # fmt: skip
+    # A video that's playing: nothing is asked of YouTube, and nothing is known yet.
+    found = result(opened, "lyrics.for_video", **asked)
     assert set(found) == {"synced", "plain", "how", "source", "note"}
+    assert found["synced"] is None and fake.asked == []
+    # The Karaoke button: the whole thing.
+    found = result(opened, "lyrics.for_video", **asked, full=True)
     assert found["how"] == "audio" and found["synced"].startswith("[00:")
+    assert code(opened, "lyrics.for_video", **asked, full="yes") == rpc.INVALID_PARAMS
     assert "lyrics.for_video" in rpc.SLOW_METHODS
     assert code(opened, "lyrics.for_video", title="Song") == rpc.INVALID_PARAMS
     assert code(opened, "lyrics.for_video", title="Song", video_id="not an id") == rpc.USER_ERROR

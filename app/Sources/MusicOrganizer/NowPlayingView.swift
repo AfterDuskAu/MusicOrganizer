@@ -136,6 +136,9 @@ private struct VideoControls: View {
                     }
                     .help("Give the video the whole screen (Esc brings it back)")
                 }
+                if player.showsPicture {
+                    KaraokeButton()  // a video from YouTube, or a saved one
+                }
                 if let video = player.video {
                     SaveVideoButton(video: video)
                     // The song itself, for a song being played from YouTube Music: a
@@ -150,19 +153,49 @@ private struct VideoControls: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-            } else if player.video != nil, model.lyrics.hasLyrics,
-                model.lyrics.videoTiming != .none
+            } else if model.lyrics.videoTiming == .failed {
+                Text("The lyrics couldn't be lined up with this video.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            } else if let video = player.video, !video.keepsTime, model.lyrics.hasLyrics,
+                model.lyrics.forVideo != video.source.videoId, model.lyrics.videoTiming == .none
             {
                 Text(
-                    model.lyrics.videoTiming == .working
-                        ? "Timing the lyrics to this video…"
-                        : "The lyrics couldn't be timed to this video, so no line is lit up.")
+                    "The video isn't the same length as the song, so the lyrics aren't timed. "
+                        + "Karaoke lines them up.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
         }
         .padding(.top, 6)
+    }
+}
+
+/// Line the lyrics up with the video that's playing. Nothing is asked of YouTube for
+/// this until the button is clicked (owner, 2026-10-02); once done for a video it's
+/// remembered, and that video's lyrics are in time by themselves from then on.
+private struct KaraokeButton: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        if model.lyrics.videoTiming == .working {
+            HStack(spacing: 6) {
+                ProgressView().controlSize(.small)
+                Text("Lining up the lyrics…").font(.callout).foregroundStyle(.secondary)
+            }
+        } else if model.lyricsFitVideo {
+            Label("Lyrics in time", systemImage: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+                .font(.callout)
+                .help("The lyrics were lined up with this video")
+        } else {
+            Button("Karaoke", systemImage: "music.mic") { model.karaoke() }
+                .help(
+                    "Line the lyrics up with this video, by its sound and its captions. It asks "
+                        + "YouTube for them once; after that this video is remembered.")
+        }
     }
 }
 

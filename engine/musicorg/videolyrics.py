@@ -804,8 +804,17 @@ def for_video(
     song_video_id: str | None = None,
     song_duration_s: float | None = None,
     video_path: str | None = None,
+    full: bool = False,
 ) -> Timed:
-    """The song's lyrics, timed to this video of it. `song_path` is the library song
+    """The song's lyrics, timed to this video of it.
+
+    **Without `full`, YouTube is asked nothing** (the owner, 2026-10-02: timing every
+    video that's played would spend requests on videos nobody is reading the lyrics
+    of). The answer is then what's already known: lyrics timed to this video on an
+    earlier request, or else a record on LRCLIB of the video's length that passes the
+    check in 4 below. With `full` (the app's Karaoke button) everything below is done.
+
+    `song_path` is the library song
     that's playing (its own `.lrc` and its own sound are what's lined up); without it,
     `song_video_id` is the song on YouTube Music, and without that the song is looked
     for by name. `video_path` is the video itself when it's a saved one in the library:
@@ -843,6 +852,8 @@ def for_video(
         kept.get("synced") or index.cached_search(key, max_age_days=MISS_CACHE_DAYS)
     ):
         return Timed(kept.get("synced"), kept.get("how"), kept.get("source"), kept.get("note"))
+    if not full:
+        return _already_known(index, title, artist, video_duration_s, song_file, song_duration_s)
 
     found = _work_out(
         index, title=title, artist=artist, video_id=video_id,
@@ -853,6 +864,34 @@ def for_video(
         index.put_search(key, {"synced": found.synced, "how": found.how,
                                "source": found.source, "note": found.note})  # fmt: skip
     return found
+
+
+def _already_known(
+    index: Index,
+    title: str,
+    artist: str,
+    video_duration_s: float | None,
+    song_file: Path | None,
+    song_duration_s: float | None,
+) -> Timed:
+    """What can be said without asking YouTube anything: a record on LRCLIB of the
+    video's length whose times differ from the song's own. (LRCLIB is asked, at its own
+    pace; YouTube Music's lyrics aren't, so a song whose only timed lyrics are there has
+    nothing to check a record against, and gets none.)"""
+    lrc = None
+    if song_file is not None and song_file.with_suffix(".lrc").is_file():
+        lrc = lyrics.check_lrc(
+            song_file.with_suffix(".lrc").read_text(encoding="utf-8", errors="replace")
+        )
+    if lrc is None:
+        lrc = lyrics.find(
+            lyrics.Query(title=title, artist=artist, album=None, duration_s=song_duration_s),
+            cache=index,
+        ).synced
+    cut = _video_cut_record(index, title, artist, video_duration_s, lines_of(lrc) if lrc else [])
+    if cut is not None:
+        return Timed(cut, "lrclib", "LRCLIB")
+    return Timed(None, settled=False)  # not looked into yet: nothing to remember
 
 
 def _work_out(

@@ -101,6 +101,9 @@ public struct TrackList: Decodable, Sendable {
 public struct TrackLyrics: Decodable, Sendable {
     public let synced: String?
     public let plain: String?
+    /// From `lyrics.for_video` only: how the lyrics were timed to the video ("audio",
+    /// "captions", "caption_text", "lrclib").
+    public let how: String?
 }
 
 /// One result of a YouTube Music search (the engine's Candidate).

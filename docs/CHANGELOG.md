@@ -244,6 +244,15 @@
 - **What it can't do:** a video with its own mix or a live take and no captions; a video that plays the song 2 % or more fast or slow (none of the real ones did); a line that starts within about a second of a cut can land on the wrong side of it.
 - Not tried in the running app (the owner asked for changes only). Tried for real through `musicorg serve` on a scratch library: the four songs above, as a library song and as songs played from YouTube Music.
 
+2026-10-02, morning. **Karaoke: lyrics are lined up with a video only when asked** (the owner: timing every video that's played would spend requests on YouTube for videos nobody is reading the lyrics of; "next to download video… a Karaoke… when clicked it does anything possible").
+
+- **By itself, the app now asks YouTube nothing for a video's lyrics.** When a video starts, `lyrics.for_video` is called without `full`: it gives lyrics already timed to that video (by Karaoke, on an earlier play), or a record on LRCLIB of the video's length that passes the check (its times differ from the song's own), or nothing. With nothing, it's as it was before last night: the song's lyrics stay, lit up if the video is as long as the song (within 2 s), unlit if not.
+- **The Karaoke button** (Local Visualizer, beside Save Video, for a video from YouTube and for a saved one) asks with `full: true`: the sound line-up and the captions, as built last night. It shows "Lining up the lyrics…", then "Lyrics in time". Once done for a video the answer is kept for 30 days, so that video is in time by itself afterwards.
+- One difference from before last night stays: the LRCLIB record "of the video's length" is no longer trusted on its length alone, since it was wrong on 5 of 9 videos.
+- **Rule 8** (reading a video's audio to fingerprint it): the owner put the decision off. It now happens only when Karaoke is clicked.
+- For the record: timing a video never counted against the daily download limit (that counts songs and videos saved through the queue). What it cost was 1 to 3 requests to YouTube the first time a video was played.
+- Not tried in the running app: the owner's Mac was busy with another test, so only the engine's tests for this (34) and one build were run here, at low priority; the full suite ran in CI.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

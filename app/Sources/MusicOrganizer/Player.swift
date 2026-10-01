@@ -140,10 +140,10 @@ final class Player {
     /// What the Cover / Video switch says. A saved video counts as "Video" by itself.
     var pictureWanted: Bool { current?.isVideo == true ? !pictureHidden : videoOn }
 
-    /// The sound that's playing is a video's own (from YouTube), not the song's. A video
-    /// is rarely the song second for second, so the song's timed lyrics don't fit it
-    /// until they've been timed to the video.
-    var soundIsVideo: Bool { loaded == .video }
+    /// False while a video that isn't as long as the song is playing: the song's timed
+    /// lyrics can't fit it. (A video of the same length may still be a little out:
+    /// that's what the Karaoke button puts right.)
+    var lyricsInTime: Bool { loaded != .video || video?.keepsTime ?? true }
 
     // MARK: what the screens call
 

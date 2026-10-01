@@ -135,11 +135,11 @@ final class AppModel {
         player.onTrackChange = { [weak self] track in self?.showLyrics(for: track) }
         player.onTick = { [weak self] time in
             guard let self else { return }
-            // A music video is rarely the song second for second (an intro, a scene in
-            // the middle), so while one plays no line is lit up until the lyrics have
-            // been timed to that video.
+            // A music video that isn't as long as the song isn't the song second for
+            // second, so the song's timed lyrics are shown without a line lit up;
+            // lyrics timed to the video itself are lit.
             let videoId = player.video?.source.videoId
-            let inTime = !player.soundIsVideo || (videoId != nil && lyrics.forVideo == videoId)
+            let inTime = player.lyricsInTime || (videoId != nil && lyrics.forVideo == videoId)
             if lyrics.timed != inTime { lyrics.timed = inTime }
             lyrics.follow(time)
         }
@@ -890,8 +890,7 @@ final class AppModel {
             return
         }
         // Looked up for now and never saved: a song played from YouTube Music, and a
-        // saved video (which keeps no lyrics of its own, and is rarely the song second
-        // for second: its lyrics are timed to it by the engine).
+        // saved video (which keeps no lyrics of its own).
         let lookUpId = track.videoId ?? (track.isVideo ? track.sourceId : nil)
         guard let connection = engine?.connection, track.lyrics != .none || lookUpId != nil
         else {
@@ -900,23 +899,19 @@ final class AppModel {
         }
         lyrics.show(.loading, for: track.path)
         Task {
-            let found: TrackLyrics?
-            if track.isVideo, let videoId = track.sourceId {
-                // A saved video: the song's lyrics, timed to this video's own sound.
-                var asked: [String: Any] = [
-                    "title": track.title, "video_id": videoId, "video_path": track.path,
-                ]
-                if let artist = track.artist ?? track.albumArtist { asked["artist"] = artist }
-                if let length = track.durationS { asked["video_duration_s"] = length }
+            var found: TrackLyrics?
+            if track.isVideo, let asked = videoLyricsRequest(for: track, full: false) {
+                // A saved video: lyrics already timed to it (by Karaoke, earlier), if any.
                 found = try? await connection.call(
-                    "lyrics.for_video", asked, as: TrackLyrics.self)
-            } else if let lookUpId {
+                    "lyrics.for_video", asked.params, as: TrackLyrics.self)
+            }
+            if found?.synced == nil, let lookUpId {
                 var asked: [String: Any] = ["title": track.title, "video_id": lookUpId]
                 if let artist = track.artist { asked["artist"] = artist }
                 if let album = track.album { asked["album"] = album }
                 if let length = track.durationS { asked["duration_s"] = length }
                 found = try? await connection.call("lyrics.find", asked, as: TrackLyrics.self)
-            } else {
+            } else if found == nil {
                 found = try? await connection.call(
                     "library.lyrics", ["path": track.path], as: TrackLyrics.self)
             }
@@ -924,7 +919,7 @@ final class AppModel {
             guard lyrics.trackPath == track.path, lyrics.forVideo == nil else { return }
             let lines = found?.synced.map(LRC.parse) ?? []
             if !lines.isEmpty {
-                lyrics.show(.synced(lines), for: track.path)
+                lyrics.show(.synced(lines), for: track.path, how: found?.how)
                 lyrics.follow(player.clock.time)
             } else if let plain = found?.plain, !plain.isEmpty {
                 lyrics.show(.plain(plain), for: track.path)
@@ -934,11 +929,34 @@ final class AppModel {
         }
     }
 
-    /// A song's video is rarely the song second for second (an intro, a scene in the
-    /// middle, a different ending), so lyrics timed to the song are out of step with it.
-    /// The engine times them to the video: it lines the video's sound up with the song's
-    /// and moves each line to where it's sung in the video. Until its answer comes, and
-    /// if it can't be done, the words are shown with no line lit up. Nothing is saved.
+    /// What `lyrics.for_video` is asked for the video that's playing: a song's video
+    /// from YouTube (`showing`), or a saved video played from the library. `full` is
+    /// the Karaoke button; without it the engine asks YouTube nothing.
+    private func videoLyricsRequest(
+        for track: Track, showing: ShowingVideo? = nil, full: Bool
+    ) -> (videoId: String, params: [String: Any])? {
+        guard let artist = track.artist ?? track.albumArtist else { return nil }
+        var asked: [String: Any] = ["title": track.title, "artist": artist, "full": full]
+        if track.isVideo, let videoId = track.sourceId {
+            asked["video_id"] = videoId
+            asked["video_path"] = track.path
+            if let length = track.durationS { asked["video_duration_s"] = length }
+            return (videoId, asked)
+        }
+        guard let showing else { return nil }
+        asked["video_id"] = showing.source.videoId
+        asked["video_duration_s"] = showing.source.length
+        if track.videoId == nil { asked["song_path"] = track.path }  // a library song
+        if let songId = track.sourceId { asked["song_video_id"] = songId }
+        if let length = track.durationS { asked["song_duration_s"] = length }
+        return (showing.source.videoId, asked)
+    }
+
+    /// A song's video has started. A video is rarely the song second for second, so the
+    /// song's timed lyrics may be out of step with it. What's done by itself costs
+    /// YouTube nothing: lyrics already timed to this video (by Karaoke, on an earlier
+    /// play) are shown; otherwise the song's own stay, lit up only if the video is as
+    /// long as the song. Lining them up properly is the Karaoke button (`karaoke`).
     private func showLyrics(forVideo showing: ShowingVideo?) {
         guard let track = player.current else { return }
         guard let showing else {
@@ -948,29 +966,56 @@ final class AppModel {
         }
         let videoId = showing.source.videoId
         guard lyrics.forVideo != videoId else { return }  // already timed to this video
-        guard let connection = engine?.connection, let artist = track.artist ?? track.albumArtist
+        guard let connection = engine?.connection,
+            let asked = videoLyricsRequest(for: track, showing: showing, full: false)
         else { return }
-        var asked: [String: Any] = [
-            "title": track.title, "artist": artist, "video_id": videoId,
-            "video_duration_s": showing.source.length,
-        ]
-        if track.videoId == nil { asked["song_path"] = track.path }  // a library song
-        if let songId = track.sourceId { asked["song_video_id"] = songId }
-        if let length = track.durationS { asked["song_duration_s"] = length }
+        Task {
+            let found = try? await connection.call(
+                "lyrics.for_video", asked.params, as: TrackLyrics.self)
+            guard player.video?.source.videoId == videoId, player.current == track else { return }
+            let lines = found?.synced.map(LRC.parse) ?? []
+            guard !lines.isEmpty else { return }  // nothing known: the song's words stay
+            lyrics.show(.synced(lines), for: track.path, forVideo: videoId, how: found?.how)
+            lyrics.follow(player.clock.time)
+        }
+    }
+
+    /// The Karaoke button: line the lyrics up with the video that's playing, whatever it
+    /// takes. The engine reads the video's sound and its captions from YouTube (once:
+    /// the answer is kept, so the same video is in time by itself from then on).
+    func karaoke() {
+        guard let track = player.current, let connection = engine?.connection,
+            lyrics.videoTiming != .working,
+            let asked = videoLyricsRequest(for: track, showing: player.video, full: true)
+        else { return }
+        let saved = track.isVideo
         lyrics.videoTiming = .working
         Task {
             let found = try? await connection.call(
-                "lyrics.for_video", asked, as: TrackLyrics.self)
-            guard player.video?.source.videoId == videoId, player.current == track else { return }
+                "lyrics.for_video", asked.params, as: TrackLyrics.self)
+            guard player.current == track,
+                saved || player.video?.source.videoId == asked.videoId
+            else { return }
             let lines = found?.synced.map(LRC.parse) ?? []
-            guard !lines.isEmpty else {  // it couldn't be done: the song's words stay, untimed
+            guard !lines.isEmpty else {
                 lyrics.videoTiming = .failed
                 return
             }
-            lyrics.show(.synced(lines), for: track.path, forVideo: videoId)
+            lyrics.show(
+                .synced(lines), for: track.path, forVideo: saved ? nil : asked.videoId,
+                how: found?.how)
             lyrics.videoTiming = .none
             lyrics.follow(player.clock.time)
         }
+    }
+
+    /// The lyrics on screen were lined up with the video that's playing (by its sound
+    /// or its captions), not just taken as the song's.
+    var lyricsFitVideo: Bool {
+        guard let track = player.current, lyrics.trackPath == track.path,
+            ["audio", "captions", "caption_text"].contains(lyrics.how ?? "")
+        else { return false }
+        return track.isVideo || lyrics.forVideo == player.video?.source.videoId
     }
 
     // MARK: the space bar
@@ -1043,6 +1088,8 @@ final class LyricsModel {
     private(set) var trackPath: String?
     /// Set when these lyrics are timed to the song's video (by its id), not the song.
     private(set) var forVideo: String?
+    /// How the engine timed them to a video ("audio", "captions"…), when it did.
+    private(set) var how: String?
     private(set) var currentLine: Int?
     /// False while the lyrics' times don't fit what's playing (a music video that isn't
     /// the song second for second): no line is lit up then.
@@ -1064,10 +1111,13 @@ final class LyricsModel {
         }
     }
 
-    func show(_ state: State, for path: String?, forVideo videoId: String? = nil) {
+    func show(
+        _ state: State, for path: String?, forVideo videoId: String? = nil, how: String? = nil
+    ) {
         self.state = state
         trackPath = path
         forVideo = videoId
+        self.how = how
         currentLine = nil
     }
 

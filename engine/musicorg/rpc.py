@@ -828,8 +828,10 @@ class Server:
 
     def lyrics_for_video(self, params: dict[str, Any]) -> dict[str, Any]:
         """A song's lyrics timed to its video, for the app to show while the video
-        plays: the video's sound lined up with the song's, checked against the video's
-        captions. Looked up and worked out, never saved in the library."""
+        plays. Without `full` YouTube is asked nothing: only what's already known is
+        given. With it (the app's Karaoke button) the video's sound is lined up with
+        the song's and checked against the video's captions. Never saved in the
+        library."""
         video_length = want(params, "video_duration_s", (int, float))
         song_length = want(params, "song_duration_s", (int, float))
         with self._index(write=True) as index:  # the index keeps what's worked out
@@ -843,6 +845,7 @@ class Server:
                 song_video_id=want(params, "song_video_id", str),
                 song_duration_s=float(song_length) if song_length is not None else None,
                 video_path=want(params, "video_path", str),
+                full=bool(want(params, "full", bool, False)),
             )  # fmt: skip
         return found.to_dict()
 
