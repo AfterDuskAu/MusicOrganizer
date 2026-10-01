@@ -63,6 +63,11 @@ A SwiftUI app that starts the engine and talks to it (`musicorg serve`). Code in
   - use, reject, only copy, or paste a link
   - see the fingerprint result where there is one
 - **Settings:** preferred names (like "Jay Z"), the library folder, the queue.
+  - **Accounts, all in one place** (owner, 2026-10-01): YouTube, Spotify, Apple Music and any later service sign in from one Settings section.
+    - **YouTube:** an opt-in sign-in using the browser's login, for age-restricted songs and, with YouTube Music Premium, the 256 kbps AAC audio. A spare account is suggested, since an account used for downloading can be restricted. To be tested before it's promised.
+    - **Spotify and Apple Music:** for bringing playlists and libraries across (v0.3), never for their audio, which is locked. The export-file route needs no sign-in and stays the default.
+    - Logins are kept in the Mac's Keychain or the app's config folder, never in the library or the repo.
+- **Better audio from YouTube** (owner asked, 2026-10-01): keep YouTube's Opus audio (about 160 kbps) as it is, without converting it, as an option beside AAC. Needs a change to rule 6 (format 140 only), a remux instead of a re-encode, and a way for the app to play Opus. Converting Opus to another format is never done: it lowers quality.
 - **What the engine is doing:** the queue, the journal's batches and Undo, in a window.
 - **Reordering a playlist by dragging**, and exporting one as an `.m3u8` file.
 - Photonizer's lessons on staying responsive, for when the library is much bigger (812 songs sort instantly today):
