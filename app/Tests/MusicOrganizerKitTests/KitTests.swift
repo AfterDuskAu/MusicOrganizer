@@ -681,6 +681,28 @@ final class SongVideoTests: XCTestCase {
         XCTAssertNotNil(engineDate(status.dailyResumeAt))
     }
 
+    func testTheDailyLimitCounter() {
+        XCTAssertEqual(DailyUse(used: 1, limit: 250).text, "1/250")
+        XCTAssertEqual(DailyUse(used: 10, limit: 400).text, "10/400")
+        XCTAssertEqual(DailyUse(used: 0, limit: 250).level, .safe)
+        XCTAssertEqual(DailyUse(used: 149, limit: 250).level, .safe)
+        XCTAssertEqual(DailyUse(used: 150, limit: 250).level, .middling)
+        XCTAssertEqual(DailyUse(used: 212, limit: 250).level, .middling)
+        XCTAssertEqual(DailyUse(used: 213, limit: 250).level, .nearlyOut)
+        XCTAssertEqual(DailyUse(used: 250, limit: 250).level, .nearlyOut)
+        // The limit was lowered below what's been used: still red, and it says so.
+        XCTAssertEqual(DailyUse(used: 300, limit: 250).level, .nearlyOut)
+        XCTAssertTrue(DailyUse(used: 300, limit: 250).explained.contains("limit is reached"))
+        // A bigger limit moves the colours with it.
+        XCTAssertEqual(DailyUse(used: 213, limit: 400).level, .safe)
+        let fromStatus = DailyUse(QueueStatus(queued: 3, dailyCount: 12, dailyCap: 250))
+        XCTAssertEqual(fromStatus, DailyUse(used: 12, limit: 250, waiting: 3))
+        XCTAssertTrue(fromStatus.explained.hasPrefix("12 of your 250 downloads"))
+        XCTAssertTrue(fromStatus.explained.contains("3 more are waiting"))
+        XCTAssertFalse(fromStatus.explained.contains("limit is reached"))
+        XCTAssertFalse(DailyUse(used: 1, limit: 250).explained.contains("waiting to download"))
+    }
+
     func testHundredsOfDownloadsAreListedShortly() {
         func download(_ id: Int, _ state: String) -> PendingDownload {
             PendingDownload(jobId: id, state: state, videoId: "v\(id)")

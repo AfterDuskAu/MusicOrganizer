@@ -353,6 +353,53 @@ public struct QueueStatus: Decodable, Equatable, Sendable {
     }
 }
 
+/// How much of the daily download limit is used: the counter at the bottom of the
+/// sidebar ("12/250"), and how close to the limit that is.
+public struct DailyUse: Equatable, Sendable {
+    public enum Level: Sendable {
+        /// Plenty left (green), a good part used (orange), nearly all used (red).
+        case safe, middling, nearlyOut
+    }
+
+    public let used: Int
+    public let limit: Int
+    /// Downloads asked for that haven't started: they'll count as they start.
+    public let waiting: Int
+
+    public init(used: Int, limit: Int, waiting: Int = 0) {
+        self.used = used
+        self.limit = limit
+        self.waiting = waiting
+    }
+
+    public init(_ status: QueueStatus) {
+        self.init(used: status.dailyCount, limit: status.dailyCap, waiting: status.queued)
+    }
+
+    public var text: String { "\(used)/\(limit)" }
+
+    /// Green under three fifths of the limit, orange from there, red from 85%.
+    public var level: Level {
+        guard limit > 0 else { return .nearlyOut }
+        let share = Double(used) / Double(limit)
+        return share >= 0.85 ? .nearlyOut : share >= 0.6 ? .middling : .safe
+    }
+
+    /// What the counter says when the pointer rests on it.
+    public var explained: String {
+        var words = "\(used) of your \(limit) downloads from YouTube in the last 24 hours. Songs "
+            + "and videos count alike; playing and searching don't count. Each one comes off "
+            + "the count a day after it was downloaded."
+        if used >= limit {
+            words += " The limit is reached: downloads carry on by themselves as it frees up."
+        }
+        if waiting > 0 {
+            words += " \(waiting) more \(waiting == 1 ? "is" : "are") waiting to download."
+        }
+        return words + " The limit is set in Settings."
+    }
+}
+
 /// A time as the engine writes it ("2026-10-02T09:30:00.250000Z"), with or without
 /// parts of a second.
 public func engineDate(_ text: String?) -> Date? {

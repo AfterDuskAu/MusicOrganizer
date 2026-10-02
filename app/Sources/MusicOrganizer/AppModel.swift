@@ -89,6 +89,7 @@ final class AppModel {
     /// Downloads that couldn't even be queued, and why (by video id).
     private(set) var startProblems: [String: String] = [:]
     @ObservationIgnored private var watchingDownloads = false
+    @ObservationIgnored private var watchingDailyLimit = false
     /// What Download Automatically last started from.
     @ObservationIgnored private var lastAuto: [DiscoverSeed]?
 
@@ -291,6 +292,7 @@ final class AppModel {
             // Downloads asked for before the app was last closed carry on in the engine.
             await refreshDownloads()
             watchDownloads()
+            watchDailyLimit()
         } catch {
             phase = .failed(error.localizedDescription)
         }
@@ -666,7 +668,31 @@ final class AppModel {
 
     private func refreshQueueStatus() async {
         guard let connection = engine?.connection else { return }
-        queueStatus = try? await connection.call("queue.status", as: QueueStatus.self)
+        if let found = try? await connection.call("queue.status", as: QueueStatus.self),
+            found != queueStatus
+        {
+            queueStatus = found
+        }
+    }
+
+    /// How much of the daily download limit is used: the sidebar's counter. It's the
+    /// engine's own count, so everything that uses the limit is in it: songs, videos,
+    /// Download Automatically, and downloads made from the command line.
+    var dailyUse: DailyUse? { queueStatus.map(DailyUse.init) }
+
+    /// Keep the counter right while nothing is happening too: a download leaves the
+    /// count when it's a day old, which nothing announces. Asked once a minute (the
+    /// engine reads it from the library's own queue file; YouTube isn't asked).
+    private func watchDailyLimit() {
+        guard !watchingDailyLimit else { return }
+        watchingDailyLimit = true
+        Task {
+            while engine != nil, !stopping {
+                await refreshQueueStatus()
+                try? await Task.sleep(for: .seconds(60))
+            }
+            watchingDailyLimit = false
+        }
     }
 
     /// The owner said yes: the planned downloads go to the queue.
@@ -755,7 +781,13 @@ final class AppModel {
             let found = try? await connection.call("queue.downloads", as: DownloadsAnswer.self)
         else { return }
         let onTheirWay = Set(pending.filter(\.isActive).map(\.jobId))
+        // A download counts towards the daily limit as it starts: the counter is asked
+        // for again whenever a different one is downloading, or the list got shorter.
+        let before = (pending.filter(\.isRunning).map(\.jobId), pending.count)
         if pending != found.downloads { pending = found.downloads }
+        if before != (pending.filter(\.isRunning).map(\.jobId), pending.count) {
+            await refreshQueueStatus()
+        }
         if !onTheirWay.subtracting(found.downloads.map(\.jobId)).isEmpty { try? await load() }
     }
 
@@ -891,6 +923,7 @@ final class AppModel {
             do {
                 engineSettings = try await connection.call(
                     "settings.set", ["daily_cap": downloads], as: EngineSettings.self)
+                await refreshQueueStatus()  // the sidebar's counter shows the new limit
             } catch {
                 notice = error.localizedDescription
             }

@@ -655,6 +655,33 @@ private struct NameSheet: View {
     }
 }
 
+/// How much of the daily download limit is used, always in view: "12/250", green while
+/// there's plenty left, orange from three fifths of it, red from 85%.
+private struct DailyLimitCounter: View {
+    let use: DailyUse
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Circle().fill(colour).frame(width: 8, height: 8)
+            Text(use.text)
+                .font(.callout.weight(.semibold))
+                .monospacedDigit()
+                .foregroundStyle(colour)
+            Text("downloads today").foregroundStyle(.secondary)
+        }
+        .help(use.explained)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var colour: Color {
+        switch use.level {
+        case .safe: .green
+        case .middling: .orange
+        case .nearlyOut: .red
+        }
+    }
+}
+
 /// The bottom of the sidebar: what's in the library, and what's still waiting.
 private struct StatusFooter: View {
     @Environment(AppModel.self) private var model
@@ -662,6 +689,10 @@ private struct StatusFooter: View {
     var body: some View {
         HStack(alignment: .bottom) {
         VStack(alignment: .leading, spacing: 3) {
+            if let use = model.dailyUse {
+                DailyLimitCounter(use: use)
+                    .padding(.bottom, 3)
+            }
             Text("\(model.library.tracks.count.formatted()) songs")
             if let status = model.status, status.waitingForReview > 0 {
                 Text("\(status.waitingForReview.formatted()) waiting for review")

@@ -309,6 +309,16 @@
 - Checked: engine tests for the three engine changes; the app's words and the shortened list in its Kit tests (39 pass); the Find page, the note in each of its states, and the Downloads page with twelve made-up downloads waiting (a paused scratch library, so nothing was fetched) looked at in the unseen snapshot. **Not clicked in the running app, and no real batch was downloaded by it.**
 - Found on the way: a long line of text with `fixedSize` beside a `Spacer` in that note left the whole page undrawn in the snapshot (sidebar and player bar included). The note now gives its text the room there is and lets it wrap.
 
+2026-10-02, 4 pm. **Song lists keep their roomy rows, and the daily limit has a counter** (the owner, with two pictures: "the spacious grid… is how it starts, as soon as anything is clicked it goes super condensed. I like the spacious one"; and "a number readily available, keeping track of the YouTube daily limit… 1/250… green… orange… red").
+
+- **The rows.** A song list opened with rows 34 points high and dropped to 24 at the first click, squashed together with the covers cut off. Fix A-1 (2026-10-01) set the table's row height once, to stop it measuring every row; SwiftUI puts its own height back whenever the selection changes, and nothing set ours again. `FixedRows` now watches the table's height and puts it straight back. This is what the owner meant on 2026-10-02 by "the grid… gets larger and smaller depending on the input": the fix that day (set column widths) answered a different thing.
+  - Reproduced before the fix and checked after it in the unseen copy of the app, with a row selected by a temporary line (removed).
+- **The counter.** The bottom of the sidebar shows downloads in the last 24 hours against the limit: "12/250 downloads today", with a dot. Green under three fifths of the limit, orange from there, red from 85%. Resting the pointer on it says what counts.
+  - It's the engine's own count (`queue.status`: `daily_count` and `daily_cap`), the same one the queue stops at, so everything that uses the limit is in it: songs, saved videos, Download Automatically, downloads run from the command line. Playing and searching don't use the limit and aren't counted.
+  - Kept right by asking again when a different download starts (a download is counted as it starts), when the queue's worker starts or stops, when the limit is changed in Settings, and once a minute, since a download leaves the count when it's a day old and nothing announces that. The engine reads it from the library's queue file; YouTube isn't asked.
+  - No engine change.
+- Not clicked in the running app.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

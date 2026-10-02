@@ -19,6 +19,9 @@ struct FixedRows: NSViewRepresentable {
 
     final class Finder: NSView {
         var height: CGFloat
+        private weak var watched: NSTableView?
+        private var watching: [NSKeyValueObservation] = []
+        private var fixing = false
 
         init(height: CGFloat) {
             self.height = height
@@ -51,16 +54,38 @@ struct FixedRows: NSViewRepresentable {
                     if abs(theirs.minX - mine.minX) < 2, abs(theirs.minY - mine.minY) < 2,
                         abs(theirs.width - mine.width) < 2, abs(theirs.height - mine.height) < 2
                     {
-                        if table.usesAutomaticRowHeights || table.rowHeight != height {
-                            table.usesAutomaticRowHeights = false
-                            table.rowHeight = height
-                        }
+                        hold(table)
                         return
                     }
                 }
                 ancestor = view.superview
                 climbed += 1
             }
+        }
+
+        /// Set the height, and keep it. SwiftUI puts its own height back whenever the
+        /// selection changes (seen 2026-10-02: the rows went from 34 points to 24 at
+        /// the first click, squashed together with their covers cut off), so the
+        /// table's height is watched and put straight back.
+        private func hold(_ table: NSTableView) {
+            fix(table)
+            guard watched !== table else { return }
+            watched = table
+            watching = [
+                table.observe(\.rowHeight) { [weak self] table, _ in self?.fix(table) },
+                table.observe(\.usesAutomaticRowHeights) { [weak self] table, _ in
+                    self?.fix(table)
+                },
+            ]
+        }
+
+        private func fix(_ table: NSTableView) {
+            // Setting either one tells the watchers above, which come back here.
+            guard !fixing else { return }
+            fixing = true
+            defer { fixing = false }
+            if table.usesAutomaticRowHeights { table.usesAutomaticRowHeights = false }
+            if table.rowHeight != height { table.rowHeight = height }
         }
 
         private static func tables(in view: NSView) -> [NSTableView] {
