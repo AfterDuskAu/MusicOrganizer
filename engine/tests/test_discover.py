@@ -493,3 +493,14 @@ def test_rpc_a_plan_for_picks_asks_youtube_nothing(opened: rpc.Server) -> None: 
     assert [op["params"].get("genre") for op in ops] == ["Hip Hop", None, None]
     bad = {"video_ids": wanted, "candidates": ["nonsense"]}
     assert code(opened, "plan.create", kind="download", options=bad) == rpc.USER_ERROR
+
+
+def test_which_of_the_owners_songs_a_track_is(lib: Library) -> None:
+    own(lib, NUMB, ("Their Own Rip", "Band", None))
+    with open_index(lib.paths, write=False) as index:
+        owned = discover.Owned(index.library_tracks())
+    by_id = Candidate(NUMB[2], "Numb (Official Video)", ("Somebody Else",))
+    by_name = Candidate("anotherIDxx", "Their Own Rip", ("Band",))
+    remix = Candidate("remixIDxxxx", "Their Own Rip (Club Remix)", ("Band",))
+    assert [owned.track_id(c) for c in (by_id, by_name, remix)] == ["t_0", "t_1", None]
+    assert [owned.has(c) for c in (by_id, by_name, remix)] == [True, True, False]

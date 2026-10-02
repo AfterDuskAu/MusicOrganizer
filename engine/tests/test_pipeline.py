@@ -1571,6 +1571,47 @@ def test_every_waiting_download_can_be_cancelled_at_once(
     assert queue.dismiss_waiting(lib) == 0
 
 
+def test_a_download_for_a_playlist_joins_it_when_it_arrives(
+    lib: Library, index: Index, downloads: FakeDownloads, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    found = {
+        VIDEO_A: candidate(VIDEO_A, "Melody", ("Band",), SECONDS, album="Tunes"),
+        VIDEO_B: candidate(VIDEO_B, "Other", ("Band",), SECONDS, album="Tunes"),
+    }
+    monkeypatch.setattr(youtube, "get_track", lambda video_id: found.get(video_id))
+    (road_trip,) = listening.create_playlist(lib, "Road Trip")
+    with pytest.raises(NotFoundError):
+        pipeline.plan_download(lib, index, [VIDEO_A], playlist_id="pl_gone")
+
+    plan = pipeline.plan_download(lib, index, [VIDEO_A, VIDEO_B], playlist_id=road_trip["id"])
+    assert [op.params["playlist_id"] for op in plan.operations] == [road_trip["id"]] * 2
+    pipeline.apply(lib, index, plan.plan_id)
+    assert listening.get(lib)["playlists"][0]["track_ids"] == []  # nothing has arrived yet
+    run_queue(lib)
+    arrived = [
+        row["musicorg_id"]
+        for video_id in (VIDEO_A, VIDEO_B)  # in the order asked for
+        for row in index.library_tracks_with_source_id(video_id)
+    ]
+    assert len(arrived) == 2 and all(arrived)
+    assert listening.get(lib)["playlists"][0]["track_ids"] == arrived
+
+    # A playlist deleted while its songs were on the way: they still arrive.
+    listening.delete_playlist(lib, road_trip["id"])
+    (gone,) = listening.create_playlist(lib, "Gone")
+    for row in index.library_tracks_with_source_id(VIDEO_B):
+        lib.root.joinpath(*row["rel_path"].split("/")).unlink()
+    index.remove_library_tracks(
+        [row["rel_path"] for row in index.library_tracks_with_source_id(VIDEO_B)]
+    )
+    plan = pipeline.plan_download(lib, index, [VIDEO_B], playlist_id=gone["id"])
+    pipeline.apply(lib, index, plan.plan_id)
+    listening.delete_playlist(lib, gone["id"])
+    run_queue(lib)
+    assert index.library_tracks_with_source_id(VIDEO_B)
+    assert listening.get(lib)["playlists"] == []
+
+
 def test_a_download_is_given_a_genre(
     lib: Library, index: Index, downloads: FakeDownloads, samples: dict[str, Path],
     monkeypatch: pytest.MonkeyPatch,

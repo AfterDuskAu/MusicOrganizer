@@ -124,3 +124,15 @@ def test_rpc_methods(server: rpc.Server, lib: Library) -> None:  # noqa: F811
     assert result(server, "listening.get")["library"] == ["t_1"]
     assert result(server, "listening.move", track_ids=["t_1"], to="downloads") == {"library": []}
     assert code(server, "listening.move", track_ids=["t_1"], to="elsewhere") == rpc.INVALID_PARAMS
+
+
+def test_a_song_joins_a_playlist_once(lib: Library) -> None:
+    (mix,) = listening.create_playlist(lib, "Mix")
+    assert listening.add_to_playlist(lib, mix["id"], "t_one")
+    assert listening.add_to_playlist(lib, mix["id"], "t_two")
+    assert listening.add_to_playlist(lib, mix["id"], "t_one")  # already in it: left as it is
+    assert listening.get(lib)["playlists"][0]["track_ids"] == ["t_one", "t_two"]
+    # A playlist that's gone: nothing changes, and it says so.
+    assert not listening.add_to_playlist(lib, "pl_gone", "t_one")
+    with pytest.raises(UserError):
+        listening.add_to_playlist(lib, mix["id"], "")

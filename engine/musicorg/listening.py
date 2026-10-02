@@ -143,6 +143,22 @@ def set_playlist_tracks(
     return data["playlists"]
 
 
+def add_to_playlist(lib: Library, playlist_id: str, track_id: str) -> bool:
+    """Put one song at the end of a playlist, unless it's in it already (a download
+    that was asked for as part of a playlist joins it when it arrives). False, and
+    nothing changes, if the playlist has been deleted meanwhile."""
+    _check_id(track_id)
+    with state.edit(lib.paths.state_file) as st:
+        data = _read(st.data)
+        for found in data["playlists"]:
+            if found["id"] == playlist_id:
+                if track_id not in found["track_ids"]:
+                    found["track_ids"].append(track_id)
+                    st.data[KEY] = data
+                return True
+    return False
+
+
 def _find(data: dict[str, Any], playlist_id: str) -> dict[str, Any]:
     for playlist in data["playlists"]:
         if playlist["id"] == playlist_id:

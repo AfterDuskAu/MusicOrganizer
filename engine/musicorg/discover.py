@@ -149,23 +149,28 @@ class _Found:
         return min(position for _, _, position in self.hits.values())
 
 
-class _Owned:
+class Owned:
     """What the owner has, for "is this pick already mine?" and "how much of this artist
     do I have?"."""
 
     def __init__(self, rows: list[dict[str, Any]]) -> None:
         self.ids: set[str] = set()
-        self.songs: dict[str, list[tuple[frozenset[str], str]]] = {}
+        # By title: the version, the artists credited, and the song's own id.
+        self.songs: dict[str, list[tuple[frozenset[str], str, str | None]]] = {}
         self.credits: list[str] = []
         self._counts: dict[str, int] = {}
+        self._by_source: dict[str, str | None] = {}
         for row in rows:
+            track_id = row.get("musicorg_id") if isinstance(row.get("musicorg_id"), str) else None
             if isinstance(row.get("source_id"), str) and row["source_id"]:
                 self.ids.add(row["source_id"])
             if naming.is_video_path(row["rel_path"]):
                 continue  # a saved video isn't the song
+            if isinstance(row.get("source_id"), str) and row["source_id"]:
+                self._by_source[row["source_id"]] = track_id
             credit = f" {youtube.artist_key(row.get('artist') or '')} "
             self.credits.append(credit)
-            self._add(row.get("title") or "", credit, ())
+            self._add(row.get("title") or "", credit, (), track_id)
             # A copy not identified yet can carry the plain title while the rip it came
             # from is named "Song R" (a remix) or "Artist - Song": its name counts too.
             origin = row.get("origin_path")
@@ -175,25 +180,38 @@ class _Owned:
                 if parsed.title:
                     by = f" {youtube.artist_key(parsed.artist or '')} "
                     self._add(parsed.title, credit if by.strip() == "" else by,
-                              parsed.version_tokens)  # fmt: skip
+                              parsed.version_tokens, track_id)  # fmt: skip
 
-    def _add(self, title: str, credit: str, versions: tuple[str, ...]) -> None:
+    def _add(
+        self, title: str, credit: str, versions: tuple[str, ...], track_id: str | None
+    ) -> None:
         parsed = parse_title(title)
         key = compare_key(parsed.title)
         if key:
             hard = _hard(parsed.version_tokens + tuple(versions))
-            self.songs.setdefault(key, []).append((hard, credit))
+            self.songs.setdefault(key, []).append((hard, credit, track_id))
 
     def has(self, candidate: Candidate) -> bool:
-        if candidate.video_id in self.ids:
-            return True
+        return candidate.video_id in self.ids or self._song(candidate) is not None
+
+    def track_id(self, candidate: Candidate) -> str | None:
+        """The owner's own copy of this song (its `MUSICORG_ID`), if they have the song
+        itself: by its YouTube id, or by title, version and artist. A saved video of it
+        doesn't count, and nor does a copy with no id."""
+        if candidate.video_id in self._by_source:
+            return self._by_source[candidate.video_id]
+        found = self._song(candidate)
+        return found[2] if found else None
+
+    def _song(self, candidate: Candidate) -> tuple[frozenset[str], str, str | None] | None:
         parsed = parse_title(candidate.title)
         versions = _hard(parsed.version_tokens)
         names = [youtube.artist_key(name) for name in candidate.artists]
-        for hard, credit in self.songs.get(compare_key(parsed.title), []):
+        for entry in self.songs.get(compare_key(parsed.title), []):
+            hard, credit, _ = entry
             if hard == versions and any(name and f" {name} " in credit for name in names):
-                return True
-        return False
+                return entry
+        return None
 
     def songs_by(self, artist: str) -> int:
         """How many of the owner's songs credit this artist."""
@@ -224,8 +242,8 @@ def suggest(
     if isinstance(count, bool) or not isinstance(count, int) or not 1 <= count <= MAX_COUNT:
         raise UserError(f"How many songs should be 1 to {MAX_COUNT}.")
 
-    rows = [row for row in index.library_tracks() if _is_there(lib, row)]
-    owned = _Owned(rows)
+    rows = [row for row in index.library_tracks() if is_there(lib, row)]
+    owned = Owned(rows)
     heard = listening.get(lib)
     skip_ids = set().union(*state.rejected(lib.load_state().data).values())
     skip_ids |= {
@@ -537,7 +555,7 @@ def _video_id(row: dict[str, Any]) -> str | None:
     return found if isinstance(found, str) and youtube.VIDEO_ID.fullmatch(found) else None
 
 
-def _is_there(lib: Library, row: dict[str, Any]) -> bool:
+def is_there(lib: Library, row: dict[str, Any]) -> bool:
     """The index is a cache: a song whose file has gone isn't the owner's any more."""
     return lib.root.joinpath(*row["rel_path"].split("/")).is_file()
 
@@ -608,7 +626,7 @@ def _song_key(candidate: Candidate) -> tuple[str, frozenset[str], str]:
     return (compare_key(parsed.title) or candidate.video_id, _hard(parsed.version_tokens), artist)
 
 
-def _score(entry: _Found, owned: _Owned) -> float:
+def _score(entry: _Found, owned: Owned) -> float:
     artist = entry.candidate.artists[0] if entry.candidate.artists else ""
     boost = min(owned.songs_by(artist), ARTIST_BOOST_SONGS) * 0.8  # at most 16 places up
     return len(entry.hits) * 100 + boost - entry.best_position * 0.5
@@ -647,7 +665,7 @@ def _named(source: _Source) -> str:
     return f"{source.label} songs" if source.kind == "genre" else source.label
 
 
-def _why(entry: _Found, owned: _Owned) -> str:
+def _why(entry: _Found, owned: Owned) -> str:
     hits = list(entry.hits.values())
     source, start, _ = min(hits, key=lambda hit: hit[2])
     artist = entry.candidate.artists[0] if entry.candidate.artists else ""

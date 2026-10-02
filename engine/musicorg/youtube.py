@@ -542,6 +542,50 @@ def genre_playlist(name: str, *, cache: SearchCache | None = None) -> GenrePlayl
     )
 
 
+PLAYLIST_ID = re.compile(r"[A-Za-z0-9_-]{2,80}")
+PLAYLIST_MOST = 1000  # songs read from one playlist (ten requests' worth)
+
+
+@dataclass(frozen=True)
+class Playlist:
+    """A playlist as YouTube Music gives it to someone who isn't signed in: a public or
+    an unlisted one. Its entries are songs (official audio), music videos, or uploads."""
+
+    playlist_id: str
+    title: str
+    tracks: tuple[Candidate, ...]
+
+
+def playlist(playlist_id: str, *, limit: int = PLAYLIST_MOST) -> Playlist:
+    """Read a playlist by its id (v0.3 imports). Never cached: the owner's own playlist
+    changes, and is asked for when they ask. A private one, or one that doesn't exist,
+    is a plain error."""
+    from ytmusicapi.exceptions import YTMusicError
+
+    if not PLAYLIST_ID.fullmatch(playlist_id):
+        raise YouTubeError("That isn't a playlist's id.")
+    try:
+        raw = _fetch(
+            "playlist", playlist_id, lambda client: client.get_playlist(playlist_id, limit=limit)
+        )
+    except (YTMusicError, KeyError, IndexError, TypeError) as exc:
+        if is_slow_down(exc):
+            raise
+        # ytmusicapi reads a page that isn't a playlist's and trips over what's missing.
+        log.info("playlist(%s): %s: %s", playlist_id, type(exc).__name__, exc)
+        raise YouTubeError(
+            "YouTube Music wouldn't show that playlist. If it's private, set it to "
+            "Unlisted or Public (the playlist's Edit menu) and try again."
+        ) from None
+    kept = trim_tracks(raw)
+    title = kept.get("title")
+    return Playlist(
+        playlist_id=playlist_id,
+        title=title if isinstance(title, str) and title.strip() else "Playlist",
+        tracks=tuple(_tracks(kept)),
+    )
+
+
 def _genre_choice(raw: Any, genre_key: str) -> dict[str, Any] | None:
     """Which of the playlists found is the genre's. The search returns all sorts ("Aussie
     Hip-Hop Golds", "Hip-Hop Christmas", "00s German Rap Essentials", in a different

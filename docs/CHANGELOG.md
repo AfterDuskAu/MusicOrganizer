@@ -319,6 +319,18 @@
   - No engine change.
 - Not clicked in the running app.
 
+2026-10-02, evening. **Import Playlists, first part: a YouTube or YouTube Music playlist by its link** (the owner: "let's start working on the Spotify/Apple Music login, and that gathers their songs on playlists, and then they can press automatic download to use the 250/500 limit a day… YouTube, as well"). Imports were on `CLAUDE.md`'s "Not yet" list (v0.3); the owner's request is the go-ahead, as it was for Discover, and the list says so now.
+
+- **What all three services need is built**, with YouTube as the first source because it needs nothing from the owner: no sign-in, no key.
+  - `imports` (new engine module, read-only): `import.playlist` reads a playlist from its link (public or unlisted, up to 1,000 songs); `import.find` says what each song is to the owner: `owned`, `queued`, `found`, `unsure` or `not_found` (new enums, in `ENGINE_API.md`).
+  - Finding uses the rule the owner's rips are matched by (`match.match_item`): only its certain answer is `found`; a likely one is `unsure`, with one line on why, and is downloaded only if ticked. A song the owner has costs no search, and nor does a playlist entry that's already official audio. A music video in the playlist is swapped for the song itself (same artist, title and version; a video's length says nothing about the song's).
+  - `plan.create` kind `download` takes `playlist_id`: each song joins that playlist of the owner's as it arrives (`listening.add_to_playlist`). A playlist deleted meanwhile is simply not joined.
+  - `discover`'s owned-songs helper is shared now (`Owned`, `is_there`) and knows each song's id, so songs the owner already has go into the playlist at once.
+- **The app:** Discover → Import Playlists. Paste a link, Read Playlist; the songs are listed with what was found for each (double-click plays what was found, saving nothing); **Download Automatically (N)** makes a playlist of the same name, puts the songs already owned in it, and queues the rest with nothing more to click. They count towards the daily limit like any download, and the sidebar's counter shows it.
+- **Checked against YouTube Music for real**, on the scratch library: a 62-song playlist read in one go, a made-up playlist id answered with the plain "set it to Unlisted or Public" error, and the page looked at in the unseen copy (59 found, 2 not sure, 1 not found). **Not clicked in the running app:** Download Automatically on this page was only run in the engine's tests, with stand-in downloads.
+- Known limits: songs join the playlist in the order they arrive, after the ones already owned, not in the original order. An account's own lists (Liked Music) can't be read without signing in.
+- **Not built: Spotify, Apple Music, and signing in to YouTube.** What each needs from the owner is in `docs/ROADMAP.md` (v0.3).
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

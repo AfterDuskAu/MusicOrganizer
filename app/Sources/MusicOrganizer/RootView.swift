@@ -84,7 +84,7 @@ struct Message<Buttons: View>: View {
 enum SidebarItem: Hashable {
     case songs, albums, artists, videos
     case favourites, recentlyAdded, mostPlayed, unconfirmed
-    case visualizer, whatsNew, find, youtube, downloads
+    case visualizer, whatsNew, find, importPlaylists, youtube, downloads
     case playlist(String)
 
     /// A name for this entry that can be saved, and read back with `init(key:)`.
@@ -94,6 +94,7 @@ enum SidebarItem: Hashable {
         case .visualizer: "visualizer"
         case .whatsNew: "whatsNew"
         case .find: "find"
+        case .importPlaylists: "import"
         case .youtube: "youtube"
         case .downloads: "downloads"
         default: libraryName ?? "songs"
@@ -109,6 +110,7 @@ enum SidebarItem: Hashable {
         case "visualizer": self = .visualizer
         case "whatsNew": self = .whatsNew
         case "find": self = .find
+        case "import": self = .importPlaylists
         case "youtube": self = .youtube
         case "downloads": self = .downloads
         default: self = SidebarItem(libraryEntry: key) ?? .songs
@@ -147,6 +149,7 @@ enum SidebarItem: Hashable {
         case .unconfirmed: "Not Identified Yet"
         case .whatsNew: "What's New"
         case .find: "Find"
+        case .importPlaylists: "Import Playlists"
         case .youtube: "YouTube Music"
         case .visualizer: "Local Visualizer"
         case .downloads: "Downloads"
@@ -166,6 +169,7 @@ enum SidebarItem: Hashable {
         case .unconfirmed: "questionmark.circle"
         case .whatsNew: "sparkles"
         case .find: "wand.and.stars"
+        case .importPlaylists: "square.and.arrow.down.on.square"
         case .youtube: "play.rectangle"
         case .visualizer: "waveform"
         case .downloads: "arrow.down.circle"
@@ -375,7 +379,8 @@ struct MainView: View {
                 }
             }
             Section("Discover", isExpanded: $openDiscover) {
-                ForEach([SidebarItem.whatsNew, .find, .downloads], id: \.self) { entry in
+                ForEach([SidebarItem.whatsNew, .find, .importPlaylists, .downloads], id: \.self) {
+                    entry in
                     if entry == .downloads {
                         Label(entry.title, systemImage: entry.symbol)
                             .badge(model.downloaded.count + model.pending.filter(\.isActive).count)
@@ -581,6 +586,8 @@ struct MainView: View {
             WhatsNewView()
         case .find:
             FindView()
+        case .importPlaylists:
+            ImportView()
         case .playlist(let id):
             if let playlist = model.playlist(id) {
                 SongList(

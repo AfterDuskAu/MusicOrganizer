@@ -108,6 +108,8 @@ final class AppModel {
     /// Discover → What's New and Discover → Find: each keeps its own picks.
     let whatsNew = DiscoverPage(named: "whatsNew")
     let find = DiscoverPage(named: "find")
+    /// Discover → Import Playlists: a playlist from elsewhere, and what was found of it.
+    let importing = ImportPage()
     /// Several downloads planned and waiting for the owner's yes (Download Selected).
     var batch: BatchDownload?
     /// How Discover's Download Automatically is going, until its note is closed.
@@ -140,6 +142,15 @@ final class AppModel {
     private static let rootKey = "libraryRoot"
 
     init() {
+        importing.read = { [weak self] link in
+            guard let self else { throw RPCError(code: 0, message: "The engine isn't running.") }
+            return try await self.readImport(link)
+        }
+        importing.find = { [weak self] tracks in try await self?.findImported(tracks) ?? [] }
+        importing.download = { [weak self] name, owned, songs in
+            guard let self else { throw RPCError(code: 0, message: "The engine isn't running.") }
+            return try await self.downloadImport(named: name, owned: owned, songs: songs)
+        }
         for page in [whatsNew, find] {
             page.ask = { [weak self] seeds, count, shuffle, name in
                 guard let self else { throw CancellationError() }
@@ -221,6 +232,11 @@ final class AppModel {
             stopping = false
             engine.connection.start(
                 onNotification: { [weak self] method, params in
+                    if method == "import.progress" {
+                        let done = params["done"] as? Int ?? 0
+                        Task { @MainActor in self?.importing.progress(done: done) }
+                        return
+                    }
                     if method == "discover.progress" {
                         let page = params["token"] as? String
                         let (done, of) = (params["done"] as? Int ?? 0, params["of"] as? Int ?? 0)
@@ -641,6 +657,93 @@ final class AppModel {
                 auto = .failed(error.localizedDescription)
             }
         }
+    }
+
+    // MARK: Import Playlists
+
+    /// Read a playlist from where it lives (a YouTube or YouTube Music link, so far).
+    private func readImport(_ link: String) async throws -> ImportedPlaylist {
+        guard let connection = engine?.connection else {
+            throw RPCError(code: RPCError.closed, message: "The engine isn't running.")
+        }
+        return try await connection.call(
+            "import.playlist", ["source": "youtube", "link": link], as: ImportedPlaylist.self)
+    }
+
+    /// Which of these songs the owner has, and what the rest are on YouTube Music.
+    private func findImported(_ tracks: [ImportTrack]) async throws -> [ImportFound] {
+        guard let connection = engine?.connection else {
+            throw RPCError(code: RPCError.closed, message: "The engine isn't running.")
+        }
+        return try await connection.call(
+            "import.find", ["tracks": tracks.map(\.params), "token": "import"],
+            as: ImportFindAnswer.self
+        ).found
+    }
+
+    /// Make the owner's playlist for an import (or use the one of that name), put the
+    /// songs they already have in it, and queue the rest: each joins the playlist as it
+    /// arrives. The click is the owner's yes; the engine still plans and journals the
+    /// batch. Returns what to say about it.
+    private func downloadImport(
+        named name: String, owned: [String], songs: [ImportCandidate]
+    ) async throws -> String {
+        guard let connection = engine?.connection else {
+            throw RPCError(code: RPCError.closed, message: "The engine isn't running.")
+        }
+        var playlist = listening.playlists.first {
+            $0.name.compare(name, options: .caseInsensitive) == .orderedSame
+        }
+        if playlist == nil {
+            let made = try await connection.call(
+                "playlist.create", ["name": name], as: PlaylistsAnswer.self)
+            listening.playlists = made.playlists
+            playlist = made.playlists.last
+        }
+        guard let playlist else {
+            throw RPCError(code: 0, message: "The playlist couldn't be made.")
+        }
+        let adding = owned.filter { !playlist.trackIds.contains($0) }
+        if !adding.isEmpty {
+            let answer = try await connection.call(
+                "playlist.set_tracks",
+                ["playlist_id": playlist.id, "track_ids": playlist.trackIds + adding],
+                as: PlaylistsAnswer.self)
+            listening.playlists = answer.playlists
+        }
+        let wanted = songs.filter {
+            !everything.videoIDs.contains($0.videoId) && downloadState(of: $0.videoId) != .working
+        }
+        guard !wanted.isEmpty else {
+            return owned.isEmpty
+                ? "There was nothing to download."
+                : "Your playlist \"\(playlist.name)\" has the \(owned.count) "
+                    + "\(owned.count == 1 ? "song" : "songs") you already had. Nothing needed "
+                    + "downloading."
+        }
+        let plan = try await connection.call(
+            "plan.create",
+            [
+                "kind": "download",
+                "options": [
+                    "video_ids": wanted.map(\.videoId),
+                    "candidates": wanted.map(\.params),
+                    "playlist_id": playlist.id,
+                ],
+            ], as: PlanAnswer.self)
+        guard plan.summary.operations > 0 else { throw Self.nothingToDo(plan) }
+        let count = plan.summary.downloads ?? plan.summary.operations
+        // What today's limit has room for, before these join the queue.
+        let status = try? await connection.call("queue.status", as: QueueStatus.self)
+        let limit = status?.dailyCap ?? 250
+        let room = limit - (status?.dailyCount ?? 0) - pending.filter(\.isActive).count
+        start(
+            BatchDownload(
+                planId: plan.planId, videoIds: wanted.map(\.videoId), count: count,
+                minutes: plan.summary.estMinutes ?? 0, days: plan.summary.days ?? 1))
+        return Imports.startedNote(
+            count, playlist: playlist.name, owned: owned.count,
+            minutes: plan.summary.estMinutes ?? 0, allowance: room, limit: limit)
     }
 
     /// Cancel every download that's still waiting its turn. The one downloading right

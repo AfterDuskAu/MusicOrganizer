@@ -85,10 +85,19 @@ A SwiftUI app that starts the engine and talks to it (`musicorg serve`). Code in
   - sorting off the main thread
   - "a stall is the main thread blocked 100 ms or more"
 
-## v0.3: imports for friends
+## v0.3: imports for friends (started early, 2026-10-02)
 
 - Spotify data export, Exportify CSV, Apple Music library XML, YouTube Music playlist links, most-played first.
 - Someone moving off a streaming service gets their songs as local files through the throttled download queue, 250 a day as standard, 500 at most (owner, 2026-10-01).
+
+**Built (2026-10-02):** Discover → Import Playlists, for a YouTube or YouTube Music playlist by its link (public or unlisted, no sign-in). The songs are found, listed, and downloaded with one click into a playlist of the same name. The finding, the list and the button are the same for every service to come.
+
+**Still to build, and what each needs from the owner** (checked on 2026-10-02):
+
+- **Spotify sign-in.** Spotify only lets an app read someone's playlists through its developer programme. Since February 2026 that needs: a (free) app registered at developer.spotify.com by the owner, **whose own account has Spotify Premium**; at most 5 people can sign in to it. The app would then sign in through the browser (no password ever passes through Music Organizer) and read the owner's playlists and their songs. Only playlists the owner made or collaborates on give their songs; followed playlists by others don't. The app's Client ID is kept on the Mac, never in the repo.
+  - Without Premium there's no sign-in. The other way is a file: Spotify's own "Download your data" export, or an Exportify CSV.
+- **Apple Music.** Signing in to Apple Music from an app needs a paid Apple Developer membership (US$99 a year), which this project doesn't have. Two ways that need none: read the playlists straight from the Music app on this Mac (macOS asks once for permission), or a library file exported from the Music app (File → Library → Export Library…).
+- **Signing in to YouTube**, for private playlists and Liked Music. Possible with the installed `ytmusicapi` using the browser's sign-in; a spare account is suggested, since an account used alongside downloading can be restricted (see Accounts, above). Until then: set a playlist to Unlisted and paste its link.
 
 ## v0.4: Discover (started early, 2026-10-01)
 

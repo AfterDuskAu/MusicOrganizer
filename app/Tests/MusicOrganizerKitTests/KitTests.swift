@@ -681,6 +681,95 @@ final class SongVideoTests: XCTestCase {
         XCTAssertNotNil(engineDate(status.dailyResumeAt))
     }
 
+    func testAnImportIsRead() throws {
+        let json = """
+            {"source": "youtube", "name": "Road Trip", "tracks": [
+              {"title": "Tune", "artists": ["Band", "Guest"], "album": null, "duration_s": 214,
+               "is_explicit": true,
+               "candidate": {"video_id": "songCCCCCCC", "title": "Tune", "artists": ["Band"],
+                             "album": "Tunes", "album_browse_id": "MPREb_1", "duration_s": 214,
+                             "is_explicit": true, "video_type": "MUSIC_VIDEO_TYPE_ATV",
+                             "year": null, "thumbnail": null, "is_official_audio": true}}]}
+            """
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let playlist = try decoder.decode(ImportedPlaylist.self, from: Data(json.utf8))
+        XCTAssertEqual(playlist.name, "Road Trip")
+        let track = try XCTUnwrap(playlist.tracks.first)
+        XCTAssertEqual(track.artistName, "Band, Guest")
+        // It goes back to the engine as it came.
+        let back = track.params
+        XCTAssertEqual(back["title"] as? String, "Tune")
+        XCTAssertEqual(back["duration_s"] as? Int, 214)
+        XCTAssertEqual(back["is_explicit"] as? Bool, true)
+        XCTAssertNil(back["album"])
+        let candidate = try XCTUnwrap(back["candidate"] as? [String: Any])
+        XCTAssertEqual(candidate["video_id"] as? String, "songCCCCCCC")
+        XCTAssertEqual(candidate["video_type"] as? String, "MUSIC_VIDEO_TYPE_ATV")
+        XCTAssertEqual(candidate["album_browse_id"] as? String, "MPREb_1")
+        XCTAssertEqual(track.candidate?.result.videoId, "songCCCCCCC")
+
+        let answer = try decoder.decode(
+            ImportFindAnswer.self,
+            from: Data(
+                """
+                {"found": [{"state": "owned", "track_id": "t_1"}, {"state": "not_found"},
+                           {"state": "something new"}]}
+                """.utf8))
+        XCTAssertEqual(answer.found.map(\.kind), [.owned, .notFound, .notFound])
+        XCTAssertEqual(answer.found.first?.trackId, "t_1")
+    }
+
+    func testWhatAnImportWillDownload() {
+        func song(_ id: String) -> ImportCandidate { ImportCandidate(videoId: id, title: id) }
+        let rows = [
+            ImportRow(id: 0, track: ImportTrack(title: "A"), found: ImportFound(state: .owned, trackId: "t_1")),
+            ImportRow(id: 1, track: ImportTrack(title: "B"), found: ImportFound(state: .found, candidate: song("b"))),
+            ImportRow(id: 2, track: ImportTrack(title: "C"), found: ImportFound(state: .unsure, candidate: song("c"), why: "The length is different.")),
+            ImportRow(id: 3, track: ImportTrack(title: "D"), found: ImportFound(state: .unsure, candidate: song("d"))),
+            ImportRow(id: 4, track: ImportTrack(title: "E"), found: ImportFound(state: .notFound)),
+            ImportRow(id: 5, track: ImportTrack(title: "F"), found: ImportFound(state: .queued, candidate: song("f"))),
+            ImportRow(id: 6, track: ImportTrack(title: "B again"), found: ImportFound(state: .found, candidate: song("b"))),
+            ImportRow(id: 7, track: ImportTrack(title: "A again"), found: ImportFound(state: .owned, trackId: "t_1")),
+            ImportRow(id: 8, track: ImportTrack(title: "No id"), found: ImportFound(state: .owned)),
+            ImportRow(id: 9, track: ImportTrack(title: "Not looked for")),
+        ]
+        let counts = Imports.counts(rows)
+        XCTAssertEqual(
+            counts,
+            Imports.Counts(owned: 3, queued: 1, found: 2, unsure: 2, notFound: 1, waiting: 1))
+        // Certain ones, and the unsure ones that are ticked; the same track only once.
+        XCTAssertEqual(Imports.toDownload(rows, ticked: []).map(\.videoId), ["b"])
+        XCTAssertEqual(Imports.toDownload(rows, ticked: [3, 4, 5]).map(\.videoId), ["b", "d"])
+        XCTAssertEqual(Imports.ownedIds(rows), ["t_1"])
+        XCTAssertEqual(
+            Imports.summary(counts),
+            "10 songs: 3 in your library, 2 to download, 1 already on the way, 2 not sure, "
+                + "1 not found")
+        XCTAssertEqual(
+            Imports.summary(counts, ticked: 2),
+            "10 songs: 3 in your library, 4 to download, 1 already on the way, 1 not found")
+        XCTAssertEqual(Imports.summary(Imports.Counts(waiting: 1)), "1 song")
+    }
+
+    func testWhatAnImportSaysOnceStarted() {
+        let all = Imports.startedNote(
+            180, playlist: "Road Trip", owned: 20, minutes: 70, allowance: 250, limit: 250)
+        XCTAssertTrue(
+            all.hasPrefix(
+                "180 songs are on the way, and join your playlist \"Road Trip\" as they arrive "
+                    + "(20 you already had are in it now). It takes about 70 minutes"))
+        let one = Imports.startedNote(
+            1, playlist: "Mix", owned: 0, minutes: 1, allowance: 5, limit: 250)
+        XCTAssertTrue(
+            one.hasPrefix(
+                "1 song is on the way, and joins your playlist \"Mix\" as it arrives. It takes"))
+        let over = Imports.startedNote(
+            400, playlist: "Everything", owned: 1, minutes: 150, allowance: 250, limit: 250)
+        XCTAssertTrue(over.contains("(1 you already had is in it now)"))
+        XCTAssertTrue(over.contains("has room for 250 now; the other 150 start by themselves"))
+    }
+
     func testTheDailyLimitCounter() {
         XCTAssertEqual(DailyUse(used: 1, limit: 250).text, "1/250")
         XCTAssertEqual(DailyUse(used: 10, limit: 400).text, "10/400")

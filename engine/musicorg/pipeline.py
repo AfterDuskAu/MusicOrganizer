@@ -1466,6 +1466,7 @@ def plan_download(
     videos: list[dict[str, Any]] | None = None,
     *,
     known: list[dict[str, Any]] | None = None,
+    playlist_id: str | None = None,
 ) -> fileops.Plan:
     """A plan downloading these from YouTube Music into the library (v0.2): songs (the
     app's "download" button), and `videos`, each `{"video_id", "height", "fps"?}`: a video
@@ -1476,9 +1477,16 @@ def plan_download(
     fifty picks is made at once instead of in over a minute. A pick's `genre` (the genre
     it was found under) goes into the plan, and from there into the song's genre tag.
 
+    `playlist_id` is one of the owner's playlists (an imported playlist, v0.3): each
+    song joins it as it arrives. A playlist deleted meanwhile is simply not joined.
+
     There's no rip behind them, so nothing is replaced and the fingerprint gate has
     nothing to compare; every other check on a download applies. What's already in the
     library is left out."""
+    if playlist_id is not None and not any(
+        found["id"] == playlist_id for found in listening.get(lib)["playlists"]
+    ):
+        raise NotFoundError("That playlist doesn't exist any more.")
     ops: list[fileops.PlanOp] = []
     skipped: dict[str, int] = {}
     given: dict[str, Candidate] = {}
@@ -1518,6 +1526,8 @@ def plan_download(
             params = {"video_id": video_id, "candidate": found.to_dict()}
             if video_id in genres:
                 params["genre"] = genres[video_id]
+            if playlist_id is not None:
+                params["playlist_id"] = playlist_id
             ops.append(fileops.PlanOp(action="download", params=params))
     size = sum((op.params["candidate"].get("duration_s") or 0) * BYTES_PER_SECOND for op in ops)
     seen: set[str] = set()
@@ -1569,7 +1579,14 @@ def download_job(ctx: JobContext) -> Outcome:
     video_id = str(op.params["video_id"])
     candidate = Candidate.from_dict(op.params["candidate"])
     with open_index(ctx.lib.paths, write=True) as index:
+        have = [
+            row
+            for row in index.library_tracks_with_source_id(video_id)
+            if not naming.is_video_path(row["rel_path"])
+        ]
         if index.library_tracks_with_source_id(video_id):
+            if have:  # it arrived another way meanwhile: the playlist still gets it
+                _join_playlist(ctx.lib, op, have[0].get("musicorg_id"))
             return Outcome.done("Already in the library.")
         path, info = ctx.download(video_id)
         problem = _check_download(path, info, candidate)
@@ -1613,7 +1630,16 @@ def download_job(ctx: JobContext) -> Outcome:
         final = fileops.commit(ctx.batch, path, naming.library_path(meta, ctx.lib.root))
         index.put_library_tracks([_track_row(ctx.lib, final, new_tags, probe.duration_s)])
         _write_sidecars(ctx, final, extras)
+    _join_playlist(ctx.lib, op, new_tags.musicorg_id)
     return Outcome.done(f"Downloaded as {final.name}.")
+
+
+def _join_playlist(lib: Library, op: fileops.PlanOp, track_id: object) -> None:
+    """A song downloaded for a playlist (an import) goes into it now that it's here."""
+    playlist_id = op.params.get("playlist_id")
+    if isinstance(playlist_id, str) and isinstance(track_id, str) and track_id:
+        if not listening.add_to_playlist(lib, playlist_id, track_id):
+            log.info("The playlist %s is gone; the song wasn't added to it.", playlist_id)
 
 
 def _download_video(ctx: JobContext, op: fileops.PlanOp) -> Outcome:

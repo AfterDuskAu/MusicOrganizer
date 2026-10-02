@@ -6,7 +6,7 @@ Standing rules for every Claude Code session in this project. Read this file, `d
 
 A personal music app that replaces Spotify, Apple Music and YouTube Music for a home library. Music comes from YouTube Music, and the app turns it into a clean, permanent, tagged library of files. This repo's `engine/` is the part with no UI. It scans, matches, downloads, tags and protects the library. From v0.2 a Mac app (SwiftUI) sits on top, and later a Windows app. Both talk to the engine over JSON-RPC.
 
-**v0.2 (from 2026-10-01): the Mac app** lives in `app/`, a Swift package: `MusicOrganizerKit` (the engine connection, the library's shape, the play queue, the lyrics parser, all tested without a window) and `MusicOrganizer` (the SwiftUI screens). `scripts/build_app.sh` builds `app/build/Music Organizer.app`. **The app never writes inside the library:** it reads audio and cover files to play and show them, and every change goes through the engine over JSON-RPC. What the app needs from the library, it asks the engine for (`library.tracks`, `library.lyrics`, `lyrics.for_video`, `listening.*`, `playlist.*`, `youtube.stream`, `youtube.video`, `discover.suggest`); it doesn't parse tags or the index itself.
+**v0.2 (from 2026-10-01): the Mac app** lives in `app/`, a Swift package: `MusicOrganizerKit` (the engine connection, the library's shape, the play queue, the lyrics parser, all tested without a window) and `MusicOrganizer` (the SwiftUI screens). `scripts/build_app.sh` builds `app/build/Music Organizer.app`. **The app never writes inside the library:** it reads audio and cover files to play and show them, and every change goes through the engine over JSON-RPC. What the app needs from the library, it asks the engine for (`library.tracks`, `library.lyrics`, `lyrics.for_video`, `listening.*`, `playlist.*`, `youtube.stream`, `youtube.video`, `discover.suggest`, `import.playlist`, `import.find`); it doesn't parse tags or the index itself.
 
 The owner builds with Claude Code and is not a professional programmer. Prefer boring, obvious code with good error messages over clever code. The development machine is an **Intel iMac**.
 
@@ -60,6 +60,7 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
   - `browse`: what the app shows: the library's tracks with their details, and a track's lyrics (read-only)
   - `listening`: the owner's favourites, play counts and playlists, kept in `state.json` by `MUSICORG_ID`
   - `discover`: songs the owner doesn't have, found from the ones they do (read-only; lookups through `youtube`)
+  - `imports`: a playlist from elsewhere, each song found on YouTube Music (read-only; lookups through `youtube`)
   - `report`
   - `review` and `review_web`: the review spreadsheet, and the local review page
   - `rpc`: the JSON-RPC server
@@ -109,6 +110,8 @@ All states, decisions and tag values are defined **once**, in `docs/ENGINE_API.m
 
 ## Not yet (see `docs/ROADMAP.md` for the version each belongs to)
 
-Spotify/Apple Music import, weekly mix, phone/Subsonic server, packaging, signing, notarization, Windows app shell, accounts and cloud anything.
+Weekly mix, phone/Subsonic server, packaging, signing, notarization, Windows app shell, accounts and cloud anything (but see imports, below).
 
 **Discover was started early, on 2026-10-01, at the owner's request** (it was on this list). Built: `discover.suggest`, the app's What's New and Find pages, the guided "What music would you like today?" mode, and Find's Download Automatically (find and queue a batch in one click). Still not yet, from its plan (`docs/roadmap/0.4-discover.md`): the `Discovered/` folder and its tag (a contract change), and Last.fm as a second source.
+
+**Imports were started early, on 2026-10-02, at the owner's request** (Spotify/Apple Music import was on this list, and so were accounts). Built: Discover → Import Playlists for a YouTube or YouTube Music playlist by its link, with no sign-in. Still not yet: signing in to Spotify, Apple Music or YouTube. Each needs something from the owner first (`docs/ROADMAP.md`, v0.3), and a sign-in is built only for reading playlists: logins stay on the Mac, never in the repo or the library.

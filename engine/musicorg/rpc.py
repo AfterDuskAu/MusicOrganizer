@@ -48,6 +48,7 @@ from musicorg import (
     browse,
     discover,
     fileops,
+    imports,
     library,
     listening,
     logging_setup,
@@ -88,7 +89,7 @@ RESUME_LEAST_S = 60.0
 REVIEW_STATES = ("review", "not_found", "matched_auto")
 SLOW_METHODS = frozenset(
     {"youtube.stream", "youtube.video", "search.ytmusic", "lyrics.find", "lyrics.for_video",
-     "discover.suggest"}
+     "discover.suggest", "import.playlist", "import.find"}
 )  # fmt: skip
 RPC_DECISIONS = ("accept", "candidate", "url", "only_copy", "skip", "reject")
 
@@ -284,6 +285,8 @@ class Server:
             "lyrics.find": self.lyrics_find,
             "lyrics.for_video": self.lyrics_for_video,
             "discover.suggest": self.discover_suggest,
+            "import.playlist": self.import_playlist,
+            "import.find": self.import_find,
             "queue.jobs": self.queue_jobs,
             "queue.downloads": self.queue_downloads,
             "queue.dismiss": self.queue_dismiss,
@@ -717,7 +720,10 @@ class Server:
                 if not ids and not videos:
                     raise RpcError(INVALID_PARAMS, "Give video_ids, videos, or both.")
                 known = want(options, "candidates", list, [])
-                plan = pipeline.plan_download(lib, index, ids, videos, known=known)
+                plan = pipeline.plan_download(
+                    lib, index, ids, videos, known=known,
+                    playlist_id=want(options, "playlist_id", str),
+                )  # fmt: skip
             elif kind == "edit":
                 cover = want(options, "cover_file", str)
                 plan = pipeline.plan_edit(
@@ -898,6 +904,27 @@ class Server:
             return discover.suggest(
                 self._library(), index, seeds, count, shuffle=shuffle, progress=progress
             )
+
+    def import_playlist(self, params: dict[str, Any]) -> dict[str, Any]:
+        """A playlist from elsewhere, as its name and its songs (imports, v0.3). Only
+        read: nothing is looked for or downloaded yet."""
+        source = need(params, "source", str)
+        if source != "youtube":
+            raise RpcError(INVALID_PARAMS, "source should be youtube.")
+        self._library()
+        return imports.from_youtube(need(params, "link", str))
+
+    def import_find(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Each imported song found on YouTube Music, or known to be the owner's
+        already. Lookups only; up to a hundred songs a call."""
+        tracks = need(params, "tracks", list)
+        token = want(params, "token", str)
+
+        def progress(done: int, total: int) -> None:
+            self.writer.notify("import.progress", {"token": token, "done": done, "of": total})
+
+        with self._index(write=True) as index:  # the index keeps YouTube Music's answers
+            return {"found": imports.find(self._library(), index, tracks, progress=progress)}
 
     def search_ytmusic(self, params: dict[str, Any]) -> dict[str, Any]:
         query = need(params, "query", str).strip()
