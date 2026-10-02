@@ -657,7 +657,10 @@ def status(
         paused = store.meta(PAUSED) == "1"
         until = _parse(store.meta(YOUTUBE_PAUSED_UNTIL))
         reason = store.meta(YOUTUBE_PAUSE_REASON)
-        daily = len(recent_downloads(store, now))
+        recent = recent_downloads(store, now)
+    daily = len(recent)
+    # At the daily limit the next download waits for the oldest of them to be a day old.
+    daily_resume = recent[daily - cap] + DAY if cap > 0 and daily >= cap else None
     youtube_paused = until is not None and now < until
     if youtube_paused:
         state = "paused_by_youtube"
@@ -675,6 +678,7 @@ def status(
     for name in JOB_STATES:
         result[name] = counts.get(name, 0)
     result.update(daily_count=daily, daily_cap=cap)
+    result["daily_resume_at"] = _iso(daily_resume) if daily_resume else None
     return result
 
 
@@ -760,6 +764,30 @@ def dismiss_download(lib: Library, job_id: int) -> None:
             fileops.close_batch(lib, job["batch_id"])
         except NotFoundError:
             pass
+
+
+def dismiss_waiting(lib: Library) -> int:
+    """Cancel every one of the owner's downloads that's still waiting its turn (the
+    app's Cancel Waiting, after hundreds were asked for at once). The one downloading
+    right now carries on, and ones that ended without the song stay on the list. Needs
+    the library's lock. Returns how many were cancelled."""
+    if not lib.writable:
+        raise RuntimeError("dismissing downloads needs the library open for writing")
+    now = _iso(datetime.now(UTC))
+    cancelled = 0
+    with open_queue(lib.paths, write=True) as store:
+        batches: dict[str, None] = {}  # in the order met
+        for job in store.jobs(kind="download", state="queued"):
+            if store.cancel_job(job["id"], now, states=("queued",)):  # not started meanwhile
+                cancelled += 1
+                batches[job["batch_id"]] = None
+        finished = [batch_id for batch_id in batches if store.open_jobs(batch_id) == 0]
+    for batch_id in finished:
+        try:
+            fileops.close_batch(lib, batch_id)
+        except NotFoundError:
+            pass
+    return cancelled
 
 
 class BatchJobs:

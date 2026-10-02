@@ -13,9 +13,11 @@ process and owns its lifetime:
   until shutdown; a CLI `queue pause` still works through the flag.
 - **Workers:** the queue runs on its own thread exactly like `queue run`, from
   `library.open` (and after `plan.apply` or `queue.resume`) until it's empty, paused, or
-  the engine stops. One further long operation at a time (`sources.scan`, `match.run`,
-  `journal.undo`) returns `{job_id}` at once and reports `job.progress` (at most 4 a
-  second) and `job.finished`. A second one while busy gets -32007.
+  the engine stops. A queue that stopped until a known time (the daily limit, a pause by
+  YouTube) is started again at that time. One further long operation at a time
+  (`sources.scan`, `match.run`, `journal.undo`) returns `{job_id}` at once and reports
+  `job.progress` (at most 4 a second) and `job.finished`. A second one while busy gets
+  -32007.
 - **Shutdown:** stdin closing is the signal on both platforms (SIGTERM on macOS does the
   same). No new work is taken; the queue's current job gets 10 seconds to finish
   (otherwise it's queued again when the engine next starts); the lock is released; the
@@ -36,6 +38,7 @@ import time
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import IO, Any
@@ -78,6 +81,10 @@ log = logging.getLogger(__name__)
 PROTOCOL = "2.0"
 SHUTDOWN_GRACE_S = 10.0
 PROGRESS_INTERVAL_S = 0.25  # at most 4 job.progress a second per job
+# A queue that stopped until a known time is started again then: the clock is looked at
+# this often, and never sooner than the least wait after it stopped.
+RESUME_CHECK_S = 30.0
+RESUME_LEAST_S = 60.0
 REVIEW_STATES = ("review", "not_found", "matched_auto")
 SLOW_METHODS = frozenset(
     {"youtube.stream", "youtube.video", "search.ytmusic", "lyrics.find", "lyrics.for_video",
@@ -241,6 +248,7 @@ class Server:
         self._job_counter = 0
         self._queue_thread: threading.Thread | None = None
         self._queue_lock = threading.Lock()
+        self._resume_wait = 0  # counts the waits to start the queue again; the newest wins
         self.methods: dict[str, Callable[[dict[str, Any]], Any]] = {
             "engine.hello": self.engine_hello,
             "library.init": self.library_init,
@@ -442,10 +450,33 @@ class Server:
                     if done:
                         self.writer.notify("library.changed", {"tracks_added": 0,
                                                                "tracks_changed": done})  # fmt: skip
+                    if result.resume_at is not None:
+                        self._resume_queue_at(result.resume_at)
                 self._queue_state()
 
             self._queue_thread = threading.Thread(target=target, name="queue", daemon=True)
             self._queue_thread.start()
+
+    def _resume_queue_at(self, when: datetime) -> None:
+        """The queue stopped until a known time (the daily limit, a pause by YouTube, a
+        retry that isn't due yet): start it again then, by itself, so downloads asked
+        for at night carry on without anyone clicking. Only the newest wait counts. The
+        clock is looked at every little while rather than slept through, so a computer
+        that was asleep at the time starts the queue when it wakes."""
+        with self._queue_lock:
+            self._resume_wait += 1
+            mine = self._resume_wait
+
+        def wait() -> None:
+            self.stopping.wait(RESUME_LEAST_S)  # never straight round again
+            while not self.stopping.is_set() and self._resume_wait == mine:
+                left = (when - datetime.now(UTC)).total_seconds()
+                if left <= 0:
+                    self.start_queue()
+                    return
+                self.stopping.wait(min(left, RESUME_CHECK_S))
+
+        threading.Thread(target=wait, name="queue-resume", daemon=True).start()
 
     def _queue_state(self) -> None:
         if self.lib is None:
@@ -823,7 +854,10 @@ class Server:
 
     def queue_dismiss(self, params: dict[str, Any]) -> dict[str, Any]:
         lib = self._library()
-        queue.dismiss_download(lib, need(params, "job_id", int))
+        if want(params, "waiting", bool, False):
+            queue.dismiss_waiting(lib)  # every download that hasn't started
+        else:
+            queue.dismiss_download(lib, need(params, "job_id", int))
         return {"downloads": queue.downloads(lib.paths)}
 
     def lyrics_for_video(self, params: dict[str, Any]) -> dict[str, Any]:

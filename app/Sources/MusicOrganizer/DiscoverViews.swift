@@ -129,6 +129,17 @@ struct FindView: View {
                     Button("Find", systemImage: "wand.and.stars", action: find)
                         .keyboardShortcut(.defaultAction)
                         .disabled(page.working || seeds.isEmpty)
+                    Menu("Download Automatically", systemImage: "arrow.down.circle") {
+                        ForEach(Guided.counts, id: \.self) { number in
+                            Button("\(number) songs") { downloadAutomatically(number) }
+                        }
+                    }
+                    .fixedSize()
+                    .disabled(page.working || seeds.isEmpty)
+                    .help(
+                        "Finds this many songs from the starting points above and downloads "
+                            + "every one, with nothing more to click. Leave the app open and "
+                            + "they'll be in Discover → Downloads when you're back.")
                     if page.hasAsked {
                         Button("Different Songs", systemImage: "arrow.triangle.2.circlepath") {
                             page.again(different: true)
@@ -140,6 +151,10 @@ struct FindView: View {
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
+            if let auto = model.auto {
+                Divider()
+                AutoDownloadNote(auto: auto) { model.auto = nil }
+            }
             Divider()
             if page.hasAsked {
                 PicksView(page: page, empty: "Nothing new was found for that.")
@@ -148,7 +163,8 @@ struct FindView: View {
                     symbol: "wand.and.stars", title: "Find songs you don't have",
                     text: "Choose where to start from and how many songs you'd like, or let the "
                         + "guide ask you. Play any of them straight away; nothing is saved unless "
-                        + "you click Download."
+                        + "you click Download. Download Automatically finds and downloads a "
+                        + "whole batch in one go, for while you're away."
                 ) {
                     Button("Guide Me…") { guiding = true }
                 }
@@ -221,11 +237,71 @@ struct FindView: View {
         model.find.find(seeds, count: count)
     }
 
+    /// Find that many from the starting points in the boxes, and download them all.
+    private func downloadAutomatically(_ number: Int) {
+        if let first = choices.first {
+            (savedStart, savedArtist, savedGenre) = (first.start, first.artist, first.genre)
+        }
+        model.downloadAutomatically(seeds, count: number)
+    }
+
     private func takeOtherCount() {
         if let typed = Int(otherCount.trimmingCharacters(in: .whitespaces)) {
             count = min(max(typed, 1), 500)
         }
         otherCount = ""
+    }
+}
+
+/// How Download Automatically is going: finding, on the way (how many, how long), or
+/// what went wrong. It stays until it's closed.
+private struct AutoDownloadNote: View {
+    let auto: AppModel.AutoDownload
+    let close: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            switch auto {
+            case .finding:
+                ProgressView().controlSize(.small)
+            case .started:
+                Image(systemName: "arrow.down.circle.fill").foregroundStyle(Color.accentColor)
+            case .failed:
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+            }
+            // The words take the room there is and wrap inside it.
+            Text(words)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            if auto.isOver {
+                Button(action: close) {
+                    Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Close this note. The downloads carry on.")
+            }
+        }
+        .font(.callout)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 9)
+        .background(.background.secondary)
+    }
+}
+
+extension AutoDownloadNote {
+    fileprivate var words: String {
+        switch auto {
+        case .finding(let count):
+            "Finding \(count) \(count == 1 ? "song" : "songs") to download…"
+        case .started(let note): note
+        case .failed(let why): why
+        }
+    }
+}
+
+extension AppModel.AutoDownload {
+    /// Found and queued, or failed: nothing more is coming.
+    var isOver: Bool {
+        if case .finding = self { false } else { true }
     }
 }
 

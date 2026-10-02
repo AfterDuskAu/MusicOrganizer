@@ -89,6 +89,8 @@ final class AppModel {
     /// Downloads that couldn't even be queued, and why (by video id).
     private(set) var startProblems: [String: String] = [:]
     @ObservationIgnored private var watchingDownloads = false
+    /// What Download Automatically last started from.
+    @ObservationIgnored private var lastAuto: [DiscoverSeed]?
 
     enum DownloadState: Equatable {
         case working
@@ -107,6 +109,17 @@ final class AppModel {
     let find = DiscoverPage(named: "find")
     /// Several downloads planned and waiting for the owner's yes (Download Selected).
     var batch: BatchDownload?
+    /// How Discover's Download Automatically is going, until its note is closed.
+    var auto: AutoDownload?
+    /// How the download queue is doing: asked for when its worker starts or stops.
+    private(set) var queueStatus: QueueStatus?
+
+    /// Find and download in one go, with no more clicks.
+    enum AutoDownload: Equatable {
+        case finding(Int)
+        case started(String)
+        case failed(String)
+    }
     /// Downloads the owner asked to delete, waiting for their yes.
     var deletingDownloads: [Track]?
 
@@ -364,6 +377,10 @@ final class AppModel {
     private func engineSaid(_ method: String) async {
         switch method {
         case "library.changed": await reload()
+        case "queue.state":
+            // The queue's worker started or stopped: at the daily limit, say.
+            await refreshQueueStatus()
+            await refreshDownloads()
         case "review.changed":
             if let connection = engine?.connection {
                 status = try? await connection.call("library.status", as: LibraryStatus.self)
@@ -582,6 +599,74 @@ final class AppModel {
             planId: plan.planId, videoIds: wanted.map(\.videoId),
             count: plan.summary.downloads ?? plan.summary.operations,
             minutes: plan.summary.estMinutes ?? 0, days: plan.summary.days ?? 1)
+    }
+
+    /// Discover's Download Automatically: find this many songs from these starting
+    /// points and queue every one, with nothing more to click. The click on the number
+    /// is the owner's yes; the engine still makes a plan first and then applies it, so
+    /// the batch is journaled like any other. The picks land on the Find page.
+    func downloadAutomatically(_ seeds: [DiscoverSeed], count: Int) {
+        if case .finding = auto { return }
+        guard !seeds.isEmpty, let connection = engine?.connection else { return }
+        auto = .finding(count)
+        // Asked for again, it starts from other songs: the first lot are on their way.
+        let again = lastAuto == seeds
+        lastAuto = seeds
+        let page = find
+        Task {
+            guard await page.run(seeds, count: count, different: again) else {
+                auto = .failed(
+                    page.problem ?? "Find is busy with another search. Try again in a moment.")
+                return
+            }
+            let picks = page.picks
+            guard !picks.isEmpty else {
+                auto = .failed(page.note ?? "Nothing new was found for that.")
+                return
+            }
+            do {
+                let batch = try await plan(downloading: picks)
+                // What today's limit has room for, before these join the queue.
+                let status = try? await connection.call("queue.status", as: QueueStatus.self)
+                let limit = status?.dailyCap ?? 250
+                let room = limit - (status?.dailyCount ?? 0) - pending.filter(\.isActive).count
+                start(batch)
+                auto = .started(
+                    Guided.startedNote(
+                        batch.count, from: page.seeds, wanted: count, minutes: batch.minutes,
+                        allowance: room, limit: limit))
+            } catch {
+                auto = .failed(error.localizedDescription)
+            }
+        }
+    }
+
+    /// Cancel every download that's still waiting its turn. The one downloading right
+    /// now carries on.
+    func cancelWaitingDownloads() {
+        guard let connection = engine?.connection else { return }
+        Task {
+            do {
+                pending = try await connection.call(
+                    "queue.dismiss", ["waiting": true], as: DownloadsAnswer.self
+                ).downloads
+            } catch {
+                notice = error.localizedDescription
+                await refreshDownloads()
+            }
+        }
+    }
+
+    /// Why the waiting downloads aren't moving, if they aren't: the daily limit, or
+    /// YouTube refusing this Mac for a while.
+    var downloadsHoldUp: String? {
+        guard pending.contains(where: { $0.isActive && !$0.isRunning }) else { return nil }
+        return queueStatus?.holdUp { $0.formatted(date: .omitted, time: .shortened) }
+    }
+
+    private func refreshQueueStatus() async {
+        guard let connection = engine?.connection else { return }
+        queueStatus = try? await connection.call("queue.status", as: QueueStatus.self)
     }
 
     /// The owner said yes: the planned downloads go to the queue.

@@ -15,6 +15,7 @@ import subprocess
 import sys
 import threading
 from collections.abc import Iterator
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -22,7 +23,7 @@ import pytest
 from conftest import require_tool
 from index_support import add_candidates, add_item, add_source, candidate
 
-from musicorg import library, rpc
+from musicorg import library, queue, rpc
 from musicorg.index import open_index
 
 ENGINE = Path(__file__).resolve().parents[1]
@@ -516,6 +517,8 @@ def test_stream_jobs_and_the_new_plan_kinds(
     assert result(opened, "queue.downloads") == {"downloads": []}
     assert code(opened, "queue.dismiss", job_id=12345) == rpc.NOT_FOUND
     assert code(opened, "queue.dismiss") == rpc.INVALID_PARAMS
+    # Every download still waiting, at once: with none waiting there's nothing to do.
+    assert result(opened, "queue.dismiss", waiting=True) == {"downloads": []}
     assert code(opened, "plan.create", kind="download") == rpc.INVALID_PARAMS
     assert code(opened, "plan.create", kind="download", options={"video_ids": []}) == (
         rpc.INVALID_PARAMS
@@ -577,3 +580,55 @@ def test_lyrics_for_a_song_played_from_youtube(
         "Song", "Band", 187.0, "abcdefghijk",
     )  # fmt: skip
     assert code(opened, "lyrics.find") == rpc.INVALID_PARAMS
+
+
+# ---- the queue starts again by itself ----------------------------------------------------
+
+
+def test_a_queue_stopped_until_a_time_starts_again_then(
+    server: rpc.Server, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(rpc, "RESUME_LEAST_S", 0.0)
+    monkeypatch.setattr(rpc, "RESUME_CHECK_S", 0.01)
+    started = threading.Event()
+    monkeypatch.setattr(server, "start_queue", started.set)
+
+    server._resume_queue_at(datetime.now(UTC) + timedelta(hours=6))  # an older wait
+    server._resume_queue_at(datetime.now(UTC) + timedelta(seconds=0.05))
+    assert started.wait(10)
+    # Only the newest wait counts: the six-hour one has given up, not just gone quiet.
+    waits = [t for t in threading.enumerate() if t.name == "queue-resume"]
+    for thread in waits:
+        thread.join(10)
+    assert not any(thread.is_alive() for thread in waits)
+
+
+def test_a_stopping_engine_does_not_start_the_queue_again(
+    server: rpc.Server, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(rpc, "RESUME_LEAST_S", 0.0)
+    monkeypatch.setattr(rpc, "RESUME_CHECK_S", 0.01)
+    started = threading.Event()
+    monkeypatch.setattr(server, "start_queue", started.set)
+    server.stopping.set()
+    server._resume_queue_at(datetime.now(UTC) - timedelta(seconds=1))
+    assert not started.wait(0.3)
+
+
+def test_the_daily_limit_ends_the_run_with_a_time_to_start_again(
+    opened: rpc.Server, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    later = datetime.now(UTC) + timedelta(hours=5)
+    asked: list[datetime] = []
+    monkeypatch.setattr(opened, "_resume_queue_at", asked.append)
+    monkeypatch.setattr(
+        queue, "run", lambda lib, **_: queue.RunResult("daily_cap", "The daily limit.", later)
+    )
+    opened.start_queue()
+    wait_queue(opened)
+    assert asked == [later]
+    # A run that just emptied the queue asks for nothing more.
+    monkeypatch.setattr(queue, "run", lambda lib, **_: queue.RunResult("empty", "Empty."))
+    opened.start_queue()
+    wait_queue(opened)
+    assert asked == [later]

@@ -296,6 +296,19 @@
 - **Engine:** a pick found from two different starting points now says which: "On the radio for both Road Trip and rock songs" (it said "2 of your starting points").
 - **Checked:** the three-row layout was looked at with the hidden copy of the app (started with three rows for the picture, then put back). The engine's test covers a playlist and a genre together with made-up radios. Not clicked, and not tried against YouTube.
 
+2026-10-02, afternoon. **Download Automatically** (the owner: "a button of automatically download 10/25/50/100/250 songs from specific genre etc… you could fall asleep after asking for the download and wake up to 250 new songs").
+
+- **Find → Download Automatically**, a menu of 10, 25, 50, 100 and 250 beside Find. It finds that many songs from the starting points in the boxes and queues every one, with nothing more to click. The picks land on the Find page, and a note under the boxes says how many are on the way, about how long it takes, and what the daily limit does to them.
+  - It's the same `discover.suggest`, `plan.create` (kind `download`) and `plan.apply` as before; the app just doesn't stop between them. The click on the number is the owner's yes, and the batch is planned and journaled like any other (rule 5).
+  - Asked for again from the same starting points, it starts from other songs of the owner's.
+- **The queue starts again by itself.** `musicorg serve` used to run the queue until it stopped and leave it: at the daily limit, or after YouTube refused us, the songs still waiting sat there until the app was opened again or something else was downloaded. Now a queue that stopped until a known time is started again at that time. The clock is looked at every 30 seconds rather than slept through, so a Mac that was asleep then carries on when it wakes; and never sooner than a minute after it stopped.
+- `queue.status` also gives `daily_resume_at`: when the next download may start, while the daily limit is reached. The app shows it above the waiting downloads ("That's 250 downloads in 24 hours, your daily limit. The rest carry on by themselves from 3:10 pm."), and the same for a pause by YouTube.
+- `queue.dismiss` takes `{ "waiting": true }` in place of a job: every download that hasn't started is cancelled at once (`queue.dismiss_waiting`). The one downloading carries on.
+- **Discover → Downloads with hundreds on the way** lists the one downloading, the next three in line and the first two that didn't arrive, and counts the rest ("and 243 more waiting their turn"), with how many are on the way and **Cancel Waiting…** (it asks first). A handful are all listed, as before.
+- Nothing new keeps the Mac awake: the queue already does (`caffeinate -i`, since step 09a). The screen may still turn off.
+- Checked: engine tests for the three engine changes; the app's words and the shortened list in its Kit tests (39 pass); the Find page, the note in each of its states, and the Downloads page with twelve made-up downloads waiting (a paused scratch library, so nothing was fetched) looked at in the unseen snapshot. **Not clicked in the running app, and no real batch was downloaded by it.**
+- Found on the way: a long line of text with `fixedSize` beside a `Spacer` in that note left the whole page undrawn in the snapshot (sidebar and player bar included). The note now gives its text the room there is and lets it wrap.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

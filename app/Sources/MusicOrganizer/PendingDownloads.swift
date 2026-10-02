@@ -4,20 +4,77 @@ import SwiftUI
 /// The top of Discover → Downloads: what's on its way, and what didn't arrive. A
 /// download shows here from the moment it's asked for until it's a song in the list
 /// below; one that failed stays, with Try Again and a way to take it off the list.
+///
+/// Hundreds at once (Discover's Download Automatically) are listed shortly: the one
+/// downloading, the next few in line, and a count of the rest with Cancel Waiting.
 struct PendingDownloads: View {
     @Environment(AppModel.self) private var model
+    @State private var cancelling = false
 
     var body: some View {
         let pending = model.pending
         if !pending.isEmpty {
+            let shown = DownloadsShown(pending)
+            let waiting = pending.filter { $0.isActive && !$0.isRunning }.count
             VStack(spacing: 0) {
-                ForEach(pending) { download in
+                if waiting > 1 || model.downloadsHoldUp != nil {
+                    summary(waiting: waiting, of: pending.filter(\.isActive).count)
+                    Divider()
+                }
+                ForEach(shown.rows) { download in
                     row(download)
+                    Divider()
+                }
+                if shown.moreWaiting > 0 || shown.moreEnded > 0 {
+                    Text(Self.rest(waiting: shown.moreWaiting, ended: shown.moreEnded))
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 7)
                     Divider()
                 }
             }
             .background(.background.secondary)
+            .confirmationDialog(
+                "Cancel the \(waiting) downloads still waiting?", isPresented: $cancelling
+            ) {
+                Button("Cancel \(waiting) Downloads", role: .destructive) {
+                    model.cancelWaitingDownloads()
+                }
+                Button("Keep Downloading", role: .cancel) {}
+            } message: {
+                Text("The one downloading right now carries on. Songs that have arrived stay.")
+            }
         }
+    }
+
+    /// How many are on their way, why they aren't moving if they aren't, and a way to
+    /// call off the ones that haven't started.
+    private func summary(waiting: Int, of active: Int) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(active) \(active == 1 ? "download" : "downloads") on the way")
+                    .fontWeight(.medium)
+                if let holdUp = model.downloadsHoldUp {
+                    Text(holdUp).font(.callout).foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+            if waiting > 1 {
+                Button("Cancel Waiting…") { cancelling = true }
+                    .help("Call off the \(waiting) downloads that haven't started")
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+    }
+
+    static func rest(waiting: Int, ended: Int) -> String {
+        var parts: [String] = []
+        if waiting > 0 { parts.append("\(waiting) more waiting their turn") }
+        if ended > 0 { parts.append("\(ended) more that didn't arrive") }
+        return "and " + parts.joined(separator: ", and ")
     }
 
     private func row(_ download: PendingDownload) -> some View {

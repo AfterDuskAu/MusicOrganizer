@@ -617,6 +617,91 @@ final class SongVideoTests: XCTestCase {
         XCTAssertTrue(Guided.downloadNote(minutes: 400, days: 2).contains("over 2 days"))
     }
 
+    func testWhatADownloadStartedAutomaticallySays() {
+        typealias Seed = DiscoverAnswer.Seed
+        let hipHop = [Seed(kind: "genre", label: "Hip hop")]
+        let all = Guided.startedNote(
+            250, from: hipHop, wanted: 250, minutes: 95, allowance: 250, limit: 250)
+        XCTAssertTrue(all.hasPrefix("250 hip hop songs are on the way. It takes about 1½ hours"))
+        XCTAssertTrue(all.hasSuffix("the Mac stays awake while they download."))
+        XCTAssertFalse(all.contains("limit"))
+        // Fewer were new than were asked for.
+        let fewer = Guided.startedNote(
+            37, from: hipHop, wanted: 50, minutes: 20, allowance: 250, limit: 250)
+        XCTAssertTrue(fewer.hasPrefix("37 hip hop songs are on the way (50 were asked for;"))
+        // Some of today's limit is used already: the rest wait, and that's said.
+        let some = Guided.startedNote(
+            250, from: hipHop, wanted: 250, minutes: 95, allowance: 120, limit: 250)
+        XCTAssertTrue(some.contains("has room for 120 now; the other 130 start by themselves"))
+        XCTAssertFalse(some.contains("It takes"))
+        let none = Guided.startedNote(
+            10, from: [], wanted: 10, minutes: 5, allowance: -3, limit: 250)
+        XCTAssertTrue(none.hasPrefix("10 songs are on the way. Your limit of 250"))
+        XCTAssertTrue(none.contains("used up for now"))
+        let one = Guided.startedNote(1, from: [], wanted: 1, minutes: 1, allowance: 9, limit: 250)
+        XCTAssertTrue(one.hasPrefix("1 song is on the way. It takes about a minute"))
+    }
+
+    func testWhyWaitingDownloadsAreNotMoving() {
+        let clock: (Date) -> String = { _ in "3:10 pm" }
+        XCTAssertNil(QueueStatus(state: "running", queued: 40, running: 1).holdUp(clock: clock))
+        XCTAssertNil(QueueStatus().holdUp(clock: clock))
+        let limit = QueueStatus(
+            queued: 30, dailyCount: 250, dailyCap: 250,
+            dailyResumeAt: "2026-10-03T05:10:00.250000Z")
+        XCTAssertEqual(
+            limit.holdUp(clock: clock),
+            "That's 250 downloads in 24 hours, your daily limit. The rest carry on by "
+                + "themselves from 3:10 pm.")
+        let refused = QueueStatus(state: "paused_by_youtube", resumeAt: "2026-10-03T05:10:00Z")
+        XCTAssertTrue(refused.holdUp(clock: clock)?.contains("resting until 3:10 pm") == true)
+        XCTAssertTrue(
+            QueueStatus(state: "paused_by_youtube").holdUp(clock: clock)?
+                .contains("for a few hours") == true)
+        XCTAssertEqual(QueueStatus(state: "paused").holdUp(clock: clock), "Downloads are paused.")
+        // The engine's times, with and without parts of a second.
+        XCTAssertNotNil(engineDate("2026-10-03T05:10:00.250000Z"))
+        XCTAssertEqual(
+            engineDate("2026-10-03T05:10:00.000000Z"), engineDate("2026-10-03T05:10:00Z"))
+        XCTAssertNil(engineDate(nil))
+        XCTAssertNil(engineDate("soon"))
+    }
+
+    func testQueueStatusIsRead() throws {
+        let json = """
+            {"state": "idle", "reason": null, "resume_at": null, "queued": 12, "running": 0,
+             "done": 240, "failed": 0, "needs_review": 1, "daily_count": 250, "daily_cap": 250,
+             "daily_resume_at": "2026-10-03T05:10:00.250000Z"}
+            """
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let status = try decoder.decode(QueueStatus.self, from: Data(json.utf8))
+        XCTAssertEqual(status.queued, 12)
+        XCTAssertEqual(status.dailyCount, 250)
+        XCTAssertNotNil(engineDate(status.dailyResumeAt))
+    }
+
+    func testHundredsOfDownloadsAreListedShortly() {
+        func download(_ id: Int, _ state: String) -> PendingDownload {
+            PendingDownload(jobId: id, state: state, videoId: "v\(id)")
+        }
+        // A handful are all listed, as they came.
+        let few = [download(3, "queued"), download(2, "running"), download(1, "failed")]
+        let short = DownloadsShown(few)
+        XCTAssertEqual(short.rows, few)
+        XCTAssertEqual([short.moreWaiting, short.moreEnded], [0, 0])
+        // Hundreds, newest first as the engine gives them: the one downloading, then the
+        // next three in line (the oldest), then two that didn't arrive.
+        let many =
+            (5...250).reversed().map { download($0, "queued") }
+            + [download(4, "running"), download(3, "failed"), download(2, "needs_review"),
+               download(1, "failed")]
+        let shown = DownloadsShown(many)
+        XCTAssertEqual(shown.rows.map(\.jobId), [4, 5, 6, 7, 3, 2])
+        XCTAssertEqual(shown.moreWaiting, 243)
+        XCTAssertEqual(shown.moreEnded, 1)
+    }
+
     func testRoughTime() {
         XCTAssertEqual(roughTime(minutes: 0), "under a minute")
         XCTAssertEqual(roughTime(minutes: 1), "about a minute")

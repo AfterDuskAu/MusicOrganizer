@@ -1543,6 +1543,34 @@ def test_a_download_dismissed_while_waiting_closes_its_batch(
         queue.dismiss_download(lib, waiting["job_id"])
 
 
+def test_every_waiting_download_can_be_cancelled_at_once(
+    lib: Library, index: Index, downloads: FakeDownloads, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    found = {
+        VIDEO_A: candidate(VIDEO_A, "Melody", ("Band",), SECONDS, album="Tunes"),
+        VIDEO_B: candidate(VIDEO_B, "Other", ("Band",), SECONDS, album="Tunes"),
+        VIDEO_V: candidate(VIDEO_V, "Third", ("Band",), SECONDS, album="Tunes"),
+    }
+    monkeypatch.setattr(youtube, "get_track", lambda video_id: found.get(video_id))
+    assert queue.dismiss_waiting(lib) == 0  # nothing waiting: nothing to do
+
+    # Two asked for together, and one by itself that has already started.
+    together = pipeline.apply(
+        lib, index, pipeline.plan_download(lib, index, [VIDEO_A, VIDEO_B]).plan_id
+    ).batch_id
+    alone = pipeline.apply(lib, index, pipeline.plan_download(lib, index, [VIDEO_V]).plan_id)
+    started = next(d for d in queue.downloads(lib.paths) if d["video_id"] == VIDEO_V)
+    with open_queue(lib.paths, write=True) as store:
+        store.update_job(started["job_id"], "2026-10-02T00:00:00Z", state="running")
+
+    assert queue.dismiss_waiting(lib) == 2
+    (left,) = queue.downloads(lib.paths)  # the one that's downloading carries on
+    assert (left["video_id"], left["state"]) == (VIDEO_V, "running")
+    journal = fileops.read_journal(lib)
+    assert journal[together].status == "closed" and journal[alone.batch_id].status != "closed"
+    assert queue.dismiss_waiting(lib) == 0
+
+
 def test_a_download_is_given_a_genre(
     lib: Library, index: Index, downloads: FakeDownloads, samples: dict[str, Path],
     monkeypatch: pytest.MonkeyPatch,

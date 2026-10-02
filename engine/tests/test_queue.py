@@ -203,7 +203,13 @@ def test_daily_cap_survives_a_restart(lib: Library, clock: FakeClock, yt: FakeYo
     later = run(lib, clock, cfg)
     assert later.stopped == "daily_cap"
     assert len(yt.downloads) == 4
-    assert queue.status(lib.paths, now=clock.t, config=cfg)["daily_count"] == 3
+    status = queue.status(lib.paths, now=clock.t, config=cfg)
+    assert status["daily_count"] == 3
+    # The status says when the next may start: when the oldest of the three is a day old.
+    assert status["daily_resume_at"] == queue._iso(later.resume_at)
+    assert later.resume_at is not None and later.resume_at > clock.t
+    under = queue.status(lib.paths, now=clock.t, config=settings(daily_cap=4))
+    assert under["daily_resume_at"] is None
 
 
 def test_what_the_owner_asked_for_by_hand_runs_before_a_long_batch(
@@ -492,6 +498,7 @@ def test_status_of_a_library_with_no_queue_yet(lib: Library) -> None:
     status = queue.status(lib.paths)
     assert status["state"] == "idle"
     assert status["queued"] == 0 and status["daily_count"] == 0
+    assert status["daily_resume_at"] is None
     assert set(status) >= {"state", "reason", "resume_at", "queued", "running", "done",
                            "failed", "needs_review", "daily_count", "daily_cap"}  # fmt: skip
 

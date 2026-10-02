@@ -308,6 +308,86 @@ public struct DownloadsAnswer: Decodable, Sendable {
     public let downloads: [PendingDownload]
 }
 
+/// `queue.status`: how the download queue is doing, and how much of the daily limit
+/// has been used.
+public struct QueueStatus: Decodable, Equatable, Sendable {
+    public let state: String
+    public let reason: String?
+    /// When a pause by YouTube ends.
+    public let resumeAt: String?
+    public let queued: Int
+    public let running: Int
+    /// Downloads in the last 24 hours, and the most there may be.
+    public let dailyCount: Int
+    public let dailyCap: Int
+    /// When the next download may start, while the daily limit is reached.
+    public let dailyResumeAt: String?
+
+    public init(
+        state: String = "idle", reason: String? = nil, resumeAt: String? = nil, queued: Int = 0,
+        running: Int = 0, dailyCount: Int = 0, dailyCap: Int = 250, dailyResumeAt: String? = nil
+    ) {
+        self.state = state
+        self.reason = reason
+        self.resumeAt = resumeAt
+        self.queued = queued
+        self.running = running
+        self.dailyCount = dailyCount
+        self.dailyCap = dailyCap
+        self.dailyResumeAt = dailyResumeAt
+    }
+
+    /// Why downloads that are waiting aren't moving, and when they will: the daily
+    /// limit, or YouTube refusing this computer for a while. Nil while the queue is
+    /// simply working through them. `clock` writes a time the way the owner reads it.
+    public func holdUp(clock: (Date) -> String) -> String? {
+        if state == "paused_by_youtube" {
+            let until = engineDate(resumeAt).map { " until \(clock($0))" } ?? " for a few hours"
+            return "YouTube is slowing this Mac down, so downloads are resting\(until). "
+                + "They carry on by themselves after that."
+        }
+        if state == "paused" { return "Downloads are paused." }
+        guard let next = engineDate(dailyResumeAt) else { return nil }
+        return "That's \(dailyCap) downloads in 24 hours, your daily limit. The rest carry on "
+            + "by themselves from \(clock(next))."
+    }
+}
+
+/// A time as the engine writes it ("2026-10-02T09:30:00.250000Z"), with or without
+/// parts of a second.
+public func engineDate(_ text: String?) -> Date? {
+    guard let text, !text.isEmpty else { return nil }
+    let parts = ISO8601DateFormatter()
+    parts.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    return parts.date(from: text) ?? ISO8601DateFormatter().date(from: text)
+}
+
+/// Which of the downloads on their way the Downloads page lists. A few are all shown;
+/// of hundreds (Discover's Download Automatically), the one downloading, the next few
+/// in line and the first few that didn't arrive, with the rest counted.
+public struct DownloadsShown: Equatable, Sendable {
+    public let rows: [PendingDownload]
+    public let moreWaiting: Int
+    public let moreEnded: Int
+
+    /// More than this many, and the list is shortened.
+    public static let most = 6
+
+    public init(_ pending: [PendingDownload]) {
+        guard pending.count > Self.most else {
+            (rows, moreWaiting, moreEnded) = (pending, 0, 0)
+            return
+        }
+        let running = pending.filter(\.isRunning)
+        // The queue takes the oldest first: the lowest job number is next in line.
+        let waiting = pending.filter { $0.isActive && !$0.isRunning }.sorted { $0.jobId < $1.jobId }
+        let ended = pending.filter { !$0.isActive }
+        rows = running + waiting.prefix(3) + ended.prefix(2)
+        moreWaiting = max(waiting.count - 3, 0)
+        moreEnded = max(ended.count - 2, 0)
+    }
+}
+
 public struct FavouritesAnswer: Decodable, Sendable {
     public let favourites: [String]
 }

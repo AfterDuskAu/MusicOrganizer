@@ -207,6 +207,37 @@ public enum Guided {
     }
 }
 
+extension Guided {
+    /// What the owner is told once Download Automatically has queued its songs: how
+    /// many, how long, and what the daily limit does to them. `allowance` is how many
+    /// more downloads today's limit has room for (before these), and `limit` the limit.
+    public static func startedNote(
+        _ count: Int, from seeds: [DiscoverAnswer.Seed], wanted: Int, minutes: Int,
+        allowance: Int, limit: Int
+    ) -> String {
+        let are = count == 1 ? "is" : "are"
+        var note = "\(what(count, from: seeds).capitalizedFirst) \(are) on the way"
+        note += count < wanted ? " (\(wanted) were asked for; that's all that was new). " : ". "
+        let now = min(count, max(allowance, 0))
+        if now == count {
+            note += "It takes \(roughTime(minutes: minutes)), paced so YouTube doesn't refuse "
+                + "this Mac."
+        } else if now == 0 {
+            note += "Your limit of \(limit) downloads in 24 hours is used up for now, so they "
+                + "start by themselves as it frees up."
+        } else {
+            note += "Your limit of \(limit) downloads in 24 hours has room for \(now) now; the "
+                + "other \(count - now) start by themselves as it frees up."
+        }
+        return note + " Leave Music Organizer open: the Mac stays awake while they download."
+    }
+}
+
+extension String {
+    /// The same words with a capital at the front; the rest is left as it is.
+    var capitalizedFirst: String { prefix(1).uppercased() + dropFirst() }
+}
+
 /// Where else a song can be looked at: a search for it on another service. Plain links,
 /// with no account and no key.
 public enum ElsewhereLink: String, CaseIterable, Identifiable, Sendable {
