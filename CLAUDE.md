@@ -6,7 +6,7 @@ Standing rules for every Claude Code session in this project. Read this file, `d
 
 A personal music app that replaces Spotify, Apple Music and YouTube Music for a home library. Music comes from YouTube Music, and the app turns it into a clean, permanent, tagged library of files. This repo's `engine/` is the part with no UI. It scans, matches, downloads, tags and protects the library. From v0.2 a Mac app (SwiftUI) sits on top, and later a Windows app. Both talk to the engine over JSON-RPC.
 
-**v0.2 (from 2026-10-01): the Mac app** lives in `app/`, a Swift package: `MusicOrganizerKit` (the engine connection, the library's shape, the play queue, the lyrics parser, all tested without a window) and `MusicOrganizer` (the SwiftUI screens). `scripts/build_app.sh` builds `app/build/Music Organizer.app`. **The app never writes inside the library:** it reads audio and cover files to play and show them, and every change goes through the engine over JSON-RPC. What the app needs from the library, it asks the engine for (`library.tracks`, `library.lyrics`, `lyrics.for_video`, `listening.*`, `playlist.*`, `youtube.stream`, `youtube.video`, `discover.suggest`, `import.playlist`, `import.find`); it doesn't parse tags or the index itself.
+**v0.2 (from 2026-10-01): the Mac app** lives in `app/`, a Swift package: `MusicOrganizerKit` (the engine connection, the library's shape, the play queue, the lyrics parser, all tested without a window) and `MusicOrganizer` (the SwiftUI screens). `scripts/build_app.sh` builds `app/build/Music Organizer.app`. **The app never writes inside the library:** it reads audio and cover files to play and show them, and every change goes through the engine over JSON-RPC. What the app needs from the library, it asks the engine for (`library.tracks`, `library.lyrics`, `lyrics.for_video`, `listening.*`, `playlist.*`, `youtube.stream`, `youtube.video`, `discover.suggest`, `import.*`, `account.*`); it doesn't parse tags or the index itself.
 
 The owner builds with Claude Code and is not a professional programmer. Prefer boring, obvious code with good error messages over clever code. The development machine is an **Intel iMac**.
 
@@ -16,12 +16,12 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
 2. **The engine writes user data only inside the library root.**
    - External folders (the owner's existing rips, friends' iTunes folders) are **read-only sources**: never renamed, retagged, moved or deleted. Only-copy tracks are *copied* into the library, and only the copy is tagged.
    - **Engine-owned exceptions:**
-     - the app's own config, log and cache folders (platformdirs): `config.json`, logs, and yt-dlp's cache via its `cachedir` option
+     - the app's own config, log and cache folders (platformdirs): `config.json`, `accounts.json`, logs, and yt-dlp's cache via its `cachedir` option
      - exports the user asked for (`report`, `review export`, `auto-sample`), written only through `fileops.write_export()`, which never overwrites and refuses any path inside the library's managed folders or a registered source
 3. **All filesystem writes go through `musicorg.fileops`.** Other modules may not create, write, move, copy, rename, replace or delete files or folders. The only exceptions, enforced by an AST-based test (step 03a):
    - `state.py`: `state.json`, written atomically
    - `index.py`: owns the SQLite files (`index.sqlite`, `queue.sqlite`)
-   - `config.py`: `config.json`, written atomically
+   - `config.py`: `config.json`, and `accounts.json` (sign-ins, beside it), written atomically
    - `tags.py`: its single mutagen save call, which only `fileops` ever calls, on staged copies
    - yt-dlp itself, writing **only** into the `_Staging/<batch_id>/` folder `fileops` hands it
    - a single line marked `# fileops-ok: in-memory`, for writes to in-memory buffers (e.g. Pillow saving into `BytesIO`)
@@ -61,6 +61,7 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
   - `listening`: the owner's favourites, play counts and playlists, kept in `state.json` by `MUSICORG_ID`
   - `discover`: songs the owner doesn't have, found from the ones they do (read-only; lookups through `youtube`)
   - `imports`: a playlist from elsewhere, each song found on YouTube Music (read-only; lookups through `youtube`)
+  - `spotify`: signing in to Spotify in the browser (PKCE) and reading the owner's playlists; the only module that talks to Spotify, and it only reads
   - `report`
   - `review` and `review_web`: the review spreadsheet, and the local review page
   - `rpc`: the JSON-RPC server
@@ -91,6 +92,7 @@ All states, decisions and tag values are defined **once**, in `docs/ENGINE_API.m
 - Commits and pushes go through the `.githooks/` secret check (`scripts/check_secrets.py`: files, commit messages and commit author details). Never bypass it with `--no-verify`. If it flags something harmless, fix the line or end it with a `secrets-ok` comment, and say so.
 - Tests that need a fake secret build it at runtime (e.g. `"ghp_" + "a1B2" * 10`), so the file never contains one.
 - YouTube logins (yt-dlp cookie files, ytmusicapi `browser.json` / `oauth.json`) live outside the repo, in the app's config folder.
+- A Spotify sign-in (`accounts.json`: the owner's app's Client ID and a refresh token that can only read playlists) lives there too. No token, one-time code or Client ID is ever logged, shown in an error, or written anywhere else.
 
 ## Testing
 
@@ -114,4 +116,4 @@ Weekly mix, phone/Subsonic server, packaging, signing, notarization, Windows app
 
 **Discover was started early, on 2026-10-01, at the owner's request** (it was on this list). Built: `discover.suggest`, the app's What's New and Find pages, the guided "What music would you like today?" mode, and Find's Download Automatically (find and queue a batch in one click). Still not yet, from its plan (`docs/roadmap/0.4-discover.md`): the `Discovered/` folder and its tag (a contract change), and Last.fm as a second source.
 
-**Imports were started early, on 2026-10-02, at the owner's request** (Spotify/Apple Music import was on this list, and so were accounts). Built: Discover → Import Playlists for a YouTube or YouTube Music playlist by its link, with no sign-in. Still not yet: signing in to Spotify, Apple Music or YouTube. Each needs something from the owner first (`docs/ROADMAP.md`, v0.3), and a sign-in is built only for reading playlists: logins stay on the Mac, never in the repo or the library.
+**Imports were started early, on 2026-10-02, at the owner's request** (Spotify/Apple Music import was on this list, and so were accounts). Built: Discover → Import Playlists for a YouTube or YouTube Music playlist by its link, with no sign-in; and for Spotify, after a sign-in on Spotify's own page (2026-10-03). Still not yet: Apple Music, and signing in to YouTube (`docs/ROADMAP.md`, v0.3). A sign-in is built only for reading playlists: logins stay on the Mac, never in the repo or the library.

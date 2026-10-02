@@ -116,6 +116,12 @@ final class AppModel {
     var auto: AutoDownload?
     /// How the download queue is doing: asked for when its worker starts or stops.
     private(set) var queueStatus: QueueStatus?
+    /// Which services are set up and signed in to (Settings → Accounts).
+    private(set) var accounts: AccountStatus?
+    /// The browser is open on a service's sign-in page, and its answer is awaited.
+    private(set) var signingIn = false
+    /// Why the last sign-in didn't work, until the next one is tried.
+    private(set) var accountNote: String?
 
     /// Find and download in one go, with no more clicks.
     enum AutoDownload: Equatable {
@@ -142,10 +148,11 @@ final class AppModel {
     private static let rootKey = "libraryRoot"
 
     init() {
-        importing.read = { [weak self] link in
+        importing.read = { [weak self] what in
             guard let self else { throw RPCError(code: 0, message: "The engine isn't running.") }
-            return try await self.readImport(link)
+            return try await self.readImport(what)
         }
+        importing.list = { [weak self] in try await self?.spotifyPlaylists() ?? [] }
         importing.find = { [weak self] tracks in try await self?.findImported(tracks) ?? [] }
         importing.download = { [weak self] name, owned, songs in
             guard let self else { throw RPCError(code: 0, message: "The engine isn't running.") }
@@ -232,6 +239,14 @@ final class AppModel {
             stopping = false
             engine.connection.start(
                 onNotification: { [weak self] method, params in
+                    if method == "account.changed" {
+                        let signedIn = params["signed_in"] as? Bool ?? false
+                        let problem = params["problem"] as? String
+                        Task { @MainActor in
+                            self?.accountChanged(signedIn: signedIn, problem: problem)
+                        }
+                        return
+                    }
                     if method == "import.progress" {
                         let done = params["done"] as? Int ?? 0
                         Task { @MainActor in self?.importing.progress(done: done) }
@@ -309,6 +324,7 @@ final class AppModel {
             await refreshDownloads()
             watchDownloads()
             watchDailyLimit()
+            loadAccounts()
         } catch {
             phase = .failed(error.localizedDescription)
         }
@@ -661,13 +677,82 @@ final class AppModel {
 
     // MARK: Import Playlists
 
-    /// Read a playlist from where it lives (a YouTube or YouTube Music link, so far).
-    private func readImport(_ link: String) async throws -> ImportedPlaylist {
+    /// Read a playlist from where it lives: a YouTube or YouTube Music link, or one of
+    /// the signed-in Spotify account's playlists.
+    private func readImport(_ what: ImportRequest) async throws -> ImportedPlaylist {
+        guard let connection = engine?.connection else {
+            throw RPCError(code: RPCError.closed, message: "The engine isn't running.")
+        }
+        return try await connection.call("import.playlist", what.params, as: ImportedPlaylist.self)
+    }
+
+    private func spotifyPlaylists() async throws -> [SpotifyPlaylist] {
         guard let connection = engine?.connection else {
             throw RPCError(code: RPCError.closed, message: "The engine isn't running.")
         }
         return try await connection.call(
-            "import.playlist", ["source": "youtube", "link": link], as: ImportedPlaylist.self)
+            "import.playlists", ["source": "spotify"], as: SpotifyPlaylistsAnswer.self
+        ).playlists
+    }
+
+    // MARK: Accounts (for reading playlists)
+
+    /// Ask the engine which services are set up and signed in to.
+    func loadAccounts() {
+        guard let connection = engine?.connection else { return }
+        Task {
+            if let found = try? await connection.call("account.status", as: AccountStatus.self),
+                found != accounts
+            {
+                accounts = found
+            }
+        }
+    }
+
+    /// Sign in to Spotify: the engine listens for Spotify's answer, and Spotify's own
+    /// sign-in page opens in the browser. The password is typed there, never here.
+    func signInToSpotify(clientId: String) {
+        guard let connection = engine?.connection, !signingIn else { return }
+        (signingIn, accountNote) = (true, nil)
+        Task {
+            do {
+                var params: [String: Any] = ["service": "spotify"]
+                let typed = clientId.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !typed.isEmpty { params["client_id"] = typed }
+                let answer = try await connection.call(
+                    "account.sign_in", params, as: SignInAnswer.self)
+                guard let page = answer.spotifyPage else {
+                    throw RPCError(code: 0, message: "The engine gave an address that isn't Spotify's.")
+                }
+                NSWorkspace.shared.open(page)
+            } catch {
+                (signingIn, accountNote) = (false, error.localizedDescription)
+            }
+            loadAccounts()
+        }
+    }
+
+    func signOutOfSpotify() {
+        guard let connection = engine?.connection else { return }
+        (signingIn, accountNote) = (false, nil)
+        importing.forgetSpotifyPlaylists()
+        Task {
+            if let found = try? await connection.call(
+                "account.sign_out", ["service": "spotify"], as: AccountStatus.self)
+            {
+                accounts = found
+            }
+        }
+    }
+
+    /// Spotify answered a sign-in (or nobody came back from its page in time).
+    private func accountChanged(signedIn: Bool, problem: String?) {
+        signingIn = false
+        accountNote = signedIn ? nil : (problem ?? "The sign-in didn't work.")
+        importing.forgetSpotifyPlaylists()
+        loadAccounts()
+        // Back to the app from the browser, now that there's something to see.
+        if signedIn { NSApp.activate(ignoringOtherApps: true) }
     }
 
     /// Which of these songs the owner has, and what the rest are on YouTube Music.

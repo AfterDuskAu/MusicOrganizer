@@ -248,6 +248,48 @@ def remember_library(root: Path) -> None:
     cfg.save()
 
 
+# ---- sign-ins (imports, v0.3) --------------------------------------------------------------
+
+ACCOUNTS_FILE_NAME = "accounts.json"
+
+
+def accounts_path() -> Path:
+    """Where sign-ins are kept: beside config.json, in the app's own settings folder.
+    Never in the library and never in the repo. A separate file from config.json, so
+    settings can be shown to someone helping without a login in them."""
+    return app_dirs().config / ACCOUNTS_FILE_NAME
+
+
+def load_accounts() -> dict[str, dict[str, Any]]:
+    """The sign-ins saved on this computer, by service ("spotify"). A missing or
+    damaged file reads as none: the owner just signs in again."""
+    try:
+        loaded = json.loads(accounts_path().read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(loaded, dict):
+        return {}
+    return {k: dict(v) for k, v in loaded.items() if isinstance(k, str) and isinstance(v, dict)}
+
+
+def save_account(service: str, account: dict[str, Any] | None) -> None:
+    """Save one service's sign-in, or remove it (`None`). Written atomically, and
+    readable by this user only (the temp file it's written through is made that way)."""
+    accounts = load_accounts()
+    if account is None:
+        accounts.pop(service, None)
+    else:
+        accounts[service] = dict(account)
+    path = accounts_path()
+    ensure_app_dir(path.parent)
+    try:
+        _write_atomic(path, json.dumps(accounts, indent=2, ensure_ascii=False) + "\n")
+    except OSError as exc:
+        raise ConfigError(
+            f"Couldn't save the sign-in on this computer: {exc.strerror or exc}."
+        ) from exc
+
+
 def _app_dir_list() -> list[Path]:
     dirs = app_dirs()
     return [dirs.config, dirs.logs, dirs.cache]

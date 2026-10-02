@@ -13,8 +13,11 @@ Sources (docs/ENGINE_API.md → "Import source"):
   (official audio) needs no search; a music video or someone's upload is searched for,
   to get the song itself.
 
-Spotify and Apple Music come next: their songs arrive as a title, artists and a length,
-and go through the same `find()`.
+- `spotify`: one of the owner's own Spotify playlists, or their Liked Songs, read
+  through `musicorg.spotify` once they've signed in. Its songs arrive as a title,
+  artists and a length, and are searched for.
+
+Apple Music comes next, through the same `find()`.
 
 How a song is found: `match.match_item`, the rule the owner's rips are matched by. Only
 its confident answer (the same artist, title and version, official audio, the length
@@ -30,7 +33,7 @@ from collections.abc import Callable
 from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
-from musicorg import discover, match, queue, youtube
+from musicorg import discover, match, queue, spotify, youtube
 from musicorg.errors import UserError
 from musicorg.index import Index
 from musicorg.library import Library
@@ -40,7 +43,7 @@ from musicorg.youtube import Candidate
 
 log = logging.getLogger(__name__)
 
-SOURCES = ("youtube",)
+SOURCES = ("youtube", "spotify")
 STATES = ("owned", "queued", "found", "unsure", "not_found")
 FIND_AT_ONCE = 100  # songs in one `find()`: each may cost a search or two
 MUSIC_VIDEO = "MUSIC_VIDEO_TYPE_OMV"
@@ -105,6 +108,23 @@ def from_youtube(link: str) -> dict[str, Any]:
             }
             for track in found.tracks
         ],
+    }
+
+
+def spotify_playlists() -> list[dict[str, Any]]:
+    """The owner's Spotify playlists, Liked Songs first, for the app to choose from."""
+    return spotify.playlists()
+
+
+def from_spotify(playlist_id: str) -> dict[str, Any]:
+    """One of the owner's Spotify playlists (or `liked`) as an import: its name and its
+    songs as Spotify names them. A request for every fifty songs."""
+    found = spotify.playlist(playlist_id)
+    return {
+        "source": "spotify",
+        "name": found["name"],
+        "tracks": found["tracks"],
+        "more": found["more"],
     }
 
 

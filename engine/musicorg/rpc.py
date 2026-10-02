@@ -58,6 +58,7 @@ from musicorg import (
     queue,
     review,
     scan,
+    spotify,
     state,
     status,
     tags,
@@ -89,7 +90,7 @@ RESUME_LEAST_S = 60.0
 REVIEW_STATES = ("review", "not_found", "matched_auto")
 SLOW_METHODS = frozenset(
     {"youtube.stream", "youtube.video", "search.ytmusic", "lyrics.find", "lyrics.for_video",
-     "discover.suggest", "import.playlist", "import.find"}
+     "discover.suggest", "import.playlist", "import.playlists", "import.find"}
 )  # fmt: skip
 RPC_DECISIONS = ("accept", "candidate", "url", "only_copy", "skip", "reject")
 
@@ -286,6 +287,10 @@ class Server:
             "lyrics.for_video": self.lyrics_for_video,
             "discover.suggest": self.discover_suggest,
             "import.playlist": self.import_playlist,
+            "import.playlists": self.import_playlists,
+            "account.status": self.account_status,
+            "account.sign_in": self.account_sign_in,
+            "account.sign_out": self.account_sign_out,
             "import.find": self.import_find,
             "queue.jobs": self.queue_jobs,
             "queue.downloads": self.queue_downloads,
@@ -376,6 +381,7 @@ class Server:
         if self.stopping.is_set() and self.lib is None:
             return
         self.stopping.set()
+        spotify.cancel_sign_in()  # stop listening for a sign-in nobody finished
         deadline = time.monotonic() + SHUTDOWN_GRACE_S
         for thread in (self._queue_thread, self._job.thread if self._job else None):
             if thread is not None and thread.is_alive():
@@ -909,10 +915,42 @@ class Server:
         """A playlist from elsewhere, as its name and its songs (imports, v0.3). Only
         read: nothing is looked for or downloaded yet."""
         source = need(params, "source", str)
-        if source != "youtube":
-            raise RpcError(INVALID_PARAMS, "source should be youtube.")
         self._library()
-        return imports.from_youtube(need(params, "link", str))
+        if source == "youtube":
+            return imports.from_youtube(need(params, "link", str))
+        if source == "spotify":
+            return imports.from_spotify(need(params, "playlist_id", str))
+        raise RpcError(INVALID_PARAMS, "source should be youtube or spotify.")
+
+    def import_playlists(self, params: dict[str, Any]) -> dict[str, Any]:
+        """The playlists a signed-in service has, to choose one from."""
+        if need(params, "source", str) != "spotify":
+            raise RpcError(INVALID_PARAMS, "source should be spotify.")
+        return {"playlists": imports.spotify_playlists()}
+
+    # -- methods: sign-ins (for reading playlists) --
+
+    def account_status(self, params: dict[str, Any]) -> dict[str, Any]:
+        return {"spotify": spotify.status()}
+
+    def account_sign_in(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Start signing in to Spotify: the engine listens on this computer for
+        Spotify's answer, and the app opens the address given in the browser. The
+        owner's password goes to Spotify's own page and nowhere else."""
+        if need(params, "service", str) != "spotify":
+            raise RpcError(INVALID_PARAMS, "service should be spotify.")
+
+        def done(problem: str | None) -> None:
+            self.writer.notify("account.changed", {"service": "spotify",
+                                                   "signed_in": problem is None,
+                                                   "problem": problem})  # fmt: skip
+
+        return {"authorize_url": spotify.begin_sign_in(want(params, "client_id", str), done)}
+
+    def account_sign_out(self, params: dict[str, Any]) -> dict[str, Any]:
+        if need(params, "service", str) != "spotify":
+            raise RpcError(INVALID_PARAMS, "service should be spotify.")
+        return {"spotify": spotify.sign_out()}
 
     def import_find(self, params: dict[str, Any]) -> dict[str, Any]:
         """Each imported song found on YouTube Music, or known to be the owner's

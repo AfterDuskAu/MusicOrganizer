@@ -4,12 +4,19 @@ import SwiftUI
 /// The Settings window (the cog wheel, or ⌘,), laid out as the owner designed it
 /// (docs/roadmap/0.2-app-layout.md). A row marked "Coming" is planned but not built.
 struct SettingsView: View {
+    /// The tab that's showing: remembered, and set by a page that sends the owner here
+    /// for one thing (Import Playlists → Spotify opens Accounts).
+    @AppStorage(SettingsView.tabKey) private var tab = "general"
+
+    static let tabKey = "settingsTab"
+
     var body: some View {
-        TabView {
-            GeneralSettings().tabItem { Label("General", systemImage: "gearshape") }
-            QualitySettings().tabItem { Label("Quality", systemImage: "waveform") }
+        TabView(selection: $tab) {
+            GeneralSettings().tabItem { Label("General", systemImage: "gearshape") }.tag("general")
+            QualitySettings().tabItem { Label("Quality", systemImage: "waveform") }.tag("quality")
             AccountSettings().tabItem { Label("Accounts", systemImage: "person.crop.circle") }
-            LyricsSettings().tabItem { Label("Lyrics", systemImage: "quote.bubble") }
+                .tag("accounts")
+            LyricsSettings().tabItem { Label("Lyrics", systemImage: "quote.bubble") }.tag("lyrics")
         }
         .frame(width: 560)
     }
@@ -138,18 +145,95 @@ private struct QualitySettings: View {
 }
 
 private struct AccountSettings: View {
+    @Environment(AppModel.self) private var model
+    @State private var clientId = ""
+
+    private static let dashboard = URL(string: "https://developer.spotify.com/dashboard")!
+
     var body: some View {
         Form {
-            account("YouTube", "For age-restricted songs and, with YouTube Premium, 256 kbps downloads.")
-            account(
-                "Apple Music",
-                "Can only read your music list. The songs are then downloaded slowly from YouTube.")
-            account(
-                "Spotify",
-                "Can only read your music list. The songs are then downloaded slowly from YouTube.")
-            SideNote("Sign-ins will be kept on this Mac only.")
+            Section("Spotify") { spotify }
+            Section {
+                account("YouTube", "For private playlists and, with YouTube Premium, 256 kbps downloads.")
+                account(
+                    "Apple Music",
+                    "Can only read your music list. The songs are then downloaded slowly from YouTube.")
+            }
+            SideNote("Sign-ins are kept on this Mac only, never in your library.")
         }
         .formStyle(.grouped)
+        .onAppear {
+            model.loadAccounts()
+            if clientId.isEmpty { clientId = model.accounts?.spotify.clientId ?? "" }
+        }
+        .onChange(of: model.accounts) {
+            if clientId.isEmpty { clientId = model.accounts?.spotify.clientId ?? "" }
+        }
+    }
+
+    @ViewBuilder
+    private var spotify: some View {
+        let status = model.accounts?.spotify
+        if status?.signedIn == true {
+            LabeledContent {
+                Button("Sign Out") { model.signOutOfSpotify() }
+            } label: {
+                Text("Signed in" + (status?.name.map { " as \($0)" } ?? ""))
+                Text("Your playlists are under Discover → Import Playlists → Spotify.")
+            }
+        } else {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Spotify makes everyone bring an app of their own. It's free, and takes a few minutes, once:")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                step(1, "Open Spotify's developer page and log in with your Spotify account. It has to have Premium.")
+                Link("Open developer.spotify.com/dashboard", destination: Self.dashboard)
+                    .padding(.leading, 22)
+                step(2, "Create app. Any name and description. For Redirect URI, paste exactly this, tick Web API, and save:")
+                HStack(spacing: 8) {
+                    Text(status?.redirectUri ?? "")
+                        .font(.callout.monospaced())
+                        .textSelection(.enabled)
+                    Button("Copy") {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(status?.redirectUri ?? "", forType: .string)
+                    }
+                    .controlSize(.small)
+                    .disabled((status?.redirectUri ?? "").isEmpty)
+                }
+                .padding(.leading, 22)
+                step(3, "On the app's page, copy its Client ID (not the Client secret) and paste it here:")
+                TextField("Client ID", text: $clientId, prompt: Text("32 letters and digits"))
+                    .labelsHidden()
+                    .textFieldStyle(.roundedBorder)
+                    .font(.callout.monospaced())
+                    .padding(.leading, 22)
+                HStack(spacing: 10) {
+                    Button("Sign In with Spotify…") { model.signInToSpotify(clientId: clientId) }
+                        .disabled(model.signingIn || !Imports.looksLikeSpotifyClientId(clientId))
+                    if model.signingIn {
+                        ProgressView().controlSize(.small)
+                        Text("Finish in your browser…").foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.leading, 22)
+                if let note = model.accountNote {
+                    Text(note)
+                        .foregroundStyle(.orange)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            SideNote(
+                "Your password is typed on Spotify's own page in your browser, never here. Music "
+                    + "Organizer is only allowed to read your playlists and Liked Songs: it can't "
+                    + "change anything, and Spotify's audio is never used.")
+        }
+    }
+
+    private func step(_ number: Int, _ words: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text("\(number).").monospacedDigit().frame(width: 16, alignment: .trailing)
+            Text(words).frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 
     private func account(_ name: String, _ note: String) -> some View {

@@ -331,6 +331,20 @@
 - Known limits: songs join the playlist in the order they arrive, after the ones already owned, not in the original order. An account's own lists (Liked Music) can't be read without signing in.
 - **Not built: Spotify, Apple Music, and signing in to YouTube.** What each needs from the owner is in `docs/ROADMAP.md` (v0.3).
 
+2026-10-03. **Import Playlists: Spotify, after signing in** (the owner: "I have a Spotify Premium acc"; that's what Spotify requires of whoever registers the app).
+
+- **`spotify`** (new engine module): the only place Spotify is talked to, and only to read.
+  - **Signing in** is Spotify's Authorization Code with PKCE flow. `account.sign_in` starts a listener on 127.0.0.1 (port 36463, for five minutes) and gives the app an address at accounts.spotify.com to open in the browser; the owner signs in *there*, so their password never passes through the app or the engine. Spotify sends the browser back with a one-time code, which is exchanged for a refresh token. There is no client secret.
+  - **What it may do** (the scopes asked for): read the owner's playlists, the ones they collaborate on, and Liked Songs. Nothing that changes anything.
+  - **What's kept:** the owner's app's Client ID and the refresh token, in `accounts.json` beside `config.json` in the app's settings folder, written atomically by `config.py` and readable by this user only. Never the access token, never in the library or the repo. An answer that doesn't carry the sign-in's own `state` is turned away and the sign-in carries on waiting.
+  - **Reading:** `import.playlists` lists the account's playlists, Liked Songs first; `import.playlist` (source `spotify`) reads one, fifty songs a request, up to 3,000. A playlist of someone else's that's only followed is listed but marked unreadable: since February 2026 Spotify gives its songs to nobody but its owner and collaborators. Podcast episodes and local files are left out.
+  - Its songs go through the same `import.find` as a YouTube playlist's; here each song not already owned costs a YouTube Music search.
+  - Errors are plain: not signed in, the sign-in ran out, Spotify refused (with the two usual reasons: no Premium on the app's account, or this account missing from the app's User Management), slow down, the port in use. No token, code or address is ever logged or put in an error.
+- **The app:** Settings → Accounts has a working Spotify section with the three steps (open Spotify's developer page, create an app with the Redirect URI shown and a Copy button, paste the Client ID), Sign In with Spotify…, and Sign Out. Discover → Import Playlists has a YouTube link / Spotify switch; Spotify shows the account's playlists to choose from. The app only ever opens an address that is https at accounts.spotify.com. Settings now remembers its tab, and "Open Settings…" on the Import page opens Accounts.
+- **Rules touched, at the owner's request for sign-ins:** `CLAUDE.md` rule 3's line for `config.py` now names `accounts.json` beside `config.json` (the Secrets section already put logins in the app's settings folder).
+- **Deviation from "record a fixture":** nobody had signed in when this was written, so there is no recorded Spotify answer. The tests stand in for Spotify with answers in the shapes its documentation gives (read on 2026-10-03, after the February 2026 changes), and both the new and the old field names are read (`items`/`tracks`, `item`/`track`). **Not tried against Spotify itself:** the first real sign-in is the owner's.
+- Checked: 13 engine tests (the whole sign-in through a real listener on this computer, renewing, every refusal, playlists, songs, RPC) and the Kit's; the Import page's Spotify side and the Settings section looked at in the unseen copy, signed out.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

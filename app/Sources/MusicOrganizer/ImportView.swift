@@ -1,46 +1,57 @@
 import MusicOrganizerKit
 import SwiftUI
 
-/// Discover → Import Playlists: paste a playlist's link, see which of its songs you
-/// have and which were found on YouTube Music, and download the rest in one go. They
-/// arrive in a playlist of the same name.
+/// Discover → Import Playlists: choose a playlist (a YouTube link, or one of your
+/// Spotify playlists), see which of its songs you have and which were found on YouTube
+/// Music, and download the rest in one go. They arrive in a playlist of the same name.
 ///
-/// Built so far: YouTube and YouTube Music playlists, by their link (no sign-in).
-/// Spotify and Apple Music come next, through the same list and the same button.
+/// Built so far: YouTube and YouTube Music playlists by their link (no sign-in), and
+/// Spotify once signed in (Settings → Accounts). Apple Music comes next, through the
+/// same list and the same button.
 struct ImportView: View {
     @Environment(AppModel.self) private var model
+    @AppStorage("importSource") private var source = Source.youtube
     @AppStorage("importLink") private var link = ""
+    @State private var spotifyChoice = ""
+
+    enum Source: String, CaseIterable, Identifiable {
+        case youtube, spotify
+
+        var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .youtube: "YouTube link"
+            case .spotify: "Spotify"
+            }
+        }
+    }
 
     var body: some View {
         let page = model.importing
         VStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 10) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Import Playlists").font(.title2.weight(.semibold))
-                    Text(
-                        "Bring a playlist across. Its songs are found on YouTube Music and "
-                            + "downloaded into a playlist of the same name here."
-                    )
-                    .foregroundStyle(.secondary)
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Import Playlists").font(.title2.weight(.semibold))
+                        Text(
+                            "Bring a playlist across. Its songs are found on YouTube Music and "
+                                + "downloaded into a playlist of the same name here."
+                        )
+                        .foregroundStyle(.secondary)
+                    }
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    Picker("From", selection: $source) {
+                        ForEach(Source.allCases) { Text($0.title).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .fixedSize()
+                    .disabled(page.isBusy)
                 }
-                HStack(spacing: 10) {
-                    TextField(
-                        "A YouTube or YouTube Music playlist's link (Share → Copy link)", text: $link
-                    )
-                    .textFieldStyle(.roundedBorder)
-                    .onSubmit { page.open(link) }
-                    Button("Read Playlist", systemImage: "list.bullet.rectangle") { page.open(link) }
-                        .keyboardShortcut(.defaultAction)
-                        .disabled(page.isBusy || link.trimmingCharacters(in: .whitespaces).isEmpty)
+                switch source {
+                case .youtube: youtube(page)
+                case .spotify: spotify(page)
                 }
-                Text(
-                    "The playlist has to be Public or Unlisted: nothing is signed in to. Spotify "
-                        + "and Apple Music aren't built yet."
-                )
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
@@ -53,14 +64,104 @@ struct ImportView: View {
         }
     }
 
+    // MARK: where from
+
+    @ViewBuilder
+    private func youtube(_ page: ImportPage) -> some View {
+        HStack(spacing: 10) {
+            TextField("A YouTube or YouTube Music playlist's link (Share → Copy link)", text: $link)
+                .textFieldStyle(.roundedBorder)
+                .onSubmit { page.open(.youtube(link: link)) }
+            Button("Read Playlist", systemImage: "list.bullet.rectangle") {
+                page.open(.youtube(link: link))
+            }
+            .keyboardShortcut(.defaultAction)
+            .disabled(page.isBusy || link.trimmingCharacters(in: .whitespaces).isEmpty)
+        }
+        caption("The playlist has to be Public or Unlisted: nothing is signed in to.")
+    }
+
+    @ViewBuilder
+    private func spotify(_ page: ImportPage) -> some View {
+        if model.accounts?.spotify.signedIn == true {
+            let lists = page.spotifyPlaylists
+            HStack(spacing: 10) {
+                if page.listing {
+                    ProgressView().controlSize(.small)
+                    Text("Asking Spotify for your playlists…").foregroundStyle(.secondary)
+                } else if lists.isEmpty {
+                    Text(page.listProblem ?? "No playlists were found.")
+                        .foregroundStyle(page.listProblem == nil ? Color.secondary : Color.orange)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    Picker("Playlist", selection: $spotifyChoice) {
+                        ForEach(lists) { list in
+                            Text(list.label).tag(list.id).disabled(!list.readable)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(maxWidth: 420)
+                    Button("Read Playlist", systemImage: "list.bullet.rectangle") {
+                        page.open(.spotify(playlistId: spotifyChoice))
+                    }
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(page.isBusy || lists.first { $0.id == spotifyChoice }?.readable != true)
+                }
+                Spacer(minLength: 0)
+                Button("Refresh", systemImage: "arrow.clockwise") { page.listSpotifyPlaylists() }
+                    .disabled(page.listing || page.isBusy)
+                    .help("Ask Spotify for your playlists again")
+            }
+            .task {
+                // Asked once, when Spotify is first chosen; after that only when told to.
+                if page.spotifyPlaylists.isEmpty, page.listProblem == nil { page.listSpotifyPlaylists() }
+            }
+            .onChange(of: lists) { chooseFirst(lists) }
+            .onAppear { chooseFirst(lists) }
+            caption(
+                "Signed in as \(model.accounts?.spotify.name ?? "your Spotify account"). Each song "
+                    + "is looked up on YouTube Music, a couple of seconds apiece.")
+        } else {
+            HStack(spacing: 10) {
+                Text("Spotify isn't signed in to yet.")
+                SettingsLink { Text("Open Settings…") }
+                    // Settings opens on its Accounts tab.
+                    .simultaneousGesture(
+                        TapGesture().onEnded {
+                            UserDefaults.standard.set("accounts", forKey: SettingsView.tabKey)
+                        })
+                Spacer(minLength: 0)
+            }
+            caption(
+                "Settings → Accounts has the steps: your own free app at Spotify, which needs "
+                    + "your account to have Premium, then a sign-in on Spotify's own page.")
+        }
+    }
+
+    /// Keep the choice on a playlist that's there and can be read.
+    private func chooseFirst(_ lists: [SpotifyPlaylist]) {
+        if lists.first(where: { $0.id == spotifyChoice })?.readable != true {
+            spotifyChoice = lists.first { $0.readable }?.id ?? ""
+        }
+    }
+
+    private func caption(_ words: String) -> some View {
+        Text(words)
+            .font(.callout)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: what was read
+
     @ViewBuilder
     private func content(_ page: ImportPage) -> some View {
         switch page.phase {
         case .idle:
             Message(
                 symbol: "square.and.arrow.down.on.square", title: "Bring a playlist across",
-                text: "Paste a playlist's link above. You'll see which of its songs you already "
-                    + "have and which were found, before anything is downloaded."
+                text: "Choose a playlist above. You'll see which of its songs you already have "
+                    + "and which were found, before anything is downloaded."
             ) {}
         case .reading:
             VStack(spacing: 12) {
@@ -70,7 +171,7 @@ struct ImportView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .failed(let why):
             Message(symbol: "exclamationmark.triangle", title: "That didn't work", text: why) {
-                Button("Try Again") { page.open(link) }
+                Button("Try Again") { again(page) }
             }
         case .finding, .ready:
             VStack(spacing: 0) {
@@ -90,6 +191,13 @@ struct ImportView: View {
                     }
                 }
             }
+        }
+    }
+
+    private func again(_ page: ImportPage) {
+        switch source {
+        case .youtube: page.open(.youtube(link: link))
+        case .spotify: page.open(.spotify(playlistId: spotifyChoice))
         }
     }
 
@@ -113,6 +221,11 @@ struct ImportView: View {
                         .foregroundStyle(.secondary)
                     if let problem = page.problem {
                         Text(problem).font(.callout).foregroundStyle(.orange)
+                    }
+                    if page.tooLong {
+                        Text("It's longer than can be read at once: these are its first songs.")
+                            .font(.callout)
+                            .foregroundStyle(.orange)
                     }
                 }
             }

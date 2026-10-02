@@ -17,7 +17,8 @@ final class ImportPage {
         case failed(String)
     }
 
-    typealias Read = (_ link: String) async throws -> ImportedPlaylist
+    typealias Read = (_ what: ImportRequest) async throws -> ImportedPlaylist
+    typealias List = () async throws -> [SpotifyPlaylist]
     typealias Find = (_ tracks: [ImportTrack]) async throws -> [ImportFound]
     typealias Download = (_ name: String, _ owned: [String], _ songs: [ImportCandidate])
         async throws -> String
@@ -31,11 +32,19 @@ final class ImportPage {
     /// Why the looking stopped early, if it did (YouTube asked us to slow down, say).
     private(set) var problem: String?
     private(set) var downloading = false
+    /// The playlist is longer than was read: only its first songs are listed.
+    private(set) var tooLong = false
     /// The not-sure songs the owner ticked to download anyway.
     var ticked = Set<Int>()
     var note: Note?
 
+    /// The signed-in Spotify account's playlists, to choose one from.
+    private(set) var spotifyPlaylists: [SpotifyPlaylist] = []
+    private(set) var listing = false
+    private(set) var listProblem: String?
+
     @ObservationIgnored var read: Read?
+    @ObservationIgnored var list: List?
     @ObservationIgnored var find: Find?
     @ObservationIgnored var download: Download?
     /// Goes up with each new playlist read: an older one's answers are dropped.
@@ -46,22 +55,42 @@ final class ImportPage {
     var counts: Imports.Counts { Imports.counts(rows) }
     var toDownload: [ImportCandidate] { Imports.toDownload(rows, ticked: ticked) }
 
-    /// Read the playlist a link points at, then look for each of its songs.
-    func open(_ link: String) {
+    /// Ask Spotify which playlists the signed-in account has.
+    func listSpotifyPlaylists() {
+        guard !listing, let list else { return }
+        (listing, listProblem) = (true, nil)
+        Task {
+            defer { listing = false }
+            do {
+                spotifyPlaylists = try await list()
+            } catch {
+                listProblem = error.localizedDescription
+            }
+        }
+    }
+
+    /// Signed out, or signed in as someone else: the old list isn't theirs.
+    func forgetSpotifyPlaylists() {
+        (spotifyPlaylists, listProblem) = ([], nil)
+    }
+
+    /// Read a playlist from where it lives, then look for each of its songs.
+    func open(_ what: ImportRequest) {
         guard !isBusy, let read else { return }
         run += 1
         let mine = run
         (phase, rows, name, ticked, note, done, problem) = (.reading, [], "", [], nil, 0, nil)
         Task {
             do {
-                let playlist = try await read(link)
+                let playlist = try await read(what)
                 guard mine == run else { return }
                 name = playlist.name
                 rows = playlist.tracks.enumerated().map { ImportRow(id: $0.offset, track: $0.element) }
                 guard !rows.isEmpty else {
-                    phase = .failed("That playlist has no songs in it that YouTube Music will show.")
+                    phase = .failed("That playlist has no songs in it that can be read.")
                     return
                 }
+                tooLong = playlist.more == true
                 await findRest(mine)
             } catch {
                 guard mine == run else { return }

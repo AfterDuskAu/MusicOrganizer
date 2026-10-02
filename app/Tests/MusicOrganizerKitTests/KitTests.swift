@@ -720,6 +720,56 @@ final class SongVideoTests: XCTestCase {
         XCTAssertEqual(answer.found.first?.trackId, "t_1")
     }
 
+    func testSpotifyAccountsAndPlaylistsAreRead() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let status = try decoder.decode(
+            AccountStatus.self,
+            from: Data(
+                """
+                {"spotify": {"client_id": null, "signed_in": false, "name": null,
+                             "redirect_uri": "http://127.0.0.1:36463/callback"}}
+                """.utf8))
+        XCTAssertFalse(status.spotify.signedIn)
+        XCTAssertEqual(status.spotify.redirectUri, "http://127.0.0.1:36463/callback")
+        let lists = try decoder.decode(
+            SpotifyPlaylistsAnswer.self,
+            from: Data(
+                """
+                {"playlists": [
+                  {"id": "liked", "name": "Liked Songs", "owner": "Me", "total": 1412, "readable": true},
+                  {"id": "theirs000001", "name": "Top Hits", "owner": "spotify", "total": 1,
+                   "readable": false},
+                  {"id": "mine00000001", "name": "Unknown Size", "owner": null, "total": null,
+                   "readable": true}]}
+                """.utf8))
+        XCTAssertEqual(lists.playlists[0].label, "Liked Songs (1,412 songs)")
+        XCTAssertEqual(
+            lists.playlists[1].label,
+            "Top Hits (1 song): someone else's, so Spotify won't give its songs")
+        XCTAssertEqual(lists.playlists[2].label, "Unknown Size")
+        XCTAssertEqual(
+            ImportRequest.spotify(playlistId: "liked").params,
+            ["source": "spotify", "playlist_id": "liked"])
+        XCTAssertEqual(
+            ImportRequest.youtube(link: "PLabc").params, ["source": "youtube", "link": "PLabc"])
+        // Only Spotify's own sign-in page is ever opened.
+        func page(_ address: String) throws -> URL? {
+            try decoder.decode(
+                SignInAnswer.self, from: Data("{\"authorize_url\": \"\(address)\"}".utf8)
+            ).spotifyPage
+        }
+        XCTAssertNotNil(try page("https://accounts.spotify.com/authorize?client_id=x"))
+        XCTAssertNil(try page("http://accounts.spotify.com/authorize"))
+        XCTAssertNil(try page("https://accounts.spotify.com.example.org/authorize"))
+        XCTAssertNil(try page("not an address"))
+        // Made up here, so no file holds something shaped like a real id.
+        let half = "0123456789abcdef"
+        XCTAssertTrue(Imports.looksLikeSpotifyClientId(" \(half)\(half.uppercased())\n"))
+        XCTAssertFalse(Imports.looksLikeSpotifyClientId(half))
+        XCTAssertFalse(Imports.looksLikeSpotifyClientId(half + half.dropLast() + "!"))
+    }
+
     func testWhatAnImportWillDownload() {
         func song(_ id: String) -> ImportCandidate { ImportCandidate(videoId: id, title: id) }
         let rows = [

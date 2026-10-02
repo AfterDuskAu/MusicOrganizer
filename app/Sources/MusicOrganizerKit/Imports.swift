@@ -94,6 +94,86 @@ public struct ImportedPlaylist: Decodable, Sendable {
     public let source: String
     public let name: String
     public let tracks: [ImportTrack]
+    /// The playlist is longer than was read (Spotify: more than 3,000 songs).
+    public let more: Bool?
+}
+
+/// Which playlist to read, and from where (`import.playlist`'s params).
+public enum ImportRequest: Equatable, Sendable {
+    case youtube(link: String)
+    case spotify(playlistId: String)
+
+    public var params: [String: String] {
+        switch self {
+        case .youtube(let link): ["source": "youtube", "link": link]
+        case .spotify(let id): ["source": "spotify", "playlist_id": id]
+        }
+    }
+}
+
+/// One of the signed-in Spotify account's playlists (`import.playlists`).
+public struct SpotifyPlaylist: Decodable, Identifiable, Hashable, Sendable {
+    public let id: String
+    public let name: String
+    public let owner: String?
+    public let total: Int?
+    /// False for someone else's playlist that's only followed: Spotify lists it, but
+    /// doesn't give its songs.
+    public let readable: Bool
+
+    public init(id: String, name: String, owner: String? = nil, total: Int? = nil, readable: Bool = true) {
+        self.id = id
+        self.name = name
+        self.owner = owner
+        self.total = total
+        self.readable = readable
+    }
+
+    /// "Road Trip (80 songs)", and why it can't be read if it can't.
+    public var label: String {
+        var words = name
+        if let total { words += " (\(total.formatted()) \(total == 1 ? "song" : "songs"))" }
+        return readable ? words : words + ": someone else's, so Spotify won't give its songs"
+    }
+}
+
+public struct SpotifyPlaylistsAnswer: Decodable, Sendable {
+    public let playlists: [SpotifyPlaylist]
+}
+
+/// `account.status`: which services are set up and signed in to. Never a token.
+public struct AccountStatus: Decodable, Equatable, Sendable {
+    public struct Spotify: Decodable, Equatable, Sendable {
+        /// The owner's own Spotify app's Client ID, once they've given it.
+        public let clientId: String?
+        public let signedIn: Bool
+        public let name: String?
+        /// What that app must have registered as its Redirect URI.
+        public let redirectUri: String
+
+        public init(clientId: String? = nil, signedIn: Bool = false, name: String? = nil, redirectUri: String = "") {
+            self.clientId = clientId
+            self.signedIn = signedIn
+            self.name = name
+            self.redirectUri = redirectUri
+        }
+    }
+
+    public let spotify: Spotify
+}
+
+/// `account.sign_in`: the address to open in the browser.
+public struct SignInAnswer: Decodable, Sendable {
+    public let authorizeUrl: String
+
+    /// The address, if it really is Spotify's own sign-in page over https: nothing else
+    /// is ever opened for a sign-in.
+    public var spotifyPage: URL? {
+        guard let url = URL(string: authorizeUrl), url.scheme == "https",
+            url.host == "accounts.spotify.com"
+        else { return nil }
+        return url
+    }
 }
 
 /// What one imported song is to the owner (`import.find`).
@@ -143,6 +223,12 @@ public struct ImportRow: Identifiable, Hashable, Sendable {
 public enum Imports {
     /// How many songs `import.find` is asked about at a time.
     public static let atOnce = 50
+
+    /// Whether this could be a Spotify Client ID: 32 letters and digits.
+    public static func looksLikeSpotifyClientId(_ text: String) -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.count == 32 && trimmed.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber) }
+    }
 
     public struct Counts: Equatable, Sendable {
         public var owned = 0
