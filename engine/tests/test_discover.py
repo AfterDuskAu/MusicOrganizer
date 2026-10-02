@@ -154,6 +154,37 @@ def test_a_playlist(lib: Library) -> None:
         suggest(lib, Seed("playlist", "pl_nothing"))
 
 
+# ---- several starting points together -------------------------------------------------------
+
+
+def test_starting_points_together_share_the_radios(
+    lib: Library, radios: dict[str, list[Candidate]]
+) -> None:
+    track_ids = own(lib, ("A", "One", "startAAAAAA"), ("B", "Two", "startBBBBBB"))
+    own(lib, ("C", "Three", "startCCCCCC"), ("D", "Four", "startDDDDDD"), genre="Rock")
+    own(lib, ("E", "Five", "startEEEEEE"), ("F", "Six", "startFFFFFF"), genre="Rock")
+    (made,) = listening.create_playlist(lib, "Road Trip")
+    listening.set_playlist_tracks(lib, made["id"], track_ids)
+    both, mine, theirs = song(1, "On Both"), song(2, "Playlist Only", "X"), song(3, "Rock", "Y")
+    radios["startAAAAAA"] = radios["startBBBBBB"] = [both, mine]
+    for start in ("startCCCCCC", "startDDDDDD", "startEEEEEE", "startFFFFFF"):
+        radios[start] = [theirs, both]
+    found = suggest(lib, Seed("playlist", made["id"]), Seed("genre", "rock"), count=10)
+    assert [(s["kind"], s["label"]) for s in found["seeds"]] == [
+        ("playlist", "Road Trip"), ("genre", "rock"),
+    ]  # fmt: skip
+    assert sum(s["radios"] for s in found["seeds"]) == 6
+    whys = {pick["title"]: pick["why"] for pick in found["picks"]}
+    # A song on the radios of both comes first, and says so.
+    assert found["picks"][0]["title"] == "On Both"
+    assert whys["On Both"] == "On the radio for both Road Trip and rock songs"
+    assert whys["Playlist Only"] == "On the radio for 2 songs in Road Trip"
+    assert whys["Rock"] == "On the radio for 4 rock songs"
+    # The same starting point twice is one.
+    again = suggest(lib, Seed("genre", "rock"), Seed("genre", "rock"), count=10)
+    assert [s["kind"] for s in again["seeds"]] == ["genre"]
+
+
 # ---- an artist -----------------------------------------------------------------------------
 
 

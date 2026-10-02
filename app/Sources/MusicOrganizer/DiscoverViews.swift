@@ -47,30 +47,16 @@ struct WhatsNewView: View {
 /// Discover → Find: choose where to start from and how many, and get that many picks.
 struct FindView: View {
     @Environment(AppModel.self) private var model
-    @AppStorage("findStart") private var start = Start.artist
+    // The first starting point is remembered from one day to the next.
+    @AppStorage("findStart") private var savedStart = FindChoice.Start.artist
+    @AppStorage("findArtist") private var savedArtist = ""
+    @AppStorage("findGenre") private var savedGenre = ""
     @AppStorage("findCount") private var count = 50
-    @AppStorage("findArtist") private var artist = ""
-    @AppStorage("findGenre") private var genre = ""
-    @State private var playlistId = ""
+    /// Where to start from: one thing, or several together (a playlist and a genre).
+    @State private var choices: [FindChoice] = []
     @State private var otherCount = ""
     /// The guided "What music would you like today?" is open.
     @State private var guiding = false
-
-    enum Start: String, CaseIterable, Identifiable {
-        case artist, genre, playlist, mostPlayed, topArtist, library
-
-        var id: String { rawValue }
-        var title: String {
-            switch self {
-            case .artist: "An artist, and bands like them"
-            case .genre: "A genre"
-            case .playlist: "One of my playlists"
-            case .mostPlayed: "The songs I play most"
-            case .topArtist: "The artist I play most"
-            case .library: "My whole library"
-            }
-        }
-    }
 
     static let genres = [
         "Hip hop", "R&B", "Pop", "Rock", "Indie", "Alternative", "Electronic", "Dance", "Metal",
@@ -82,22 +68,51 @@ struct FindView: View {
         let page = model.find
         VStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 10) {
-                    Text("Start from").foregroundStyle(.secondary)
-                    Picker("Start from", selection: $start) {
-                        ForEach(Start.allCases) { Text($0.title).tag($0) }
+                ForEach($choices) { $choice in
+                    let first = choice.id == choices.first?.id
+                    HStack(spacing: 10) {
+                        Text(first ? "Start from" : "and from")
+                            .foregroundStyle(.secondary)
+                            .frame(width: 68, alignment: .leading)
+                        Picker("Start from", selection: $choice.start) {
+                            ForEach(FindChoice.Start.allCases) { Text($0.title).tag($0) }
+                        }
+                        .labelsHidden()
+                        .fixedSize()
+                        detail(for: $choice)
+                        if !first {
+                            Button {
+                                choices.removeAll { $0.id == choice.id }
+                            } label: {
+                                Image(systemName: "minus.circle")
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(.secondary)
+                            .help("Take this starting point away")
+                        }
+                        if choice.id == choices.last?.id, choices.count < FindChoice.most {
+                            Button("Add Another", systemImage: "plus") {
+                                choices.append(FindChoice(start: .genre, playlistId: firstPlaylist))
+                            }
+                            .help(
+                                "Start from this as well: a playlist and a genre, say. Songs found "
+                                    + "from both come first.")
+                        }
+                        Spacer()
+                        if first {
+                            Button("Guide Me…", systemImage: "bubble.left.and.bubble.right") {
+                                guiding = true
+                            }
+                            .help(
+                                "Three questions instead of these boxes: what music, play or "
+                                    + "download, how many")
+                        }
                     }
-                    .labelsHidden()
-                    .fixedSize()
-                    detail
-                    Spacer()
-                    Button("Guide Me…", systemImage: "bubble.left.and.bubble.right") {
-                        guiding = true
-                    }
-                    .help("Three questions instead of these boxes: what music, play or download, how many")
                 }
                 HStack(spacing: 10) {
-                    Text("How many").foregroundStyle(.secondary)
+                    Text("How many")
+                        .foregroundStyle(.secondary)
+                        .frame(width: 68, alignment: .leading)
                     Picker("How many", selection: $count) {
                         ForEach(Self.counts, id: \.self) { Text("\($0)").tag($0) }
                         if !Self.counts.contains(count) { Text("\(count)").tag(count) }
@@ -118,7 +133,7 @@ struct FindView: View {
                         Button("Different Songs", systemImage: "arrow.triangle.2.circlepath") {
                             page.again(different: true)
                         }
-                        .disabled(page.working || start == .artist || start == .topArtist)
+                        .disabled(page.working || onlyArtists)
                         .help("Start from other songs of yours")
                     }
                 }
@@ -141,26 +156,35 @@ struct FindView: View {
         }
         .sheet(isPresented: $guiding) { GuideSheet().environment(model) }
         .onAppear {
-            if playlistId.isEmpty { playlistId = model.listening.playlists.first?.id ?? "" }
+            if choices.isEmpty {
+                choices = [
+                    FindChoice(
+                        start: savedStart, artist: savedArtist, genre: savedGenre,
+                        playlistId: firstPlaylist)
+                ]
+            }
         }
     }
 
+    private var firstPlaylist: String { model.listening.playlists.first?.id ?? "" }
+
+    /// What a starting point needs said about it: a name to type, or a playlist to pick.
     @ViewBuilder
-    private var detail: some View {
-        switch start {
+    private func detail(for choice: Binding<FindChoice>) -> some View {
+        switch choice.wrappedValue.start {
         case .artist:
-            TextField("Linkin Park (or several, with commas between)", text: $artist)
+            TextField("Linkin Park (or several, with commas between)", text: choice.artist)
                 .textFieldStyle(.roundedBorder)
                 .frame(maxWidth: 340)
                 .onSubmit(find)
         case .genre:
-            TextField("Genre", text: $genre)
+            TextField("Genre", text: choice.genre)
                 .textFieldStyle(.roundedBorder)
                 .frame(maxWidth: 200)
                 .onSubmit(find)
             Menu("Choose") {
                 ForEach(Self.genres, id: \.self) { name in
-                    Button(name) { genre = name }
+                    Button(name) { choice.wrappedValue.genre = name }
                 }
             }
             .fixedSize()
@@ -168,7 +192,7 @@ struct FindView: View {
             if model.listening.playlists.isEmpty {
                 Text("You have no playlists yet.").foregroundStyle(.secondary)
             } else {
-                Picker("Playlist", selection: $playlistId) {
+                Picker("Playlist", selection: choice.playlistId) {
                     ForEach(model.listening.playlists) { Text($0.name).tag($0.id) }
                 }
                 .labelsHidden()
@@ -180,20 +204,20 @@ struct FindView: View {
     }
 
     private var seeds: [DiscoverSeed] {
-        switch start {
-        case .artist: DiscoverSeed.artists(artist)
-        case .genre:
-            genre.trimmingCharacters(in: .whitespaces).isEmpty
-                ? [] : [.genre(genre.trimmingCharacters(in: .whitespaces))]
-        case .playlist: model.playlist(playlistId) == nil ? [] : [.playlist(playlistId)]
-        case .mostPlayed: [.mostPlayed]
-        case .topArtist: [.topArtist]
-        case .library: [.library]
-        }
+        FindChoice.seeds(of: choices, playlists: Set(model.listening.playlists.map(\.id)))
+    }
+
+    /// Nothing here starts from the owner's own songs, so there are no "other songs of
+    /// yours" to start from instead.
+    private var onlyArtists: Bool {
+        choices.allSatisfy { $0.start == .artist || $0.start == .topArtist }
     }
 
     private func find() {
         takeOtherCount()
+        if let first = choices.first {
+            (savedStart, savedArtist, savedGenre) = (first.start, first.artist, first.genre)
+        }
         model.find.find(seeds, count: count)
     }
 

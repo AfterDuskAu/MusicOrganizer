@@ -505,6 +505,29 @@ final class SongVideoTests: XCTestCase {
         XCTAssertEqual(DiscoverSeed.artists("  "), [])
     }
 
+    func testFindsStartingPointsTogether() {
+        let playlists: Set<String> = ["pl_1"]
+        let trip = FindChoice(start: .playlist, playlistId: "pl_1")
+        let rock = FindChoice(start: .genre, genre: " Rock ")
+        XCTAssertEqual(
+            FindChoice.seeds(of: [trip, rock], playlists: playlists),
+            [.playlist("pl_1"), .genre("Rock")])
+        // Several artists in one box, and the same thing asked for twice.
+        let artists = FindChoice(start: .artist, artist: "Linkin Park, Korn")
+        XCTAssertEqual(
+            FindChoice.seeds(of: [artists, rock, rock, FindChoice(start: .library)], playlists: []),
+            [.artist("Linkin Park"), .artist("Korn"), .genre("Rock"), .library])
+        // A box that's still empty, or a playlist that has gone: nothing is asked yet.
+        XCTAssertEqual(FindChoice.seeds(of: [rock, FindChoice(start: .artist)], playlists: []), [])
+        XCTAssertEqual(FindChoice.seeds(of: [trip], playlists: []), [])
+        XCTAssertEqual(FindChoice.seeds(of: [], playlists: []), [])
+        XCTAssertEqual(FindChoice(start: .mostPlayed).seeds(playlists: []), [.mostPlayed])
+        XCTAssertEqual(FindChoice(start: .topArtist).seeds(playlists: []), [.topArtist])
+        // Never more than the engine takes.
+        let many = FindChoice(start: .artist, artist: (1...12).map { "Band \($0)" }.joined(separator: ","))
+        XCTAssertEqual(FindChoice.seeds(of: [many], playlists: []).count, 8)
+    }
+
     func testLinksToASongElsewhere() {
         XCTAssertEqual(
             ElsewhereLink.spotify.url(title: "What's New?", artist: "AC/DC")?.absoluteString,

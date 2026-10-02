@@ -35,6 +35,73 @@ public enum DiscoverSeed: Hashable, Sendable {
     }
 }
 
+/// One starting point as the Find page's boxes hold it: which kind, and what was typed
+/// or chosen for it.
+public struct FindChoice: Identifiable, Equatable, Sendable {
+    public enum Start: String, CaseIterable, Identifiable, Sendable {
+        case artist, genre, playlist, mostPlayed, topArtist, library
+
+        public var id: String { rawValue }
+        public var title: String {
+            switch self {
+            case .artist: "An artist, and bands like them"
+            case .genre: "A genre"
+            case .playlist: "One of my playlists"
+            case .mostPlayed: "The songs I play most"
+            case .topArtist: "The artist I play most"
+            case .library: "My whole library"
+            }
+        }
+    }
+
+    /// The Find page offers this many starting points at once (the engine takes eight).
+    public static let most = 4
+
+    public let id: UUID
+    public var start: Start
+    public var artist: String
+    public var genre: String
+    public var playlistId: String
+
+    public init(
+        start: Start = .artist, artist: String = "", genre: String = "", playlistId: String = "",
+        id: UUID = UUID()
+    ) {
+        self.id = id
+        self.start = start
+        self.artist = artist
+        self.genre = genre
+        self.playlistId = playlistId
+    }
+
+    /// The seeds this one choice makes: none while its box is empty, several for
+    /// several artists. `playlists` are the ids of the playlists there are.
+    public func seeds(playlists: Set<String>) -> [DiscoverSeed] {
+        switch start {
+        case .artist: return DiscoverSeed.artists(artist)
+        case .genre:
+            let name = genre.trimmingCharacters(in: .whitespaces)
+            return name.isEmpty ? [] : [.genre(name)]
+        case .playlist: return playlists.contains(playlistId) ? [.playlist(playlistId)] : []
+        case .mostPlayed: return [.mostPlayed]
+        case .topArtist: return [.topArtist]
+        case .library: return [.library]
+        }
+    }
+
+    /// Every choice's seeds together, each once, eight at most. Empty if any choice is
+    /// still unfilled: Find waits until every box has something in it.
+    public static func seeds(of choices: [FindChoice], playlists: Set<String>) -> [DiscoverSeed] {
+        var all: [DiscoverSeed] = []
+        for choice in choices {
+            let found = choice.seeds(playlists: playlists)
+            if found.isEmpty { return [] }
+            for seed in found where !all.contains(seed) { all.append(seed) }
+        }
+        return Array(all.prefix(8))
+    }
+}
+
 /// One of Discover's picks: a YouTube Music song the owner doesn't have, and why it's here.
 public struct DiscoverPick: Decodable, Identifiable, Hashable, Sendable {
     public let videoId: String

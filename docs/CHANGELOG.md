@@ -289,6 +289,13 @@
 - A song is about 4 MB and arrives in a second or two, so this mostly shows on videos (a 1080p video is about 100 MB).
 - **Not tried with a real download** (nothing was asked of YouTube: the owner's Mac was busy). The engine's counting and the app's wording are tested; the bar itself hasn't been seen moving.
 
+2026-10-02, 10 am. **Find: several starting points together** (the plan's "seeds can be combined, e.g. Road Trip limited to rock, or two artists together").
+
+- **The app:** Find's "Start from" row has an **Add Another** button. Up to four starting points, each its own row ("Start from… and from…"), each of any kind: a playlist and a genre, a genre and an artist, the most played songs and a playlist. A row is taken away with its minus. Find waits until every row has something in it. Only the first row is remembered from one day to the next.
+- **How they combine:** the engine already took several seeds. The radios are shared between them in turn, and a song that turns up for more than one comes first. So "Road Trip and rock" leans to songs found from both, rather than strictly keeping only rock: nothing says what genre a song on a radio is, so a strict limit isn't possible.
+- **Engine:** a pick found from two different starting points now says which: "On the radio for both Road Trip and rock songs" (it said "2 of your starting points").
+- **Checked:** the three-row layout was looked at with the hidden copy of the app (started with three rows for the picture, then put back). The engine's test covers a playlist and a genre together with made-up radios. Not clicked, and not tried against YouTube.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

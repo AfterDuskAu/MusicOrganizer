@@ -641,6 +641,12 @@ def _pick_genre(entry: _Found) -> str | None:
     return source.genre or start.genre
 
 
+def _named(source: _Source) -> str:
+    """A starting point as a "why" line names it: "Road Trip", "Linkin Park", "rock
+    songs", "your library"."""
+    return f"{source.label} songs" if source.kind == "genre" else source.label
+
+
 def _why(entry: _Found, owned: _Owned) -> str:
     hits = list(entry.hits.values())
     source, start, _ = min(hits, key=lambda hit: hit[2])
@@ -651,8 +657,11 @@ def _why(entry: _Found, owned: _Owned) -> str:
         }
         return f"By {source.label}" if own else f"Similar to {source.label}"
     if len(hits) > 1:
-        if len({s.label for s, _, _ in hits}) > 1:
-            return f"On the radio for {len(hits)} of your starting points"
+        labels = list(dict.fromkeys(_named(s) for s, _, _ in hits))
+        if len(labels) == 2:  # found from both of two starting points: the best kind of pick
+            return f"On the radio for both {labels[0]} and {labels[1]}"
+        if len(labels) > 2:
+            return f"On the radio for {len(labels)} of your starting points"
         if source.kind == "library":
             return f"On the radio for {len(hits)} of your songs"
         if source.kind == "most_played":
