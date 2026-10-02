@@ -720,6 +720,87 @@ final class SongVideoTests: XCTestCase {
         XCTAssertEqual(answer.found.first?.trackId, "t_1")
     }
 
+    func testProfilesKeepPeopleApart() throws {
+        // Before profiles there was one library: it becomes the first profile's.
+        var list = ProfileList(firstNamed: "  D ", libraryRoot: "/Volumes/Music/Library")
+        XCTAssertEqual(list.current, Profile(id: "default", name: "D", libraryRoot: "/Volumes/Music/Library"))
+        XCTAssertEqual(ProfileList(firstNamed: " ", libraryRoot: nil).current.name, "Me")
+
+        // A new profile gets a folder of its own, beside the one in use.
+        XCTAssertEqual(list.suggestedRoot(for: " C "), "/Volumes/Music/Library (C)")
+        XCTAssertEqual(list.suggestedRoot(for: "Kids / 1:2"), "/Volumes/Music/Library (Kids  12)")
+        XCTAssertNil(list.suggestedRoot(for: " . "))
+        XCTAssertNil(ProfileList(firstNamed: "D", libraryRoot: nil).suggestedRoot(for: "C"))
+        let made = try list.add(name: "  C  ", libraryRoot: "/Volumes/Music/Library (C)") { "p_1" }
+        XCTAssertEqual(made, Profile(id: "p_1", name: "C", libraryRoot: "/Volumes/Music/Library (C)", isNew: true))
+        XCTAssertEqual(list.current.id, "default")  // adding doesn't switch
+
+        // Names are one each, whatever their capitals; and so are folders.
+        XCTAssertThrowsError(try list.add(name: "c", libraryRoot: "/x")) {
+            XCTAssertEqual($0 as? ProfileList.Problem, .taken("C"))
+        }
+        XCTAssertThrowsError(try list.add(name: "", libraryRoot: "/x")) {
+            XCTAssertEqual($0 as? ProfileList.Problem, .noName)
+        }
+        XCTAssertThrowsError(try list.add(name: String(repeating: "n", count: 41), libraryRoot: "/x")) {
+            XCTAssertEqual($0 as? ProfileList.Problem, .tooLong)
+        }
+        XCTAssertThrowsError(try list.add(name: "Kids", libraryRoot: "/Volumes/Music/library/")) {
+            XCTAssertEqual($0 as? ProfileList.Problem, .sameFolder("D"))
+        }
+        XCTAssertTrue(
+            ProfileList.Problem.sameFolder("D").localizedDescription.contains("would be mixed"))
+        try list.add(name: "Kids", libraryRoot: "/Volumes/Music/Library (Kids)") { "p_1" }  // an id in use
+        XCTAssertEqual(Set(list.profiles.map(\.id)).count, 3)
+
+        // Switching, and what can't be removed.
+        list.switchTo("p_1")
+        XCTAssertEqual(list.current.name, "C")
+        list.setCurrentLibrary("/Volumes/Music/Library (C)")  // the engine has made it
+        XCTAssertFalse(list.current.isNew)
+        list.switchTo("nobody")
+        XCTAssertEqual(list.current.id, "p_1")
+        XCTAssertThrowsError(try list.remove("p_1")) {
+            XCTAssertEqual($0 as? ProfileList.Problem, .inUse)
+        }
+        try list.rename("default", to: "Dad")
+        XCTAssertThrowsError(try list.rename("default", to: "kids"))
+        try list.rename("default", to: "dad")  // its own name, in other capitals
+        try list.remove("default")
+        XCTAssertEqual(list.profiles.map(\.name), ["C", "Kids"])
+        var one = ProfileList(firstNamed: "D", libraryRoot: nil)
+        XCTAssertThrowsError(try one.remove("default")) {
+            XCTAssertEqual($0 as? ProfileList.Problem, .lastOne)
+        }
+
+        // It's saved and read back whole.
+        let saved = try JSONEncoder().encode(list)
+        XCTAssertEqual(try JSONDecoder().decode(ProfileList.self, from: saved), list)
+        XCTAssertTrue(ProfileList.newId().hasPrefix("p_"))
+        XCTAssertEqual(ProfileList.newId().count, 10)
+    }
+
+    func testWhichSettingsBelongToAProfile() {
+        let saved: [String: Any] = [
+            "findArtist": "Linkin Park", "sidebarLibrary": "songs,albums", "importSource": "spotify",
+            "profiles": Data(), "libraryRoot": "/somewhere", "profileSettings.default": ["a": 1],
+            "NSWindow Frame main": "0 0 800 600", "AppleLanguages": ["en"],
+        ]
+        XCTAssertEqual(
+            Set(ProfileSettings.toKeep(saved).keys), ["findArtist", "sidebarLibrary", "importSource"])
+        // Switching to someone with other settings: theirs are set, and what only the
+        // first person had goes back to the app's own default.
+        let theirs: [String: Any] = ["findArtist": "Phoenix", "libraryRoot": "/not theirs to set"]
+        let changes = ProfileSettings.changes(from: saved, to: theirs)
+        XCTAssertEqual(changes.set.keys.sorted(), ["findArtist"])
+        XCTAssertEqual(changes.set["findArtist"] as? String, "Phoenix")
+        XCTAssertEqual(changes.remove, ["importSource", "sidebarLibrary"])
+        // A brand new profile starts from the app's defaults.
+        XCTAssertEqual(
+            ProfileSettings.changes(from: saved, to: [:]).remove,
+            ["findArtist", "importSource", "sidebarLibrary"])
+    }
+
     func testSpotifyAccountsAndPlaylistsAreRead() throws {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase

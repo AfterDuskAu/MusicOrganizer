@@ -149,8 +149,8 @@ def test_signing_in_from_start_to_finish(fake: FakeSpotify) -> None:
                                 "redirect_uri": spotify.redirect_uri()}  # fmt: skip
     # What's kept: the refresh token, never the access token; for this user only.
     saved = json.loads(config.accounts_path().read_text(encoding="utf-8"))
-    assert saved == {"spotify": {"client_id": CLIENT, "refresh_token": REFRESH,
-                                 "name": "Me Myself"}}  # fmt: skip
+    assert saved == {"profiles": {"default": {"spotify": {
+        "client_id": CLIENT, "refresh_token": REFRESH, "name": "Me Myself"}}}}  # fmt: skip
     assert ACCESS not in config.accounts_path().read_text(encoding="utf-8")
     if config.os.name != "nt":
         assert config.accounts_path().stat().st_mode & 0o077 == 0
@@ -158,7 +158,7 @@ def test_signing_in_from_start_to_finish(fake: FakeSpotify) -> None:
     # Signing out forgets the sign-in and keeps the Client ID.
     assert spotify.sign_out()["signed_in"] is False
     assert json.loads(config.accounts_path().read_text(encoding="utf-8")) == {
-        "spotify": {"client_id": CLIENT}
+        "profiles": {"default": {"spotify": {"client_id": CLIENT}}}
     }
 
 
@@ -213,6 +213,34 @@ def test_what_isnt_a_client_id_and_a_port_in_use(fake: FakeSpotify) -> None:
 def test_tests_never_reach_spotify() -> None:
     with pytest.raises(ReplayMissError):
         spotify._http("GET", spotify.API + "/me")
+
+
+def test_each_profile_has_its_own_sign_in(
+    fake: FakeSpotify, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    signed_in()  # the first profile (no name given, as from the command line)
+    assert spotify.status()["signed_in"] is True and config.current_profile() == "default"
+
+    # Someone else's profile: not signed in, and it can't see the first one's Client ID.
+    monkeypatch.setenv(config.PROFILE_ENV, "p_1a2b3c4d")
+    spotify._forget_access()
+    assert spotify.status() == {"client_id": None, "signed_in": False, "name": None,
+                                "redirect_uri": spotify.redirect_uri()}  # fmt: skip
+    with pytest.raises(spotify.SpotifyError, match="isn't signed in"):
+        spotify._get("/me")
+    config.save_account("spotify", {"client_id": CLIENT, "refresh_token": "hers", "name": "C"})
+    assert spotify.status()["name"] == "C"
+    spotify.sign_out()
+
+    # Back in the first profile, everything is as it was left.
+    monkeypatch.delenv(config.PROFILE_ENV)
+    assert config.load_accounts()["spotify"]["refresh_token"] == REFRESH
+    saved = json.loads(config.accounts_path().read_text(encoding="utf-8"))["profiles"]
+    assert set(saved) == {"default", "p_1a2b3c4d"}
+    assert saved["p_1a2b3c4d"] == {"spotify": {"client_id": CLIENT}}
+    # A profile name that isn't one (it would be part of a file's keys) is the first profile.
+    monkeypatch.setenv(config.PROFILE_ENV, "../../etc")
+    assert config.current_profile() == "default"
 
 
 # ---- asking -------------------------------------------------------------------------------

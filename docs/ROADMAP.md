@@ -68,6 +68,7 @@ A SwiftUI app that starts the engine and talks to it (`musicorg serve`). Code in
   - use, reject, only copy, or paste a link
   - see the fingerprint result where there is one
 - **Settings:** preferred names (like "Jay Z"), the library folder, the queue.
+  - **Profiles** (built 2026-10-03): Settings → Profiles. Each person has a name and a library folder of their own, with their own playlists, sign-ins and app settings; switching deletes nothing. The daily download limit is shared.
   - **Accounts, all in one place** (owner, 2026-10-01): YouTube, Spotify, Apple Music and any later service sign in from one Settings section.
     - **YouTube:** an opt-in sign-in using the browser's login, for age-restricted songs and, with YouTube Music Premium, the 256 kbps AAC audio. A spare account is suggested, since an account used for downloading can be restricted. To be tested before it's promised.
     - **Spotify and Apple Music:** for bringing playlists and libraries across (v0.3), never for their audio, which is locked. The export-file route needs no sign-in and stays the default.

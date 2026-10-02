@@ -37,6 +37,7 @@ import random
 import signal
 import threading
 import time
+from collections import Counter
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -45,8 +46,9 @@ from pathlib import Path
 from typing import Any
 
 from musicorg import fileops, tools, youtube
-from musicorg.config import Config
+from musicorg.config import Config, load_download_times, save_download_times
 from musicorg.errors import (
+    ConfigError,
     DownloadError,
     FormatUnavailableError,
     MusicOrgError,
@@ -545,6 +547,10 @@ class _Runner:
         now = self.clock.now()
         times = self._recent_downloads(now) + [now]
         self.store.set_meta(DOWNLOADS, json.dumps([_iso(t) for t in times]))
+        try:  # and for the other libraries on this computer
+            save_download_times([_iso(t) for t in times])
+        except ConfigError as exc:
+            log.warning("%s The daily limit is counted for this library alone.", exc.message)
         self.session_downloads += 1
 
     def downloaded(self) -> None:
@@ -634,13 +640,23 @@ class _YouTubePause(Exception):
 
 
 def recent_downloads(store: QueueStore, now: datetime) -> list[datetime]:
-    """Download times in the 24 hours before `now`, oldest first."""
+    """Download times in the 24 hours before `now`, oldest first: this library's, and
+    every other library's on this computer (another profile's). YouTube counts the
+    computer, so the daily limit is one count however many people share it."""
     try:
         raw = json.loads(store.meta(DOWNLOADS) or "[]")
     except ValueError:
         raw = []
-    times = [t for t in (_parse(v) for v in raw if isinstance(v, str)) if t is not None]
-    return sorted(t for t in times if now - t < DAY)
+
+    def times(values: Any) -> Counter[datetime]:
+        listed = values if isinstance(values, list) else []
+        found = (_parse(v) for v in listed if isinstance(v, str))
+        return Counter(t for t in found if t is not None)
+
+    # A download is in this library's list and in the computer's: counted once. Two that
+    # started at the very same moment are two.
+    merged = times(raw) | times(load_download_times())
+    return sorted(t for t in merged.elements() if now - t < DAY)
 
 
 # ---- status, pause, resume (no lock) ---------------------------------------------------

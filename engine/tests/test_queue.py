@@ -20,7 +20,7 @@ from typing import Any
 import pytest
 import yt_dlp
 
-from musicorg import fileops, library, queue, tools, youtube
+from musicorg import config, fileops, library, queue, tools, youtube
 from musicorg.config import Config
 from musicorg.index import open_queue
 from musicorg.library import Library
@@ -210,6 +210,35 @@ def test_daily_cap_survives_a_restart(lib: Library, clock: FakeClock, yt: FakeYo
     assert later.resume_at is not None and later.resume_at > clock.t
     under = queue.status(lib.paths, now=clock.t, config=settings(daily_cap=4))
     assert under["daily_resume_at"] is None
+
+
+def test_the_daily_limit_is_one_count_for_every_library_on_the_computer(
+    lib: Library, clock: FakeClock, yt: FakeYouTube, tmp_path: Path
+) -> None:
+    """Two profiles are two libraries. YouTube counts the computer, so what one downloads
+    comes off what the other may."""
+    cfg = settings(daily_cap=3)
+    enqueue(lib, 2)
+    assert run(lib, clock, cfg).stopped == "empty"
+    assert queue.status(lib.paths, now=clock.t, config=cfg)["daily_count"] == 2
+
+    other_root = tmp_path / "Someone Else's Library"
+    library.init(other_root)
+    other = library.open(other_root, write=True, command="pytest")
+    try:
+        status = queue.status(other.paths, now=clock.t, config=cfg)
+        assert status["daily_count"] == 2 and status["queued"] == 0
+        enqueue(other, 3)
+        stopped = run(other, clock, cfg)
+        assert stopped.stopped == "daily_cap" and len(yt.downloads) == 3  # one more, not three
+        assert queue.status(other.paths, now=clock.t, config=cfg)["daily_count"] == 3
+    finally:
+        other.close()
+    # And the first library sees the other's download too.
+    assert queue.status(lib.paths, now=clock.t, config=cfg)["daily_count"] == 3
+    # A count that can't be read (the file is damaged) falls back to this library's own.
+    config.download_times_path().write_text("not json", encoding="utf-8")
+    assert queue.status(lib.paths, now=clock.t, config=cfg)["daily_count"] == 2
 
 
 def test_what_the_owner_asked_for_by_hand_runs_before_a_long_batch(

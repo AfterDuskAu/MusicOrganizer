@@ -55,6 +55,15 @@ final class ImportPage {
     var counts: Imports.Counts { Imports.counts(rows) }
     var toDownload: [ImportCandidate] { Imports.toDownload(rows, ticked: ticked) }
 
+    /// Back to how the page starts: another profile's library is in use now. Anything
+    /// still being read or looked for is dropped when it comes back.
+    func reset() {
+        run += 1
+        (phase, rows, name, ticked, note, done, problem) = (.idle, [], "", [], nil, 0, nil)
+        (tooLong, downloading) = (false, false)
+        forgetSpotifyPlaylists()
+    }
+
     /// Ask Spotify which playlists the signed-in account has.
     func listSpotifyPlaylists() {
         guard !listing, let list else { return }

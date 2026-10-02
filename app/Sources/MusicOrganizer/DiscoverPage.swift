@@ -68,6 +68,12 @@ final class DiscoverPage {
         }
     }
 
+    /// Back to how the page starts: another profile's library is in use now.
+    func reset() {
+        (picks, problem, note, seeds, hasAsked, selected, last) = ([], nil, nil, [], false, [], nil)
+        (done, of, round) = (0, 0, 0)
+    }
+
     /// The last request again (after it failed), or with other starting songs.
     func again(different: Bool = false) {
         guard let last else { return }

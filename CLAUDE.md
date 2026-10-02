@@ -16,12 +16,12 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
 2. **The engine writes user data only inside the library root.**
    - External folders (the owner's existing rips, friends' iTunes folders) are **read-only sources**: never renamed, retagged, moved or deleted. Only-copy tracks are *copied* into the library, and only the copy is tagged.
    - **Engine-owned exceptions:**
-     - the app's own config, log and cache folders (platformdirs): `config.json`, `accounts.json`, logs, and yt-dlp's cache via its `cachedir` option
+     - the app's own config, log and cache folders (platformdirs): `config.json`, `accounts.json`, `downloads.json`, logs, and yt-dlp's cache via its `cachedir` option
      - exports the user asked for (`report`, `review export`, `auto-sample`), written only through `fileops.write_export()`, which never overwrites and refuses any path inside the library's managed folders or a registered source
 3. **All filesystem writes go through `musicorg.fileops`.** Other modules may not create, write, move, copy, rename, replace or delete files or folders. The only exceptions, enforced by an AST-based test (step 03a):
    - `state.py`: `state.json`, written atomically
    - `index.py`: owns the SQLite files (`index.sqlite`, `queue.sqlite`)
-   - `config.py`: `config.json`, and `accounts.json` (sign-ins, beside it), written atomically
+   - `config.py`: `config.json`, and beside it `accounts.json` (sign-ins) and `downloads.json` (the computer's count of the day's downloads), written atomically
    - `tags.py`: its single mutagen save call, which only `fileops` ever calls, on staged copies
    - yt-dlp itself, writing **only** into the `_Staging/<batch_id>/` folder `fileops` hands it
    - a single line marked `# fileops-ok: in-memory`, for writes to in-memory buffers (e.g. Pillow saving into `BytesIO`)
@@ -117,3 +117,5 @@ Weekly mix, phone/Subsonic server, packaging, signing, notarization, Windows app
 **Discover was started early, on 2026-10-01, at the owner's request** (it was on this list). Built: `discover.suggest`, the app's What's New and Find pages, the guided "What music would you like today?" mode, and Find's Download Automatically (find and queue a batch in one click). Still not yet, from its plan (`docs/roadmap/0.4-discover.md`): the `Discovered/` folder and its tag (a contract change), and Last.fm as a second source.
 
 **Imports were started early, on 2026-10-02, at the owner's request** (Spotify/Apple Music import was on this list, and so were accounts). Built: Discover → Import Playlists for a YouTube or YouTube Music playlist by its link, with no sign-in; and for Spotify, after a sign-in on Spotify's own page (2026-10-03). Still not yet: Apple Music, and signing in to YouTube (`docs/ROADMAP.md`, v0.3). A sign-in is built only for reading playlists: logins stay on the Mac, never in the repo or the library.
+
+**Profiles were built on 2026-10-03, at the owner's request** ("accounts" was on this list; these are local, with nothing online). A profile is a name and a library folder of its own, chosen in the app's Settings → Profiles; the app starts the engine for one profile at a time (`MUSICORG_PROFILE`), and the engine still serves one library. Sign-ins are kept per profile; the daily download limit is counted once for the whole computer. Still not yet, from `docs/roadmap/1.1-family-mode.md`: a parent PIN, and filtering a kids profile by the explicit tag.

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -248,6 +249,22 @@ def remember_library(root: Path) -> None:
     cfg.save()
 
 
+# ---- profiles: whose sign-ins, and one count of downloads for the computer ----------------
+
+PROFILE_ENV = "MUSICORG_PROFILE"
+DEFAULT_PROFILE = "default"
+_PROFILE_ID = re.compile(r"[A-Za-z0-9_-]{1,40}")
+
+
+def current_profile() -> str:
+    """Which of the app's local profiles this engine is running for. The app names it
+    when it starts the engine (`MUSICORG_PROFILE`); without that, as from the command
+    line, it's the first profile. A profile is a person's own library and sign-ins on
+    this computer: there's nothing online about it."""
+    given = os.environ.get(PROFILE_ENV, "")
+    return given if _PROFILE_ID.fullmatch(given) else DEFAULT_PROFILE
+
+
 # ---- sign-ins (imports, v0.3) --------------------------------------------------------------
 
 ACCOUNTS_FILE_NAME = "accounts.json"
@@ -260,33 +277,81 @@ def accounts_path() -> Path:
     return app_dirs().config / ACCOUNTS_FILE_NAME
 
 
-def load_accounts() -> dict[str, dict[str, Any]]:
-    """The sign-ins saved on this computer, by service ("spotify"). A missing or
-    damaged file reads as none: the owner just signs in again."""
+def _all_accounts() -> dict[str, dict[str, Any]]:
+    """Every profile's sign-ins. A missing or damaged file reads as none: the owner
+    just signs in again."""
     try:
         loaded = json.loads(accounts_path().read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {}
-    if not isinstance(loaded, dict):
+    profiles = loaded.get("profiles") if isinstance(loaded, dict) else None
+    if not isinstance(profiles, dict):
         return {}
-    return {k: dict(v) for k, v in loaded.items() if isinstance(k, str) and isinstance(v, dict)}
+    return {k: dict(v) for k, v in profiles.items() if isinstance(k, str) and isinstance(v, dict)}
+
+
+def load_accounts() -> dict[str, dict[str, Any]]:
+    """This profile's sign-ins, by service ("spotify"). Another profile's are never
+    given out: one person's Spotify isn't the next person's."""
+    mine = _all_accounts().get(current_profile()) or {}
+    return {k: dict(v) for k, v in mine.items() if isinstance(k, str) and isinstance(v, dict)}
 
 
 def save_account(service: str, account: dict[str, Any] | None) -> None:
-    """Save one service's sign-in, or remove it (`None`). Written atomically, and
-    readable by this user only (the temp file it's written through is made that way)."""
-    accounts = load_accounts()
+    """Save one service's sign-in for this profile, or remove it (`None`). Written
+    atomically, and readable by this user only (the temp file it's written through is
+    made that way)."""
+    everyone = _all_accounts()
+    mine = everyone.get(current_profile()) or {}
     if account is None:
-        accounts.pop(service, None)
+        mine.pop(service, None)
     else:
-        accounts[service] = dict(account)
+        mine[service] = dict(account)
+    if mine:
+        everyone[current_profile()] = mine
+    else:
+        everyone.pop(current_profile(), None)
     path = accounts_path()
     ensure_app_dir(path.parent)
+    text = json.dumps({"profiles": everyone}, indent=2, ensure_ascii=False) + "\n"
     try:
-        _write_atomic(path, json.dumps(accounts, indent=2, ensure_ascii=False) + "\n")
+        _write_atomic(path, text)
     except OSError as exc:
         raise ConfigError(
             f"Couldn't save the sign-in on this computer: {exc.strerror or exc}."
+        ) from exc
+
+
+# ---- the day's downloads, for the whole computer ------------------------------------------
+
+DOWNLOAD_TIMES_FILE_NAME = "downloads.json"
+
+
+def download_times_path() -> Path:
+    return app_dirs().config / DOWNLOAD_TIMES_FILE_NAME
+
+
+def load_download_times() -> list[str]:
+    """When this computer's recent downloads started, whichever library they went into.
+    YouTube counts a computer, not a person: with several profiles the daily limit has
+    to be one count. Missing or damaged reads as none."""
+    try:
+        loaded = json.loads(download_times_path().read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    times = loaded.get("times") if isinstance(loaded, dict) else None
+    return [t for t in times if isinstance(t, str)] if isinstance(times, list) else []
+
+
+def save_download_times(times: list[str]) -> None:
+    """Replace the list (the queue passes the last 24 hours' worth)."""
+    path = download_times_path()
+    ensure_app_dir(path.parent)
+    try:
+        _write_atomic(path, json.dumps({"times": list(times)}, indent=2) + "\n")
+    except OSError as exc:
+        raise ConfigError(
+            f"Couldn't save the count of downloads to {path}: {exc.strerror or exc}."
         ) from exc
 
 

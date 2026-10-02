@@ -9,12 +9,17 @@ public final class EngineProcess: @unchecked Sendable {
     private let errors = ErrorTail()
 
     /// `executable` is the `musicorg` command, e.g. `<repo>/.venv/bin/musicorg`.
-    public init(executable: URL) throws {
+    /// `environment` is added to this app's own for the engine: which profile it's
+    /// running for (`MUSICORG_PROFILE`), so each person's sign-ins stay their own.
+    public init(executable: URL, environment: [String: String] = [:]) throws {
         signal(SIGPIPE, SIG_IGN)  // writing to an engine that has gone is an error, not a crash
         let stdin = Pipe(), stdout = Pipe(), stderr = Pipe()
         process = Process()
         process.executableURL = executable
         process.arguments = ["serve"]
+        if !environment.isEmpty {
+            process.environment = ProcessInfo.processInfo.environment.merging(environment) { $1 }
+        }
         process.standardInput = stdin
         process.standardOutput = stdout
         process.standardError = stderr

@@ -114,6 +114,9 @@ final class AppModel {
     var batch: BatchDownload?
     /// How Discover's Download Automatically is going, until its note is closed.
     var auto: AutoDownload?
+    /// The people who use the app on this Mac, each with a library of their own, and
+    /// which of them it's open for (Settings → Profiles).
+    private(set) var profiles = AppModel.savedProfiles()
     /// How the download queue is doing: asked for when its worker starts or stops.
     private(set) var queueStatus: QueueStatus?
     /// Which services are set up and signed in to (Settings → Accounts).
@@ -234,7 +237,8 @@ final class AppModel {
             return
         }
         do {
-            let engine = try EngineProcess(executable: executable)
+            let engine = try EngineProcess(
+                executable: executable, environment: ["MUSICORG_PROFILE": profiles.current.id])
             self.engine = engine
             stopping = false
             engine.connection.start(
@@ -271,11 +275,18 @@ final class AppModel {
             phase = .failed("The engine didn't start: \(error.localizedDescription)")
             return
         }
-        if let saved = UserDefaults.standard.string(forKey: Self.rootKey) {
-            await open(URL(fileURLWithPath: saved))
+        if let root = libraryToOpen {
+            await open(URL(fileURLWithPath: root))
         } else {
             phase = .needsLibrary
         }
+    }
+
+    /// The library folder of the profile in use. A folder given when the app was
+    /// started (`-libraryRoot <folder>`, a developer's check) comes before it.
+    private var libraryToOpen: String? {
+        let given = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
+        return given[Self.rootKey] as? String ?? profiles.current.libraryRoot
     }
 
     private func stopEngine() {
@@ -308,15 +319,121 @@ final class AppModel {
         panel.message = "Choose your Music Organizer library folder (the one with Music inside)."
         panel.prompt = "Open Library"
         guard panel.runModal() == .OK, let url = panel.url else { return }
-        UserDefaults.standard.set(url.path, forKey: Self.rootKey)
+        if let owner = profiles.profiles.first(where: {
+            $0.id != profiles.currentId && $0.libraryRoot == url.path
+        }) {
+            notice = ProfileList.Problem.sameFolder(owner.name).localizedDescription
+            return
+        }
+        profiles.setCurrentLibrary(url.path)
+        saveProfiles()
         player.stop()
         retry()  // an engine serves one library, so a new choice starts a new engine
+    }
+
+    // MARK: Profiles
+
+    private static let profilesKey = "profiles"
+
+    /// The saved list; or, the first time, one profile with the library that was in use
+    /// before there were profiles, named after this Mac's user.
+    private static func savedProfiles() -> ProfileList {
+        if let data = UserDefaults.standard.data(forKey: profilesKey),
+            let saved = try? JSONDecoder().decode(ProfileList.self, from: data),
+            !saved.profiles.isEmpty
+        {
+            return saved
+        }
+        return ProfileList(
+            firstNamed: NSFullUserName(),
+            libraryRoot: UserDefaults.standard.persistentDomain(forName: settingsDomain)?[rootKey]
+                as? String)
+    }
+
+    private func saveProfiles() {
+        if let data = try? JSONEncoder().encode(profiles) {
+            UserDefaults.standard.set(data, forKey: Self.profilesKey)
+        }
+    }
+
+    /// Make a profile with a library folder of its own, and switch to it. The engine
+    /// makes the library when it's first opened; nothing of anyone else's is touched.
+    func addProfile(named name: String, libraryRoot: String) throws {
+        let made = try profiles.add(name: name, libraryRoot: libraryRoot)
+        saveProfiles()
+        switchProfile(to: made.id)
+    }
+
+    func renameProfile(_ id: String, to name: String) throws {
+        try profiles.rename(id, to: name)
+        saveProfiles()
+    }
+
+    /// Take a profile off the list. Its library folder stays exactly where it is.
+    func removeProfile(_ id: String) throws {
+        try profiles.remove(id)
+        UserDefaults.standard.removeObject(forKey: Self.settingsKey(id))
+        saveProfiles()
+    }
+
+    /// Change who the app is open for: their library, playlists, sign-ins and settings.
+    /// The profile being left is put away exactly as it is, and nothing is deleted.
+    /// Its downloads still waiting carry on when it's switched back to.
+    func switchProfile(to id: String) {
+        guard id != profiles.currentId, profiles.profile(id) != nil else { return }
+        player.stop()
+        putAwaySettings(of: profiles.currentId)
+        profiles.switchTo(id)
+        saveProfiles()
+        bringBackSettings(of: id)
+        clearForAnotherLibrary()
+        retry()  // an engine serves one library and one profile: a new one starts
+    }
+
+    private static var settingsDomain: String {
+        Bundle.main.bundleIdentifier ?? ProcessInfo.processInfo.processName
+    }
+
+    private static func settingsKey(_ id: String) -> String { "profileSettings.\(id)" }
+
+    private func putAwaySettings(of id: String) {
+        let all = UserDefaults.standard.persistentDomain(forName: Self.settingsDomain) ?? [:]
+        UserDefaults.standard.set(ProfileSettings.toKeep(all), forKey: Self.settingsKey(id))
+    }
+
+    private func bringBackSettings(of id: String) {
+        let all = UserDefaults.standard.persistentDomain(forName: Self.settingsDomain) ?? [:]
+        let theirs = UserDefaults.standard.dictionary(forKey: Self.settingsKey(id)) ?? [:]
+        let changes = ProfileSettings.changes(from: all, to: theirs)
+        for key in changes.remove { UserDefaults.standard.removeObject(forKey: key) }
+        for (key, value) in changes.set { UserDefaults.standard.set(value, forKey: key) }
+    }
+
+    /// Nothing of the last profile's stays on screen while the next one's is read.
+    private func clearForAnotherLibrary() {
+        (library, everything, downloaded, videos) = (.empty, .empty, [], [])
+        (listening, favourites, status, root) = (.empty, [], nil, nil)
+        (pending, starting, startProblems) = ([], [], [:])
+        (queueStatus, accounts, accountNote, signingIn) = (nil, nil, nil, false)
+        (auto, batch, deletingDownloads, lastAuto) = (nil, nil, nil, nil)
+        (youtubeQuery, youtubeResults, youtubeProblem, searchText) = ("", [], nil, "")
+        libraryVersion += 1
+        for page in [whatsNew, find] { page.reset() }
+        importing.reset()
+        keepDownloadsSeparate =
+            UserDefaults.standard.object(forKey: "keepDownloadsSeparate") as? Bool ?? true
     }
 
     private func open(_ folder: URL) async {
         guard let connection = engine?.connection else { return }
         phase = .loading
         do {
+            if profiles.current.isNew, profiles.current.libraryRoot == folder.path {
+                // A new profile's library: the engine makes it, once.
+                _ = try await connection.call("library.init", ["root": folder.path])
+                profiles.setCurrentLibrary(folder.path)
+                saveProfiles()
+            }
             _ = try await connection.call("library.open", ["root": folder.path])
             try await load()
             phase = .ready

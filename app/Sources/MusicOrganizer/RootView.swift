@@ -696,6 +696,21 @@ private struct StatusFooter: View {
     var body: some View {
         HStack(alignment: .bottom) {
         VStack(alignment: .leading, spacing: 3) {
+            if model.profiles.profiles.count > 1 {
+                // Whose music this is, once there's more than one person. Click to switch.
+                SettingsLink {
+                    Label(model.profiles.current.name, systemImage: "person.crop.circle")
+                        .font(.callout.weight(.medium))
+                }
+                .buttonStyle(.plain)
+                .simultaneousGesture(
+                    TapGesture().onEnded {
+                        UserDefaults.standard.set("profiles", forKey: SettingsView.tabKey)
+                    }
+                )
+                .help("The profile in use. Click to switch (Settings → Profiles).")
+                .padding(.bottom, 3)
+            }
             if let use = model.dailyUse {
                 DailyLimitCounter(use: use)
                     .padding(.bottom, 3)
