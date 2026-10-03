@@ -358,6 +358,11 @@
 - **Rules touched:** `CLAUDE.md` rule 3's line for `config.py` and rule 2's list now name `downloads.json` too.
 - Checked: engine tests (a second profile can't see the first's sign-in; two libraries share the count); the Kit's profile tests; and, in the unseen copy of the app on scratch folders, a real profile made and switched to (an empty library, made by the engine), then back (the first profile's 17 songs, playlist and favourite all there). **Not clicked in the running app:** the Profiles tab's buttons and the New Profile sheet were looked at, not pressed.
 
+2026-10-03, after trying the app. The owner sent a batch: a playing error, a new layout for Downloads, Settings regrouped, Show More on Discover, a mark for songs heard to the end, an Up Next for YouTube Music, a new layout under a playing video, and copying a playlist to another profile. Done in that order, one commit each.
+
+- **YouTube's refusals in plain words.** An age-restricted song showed yt-dlp's own message, written for people at a command line ("Use --cookies-from-browser or --cookies… See https://github.com/…"). The engine now says why in a sentence: "It's age-restricted: YouTube only plays it to someone signed in as an adult, and signing in to YouTube isn't built yet." Likewise a private video, members-only, not in this country, not out yet, taken down for copyright, a closed channel, or gone. The same words show when playing and in Downloads. (Getting past the age check needs a YouTube sign-in: later, at the owner's word.)
+- **Discover → Downloads is two boxes: Videos and Songs** (the owner's sketch), each newest first, with a Videos First / Songs First switch that's remembered. The genre boxes are gone; a download's genre tag is still written.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

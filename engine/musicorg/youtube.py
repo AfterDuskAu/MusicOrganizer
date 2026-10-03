@@ -1193,7 +1193,7 @@ def download_problem(video_id: str, exc: BaseException) -> Exception:
             "are paused. They carry on by themselves later; nothing is lost."
         )
     if any(s in low for s in _UNAVAILABLE):
-        return VideoUnavailableError(f"YouTube won't let {video_id} be downloaded: {detail}")
+        return VideoUnavailableError(_why_unavailable(low))
     if any(s in low for s in _FORMAT):
         return FormatUnavailableError(
             f"YouTube didn't offer the usual audio format (140, AAC) for {video_id}. No "
@@ -1206,6 +1206,30 @@ def download_problem(video_id: str, exc: BaseException) -> Exception:
             f"The download of {video_id} failed on the network: {detail}", network=True
         )
     return DownloadError(f"The download of {video_id} didn't work: {detail}")
+
+
+# Why YouTube won't give a video out, in plain words: yt-dlp's own message is for
+# people at a command line (flags, links to its FAQ). Checked in this order.
+_WHY_UNAVAILABLE = (
+    (("confirm your age", "age-restricted", "age restricted", "inappropriate for some users"),
+     "It's age-restricted: YouTube only plays it to someone signed in as an adult, and "
+     "signing in to YouTube isn't built yet."),
+    (("private video",), "It's a private video."),
+    (("members-only", "members only", "join this channel"),
+     "It's only for the channel's paying members."),
+    (("your country", "geo restrict"), "YouTube doesn't allow it in this country."),
+    (("premieres in", "live event will begin"),
+     "It hasn't come out yet (a premiere or a live event)."),
+    (("copyright",), "It was taken down for copyright."),
+    (("been terminated",), "The channel it was on has been closed."),
+)  # fmt: skip
+
+
+def _why_unavailable(low: str) -> str:
+    for words, why in _WHY_UNAVAILABLE:
+        if any(w in low for w in words):
+            return why
+    return "It isn't on YouTube any more, or YouTube won't give it out."
 
 
 def _short_detail(text: str) -> str:

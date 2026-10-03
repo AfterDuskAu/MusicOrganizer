@@ -292,6 +292,16 @@ public struct GenreGroup: Identifiable, Equatable, Sendable {
     }
 }
 
+/// Discover → Downloads, as the owner drew it on 2026-10-03: a box of videos and a box of
+/// songs, each newest first; which box comes first is the owner's choice.
+public enum DownloadGroups {
+    public static func byKind(_ tracks: [Track], videosFirst: Bool) -> [GenreGroup] {
+        let videos = GenreGroup(name: "Videos", tracks: tracks.filter(\.isVideo))
+        let songs = GenreGroup(name: "Songs", tracks: tracks.filter { !$0.isVideo })
+        return (videosFirst ? [videos, songs] : [songs, videos]).filter { !$0.tracks.isEmpty }
+    }
+}
+
 public enum Genres {
     /// What makes two genre tags the same group: the first genre named ("Hip-Hop/Rap"
     /// is filed under hip hop), whatever its capitals, hyphens and spacing.

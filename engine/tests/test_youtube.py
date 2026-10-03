@@ -13,7 +13,7 @@ import requests
 from ytmusicapi.exceptions import YTMusicServerError
 
 from musicorg import youtube
-from musicorg.errors import ReplayMissError, YouTubePausedError
+from musicorg.errors import ReplayMissError, VideoUnavailableError, YouTubePausedError
 from musicorg.youtube import Album, AlbumTrack, RateLimiter
 
 
@@ -427,3 +427,27 @@ def test_same_song() -> None:
     assert youtube.same_song("numb (Remastered)", "LINKIN PARK feat. Somebody", numb)
     assert not youtube.same_song("Numb (Live)", "Linkin Park", numb)
     assert not youtube.same_song("Numb", "Somebody Else", numb)
+
+
+@pytest.mark.parametrize(
+    ("said", "plain"),
+    [
+        ("ERROR: [youtube] DuQGokwsWF8: Sign in to confirm your age. This video may be "
+         "inappropriate for some users. Use --cookies-from-browser or --cookies for the "
+         "authentication. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ", "age-restricted"),
+        ("ERROR: [youtube] abcdefghijk: Private video. Sign in if you've been granted access",
+         "private video"),
+        ("ERROR: [youtube] abcdefghijk: Video unavailable", "isn't on YouTube any more"),
+        ("ERROR: [youtube] abcdefghijk: The uploader has not made this video available in your "
+         "country", "this country"),
+        ("ERROR: [youtube] abcdefghijk: Join this channel to get access to members-only content",
+         "paying members"),
+    ],
+)  # fmt: skip
+def test_why_youtube_wont_give_a_video_is_said_plainly(said: str, plain: str) -> None:
+    error = youtube.download_problem("abcdefghijk", Exception(said))
+    assert isinstance(error, VideoUnavailableError)
+    assert plain in error.message
+    # None of yt-dlp's own words for people at a command line come through.
+    for leftover in ("--cookies", "http", "wiki", "abcdefghijk", "DuQGokwsWF8"):
+        assert leftover not in error.message

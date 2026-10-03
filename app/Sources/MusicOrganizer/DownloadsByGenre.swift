@@ -1,16 +1,13 @@
 import MusicOrganizerKit
 import SwiftUI
 
-/// Discover → Downloads, laid out as the owner drew it (2026-10-02): each genre named on
-/// the left, and beside it a box of its songs, each line a song's name, artist and the
-/// day it was added. The newest downloads are at the top of each box, and the genre
-/// with the newest download comes first.
-///
-/// A song's genre is its own genre tag: a download gets one from Discover (the genre it
-/// was found under) or from the owner's other songs by the artist. One with no genre
-/// yet is listed last; Edit Details… gives it one.
+/// Discover → Downloads, laid out as the owner drew it (2026-10-03): "Videos" and
+/// "Songs" named on the left, and beside each a box of them, each line a name, artist and
+/// the day it was added, newest first. Videos or songs first is the owner's choice, and
+/// remembered. (Until 2026-10-03 the boxes were genres.)
 struct DownloadsByGenre: View {
     @Environment(AppModel.self) private var model
+    @AppStorage("downloadsVideosFirst") private var videosFirst = true
 
     private static let genreWidth: CGFloat = 150
     static let artistWidth: CGFloat = 220
@@ -32,7 +29,7 @@ struct DownloadsByGenre: View {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 18) {
                         columnNames
-                        ForEach(Genres.groups(shown)) { group in
+                        ForEach(DownloadGroups.byKind(shown, videosFirst: videosFirst)) { group in
                             HStack(alignment: .top, spacing: 16) {
                                 genreLabel(group)
                                 songs(group, in: shown)
@@ -65,6 +62,14 @@ struct DownloadsByGenre: View {
                 .foregroundStyle(.secondary)
             }
             Spacer()
+            Picker("Order", selection: $videosFirst) {
+                Text("Videos First").tag(true)
+                Text("Songs First").tag(false)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .fixedSize()
+            .help("Which box comes first")
             Button("Play", systemImage: "play.fill") { model.player.play(shown) }
                 .help("Play these songs in order")
             Button("Shuffle", systemImage: "shuffle") { model.player.playShuffled(shown) }
@@ -92,11 +97,15 @@ struct DownloadsByGenre: View {
 
     private func genreLabel(_ group: GenreGroup) -> some View {
         VStack(spacing: 2) {
-            Text(group.name.isEmpty ? "No genre yet" : group.name)
+            Image(systemName: group.name == "Videos" ? "film" : "music.note")
+                .font(.title3)
+                .foregroundStyle(.secondary)
+            Text(group.name)
                 .font(.headline)
                 .multilineTextAlignment(.center)
-            Text(group.tracks.count == 1 ? "1 song" : "\(group.tracks.count) songs")
+            Text("\(group.tracks.count)")
                 .font(.caption)
+                .monospacedDigit()
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 10)
@@ -104,10 +113,7 @@ struct DownloadsByGenre: View {
         .frame(width: Self.genreWidth)
         .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10))
         .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(.quaternary))
-        .help(
-            group.name.isEmpty
-                ? "These have no genre in their details. Right-click one → Edit Details… to give it one."
-                : "Songs whose genre is \(group.name)")
+        .help(group.name == "Videos" ? "Videos saved whole, picture and sound" : "Songs: sound only")
     }
 
     private func songs(_ group: GenreGroup, in shown: [Track]) -> some View {

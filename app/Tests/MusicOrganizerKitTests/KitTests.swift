@@ -567,6 +567,24 @@ final class SongVideoTests: XCTestCase {
         XCTAssertEqual(PendingDownload(jobId: 3, state: "running", progress: 1.7).percent, 100)
     }
 
+    func testDownloadsAreGroupedIntoVideosAndSongs() throws {
+        func track(_ path: String, _ title: String) throws -> Track {
+            Track(path: path, title: title, video: path.hasSuffix(".mp4") ? true : nil)
+        }
+        let newest = try track("Music/Videos/Band/Clip.mp4", "Clip")
+        let song = try track("Music/Band/Album/01 Tune.m4a", "Tune")
+        let older = try track("Music/Videos/Band/Old Clip.mp4", "Old Clip")
+        XCTAssertTrue(newest.isVideo)
+        XCTAssertFalse(song.isVideo)
+        let videosFirst = DownloadGroups.byKind([newest, song, older], videosFirst: true)
+        XCTAssertEqual(videosFirst.map(\.name), ["Videos", "Songs"])
+        XCTAssertEqual(videosFirst[0].tracks.map(\.title), ["Clip", "Old Clip"])  // order kept
+        XCTAssertEqual(
+            DownloadGroups.byKind([newest, song], videosFirst: false).map(\.name), ["Songs", "Videos"])
+        // An empty box isn't shown.
+        XCTAssertEqual(DownloadGroups.byKind([song], videosFirst: true).map(\.name), ["Songs"])
+    }
+
     func testDownloadsAreGroupedByGenre() {
         func song(_ title: String, _ genre: String?, _ added: String) -> Track {
             Track(path: "Music/\(title).m4a", title: title, genre: genre, acquired: added)
