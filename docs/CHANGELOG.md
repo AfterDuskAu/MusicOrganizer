@@ -367,6 +367,7 @@
   - **Downloads:** where downloads show (Discover Downloads or All Library), the library folder (Select…), the quality (128 kbps; 256 says coming), and downloads per day (50 to 500).
   - **Lyrics:** Find Missing Lyrics, as before.
   - A tab remembered from before opens Profile. Messages that named the old tabs (the Spotify sign-in's, Downloads') name the new ones.
+- **Show 25 More** under What's New's and Find's songs (the owner: "it shows 49 songs, not 50, because these radios didn't have more… should be able to click Show More… to continuously look for more"). Each press asks for 25 more from the same starting points, starting from other songs of the owner's each time, and none of the songs already on the page (`discover.suggest` takes `exclude`). If nothing new turns up, it says so.
 
 ## 0.1.1 — in progress
 

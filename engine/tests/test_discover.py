@@ -81,6 +81,15 @@ def test_picks_from_the_whole_library(lib: Library) -> None:
     assert suggest(lib, Seed("library")) == found  # the same again: the answers are kept
 
 
+def test_show_more_never_picks_what_is_already_shown(lib: Library) -> None:
+    own(lib, *FOUR)
+    first = suggest(lib, Seed("library"), count=10)
+    with open_index(lib.paths, write=True) as index:
+        more = discover.suggest(lib, index, [Seed("library")], 10, shuffle="t", exclude=ids(first))
+    assert more["picks"] and not set(ids(more)) & set(ids(first))
+    assert len(set(ids(more))) == len(ids(more))
+
+
 def test_what_is_never_suggested(lib: Library) -> None:
     own(lib, *FOUR)
     with open_index(lib.paths, write=True) as index:

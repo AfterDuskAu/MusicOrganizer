@@ -92,6 +92,7 @@ SLOW_METHODS = frozenset(
     {"youtube.stream", "youtube.video", "search.ytmusic", "lyrics.find", "lyrics.for_video",
      "discover.suggest", "import.playlist", "import.playlists", "import.find"}
 )  # fmt: skip
+MAX_EXCLUDE = 5000  # songs already on screen that Show More leaves out
 RPC_DECISIONS = ("accept", "candidate", "url", "only_copy", "skip", "reject")
 
 # Error codes (docs/ENGINE_API.md → Errors).
@@ -902,14 +903,18 @@ class Server:
         count = want(params, "count", int, 50)
         shuffle = want(params, "shuffle", str, "") or ""
         token = want(params, "token", str)
+        exclude = want(params, "exclude", list, [])
+        if len(exclude) > MAX_EXCLUDE or not all(isinstance(v, str) for v in exclude):
+            raise RpcError(INVALID_PARAMS, f"exclude should be at most {MAX_EXCLUDE} video ids.")
 
         def progress(done: int, total: int) -> None:
             self.writer.notify("discover.progress", {"token": token, "done": done, "of": total})
 
         with self._index(write=True) as index:  # the index keeps YouTube Music's answers
             return discover.suggest(
-                self._library(), index, seeds, count, shuffle=shuffle, progress=progress
-            )
+                self._library(), index, seeds, count, shuffle=shuffle, exclude=exclude,
+                progress=progress,
+            )  # fmt: skip
 
     def import_playlist(self, params: dict[str, Any]) -> dict[str, Any]:
         """A playlist from elsewhere, as its name and its songs (imports, v0.3). Only

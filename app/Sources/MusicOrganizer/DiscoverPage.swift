@@ -7,8 +7,13 @@ import Observation
 @MainActor
 @Observable
 final class DiscoverPage {
-    typealias Ask = (_ seeds: [DiscoverSeed], _ count: Int, _ shuffle: String, _ page: String)
-        async throws -> DiscoverAnswer
+    typealias Ask = (
+        _ seeds: [DiscoverSeed], _ count: Int, _ shuffle: String, _ page: String,
+        _ exclude: [String]
+    ) async throws -> DiscoverAnswer
+
+    /// How many more songs Show More asks for.
+    static let moreStep = 25
 
     /// Names this page in the engine's progress notes.
     let name: String
@@ -25,6 +30,10 @@ final class DiscoverPage {
     private(set) var seeds: [DiscoverAnswer.Seed] = []
     /// False until the first request has been made.
     private(set) var hasAsked = false
+    /// Show More is asking for more.
+    private(set) var loadingMore = false
+    /// Show More found nothing new: the radios have nothing more to give.
+    private(set) var noMore = false
     /// The picks ticked for "Download Selected".
     var selected = Set<String>()
 
@@ -56,8 +65,9 @@ final class DiscoverPage {
         (done, of) = (0, 0)
         defer { working = false }
         do {
-            let answer = try await ask(seeds, count, "\(Self.today()) \(round)", name)
+            let answer = try await ask(seeds, count, "\(Self.today()) \(round)", name, [])
             picks = answer.picks
+            noMore = false
             note = answer.note
             self.seeds = answer.seeds ?? []
             selected = []
@@ -71,8 +81,34 @@ final class DiscoverPage {
     /// Back to how the page starts: another profile's library is in use now.
     func reset() {
         (picks, problem, note, seeds, hasAsked, selected, last) = ([], nil, nil, [], false, [], nil)
+        (loadingMore, noMore, problemWithMore) = (false, false, nil)
         (done, of, round) = (0, 0, 0)
     }
+
+    /// Show More: another 25 songs from the same starting points, none of them already
+    /// on the page. Each time starts from other songs of the owner's, so the radios
+    /// reach further.
+    func more() {
+        guard !working, !loadingMore, let last, let ask else { return }
+        (loadingMore, noMore, problemWithMore) = (true, false, nil)
+        round += 1
+        let shown = picks.map(\.videoId)
+        Task {
+            defer { loadingMore = false }
+            do {
+                let answer = try await ask(
+                    last.seeds, Self.moreStep, "\(Self.today()) \(round)", name, shown)
+                let new = answer.picks.filter { pick in !picks.contains { $0.id == pick.id } }
+                picks += new
+                noMore = new.isEmpty
+            } catch {
+                problemWithMore = error.localizedDescription
+            }
+        }
+    }
+
+    /// Why Show More didn't work, said under the songs already found (which stay).
+    var problemWithMore: String?
 
     /// The last request again (after it failed), or with other starting songs.
     func again(different: Bool = false) {

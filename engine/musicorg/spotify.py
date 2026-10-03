@@ -378,7 +378,9 @@ def _access_token() -> str:
     account = config.load_accounts().get(SERVICE) or {}
     client_id, refresh = account.get("client_id"), account.get("refresh_token")
     if not isinstance(client_id, str) or not isinstance(refresh, str) or not refresh:
-        raise SpotifyError("Spotify isn't signed in to. Sign in under Settings → Profile → Spotify.")
+        raise SpotifyError(
+            "Spotify isn't signed in to. Sign in under Settings → Profile → Spotify."
+        )
     status_code, _, body = _http(
         "POST",
         TOKEN_URL,

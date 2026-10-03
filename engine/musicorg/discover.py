@@ -42,7 +42,7 @@ import math
 import random
 import re
 from collections import Counter
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -230,11 +230,15 @@ def suggest(
     count: int,
     *,
     shuffle: str = "",
+    exclude: Iterable[str] = (),
     progress: Progress | None = None,
 ) -> dict[str, Any]:
     """`count` picks from these seeds, best first: `{picks, wanted, radios, seeds,
     note}` (docs/ENGINE_API.md → `discover.suggest`). `index` must be writable: YouTube
-    Music's answers are kept in it."""
+    Music's answers are kept in it.
+
+    `exclude`: YouTube ids already on the owner's screen (the app's Show More): none of
+    them is picked again, so the radios are walked further for songs that are new."""
     if not seeds:
         raise UserError("Choose where to start from: your library, a playlist, an artist…")
     if len(seeds) > MAX_SEEDS:
@@ -249,6 +253,7 @@ def suggest(
     skip_ids |= {
         row["video_id"] for row in queue.downloads(lib.paths) if isinstance(row["video_id"], str)
     }
+    skip_ids |= {video_id for video_id in exclude if isinstance(video_id, str)}
     rng = random.Random(f"discover {shuffle}")
     notes: list[str] = []
     sources = []

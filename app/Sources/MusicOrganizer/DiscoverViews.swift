@@ -357,9 +357,35 @@ struct PicksView: View {
                         }
                     }
                     .padding(20)
+                    showMore
                 }
             }
         }
+    }
+
+    /// Under the cards: ask for 25 more, as often as the owner likes.
+    @ViewBuilder
+    private var showMore: some View {
+        VStack(spacing: 8) {
+            if page.loadingMore {
+                HStack(spacing: 8) {
+                    ProgressView().controlSize(.small)
+                    Text("Looking further…").foregroundStyle(.secondary)
+                }
+            } else {
+                Button("Show \(DiscoverPage.moreStep) More", systemImage: "plus.circle") { page.more() }
+                    .help("Look further from the same starting points for songs not shown yet")
+            }
+            if let why = page.problemWithMore {
+                Text(why).font(.callout).foregroundStyle(.orange)
+            } else if page.noMore {
+                Text("Nothing more was found this time. Try again for other starting songs.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.bottom, 24)
     }
 
     /// The row above the cards: how many, and what can be done with several at once.

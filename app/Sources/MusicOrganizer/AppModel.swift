@@ -162,9 +162,9 @@ final class AppModel {
             return try await self.downloadImport(named: name, owned: owned, songs: songs)
         }
         for page in [whatsNew, find] {
-            page.ask = { [weak self] seeds, count, shuffle, name in
+            page.ask = { [weak self] seeds, count, shuffle, name, exclude in
                 guard let self else { throw CancellationError() }
-                return try await self.suggest(seeds, count, shuffle, name)
+                return try await self.suggest(seeds, count, shuffle, name, exclude: exclude)
             }
         }
         player.onTrackChange = { [weak self] track in self?.showLyrics(for: track) }
@@ -691,15 +691,17 @@ final class AppModel {
     /// Ask the engine for songs the owner doesn't have. Takes seconds: the engine asks
     /// YouTube Music for several radios, at its usual careful pace.
     private func suggest(
-        _ seeds: [DiscoverSeed], _ count: Int, _ shuffle: String, _ page: String
+        _ seeds: [DiscoverSeed], _ count: Int, _ shuffle: String, _ page: String,
+        exclude: [String] = []
     ) async throws -> DiscoverAnswer {
         guard let connection = engine?.connection else {
             throw RPCError(code: 0, message: "The engine isn't running.")
         }
-        return try await connection.call(
-            "discover.suggest",
-            ["seeds": seeds.map(\.params), "count": count, "shuffle": shuffle, "token": page],
-            as: DiscoverAnswer.self)
+        var params: [String: Any] = [
+            "seeds": seeds.map(\.params), "count": count, "shuffle": shuffle, "token": page,
+        ]
+        if !exclude.isEmpty { params["exclude"] = exclude }
+        return try await connection.call("discover.suggest", params, as: DiscoverAnswer.self)
     }
 
     /// Download one of Discover's picks. The engine is handed the pick back as it gave
