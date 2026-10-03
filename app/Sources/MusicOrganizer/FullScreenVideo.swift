@@ -25,7 +25,7 @@ struct FullScreenVideo: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                if lyricsOn && model.lyrics.settled {
+                if lyricsShown && model.lyrics.settled {
                     LyricsView(large: true)
                         .frame(minWidth: 280, idealWidth: 480, maxWidth: 480)
                 }
@@ -52,6 +52,9 @@ struct FullScreenVideo: View {
             NSCursor.setHiddenUntilMouseMoves(false)
         }
     }
+
+    /// The lyrics column: the setting, unless it's been switched here for now.
+    private var lyricsShown: Bool { model.shows(Player.fullScreenLyricsKey, setting: lyricsOn) }
 
     /// A song with no video of its own, while the screen is given to videos.
     private func noVideo(_ player: Player) -> some View {
@@ -108,6 +111,18 @@ struct FullScreenVideo: View {
                 .controlSize(.small)
                 .frame(width: 90)
             QualityMenu()
+            Button {
+                model.switchForNow(Player.fullScreenLyricsKey, to: !lyricsShown, setting: lyricsOn)
+            } label: {
+                Image(systemName: "quote.bubble")
+                    .foregroundStyle(lyricsShown ? Color.accentColor : .primary)
+            }
+            .disabled(!model.lyrics.settled)
+            .help(
+                model.lyrics.settled
+                    ? "Lyrics beside the video: \(lyricsShown ? "on" : "off"). Click to switch them "
+                        + "for now; your setting is in Settings → Play Options."
+                    : "This song has no lyrics to show")
             Button {
                 model.setVideoFullScreen(false)
             } label: {

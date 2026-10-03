@@ -282,9 +282,17 @@ struct MainView: View {
                 showNowPlaying || model.videoFullScreen ? .hidden : .automatic, for: .windowToolbar)
             // Below the split view, not an inset: the sidebar runs the window's full height
             // and would otherwise sit underneath the bar.
-            // The lyrics button switches the lyrics of the page that's showing.
+            // The lyrics button switches the lyrics of the page that's showing. On the
+            // player page that's only for now: the setting stays as chosen in Settings.
             PlayerBar(
-                showLyrics: onPlayerPage ? $visualizerLyrics : $showLyrics,
+                showLyrics: onPlayerPage
+                    ? Binding(
+                        get: { model.shows(Player.visualizerLyricsKey, setting: visualizerLyrics) },
+                        set: {
+                            model.switchForNow(
+                                Player.visualizerLyricsKey, to: $0, setting: visualizerLyrics)
+                        })
+                    : $showLyrics,
                 lyricsForPlayerPage: onPlayerPage, showNowPlaying: $showNowPlaying)
         }
         // Over everything, the player bar included: the video's own controls take over.

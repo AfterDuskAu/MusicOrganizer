@@ -62,9 +62,23 @@ private struct PlaySettings: View {
     @AppStorage(Player.alwaysBestVideoKey) private var alwaysBestVideo = false
     @AppStorage(Player.visualizerLyricsKey) private var visualizerLyrics = true
     @AppStorage(Player.fullScreenLyricsKey) private var fullScreenLyrics = false
+    @AppStorage(PageChanges.key) private var changesLast = PageChanges.standard
+    @Environment(AppModel.self) private var model
 
     var body: some View {
         Form {
+            Section {
+                Picker("A change made on a page lasts", selection: $changesLast) {
+                    ForEach(PageChanges.options, id: \.self) { minutes in
+                        Text(PageChanges.label(minutes)).tag(minutes)
+                    }
+                }
+                SideNote(
+                    "What's chosen here is how the app always starts and stays. Switching "
+                        + "something on a page (lyrics off with the button beside the volume "
+                        + "slider, say) doesn't change these settings: it lasts this long, then "
+                        + "the page goes back to what's chosen here.")
+            }
             Section("Visualizer") {
                 Toggle("Videos: always the highest quality available", isOn: $alwaysBestVideo)
                 SideNote(
@@ -72,16 +86,24 @@ private struct PlaySettings: View {
                         + "Visualizer has no picture-size menu. This is about playing only: what "
                         + "a download saves is set under Downloads.")
                 yesNo("Always show lyrics", $visualizerLyrics)
+                    // The setting is the standing choice: a page switched for now follows it again.
+                    .onChange(of: visualizerLyrics) {
+                        model.forgetPageChange(Player.visualizerLyricsKey)
+                    }
                 SideNote(
                     "Yes: the lyrics are beside the cover or video whenever the song has any; a "
                         + "song with none gives the whole page to the cover or video. No: the "
                         + "cover or video always has the whole page. The lyrics button beside "
-                        + "the volume slider switches this as well, while the Local Visualizer "
-                        + "is showing.")
+                        + "the volume slider switches them on the Local Visualizer for now, "
+                        + "without changing this.")
                 yesNo("Show lyrics in full screen", $fullScreenLyrics)
+                    .onChange(of: fullScreenLyrics) {
+                        model.forgetPageChange(Player.fullScreenLyricsKey)
+                    }
                 SideNote(
                     "Yes: with a video on the whole screen, the song's lyrics take a column on "
-                        + "the right and the video the rest. No: the video has the whole screen.")
+                        + "the right and the video the rest. No: the video has the whole screen. "
+                        + "The lyrics button in full screen switches them for now.")
                 yesNo(
                     "When Video is chosen, play the song while its video loads?", $playWhileLoading)
                 SideNote(

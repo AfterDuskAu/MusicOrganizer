@@ -10,8 +10,8 @@ struct NowPlayingView: View {
     /// False while the page is kept out of sight: a video's picture isn't drawn then.
     var isActive = true
     @Environment(AppModel.self) private var model
-    /// Settings → Play Options → Always show lyrics; the lyrics button in the player bar
-    /// switches it too.
+    /// Settings → Play Options → Always show lyrics. The lyrics button in the player bar
+    /// switches the page for now, without changing the setting.
     @AppStorage(Player.visualizerLyricsKey) private var lyricsOn = true
 
     var body: some View {
@@ -19,7 +19,8 @@ struct NowPlayingView: View {
         // In full screen the picture is drawn there, not here as well.
         let showsVideo = isActive && model.player.showsPicture && !model.videoFullScreen
         // A song with no lyrics, or lyrics turned off: the cover or video has the page.
-        let showsLyrics = lyricsOn && model.lyrics.settled
+        let showsLyrics =
+            model.shows(Player.visualizerLyricsKey, setting: lyricsOn) && model.lyrics.settled
         ZStack(alignment: .topLeading) {
             sideBySide(track, showsVideo: showsVideo, showsLyrics: showsLyrics)
                 .padding(.horizontal, 40)

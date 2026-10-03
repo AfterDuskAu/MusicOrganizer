@@ -429,6 +429,15 @@
 - **Deviation:** the Artist page wasn't in the Discover plan; added at the owner's request, and `CLAUDE.md` says so.
 - Checked: engine tests against recorded answers; Kit tests; and in the unseen copy with a real artist: the page, all songs, an album's songs, the lower half, and the cards' artist button. Not clicked in the running app: the right-click entries, Download Missing, Back.
 
+2026-10-04. The owner: "Play options selected in settings should be permanent. They can be toggled off in individual pages, but reset after x amount of time to the settings preference. Toggling lyrics off from the base bar, near volume, doesn't automatically turn off always show lyrics in settings."
+
+- **Settings are the standing choice; a page is switched only for now.** The lyrics button beside the volume slider no longer changes "Always show lyrics" in Settings (it did, since yesterday). On the Local Visualizer it switches the lyrics for now: the setting stays as chosen, and the page goes back to it by itself.
+- **How long "for now" is** is a new first row in Settings → Play Options: "A change made on a page lasts" 5 minutes, 30 minutes (the standard), 1 hour, or until the app is next opened. Whichever is chosen, opening the app again always starts from the settings. Changing the setting itself in Settings takes effect at once and ends a page's switch.
+- **Full screen has a lyrics button too** (in its bottom bar), which switches "Show lyrics in full screen" the same way: for now.
+- The lyrics button's tip says which it is: as set in Settings, or switched for now and when it goes back.
+- The lyrics beside the library pages (the same button, on any other page) are as they were: that isn't a Play Options setting, and stays how it's left.
+- Checked in the unseen copy: the new row in Settings; a page switched for now (the lyrics went, the button dimmed, and the saved setting was untouched); and, with the time set to one minute, the lyrics coming back by themselves. Not clicked in the running app.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

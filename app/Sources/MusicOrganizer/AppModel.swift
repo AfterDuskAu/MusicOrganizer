@@ -131,6 +131,11 @@ final class AppModel {
     /// A page to open in the sidebar, asked for from somewhere else in the app (Artist
     /// Info on a song). The main view opens it and clears this.
     var goTo: SidebarItem?
+    /// Play Options switched on a page, for now (by their settings' keys). The settings
+    /// themselves are the owner's standing choice and aren't touched: a page goes back
+    /// to them after a while, and when the app is next opened (owner, 2026-10-04).
+    private(set) var pageChanges: [String: Bool] = [:]
+    @ObservationIgnored private var pageChangeTimers: [String: Task<Void, Never>] = [:]
     /// Several downloads planned and waiting for the owner's yes (Download Selected).
     var batch: BatchDownload?
     /// How Discover's Download Automatically is going, until its note is closed.
@@ -637,6 +642,7 @@ final class AppModel {
         for page in [whatsNew, find] { page.reset() }
         importing.reset()
         artistBrowser.reset()
+        for key in Array(pageChanges.keys) { forgetPageChange(key) }
         keepDownloadsSeparate =
             UserDefaults.standard.object(forKey: "keepDownloadsSeparate") as? Bool ?? true
         youtubeQueue = Self.savedYouTubeQueue()  // the next profile's own
@@ -916,6 +922,41 @@ final class AppModel {
 
     /// Download one song into the library. Only ever called by the owner's click.
     func download(_ result: SearchResult) { downloadSong(result.videoId) }
+
+    // MARK: Play Options, switched on a page for now
+
+    /// What a page shows for a Play Options setting: what was switched on the page for
+    /// now, or else the setting.
+    func shows(_ key: String, setting: Bool) -> Bool {
+        PageChanges.shown(pageChanges[key], setting: setting)
+    }
+
+    /// Switch a Play Options setting on a page, for now. The setting isn't changed; the
+    /// page goes back to it after the time chosen in Settings → Play Options.
+    func switchForNow(_ key: String, to value: Bool, setting: Bool) {
+        pageChangeTimers[key]?.cancel()
+        pageChangeTimers[key] = nil
+        guard value != setting else {  // back to the setting: nothing to remember
+            pageChanges[key] = nil
+            return
+        }
+        pageChanges[key] = value
+        let minutes =
+            UserDefaults.standard.object(forKey: PageChanges.key) as? Int ?? PageChanges.standard
+        guard minutes > 0 else { return }  // until the app is next opened
+        pageChangeTimers[key] = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(minutes * 60))
+            guard !Task.isCancelled else { return }
+            self?.forgetPageChange(key)
+        }
+    }
+
+    /// The page goes by the setting again: the time is up, or the setting was changed.
+    func forgetPageChange(_ key: String) {
+        pageChangeTimers[key]?.cancel()
+        pageChangeTimers[key] = nil
+        pageChanges[key] = nil
+    }
 
     // MARK: the Artist page
 

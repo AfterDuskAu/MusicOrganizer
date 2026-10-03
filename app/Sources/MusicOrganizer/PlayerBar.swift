@@ -107,11 +107,17 @@ struct PlayerBar: View {
 
     private var lyricsHelp: String {
         if lyricsForPlayerPage {
-            return showLyrics
-                ? "Lyrics are on for this page: they're beside the cover or video whenever the "
-                    + "song playing has them"
-                : "Lyrics are off for this page: the cover or video has it to itself. Click to "
-                    + "show them again"
+            let state = showLyrics ? "on" : "off"
+            if model.pageChanges[Player.visualizerLyricsKey] != nil {
+                let minutes =
+                    UserDefaults.standard.object(forKey: PageChanges.key) as? Int
+                    ?? PageChanges.standard
+                return "Lyrics are \(state) for now. The page goes back to your setting "
+                    + "\(PageChanges.goesBack(minutes)); click to go back now. The setting "
+                    + "itself is in Settings → Play Options."
+            }
+            return "Lyrics are \(state) on this page, as set in Settings → Play Options. Click "
+                + "to switch them \(showLyrics ? "off" : "on") for now."
         }
         return showLyrics
             ? "Lyrics are on: they appear beside the library whenever the song playing has them"

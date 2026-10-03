@@ -157,6 +157,38 @@ public struct StreamAnswer: Decodable, Sendable {
     public let likes: Int?
 }
 
+/// A Play Options setting switched on a page (lyrics off with the button by the volume
+/// slider, say) is switched only for now: the setting itself stays as chosen in
+/// Settings, and the page goes back to it after a while. This is how long that while
+/// can be, and how it's said.
+public enum PageChanges {
+    /// The key the choice is saved under: minutes, or 0 for "until the app is next opened".
+    public static let key = "pageChangesLastMinutes"
+    public static let standard = 30
+    public static let options = [5, 30, 60, 0]
+
+    /// "5 minutes", "1 hour", "Until the app is next opened": a choice in Settings.
+    public static func label(_ minutes: Int) -> String {
+        minutes <= 0 ? "Until the app is next opened" : time(minutes)
+    }
+
+    /// "in 30 minutes", "when the app is next opened": when a page goes back.
+    public static func goesBack(_ minutes: Int) -> String {
+        minutes <= 0 ? "when the app is next opened" : "in \(time(minutes))"
+    }
+
+    private static func time(_ minutes: Int) -> String {
+        if minutes % 60 == 0 {
+            let hours = minutes / 60
+            return hours == 1 ? "1 hour" : "\(hours) hours"
+        }
+        return minutes == 1 ? "1 minute" : "\(minutes) minutes"
+    }
+
+    /// What a page shows: the change made on it for now, or else the setting.
+    public static func shown(_ change: Bool?, setting: Bool) -> Bool { change ?? setting }
+}
+
 /// A big count as YouTube writes them: 950, 5.2K, 900K, 1.3M, 2.1B.
 public enum CompactCount {
     public static func text(_ count: Int) -> String {

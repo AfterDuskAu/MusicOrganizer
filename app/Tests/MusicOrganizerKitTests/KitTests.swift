@@ -996,6 +996,23 @@ final class SongVideoTests: XCTestCase {
         XCTAssertFalse(Imports.looksLikeLastfmKey(half + half.dropLast() + "g"))
     }
 
+    func testAChangeMadeOnAPageIsOnlyForNow() {
+        // The page shows what was switched on it, or else the setting.
+        XCTAssertTrue(PageChanges.shown(nil, setting: true))
+        XCTAssertFalse(PageChanges.shown(false, setting: true))
+        XCTAssertTrue(PageChanges.shown(true, setting: false))
+        // How long, as Settings lists it and as a tip says it.
+        XCTAssertEqual(
+            PageChanges.options.map(PageChanges.label),
+            ["5 minutes", "30 minutes", "1 hour", "Until the app is next opened"])
+        XCTAssertEqual(PageChanges.goesBack(30), "in 30 minutes")
+        XCTAssertEqual(PageChanges.goesBack(60), "in 1 hour")
+        XCTAssertEqual(PageChanges.goesBack(120), "in 2 hours")
+        XCTAssertEqual(PageChanges.goesBack(1), "in 1 minute")
+        XCTAssertEqual(PageChanges.goesBack(0), "when the app is next opened")
+        XCTAssertTrue(PageChanges.options.contains(PageChanges.standard))
+    }
+
     func testAnArtistsPageIsRead() throws {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
