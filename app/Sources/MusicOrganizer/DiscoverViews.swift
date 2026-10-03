@@ -478,6 +478,7 @@ private struct PickCard: View {
             }
             HStack(spacing: 5) {
                 Text(pick.title).fontWeight(playing ? .semibold : .medium).lineLimit(1)
+                if model.heard.contains(pick.videoId) { HeardMark() }
                 if pick.isExplicit == true {
                     Image(systemName: "e.square.fill").foregroundStyle(.secondary)
                 }
@@ -541,5 +542,17 @@ private struct PickCard: View {
                     .help("Save this song in your library")
             }
         }
+    }
+}
+
+/// The small red checkmark beside a song from YouTube that's been played all the way
+/// through (What's New, Find, YouTube Music). Remembered for good, per profile.
+struct HeardMark: View {
+    var body: some View {
+        Image(systemName: "checkmark")
+            .font(.caption.weight(.heavy))
+            .foregroundStyle(.red)
+            .help("You've played this one all the way through")
+            .accessibilityLabel("Played all the way through")
     }
 }

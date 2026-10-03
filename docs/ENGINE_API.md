@@ -100,9 +100,10 @@ Exit codes:
 | `library.status` | — | `{ "items_by_state": {..}, "tracks", "only_copy", "queue": {..}, "warnings": [..] }` |
 | `library.tracks` | — | `{ "root", "tracks": [Track] }`: every song in the library, for the app's screens (v0.2). Slow the first time (it reads each file's tags once), instant afterwards. |
 | `library.lyrics` | `{ "path" }` (a Track's `path`) | `{ "synced", "plain" }`: the text of the song's `.lrc`, and the lyrics in its tags. Either may be null. |
-| `listening.get` | — | `Listening`: the owner's favourites, play counts and playlists (v0.2), kept in `state.json` |
+| `listening.get` | — | `Listening`: the owner's favourites, play counts and playlists (v0.2), kept in `state.json`; and `heard`, the YouTube ids played all the way through (`listening.heard`) |
 | `listening.favourite` | `{ "track_id", "on" }` | `{ "favourites": [track_id] }` (most recent first) |
 | `listening.played` | `{ "track_id" }` (the app sends it when a song has played to its end) | `{ "count", "last_played" }` |
+| `listening.heard` | `{ "video_id" }` | `{ "count", "last_heard" }`: a song from YouTube Music (not the owner's: a pick or a search result) was played all the way through. Kept for good in the library's `state.json`; `listening.get` lists them as `heard`, for the app's red checkmark (2026-10-03). |
 | `listening.move` | `{ "track_ids": [..], "to": "library" \| "downloads" }` | `{ "library": [track_id] }`: the downloads the owner has moved into the main library's lists (v0.2). No file moves; it's the owner's sorting, kept in `state.json`. |
 | `playlist.create` | `{ "name" }` | `{ "playlists": [Playlist] }` |
 | `playlist.rename` | `{ "playlist_id", "name" }` | `{ "playlists": [Playlist] }` |
@@ -201,7 +202,8 @@ Standard JSON-RPC codes, plus:
 
 // Listening and Playlist (v0.2). Songs are named by `track_id` (MUSICORG_ID), which survives renames.
 { "favourites": ["t_…"], "library": ["t_…"], "plays": { "t_…": { "count": 3, "last_played": "2026-10-01T03:00:00Z" } },
-  "playlists": [ { "id": "pl_…", "name": "Road trip", "created_at": "…", "track_ids": ["t_…"] } ] }
+  "playlists": [ { "id": "pl_…", "name": "Road trip", "created_at": "…", "track_ids": ["t_…"] } ],
+  "heard": ["DuQGokwsWF8"] }
 
 // ReviewItem
 { "item_id": "i_3fa2…", "source_path": "…", "parsed": { "artist": "…", "title": "…", "version_tokens": [..], "confidence": 0.9 },

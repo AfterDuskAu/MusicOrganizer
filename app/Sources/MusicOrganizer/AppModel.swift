@@ -51,6 +51,9 @@ final class AppModel {
     private(set) var engineVersion: String?
     private(set) var listening = Listening.empty
     private(set) var favourites = Set<String>()
+    /// Songs from YouTube played all the way through, by YouTube id (the red checkmark
+    /// on What's New, Find and YouTube Music). Kept for good, per profile.
+    private(set) var heard = Set<String>()
     /// Something to tell the owner (a change the engine refused), shown as an alert.
     var notice: String?
     /// A name being asked for: a new playlist, or a new name for one.
@@ -412,7 +415,7 @@ final class AppModel {
     /// Nothing of the last profile's stays on screen while the next one's is read.
     private func clearForAnotherLibrary() {
         (library, everything, downloaded, videos) = (.empty, .empty, [], [])
-        (listening, favourites, status, root) = (.empty, [], nil, nil)
+        (listening, favourites, heard, status, root) = (.empty, [], [], nil, nil)
         (pending, starting, startProblems) = ([], [], [:])
         (queueStatus, accounts, accountNote, signingIn) = (nil, nil, nil, false)
         (auto, batch, deletingDownloads, lastAuto) = (nil, nil, nil, nil)
@@ -461,6 +464,7 @@ final class AppModel {
         if let found = try? await connection.call("listening.get", as: Listening.self) {
             listening = found
             favourites = Set(found.favourites)
+            heard = Set(found.heard ?? [])
             playsVersion += 1
         }
         await arrange(list.tracks)
@@ -574,6 +578,15 @@ final class AppModel {
     }
 
     private func countPlay(of track: Track) {
+        if track.trackId == nil, let videoId = track.videoId {
+            // A song from YouTube, heard to its end: it gets the red checkmark, for good.
+            heard.insert(videoId)
+            change { connection in
+                _ = try await connection.call(
+                    "listening.heard", ["video_id": videoId], as: HeardCount.self)
+            }
+            return
+        }
         guard let id = track.trackId else { return }
         change { connection in
             let count = try await connection.call(

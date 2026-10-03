@@ -224,6 +224,9 @@ public struct Listening: Decodable, Sendable {
     public var playlists: [Playlist]
     /// Downloads the owner has moved into the main library's lists.
     public var library: [String]?
+    /// YouTube ids of songs played all the way through from YouTube (picks and search
+    /// results, not the owner's own): the red checkmark.
+    public var heard: [String]?
 
     public static let empty = Listening(favourites: [], plays: [:], playlists: [])
 
@@ -236,6 +239,11 @@ public struct Listening: Decodable, Sendable {
         self.playlists = playlists
         self.library = library
     }
+}
+
+/// `listening.heard`: how many times a YouTube song has been heard to its end.
+public struct HeardCount: Decodable, Sendable {
+    public let count: Int
 }
 
 public struct MovedAnswer: Decodable, Sendable {

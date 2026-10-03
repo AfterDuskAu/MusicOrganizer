@@ -85,6 +85,7 @@ private struct ResultRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(result.title).fontWeight(playing ? .semibold : .regular).lineLimit(1)
+                    if model.heard.contains(result.videoId) { HeardMark() }
                     if result.isExplicit == true {
                         Image(systemName: "e.square.fill").foregroundStyle(.secondary)
                     }

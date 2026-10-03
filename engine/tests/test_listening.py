@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from test_rpc import code, out, result, server  # noqa: F401  (out and server are fixtures)
 
-from musicorg import listening, rpc, state
+from musicorg import library, listening, rpc, state
 from musicorg.errors import NotFoundError, UserError
 from musicorg.library import Library
 
 
 def test_nothing_yet(lib: Library) -> None:
-    assert listening.get(lib) == {"favourites": [], "plays": {}, "playlists": [], "library": []}
+    assert listening.get(lib) == {"favourites": [], "plays": {}, "playlists": [], "library": [],
+                                  "heard": []}  # fmt: skip
 
 
 def test_favourites_most_recent_first(lib: Library, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -136,3 +139,29 @@ def test_a_song_joins_a_playlist_once(lib: Library) -> None:
     assert not listening.add_to_playlist(lib, "pl_gone", "t_one")
     with pytest.raises(UserError):
         listening.add_to_playlist(lib, mix["id"], "")
+
+
+def test_a_song_heard_to_the_end_from_youtube_is_remembered(lib: Library) -> None:
+    assert listening.get(lib)["heard"] == []
+    assert listening.heard(lib, "DuQGokwsWF8")["count"] == 1
+    again = listening.heard(lib, "DuQGokwsWF8")
+    assert again["count"] == 2 and again["last_heard"]
+    listening.heard(lib, "abc-def_123")
+    assert listening.get(lib)["heard"] == ["DuQGokwsWF8", "abc-def_123"]
+    for bad in ("", "short", "../../etc/pw", "x" * 12):
+        with pytest.raises(UserError):
+            listening.heard(lib, bad)
+    # Kept in state.json, beside the play counts, and it survives a damaged entry.
+    with state.edit(lib.paths.state_file) as st:
+        st.data["listening"]["heard"]["broken0000"] = "not a dict"
+    assert listening.get(lib)["heard"] == ["DuQGokwsWF8", "abc-def_123"]
+
+
+def test_heard_over_rpc(server: rpc.Server, tmp_path: Path) -> None:  # noqa: F811
+    root = tmp_path / "Library"
+    library.init(root)
+    result(server, "engine.hello", client="pytest", client_version="1")
+    assert result(server, "library.open", root=str(root)) == {"status": "open"}
+    assert result(server, "listening.heard", video_id="DuQGokwsWF8")["count"] == 1
+    assert result(server, "listening.get")["heard"] == ["DuQGokwsWF8"]
+    assert code(server, "listening.heard", video_id="nope") == rpc.USER_ERROR

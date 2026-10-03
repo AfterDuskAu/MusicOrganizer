@@ -99,6 +99,25 @@ def played(lib: Library, track_id: str) -> dict[str, Any]:
     return dict(entry)
 
 
+def heard(lib: Library, video_id: str) -> dict[str, Any]:
+    """Note that a song from YouTube was played all the way through (it isn't the
+    owner's: a pick or a search result). Kept for good, per library, so the app can mark
+    what's been heard. Returns its `{count, last_heard}`."""
+    if not isinstance(video_id, str) or not youtube_id(video_id):
+        raise UserError("That isn't a YouTube video id.")
+    with state.edit(lib.paths.state_file) as st:
+        data = _read(st.data)
+        entry = data["heard"].setdefault(video_id, {"count": 0})
+        entry["count"] = int(entry.get("count", 0)) + 1
+        entry["last_heard"] = _now()
+        st.data[KEY] = data
+    return dict(entry)
+
+
+def youtube_id(text: str) -> bool:
+    return len(text) == 11 and all(c.isalnum() or c in "-_" for c in text)
+
+
 def create_playlist(lib: Library, name: str) -> list[dict[str, Any]]:
     name = _name(name)
     with state.edit(lib.paths.state_file) as st:
@@ -189,7 +208,13 @@ def _read(data: dict[str, Any]) -> dict[str, Any]:
     plays = raw.get("plays")
     playlists = raw.get("playlists")
     moved = raw.get("library")
+    heard_ = raw.get("heard")
     return {
+        "heard": {
+            k: {"count": v["count"], "last_heard": v.get("last_heard")}
+            for k, v in (heard_.items() if isinstance(heard_, dict) else [])
+            if isinstance(k, str) and isinstance(v, dict) and isinstance(v.get("count"), int)
+        },
         "library": {
             k: {"since": v.get("since") if isinstance(v, dict) else None}
             for k, v in (moved.items() if isinstance(moved, dict) else [])
@@ -223,6 +248,7 @@ def _shown(data: dict[str, Any]) -> dict[str, Any]:
         "plays": data["plays"],
         "playlists": data["playlists"],
         "library": sorted(data["library"]),
+        "heard": sorted(data["heard"]),
     }
 
 

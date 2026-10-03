@@ -262,6 +262,7 @@ class Server:
             "listening.get": self.listening_get,
             "listening.favourite": self.listening_favourite,
             "listening.played": self.listening_played,
+            "listening.heard": self.listening_heard,
             "listening.move": self.listening_move,
             "playlist.create": self.playlist_create,
             "playlist.rename": self.playlist_rename,
@@ -563,6 +564,9 @@ class Server:
 
     def listening_played(self, params: dict[str, Any]) -> dict[str, Any]:
         return listening.played(self._library(), need(params, "track_id", str))
+
+    def listening_heard(self, params: dict[str, Any]) -> dict[str, Any]:
+        return listening.heard(self._library(), need(params, "video_id", str))
 
     def listening_move(self, params: dict[str, Any]) -> dict[str, Any]:
         ids, to = need(params, "track_ids", list), need(params, "to", str)
