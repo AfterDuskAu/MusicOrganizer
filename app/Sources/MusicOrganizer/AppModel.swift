@@ -98,6 +98,11 @@ final class AppModel {
     /// Downloads that couldn't even be queued, and why (by video id).
     private(set) var startProblems: [String: String] = [:]
     @ObservationIgnored private var watchingDownloads = false
+    /// The player page's Download Video, with the song showing: the video found for a
+    /// song (by the song's id in the app), what's being looked for, and what has none.
+    private(set) var videoFor: [String: String] = [:]
+    private(set) var findingVideoFor = Set<String>()
+    private(set) var noVideoFor: [String: String] = [:]
     @ObservationIgnored private var watchingDailyLimit = false
     /// What Download Automatically last started from.
     @ObservationIgnored private var lastAuto: [DiscoverSeed]?
@@ -1195,6 +1200,82 @@ final class AppModel {
             } catch {
                 notice = error.localizedDescription
                 await refreshDownloads()
+            }
+        }
+    }
+
+    // MARK: the player page's three downloads
+
+    /// Where a Download Song or Download Video button is.
+    enum SaveState: Equatable {
+        case ready
+        case saved
+        case working(String)
+        case failed(String)
+        case unavailable(String)
+    }
+
+    /// The song itself, for what's playing: one from YouTube Music can be downloaded;
+    /// one of the owner's own already is theirs.
+    func songState(of track: Track) -> SaveState {
+        guard let songId = track.videoId else {
+            return track.isVideo
+                ? .unavailable("This is a saved video. Find the song on YouTube Music to download it.")
+                : .saved
+        }
+        if everything.videoIDs.contains(songId) { return .saved }
+        switch downloadState(of: songId) {
+        case .working: return .working(downloadNote(of: songId))
+        case .failed(let why): return .failed(why)
+        case nil: return .ready
+        }
+    }
+
+    func downloadSongOf(_ track: Track) {
+        if let songId = track.videoId { downloadSong(songId) }
+    }
+
+    /// The song's video: the one showing, or the one found for it when Download Video was
+    /// clicked with the song showing.
+    func videoState(of track: Track) -> SaveState {
+        if track.isVideo { return .saved }
+        if findingVideoFor.contains(track.id) { return .working("Finding the video…") }
+        if let why = noVideoFor[track.id] { return .unavailable(why) }
+        let showing = player.current?.id == track.id ? player.video?.source.videoId : nil
+        guard let videoId = showing ?? videoFor[track.id] else { return .ready }
+        if everything.videoIDs.contains(videoId) { return .saved }
+        switch downloadState(of: videoId) {
+        case .working: return .working(downloadNote(of: videoId, saving: true))
+        case .failed(let why): return .failed(why)
+        case nil: return .ready
+        }
+    }
+
+    /// Download Video on the player page. The video showing is saved at the size showing;
+    /// otherwise the song's official video is found first and saved at its sharpest, up
+    /// to 1080p (the most a saved video may be).
+    func downloadVideoOf(_ track: Track) {
+        if player.current?.id == track.id, let showing = player.video {
+            saveVideo(showing)
+            return
+        }
+        guard let findVideo = player.findVideo, !findingVideoFor.contains(track.id) else { return }
+        findingVideoFor.insert(track.id)
+        Task {
+            defer { findingVideoFor.remove(track.id) }
+            do {
+                guard let found = try await findVideo(track) else {
+                    noVideoFor[track.id] = "YouTube Music has no official video for this song."
+                    return
+                }
+                videoFor[track.id] = found.videoId
+                let quality = found.qualities.first { $0.height <= 1080 } ?? found.qualities.last
+                guard let quality else { return }
+                startDownload(
+                    found.videoId,
+                    ["videos": [["video_id": found.videoId, "height": quality.height, "fps": quality.fps]]])
+            } catch {
+                noVideoFor[track.id] = error.localizedDescription
             }
         }
     }

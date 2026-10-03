@@ -51,8 +51,7 @@ struct NowPlayingView: View {
                         .frame(maxWidth: 420, maxHeight: 420)
                         .shadow(color: .black.opacity(0.5), radius: 24, y: 10)
                 }
-                names(track)
-                VideoControls()
+                PlayerControls(track: track)
             }
             .frame(maxWidth: .infinity)
             // A video gets the room: the lyrics move over, or make way if there are none.
@@ -74,23 +73,6 @@ struct NowPlayingView: View {
             .onTapGesture(count: 2) { model.setVideoFullScreen(true) }
     }
 
-    @ViewBuilder
-    private func names(_ track: Track?) -> some View {
-        if let track {
-            VStack(spacing: 4) {
-                Text(track.title).font(.title.weight(.bold)).multilineTextAlignment(.center)
-                Text(track.artistName).font(.title3).foregroundStyle(.secondary)
-                if !track.albumName.isEmpty {
-                    Text(track.albumName).font(.callout).foregroundStyle(.tertiary)
-                }
-            }
-            FavouriteButton(track: track)
-                .font(.title2)
-        } else {
-            Text("Nothing playing").font(.title2).foregroundStyle(.secondary)
-        }
-    }
-
     /// The cover, blurred right out, under a dark wash: the screen takes the album's colour.
     private func backdrop(_ track: Track?) -> some View {
         // Color.black sets the size. The cover is blurred while it's still tiny and only
@@ -109,67 +91,152 @@ struct NowPlayingView: View {
     }
 }
 
-/// Cover or video; and for a video, the size of its picture (as on YouTube) and a way to
-/// give it the whole screen.
-private struct VideoControls: View {
+/// Under the cover or the video, as the owner drew it (2026-10-03): on the left, Song or
+/// Video and the three downloads; in the middle, what's playing; on the right, for a
+/// video only, Karaoke, the picture's size and Full Screen. A note about the video, if
+/// there is one, goes underneath.
+private struct PlayerControls: View {
+    let track: Track?
     @Environment(AppModel.self) private var model
 
     var body: some View {
         let player = model.player
-        VStack(spacing: 8) {
-            HStack(spacing: 10) {
-                Picker(
-                    "Show",
-                    selection: Binding(get: { player.pictureWanted }, set: { player.setVideo($0) })
-                ) {
-                    Text("Song").tag(false)
-                    Text("Video").tag(true)
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .fixedSize()
-                .help("Play the song with its cover, or its official video from YouTube")
-                if player.showsPicture {
-                    QualityMenu()  // only for a video played from YouTube
-                    Button("Full Screen", systemImage: "arrow.up.left.and.arrow.down.right") {
-                        model.setVideoFullScreen(true)
+        VStack(spacing: 10) {
+            HStack(alignment: .top, spacing: 16) {
+                HStack(alignment: .top, spacing: 12) {
+                    Picker(
+                        "Show",
+                        selection: Binding(get: { player.pictureWanted }, set: { player.setVideo($0) })
+                    ) {
+                        Text("Song").tag(false)
+                        Text("Video").tag(true)
                     }
-                    .help("Give the video the whole screen (Esc brings it back)")
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .fixedSize()
+                    .help("Play the song with its cover, or its official video from YouTube")
+                    if let track { DownloadButtons(track: track) }
                 }
-                if player.showsPicture {
-                    KaraokeButton()  // a video from YouTube, or a saved one
-                }
-                if let video = player.video {
-                    SaveVideoButton(video: video)
-                    // The song itself, for a song being played from YouTube Music: a
-                    // video is a different file, and often a different cut.
-                    if let songId = player.current?.videoId {
-                        SaveSongButton(videoId: songId)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                names
+                    .frame(maxWidth: .infinity)
+                HStack(spacing: 10) {
+                    if player.showsPicture {
+                        KaraokeButton()  // a video from YouTube, or a saved one
+                        QualityMenu()  // only for a video played from YouTube
+                        Button("Full Screen", systemImage: "arrow.up.left.and.arrow.down.right") {
+                            model.setVideoFullScreen(true)
+                        }
+                        .help("Give the video the whole screen (Esc brings it back)")
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .trailing)
             }
-            if let note = player.videoNote {
-                Text(note)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            } else if model.lyrics.videoTiming == .failed {
-                Text("The lyrics couldn't be lined up with this video.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            } else if let video = player.video, !video.keepsTime, model.lyrics.hasLyrics,
-                model.lyrics.forVideo != video.source.videoId, model.lyrics.videoTiming == .none
-            {
-                Text(
-                    "The video isn't the same length as the song, so the lyrics aren't timed. "
-                        + "Karaoke lines them up.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            }
+            note
         }
         .padding(.top, 6)
+    }
+
+    @ViewBuilder
+    private var names: some View {
+        if let track {
+            VStack(spacing: 4) {
+                Text(track.title).font(.title.weight(.bold)).multilineTextAlignment(.center)
+                Text(track.artistName).font(.title3).foregroundStyle(.secondary)
+                if !track.albumName.isEmpty {
+                    Text(track.albumName).font(.callout).foregroundStyle(.tertiary)
+                }
+                FavouriteButton(track: track)
+                    .font(.title2)
+                    .padding(.top, 4)
+            }
+        } else {
+            Text("Nothing playing").font(.title2).foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private var note: some View {
+        let player = model.player
+        if let note = player.videoNote {
+            Text(note)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        } else if model.lyrics.videoTiming == .failed {
+            Text("The lyrics couldn't be lined up with this video.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        } else if let video = player.video, !video.keepsTime, model.lyrics.hasLyrics,
+            model.lyrics.forVideo != video.source.videoId, model.lyrics.videoTiming == .none
+        {
+            Text(
+                "The video isn't the same length as the song, so the lyrics aren't timed. "
+                    + "Karaoke lines them up.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+    }
+}
+
+/// Download Song, Download Video, Download Both, one above the other. Each says when
+/// it's done or on its way instead. The video is the one showing, at the size showing;
+/// with the song showing, it's the song's official video, found when it's asked for, at
+/// its sharpest up to 1080p.
+private struct DownloadButtons: View {
+    let track: Track
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let song = model.songState(of: track)
+        let video = model.videoState(of: track)
+        VStack(alignment: .leading, spacing: 6) {
+            row(song, start: "Download Song", done: "Song in Your Library", symbol: "music.note") {
+                model.downloadSongOf(track)
+            }
+            .help("Save the song itself, sound only, with its album details")
+            row(video, start: "Download Video", done: "Video in Your Library", symbol: "film") {
+                model.downloadVideoOf(track)
+            }
+            .help("Save the video whole, picture and sound. It counts as one of the day's downloads.")
+            Button("Download Both", systemImage: "square.and.arrow.down.on.square") {
+                if song == .ready { model.downloadSongOf(track) }
+                if video == .ready { model.downloadVideoOf(track) }
+            }
+            .disabled(song != .ready || video != .ready)
+            .help("The song and its video, as two downloads")
+        }
+        .controlSize(.small)
+        .frame(width: 170, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private func row(
+        _ state: AppModel.SaveState, start: String, done: String, symbol: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        switch state {
+        case .ready:
+            Button(start, systemImage: symbol, action: action)
+        case .saved:
+            Label(done, systemImage: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+                .font(.callout)
+        case .working(let words):
+            HStack(spacing: 6) {
+                ProgressView().controlSize(.mini)
+                Text(words).font(.callout).monospacedDigit().foregroundStyle(.secondary)
+            }
+        case .failed(let why):
+            Button("Try Again", systemImage: "exclamationmark.triangle", action: action)
+                .help(why)
+        case .unavailable(let why):
+            Button(start, systemImage: symbol) {}
+                .disabled(true)
+                .help(why)
+        }
     }
 }
 
@@ -195,79 +262,6 @@ private struct KaraokeButton: View {
                 .help(
                     "Line the lyrics up with this video, by its sound and its captions. It asks "
                         + "YouTube for them once; after that this video is remembered.")
-        }
-    }
-}
-
-/// Keep the video that's playing: saved whole, at the picture size that's showing.
-private struct SaveVideoButton: View {
-    let video: ShowingVideo
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
-        let videoId = video.source.videoId
-        if model.everything.videoIDs.contains(videoId) {
-            Label("Saved", systemImage: "checkmark.circle.fill")
-                .foregroundStyle(.green)
-                .font(.callout)
-                .help("This video is in your library")
-        } else {
-            switch model.downloadState(of: videoId) {
-            case .working:
-                HStack(spacing: 6) {
-                    ProgressView().controlSize(.small)
-                    Text(model.downloadNote(of: videoId, saving: true))
-                        .font(.callout)
-                        .monospacedDigit()
-                        .foregroundStyle(.secondary)
-                }
-            case .failed(let why):
-                Button("Try Again", systemImage: "exclamationmark.triangle") {
-                    model.saveVideo(video)
-                }
-                .help(why)
-            case nil:
-                Button("Save Video", systemImage: "arrow.down.circle") { model.saveVideo(video) }
-                    .help(
-                        "Save this video in your library at \(video.quality.label). It counts "
-                            + "as one of the day's downloads.")
-            }
-        }
-    }
-}
-
-/// Download the song too, beside its video: the audio alone, as any downloaded song.
-private struct SaveSongButton: View {
-    let videoId: String
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
-        if model.everything.videoIDs.contains(videoId) {
-            Label("Song Saved", systemImage: "checkmark.circle.fill")
-                .foregroundStyle(.green)
-                .font(.callout)
-                .help("This song is in your library")
-        } else {
-            switch model.downloadState(of: videoId) {
-            case .working:
-                HStack(spacing: 6) {
-                    ProgressView().controlSize(.small)
-                    Text(model.downloadNote(of: videoId))
-                        .font(.callout)
-                        .monospacedDigit()
-                        .foregroundStyle(.secondary)
-                }
-            case .failed(let why):
-                Button("Try Again", systemImage: "exclamationmark.triangle") {
-                    model.downloadSong(videoId)
-                }
-                .help(why)
-            case nil:
-                Button("Download Song Too", systemImage: "music.note") {
-                    model.downloadSong(videoId)
-                }
-                .help("Save the song itself (sound only, with its album details) in your library")
-            }
         }
     }
 }
