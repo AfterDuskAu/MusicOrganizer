@@ -439,29 +439,12 @@ def artist_radio(name: str, *, cache: SearchCache | None = None) -> ArtistRadio 
     Only an artist whose name is the one asked for is taken ("the" aside): a search for
     a name YouTube Music doesn't know returns other artists, and their radio would be a
     surprise."""
-    key = query_key(name)
-    if not key:
-        return None
-    cache_key = f"artists {key}"
-    raw = None if cache is None else cache.cached_search(cache_key, max_age_days=SEARCH_CACHE_DAYS)
-    if raw is None:
-        raw = _fetch("artists", key, lambda client: client.search(name, filter="artists", limit=5))
-        raw = [
-            {k: r.get(k) for k in ("artist", "browseId", "radioId")}
-            for r in (raw if isinstance(raw, list) else [])
-            if isinstance(r, dict)
-        ]
-        if cache is not None:
-            cache.put_search(cache_key, raw)
     wanted = artist_key(name)
     found = next(
         (
             r
-            for r in (raw if isinstance(raw, list) else [])
-            if isinstance(r, dict)
-            and isinstance(r.get("artist"), str)
-            and isinstance(r.get("radioId"), str)
-            and artist_key(r["artist"]) == wanted
+            for r in _artist_search(name, cache)
+            if isinstance(r.get("radioId"), str) and artist_key(r["artist"]) == wanted
         ),
         None,
     )
@@ -485,6 +468,229 @@ def artist_radio(name: str, *, cache: SearchCache | None = None) -> ArtistRadio 
         if cache is not None:
             cache.put_search(radio_key, tracks)
     return ArtistRadio(name=found["artist"], tracks=tuple(_tracks(tracks)))
+
+
+def _artist_search(name: str, cache: SearchCache | None) -> list[dict[str, Any]]:
+    """The artists YouTube Music finds for a name, best first: each `{artist, browseId,
+    radioId}`. One request, kept for 30 days."""
+    key = query_key(name)
+    if not key:
+        return []
+    cache_key = f"artists {key}"
+    raw = None if cache is None else cache.cached_search(cache_key, max_age_days=SEARCH_CACHE_DAYS)
+    if raw is None:
+        raw = _fetch("artists", key, lambda client: client.search(name, filter="artists", limit=5))
+        raw = [
+            {k: r.get(k) for k in ("artist", "browseId", "radioId")}
+            for r in (raw if isinstance(raw, list) else [])
+            if isinstance(r, dict)
+        ]
+        if cache is not None:
+            cache.put_search(cache_key, raw)
+    return [
+        r
+        for r in (raw if isinstance(raw, list) else [])
+        if isinstance(r, dict) and isinstance(r.get("artist"), str)
+    ]
+
+
+# ---- an artist's own page (the Artist page, 2026-10-03) ----------------------------------
+
+ARTIST_ID = re.compile(r"[A-Za-z0-9_-]{10,60}")
+ARTIST_PAGE_CACHE_DAYS = 7
+ARTIST_PAGE_KEEP = ("name", "description", "subscribers", "monthlyListeners", "views")
+RELEASE_KEEP = ("browseId", "title", "year", "type", "isExplicit")
+
+
+@dataclass(frozen=True)
+class Release:
+    """An album, EP or single on an artist's page."""
+
+    browse_id: str
+    title: str
+    year: str | None
+    kind: str | None  # "Album", "EP", "Single", when YouTube Music says
+    is_explicit: bool | None
+    thumbnail: str | None
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class RelatedArtist:
+    """An artist YouTube Music lists as one "fans might also like"."""
+
+    artist_id: str
+    name: str
+    # Their monthly audience, as YouTube Music writes it ("28.3M"). ytmusicapi calls the
+    # field `subscribers`; the page itself says "monthly audience" (checked 2026-10-03).
+    monthly_audience: str | None
+    thumbnail: str | None
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class ArtistPage:
+    """An artist's page on YouTube Music: who they are, their best-known songs, their
+    releases, and the artists their listeners also play. The counts are YouTube Music's
+    own words ("25.4M", "22,614,775,651 views"). `monthly_audience` is what ytmusicapi
+    calls `monthlyListeners`: the page says "170M monthly audience"."""
+
+    artist_id: str
+    name: str
+    description: str | None
+    subscribers: str | None
+    monthly_audience: str | None
+    views: str | None
+    thumbnail: str | None
+    songs: tuple[Candidate, ...]  # the five or so the page shows; no lengths
+    songs_playlist_id: str | None  # every song of theirs, as a playlist (`playlist()`)
+    albums: tuple[Release, ...]
+    singles: tuple[Release, ...]
+    related: tuple[RelatedArtist, ...]
+
+
+def find_artist(name: str, *, cache: SearchCache | None = None) -> tuple[str, str] | None:
+    """(the artist's id, their name as YouTube Music spells it) for a name, or None if
+    YouTube Music finds no artist at all. The artist of exactly that name ("the" aside)
+    if there is one; otherwise the first one found, which is YouTube Music's best guess
+    at a name typed loosely ("jayz"). One request, kept for 30 days."""
+    found = [r for r in _artist_search(name, cache) if isinstance(r.get("browseId"), str)]
+    wanted = artist_key(name)
+    exact = next((r for r in found if artist_key(r["artist"]) == wanted), None)
+    chosen = exact or (found[0] if found else None)
+    return (chosen["browseId"], chosen["artist"]) if chosen else None
+
+
+def trim_artist_page(raw: Any) -> dict[str, Any]:
+    """An artist page's answer, cut down to what the engine reads: what's cached and
+    what's recorded for tests. One picture each, the largest."""
+
+    def picture(item: Any) -> list[dict[str, Any]]:
+        found = [t for t in (item or []) if isinstance(t, dict) and t.get("url")]
+        return [max(found, key=lambda t: t.get("width") or 0)] if found else []
+
+    def section(name: str) -> dict[str, Any]:
+        found = raw.get(name) if isinstance(raw.get(name), dict) else {}
+        results = found.get("results")
+        return {**found, "results": [r for r in results or [] if isinstance(r, dict)]}
+
+    if not isinstance(raw, dict):
+        return {}
+    kept: dict[str, Any] = {k: raw.get(k) for k in ARTIST_PAGE_KEEP}
+    kept["thumbnails"] = picture(raw.get("thumbnails"))
+    songs = section("songs")
+    kept["songs"] = {
+        "browseId": songs.get("browseId"),
+        "results": trim_tracks({"tracks": songs["results"]})["tracks"],
+    }
+    for name in ("albums", "singles"):
+        kept[name] = {
+            "results": [
+                {**{k: r.get(k) for k in RELEASE_KEEP}, "thumbnails": picture(r.get("thumbnails"))}
+                for r in section(name)["results"]
+            ]
+        }
+    kept["related"] = {
+        "results": [
+            {
+                **{k: r.get(k) for k in ("browseId", "title", "subscribers")},
+                "thumbnails": picture(r.get("thumbnails")),
+            }
+            for r in section("related")["results"]
+        ]
+    }
+    return kept
+
+
+def artist_page(artist_id: str, *, cache: SearchCache | None = None) -> ArtistPage:
+    """An artist's page by their id (from `find_artist`, or a related artist's). One
+    request, kept for a week. Checked against ytmusicapi 1.12.3's `get_artist`: `name`,
+    `description`, `subscribers`, `monthlyListeners`, `views`, `thumbnails`; `songs`
+    (`browseId` of the playlist of all their songs, and `results`: five tracks, with no
+    lengths); `albums` and `singles` (`results`: ten each, `browseId`, `title`, `year`,
+    `type` on singles); `related` (`results`: `browseId`, `title`, `subscribers`)."""
+    from ytmusicapi.exceptions import YTMusicError
+
+    if not ARTIST_ID.fullmatch(artist_id):
+        raise YouTubeError("That isn't an artist's id.")
+    key = f"artist page {artist_id}"
+    raw = None if cache is None else cache.cached_search(key, max_age_days=ARTIST_PAGE_CACHE_DAYS)
+    if raw is None:
+        try:
+            raw = trim_artist_page(
+                _fetch("artist-page", artist_id, lambda client: client.get_artist(artist_id))
+            )
+        except (YTMusicError, KeyError, IndexError, TypeError) as exc:
+            if is_slow_down(exc):
+                raise
+            # ytmusicapi reads a page that isn't an artist's and trips over what's missing.
+            log.info("artist_page(%s): %s: %s", artist_id, type(exc).__name__, exc)
+            raise YouTubeError("YouTube Music has no artist page for that.") from None
+        if cache is not None and raw.get("name"):
+            cache.put_search(key, raw)
+    name = raw.get("name") if isinstance(raw, dict) else None
+    if not isinstance(name, str) or not name:
+        raise YouTubeError("YouTube Music's page for that artist gave an answer we can't read.")
+
+    def text(key: str) -> str | None:
+        value = raw.get(key)
+        return value.strip() if isinstance(value, str) and value.strip() else None
+
+    def largest(item: dict[str, Any]) -> str | None:
+        found = [t for t in item.get("thumbnails") or [] if isinstance(t, dict) and t.get("url")]
+        return max(found, key=lambda t: t.get("width") or 0)["url"] if found else None
+
+    def results(section: str) -> list[dict[str, Any]]:
+        found = raw.get(section) if isinstance(raw.get(section), dict) else {}
+        return [r for r in found.get("results") or [] if isinstance(r, dict)]
+
+    def releases(section: str) -> tuple[Release, ...]:
+        return tuple(
+            Release(
+                browse_id=r["browseId"],
+                title=r["title"],
+                year=str(r["year"]) if r.get("year") else None,
+                kind=r.get("type") if isinstance(r.get("type"), str) else None,
+                is_explicit=r.get("isExplicit") if isinstance(r.get("isExplicit"), bool) else None,
+                thumbnail=largest(r),
+            )
+            for r in results(section)
+            if isinstance(r.get("browseId"), str) and isinstance(r.get("title"), str)
+        )
+
+    songs = raw.get("songs") if isinstance(raw.get("songs"), dict) else {}
+    all_songs = songs.get("browseId")
+    return ArtistPage(
+        artist_id=artist_id,
+        name=name,
+        description=text("description"),
+        subscribers=text("subscribers"),
+        monthly_audience=text("monthlyListeners"),
+        views=text("views"),
+        thumbnail=largest(raw),
+        songs=tuple(_tracks({"tracks": results("songs")})),
+        songs_playlist_id=all_songs.removeprefix("VL")
+        if isinstance(all_songs, str) and all_songs
+        else None,
+        albums=releases("albums"),
+        singles=releases("singles"),
+        related=tuple(
+            RelatedArtist(
+                artist_id=r["browseId"],
+                name=r["title"],
+                monthly_audience=r.get("subscribers")
+                if isinstance(r.get("subscribers"), str)
+                else None,
+                thumbnail=largest(r),
+            )
+            for r in results("related")
+            if isinstance(r.get("browseId"), str) and isinstance(r.get("title"), str)
+        ),
+    )
 
 
 @dataclass(frozen=True)

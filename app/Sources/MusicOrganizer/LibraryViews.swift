@@ -378,6 +378,10 @@ struct SongActions: View {
                 // 2026-10-01: the checks come first).
                 Button("Swap Audio…") { model.explainSwap(of: only) }
             }
+            // The artist's page: who they are, their songs and albums (Discover → Artist).
+            if let artist = only.artist ?? only.albumArtist {
+                ArtistInfoItems(artists: [artist])
+            }
         }
         // Downloads kept under Discover can be moved into the main library, and back.
         let downloads = songs.filter(\.isDownload)

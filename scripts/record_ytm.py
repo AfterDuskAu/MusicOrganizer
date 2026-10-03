@@ -9,6 +9,8 @@ Usage (from the repo root, with the engine's virtual environment):
     .venv/bin/python scripts/record_ytm.py radio 5qZQEq_C3vc ...
     .venv/bin/python scripts/record_ytm.py artist "Linkin Park" ...
     .venv/bin/python scripts/record_ytm.py genre "jazz" ...
+    .venv/bin/python scripts/record_ytm.py artist-page "Linkin Park" ...
+    .venv/bin/python scripts/record_ytm.py playlist OLAK5uy_… --tracks 6
     .venv/bin/python scripts/record_ytm.py cases [engine/tests/data/match_cases.json]
 
 `cases` records every search the matcher would make for each case in the evaluation
@@ -20,7 +22,9 @@ exist) is recorded as its error and replayed as the same error.
 
 `artist` records two requests (the artist search, then that artist's radio) and `genre`
 two as well (the playlist search, then the playlist chosen): what Discover asks for.
-`--tracks N` keeps only the first N tracks of a radio or playlist.
+`--tracks N` keeps only the first N tracks of a radio or playlist. `artist-page` records
+the artist search (if it isn't there) and the artist's page as `youtube.artist_page`
+keeps it; `playlist` records a playlist by its id, as `youtube.playlist` reads it.
 
 Requests go through the engine's rate limiter. Opaque feedback tokens are removed, a
 watch playlist keeps only its first track and an album drops its recommendations; a
@@ -54,7 +58,18 @@ def main() -> int:
     )
     parser.add_argument(
         "kind",
-        choices=["search", "videos", "watch", "album", "radio", "artist", "genre", "cases"],
+        choices=[
+            "search",
+            "videos",
+            "watch",
+            "album",
+            "radio",
+            "artist",
+            "genre",
+            "cases",
+            "artist-page",
+            "playlist",
+        ],
     )
     parser.add_argument("args", nargs="*")
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
@@ -63,6 +78,10 @@ def main() -> int:
     opts = parser.parse_args()
     if opts.kind in ("artist", "genre"):
         recorded = sum(record_pair(opts, arg) for arg in opts.args)
+        print(f"Recorded {recorded} requests.")
+        return 0
+    if opts.kind == "artist-page":
+        recorded = sum(record_artist_page(opts, arg) for arg in opts.args)
         print(f"Recorded {recorded} requests.")
         return 0
 
@@ -87,7 +106,7 @@ def main() -> int:
             if youtube.is_slow_down(exc):
                 raise
             response, trimmed, error = None, [], str(exc)  # replayed as the same error
-        if kind == "radio" and response is not None:
+        if kind in ("radio", "playlist") and response is not None:
             response = cut(response, opts.tracks, trimmed)
         write(path, kind, key, arg, response, trimmed, error)
         recorded += 1
@@ -122,6 +141,37 @@ def cut(response: Any, tracks: int | None, trimmed: list[str]) -> Any:
         response["tracks"] = response["tracks"][:tracks]
         trimmed.append(f"all but the first {tracks} tracks")
     return response
+
+
+def record_artist_page(opts: argparse.Namespace, name: str) -> int:
+    """An artist's search (unless it's recorded) and their page, cut down to what the
+    engine reads: the two requests `artist.info` makes for a name."""
+    key = youtube.query_key(name)
+    recorded = 0
+    path = youtube.recording_path(opts.out, "artists", key)
+    if path.exists() and not opts.force:
+        found = json.loads(path.read_text(encoding="utf-8"))["response"]
+    else:
+        keep = ("artist", "browseId", "radioId")
+        raw = youtube.fetch_live(lambda client: client.search(name, filter="artists", limit=5))
+        found = [{k: r.get(k) for k in keep} for r in raw if isinstance(r, dict)]
+        write(path, "artists", key, name, found, ["everything but " + ", ".join(keep)], None)
+        recorded += 1
+    wanted = youtube.artist_key(name)
+    listed = [r for r in found if isinstance(r.get("browseId"), str)]
+    chosen = next((r for r in listed if youtube.artist_key(r["artist"]) == wanted), None)
+    chosen = chosen or (listed[0] if listed else None)
+    if chosen is None:
+        print(f"  nothing on YouTube Music is called {name!r}", file=sys.stderr)
+        return recorded
+    artist_id = chosen["browseId"]
+    path = youtube.recording_path(opts.out, "artist-page", artist_id)
+    if path.exists() and not opts.force:
+        return recorded
+    raw = youtube.fetch_live(lambda client: client.get_artist(artist_id))
+    trimmed = ["everything but the fields the engine reads; one picture each"]
+    write(path, "artist-page", artist_id, name, youtube.trim_artist_page(raw), trimmed, None)
+    return recorded + 1
 
 
 def record_pair(opts: argparse.Namespace, name: str) -> int:
@@ -187,6 +237,8 @@ def fetch(kind: str, arg: str) -> tuple[Any, list[str]]:
                 videoId=arg, radio=True, limit=youtube.RADIO_SONGS
             )
         )
+    elif kind == "playlist":
+        response = youtube.fetch_live(lambda client: client.get_playlist(arg, limit=100))
     elif kind == "watch":
         response = youtube.fetch_live(
             lambda client: client.get_watch_playlist(videoId=arg, limit=1)

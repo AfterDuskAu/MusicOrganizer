@@ -1,0 +1,557 @@
+{
+ "kind": "artist-page",
+ "key": "UCxgN32UVVztKAQd2HkXzBtw",
+ "request": "Linkin Park",
+ "recorded_at": "2026-10-03T03:50:55Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [
+  "everything but the fields the engine reads; one picture each"
+ ],
+ "error": null,
+ "response": {
+  "name": "Linkin Park",
+  "description": "Linkin Park is an American rock band formed in Agoura Hills, California, in 1996. The band's current lineup consists of vocalist/rhythm guitarist/keyboardist Mike Shinoda, lead guitarist Brad Delson, DJ/turntablist Joe Hahn, bassist Dave Farrell, vocalist Emily Armstrong, and drummer Colin Brittain. The lineup for the band's first seven studio albums included lead vocalist Chester Bennington and drummer Rob Bourdon; after Bennington's suicide in July 2017, the band endured a seven-year hiatus, during which Bourdon chose to depart from the band. In September 2024, Linkin Park's reformation was announced along with the addition of Armstrong and Brittain.\nCategorized mainly as alternative rock and nu metal, Linkin Park's earlier music spanned a fusion of heavy metal and hip-hop, with their later music featuring more electronica and pop elements. Linkin Park rose to international fame with their debut studio album, Hybrid Theory, which became certified Diamond by the Recording Industry Association of America.\n\nFrom Wikipedia (https://en.wikipedia.org/wiki/Linkin_...) under Creative Commons Attribution CC-BY-SA 3.0 (http://creativecommons.org/licenses/b...)",
+  "subscribers": "25.4M",
+  "monthlyListeners": "170M",
+  "views": "22,614,775,651 views",
+  "thumbnails": [
+   {
+    "url": "https://lh3.googleusercontent.com/uE72emEZFH3TVtCZoIFYKmnf7vsb42RYQxb4X-lonyqPQuS_mLtKpLfBQ5JdHwUijfQo06BtSB7LoQ=w2880-h1200-p-l90-rj",
+    "width": 2880,
+    "height": 1200
+   }
+  ],
+  "songs": {
+   "browseId": "VLOLAK5uy_k7mmOSpP63ccIRmgod4PkMPARvWuYw6dA",
+   "results": [
+    {
+     "videoId": "BLZWkjBXfN8",
+     "title": "In the End",
+     "artists": [
+      {
+       "name": "Linkin Park",
+       "id": "UCxgN32UVVztKAQd2HkXzBtw"
+      }
+     ],
+     "album": {
+      "name": "Hybrid Theory (Bonus Edition)",
+      "id": "MPREb_m10OjDmOhfv"
+     },
+     "isExplicit": false,
+     "videoType": "MUSIC_VIDEO_TYPE_ATV",
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/lkNJVMp3siDfSw_zVYj3tE6fQS7G6Gj2gzoxrIwS7K4TwqmL_uSBb9-PKACNLIP_7XLQib4tC5XwWbpD=w120-h120-l90-rj",
+       "width": 120,
+       "height": 120
+      }
+     ]
+    },
+    {
+     "videoId": "5qZQEq_C3vc",
+     "title": "Numb",
+     "artists": [
+      {
+       "name": "Linkin Park",
+       "id": "UCxgN32UVVztKAQd2HkXzBtw"
+      }
+     ],
+     "album": {
+      "name": "Meteora (Bonus Edition)",
+      "id": "MPREb_ebWSmYnO2aa"
+     },
+     "isExplicit": false,
+     "videoType": "MUSIC_VIDEO_TYPE_ATV",
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/Rqh2HDAD-Fj1-oHYqVklPGklMHIV3r6SMPMZmFE3FlLiWeBBnP3SCESfgeNdzQ-DmpCIvOGE4J0hzVxa=w120-h120-s-l90-rj",
+       "width": 120,
+       "height": 120
+      }
+     ]
+    },
+    {
+     "videoId": "-YQ8IbVIwPM",
+     "title": "Somewhere I Belong",
+     "artists": [
+      {
+       "name": "Linkin Park",
+       "id": "UCxgN32UVVztKAQd2HkXzBtw"
+      }
+     ],
+     "album": {
+      "name": "Meteora",
+      "id": "MPREb_qMlbe7gLeuH"
+     },
+     "isExplicit": false,
+     "videoType": "MUSIC_VIDEO_TYPE_ATV",
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/dNfpEZtqYYsrHaHpSE9ik5vGgUSVLKE5DycRz8VMLdIQV_GYz7GpGUkMnU9I0926zLRQEAIUwdsjYCuG=w120-h120-l90-rj",
+       "width": 120,
+       "height": 120
+      }
+     ]
+    },
+    {
+     "videoId": "eXRWHzV72sU",
+     "title": "What I've Done",
+     "artists": [
+      {
+       "name": "Linkin Park",
+       "id": "UCxgN32UVVztKAQd2HkXzBtw"
+      }
+     ],
+     "album": {
+      "name": "Minutes to Midnight",
+      "id": "MPREb_WJjOQ3cXgzB"
+     },
+     "isExplicit": false,
+     "videoType": "MUSIC_VIDEO_TYPE_ATV",
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/BtAKhqmTBoZWEQPlcF9tgpqILWNkQ4vc0tk0nlSrIpdvhW9sf9K-tQDoym1zh9Svl-8PnpFCY_6vNYg7=w120-h120-l90-rj",
+       "width": 120,
+       "height": 120
+      }
+     ]
+    },
+    {
+     "videoId": "2mXNRsyTitA",
+     "title": "Faint",
+     "artists": [
+      {
+       "name": "Linkin Park",
+       "id": "UCxgN32UVVztKAQd2HkXzBtw"
+      }
+     ],
+     "album": {
+      "name": "Meteora (Bonus Edition)",
+      "id": "MPREb_ebWSmYnO2aa"
+     },
+     "isExplicit": false,
+     "videoType": "MUSIC_VIDEO_TYPE_ATV",
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/Rqh2HDAD-Fj1-oHYqVklPGklMHIV3r6SMPMZmFE3FlLiWeBBnP3SCESfgeNdzQ-DmpCIvOGE4J0hzVxa=w120-h120-s-l90-rj",
+       "width": 120,
+       "height": 120
+      }
+     ]
+    }
+   ]
+  },
+  "albums": {
+   "results": [
+    {
+     "browseId": "MPREb_d1UkStdzUrN",
+     "title": "From Zero",
+     "year": "2024",
+     "type": null,
+     "isExplicit": true,
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/R-yqivSHsR8ZWpKMy2vplo6LEK-c0XVA7SzRRHR0eUYa-Gazo1VnbVnmN1ifymUOuCmW5yxjFlNv-rBv=w544-h544-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "MPREb_50qLVGW1eWv",
+     "title": "From Zero: A Cappellas + Instrumentals",
+     "year": "2024",
+     "type": null,
+     "isExplicit": true,
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/8PJbgG3hc_JmhrerKW-Lb-SVkJnONeLZvSLJPqEccJwyKsvuC62SHttZPeeW3GYWhwhtvKXHXgXhqlU=w544-h544-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "MPREb_l98qHFaY2Yp",
+     "title": "From Zero: A Cappellas",
+     "year": "2024",
+     "type": null,
+     "isExplicit": true,
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/-wVY7GTwE7oWNOTs4bTyb_TvgeXLpBcGxA5R7357XZNJhGqwy-PSGIPf6LPFqGi9p-TV3v3WZMqHosBDYA=w544-h544-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "MPREb_CzkuHfNPVWH",
+     "title": "Papercuts",
+     "year": "2024",
+     "type": null,
+     "isExplicit": true,
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/-pm394HLjSt4bQLNAfz1YkQvOTNUmJL7YVjN6E_8Th-Bc0XpeVMKqwgc6frikyV0GSr3l4W7IBxJu1I=w544-h544-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "MPREb_t7vewLEKKPi",
+     "title": "One More Light",
+     "year": "2017",
+     "type": null,
+     "isExplicit": true,
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/VqiFkN_mFSYwv8sYWgLkBSOeZvVy8LJ2ceznhgTUJW8EsQ79wq1WElPsXQWYoagNSaB5Aus99FBABJ9d=w544-h544-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "MPREb_7Tei4NlINv8",
+     "title": "The Hunting Party: Acapellas + Instrumentals",
+     "year": "2014",
+     "type": null,
+     "isExplicit": true,
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/VFhpEJlEP7hWtG6WRbgmZ1xaIyKugAFQJZ_sJDu5m2EJD0emiyc8C4SERCxZyKeQr2uDYbvBFq_JcwQ=w544-h544-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "MPREb_Vqzlzj5SbpQ",
+     "title": "The Hunting Party",
+     "year": "2014",
+     "type": null,
+     "isExplicit": true,
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/yocfhS46IAanogpQV-Muvi6MlD7mXIEwAP9-PcD-r9pP3MoZY1NYVp37Okc2EmuSXgQniitNQVr3g9hF=w544-h544-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "MPREb_1tfBwXcIkmu",
+     "title": "LIVING THINGS",
+     "year": "2012",
+     "type": null,
+     "isExplicit": false,
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/ldVVO7vktLrUuW13A3oCdDlgrxfTQxmIyyMwAxef5W07pkRxdbgu3GLV8BaIZkW_RDR7qxd9utQy7Wqj=w544-h544-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "MPREb_uZFklMDQNMM",
+     "title": "A Thousand Suns",
+     "year": "2010",
+     "type": null,
+     "isExplicit": true,
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/lijlrFj65toZ4hDg7D-rhVL06W3_vSXhOxmWBrJjLqN8PfrM6mBBjckM3YNGB6TY7GestPevfOAciPP_ww=w544-h544-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "MPREb_VKZiZdjp9B6",
+     "title": "Minutes to Midnight",
+     "year": "2007",
+     "type": null,
+     "isExplicit": true,
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/BtAKhqmTBoZWEQPlcF9tgpqILWNkQ4vc0tk0nlSrIpdvhW9sf9K-tQDoym1zh9Svl-8PnpFCY_6vNYg7=w544-h544-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    }
+   ]
+  },
+  "singles": {
+   "results": [
+    {
+     "browseId": "MPREb_zmB7yUOvXlD",
+     "title": "Unshatter",
+     "year": "2025",
+     "type": "Single",
+     "isExplicit": null,
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/V8Fpkc3z6jEzxuHL8ztX0zH4obJ_PyVeFs2NzdIWt7kuUFysKWwL91BEHZjV0mWGiqLLzauGEa7cSAli=w544-h544-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "MPREb_0Ze1jNlXY8N",
+     "title": "Up From the Bottom",
+     "year": "2025",
+     "type": "Single",
+     "isExplicit": null,
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/h7eIvtFvMn1aHPFSToWNhJX5zE8dDfliaNk_zwvn2c45gwIHUnxmIa_nwhlWk_ofdOdzKOIf1IF_o6Vp=w544-h544-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "MPREb_wF3KQDxpsvI",
+     "title": "Two Faced",
+     "year": "2024",
+     "type": "Single",
+     "isExplicit": null,
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/TFkAiGv7FXKu0YoZRyL3nSURDQ5dzCpnKT0KSLZYoIHAvQOy8PVD9YkgDZbwjWgPrS-rKePEZc6q9qo=w544-h544-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "MPREb_Haoz5TjvC2p",
+     "title": "Over Each Other",
+     "year": "2024",
+     "type": "Single",
+     "isExplicit": null,
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/UjrgyLumUlovg6VnnGrSoqcSjEgSL8hQAxhnjWJfs-Rr38dySGSBNwykAjgZqEwKY9OeyjP1ccGPiMpu=w544-h544-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "MPREb_YeiMKp4dBlM",
+     "title": "Heavy Is the Crown",
+     "year": "2024",
+     "type": "Single",
+     "isExplicit": null,
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/Vn5JCtM9saVrBOX9thI_FozrQ92VGIsuGGOJVZDtLS-bDIoLnnVcE0-Cyvn1bBXw7WoUvpIfkRRSK2k=w544-h544-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "MPREb_30j4ST9s66V",
+     "title": "The Emptiness Machine",
+     "year": "2024",
+     "type": "Single",
+     "isExplicit": null,
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/ktsQFrAwpcKE5hNyCJQ8X-QAigH45cdag67pSYJUhC2whO5FZU-Dr47iMPyzM07Vgr4p0vENJYciqac=w544-h544-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "MPREb_QZBXg5yjOdT",
+     "title": "Friendly Fire: A Cappella + Instrumental",
+     "year": "2024",
+     "type": "Single",
+     "isExplicit": null,
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/dnMW-SVlgGhxbteR5lDMzrZMzofKoJ04nQuUgBlrhvso9Mla-5cxmfjeSoElkFYkIqS3Zy59Ufs56VE=w544-h544-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "MPREb_37MHe2sUjfQ",
+     "title": "Friendly Fire",
+     "year": "2024",
+     "type": "Single",
+     "isExplicit": null,
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/7BRsOsmsFdHJFnFtQVcEzSlxYivhoI4OeX1HJNir3Qm-dalQrBC61ljMFqU-0ZCarSOp1TyAPX5NEFaO=w544-h544-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "MPREb_ZT8yl1IbkOO",
+     "title": "Lost (PLZ Tethered Version)",
+     "year": "2023",
+     "type": "Single",
+     "isExplicit": null,
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/8WfLd170xyUhj38fUhgNuE2OxJQdkCjl764kyLvarM8eh9sViZf9xowuZeLUZ_5h6oW2wvjZsE1FyZ0=w544-h544-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "MPREb_A7gVeg120CX",
+     "title": "Fighting Myself",
+     "year": "2023",
+     "type": "Single",
+     "isExplicit": null,
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/yjTNd-T78XgGh2A9ukyfJjwxMV8hRef_-qcyVvW88o7-RPZS-aokCDgfjyeeePRk4pSkMyOyjFnpuimH=w544-h544-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    }
+   ]
+  },
+  "related": {
+   "results": [
+    {
+     "browseId": "UCh9xZWuDWSMeedunotdYYrQ",
+     "title": "Slipknot",
+     "subscribers": "28.3M",
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/rCs7mOiU6pDCwa5pF0BCdiEKCExAJQOv-6LYdCDq_YleSM0u_GvfCCcNSa6LwwThW-Gc9nkNl7B1Lw=w544-h544-p-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "UCXe06VQdj4l_LyuUGh__DQg",
+     "title": "Limp Bizkit",
+     "subscribers": "23.6M",
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/vtdkFSDCcM-E5FGhxSkfrrUDmTNi0CZsJ6nwHSD2c9huoAWaasTVIIa0ahnqLq6yKYyv2a4fy5r_Y5E=w544-h544-p-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "UCgdqrZsRnxy1qGIusPhQEyg",
+     "title": "Breaking Benjamin",
+     "subscribers": "7.51M",
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/mwpX5px55KVtaDnMoOOlMfXzPYrDGr2LobRugU31yRAzYcS5QR1uTDFeOFxChiqyIgseQ5--lUDCb2M=w544-h544-p-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "UCJls2FMEbRYxi28jcuKe2vA",
+     "title": "Avenged Sevenfold",
+     "subscribers": "20.4M",
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/5ci78rKknUuBjvn9esGu_zXAZOzA62XIsRu6FMUj52xJIv0Yszfni4nHWJVUkr1BbxtBJhKcdcgZPXE=w544-h544-p-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "UCfgRkxIufLnYKicOY8aJQ2g",
+     "title": "Three Days Grace",
+     "subscribers": "39.1M",
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/hBFYHNfYZvohXY4TGCmTlb0-4uRMi3izhz07rZIb-6lml2IK8gn40fVw3AK6VVv_yRDx2vQ5FeboImA=w544-h544-p-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "UCMHHDXMvnMKRzuEKtMe8ZRA",
+     "title": "Disturbed",
+     "subscribers": "163M",
+     "thumbnails": [
+      {
+       "url": "https://lh3.googleusercontent.com/RTfU9E9MQl_LPYILkAXvLBvMeQT63e2CuO9_-4yxaWYkZ6DhYvc0WugTRbGBA9LS75PzjM_USVghcw=w544-h544-p-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "UCUHYrf3BF5yI9QdRw09__BA",
+     "title": "Skillet",
+     "subscribers": "38.7M",
+     "thumbnails": [
+      {
+       "url": "https://lh3.googleusercontent.com/_fKp5gTVgs4mWQ7vqvg2wbWyeNNHES0J9TdK2p102IE_WwZ5SIY6MCyQR7o7HqmpVwvlX5fkmrC_WC8M=w544-h544-p-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "UCDJftX2zx_UT_QSnBGIF96w",
+     "title": "System of A Down",
+     "subscribers": "31.8M",
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/jg9t5w2HS_pbCHN3z21mnY1LZzUbasjMJ_INo7TDOUrrqHs3W9e-mdHvvxgeOK1VXpKTq3YK_xEZOw=w544-h544-p-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "UCK2kzYT3yR6LV_Pji5TDrgA",
+     "title": "Thirty Seconds To Mars",
+     "subscribers": "8.11M",
+     "thumbnails": [
+      {
+       "url": "https://lh3.googleusercontent.com/nQBffbsL2rXs8nCW8UnoxNtsBf3PE5RHaGlylnZvbD5oMCXq-Vl3pDKAIrFoPClwhzBxuzQbna-Q4A=w544-h544-p-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    },
+    {
+     "browseId": "UC_o4Fz0kJt1pY-45KT10BEA",
+     "title": "Thousand Foot Krutch",
+     "subscribers": "8.46M",
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/slpGliqACH0XiXozZPF0IvEBPpF8HeJAoKvC1o_EJoA_FBlhJxUfkSmYOsXKnYE_xmwYVavg6jofLpE=w544-h544-p-l90-rj",
+       "width": 544,
+       "height": 544
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

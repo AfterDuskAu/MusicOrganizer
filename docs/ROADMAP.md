@@ -120,11 +120,13 @@ Plan: [`docs/roadmap/0.4-discover.md`](roadmap/0.4-discover.md).
 - A guided "What music would you like today?" mode.
 - Discovered songs go to their own inbox: `Discovered/<Genre>/<YYYY-MM Month>/`, with Keep or Remove.
 
-**Asked about, not built (owner, 2026-10-03): an Artist page.** "Artist will look up a lot of information about the artist, list of songs, background information, and Ticketmaster next concerts." Reached by right-clicking a song (Artist Info), or an artist button on What's New, Find and YouTube Music; listed under Find in Discover. What was found out, for when it's built:
-  - **Songs, albums, similar artists and a short background** all come from YouTube Music's own artist page (the installed `ytmusicapi`'s `get_artist`: description, views, top songs, albums, singles, videos, related artists). One request through the limiter, no key, and it can be kept for a week like a radio. Every song on it can be played and downloaded like any other, and the page can say which of them the owner already has.
-  - **Concerts:** Ticketmaster's Discovery API. It needs a free key the owner makes themselves (as with Last.fm), allows 5,000 questions a day, and covers Australia, New Zealand, the US, Canada, the UK and most of Europe. It only knows the concerts Ticketmaster sells, so a tour sold through another seller won't show. Songkick's API is closed to new apps; Bandsintown's needs approval for each app.
-  - **Suggested order:** the page without concerts first (no key, nothing for the owner to set up), then concerts once the owner has a Ticketmaster key and has chosen a country.
-  - **For the owner to decide:** whether to build it, and whether concerts should be for one country or near one city.
+**Built (2026-10-03, the owner's "build the page, starting without concerts"): the Artist page.** Discover → Artist, under Find. Reached from its own search box, from Artist Info on any song's right-click menu, and from the artist button beside a song on YouTube Music and on the What's New and Find cards.
+  - It shows who the artist is (YouTube Music's background text and its counts), their best-known songs, every song of theirs on request (up to 300), their albums and singles (each opens to its songs), and the artists their listeners also play (each opens that artist's page, with Back). Every song plays, queues and downloads like any other, the page says which the owner already has, and **Download Missing** fetches the rest of what's listed, after showing how many and how long.
+  - It all comes from YouTube Music's own artist page: two requests for an artist the first time, kept for a week. No key and no sign-in.
+  - **Concerts: not built.** The owner wants them for the whole world, just the next show ("the next available play"), and pointed out that YouTube shows this under videos (its "Event tickets" shelf, which is Ticketmaster's information). Two ways, to choose between when it's built:
+    - **From YouTube's own page**, with no key: checked on 2026-10-03, a video's page does carry that shelf (date, city, venue, seller). It would cost one more request per artist, and reading a web page that isn't made for programs can break whenever YouTube changes it.
+    - **Ticketmaster's Discovery API**: a free key the owner makes themselves (as with Last.fm), 5,000 questions a day, covering Australia, New Zealand, the US, Canada, the UK and most of Europe. Sturdier, and it lists every show, not only the next. It only knows what Ticketmaster sells. Songkick's API is closed to new apps; Bandsintown's needs approval for each app.
+  - Not built either: "see all" beyond the ten albums and ten singles YouTube Music's page shows, and the artist's videos.
 
 ## v0.5: packaging
 

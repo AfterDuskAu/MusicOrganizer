@@ -1,0 +1,346 @@
+{
+ "kind": "album",
+ "key": "MPREb_d1UkStdzUrN",
+ "request": "MPREb_d1UkStdzUrN",
+ "recorded_at": "2026-10-03T03:51:10Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [
+  "related_recommendations",
+  "description",
+  "descriptionRuns",
+  "feedback tokens"
+ ],
+ "error": null,
+ "response": {
+  "title": "From Zero",
+  "type": "Album",
+  "thumbnails": [
+   {
+    "url": "https://yt3.googleusercontent.com/R-yqivSHsR8ZWpKMy2vplo6LEK-c0XVA7SzRRHR0eUYa-Gazo1VnbVnmN1ifymUOuCmW5yxjFlNv-rBv=w60-h60-l90-rj",
+    "width": 60,
+    "height": 60
+   },
+   {
+    "url": "https://yt3.googleusercontent.com/R-yqivSHsR8ZWpKMy2vplo6LEK-c0XVA7SzRRHR0eUYa-Gazo1VnbVnmN1ifymUOuCmW5yxjFlNv-rBv=w120-h120-l90-rj",
+    "width": 120,
+    "height": 120
+   },
+   {
+    "url": "https://yt3.googleusercontent.com/R-yqivSHsR8ZWpKMy2vplo6LEK-c0XVA7SzRRHR0eUYa-Gazo1VnbVnmN1ifymUOuCmW5yxjFlNv-rBv=w226-h226-l90-rj",
+    "width": 226,
+    "height": 226
+   },
+   {
+    "url": "https://yt3.googleusercontent.com/R-yqivSHsR8ZWpKMy2vplo6LEK-c0XVA7SzRRHR0eUYa-Gazo1VnbVnmN1ifymUOuCmW5yxjFlNv-rBv=w544-h544-l90-rj",
+    "width": 544,
+    "height": 544
+   }
+  ],
+  "isExplicit": false,
+  "year": "2024",
+  "artists": [
+   {
+    "name": "Linkin Park",
+    "id": "UCxgN32UVVztKAQd2HkXzBtw"
+   }
+  ],
+  "trackCount": 11,
+  "duration": "32 minutes",
+  "audioPlaylistId": "OLAK5uy_miCUHAHUPqc21dc-Vs7KTxbbqqzFCl68c",
+  "likeStatus": "INDIFFERENT",
+  "tracks": [
+   {
+    "videoId": "ay32SqJPpB0",
+    "title": "From Zero (Intro)",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": "From Zero",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "11M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 1,
+    "duration": "0:23",
+    "duration_seconds": 23,
+    "creditsBrowseId": "MPTCy26UaUlvBws"
+   },
+   {
+    "videoId": "SRXH9AbT280",
+    "title": "The Emptiness Machine",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": "From Zero",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "421M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 2,
+    "duration": "3:11",
+    "duration_seconds": 191,
+    "creditsBrowseId": "MPTCKBV_zpMm_0Q"
+   },
+   {
+    "videoId": "_f9b0NB5o4E",
+    "title": "Cut the Bridge",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": "From Zero",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "32M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 3,
+    "duration": "3:49",
+    "duration_seconds": 229,
+    "creditsBrowseId": "MPTCx3Wug55A0tk"
+   },
+   {
+    "videoId": "ZAt8oxY0GQo",
+    "title": "Heavy Is the Crown",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": "From Zero",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "218M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 4,
+    "duration": "2:48",
+    "duration_seconds": 168,
+    "creditsBrowseId": "MPTCh0OK2oOG1no"
+   },
+   {
+    "videoId": "fSHoePrnmMw",
+    "title": "Over Each Other",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": "From Zero",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "49M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 5,
+    "duration": "2:51",
+    "duration_seconds": 171,
+    "creditsBrowseId": "MPTCVianKGpW3bw"
+   },
+   {
+    "videoId": "aoverLVhD-8",
+    "title": "Casualty",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": "From Zero",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "14M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 6,
+    "duration": "2:21",
+    "duration_seconds": 141,
+    "creditsBrowseId": "MPTC1Alzme5lq4c"
+   },
+   {
+    "videoId": "qaMxFaIZiKY",
+    "title": "Overflow",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": "From Zero",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "16M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 7,
+    "duration": "3:32",
+    "duration_seconds": 212,
+    "creditsBrowseId": "MPTCSlVa6DK_Kqw"
+   },
+   {
+    "videoId": "kivUsDGWojU",
+    "title": "Two Faced",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": "From Zero",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "96M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 8,
+    "duration": "3:04",
+    "duration_seconds": 184,
+    "creditsBrowseId": "MPTCZQqW8622gV4"
+   },
+   {
+    "videoId": "TWmOZB-9xAw",
+    "title": "Stained",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": "From Zero",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "25M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 9,
+    "duration": "3:06",
+    "duration_seconds": 186,
+    "creditsBrowseId": "MPTCTkyFUjavMNU"
+   },
+   {
+    "videoId": "pa4kv2Z5mvQ",
+    "title": "IGYEIH",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": "From Zero",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "18M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 10,
+    "duration": "3:30",
+    "duration_seconds": 210,
+    "creditsBrowseId": "MPTCbpFq9FzDfU8"
+   },
+   {
+    "videoId": "Ip0jJACsE_g",
+    "title": "Good Things Go",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": "From Zero",
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": false,
+    "pinnedToListenAgain": false,
+    "thumbnails": null,
+    "isAvailable": true,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_OMV",
+    "views": "29M plays",
+    "communityVoteStatus": null,
+    "trackNumber": 11,
+    "duration": "3:30",
+    "duration_seconds": 210,
+    "creditsBrowseId": "MPTC7ooOL42f-2s"
+   }
+  ],
+  "other_versions": [
+   {
+    "title": "From Zero (Deluxe Edition)",
+    "artists": [
+     {
+      "id": "UCxgN32UVVztKAQd2HkXzBtw",
+      "name": "Linkin Park"
+     }
+    ],
+    "browseId": "MPREb_JpdB3ZZ3xT2",
+    "audioPlaylistId": "OLAK5uy_lL9dW1Y3Mm0MHkCrvhc12h1J3Qqrzj7-I",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/2Qt9Ht3xtFNJ-jQq4OuyHGaMfjqBTYZXtRtx3vTzzDbAkflPX3xosJpPSrlp4prhe8I_AmKm1iaGg_DS=w226-h226-l90-rj",
+      "width": 226,
+      "height": 226
+     },
+     {
+      "url": "https://yt3.googleusercontent.com/2Qt9Ht3xtFNJ-jQq4OuyHGaMfjqBTYZXtRtx3vTzzDbAkflPX3xosJpPSrlp4prhe8I_AmKm1iaGg_DS=w544-h544-l90-rj",
+      "width": 544,
+      "height": 544
+     }
+    ],
+    "isExplicit": true,
+    "type": "Album"
+   }
+  ],
+  "duration_seconds": 1925
+ }
+}

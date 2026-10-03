@@ -996,6 +996,77 @@ final class SongVideoTests: XCTestCase {
         XCTAssertFalse(Imports.looksLikeLastfmKey(half + half.dropLast() + "g"))
     }
 
+    func testAnArtistsPageIsRead() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let json = """
+            {"found": true, "artist_id": "UCaaaaaaaaaaaaaaaaaaaaaa", "name": "Band",
+             "description": "About them.", "subscribers": "25.4M", "monthly_audience": "170M",
+             "views": "22,614 views", "thumbnail": "https://example.invalid/a.jpg",
+             "songs": [
+               {"video_id": "abcdefghijk", "title": "Song", "artists": ["Band"], "album": "Record",
+                "album_browse_id": "MPREb_1", "duration_s": null, "is_explicit": false,
+                "video_type": "MUSIC_VIDEO_TYPE_ATV", "year": null, "thumbnail": null,
+                "plays": null, "is_official_audio": true, "owned": true},
+               {"video_id": "lmnopqrstuv", "title": "Other", "artists": ["Band"], "owned": false}],
+             "songs_playlist_id": "OLAK5uy_x",
+             "albums": [{"browse_id": "MPREb_1", "title": "Record", "year": "2024", "kind": null,
+                         "is_explicit": true, "thumbnail": null}],
+             "singles": [{"browse_id": "MPREb_2", "title": "One", "year": "2025", "kind": "Single",
+                          "is_explicit": null, "thumbnail": null}],
+             "related": [{"artist_id": "UCbbbbbbbbbbbbbbbbbbbbbb", "name": "Others",
+                          "monthly_audience": "28.3M", "thumbnail": null}],
+             "owned_songs": 31}
+            """
+        let info = try decoder.decode(ArtistInfo.self, from: Data(json.utf8))
+        XCTAssertEqual(info.name, "Band")
+        XCTAssertEqual(info.numbers, "25.4M subscribers · 170M monthly audience · 22,614 views")
+        XCTAssertEqual(info.ownedWords, "You have 31 of their songs")
+        XCTAssertEqual(info.songs?.map(\.owned), [true, false])
+        XCTAssertEqual(info.songs?.first?.result.track.videoId, "abcdefghijk")
+        XCTAssertEqual(info.albums?.first?.caption, "2024")
+        XCTAssertEqual(info.singles?.first?.caption, "Single · 2025")
+        XCTAssertEqual(info.related?.first?.monthlyAudience, "28.3M")
+        // A song goes back to the engine as it came, for a download plan.
+        let back = try XCTUnwrap(info.songs?.first?.candidate.params)
+        XCTAssertEqual(back["video_id"] as? String, "abcdefghijk")
+        XCTAssertEqual(back["album_browse_id"] as? String, "MPREb_1")
+        XCTAssertTrue(JSONSerialization.isValidJSONObject(back))
+
+        // Nobody of that name: only the name comes back.
+        let none = try decoder.decode(
+            ArtistInfo.self, from: Data(#"{"found": false, "name": "Zzyzx"}"#.utf8))
+        XCTAssertFalse(none.found)
+        XCTAssertEqual(none.numbers, "")
+        XCTAssertNil(none.ownedWords)
+
+        let album = try decoder.decode(
+            ArtistAlbum.self,
+            from: Data(
+                """
+                {"browse_id": "MPREb_1", "title": "Record", "year": "2024", "artists": ["Band"],
+                 "thumbnail": null,
+                 "songs": [{"video_id": "abcdefghijk", "title": "Song", "artists": ["Band"],
+                            "duration_s": 187, "owned": false}]}
+                """.utf8))
+        XCTAssertEqual(album.songs.first?.result.durationS, 187)
+    }
+
+    func testWhatAnArtistsPageWouldDownload() {
+        func song(_ id: String, owned: Bool = false) -> ArtistSong {
+            ArtistSong(candidate: ImportCandidate(videoId: id, title: id), owned: owned)
+        }
+        let songs = [song("a"), song("b", owned: true), song("c"), song("a"), song("d")]
+        XCTAssertEqual(ArtistSongs.missing(songs).map(\.videoId), ["a", "c", "d"])
+        // One already in the library by its id, or on its way, isn't fetched again.
+        XCTAssertEqual(ArtistSongs.missing(songs, skip: ["c"]).map(\.videoId), ["a", "d"])
+        XCTAssertEqual(ArtistSongs.missing([]).count, 0)
+        // Whose page "Artist Info" opens for a song.
+        XCTAssertEqual(ArtistSongs.names(["Jay-Z", " Linkin Park ", "jay-z", ""]), ["Jay-Z", "Linkin Park"])
+        XCTAssertEqual(ArtistSongs.names(["A", "B", "C", "D"]), ["A", "B", "C"])
+        XCTAssertEqual(ArtistSongs.names([]), [])
+    }
+
     func testWhatAnImportWillDownload() {
         func song(_ id: String) -> ImportCandidate { ImportCandidate(videoId: id, title: id) }
         let rows = [

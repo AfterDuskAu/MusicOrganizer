@@ -66,6 +66,13 @@ struct ResultRow: View {
     let result: SearchResult
     /// False on the YouTube Queue page itself: there's nothing to queue there.
     var queueButton = true
+    /// The engine says the owner has this song (by its name, not only its YouTube id).
+    var owned = false
+    /// False on an artist's own page: every row there is theirs.
+    var artistButton = true
+    /// A page that holds the song as the engine gave it downloads it with that, so the
+    /// engine needn't look it up again.
+    var download: (() -> Void)?
     let play: () -> Void
     @Environment(AppModel.self) private var model
 
@@ -105,6 +112,15 @@ struct ResultRow: View {
                     .foregroundStyle(.secondary)
                     .help("Played \(plays) times on YouTube Music")
             }
+            if artistButton, let artist = result.artists.first {
+                Button {
+                    model.showArtist(artist)
+                } label: {
+                    Image(systemName: "person.crop.circle").foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Artist: about \(artist), their songs and albums")
+            }
             if queueButton {
                 let queued = model.isQueued(result)
                 Button(queued ? "Queued" : "Queue", systemImage: queued ? "checkmark" : "text.append") {
@@ -125,11 +141,16 @@ struct ResultRow: View {
         .padding(.vertical, 3)
         .contentShape(Rectangle())
         .onTapGesture(count: 2, perform: play)
+        .contextMenu { ArtistInfoItems(artists: result.artists) }
+    }
+
+    private func startDownload() {
+        if let download { download() } else { model.download(result) }
     }
 
     @ViewBuilder
     private var status: some View {
-        if model.everything.videoIDs.contains(result.videoId) {
+        if owned || model.everything.videoIDs.contains(result.videoId) {
             Label("In your library", systemImage: "checkmark.circle.fill")
                 .foregroundStyle(.green)
                 .font(.callout)
@@ -144,11 +165,29 @@ struct ResultRow: View {
                         .foregroundStyle(.secondary)
                 }
             case .failed(let why):
-                Button("Try Again", systemImage: "exclamationmark.triangle") { model.download(result) }
+                Button("Try Again", systemImage: "exclamationmark.triangle", action: startDownload)
                     .help(why)
             case nil:
-                Button("Download", systemImage: "arrow.down.circle") { model.download(result) }
+                Button("Download", systemImage: "arrow.down.circle", action: startDownload)
                     .help("Save this song in your library")
+            }
+        }
+    }
+}
+
+/// "Artist Info" on a song's right-click menu: one entry for a song with one artist,
+/// one each (by name) for a song credited to several.
+struct ArtistInfoItems: View {
+    let artists: [String]
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let names = ArtistSongs.names(artists)
+        if names.count == 1 {
+            Button("Artist Info") { model.showArtist(names[0]) }
+        } else {
+            ForEach(names, id: \.self) { name in
+                Button("Artist Info: \(name)") { model.showArtist(name) }
             }
         }
     }

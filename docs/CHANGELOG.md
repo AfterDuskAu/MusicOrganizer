@@ -418,6 +418,17 @@
 - Asked, not built: an **Artist page** (right-click a song → Artist Info, or an artist button on What's New, Find and YouTube Music: the artist's songs, background, coming concerts). The owner asked what I thought; the answer and the two decisions it needs are in `docs/ROADMAP.md`.
 - Checked in the unseen copy, by temporary lines since removed: the page with lyrics, without, and with lyrics switched off; the full-screen layout with its lyrics column; the Play Options tab. Not clicked in the running app.
 
+2026-10-03, late. **The Artist page** (the owner: "build the page, starting without concerts").
+
+- **Discover → Artist**, under Find: type an artist's name, or get there from a song. It shows YouTube Music's own page for the artist: a picture, their background, subscribers, monthly audience and views; their best-known songs; **Show All Songs** (every song YouTube Music lists for them, up to 300, with lengths); their albums, and their singles and EPs, each opening to its songs; and **Fans Also Like**, each opening that artist's page, with a Back button.
+- Every song there plays, queues and downloads like a YouTube Music row. The page says which songs the owner already has (by the song's name, version and artist, not only its YouTube id), how many of the artist's songs they have, and **Download Missing** fetches the rest of what's listed: the usual question first (how many, how long), and the daily limit applies.
+- **Three ways in:** Artist Info on the right-click menu of any song (library songs, YouTube Music rows, What's New and Find cards; a song credited to several artists lists each); an artist button beside each YouTube Music row and beside the artist's name on each What's New and Find card; and the page's own box.
+- **Engine:** `artist` (new module, read-only) and `artist.info`, `artist.songs`, `artist.album`; `youtube.find_artist` and `youtube.artist_page` (ytmusicapi's `get_artist`, checked against 1.12.3 and recorded for the tests). Two requests for an artist the first time (the name, kept 30 days; the page, kept a week), through the limiter. No key and no sign-in.
+- **What YouTube Music calls things:** ytmusicapi names two of the counts `monthlyListeners` and (for related artists) `subscribers`; the page itself says "monthly audience" for both, so that's what the engine and the app call them.
+- **Concerts aren't built.** The owner wants the next show, worldwide, and showed YouTube's "Event tickets" shelf under a video. Checked: a video's page does carry it, with no key. Whether to read that or use Ticketmaster's free API is written up in `docs/ROADMAP.md`.
+- **Deviation:** the Artist page wasn't in the Discover plan; added at the owner's request, and `CLAUDE.md` says so.
+- Checked: engine tests against recorded answers; Kit tests; and in the unseen copy with a real artist: the page, all songs, an album's songs, the lower half, and the cards' artist button. Not clicked in the running app: the right-click entries, Download Missing, Back.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

@@ -1,0 +1,218 @@
+{
+ "kind": "playlist",
+ "key": "OLAK5uy_k7mmOSpP63ccIRmgod4PkMPARvWuYw6dA",
+ "request": "OLAK5uy_k7mmOSpP63ccIRmgod4PkMPARvWuYw6dA",
+ "recorded_at": "2026-10-03T03:51:08Z",
+ "ytmusicapi": "1.12.3",
+ "trimmed": [
+  "feedback tokens",
+  "everything but the tracks' fields the engine reads",
+  "all but the first 8 tracks"
+ ],
+ "error": null,
+ "response": {
+  "tracks": [
+   {
+    "videoId": "BLZWkjBXfN8",
+    "title": "In the End",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Hybrid Theory (Bonus Edition)",
+     "id": "MPREb_m10OjDmOhfv"
+    },
+    "duration": "3:37",
+    "duration_seconds": 217,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/lkNJVMp3siDfSw_zVYj3tE6fQS7G6Gj2gzoxrIwS7K4TwqmL_uSBb9-PKACNLIP_7XLQib4tC5XwWbpD=w120-h120-l90-rj",
+      "width": 120,
+      "height": 120
+     }
+    ]
+   },
+   {
+    "videoId": "5qZQEq_C3vc",
+    "title": "Numb",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Meteora (Bonus Edition)",
+     "id": "MPREb_ebWSmYnO2aa"
+    },
+    "duration": "3:08",
+    "duration_seconds": 188,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/Rqh2HDAD-Fj1-oHYqVklPGklMHIV3r6SMPMZmFE3FlLiWeBBnP3SCESfgeNdzQ-DmpCIvOGE4J0hzVxa=w120-h120-s-l90-rj",
+      "width": 120,
+      "height": 120
+     }
+    ]
+   },
+   {
+    "videoId": "-YQ8IbVIwPM",
+    "title": "Somewhere I Belong",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Meteora",
+     "id": "MPREb_qMlbe7gLeuH"
+    },
+    "duration": "3:34",
+    "duration_seconds": 214,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/dNfpEZtqYYsrHaHpSE9ik5vGgUSVLKE5DycRz8VMLdIQV_GYz7GpGUkMnU9I0926zLRQEAIUwdsjYCuG=w120-h120-l90-rj",
+      "width": 120,
+      "height": 120
+     }
+    ]
+   },
+   {
+    "videoId": "eXRWHzV72sU",
+    "title": "What I've Done",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Minutes to Midnight",
+     "id": "MPREb_WJjOQ3cXgzB"
+    },
+    "duration": "3:26",
+    "duration_seconds": 206,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/BtAKhqmTBoZWEQPlcF9tgpqILWNkQ4vc0tk0nlSrIpdvhW9sf9K-tQDoym1zh9Svl-8PnpFCY_6vNYg7=w120-h120-l90-rj",
+      "width": 120,
+      "height": 120
+     }
+    ]
+   },
+   {
+    "videoId": "2mXNRsyTitA",
+    "title": "Faint",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Meteora (Bonus Edition)",
+     "id": "MPREb_ebWSmYnO2aa"
+    },
+    "duration": "2:43",
+    "duration_seconds": 163,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/Rqh2HDAD-Fj1-oHYqVklPGklMHIV3r6SMPMZmFE3FlLiWeBBnP3SCESfgeNdzQ-DmpCIvOGE4J0hzVxa=w120-h120-s-l90-rj",
+      "width": 120,
+      "height": 120
+     }
+    ]
+   },
+   {
+    "videoId": "iw35Pfqf4U8",
+    "title": "Given Up",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Minutes to Midnight",
+     "id": "MPREb_WJjOQ3cXgzB"
+    },
+    "duration": "3:10",
+    "duration_seconds": 190,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/BtAKhqmTBoZWEQPlcF9tgpqILWNkQ4vc0tk0nlSrIpdvhW9sf9K-tQDoym1zh9Svl-8PnpFCY_6vNYg7=w120-h120-l90-rj",
+      "width": 120,
+      "height": 120
+     }
+    ]
+   },
+   {
+    "videoId": "KBV_zpMm_0Q",
+    "title": "The Emptiness Machine",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "From Zero",
+     "id": "MPREb_d1UkStdzUrN"
+    },
+    "duration": "3:11",
+    "duration_seconds": 191,
+    "isExplicit": true,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/R-yqivSHsR8ZWpKMy2vplo6LEK-c0XVA7SzRRHR0eUYa-Gazo1VnbVnmN1ifymUOuCmW5yxjFlNv-rBv=w120-h120-l90-rj",
+      "width": 120,
+      "height": 120
+     }
+    ]
+   },
+   {
+    "videoId": "t19wM1gn1Wo",
+    "title": "New Divide",
+    "artists": [
+     {
+      "name": "Linkin Park",
+      "id": "UCxgN32UVVztKAQd2HkXzBtw"
+     }
+    ],
+    "album": {
+     "name": "Papercuts",
+     "id": "MPREb_CzkuHfNPVWH"
+    },
+    "duration": "4:30",
+    "duration_seconds": 270,
+    "isExplicit": false,
+    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+    "thumbnails": [
+     {
+      "url": "https://yt3.googleusercontent.com/-pm394HLjSt4bQLNAfz1YkQvOTNUmJL7YVjN6E_8Th-Bc0XpeVMKqwgc6frikyV0GSr3l4W7IBxJu1I=w120-h120-l90-rj",
+      "width": 120,
+      "height": 120
+     }
+    ]
+   }
+  ],
+  "title": "Top songs"
+ }
+}

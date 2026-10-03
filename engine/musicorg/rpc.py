@@ -45,6 +45,7 @@ from typing import IO, Any
 
 from musicorg import (
     __version__,
+    artist,
     browse,
     discover,
     fileops,
@@ -92,7 +93,7 @@ REVIEW_STATES = ("review", "not_found", "matched_auto")
 SLOW_METHODS = frozenset(
     {"youtube.stream", "youtube.video", "search.ytmusic", "lyrics.find", "lyrics.for_video",
      "discover.suggest", "import.playlist", "import.playlists", "import.find",
-     "account.connect"}
+     "account.connect", "artist.info", "artist.songs", "artist.album"}
 )  # fmt: skip
 MAX_EXCLUDE = 5000  # songs already on screen that Show More leaves out
 RPC_DECISIONS = ("accept", "candidate", "url", "only_copy", "skip", "reject")
@@ -297,6 +298,9 @@ class Server:
             "account.connect": self.account_connect,
             "account.sign_out": self.account_sign_out,
             "import.find": self.import_find,
+            "artist.info": self.artist_info,
+            "artist.songs": self.artist_songs,
+            "artist.album": self.artist_album,
             "queue.jobs": self.queue_jobs,
             "queue.downloads": self.queue_downloads,
             "queue.dismiss": self.queue_dismiss,
@@ -1002,6 +1006,27 @@ class Server:
 
         with self._index(write=True) as index:  # the index keeps YouTube Music's answers
             return {"found": imports.find(self._library(), index, tracks, progress=progress)}
+
+    # -- methods: the Artist page --
+
+    def artist_info(self, params: dict[str, Any]) -> dict[str, Any]:
+        """An artist's page on YouTube Music, by their name or their id, with which of
+        their songs the owner has. Lookups only."""
+        name, artist_id = want(params, "name", str), want(params, "artist_id", str)
+        if (name is None) == (artist_id is None):
+            raise RpcError(INVALID_PARAMS, "Give a name or an artist_id (one of them).")
+        with self._index(write=True) as index:  # the index keeps YouTube Music's answers
+            return artist.info(self._library(), index, name=name, artist_id=artist_id)
+
+    def artist_songs(self, params: dict[str, Any]) -> dict[str, Any]:
+        playlist_id = need(params, "playlist_id", str)
+        with self._index(write=True) as index:
+            return artist.songs(self._library(), index, playlist_id)
+
+    def artist_album(self, params: dict[str, Any]) -> dict[str, Any]:
+        browse_id = need(params, "browse_id", str)
+        with self._index(write=True) as index:
+            return artist.album(self._library(), index, browse_id)
 
     def search_ytmusic(self, params: dict[str, Any]) -> dict[str, Any]:
         query = need(params, "query", str).strip()

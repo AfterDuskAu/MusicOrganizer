@@ -126,6 +126,11 @@ final class AppModel {
     let find = DiscoverPage(named: "find")
     /// Discover → Import Playlists: a playlist from elsewhere, and what was found of it.
     let importing = ImportPage()
+    /// Discover → Artist: the artist being looked at.
+    let artistBrowser = ArtistBrowser()
+    /// A page to open in the sidebar, asked for from somewhere else in the app (Artist
+    /// Info on a song). The main view opens it and clears this.
+    var goTo: SidebarItem?
     /// Several downloads planned and waiting for the owner's yes (Download Selected).
     var batch: BatchDownload?
     /// How Discover's Download Automatically is going, until its note is closed.
@@ -171,6 +176,17 @@ final class AppModel {
     private static let rootKey = "libraryRoot"
 
     init() {
+        artistBrowser.lookUp = { [weak self] name, artistId in
+            var asked: [String: Any] = [:]
+            if let artistId { asked["artist_id"] = artistId } else { asked["name"] = name ?? "" }
+            return try await Self.ask(self, "artist.info", asked, as: ArtistInfo.self)
+        }
+        artistBrowser.findSongs = { [weak self] list in
+            try await Self.ask(self, "artist.songs", ["playlist_id": list], as: ArtistSongsAnswer.self)
+        }
+        artistBrowser.findAlbum = { [weak self] id in
+            try await Self.ask(self, "artist.album", ["browse_id": id], as: ArtistAlbum.self)
+        }
         importing.read = { [weak self] what in
             guard let self else { throw RPCError(code: 0, message: "The engine isn't running.") }
             return try await self.readImport(what)
@@ -620,6 +636,7 @@ final class AppModel {
         libraryVersion += 1
         for page in [whatsNew, find] { page.reset() }
         importing.reset()
+        artistBrowser.reset()
         keepDownloadsSeparate =
             UserDefaults.standard.object(forKey: "keepDownloadsSeparate") as? Bool ?? true
         youtubeQueue = Self.savedYouTubeQueue()  // the next profile's own
@@ -899,6 +916,68 @@ final class AppModel {
 
     /// Download one song into the library. Only ever called by the owner's click.
     func download(_ result: SearchResult) { downloadSong(result.videoId) }
+
+    // MARK: the Artist page
+
+    /// One question to the engine, for a page that isn't the model itself.
+    private static func ask<Answer: Decodable>(
+        _ model: AppModel?, _ method: String, _ params: [String: Any], as type: Answer.Type
+    ) async throws -> Answer {
+        guard let connection = model?.engine?.connection else {
+            throw RPCError(code: RPCError.closed, message: "The engine isn't running.")
+        }
+        return try await connection.call(method, params, as: type)
+    }
+
+    /// Open Discover → Artist on this artist (a song's, by name).
+    func showArtist(_ name: String) {
+        guard !name.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        artistBrowser.open(name: name)
+        goTo = .artistInfo
+    }
+
+    /// Download a song from an artist's page. The engine is handed the song back as it
+    /// gave it, so it doesn't look it up a second time.
+    func download(_ song: ImportCandidate) {
+        startDownload(song.videoId, ["video_ids": [song.videoId], "candidates": [song.params]])
+    }
+
+    /// Whether a YouTube song could still be downloaded: not in the library by its id,
+    /// and not on its way.
+    func canDownload(_ videoId: String) -> Bool {
+        !everything.videoIDs.contains(videoId) && downloadState(of: videoId) != .working
+    }
+
+    /// Several of an artist's songs at once. It's a batch, so the plan comes first:
+    /// how many and how long. Nothing is queued until the owner says yes.
+    func planDownloads(of songs: [ImportCandidate]) {
+        let wanted = songs.filter { canDownload($0.videoId) }
+        guard let connection = engine?.connection else { return }
+        guard !wanted.isEmpty else {
+            notice = "All of those are in your library already, or on their way."
+            return
+        }
+        Task {
+            do {
+                let plan = try await connection.call(
+                    "plan.create",
+                    [
+                        "kind": "download",
+                        "options": [
+                            "video_ids": wanted.map(\.videoId),
+                            "candidates": wanted.map(\.params),
+                        ],
+                    ], as: PlanAnswer.self)
+                guard plan.summary.operations > 0 else { throw Self.nothingToDo(plan) }
+                batch = BatchDownload(
+                    planId: plan.planId, videoIds: wanted.map(\.videoId),
+                    count: plan.summary.downloads ?? plan.summary.operations,
+                    minutes: plan.summary.estMinutes ?? 0, days: plan.summary.days ?? 1)
+            } catch {
+                notice = error.localizedDescription
+            }
+        }
+    }
 
     // MARK: Discover: picks, and downloading them
 

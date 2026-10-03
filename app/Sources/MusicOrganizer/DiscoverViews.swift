@@ -503,7 +503,19 @@ private struct PickCard: View {
                 }
             }
             .padding(.top, 4)
-            Text(pick.artistName).foregroundStyle(.secondary).lineLimit(1)
+            // The artist's name, with the button for their page beside it.
+            HStack(spacing: 5) {
+                Text(pick.artistName).foregroundStyle(.secondary).lineLimit(1)
+                if let artist = pick.artists.first {
+                    Button {
+                        model.showArtist(artist)
+                    } label: {
+                        Image(systemName: "person.crop.circle").foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Artist: about \(artist), their songs and albums")
+                }
+            }
             Text(pick.why)
                 .font(.caption)
                 .foregroundStyle(.tertiary)
@@ -546,6 +558,7 @@ private struct PickCard: View {
         }
         .font(.callout)
         .onHover { hovering = $0 }
+        .contextMenu { ArtistInfoItems(artists: pick.artists) }
     }
 
     @ViewBuilder
