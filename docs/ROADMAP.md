@@ -59,6 +59,8 @@ A SwiftUI app that starts the engine and talks to it (`musicorg serve`). Code in
 
 **The owner's layout for the sidebar and Settings** is in [`roadmap/0.2-app-layout.md`](roadmap/0.2-app-layout.md).
 
+**The Visualizer** (planned 2026-10-03, at the owner's request; nothing built yet): visuals on the Local Visualizer page that move with the real sound, each made from a reference picture the owner sends (six so far). It's a separate Swift package, `visualizer/`, that can be lifted out later. Plan, measurements and roadmap: [`roadmap/0.2-visualizer.md`](roadmap/0.2-visualizer.md).
+
 **Parked by the owner (2026-10-01):** Fix A-1 (the app feels rough), Fix A-2 (automatic downloads stay out of the main library) and Fix A-3 (a real media player tab). All three are written up in `docs/KNOWN-ISSUES.md`.
 
 **Still to build, roughly in this order** (the owner decides after using the first slice):
