@@ -1612,6 +1612,65 @@ def test_a_download_for_a_playlist_joins_it_when_it_arrives(
     assert listening.get(lib)["playlists"] == []
 
 
+def test_a_playlist_is_copied_in_from_another_profiles_library(
+    lib: Library, index: Index, downloads: FakeDownloads, tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:  # fmt: skip
+    found = {
+        VIDEO_A: candidate(VIDEO_A, "Melody", ("Band",), SECONDS, album="Tunes"),
+        VIDEO_B: candidate(VIDEO_B, "Other", ("Band",), SECONDS, album="Tunes"),
+    }
+    monkeypatch.setattr(youtube, "get_track", lambda video_id: found.get(video_id))
+    # Their library: two songs downloaded, one with lyrics beside it.
+    theirs_root = tmp_path / "Their Library"
+    library.init(theirs_root)
+    theirs = library.open(theirs_root, write=True, command="pytest")
+    try:
+        with open_index(theirs.paths, write=True) as their_index:
+            plan = pipeline.plan_download(theirs, their_index, [VIDEO_A, VIDEO_B])
+            pipeline.apply(theirs, their_index, plan.plan_id)
+            run_queue(theirs)
+            rows = sorted(their_index.library_tracks(), key=lambda row: row["rel_path"])
+        their_songs = [row["rel_path"] for row in rows]
+        lyrics_file = theirs.root.joinpath(*their_songs[0].split("/")).with_suffix(".lrc")
+        lyrics_file.write_text("[00:01.00] la la\n", encoding="utf-8")
+    finally:
+        theirs.close()
+    before = {p: p.stat().st_mtime_ns for p in theirs_root.rglob("*") if p.is_file()}
+
+    # Copied into this library, into a playlist here.
+    (mix,) = listening.create_playlist(lib, "From Them")
+    plan = pipeline.plan_share(lib, index, theirs_root, their_songs, playlist_id=mix["id"])
+    assert plan.kind == "share" and plan.summary["copies"] == 2
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    mine = sorted(index.library_tracks(), key=lambda row: row["rel_path"])
+    assert [row["rel_path"] for row in mine] == their_songs  # the same places under Music/
+    assert [row["musicorg_id"] for row in mine] == [row["musicorg_id"] for row in rows]
+    assert lib.root.joinpath(*their_songs[0].split("/")).with_suffix(".lrc").is_file()
+    assert listening.get(lib)["playlists"][0]["track_ids"] == [r["musicorg_id"] for r in rows]
+    # Their library was only read.
+    assert {p: p.stat().st_mtime_ns for p in theirs_root.rglob("*") if p.is_file()} == before
+
+    # Again: nothing is copied twice, and the songs join the playlist they're asked for.
+    (again,) = [p for p in listening.create_playlist(lib, "Again") if p["name"] == "Again"]
+    plan = pipeline.plan_share(lib, index, theirs_root, their_songs, playlist_id=again["id"])
+    assert plan.summary["copies"] == 0 and plan.summary["already_here"] == 2
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    assert len(index.library_tracks()) == 2
+    assert listening.get(lib)["playlists"][1]["track_ids"] == [r["musicorg_id"] for r in rows]
+
+    # Only songs inside their Music folder, and not this library itself.
+    for bad in ("state.json", "Music/../state.json", "../Their Library/Music/x.m4a", 3):
+        with pytest.raises(UserError):
+            pipeline.plan_share(lib, index, theirs_root, [bad])  # type: ignore[list-item]
+    with pytest.raises(UserError, match="this library already"):
+        pipeline.plan_share(lib, index, lib.root, their_songs)
+    with pytest.raises(UserError, match="isn't there"):
+        pipeline.plan_share(lib, index, tmp_path / "Nowhere", their_songs)
+
+
 def test_a_download_is_given_a_genre(
     lib: Library, index: Index, downloads: FakeDownloads, samples: dict[str, Path],
     monkeypatch: pytest.MonkeyPatch,

@@ -411,6 +411,18 @@ struct MainView: View {
                         Label(playlist.name, systemImage: entry.symbol)
                             .contextMenu {
                                 Button("Rename…") { model.rename(playlist) }
+                                let others = model.profiles.profiles.filter {
+                                    $0.id != model.profiles.currentId
+                                }
+                                if !others.isEmpty {
+                                    Menu("Copy to Profile") {
+                                        ForEach(others) { profile in
+                                            Button(profile.name) {
+                                                model.copyPlaylist(playlist, to: profile.id)
+                                            }
+                                        }
+                                    }
+                                }
                                 Button("Delete…", role: .destructive) { deleting = playlist }
                             }
                     }

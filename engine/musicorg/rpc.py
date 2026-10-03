@@ -745,11 +745,16 @@ class Server:
                 )  # fmt: skip
             elif kind == "remove":
                 plan = pipeline.plan_remove(lib, index, need(options, "paths", list))
+            elif kind == "share":
+                plan = pipeline.plan_share(
+                    lib, index, Path(need(options, "source_root", str)),
+                    need(options, "paths", list), playlist_id=want(options, "playlist_id", str),
+                )  # fmt: skip
             else:
                 raise RpcError(
                     INVALID_PARAMS,
-                    "kind should be replace, adopt, lyrics, artwork, tidy, download, edit or "
-                    "remove.",
+                    "kind should be replace, adopt, lyrics, artwork, tidy, download, edit, "
+                    "remove or share.",
                 )
         summary = dict(plan.summary)
         for key in ("operations", "downloads", "est_minutes", "low_confidence_adopts"):

@@ -58,7 +58,7 @@ from musicorg.errors import (
     YouTubePausedError,
     YouTubeRefusedError,
 )
-from musicorg.index import QueueStore, open_queue
+from musicorg.index import LOCAL_FIRST_KINDS, QueueStore, open_queue
 from musicorg.library import Library
 from musicorg.naming import LibraryPaths
 
@@ -344,11 +344,13 @@ class _Runner:
                 return self._result(
                     "paused", "The queue is paused. `musicorg queue resume` starts it again."
                 )
-            until = self.youtube_pause()
-            if until is not None:
-                return self._youtube_result(until)
             now = self.clock.now()
             job = self.store.next_ready(_iso(now))
+            # A pause by YouTube stops what reaches YouTube. Work on files here goes on.
+            if job is None or job["kind"] not in LOCAL_FIRST_KINDS:
+                until = self.youtube_pause()
+                if until is not None:
+                    return self._youtube_result(until)
             if job is None:
                 retry = _parse(self.store.next_retry_at())
                 if retry is None:

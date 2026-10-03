@@ -386,6 +386,91 @@ final class AppModel {
         }
     }
 
+    // MARK: Copying a playlist to another profile
+
+    private static let pendingSharesKey = "pendingShares"
+
+    /// Playlists sent to other profiles, waiting for each to be opened (by profile id).
+    private var pendingShares: [String: [PendingShare]] {
+        get {
+            guard let data = UserDefaults.standard.data(forKey: Self.pendingSharesKey) else {
+                return [:]
+            }
+            return (try? JSONDecoder().decode([String: [PendingShare]].self, from: data)) ?? [:]
+        }
+        set {
+            if newValue.isEmpty {
+                UserDefaults.standard.removeObject(forKey: Self.pendingSharesKey)
+            } else if let data = try? JSONEncoder().encode(newValue) {
+                UserDefaults.standard.set(data, forKey: Self.pendingSharesKey)
+            }
+        }
+    }
+
+    /// Copy to Profile: the playlist's songs are copied into the other profile's library
+    /// the next time it's opened, into a playlist of the same name there. This profile
+    /// keeps its own; nothing of either is moved or deleted.
+    func copyPlaylist(_ playlist: Playlist, to id: String) {
+        guard let target = profiles.profile(id), let root else { return }
+        let songs = tracks(in: playlist).filter { $0.videoId == nil }
+        guard !songs.isEmpty else {
+            notice = "“\(playlist.name)” has no songs in it to copy."
+            return
+        }
+        pendingShares[id, default: []].append(
+            PendingShare(
+                sourceRoot: root.path, paths: songs.map(\.path), playlistName: playlist.name,
+                fromName: profiles.current.name))
+        info = Info(
+            title: "“\(playlist.name)” will go to \(target.name)",
+            text: "Its \(songs.count) \(songs.count == 1 ? "song is" : "songs are") copied into "
+                + "\(target.name)'s library the next time \(target.name)'s profile is opened, "
+                + "into a playlist of the same name. Yours stay exactly as they are.")
+    }
+
+    /// The profile just opened has playlists waiting for it: copy each in, through its
+    /// own engine (a plan, then the queue; journaled, and Undo takes them back out).
+    private func receiveShares() async {
+        let id = profiles.currentId
+        guard let waiting = pendingShares[id], !waiting.isEmpty,
+            let connection = engine?.connection
+        else { return }
+        pendingShares[id] = nil
+        var said: [String] = []
+        for share in waiting {
+            do {
+                let name = share.nameHere(among: listening.playlists.map(\.name))
+                let made = try await connection.call(
+                    "playlist.create", ["name": name], as: PlaylistsAnswer.self)
+                listening.playlists = made.playlists
+                guard let playlist = made.playlists.last else { continue }
+                let plan = try await connection.call(
+                    "plan.create",
+                    [
+                        "kind": "share",
+                        "options": [
+                            "source_root": share.sourceRoot, "paths": share.paths,
+                            "playlist_id": playlist.id,
+                        ],
+                    ], as: PlanAnswer.self)
+                _ = try await connection.call(
+                    "plan.apply", ["plan_id": plan.planId], as: BatchAnswer.self)
+                said.append(
+                    "“\(name)” from \(share.fromName): \(share.paths.count) "
+                        + (share.paths.count == 1 ? "song" : "songs"))
+            } catch {
+                notice = "“\(share.playlistName)” from \(share.fromName) couldn't be copied: "
+                    + error.localizedDescription
+            }
+        }
+        if !said.isEmpty {
+            info = Info(
+                title: "Playlists from other profiles",
+                text: "Copying in " + said.joined(separator: "; ")
+                    + ". Each playlist fills as its songs arrive, in a moment.")
+        }
+    }
+
     // MARK: Profiles
 
     private static let profilesKey = "profiles"
@@ -498,6 +583,7 @@ final class AppModel {
             watchDownloads()
             watchDailyLimit()
             loadAccounts()
+            await receiveShares()
         } catch {
             phase = .failed(error.localizedDescription)
         }

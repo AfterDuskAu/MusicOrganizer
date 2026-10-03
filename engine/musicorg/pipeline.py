@@ -1948,6 +1948,146 @@ def remove_job(ctx: JobContext) -> Outcome:
     return Outcome.done(f"{path.name} is in the Trash.")
 
 
+# ---- songs from another profile's library (2026-10-03) ----------------------------------
+
+MAX_SHARE = 2000
+
+
+def plan_share(
+    lib: Library,
+    index: Index,
+    source_root: Path,
+    rel_paths: list[str],
+    *,
+    playlist_id: str | None = None,
+) -> fileops.Plan:
+    """A plan copying songs from another profile's library into this one, and into one
+    of this library's playlists (the app's Copy to Profile: one person shares a playlist
+    with another).
+
+    The other library is only ever read (rule 2): each file is copied in with
+    `fileops.copy_in`, checked against what was read, with its `.lrc`, and its album's
+    `cover.jpg` when this library has none there yet. It keeps its tags as they are, its
+    `MUSICORG_ID` too, and lands at the same place under `Music/` (a name already taken
+    gets a " (2)"). A song this library already has, by that id or by its YouTube id, isn't
+    copied again: it just joins the playlist. Journaled; undo takes the copies back out."""
+    try:
+        theirs = Path(source_root).expanduser().resolve(strict=True)
+    except OSError:
+        raise UserError("The other profile's library folder isn't there.") from None
+    music = theirs / naming.MUSIC_DIR
+    if not music.is_dir():
+        raise UserError("That folder isn't a Music Organizer library.")
+    if theirs == lib.root.resolve():
+        raise UserError("Those songs are in this library already.")
+    if not rel_paths:
+        raise UserError("Choose the songs to copy.")
+    if len(rel_paths) > MAX_SHARE:
+        raise UserError(f"That's too many songs at once (the limit is {MAX_SHARE}).")
+    if playlist_id is not None and not any(
+        found["id"] == playlist_id for found in listening.get(lib)["playlists"]
+    ):
+        raise NotFoundError("That playlist doesn't exist any more.")
+    by_id: dict[str, str] = {}
+    by_source: dict[str, str] = {}
+    for row in index.library_tracks():
+        mine = row.get("musicorg_id")
+        if isinstance(mine, str):
+            by_id[mine] = mine
+            source = row.get("source_id")
+            if isinstance(source, str) and not naming.is_video_path(row["rel_path"]):
+                by_source.setdefault(source, mine)
+    ops: list[fileops.PlanOp] = []
+    copies = 0
+    for rel in dict.fromkeys(rel_paths):
+        src = _shared_file(music, rel)
+        found = tags.read_tags(src)
+        their_id = found.musicorg_id
+        if not isinstance(their_id, str) or not their_id:
+            raise UserError(f"{src.name} isn't a file a library manages.")
+        source_id = found.source_id if isinstance(found.source_id, str) else None
+        here = by_id.get(their_id) or (
+            by_source.get(source_id) if source_id and not naming.is_video_path(rel) else None
+        )
+        params: dict[str, Any] = {"musicorg_id": here or their_id}
+        if playlist_id is not None:
+            params["playlist_id"] = playlist_id
+        if here is not None:
+            params["already_here"] = True
+            ops.append(fileops.PlanOp(action="share", params=params))
+            continue
+        params["target"] = PurePosixPath(*PurePosixPath(rel).parts[1:]).as_posix()
+        params["title"] = found.title if isinstance(found.title, str) else src.stem
+        ops.append(
+            fileops.PlanOp(action="share", source=fileops.FileCheck.of(lib, src), params=params)
+        )
+        copies += 1
+    size = sum(op.source.size for op in ops if op.source is not None)
+    summary = {"operations": len(ops), "downloads": 0, "copies": copies,
+               "already_here": len(ops) - copies, "est_minutes": max(1, math.ceil(copies / 60)),
+               "days": 0, "disk_mb": round(size / 1e6, 1), "low_confidence_adopts": 0}  # fmt: skip
+    plan = fileops.new_plan("share", ops, summary)
+    fileops.save_plan(lib, plan)
+    return plan
+
+
+def _shared_file(music: Path, rel: object) -> Path:
+    """One of the other library's songs, by its library path ("Music/…"): it must be a
+    song or video file inside that library's Music folder, and nowhere else."""
+    if not isinstance(rel, str) or not rel.startswith(naming.MUSIC_DIR + "/"):
+        raise UserError(f"{rel!r} isn't a song in that library.")
+    parts = PurePosixPath(rel).parts
+    if any(part in ("", ".", "..") for part in parts):
+        raise UserError(f"{rel!r} isn't a song in that library.")
+    path = music.parent.joinpath(*parts)
+    try:
+        resolved = path.resolve(strict=True)
+    except OSError:
+        raise UserError(f"{path.name} isn't in that library any more.") from None
+    if not resolved.is_relative_to(music.resolve()) or not resolved.is_file():
+        raise UserError(f"{rel!r} isn't a song in that library.")
+    if not (naming.is_audio_name(resolved.name) or naming.is_video_path(rel)):
+        raise UserError(f"{resolved.name} isn't a song or a video.")
+    return resolved
+
+
+def share_job(ctx: JobContext) -> Outcome:
+    (op,) = _ops(ctx.payload)
+    params = op.params
+    if params.get("already_here"):
+        _join_playlist(ctx.lib, op, params.get("musicorg_id"))
+        return Outcome.done("It was here already; it's in the playlist.")
+    assert op.source is not None
+    problem = fileops.check_op(ctx.lib, op)
+    if problem is not None:
+        return Outcome.needs_review(
+            FILE_CHANGED, "The other library's file changed since the plan."
+        )
+    src = Path(op.source.path)
+    with open_index(ctx.lib.paths, write=True) as index:
+        if any(row.get("musicorg_id") == params["musicorg_id"] for row in index.library_tracks()):
+            _join_playlist(ctx.lib, op, params["musicorg_id"])
+            return Outcome.done("It arrived here another way; it's in the playlist.")
+        final = fileops.copy_in(ctx.batch, src, params["target"])
+        music = ctx.lib.paths.music
+        lyrics_file = src.with_suffix(".lrc")
+        if lyrics_file.is_file():
+            fileops.copy_in(
+                ctx.batch, lyrics_file, final.with_suffix(".lrc").relative_to(music).as_posix()
+            )
+        cover = src.parent / naming.COVER_NAME
+        if cover.is_file() and not (final.parent / naming.COVER_NAME).exists():
+            fileops.copy_in(
+                ctx.batch, cover, (final.parent / naming.COVER_NAME).relative_to(music).as_posix()
+            )
+        written = tags.read_tags(final)
+        index.put_library_tracks(
+            [_track_row(ctx.lib, final, written, tags.probe(final).duration_s)]
+        )
+    _join_playlist(ctx.lib, op, written.musicorg_id)
+    return Outcome.done(f"Copied in as {final.name}.")
+
+
 # ---- lyrics and covers for the library (step 10) ------------------------------------
 
 WORK_S_PER_LYRICS = 3  # LRCLIB's pace (one request a second), sometimes YouTube Music too
@@ -2328,3 +2468,4 @@ queue.register("tidy", tidy_job, network=False)
 queue.register("download", download_job, network=True)
 queue.register("edit", edit_job, network=False)
 queue.register("remove", remove_job, network=False)
+queue.register("share", share_job, network=False)

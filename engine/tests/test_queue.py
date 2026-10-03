@@ -258,7 +258,38 @@ def test_what_the_owner_asked_for_by_hand_runs_before_a_long_batch(
     kinds = {kind: Kind(note, network=False) for kind in ("lyrics", "download", "edit")}
     result = run(lib, clock, kinds=kinds)
     assert result.counts == {"done": 6}
-    assert order == [*download_ids, *edit_ids, *lyrics_ids, *more_lyrics]
+    # Work on files here first, then the owner's downloads, then the long batches.
+    assert order == [*edit_ids, *download_ids, *lyrics_ids, *more_lyrics]
+
+
+def test_local_work_runs_at_the_daily_limit_and_while_youtube_rests(
+    lib: Library, clock: FakeClock, yt: FakeYouTube
+) -> None:
+    """A Delete or an Edit Details never waits hours behind downloads that can't go yet."""
+    cfg = settings(daily_cap=1)
+    enqueue(lib, 3)  # three downloads; the limit lets one through
+    _, removes = enqueue(lib, 1, kind="remove")
+    done: list[int] = []
+
+    def note(ctx: Any) -> Outcome:
+        done.append(ctx.job["id"])
+        return Outcome.done()
+
+    kinds = {**KINDS, "remove": Kind(note, network=False), "share": Kind(note, network=False)}
+    first = run(lib, clock, cfg, kinds=kinds)
+    assert first.stopped == "daily_cap" and done == removes and len(yt.downloads) == 1
+
+    # At the limit still: a new one runs, and the queue stops at the limit again.
+    _, shares = enqueue(lib, 1, kind="share")
+    assert run(lib, clock, cfg, kinds=kinds).stopped == "daily_cap"
+    assert done == removes + shares and len(yt.downloads) == 1
+
+    # While YouTube has paused us, too.
+    with open_queue(lib.paths, write=True) as store:
+        store.set_meta(queue.YOUTUBE_PAUSED_UNTIL, queue._iso(clock.t + timedelta(hours=6)))
+    _, later = enqueue(lib, 1, kind="remove")
+    assert run(lib, clock, cfg, kinds=kinds).stopped == "paused_by_youtube"
+    assert done == removes + shares + later
 
 
 def test_jobs_without_downloads_skip_the_pace(lib: Library, clock: FakeClock) -> None:

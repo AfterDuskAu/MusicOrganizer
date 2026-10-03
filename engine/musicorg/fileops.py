@@ -99,7 +99,7 @@ ENGINE = (naming.ENGINE_DIR,)
 
 # docs/ENGINE_API.md → Enums.
 PLAN_KINDS = frozenset(
-    {"replace", "adopt", "lyrics", "artwork", "tidy", "download", "edit", "remove"}
+    {"replace", "adopt", "lyrics", "artwork", "tidy", "download", "edit", "remove", "share"}
 )
 BATCH_KINDS = PLAN_KINDS | {"undo", "demo"}
 OPERATIONS = (

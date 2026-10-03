@@ -574,7 +574,11 @@ def open_index(paths: LibraryPaths, *, write: bool) -> Index:
 QUEUE_SCHEMA_VERSION = 1
 # Jobs the owner asks for one at a time and waits on (the app's Download, Save Video and
 # Edit Details). They run before the batches that work through the whole library.
-FIRST_KINDS = ("download", "edit", "remove")
+FIRST_KINDS = ("download", "edit", "remove", "share")
+# Of those, the ones that only work on files here (no YouTube): they run first of all,
+# even at the daily limit or while YouTube has paused us, so an Edit Details or a Delete
+# never waits hours behind a long Download Automatically.
+LOCAL_FIRST_KINDS = ("edit", "remove", "share")
 
 _QUEUE_TABLES = """
 CREATE TABLE jobs (
@@ -751,12 +755,14 @@ class QueueStore:
         kinds the owner asks for one at a time and waits on (`FIRST_KINDS`), then the
         oldest of the rest. So saving one song isn't stuck behind an hour-long run
         through the whole library."""
-        marks = ", ".join("?" for _ in FIRST_KINDS)
+        local = ", ".join("?" for _ in LOCAL_FIRST_KINDS)
+        first = ", ".join("?" for _ in FIRST_KINDS)
         rows = self._rows(
             "SELECT * FROM jobs WHERE state = 'queued' "
             "AND (next_attempt_at IS NULL OR next_attempt_at <= ?) "
-            f"ORDER BY CASE WHEN kind IN ({marks}) THEN 0 ELSE 1 END, id LIMIT 1",
-            (now, *FIRST_KINDS),
+            f"ORDER BY CASE WHEN kind IN ({local}) THEN 0 WHEN kind IN ({first}) THEN 1 "
+            "ELSE 2 END, id LIMIT 1",
+            (now, *LOCAL_FIRST_KINDS, *FIRST_KINDS),
         )
         return _job(rows[0]) if rows else None
 

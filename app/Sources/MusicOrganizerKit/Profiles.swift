@@ -143,13 +143,47 @@ public struct ProfileList: Codable, Equatable, Sendable {
     }
 }
 
+/// A playlist one profile sent to another (Copy to Profile): its songs are copied into the
+/// other profile's library the next time that profile is opened, by its own engine.
+public struct PendingShare: Codable, Equatable, Sendable {
+    /// The sending profile's library, and its songs' paths in it ("Music/…").
+    public let sourceRoot: String
+    public let paths: [String]
+    public let playlistName: String
+    /// Who sent it, to say so.
+    public let fromName: String
+
+    public init(sourceRoot: String, paths: [String], playlistName: String, fromName: String) {
+        self.sourceRoot = sourceRoot
+        self.paths = paths
+        self.playlistName = playlistName
+        self.fromName = fromName
+    }
+
+    /// The playlist's name in the receiving library: its own name, unless a playlist of
+    /// that name is there already, then "Road Trip (from C)", then "(from C 2)" and on.
+    public func nameHere(among names: [String]) -> String {
+        let taken = Set(names.map { $0.lowercased() })
+        if !taken.contains(playlistName.lowercased()) { return playlistName }
+        var name = "\(playlistName) (from \(fromName))"
+        var number = 2
+        while taken.contains(name.lowercased()) {
+            name = "\(playlistName) (from \(fromName) \(number))"
+            number += 1
+        }
+        return name
+    }
+}
+
 /// Which of the app's saved settings belong to a profile, so they can be put away when
 /// another profile is switched to and brought back afterwards.
 public enum ProfileSettings {
     /// The app's own keys for the profiles themselves, and what macOS keeps for the
     /// app (window places, its own switches): those stay as they are.
     public static func belongsToProfile(_ key: String) -> Bool {
-        if key == "profiles" || key == "libraryRoot" || key.hasPrefix("profileSettings.") {
+        if key == "profiles" || key == "libraryRoot" || key == "pendingShares"
+            || key.hasPrefix("profileSettings.")
+        {
             return false
         }
         return !["NS", "Apple", "com.apple.", "WebKit"].contains { key.hasPrefix($0) }

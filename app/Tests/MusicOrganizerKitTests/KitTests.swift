@@ -820,6 +820,19 @@ final class SongVideoTests: XCTestCase {
         XCTAssertEqual(ProfileList.newId().count, 10)
     }
 
+    func testAPlaylistSentToAnotherProfileIsNamedSoNothingIsMixed() {
+        let sent = PendingShare(sourceRoot: "/L (C)", paths: ["Music/A/B/01 T.m4a"], playlistName: "Road Trip", fromName: "C")
+        XCTAssertEqual(sent.nameHere(among: ["Chill"]), "Road Trip")
+        XCTAssertEqual(sent.nameHere(among: ["road trip"]), "Road Trip (from C)")
+        XCTAssertEqual(sent.nameHere(among: ["Road Trip", "Road Trip (from C)"]), "Road Trip (from C 2)")
+        // What's waiting to be copied isn't any one profile's setting.
+        XCTAssertFalse(ProfileSettings.belongsToProfile("pendingShares"))
+        let saved = try? JSONEncoder().encode(["p_1": [sent]])
+        XCTAssertEqual(
+            saved.flatMap { try? JSONDecoder().decode([String: [PendingShare]].self, from: $0) },
+            ["p_1": [sent]])
+    }
+
     func testWhichSettingsBelongToAProfile() {
         let saved: [String: Any] = [
             "findArtist": "Linkin Park", "sidebarLibrary": "songs,albums", "importSource": "spotify",
