@@ -823,7 +823,7 @@ def for_video(
     earlier request, or else a record on LRCLIB of the video's length that passes the
     check in 4 below. With `full` (the app's Karaoke button) everything below is done.
 
-    **Fetching a whole sound from YouTube counts as a download** (owner, 2026-10-04):
+    **Fetching a whole sound from YouTube counts as a download** (owner, 2026-10-03):
     one for the video's sound, and one more for the song's when the song isn't a file
     in the library. Each is counted against the daily limit as it's fetched, once: a
     sound's fingerprint is kept for 30 days. With the limit used up no sound is

@@ -98,7 +98,7 @@ A SwiftUI app that starts the engine and talks to it (`musicorg serve`). Code in
 **Built (2026-10-03): Spotify sign-in.** Settings → Accounts walks through it: the owner registers a free app at developer.spotify.com (their account needs Spotify Premium; at most 5 people can sign in to one app), pastes its Client ID, and signs in on Spotify's own page in the browser. Their playlists and Liked Songs then appear under Import Playlists → Spotify. Only playlists the owner made or collaborates on give their songs. Not yet tried against Spotify itself.
   - Someone without Premium has no sign-in. The other way is a file: an Exportify CSV reads through Import Playlists → Amazon Music → Choose File (2026-10-03). Spotify's own "Download your data" export (JSON) isn't read.
 
-**Built (2026-10-03, evening): Deezer, Amazon Music by file, Last.fm.** The owner asked which other big services were worth adding, and chose these three.
+**Built (2026-10-03): Deezer, Amazon Music by file, Last.fm.** The owner asked which other big services were worth adding, and chose these three.
   - **Deezer:** a public playlist or album by its link, no sign-in. Tried against Deezer itself.
   - **Amazon Music:** it can't be read from outside and has no export, so the way in is a playlist saved as a CSV or text file by a service such as TuneMyMusic or Soundiiz. Any CSV, text (`Artist - Title` lines) or M3U playlist file reads, from any service. Not yet tried with a real Amazon export.
   - **Last.fm:** the owner's username and their own free API key (Settings → Profile → Last.fm). Their Loved Tracks and most played import as playlists, and "My most played on Last.fm" is a starting point in Discover → Find. Not yet tried against Last.fm itself.

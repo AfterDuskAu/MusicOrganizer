@@ -133,7 +133,7 @@ final class AppModel {
     var goTo: SidebarItem?
     /// Play Options switched on a page, for now (by their settings' keys). The settings
     /// themselves are the owner's standing choice and aren't touched: a page goes back
-    /// to them after a while, and when the app is next opened (owner, 2026-10-04).
+    /// to them after a while, and when the app is next opened (owner, 2026-10-03).
     private(set) var pageChanges: [String: Bool] = [:]
     @ObservationIgnored private var pageChangeTimers: [String: Task<Void, Never>] = [:]
     /// Several downloads planned and waiting for the owner's yes (Download Selected).

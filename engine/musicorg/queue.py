@@ -658,7 +658,7 @@ def spend_download(
 ) -> None:
     """Count one download against the daily limit for something that isn't a queued
     download but takes as much from YouTube as one: Karaoke fetching a video's whole
-    sound (owner, 2026-10-04: "anything that uses the daily limit will register"). With
+    sound (owner, 2026-10-03: "anything that uses the daily limit will register"). With
     the limit reached, nothing is counted and it's a DailyLimitError saying when there's
     room again: the caller doesn't fetch. `what` names the thing in that message."""
     now = now or datetime.now(UTC)

@@ -14,7 +14,7 @@ public struct Profile: Codable, Identifiable, Equatable, Sendable {
     public var libraryRoot: String?
     /// A library that hasn't been made yet: the engine makes it when it's first opened.
     public var isNew: Bool
-    /// A child's profile (owner, 2026-10-04). For now it's only a mark: what it will do
+    /// A child's profile (owner, 2026-10-03). For now it's only a mark: what it will do
     /// (most likely no explicit songs and nothing age-restricted) is still to be decided.
     public var isChild: Bool
 
@@ -165,7 +165,7 @@ public struct ProfileList: Codable, Equatable, Sendable {
     }
 
     /// Where a new profile's library goes: a folder of its own in the Mac's Music folder,
-    /// named after the profile ("Music Kids"; owner, 2026-10-04). `musicFolder` is that
+    /// named after the profile ("Music Kids"; owner, 2026-10-03). `musicFolder` is that
     /// Music folder; nil when the Mac has none to give. A folder that's there already, or
     /// is another profile's, is never suggested: the next free name is ("Music Kids 2"),
     /// so two people's music can't be mixed by a name. `exists` says whether a folder is
