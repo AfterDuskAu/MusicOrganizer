@@ -85,8 +85,6 @@ enum SidebarItem: Hashable {
     case songs, albums, artists, videos
     case favourites, recentlyAdded, mostPlayed, unconfirmed
     case visualizer, whatsNew, find, importPlaylists, youtube, youtubeQueue, downloads
-    /// Discover → Artist: an artist's page, looked up on YouTube Music.
-    case artistInfo
     case playlist(String)
 
     /// A name for this entry that can be saved, and read back with `init(key:)`.
@@ -97,7 +95,6 @@ enum SidebarItem: Hashable {
         case .whatsNew: "whatsNew"
         case .find: "find"
         case .importPlaylists: "import"
-        case .artistInfo: "artistInfo"
         case .youtube: "youtube"
         case .youtubeQueue: "youtubeQueue"
         case .downloads: "downloads"
@@ -115,7 +112,8 @@ enum SidebarItem: Hashable {
         case "whatsNew": self = .whatsNew
         case "find": self = .find
         case "import": self = .importPlaylists
-        case "artistInfo": self = .artistInfo
+        // Discover → Artist was a page of its own for a few hours; it's the Artists page now.
+        case "artistInfo": self = .artists
         case "youtube": self = .youtube
         case "youtubeQueue": self = .youtubeQueue
         case "downloads": self = .downloads
@@ -156,7 +154,6 @@ enum SidebarItem: Hashable {
         case .whatsNew: "What's New"
         case .find: "Find"
         case .importPlaylists: "Import Playlists"
-        case .artistInfo: "Artist"
         case .youtube: "YouTube Music"
         case .youtubeQueue: "YouTube Queue"
         case .visualizer: "Local Visualizer"
@@ -178,7 +175,6 @@ enum SidebarItem: Hashable {
         case .whatsNew: "sparkles"
         case .find: "wand.and.stars"
         case .importPlaylists: "square.and.arrow.down.on.square"
-        case .artistInfo: "person.crop.circle"
         case .youtube: "play.rectangle"
         case .youtubeQueue: "text.append"
         case .visualizer: "waveform"
@@ -231,9 +227,6 @@ struct MainView: View {
                             .navigationTitle(title(of: current))
                             .navigationDestination(for: Album.self) {
                                 AlbumPage(album: $0).environment(model)
-                            }
-                            .navigationDestination(for: Artist.self) {
-                                ArtistPage(artist: $0).environment(model)
                             }
                     }
                 }
@@ -417,10 +410,7 @@ struct MainView: View {
                 }
             }
             Section("Discover", isExpanded: $openDiscover) {
-                ForEach(
-                    [SidebarItem.whatsNew, .find, .artistInfo, .downloads, .importPlaylists],
-                    id: \.self
-                ) {
+                ForEach([SidebarItem.whatsNew, .find, .downloads, .importPlaylists], id: \.self) {
                     entry in
                     if entry == .downloads {
                         Label(entry.title, systemImage: entry.symbol)
@@ -597,7 +587,7 @@ struct MainView: View {
         case .albums:
             AlbumsView()
         case .artists:
-            ArtistsView()
+            ArtistsPage()
         case .favourites:
             SongList(
                 source: .favourites, title: "Favourites",
@@ -646,8 +636,6 @@ struct MainView: View {
             FindView()
         case .importPlaylists:
             ImportView()
-        case .artistInfo:
-            ArtistInfoView()
         case .playlist(let id):
             if let playlist = model.playlist(id) {
                 SongList(

@@ -2,8 +2,9 @@ import Foundation
 import MusicOrganizerKit
 import Observation
 
-/// Discover → Artist: the artist being looked at, the ones looked at before, and what's
-/// been asked for about them (all their songs, an album's songs).
+/// Library → Artists: what the Discover side has found (a search's artists), the artist
+/// being looked at, the ones looked at before, and what's been asked for about them
+/// (all their songs, an album's songs).
 @MainActor
 @Observable
 final class ArtistBrowser {
@@ -17,6 +18,7 @@ final class ArtistBrowser {
     }
 
     typealias LookUp = (_ name: String?, _ artistId: String?) async throws -> ArtistInfo
+    typealias Search = (_ query: String) async throws -> [RelatedArtist]
     typealias Songs = (_ playlistId: String) async throws -> ArtistSongsAnswer
     typealias Album = (_ browseId: String) async throws -> ArtistAlbum
 
@@ -37,6 +39,16 @@ final class ArtistBrowser {
     private(set) var before: [Asked] = []
     /// What's typed in the page's search box.
     var query = ""
+    /// The artist asked for (showing, on its way, or not found): the page shows their two
+    /// halves. Nil: the page shows the two lists.
+    private(set) var opened: Asked?
+    /// The artists a search found on YouTube Music, for the Discover list. Nil until a
+    /// search is made: the list then shows the artists behind What's New.
+    private(set) var results: [ListedArtist]?
+    /// What was searched for, to say so when nothing was found.
+    private(set) var searched = ""
+    private(set) var searching = false
+    private(set) var searchProblem: String?
 
     struct Asked: Equatable {
         let name: String
@@ -44,6 +56,8 @@ final class ArtistBrowser {
     }
 
     @ObservationIgnored var lookUp: LookUp?
+    @ObservationIgnored var findArtists: Search?
+    @ObservationIgnored private var searchRun = 0
     @ObservationIgnored var findSongs: Songs?
     @ObservationIgnored var findAlbum: Album?
     /// Goes up with each artist asked for: an older one's answer is dropped.
@@ -59,6 +73,50 @@ final class ArtistBrowser {
         run += 1
         (phase, info, allSongs, moreSongs, loadingSongs, songsProblem) = (.idle, nil, nil, false, false, nil)
         (album, openingAlbum, albumProblem, before, query, last) = (nil, nil, nil, [], "", nil)
+        searchRun += 1
+        (opened, results, searched, searching, searchProblem) = (nil, nil, "", false, nil)
+    }
+
+    /// Ask YouTube Music which artists go by what's typed: the Discover list. The page
+    /// goes back to its two lists if an artist was open.
+    func search() {
+        let wanted = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !wanted.isEmpty, let findArtists else { return }
+        close()
+        searchRun += 1
+        let mine = searchRun
+        (searching, searchProblem, searched) = (true, nil, wanted)
+        Task {
+            do {
+                let found = try await findArtists(wanted)
+                guard mine == searchRun else { return }
+                results = found.map {
+                    ListedArtist(name: $0.name, artistId: $0.artistId, thumbnail: $0.thumbnail)
+                }
+            } catch {
+                guard mine == searchRun else { return }
+                (results, searchProblem) = ([], error.localizedDescription)
+            }
+            searching = false
+        }
+    }
+
+    /// The box was emptied: the Discover list is What's New's artists again.
+    func clearSearch() {
+        searchRun += 1
+        (results, searched, searching, searchProblem) = (nil, "", false, nil)
+    }
+
+    /// Back to the two lists.
+    func close() {
+        run += 1
+        (phase, info, allSongs, moreSongs, loadingSongs, songsProblem) = (.idle, nil, nil, false, false, nil)
+        (album, openingAlbum, albumProblem, before, opened, last) = (nil, nil, nil, [], nil, nil)
+    }
+
+    /// An artist on the Discover list: by id when a search found them, else by name.
+    func open(_ listed: ListedArtist) {
+        show(Asked(name: listed.name, artistId: listed.artistId), remember: true)
     }
 
     /// Look an artist up by name: typed in the box, or a song's artist.
@@ -75,9 +133,12 @@ final class ArtistBrowser {
         show(Asked(name: related.name, artistId: related.artistId), remember: true)
     }
 
-    /// The artist looked at before this one.
+    /// The artist looked at before this one; from the first, back to the two lists.
     func back() {
-        guard let previous = before.popLast() else { return }
+        guard let previous = before.popLast() else {
+            close()
+            return
+        }
         show(previous, remember: false)
     }
 
@@ -93,7 +154,7 @@ final class ArtistBrowser {
         }
         run += 1
         let mine = run
-        last = asked
+        (last, opened) = (asked, asked)
         (phase, allSongs, moreSongs, loadingSongs, songsProblem) = (.loading(asked.name), nil, false, false, nil)
         (album, openingAlbum, albumProblem) = (nil, nil, nil)
         Task {
@@ -104,7 +165,8 @@ final class ArtistBrowser {
                 guard mine == run else { return }
                 if found.found {
                     info = found
-                    query = found.name
+                    // As YouTube Music spells them, and by id from now on.
+                    opened = Asked(name: found.name, artistId: found.artistId)
                     phase = .shown
                 } else {
                     phase = .missing(asked.name)

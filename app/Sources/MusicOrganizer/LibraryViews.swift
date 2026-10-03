@@ -378,7 +378,7 @@ struct SongActions: View {
                 // 2026-10-01: the checks come first).
                 Button("Swap Audio…") { model.explainSwap(of: only) }
             }
-            // The artist's page: who they are, their songs and albums (Discover → Artist).
+            // The Artists page on this artist: the owner's side, and their page on YouTube Music.
             if let artist = only.artist ?? only.albumArtist {
                 ArtistInfoItems(artists: [artist])
             }
@@ -601,58 +601,5 @@ struct AlbumPage: View {
         parts.append(album.tracks.count == 1 ? "1 song" : "\(album.tracks.count) songs")
         parts.append("\(max(1, Int((album.duration / 60).rounded()))) min")
         return parts.joined(separator: " · ")
-    }
-}
-
-// MARK: artists
-
-struct ArtistsView: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
-        let artists = model.artists
-        if artists.isEmpty {
-            ContentUnavailableView.search(text: model.searchText)
-        } else {
-            List(artists) { artist in
-                NavigationLink(value: artist) {
-                    HStack(spacing: 10) {
-                        CoverView(track: artist.albums.first?.coverTrack, size: .small, corner: 18)
-                            .frame(width: 36, height: 36)
-                        VStack(alignment: .leading) {
-                            Text(artist.name)
-                            Text(artist.trackCount == 1 ? "1 song" : "\(artist.trackCount) songs")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .padding(.vertical, 2)
-                }
-            }
-        }
-    }
-}
-
-struct ArtistPage: View {
-    let artist: Artist
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
-        let tracks = artist.albums.flatMap(\.tracks)
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                Text(artist.name).font(.largeTitle.weight(.bold))
-                HStack {
-                    Button("Play", systemImage: "play.fill") { model.player.play(tracks) }
-                        .buttonStyle(.borderedProminent)
-                    Button("Shuffle", systemImage: "shuffle") { model.player.playShuffled(tracks) }
-                }
-                .controlSize(.large)
-                AlbumGrid(albums: artist.albums)
-            }
-            .padding(20)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .navigationTitle(artist.name)
     }
 }

@@ -126,7 +126,7 @@ final class AppModel {
     let find = DiscoverPage(named: "find")
     /// Discover → Import Playlists: a playlist from elsewhere, and what was found of it.
     let importing = ImportPage()
-    /// Discover → Artist: the artist being looked at.
+    /// Library → Artists: the Discover side's artists, and the artist being looked at.
     let artistBrowser = ArtistBrowser()
     /// A page to open in the sidebar, asked for from somewhere else in the app (Artist
     /// Info on a song). The main view opens it and clears this.
@@ -185,6 +185,10 @@ final class AppModel {
             var asked: [String: Any] = [:]
             if let artistId { asked["artist_id"] = artistId } else { asked["name"] = name ?? "" }
             return try await Self.ask(self, "artist.info", asked, as: ArtistInfo.self)
+        }
+        artistBrowser.findArtists = { [weak self] query in
+            try await Self.ask(self, "artist.search", ["query": query], as: ArtistSearchAnswer.self)
+                .artists
         }
         artistBrowser.findSongs = { [weak self] list in
             try await Self.ask(self, "artist.songs", ["playlist_id": list], as: ArtistSongsAnswer.self)
@@ -981,11 +985,12 @@ final class AppModel {
         return try await connection.call(method, params, as: type)
     }
 
-    /// Open Discover → Artist on this artist (a song's, by name).
+    /// Open the Artists page on this artist (a song's, by name): what the owner has of
+    /// theirs on one side, their page on YouTube Music on the other.
     func showArtist(_ name: String) {
         guard !name.trimmingCharacters(in: .whitespaces).isEmpty else { return }
         artistBrowser.open(name: name)
-        goTo = .artistInfo
+        goTo = .artists
     }
 
     /// Download a song from an artist's page. The engine is handed the song back as it

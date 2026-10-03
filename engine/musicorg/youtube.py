@@ -472,7 +472,8 @@ def artist_radio(name: str, *, cache: SearchCache | None = None) -> ArtistRadio 
 
 def _artist_search(name: str, cache: SearchCache | None) -> list[dict[str, Any]]:
     """The artists YouTube Music finds for a name, best first: each `{artist, browseId,
-    radioId}`. One request, kept for 30 days."""
+    radioId, thumbnails}` (one picture, the largest; an answer kept from before
+    2026-10-03 has none). One request, kept for 30 days."""
     key = query_key(name)
     if not key:
         return []
@@ -481,7 +482,10 @@ def _artist_search(name: str, cache: SearchCache | None) -> list[dict[str, Any]]
     if raw is None:
         raw = _fetch("artists", key, lambda client: client.search(name, filter="artists", limit=5))
         raw = [
-            {k: r.get(k) for k in ("artist", "browseId", "radioId")}
+            {
+                **{k: r.get(k) for k in ("artist", "browseId", "radioId")},
+                "thumbnails": _largest_picture(r.get("thumbnails")),
+            }
             for r in (raw if isinstance(raw, list) else [])
             if isinstance(r, dict)
         ]
@@ -551,6 +555,32 @@ class ArtistPage:
     albums: tuple[Release, ...]
     singles: tuple[Release, ...]
     related: tuple[RelatedArtist, ...]
+
+
+def _largest_picture(pictures: Any) -> list[dict[str, Any]]:
+    found = [t for t in (pictures or []) if isinstance(t, dict) and t.get("url")]
+    return [max(found, key=lambda t: t.get("width") or 0)] if found else []
+
+
+def search_artists(name: str, *, cache: SearchCache | None = None) -> list[RelatedArtist]:
+    """The artists YouTube Music finds for what was typed, best first (the Artists page's
+    search): each with their id, name and picture. The search gives no audience count.
+    The same request `find_artist` makes, so looking one of them up afterwards by name
+    asks nothing more."""
+    listed = []
+    for found in _artist_search(name, cache):
+        if not isinstance(found.get("browseId"), str):
+            continue
+        pictures = _largest_picture(found.get("thumbnails"))
+        listed.append(
+            RelatedArtist(
+                artist_id=found["browseId"],
+                name=found["artist"],
+                monthly_audience=None,
+                thumbnail=pictures[0]["url"] if pictures else None,
+            )
+        )
+    return listed
 
 
 def find_artist(name: str, *, cache: SearchCache | None = None) -> tuple[str, str] | None:

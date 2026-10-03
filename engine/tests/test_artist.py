@@ -50,6 +50,47 @@ def test_a_loosely_typed_name_takes_youtube_musics_best_guess(
     assert youtube.find_artist("jay zed") == ("UCbbbbbbbbbbbbbbbbbbbbbb", "Jay Zed")
 
 
+def test_a_search_lists_the_artists_found_with_their_pictures(
+    lib: Library, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def search(kind: str, key: str, live: Any) -> Any:
+        assert (kind, key) == ("artists", "link")
+        return [
+            {"artist": "Linkin Park", "browseId": LINKIN_PARK, "radioId": "RDEM1",
+             "category": "Artists", "resultType": "artist",
+             "thumbnails": [{"url": "https://e.invalid/s", "width": 60},
+                            {"url": "https://e.invalid/l", "width": 120}]},
+            {"artist": "Link Wray", "browseId": "UCdddddddddddddddddddddd", "radioId": None,
+             "thumbnails": []},
+            {"artist": "No Page", "browseId": None},
+        ]  # fmt: skip
+
+    monkeypatch.setattr(youtube, "_fetch", search)
+    with open_index(lib.paths, write=True) as index:
+        found = artist.search(index, " link ")
+        assert found == {"artists": [
+            {"artist_id": LINKIN_PARK, "name": "Linkin Park", "monthly_audience": None,
+             "thumbnail": "https://e.invalid/l"},
+            {"artist_id": "UCdddddddddddddddddddddd", "name": "Link Wray",
+             "monthly_audience": None, "thumbnail": None},
+        ]}  # fmt: skip
+        # Kept: asked again, YouTube Music isn't, and nor is it to open one by name.
+        monkeypatch.setattr(youtube, "_fetch", lambda *a: pytest.fail("asked again"))
+        assert artist.search(index, "Link") == found
+        assert youtube.find_artist("link", cache=index) == (LINKIN_PARK, "Linkin Park")
+        with pytest.raises(UserError, match="Type an artist's name"):
+            artist.search(index, "  ")
+
+
+def test_a_search_recorded_before_pictures_were_kept_still_reads(lib: Library) -> None:
+    with open_index(lib.paths, write=True) as index:
+        found = artist.search(index, "Linkin Park")["artists"]
+        assert found[0] == {"artist_id": LINKIN_PARK, "name": "Linkin Park",
+                            "monthly_audience": None, "thumbnail": None}  # fmt: skip
+        assert len(found) == 8
+        assert artist.search(index, "Zzyzx Qwfp Band") == {"artists": []}
+
+
 # ---- the page ----------------------------------------------------------------------------
 
 
@@ -197,6 +238,11 @@ def test_the_artist_page_over_rpc(opened: rpc.Server) -> None:  # noqa: F811
     assert page["name"] == "Linkin Park" and page["songs"][0]["owned"] is True
     assert result(opened, "artist.info", artist_id=LINKIN_PARK) == page
     assert result(opened, "artist.info", name="Zzyzx Qwfp Band")["found"] is False
+    assert result(opened, "artist.search", query="Linkin Park")["artists"][0]["name"] == (
+        "Linkin Park"
+    )
+    assert code(opened, "artist.search") == rpc.INVALID_PARAMS
+    assert code(opened, "artist.search", query=" ") == rpc.USER_ERROR
     assert code(opened, "artist.info") == rpc.INVALID_PARAMS
     assert code(opened, "artist.info", name="A", artist_id=LINKIN_PARK) == rpc.INVALID_PARAMS
     assert len(result(opened, "artist.songs", playlist_id=ALL_SONGS)["songs"]) == 8

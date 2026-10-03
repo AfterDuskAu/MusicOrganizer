@@ -8,6 +8,8 @@ Nothing is downloaded and nothing in the library changes: the songs are for the 
 show, play and, when the owner asks, download through the usual plan and queue
 (`plan.create` kind `download`, handing the songs back as `candidates`).
 
+- `search()`: the artists YouTube Music finds for what was typed, with their pictures.
+  One request, kept for 30 days.
 - `info()`: the page. By the artist's name (found first: a search, kept for 30 days) or
   by their id (a related artist's, which needs no search). Two requests at most.
 - `songs()`: every song of theirs, from the playlist the page points at. A request for
@@ -43,6 +45,16 @@ def _owned(lib: Library, index: Index) -> discover.Owned:
 
 def _songs(found: list[Candidate] | tuple[Candidate, ...], owned: discover.Owned) -> list[Any]:
     return [{**song.to_dict(), "owned": owned.has(song)} for song in found]
+
+
+def search(index: Index, query: str) -> dict[str, Any]:
+    """The artists YouTube Music finds for `query`, best first: `{artists: [{artist_id,
+    name, monthly_audience, thumbnail}]}` (the search gives no audience, so that's
+    null). Empty when it finds none. `index` must be writable: the answer is kept."""
+    wanted = query.strip()
+    if not wanted:
+        raise UserError("Type an artist's name first.")
+    return {"artists": [found.to_dict() for found in youtube.search_artists(wanted, cache=index)]}
 
 
 def info(

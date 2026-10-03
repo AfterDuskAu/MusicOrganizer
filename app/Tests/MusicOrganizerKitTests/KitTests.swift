@@ -1119,6 +1119,113 @@ final class SongVideoTests: XCTestCase {
         XCTAssertEqual(album.songs.first?.result.durationS, 187)
     }
 
+    func testArtistsOnTheDiscoverSideAndWhoseTheyAre() throws {
+        // One artist, however a name is written.
+        XCTAssertEqual(ArtistNames.key("JAY-Z"), ArtistNames.key("Jay Z"))
+        XCTAssertEqual(ArtistNames.key("The Beatles"), ArtistNames.key("beatles"))
+        XCTAssertEqual(ArtistNames.key("Beyoncé"), ArtistNames.key("BEYONCE"))
+        XCTAssertNotEqual(ArtistNames.key("Phoenix"), ArtistNames.key("Phoenix Rising"))
+        XCTAssertEqual(ArtistNames.key(" - "), "")
+
+        // The artists behind a page of picks: the one with most picks first, then as met.
+        let json = """
+            {"picks": [
+              {"video_id": "aaaaaaaaaaa", "title": "One", "artists": ["Snoop Dogg"], "why": "w", "hits": 1,
+               "thumbnail": "https://example.invalid/snoop.jpg"},
+              {"video_id": "bbbbbbbbbbb", "title": "Two", "artists": ["Jay-Z", "Linkin Park"], "why": "w", "hits": 1,
+               "thumbnail": null},
+              {"video_id": "ccccccccccc", "title": "Three", "artists": ["JAY Z"], "why": "w", "hits": 1,
+               "thumbnail": "https://example.invalid/jay.jpg"},
+              {"video_id": "ddddddddddd", "title": "Four", "artists": [], "why": "w", "hits": 1},
+              {"video_id": "eeeeeeeeeee", "title": "Five", "artists": ["Dr. Dre"], "why": "w", "hits": 1}],
+             "wanted": 5, "radios": 1, "seeds": [], "note": null}
+            """
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let picks = try decoder.decode(DiscoverAnswer.self, from: Data(json.utf8)).picks
+        let behind = ArtistNames.behind(picks)
+        XCTAssertEqual(behind.map(\.name), ["Jay-Z", "Snoop Dogg", "Dr. Dre"])
+        XCTAssertEqual(behind.map(\.picks), [2, 1, 1])
+        XCTAssertEqual(behind[0].thumbnail, "https://example.invalid/jay.jpg")  // their first with one
+        XCTAssertEqual(behind[0].caption, "2 songs in What's New")
+        XCTAssertEqual(behind[1].caption, "1 song in What's New")
+        XCTAssertNil(behind[0].artistId)
+        XCTAssertEqual(ArtistNames.behind([]), [])
+        // A search's artist has no picks to count, and is opened by its id.
+        let found = ListedArtist(name: "Linkin Park", artistId: "UCx")
+        XCTAssertNil(found.caption)
+        XCTAssertEqual(found.id, "UCx")
+        let answer = try decoder.decode(
+            ArtistSearchAnswer.self,
+            from: Data(
+                #"{"artists": [{"artist_id": "UCx", "name": "Linkin Park", "monthly_audience": null, "thumbnail": null}]}"#
+                    .utf8))
+        XCTAssertEqual(answer.artists.map(\.name), ["Linkin Park"])
+    }
+
+    func testWhatTheOwnersListeningSaysAboutAnArtist() {
+        func song(
+            _ n: Int, _ title: String, artist: String = "Jay Z", album: String = "Album",
+            seconds: Double = 180, added: String = "2026-10-01T10:00:00Z"
+        ) -> Track {
+            Track(
+                path: "Music/\(artist)/\(album)/\(n) \(title).m4a", title: title, artist: artist,
+                albumArtist: artist, album: album, durationS: seconds, trackId: "t_\(n)",
+                acquired: added)
+        }
+        let library = Library(tracks: [
+            song(1, "Often", seconds: 240, added: "2026-09-30T08:00:00Z"),
+            song(2, "Once", album: "Other", seconds: 200),
+            song(3, "Never"),
+            song(4, "Theirs", artist: "Phoenix"),
+            song(5, "Unplayed", artist: "Air"),
+        ])
+        let plays = [
+            "t_1": PlayCount(count: 12, lastPlayed: "2026-10-02T09:30:00Z"),
+            "t_2": PlayCount(count: 1, lastPlayed: "2026-10-03T01:00:00.250000Z"),
+            "t_4": PlayCount(count: 20),
+        ]
+        // Found however the name is written.
+        let jay = try! XCTUnwrap(ArtistNames.mine("JAY-Z", in: library.artists))
+        XCTAssertEqual(jay.name, "Jay Z")
+        XCTAssertNil(ArtistNames.mine("Linkin Park", in: library.artists))
+        XCTAssertNil(ArtistNames.mine("", in: library.artists))
+
+        let stats = ArtistStats(artist: jay, plays: plays, favourites: ["t_2", "t_3", "t_4"])
+        XCTAssertEqual(stats.songs, 3)
+        XCTAssertEqual(stats.albums, 2)
+        XCTAssertEqual(stats.plays, 13)
+        XCTAssertEqual(stats.secondsListened, 12 * 240 + 200)
+        XCTAssertEqual(stats.listened, "51 min")
+        XCTAssertEqual(stats.mostPlayed, .init(title: "Often", plays: 12))
+        XCTAssertEqual(stats.favourites, 2)  // only theirs
+        XCTAssertEqual(stats.lastPlayed, engineDate("2026-10-03T01:00:00.250000Z"))
+        XCTAssertEqual(stats.firstAdded, engineDate("2026-09-30T08:00:00Z"))
+        // Phoenix was played more: Jay Z is the owner's second.
+        XCTAssertEqual(ArtistStats.rank(of: jay, among: library.artists, plays: plays), 2)
+        let phoenix = try! XCTUnwrap(ArtistNames.mine("phoenix", in: library.artists))
+        XCTAssertEqual(ArtistStats.rank(of: phoenix, among: library.artists, plays: plays), 1)
+
+        // Nothing played yet: no time, no most played, no place among the artists.
+        let air = try! XCTUnwrap(ArtistNames.mine("Air", in: library.artists))
+        let quiet = ArtistStats(artist: air, plays: plays, favourites: [])
+        XCTAssertEqual(quiet.plays, 0)
+        XCTAssertNil(quiet.listened)
+        XCTAssertNil(quiet.mostPlayed)
+        XCTAssertNil(quiet.lastPlayed)
+        XCTAssertNil(ArtistStats.rank(of: air, among: library.artists, plays: plays))
+        // How long, in words.
+        func listened(_ seconds: Double) -> String? {
+            ArtistStats(
+                artist: Library(tracks: [song(9, "S", artist: "X", seconds: seconds)]).artists[0],
+                plays: ["t_9": PlayCount(count: 1)], favourites: []
+            ).listened
+        }
+        XCTAssertEqual(listened(20), "under a minute")
+        XCTAssertEqual(listened(3600), "1 hr")
+        XCTAssertEqual(listened(9060), "2 hr 31 min")
+    }
+
     func testWhatAnArtistsPageWouldDownload() {
         func song(_ id: String, owned: Bool = false) -> ArtistSong {
             ArtistSong(candidate: ImportCandidate(videoId: id, title: id), owned: owned)

@@ -75,6 +75,9 @@ struct ResultRow: View {
     var download: (() -> Void)?
     let play: () -> Void
     @Environment(AppModel.self) private var model
+    /// The row is in a narrow place (an artist's page beside the owner's own side): the
+    /// Queue button is its symbol alone, and a length that isn't known takes no room.
+    @Environment(\.narrowRows) private var narrow
 
     var body: some View {
         let track = result.track
@@ -123,20 +126,26 @@ struct ResultRow: View {
             }
             if queueButton {
                 let queued = model.isQueued(result)
-                Button(queued ? "Queued" : "Queue", systemImage: queued ? "checkmark" : "text.append") {
+                let button = Button(
+                    queued ? "Queued" : "Queue", systemImage: queued ? "checkmark" : "text.append"
+                ) {
                     model.toggleQueued(result)
                 }
                 .help(
                     queued
                         ? "In the YouTube Queue. Click to take it out."
-                        : "Play this after the song that's playing, and keep it in the YouTube Queue")
+                        : "Queue: play this after the song that's playing, and keep it in the "
+                            + "YouTube Queue")
+                if narrow { button.labelStyle(.iconOnly) } else { button }
             }
-            Text(clockTime(result.durationS))
-                .monospacedDigit()
-                .foregroundStyle(.secondary)
-                .frame(width: 44, alignment: .trailing)
+            if !narrow || result.durationS != nil {
+                Text(clockTime(result.durationS))
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                    .frame(width: 44, alignment: .trailing)
+            }
             status
-                .frame(width: 130, alignment: .trailing)
+                .frame(width: narrow ? 118 : 130, alignment: .trailing)
         }
         .padding(.vertical, 3)
         .contentShape(Rectangle())
@@ -173,6 +182,11 @@ struct ResultRow: View {
             }
         }
     }
+}
+
+extension EnvironmentValues {
+    /// Song rows here are in a narrow place, and take a slimmer form (`ResultRow`).
+    @Entry var narrowRows = false
 }
 
 /// "Artist Info" on a song's right-click menu: one entry for a song with one artist,
