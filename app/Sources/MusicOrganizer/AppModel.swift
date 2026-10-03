@@ -1949,10 +1949,16 @@ final class LyricsModel {
         }
     }
 
+    /// Whether there are lyrics, as last known: it holds while the next song's are being
+    /// looked for. The player page makes room for lyrics by this, so the cover doesn't
+    /// jump across the page and back each time a song changes.
+    private(set) var settled = false
+
     func show(
         _ state: State, for path: String?, forVideo videoId: String? = nil, how: String? = nil
     ) {
         self.state = state
+        if state != .loading { settled = hasLyrics }
         trackPath = path
         forVideo = videoId
         self.how = how

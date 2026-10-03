@@ -3,9 +3,12 @@ import MusicOrganizerKit
 import SwiftUI
 
 /// The video on the whole screen. The controls come up when the mouse moves and go
-/// away again when it rests; Esc, or a double click, brings the app back.
+/// away again when it rests; Esc, or a double click, brings the app back. With Settings →
+/// Play Options → Show lyrics in full screen, a song's lyrics take a column on the
+/// right and the video the rest: nothing is laid over the picture.
 struct FullScreenVideo: View {
     @Environment(AppModel.self) private var model
+    @AppStorage(Player.fullScreenLyricsKey) private var lyricsOn = false
     @State private var controlsShown = true
     @State private var hiding: Task<Void, Never>?
 
@@ -13,10 +16,19 @@ struct FullScreenVideo: View {
         let player = model.player
         ZStack {
             Color.black
-            if player.showsPicture {
-                VideoSurface(player: player.screen, refresh: player.pictureRefresh)
-            } else {
-                noVideo(player)
+            HStack(spacing: 0) {
+                Group {
+                    if player.showsPicture {
+                        VideoSurface(player: player.screen, refresh: player.pictureRefresh)
+                    } else {
+                        noVideo(player)
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                if lyricsOn && model.lyrics.settled {
+                    LyricsView(large: true)
+                        .frame(minWidth: 280, idealWidth: 480, maxWidth: 480)
+                }
             }
             if controlsShown {
                 VStack(spacing: 0) {

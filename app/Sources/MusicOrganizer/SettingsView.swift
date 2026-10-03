@@ -54,36 +54,71 @@ private struct ComingBadge: View {
     }
 }
 
-/// Settings → Play Options: how songs and videos play.
+/// Settings → Play Options: how songs and videos play, as the owner laid it out
+/// (2026-10-03): the Local Visualizer's options, then the custom visualizer's, which wait
+/// for that project (Particle Accelerator) to be finished.
 private struct PlaySettings: View {
     @AppStorage(Player.playWhileVideoLoadsKey) private var playWhileLoading = true
     @AppStorage(Player.alwaysBestVideoKey) private var alwaysBestVideo = false
+    @AppStorage(Player.visualizerLyricsKey) private var visualizerLyrics = true
+    @AppStorage(Player.fullScreenLyricsKey) private var fullScreenLyrics = false
 
     var body: some View {
         Form {
-            Section("Playing videos") {
+            Section("Visualizer") {
                 Toggle("Videos: always the highest quality available", isOn: $alwaysBestVideo)
                 SideNote(
                     "Videos then always play at their sharpest (up to 1080p), and the Local "
                         + "Visualizer has no picture-size menu. This is about playing only: what "
                         + "a download saves is set under Downloads.")
-            }
-            Section("Playing a song with its video") {
-                Picker(
-                    "When Video is chosen on the Local Visualizer, play the song while its video loads?",
-                    selection: $playWhileLoading
-                ) {
-                    Text("Yes").tag(true)
-                    Text("No").tag(false)
-                }
-                .pickerStyle(.radioGroup)
+                yesNo("Always show lyrics", $visualizerLyrics)
+                SideNote(
+                    "Yes: the lyrics are beside the cover or video whenever the song has any; a "
+                        + "song with none gives the whole page to the cover or video. No: the "
+                        + "cover or video always has the whole page. The lyrics button beside "
+                        + "the volume slider switches this as well, while the Local Visualizer "
+                        + "is showing.")
+                yesNo("Show lyrics in full screen", $fullScreenLyrics)
+                SideNote(
+                    "Yes: with a video on the whole screen, the song's lyrics take a column on "
+                        + "the right and the video the rest. No: the video has the whole screen.")
+                yesNo(
+                    "When Video is chosen, play the song while its video loads?", $playWhileLoading)
                 SideNote(
                     "Yes: the song starts at once, and its video takes over when it's ready. No: "
                         + "nothing plays until the video is ready, then the video starts from its "
                         + "beginning. A song with no video plays as soon as that's known.")
             }
+            Section {
+                Picker("Which visualizer", selection: .constant("")) {
+                    Text("None yet").tag("")
+                }
+                .disabled(true)
+                yesNo(
+                    "Use the custom visualizer instead of the song or album cover",
+                    .constant(false)
+                )
+                .disabled(true)
+                SideNote(
+                    "For the visualizers being made as their own project, Particle Accelerator. "
+                        + "These two will work once it's finished and added here.")
+            } header: {
+                HStack(spacing: 8) {
+                    Text("Custom Visualizer")
+                    ComingBadge()
+                }
+            }
         }
         .formStyle(.grouped)
+    }
+
+    private func yesNo(_ question: String, _ answer: Binding<Bool>) -> some View {
+        Picker(question, selection: answer) {
+            Text("Yes").tag(true)
+            Text("No").tag(false)
+        }
+        .pickerStyle(.radioGroup)
+        .horizontalRadioGroupLayout()
     }
 }
 

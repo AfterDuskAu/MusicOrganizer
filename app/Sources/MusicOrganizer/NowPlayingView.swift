@@ -10,13 +10,18 @@ struct NowPlayingView: View {
     /// False while the page is kept out of sight: a video's picture isn't drawn then.
     var isActive = true
     @Environment(AppModel.self) private var model
+    /// Settings → Play Options → Always show lyrics; the lyrics button in the player bar
+    /// switches it too.
+    @AppStorage(Player.visualizerLyricsKey) private var lyricsOn = true
 
     var body: some View {
         let track = model.player.current
         // In full screen the picture is drawn there, not here as well.
         let showsVideo = isActive && model.player.showsPicture && !model.videoFullScreen
+        // A song with no lyrics, or lyrics turned off: the cover or video has the page.
+        let showsLyrics = lyricsOn && model.lyrics.settled
         ZStack(alignment: .topLeading) {
-            sideBySide(track, showsVideo: showsVideo)
+            sideBySide(track, showsVideo: showsVideo, showsLyrics: showsLyrics)
                 .padding(.horizontal, 40)
                 .padding(.top, 52)
                 .padding(.bottom, 24)
@@ -41,11 +46,13 @@ struct NowPlayingView: View {
     }
 
     /// The cover (or the video) on the left, the lyrics on the right. The left side, as
-    /// the owner drew it (2026-10-03): Song | Video on top, the picture, the song's name
-    /// centred under it, and the downloads below. Everything else makes room around the
-    /// name: nothing squeezes it.
-    private func sideBySide(_ track: Track?, showsVideo: Bool) -> some View {
-        HStack(spacing: 32) {
+    /// the owner drew it (2026-10-03): Song | Video on top, the picture, and everything
+    /// else centred under it: the song's name, the heart, Karaoke (and Full Screen), then
+    /// the downloads. With no lyrics to show, the left side is the whole page, and the
+    /// cover may be bigger.
+    private func sideBySide(_ track: Track?, showsVideo: Bool, showsLyrics: Bool) -> some View {
+        let cover: CGFloat = showsLyrics ? 420 : 560
+        return HStack(spacing: 32) {
             VStack(spacing: 14) {
                 ShowPicker()
                 if showsVideo {
@@ -53,19 +60,21 @@ struct NowPlayingView: View {
                 } else {
                     CoverView(track: track, size: .large, corner: 12)
                         .aspectRatio(1, contentMode: .fit)
-                        .frame(maxWidth: 420, maxHeight: 420)
+                        .frame(maxWidth: cover, maxHeight: cover)
                         .shadow(color: .black.opacity(0.5), radius: 24, y: 10)
                 }
                 PlayerControls(track: track, showsVideo: showsVideo)
             }
             .frame(minWidth: 320, maxWidth: .infinity)
-            // A video gets the room: the lyrics move over, or make way if there are none.
-            if !showsVideo {
-                LyricsView(large: true)
-                    .frame(minWidth: 220, maxWidth: .infinity)
-            } else if model.lyrics.hasLyrics {
-                LyricsView(large: false)
-                    .frame(minWidth: 200, idealWidth: 320, maxWidth: 320)
+            // A video gets the room: the lyrics take a narrow column beside it.
+            if showsLyrics {
+                if showsVideo {
+                    LyricsView(large: false)
+                        .frame(minWidth: 200, idealWidth: 320, maxWidth: 320)
+                } else {
+                    LyricsView(large: true)
+                        .frame(minWidth: 220, maxWidth: .infinity)
+                }
             }
         }
     }
@@ -115,35 +124,22 @@ private struct ShowPicker: View {
     }
 }
 
-/// Under the picture: the song's name, artist and album, centred under it, and
-/// whatever goes with them to its right (Karaoke; for a video, the picture size and Full
-/// Screen too). When there isn't room beside the name, they go under it instead, still
-/// centred. Then the three downloads: in a row when there's room, one above the other
-/// when there isn't. A note about the video, if there is one, goes last.
+/// Under the picture, everything centred, one thing under the next (the owner,
+/// 2026-10-03: "I quite like this, it's all centred"): the song's name, artist and album;
+/// the heart; Karaoke, and for a video its picture size and Full Screen; then the three
+/// downloads, in a row when there's room and one above the other when there isn't. A
+/// note about the video, if there is one, goes last.
 private struct PlayerControls: View {
     let track: Track?
     let showsVideo: Bool
     @Environment(AppModel.self) private var model
     @AppStorage("alwaysBestVideo") private var alwaysBestVideo = false
 
-    /// The room kept on each side of the name, so it stays in the middle.
-    private var side: CGFloat { showsVideo ? 116 : 52 }
-
     var body: some View {
         VStack(spacing: 14) {
-            ViewThatFits(in: .horizontal) {
-                // At most so wide, so what's beside the name stays near it.
-                names
-                    .frame(idealWidth: 240, maxWidth: 440)
-                    .padding(.horizontal, side)
-                    .overlay(alignment: .trailing) {
-                        VStack(alignment: .trailing, spacing: 8) { extras }
-                            .frame(width: side, alignment: .trailing)
-                    }
-                VStack(spacing: 10) {
-                    names.frame(maxWidth: .infinity)
-                    HStack(spacing: 10) { extras }
-                }
+            VStack(spacing: 10) {
+                names.frame(maxWidth: .infinity)
+                HStack(spacing: 10) { extras }
             }
             if let track { DownloadButtons(track: track) }
             note
@@ -187,7 +183,7 @@ private struct PlayerControls: View {
         }
     }
 
-    /// Beside the name: Karaoke for every song; and for a video, its picture size
+    /// Under the heart: Karaoke for every song; and for a video, its picture size
     /// (unless Settings keeps it at the sharpest) and Full Screen.
     @ViewBuilder
     private var extras: some View {

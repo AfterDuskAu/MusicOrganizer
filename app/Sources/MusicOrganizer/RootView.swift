@@ -195,6 +195,8 @@ struct MainView: View {
     @State private var showNowPlaying = false
     @State private var deleting: Playlist?
     @AppStorage("showLyrics") private var showLyrics = false
+    /// Lyrics beside the cover or video on the player page (Settings → Play Options).
+    @AppStorage(Player.visualizerLyricsKey) private var visualizerLyrics = true
     /// The Library entries the owner keeps in the sidebar, in order.
     @AppStorage("sidebarLibrary") private var savedEntries = SidebarChoice.write(SidebarChoice.all)
     /// The Library entries the owner has been offered so far: a new one is shown once.
@@ -267,7 +269,10 @@ struct MainView: View {
                 showNowPlaying || model.videoFullScreen ? .hidden : .automatic, for: .windowToolbar)
             // Below the split view, not an inset: the sidebar runs the window's full height
             // and would otherwise sit underneath the bar.
-            PlayerBar(showLyrics: $showLyrics, showNowPlaying: $showNowPlaying)
+            // The lyrics button switches the lyrics of the page that's showing.
+            PlayerBar(
+                showLyrics: onPlayerPage ? $visualizerLyrics : $showLyrics,
+                lyricsForPlayerPage: onPlayerPage, showNowPlaying: $showNowPlaying)
         }
         // Over everything, the player bar included: the video's own controls take over.
         .overlay {
@@ -463,6 +468,9 @@ struct MainView: View {
     }
 
     private var current: SidebarItem { item ?? .songs }
+
+    /// A page that shows the lyrics itself: the Local Visualizer, or the big now-playing.
+    private var onPlayerPage: Bool { current == .visualizer || showNowPlaying }
 
     /// The lyrics panel isn't a fixture: it's there only while a song with lyrics is on,
     /// and never beside a page that shows the lyrics itself.

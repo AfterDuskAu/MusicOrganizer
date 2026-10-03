@@ -405,6 +405,19 @@
 - **Deviations:** Last.fm was on `CLAUDE.md`'s Not yet list (under Discover); built at the owner's request, and that paragraph updated. A playlist file is a new kind of outside file the engine opens: read-only, like a scan's input (rule 2).
 - Checked: engine tests (Deezer against recorded answers; Last.fm and the file reader against made-up ones), Kit tests; and in the unseen copy, the Import page's new tabs, the two Settings tabs, the Last.fm set-up steps, and the thumbs-up count beside the heart (a made-up count put in by a temporary line, removed). A Deezer album and a made-up CSV were read and their songs found on YouTube Music in a scratch library. Not clicked in the running app: choosing a file, setting up Last.fm, a real count on a playing song, the two settings.
 
+2026-10-03, night. The owner, with a picture of the narrow player page: "I quite like this, it's all centred. Move full screen and karaoke under the heart. Same for songs." And options for the visualizer under Play Options.
+
+- **The player page is centred, one thing under the next, at every width:** Song | Video, the picture, the name, the heart, then Karaoke (and for a video its picture size and Full Screen) in a row under the heart, then the downloads. Before, Karaoke and Full Screen sat beside the name when the window was wide, and under it only when narrow.
+- **Lyrics make way.** A song with no lyrics no longer keeps half the page for "No lyrics for this song yet": the cover (now up to 560 points) or the video has the whole page. The page keeps its shape while the next song's lyrics are looked for, so the cover doesn't jump across and back at every song.
+- **Settings → Play Options → Visualizer**, as the owner listed it:
+  - "Videos: always the highest quality available" (as before).
+  - **Always show lyrics**, yes or no. No: the cover or video always has the whole page. The lyrics button beside the volume slider switches the same thing while the Local Visualizer (or the big now-playing page) is showing; on any other page it still switches the lyrics beside the library.
+  - **Show lyrics in full screen**, yes or no (no, as it was, until chosen). Yes: with a video on the whole screen, the song's lyrics take a column on the right and the video the rest; nothing is laid over the picture.
+  - "Play the song while its video loads?" moved in here.
+- **Settings → Play Options → Custom Visualizer**, marked Coming: "Which visualizer" and "Use the custom visualizer instead of the song or album cover". Both are switched off until the visualizer project (Particle Accelerator) is finished and added; nothing is behind them yet.
+- Asked, not built: an **Artist page** (right-click a song → Artist Info, or an artist button on What's New, Find and YouTube Music: the artist's songs, background, coming concerts). The owner asked what I thought; the answer and the two decisions it needs are in `docs/ROADMAP.md`.
+- Checked in the unseen copy, by temporary lines since removed: the page with lyrics, without, and with lyrics switched off; the full-screen layout with its lyrics column; the Play Options tab. Not clicked in the running app.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

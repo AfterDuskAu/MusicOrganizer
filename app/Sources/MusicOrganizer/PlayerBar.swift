@@ -2,7 +2,11 @@ import MusicOrganizerKit
 import SwiftUI
 
 struct PlayerBar: View {
+    /// The lyrics switch for the page that's showing: beside the library, or (on the
+    /// Local Visualizer and the big now-playing page) beside the cover or video.
     @Binding var showLyrics: Bool
+    /// The switch is the player page's own: its tip says so.
+    var lyricsForPlayerPage = false
     @Binding var showNowPlaying: Bool
     @Environment(AppModel.self) private var model
     @State private var showQueue = false
@@ -101,6 +105,19 @@ struct PlayerBar: View {
         .disabled(player.current == nil)
     }
 
+    private var lyricsHelp: String {
+        if lyricsForPlayerPage {
+            return showLyrics
+                ? "Lyrics are on for this page: they're beside the cover or video whenever the "
+                    + "song playing has them"
+                : "Lyrics are off for this page: the cover or video has it to itself. Click to "
+                    + "show them again"
+        }
+        return showLyrics
+            ? "Lyrics are on: they appear beside the library whenever the song playing has them"
+            : "Lyrics are off"
+    }
+
     private func extras(_ player: Player) -> some View {
         @Bindable var player = player
         return HStack(spacing: 12) {
@@ -112,10 +129,7 @@ struct PlayerBar: View {
                 Image(systemName: "quote.bubble")
                     .foregroundStyle(showLyrics ? Color.accentColor : .primary)
             }
-            .help(
-                showLyrics
-                    ? "Lyrics are on: they appear beside the library whenever the song playing has them"
-                    : "Lyrics are off")
+            .help(lyricsHelp)
             Button { showQueue.toggle() } label: { Image(systemName: "list.bullet") }
                 .help("Up next")
                 .popover(isPresented: $showQueue, arrowEdge: .top) { UpNext().environment(model) }

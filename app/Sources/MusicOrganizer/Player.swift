@@ -334,6 +334,11 @@ final class Player {
     /// Settings → Play Options: videos always play at their sharpest, and the Local
     /// Visualizer's picture-size menu goes away.
     static let alwaysBestVideoKey = "alwaysBestVideo"
+    /// Settings → Play Options: the lyrics beside the cover or video on the Local
+    /// Visualizer (on unless turned off), and beside a video on the whole screen (off
+    /// unless turned on).
+    static let visualizerLyricsKey = "visualizerLyrics"
+    static let fullScreenLyricsKey = "fullScreenLyrics"
     /// Settings → Downloads: a video is always saved at its sharpest, whatever size is
     /// playing.
     static let alwaysBestDownloadKey = "alwaysBestVideoDownload"

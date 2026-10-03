@@ -120,6 +120,12 @@ Plan: [`docs/roadmap/0.4-discover.md`](roadmap/0.4-discover.md).
 - A guided "What music would you like today?" mode.
 - Discovered songs go to their own inbox: `Discovered/<Genre>/<YYYY-MM Month>/`, with Keep or Remove.
 
+**Asked about, not built (owner, 2026-10-03): an Artist page.** "Artist will look up a lot of information about the artist, list of songs, background information, and Ticketmaster next concerts." Reached by right-clicking a song (Artist Info), or an artist button on What's New, Find and YouTube Music; listed under Find in Discover. What was found out, for when it's built:
+  - **Songs, albums, similar artists and a short background** all come from YouTube Music's own artist page (the installed `ytmusicapi`'s `get_artist`: description, views, top songs, albums, singles, videos, related artists). One request through the limiter, no key, and it can be kept for a week like a radio. Every song on it can be played and downloaded like any other, and the page can say which of them the owner already has.
+  - **Concerts:** Ticketmaster's Discovery API. It needs a free key the owner makes themselves (as with Last.fm), allows 5,000 questions a day, and covers Australia, New Zealand, the US, Canada, the UK and most of Europe. It only knows the concerts Ticketmaster sells, so a tour sold through another seller won't show. Songkick's API is closed to new apps; Bandsintown's needs approval for each app.
+  - **Suggested order:** the page without concerts first (no key, nothing for the owner to set up), then concerts once the owner has a Ticketmaster key and has chosen a country.
+  - **For the owner to decide:** whether to build it, and whether concerts should be for one country or near one city.
+
 ## v0.5: packaging
 
 A signed and notarised DMG with Python, ffmpeg, fpcalc and deno bundled, automatic updates, yt-dlp updates without a new app release, and Intel and Apple Silicon builds. (yt-dlp updates itself, so this is a direct download, never a Mac App Store app.)
