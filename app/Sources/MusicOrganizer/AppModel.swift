@@ -26,7 +26,7 @@ final class AppModel {
     private(set) var downloaded: [Track] = []
     /// Saved videos (Library → Videos). Empty while downloads are kept under Discover.
     private(set) var videos: [Track] = []
-    /// Settings → General: downloads stay under Discover until the owner says otherwise.
+    /// Settings → Downloads: downloads stay under Discover until the owner says otherwise.
     var keepDownloadsSeparate = UserDefaults.standard.object(forKey: "keepDownloadsSeparate")
         as? Bool ?? true
     {
@@ -115,11 +115,11 @@ final class AppModel {
     /// How Discover's Download Automatically is going, until its note is closed.
     var auto: AutoDownload?
     /// The people who use the app on this Mac, each with a library of their own, and
-    /// which of them it's open for (Settings → Profiles).
+    /// which of them it's open for (Settings → Profile).
     private(set) var profiles = AppModel.savedProfiles()
     /// How the download queue is doing: asked for when its worker starts or stops.
     private(set) var queueStatus: QueueStatus?
-    /// Which services are set up and signed in to (Settings → Accounts).
+    /// Which services are set up and signed in to (Settings → Profile → Accounts).
     private(set) var accounts: AccountStatus?
     /// The browser is open on a service's sign-in page, and its answer is awaited.
     private(set) var signingIn = false

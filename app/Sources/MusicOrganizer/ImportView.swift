@@ -6,7 +6,7 @@ import SwiftUI
 /// Music, and download the rest in one go. They arrive in a playlist of the same name.
 ///
 /// Built so far: YouTube and YouTube Music playlists by their link (no sign-in), and
-/// Spotify once signed in (Settings → Accounts). Apple Music comes next, through the
+/// Spotify once signed in (Settings → Profile → Spotify). Apple Music comes next, through the
 /// same list and the same button.
 struct ImportView: View {
     @Environment(AppModel.self) private var model
@@ -128,12 +128,14 @@ struct ImportView: View {
                     // Settings opens on its Accounts tab.
                     .simultaneousGesture(
                         TapGesture().onEnded {
-                            UserDefaults.standard.set("accounts", forKey: SettingsView.tabKey)
+                            UserDefaults.standard.set("profile", forKey: SettingsView.tabKey)
+                            UserDefaults.standard.set(
+                                "Spotify", forKey: SettingsView.openAccountKey)
                         })
                 Spacer(minLength: 0)
             }
             caption(
-                "Settings → Accounts has the steps: your own free app at Spotify, which needs "
+                "Settings → Profile → Spotify has the steps: your own free app at Spotify, which needs "
                     + "your account to have Premium, then a sign-in on Spotify's own page.")
         }
     }

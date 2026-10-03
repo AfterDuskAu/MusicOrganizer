@@ -362,6 +362,11 @@
 
 - **YouTube's refusals in plain words.** An age-restricted song showed yt-dlp's own message, written for people at a command line ("Use --cookies-from-browser or --cookies… See https://github.com/…"). The engine now says why in a sentence: "It's age-restricted: YouTube only plays it to someone signed in as an adult, and signing in to YouTube isn't built yet." Likewise a private video, members-only, not in this country, not out yet, taken down for copyright, a closed channel, or gone. The same words show when playing and in Downloads. (Getting past the age check needs a YouTube sign-in: later, at the owner's word.)
 - **Discover → Downloads is two boxes: Videos and Songs** (the owner's sketch), each newest first, with a Videos First / Songs First switch that's remembered. The genre boxes are gone; a download's genre tag is still written.
+- **Settings regrouped into three tabs**, as the owner laid out:
+  - **Profile:** the profiles on this Mac (Switch, Rename, Remove from the List, Add New Profile…), then the profile's accounts, YouTube, Spotify, Apple Music and SoundCloud, each a row whose arrow folds open its instructions or sign-in. Only Spotify works so far; the others say "Coming". "Open Settings…" on the Import page opens this tab with Spotify folded open.
+  - **Downloads:** where downloads show (Discover Downloads or All Library), the library folder (Select…), the quality (128 kbps; 256 says coming), and downloads per day (50 to 500).
+  - **Lyrics:** Find Missing Lyrics, as before.
+  - A tab remembered from before opens Profile. Messages that named the old tabs (the Spotify sign-in's, Downloads') name the new ones.
 
 ## 0.1.1 — in progress
 

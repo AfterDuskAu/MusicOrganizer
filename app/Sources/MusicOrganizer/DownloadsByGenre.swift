@@ -56,7 +56,7 @@ struct DownloadsByGenre: View {
                             + "move one in, drag it onto Library in the sidebar, or right-click → "
                             + "Move to Library."
                         : "Downloaded songs are also in your main library, and videos under "
-                            + "Library → Videos (Settings → General)."
+                            + "Library → Videos (Settings → Downloads)."
                 )
                 .font(.callout)
                 .foregroundStyle(.secondary)

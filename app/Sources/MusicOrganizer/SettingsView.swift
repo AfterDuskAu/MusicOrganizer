@@ -5,22 +5,25 @@ import SwiftUI
 /// (docs/roadmap/0.2-app-layout.md). A row marked "Coming" is planned but not built.
 struct SettingsView: View {
     /// The tab that's showing: remembered, and set by a page that sends the owner here
-    /// for one thing (Import Playlists → Spotify opens Accounts).
-    @AppStorage(SettingsView.tabKey) private var tab = "general"
+    /// for one thing (Import Playlists → Spotify opens Profile, with Spotify open).
+    @AppStorage(SettingsView.tabKey) private var tab = "profile"
 
     static let tabKey = "settingsTab"
+    /// Which account under Settings → Profile is open (its arrow turned down).
+    static let openAccountKey = "settingsOpenAccount"
+    private static let tabs = ["profile", "downloads", "lyrics"]
 
     var body: some View {
         TabView(selection: $tab) {
-            GeneralSettings().tabItem { Label("General", systemImage: "gearshape") }.tag("general")
-            ProfileSettingsTab().tabItem { Label("Profiles", systemImage: "person.2") }
-                .tag("profiles")
-            QualitySettings().tabItem { Label("Quality", systemImage: "waveform") }.tag("quality")
-            AccountSettings().tabItem { Label("Accounts", systemImage: "person.crop.circle") }
-                .tag("accounts")
+            ProfileSettingsTab().tabItem { Label("Profile", systemImage: "person.crop.circle") }
+                .tag("profile")
+            DownloadSettings().tabItem { Label("Downloads", systemImage: "arrow.down.circle") }
+                .tag("downloads")
             LyricsSettings().tabItem { Label("Lyrics", systemImage: "quote.bubble") }.tag("lyrics")
         }
         .frame(width: 560)
+        // A tab remembered from before Settings was regrouped (2026-10-03) opens Profile.
+        .onAppear { if !Self.tabs.contains(tab) { tab = "profile" } }
     }
 }
 
@@ -49,43 +52,44 @@ private struct ComingBadge: View {
     }
 }
 
-private struct GeneralSettings: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
-        @Bindable var model = model
-        Form {
-            Picker("Songs and videos you download go to", selection: $model.keepDownloadsSeparate) {
-                Text("Discover Downloads").tag(true)
-                Text("All Library").tag(false)
-            }
-            .pickerStyle(.radioGroup)
-            SideNote(
-                "Discover Downloads keeps what you download apart from your main library, under "
-                    + "Discover → Downloads, so you can sort it later. All Library also shows "
-                    + "the songs in Songs, Artists, Recently Added and the rest, and the videos "
-                    + "under Library → Videos. You can switch at any time; no file is moved "
-                    + "either way. On disk, songs are in the library's Music folder by artist "
-                    + "and album, and videos in Music/Videos.")
-            LabeledContent("Library folder") {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(model.root?.path ?? "Not chosen").textSelection(.enabled)
-                    Button("Choose Another…") { model.chooseLibrary() }
-                }
-            }
-        }
-        .formStyle(.grouped)
-    }
-}
-
-private struct QualitySettings: View {
+/// Settings → Downloads: where downloads show, the library folder, the quality, and
+/// how many a day.
+private struct DownloadSettings: View {
     @Environment(AppModel.self) private var model
     /// The limit moves in steps of this many.
     private static let step = 50
 
     var body: some View {
+        @Bindable var model = model
         let settings = model.engineSettings
         Form {
+            Section {
+                Picker("Songs and videos you download go to", selection: $model.keepDownloadsSeparate) {
+                    Text("Discover Downloads").tag(true)
+                    Text("All Library").tag(false)
+                }
+                .pickerStyle(.radioGroup)
+                SideNote(
+                    "Discover Downloads keeps what you download apart from your main library, under "
+                        + "Discover → Downloads, so you can sort it later. All Library also shows "
+                        + "the songs in Songs, Artists, Recently Added and the rest, and the videos "
+                        + "under Library → Videos. You can switch at any time; no file is moved "
+                        + "either way.")
+            }
+            Section {
+                LabeledContent("Library folder") {
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text(model.root?.path ?? "Not chosen")
+                            .lineLimit(2)
+                            .truncationMode(.middle)
+                            .textSelection(.enabled)
+                        Button("Select…") { model.chooseLibrary() }
+                    }
+                }
+                SideNote(
+                    "This profile's library. Songs are kept in its Music folder by artist and "
+                        + "album, and videos in Music/Videos.")
+            }
             Section {
                 Picker("Download quality", selection: .constant(128)) {
                     Text("128 kbps").tag(128)
@@ -146,7 +150,7 @@ private struct QualitySettings: View {
     }
 }
 
-/// Settings → Profiles: the people who use the app on this Mac. A profile is a name
+/// Settings → Profile: the people who use the app on this Mac. A profile is a name
 /// and a library folder of its own; it isn't an account anywhere, and has no password.
 private struct ProfileSettingsTab: View {
     @Environment(AppModel.self) private var model
@@ -165,20 +169,21 @@ private struct ProfileSettingsTab: View {
                 }
             }
             Section {
-                Button("New Profile…", systemImage: "plus") { adding = true }
+                Button("Add New Profile…", systemImage: "plus") { adding = true }
                 if let problem {
                     Text(problem)
                         .foregroundStyle(.orange)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                SideNote(
+                    "Each profile has its own music, downloads, playlists, favourites, sign-ins "
+                        + "and settings, in a library folder of its own, so nobody's music is "
+                        + "mixed with anyone else's. Switching deletes nothing: a profile is "
+                        + "exactly as it was left when you switch back, and downloads it was "
+                        + "still waiting for carry on then. The daily download limit is shared, "
+                        + "because YouTube counts the computer, not the person.")
             }
-            SideNote(
-                "Each profile has its own music, downloads, playlists, favourites, sign-ins and "
-                    + "settings, in a library folder of its own, so nobody's music is mixed with "
-                    + "anyone else's. Switching deletes nothing: a profile is exactly as it was "
-                    + "left when you switch back, and downloads it was still waiting for carry on "
-                    + "then. The daily download limit is shared by everyone, because YouTube "
-                    + "counts the computer, not the person.")
+            AccountSettings()
         }
         .formStyle(.grouped)
         .sheet(isPresented: $adding) { NewProfileSheet().environment(model) }
@@ -337,30 +342,65 @@ private struct NewProfileSheet: View {
     }
 }
 
+/// The accounts of the profile in use, each a row with an arrow: turned down, it shows
+/// how to sign in, or who's signed in. Sign-ins only ever read: they bring music lists
+/// across, and are kept on this Mac only.
 private struct AccountSettings: View {
     @Environment(AppModel.self) private var model
+    @AppStorage(SettingsView.openAccountKey) private var open = ""
     @State private var clientId = ""
 
     private static let dashboard = URL(string: "https://developer.spotify.com/dashboard")!
 
     var body: some View {
-        Form {
-            Section("Spotify") { spotify }
-            Section {
-                account("YouTube", "For private playlists and, with YouTube Premium, 256 kbps downloads.")
-                account(
-                    "Apple Music",
-                    "Can only read your music list. The songs are then downloaded slowly from YouTube.")
+        Section("Accounts for \(model.profiles.current.name)") {
+            account("YouTube", symbol: "play.rectangle", state: comingWords) {
+                SideNote(
+                    "For private playlists and Liked Music, age-restricted songs, and, with YouTube "
+                        + "Premium, 256 kbps downloads. Not built yet.")
             }
-            SideNote("Sign-ins are kept on this Mac only, never in your library.")
+            account("Spotify", symbol: "music.note.list", state: spotifyState) { spotify }
+            account("Apple Music", symbol: "applelogo", state: comingWords) {
+                SideNote(
+                    "Will read your playlists from the Music app on this Mac. The songs are then "
+                        + "found and downloaded from YouTube. Not built yet.")
+            }
+            account("SoundCloud", symbol: "cloud", state: comingWords) {
+                SideNote("Not built yet.")
+            }
         }
-        .formStyle(.grouped)
         .onAppear {
             model.loadAccounts()
             if clientId.isEmpty { clientId = model.accounts?.spotify.clientId ?? "" }
         }
         .onChange(of: model.accounts) {
             if clientId.isEmpty { clientId = model.accounts?.spotify.clientId ?? "" }
+        }
+    }
+
+    private var comingWords: String { "Coming" }
+
+    private var spotifyState: String {
+        guard let status = model.accounts?.spotify else { return "" }
+        if status.signedIn { return "Signed in" + (status.name.map { " as \($0)" } ?? "") }
+        return model.signingIn ? "Signing in…" : "Not signed in"
+    }
+
+    /// One account: its name and state, and what's under its arrow.
+    private func account(
+        _ name: String, symbol: String, state: String, @ViewBuilder inside: () -> some View
+    ) -> some View {
+        let content = inside()
+        return DisclosureGroup(
+            isExpanded: Binding(get: { open == name }, set: { open = $0 ? name : "" })
+        ) {
+            content.padding(.vertical, 4)
+        } label: {
+            LabeledContent {
+                Text(state).foregroundStyle(.secondary)
+            } label: {
+                Label(name, systemImage: symbol)
+            }
         }
     }
 
@@ -429,14 +469,6 @@ private struct AccountSettings: View {
         }
     }
 
-    private func account(_ name: String, _ note: String) -> some View {
-        LabeledContent {
-            ComingBadge()
-        } label: {
-            Text(name)
-            Text(note)
-        }
-    }
 }
 
 private struct LyricsSettings: View {

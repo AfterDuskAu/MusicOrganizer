@@ -378,7 +378,7 @@ def _access_token() -> str:
     account = config.load_accounts().get(SERVICE) or {}
     client_id, refresh = account.get("client_id"), account.get("refresh_token")
     if not isinstance(client_id, str) or not isinstance(refresh, str) or not refresh:
-        raise SpotifyError("Spotify isn't signed in to. Sign in under Settings → Accounts.")
+        raise SpotifyError("Spotify isn't signed in to. Sign in under Settings → Profile → Spotify.")
     status_code, _, body = _http(
         "POST",
         TOKEN_URL,
@@ -390,7 +390,7 @@ def _access_token() -> str:
     if status_code == 400 and tokens.get("error") == "invalid_grant":
         sign_out()
         raise SpotifyError(
-            "Your Spotify sign-in has run out. Sign in again under Settings → Accounts."
+            "Your Spotify sign-in has run out. Sign in again under Settings → Profile → Spotify."
         )
     if status_code != 200 or not isinstance(access, str):
         raise SpotifyError(f"Spotify wouldn't renew the sign-in{_said(body)}. Try again later.")

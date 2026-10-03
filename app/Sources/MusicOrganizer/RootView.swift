@@ -566,7 +566,7 @@ struct MainView: View {
             SongList(
                 source: .videos, title: "Videos",
                 empty: model.keepDownloadsSeparate
-                    ? "Saved videos are under Discover → Downloads. Settings → General "
+                    ? "Saved videos are under Discover → Downloads. Settings → Downloads "
                         + "(All Library) lists them here instead."
                     : "Videos you save show up here. Play a song on the Local Visualizer, "
                         + "switch to Video, and click Save Video.",
@@ -705,7 +705,7 @@ private struct StatusFooter: View {
                 .buttonStyle(.plain)
                 .simultaneousGesture(
                     TapGesture().onEnded {
-                        UserDefaults.standard.set("profiles", forKey: SettingsView.tabKey)
+                        UserDefaults.standard.set("profile", forKey: SettingsView.tabKey)
                     }
                 )
                 .help("The profile in use. Click to switch (Settings → Profiles).")
