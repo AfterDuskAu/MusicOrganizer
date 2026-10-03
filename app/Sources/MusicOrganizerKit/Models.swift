@@ -104,6 +104,23 @@ public struct TrackLyrics: Decodable, Sendable {
     /// From `lyrics.for_video` only: how the lyrics were timed to the video ("audio",
     /// "captions", "caption_text", "lrclib").
     public let how: String?
+    /// From `lyrics.for_video` only: one plain line about how it went, when there's
+    /// something to say (the day's downloads are used up, say).
+    public let note: String?
+}
+
+/// What Karaoke costs. Lining lyrics up with a video fetches the video's whole sound
+/// from YouTube, which counts as a download; and the song's too, unless the song is a
+/// file in the library (or the video is a saved one, whose sound is read from its file).
+public enum KaraokeCost {
+    public static func downloads(songIsAFile: Bool) -> Int { songIsAFile ? 1 : 2 }
+
+    /// "Uses 1 download from your daily limit."
+    public static func words(songIsAFile: Bool) -> String {
+        songIsAFile
+            ? "Uses 1 download from your daily limit."
+            : "Uses 2 downloads from your daily limit: the song's sound and the video's."
+    }
 }
 
 /// One result of a YouTube Music search (the engine's Candidate).

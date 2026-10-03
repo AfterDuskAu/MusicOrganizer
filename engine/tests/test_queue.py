@@ -22,6 +22,7 @@ import yt_dlp
 
 from musicorg import config, fileops, library, queue, tools, youtube
 from musicorg.config import Config
+from musicorg.errors import DailyLimitError
 from musicorg.index import open_queue
 from musicorg.library import Library
 from musicorg.queue import Kind, Outcome
@@ -210,6 +211,27 @@ def test_daily_cap_survives_a_restart(lib: Library, clock: FakeClock, yt: FakeYo
     assert later.resume_at is not None and later.resume_at > clock.t
     under = queue.status(lib.paths, now=clock.t, config=settings(daily_cap=4))
     assert under["daily_resume_at"] is None
+
+
+def test_something_that_costs_youtube_a_download_counts_as_one(
+    lib: Library, clock: FakeClock, yt: FakeYouTube
+) -> None:
+    # Karaoke fetching a video's whole sound: counted with the queue's own downloads.
+    cfg = settings(daily_cap=3)
+    queue.spend_download(lib.paths, "Karaoke", now=clock.t, config=cfg)
+    assert queue.status(lib.paths, now=clock.t, config=cfg)["daily_count"] == 1
+    enqueue(lib, 5)
+    first = run(lib, clock, cfg)
+    assert first.stopped == "daily_cap" and len(yt.downloads) == 2  # the third was spent
+    # With the limit used up it's refused, with when there's room again, and not counted.
+    with pytest.raises(DailyLimitError, match="limit is used up .3 in 24 hours.*Karaoke") as no:
+        queue.spend_download(lib.paths, "Karaoke", now=clock.t, config=cfg)
+    assert no.value.resume_at == START + timedelta(hours=24)
+    assert queue.status(lib.paths, now=clock.t, config=cfg)["daily_count"] == 3
+    # A day on, the three are a day old and there's room again.
+    later = clock.t + timedelta(hours=24)
+    queue.spend_download(lib.paths, "Karaoke", now=later, config=cfg)
+    assert queue.status(lib.paths, now=later, config=cfg)["daily_count"] == 1
 
 
 def test_the_daily_limit_is_one_count_for_every_library_on_the_computer(

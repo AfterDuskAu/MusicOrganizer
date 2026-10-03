@@ -202,6 +202,10 @@ private struct PlayerControls: View {
         }
     }
 
+    /// The song playing is a file in the library (not one played from YouTube): Karaoke
+    /// then fetches one sound, the video's, and not the song's as well.
+    private var songIsAFile: Bool { track?.videoId == nil }
+
     @ViewBuilder
     private var note: some View {
         let player = model.player
@@ -216,7 +220,7 @@ private struct PlayerControls: View {
         {
             caption(
                 "The video isn't the same length as the song, so the lyrics aren't timed. "
-                    + "Karaoke lines them up.")
+                    + "Karaoke lines them up. " + KaraokeCost.words(songIsAFile: songIsAFile))
         }
     }
 
@@ -337,7 +341,9 @@ private struct KaraokeButton: View {
             Button { model.karaoke() } label: { Image(systemName: "music.mic") }
                 .help(
                     "Karaoke: line the lyrics up with this video, by its sound and its captions. "
-                        + "It asks YouTube for them once; after that this video is remembered.")
+                        + KaraokeCost.words(songIsAFile: model.player.current?.videoId == nil)
+                        + " It's fetched once; after that this video is remembered and costs "
+                        + "nothing.")
         } else {
             let timed = model.lyrics.isSynced
             Button { model.karaokeSong() } label: { Image(systemName: "music.mic") }

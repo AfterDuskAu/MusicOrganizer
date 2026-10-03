@@ -83,6 +83,15 @@ class YouTubePausedError(YouTubeBlockedError):
         self.resume_at = resume_at
 
 
+class DailyLimitError(UserError):
+    """The day's downloads are used up, and something that costs one was asked for.
+    `resume_at` (an aware datetime) is when there's room for one again."""
+
+    def __init__(self, message: str, resume_at: datetime) -> None:
+        super().__init__(message)
+        self.resume_at = resume_at
+
+
 class YouTubeRefusedError(YouTubeBlockedError):
     """YouTube refused a download from us ("confirm you're not a bot", HTTP 429). The whole
     queue pauses (step 09a). Never retried in a loop, and never worked around."""

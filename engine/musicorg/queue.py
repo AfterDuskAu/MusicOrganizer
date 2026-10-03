@@ -49,6 +49,7 @@ from musicorg import fileops, tools, youtube
 from musicorg.config import Config, load_download_times, save_download_times
 from musicorg.errors import (
     ConfigError,
+    DailyLimitError,
     DownloadError,
     FormatUnavailableError,
     MusicOrgError,
@@ -547,12 +548,8 @@ class _Runner:
 
     def count_download(self) -> None:
         now = self.clock.now()
-        times = self._recent_downloads(now) + [now]
-        self.store.set_meta(DOWNLOADS, json.dumps([_iso(t) for t in times]))
-        try:  # and for the other libraries on this computer
-            save_download_times([_iso(t) for t in times])
-        except ConfigError as exc:
-            log.warning("%s The daily limit is counted for this library alone.", exc.message)
+        with _COUNTING:
+            _count(self.store, self._recent_downloads(now), now)
         self.session_downloads += 1
 
     def downloaded(self) -> None:
@@ -639,6 +636,43 @@ class _YouTubePause(Exception):
     def __init__(self, until: datetime) -> None:
         super().__init__("paused by YouTube")
         self.until = until
+
+
+# The worker and a request from the app can both count a download at the same moment:
+# one at a time, so neither's is lost.
+_COUNTING = threading.Lock()
+
+
+def _count(store: QueueStore, recent: list[datetime], now: datetime) -> None:
+    """Add one download at `now` to the day's count, here and for the whole computer."""
+    times = [_iso(t) for t in [*recent, now]]
+    store.set_meta(DOWNLOADS, json.dumps(times))
+    try:  # and for the other libraries on this computer
+        save_download_times(times)
+    except ConfigError as exc:
+        log.warning("%s The daily limit is counted for this library alone.", exc.message)
+
+
+def spend_download(
+    paths: LibraryPaths, what: str, *, now: datetime | None = None, config: Config | None = None
+) -> None:
+    """Count one download against the daily limit for something that isn't a queued
+    download but takes as much from YouTube as one: Karaoke fetching a video's whole
+    sound (owner, 2026-10-04: "anything that uses the daily limit will register"). With
+    the limit reached, nothing is counted and it's a DailyLimitError saying when there's
+    room again: the caller doesn't fetch. `what` names the thing in that message."""
+    now = now or datetime.now(UTC)
+    cap = (config if config is not None else Config.load()).throttle()["daily_cap"]
+    with _COUNTING, open_queue(paths, write=True) as store:
+        recent = recent_downloads(store, now)
+        if cap > 0 and len(recent) >= cap:
+            resume_at = recent[len(recent) - cap] + DAY
+            raise DailyLimitError(
+                f"Today's download limit is used up ({cap} in 24 hours), and {what} counts "
+                f"as one. There's room again at {_clock(resume_at)}.",
+                resume_at,
+            )
+        _count(store, recent, now)
 
 
 def recent_downloads(store: QueueStore, now: datetime) -> list[datetime]:

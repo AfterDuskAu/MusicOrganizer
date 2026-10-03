@@ -578,10 +578,21 @@ final class AppModel {
 
     /// Make a profile with a library folder of its own, and switch to it. The engine
     /// makes the library when it's first opened; nothing of anyone else's is touched.
-    func addProfile(named name: String, libraryRoot: String) throws {
-        let made = try profiles.add(name: name, libraryRoot: libraryRoot)
+    func addProfile(named name: String, libraryRoot: String, isChild: Bool = false) throws {
+        let made = try profiles.add(name: name, libraryRoot: libraryRoot, isChild: isChild)
         saveProfiles()
         switchProfile(to: made.id)
+    }
+
+    /// Mark a profile as a child's, or take the mark off. Only a mark for now.
+    func setChild(_ id: String, _ isChild: Bool) {
+        profiles.setChild(id, isChild)
+        saveProfiles()
+    }
+
+    /// The Mac's own Music folder, where a new profile's library goes.
+    static var musicFolder: String? {
+        FileManager.default.urls(for: .musicDirectory, in: .userDomainMask).first?.path
     }
 
     func renameProfile(_ id: String, to name: String) throws {
@@ -1894,15 +1905,19 @@ final class AppModel {
         else { return }
         let saved = track.isVideo
         lyrics.videoTiming = .working
+        lyricsNote = nil
         Task {
             let found = try? await connection.call(
                 "lyrics.for_video", asked.params, as: TrackLyrics.self)
+            // Fetching the video's sound counted as a download: the counter shows it.
+            await refreshQueueStatus()
             guard player.current == track,
                 saved || player.video?.source.videoId == asked.videoId
             else { return }
             let lines = found?.synced.map(LRC.parse) ?? []
             guard !lines.isEmpty else {
                 lyrics.videoTiming = .failed
+                lyricsNote = found?.note  // why, when the engine says (the daily limit)
                 return
             }
             lyrics.show(

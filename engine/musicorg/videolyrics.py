@@ -34,15 +34,21 @@ import logging
 import re
 import statistics
 from collections import Counter, defaultdict
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from difflib import SequenceMatcher
 from itertools import pairwise
 from pathlib import Path
 from typing import Any
 
-from musicorg import browse, fingerprint, lyrics, youtube
-from musicorg.errors import AudioError, MusicOrgError, YouTubeBlockedError, YouTubeError
+from musicorg import browse, fingerprint, lyrics, queue, youtube
+from musicorg.errors import (
+    AudioError,
+    DailyLimitError,
+    MusicOrgError,
+    YouTubeBlockedError,
+    YouTubeError,
+)
 from musicorg.index import Index
 from musicorg.library import Library
 
@@ -774,6 +780,9 @@ def sung_lines(cues: Sequence[Cue]) -> list[tuple[float, str]] | None:
 # ---- the whole thing: lyrics timed to a video ---------------------------------------------
 
 
+Spend = Callable[[], None]  # counts one download against the daily limit, or raises
+
+
 @dataclass(frozen=True)
 class Timed:
     """Lyrics timed to a video. `how` says which way they were timed: `audio` (the two
@@ -813,6 +822,13 @@ def for_video(
     of). The answer is then what's already known: lyrics timed to this video on an
     earlier request, or else a record on LRCLIB of the video's length that passes the
     check in 4 below. With `full` (the app's Karaoke button) everything below is done.
+
+    **Fetching a whole sound from YouTube counts as a download** (owner, 2026-10-04):
+    one for the video's sound, and one more for the song's when the song isn't a file
+    in the library. Each is counted against the daily limit as it's fetched, once: a
+    sound's fingerprint is kept for 30 days. With the limit used up no sound is
+    fetched; the captions are still tried, and if they can't do it the answer's note
+    says the limit is why.
 
     `song_path` is the library song
     that's playing (its own `.lrc` and its own sound are what's lined up); without it,
@@ -855,10 +871,13 @@ def for_video(
     if not full:
         return _already_known(index, title, artist, video_duration_s, song_file, song_duration_s)
 
+    def spend() -> None:
+        queue.spend_download(lib.paths, "lining lyrics up with a video (Karaoke)")
+
     found = _work_out(
         index, title=title, artist=artist, video_id=video_id,
         video_duration_s=video_duration_s, song_file=song_file, song_video_id=song_video_id,
-        song_duration_s=song_duration_s, video_file=video_file,
+        song_duration_s=song_duration_s, video_file=video_file, spend=spend,
     )  # fmt: skip
     if found.synced or found.settled:  # a miss because YouTube didn't answer isn't kept
         index.put_search(key, {"synced": found.synced, "how": found.how,
@@ -905,6 +924,7 @@ def _work_out(
     song_video_id: str | None,
     song_duration_s: float | None,
     video_file: Path | None,
+    spend: Spend | None = None,
 ) -> Timed:
     if song_file is None and song_video_id is None:
         # A saved video, or a song known only by name: the official song it's a video of.
@@ -938,7 +958,7 @@ def _work_out(
 
     trouble: list[str] = []  # what YouTube didn't hand over this time
     by_sound = (
-        _by_sound(index, lines, sources, song_file, song_video_id, video_file, trouble)
+        _by_sound(index, lines, sources, song_file, song_video_id, video_file, trouble, spend)
         if lines
         else None
     )
@@ -978,6 +998,9 @@ def _work_out(
     cut = _video_cut_record(index, title, artist, video_duration_s, lines)
     if cut is not None:
         return Timed(cut, "lrclib", "LRCLIB")
+    limit = next((why for why in trouble if why.startswith("Today's")), None)
+    if limit is not None:  # not kept: there's room again tomorrow
+        return Timed(None, note=limit, settled=False)
     if trouble:
         return Timed(None, note="YouTube didn't hand over the video's sound.", settled=False)
     return Timed(None, note="Neither the video's sound nor its captions could time the lyrics.")
@@ -991,6 +1014,7 @@ def _by_sound(
     song_video_id: str | None,
     video_file: Path | None,
     trouble: list[str],
+    spend: Spend | None = None,
 ) -> tuple[list[list[float]], list[float]] | None:
     """The lyrics moved through the time map: for each of the song's lines the moments
     of the video it comes up at, and the moments no line should show from. None if the
@@ -999,15 +1023,20 @@ def _by_sound(
         if song_file is not None:
             song = fingerprint.fingerprint(song_file, index=index).items
         elif song_video_id:
-            song = _stream_items(index, song_video_id, None)
+            song = _stream_items(index, song_video_id, None, spend)
         else:
             return None
         if video_file is not None:
             video = fingerprint.fingerprint(video_file, index=index).items
         else:
-            video = _stream_items(index, sources.video_id, sources.audio)
+            video = _stream_items(index, sources.video_id, sources.audio, spend)
     except YouTubeBlockedError:
         raise
+    except DailyLimitError as exc:
+        # The day's downloads are used up: no sound is fetched. The captions may still do.
+        log.info("video lyrics: %s: %s", sources.video_id, exc.message)
+        trouble.append(exc.message)
+        return None
     except (MusicOrgError, AudioError) as exc:
         log.info("video lyrics: no fingerprint for %s: %s", sources.video_id, exc)
         trouble.append("sound")
@@ -1036,8 +1065,12 @@ def _official_song(index: Index, title: str, artist: str) -> youtube.Candidate |
     return None
 
 
-def _stream_items(index: Index, video_id: str, stream: youtube.Stream | None) -> tuple[int, ...]:
-    """A YouTube audio's raw fingerprint, fetched once and kept for 30 days."""
+def _stream_items(
+    index: Index, video_id: str, stream: youtube.Stream | None, spend: Spend | None = None
+) -> tuple[int, ...]:
+    """A YouTube audio's raw fingerprint, fetched once and kept for 30 days. Fetching it
+    takes the whole sound from YouTube, as a download does, so `spend` counts one
+    against the daily limit first (and raises DailyLimitError if there's no room)."""
     key = f"fingerprint {video_id}"
     kept = index.cached_search(key, max_age_days=CACHE_DAYS)
     if isinstance(kept, list) and kept:
@@ -1046,6 +1079,8 @@ def _stream_items(index: Index, video_id: str, stream: youtube.Stream | None) ->
         stream = youtube.sources(video_id).audio
         if stream is None:
             raise YouTubeError("YouTube doesn't offer that song in the format we read.")
+    if spend is not None:
+        spend()
     try:
         data = youtube.fetch_audio(stream)
     except YouTubeBlockedError:

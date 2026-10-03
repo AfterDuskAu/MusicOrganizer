@@ -14,8 +14,8 @@ from typing import Any
 import pytest
 from test_rpc import code, opened, out, result, root, server  # noqa: F401  (fixtures)
 
-from musicorg import fingerprint, lyrics, rpc, videolyrics, youtube
-from musicorg.errors import DownloadError, YouTubePausedError
+from musicorg import fingerprint, lyrics, queue, rpc, videolyrics, youtube
+from musicorg.errors import DailyLimitError, DownloadError, YouTubePausedError
 from musicorg.index import open_index
 from musicorg.library import Library
 from musicorg.videolyrics import ITEM_S, Cue, Segment
@@ -584,6 +584,70 @@ def test_a_library_songs_own_lyrics_and_sound_are_what_is_lined_up(
     fake.asked.clear()
     assert timed(lib, song_path="Music/Band/Album/01 Song.m4a", song_video_id=None).how == "audio"
     assert fake.asked == [f"sources {VIDEO}"]  # the video's fingerprint was kept
+
+
+def downloads_today(lib: Library) -> int:
+    return queue.status(lib.paths)["daily_count"]
+
+
+def test_each_sound_fetched_counts_as_a_download_once(lib: Library, fake: FakeYouTube) -> None:
+    # A song played from YouTube: its sound and the video's are both fetched.
+    assert timed(lib).how == "audio" and downloads_today(lib) == 2
+    # Asked again, nothing is fetched, so nothing more is counted.
+    assert timed(lib).how == "audio" and downloads_today(lib) == 2
+    # Just playing the video (not Karaoke) never counts.
+    assert timed(lib, full=False).how == "audio" and downloads_today(lib) == 2
+
+
+def test_a_library_songs_karaoke_is_one_download(
+    lib: Library, fake: FakeYouTube, samples: dict[str, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import shutil
+
+    song = lib.paths.music / "Band" / "Album" / "01 Song.m4a"
+    song.parent.mkdir(parents=True)
+    shutil.copyfile(samples["m4a"], song)
+    song.with_suffix(".lrc").write_text(LRC, encoding="utf-8")
+    monkeypatch.setattr(
+        fingerprint, "fingerprint", lambda *a, **k: fingerprint.RawFP(0.0, tuple(SONG))
+    )
+    found = timed(lib, song_path="Music/Band/Album/01 Song.m4a", song_video_id=None)
+    assert found.how == "audio" and downloads_today(lib) == 1  # the video's sound alone
+
+
+def test_with_the_days_downloads_used_up_no_sound_is_fetched(
+    lib: Library, fake: FakeYouTube, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def used_up(paths: Any, what: str, **_: Any) -> None:
+        raise DailyLimitError(
+            f"Today's download limit is used up (250 in 24 hours), and {what} counts as one. "
+            "There's room again at 3:10am.",
+            datetime.now(UTC),
+        )
+
+    with monkeypatch.context() as patched:
+        patched.setattr(queue, "spend_download", used_up)
+        found = timed(lib)
+        assert found.synced is None and found.settled is False
+        assert found.note is not None and found.note.startswith("Today's download limit")
+        assert "Karaoke" in found.note
+        assert not [asked for asked in fake.asked if asked.startswith("audio")]
+    # Nothing was remembered as a failure: with room again, the sound is fetched and used.
+    assert timed(lib).how == "audio" and downloads_today(lib) == 2
+
+
+def test_the_captions_cost_nothing_and_still_work_at_the_limit(
+    lib: Library, fake: FakeYouTube, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def used_up(paths: Any, what: str, **_: Any) -> None:
+        raise DailyLimitError("Today's download limit is used up.", datetime.now(UTC))
+
+    monkeypatch.setattr(queue, "spend_download", used_up)
+    fake.captions[VIDEO] = [("manual", captions_for(LINES, lambda n: 14.0))]
+    found = timed(lib)
+    assert (found.how, found.note) == ("captions", None)
+    assert not [asked for asked in fake.asked if asked.startswith("audio")]
+    assert downloads_today(lib) == 0
 
 
 def test_youtube_slowing_us_down_stops_the_request(

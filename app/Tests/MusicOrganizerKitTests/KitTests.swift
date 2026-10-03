@@ -811,13 +811,41 @@ final class SongVideoTests: XCTestCase {
         XCTAssertEqual(list.current, Profile(id: "default", name: "D", libraryRoot: "/Volumes/Music/Library"))
         XCTAssertEqual(ProfileList(firstNamed: " ", libraryRoot: nil).current.name, "Me")
 
-        // A new profile gets a folder of its own, beside the one in use.
-        XCTAssertEqual(list.suggestedRoot(for: " C "), "/Volumes/Music/Library (C)")
-        XCTAssertEqual(list.suggestedRoot(for: "Kids / 1:2"), "/Volumes/Music/Library (Kids  12)")
-        XCTAssertNil(list.suggestedRoot(for: " . "))
-        XCTAssertNil(ProfileList(firstNamed: "D", libraryRoot: nil).suggestedRoot(for: "C"))
+        // A new profile gets a folder of its own in the Music folder, named after it.
+        let music = "/Users/someone/Music"
+        XCTAssertEqual(list.suggestedRoot(for: " C ", in: music), "/Users/someone/Music/Music C")
+        XCTAssertEqual(
+            list.suggestedRoot(for: "Kids / 1:2", in: music), "/Users/someone/Music/Music Kids  12")
+        XCTAssertNil(list.suggestedRoot(for: " . ", in: music))
+        XCTAssertNil(list.suggestedRoot(for: "C", in: nil))
+        // Even with no library of its own yet, the first profile's list can suggest one.
+        XCTAssertEqual(
+            ProfileList(firstNamed: "D", libraryRoot: nil).suggestedRoot(for: "C", in: music),
+            "/Users/someone/Music/Music C")
+        // A folder that's there already is never suggested: the next free name is.
+        XCTAssertEqual(
+            list.suggestedRoot(for: "C", in: music) { $0.hasSuffix("/Music C") },
+            "/Users/someone/Music/Music C 2")
         let made = try list.add(name: "  C  ", libraryRoot: "/Volumes/Music/Library (C)") { "p_1" }
         XCTAssertEqual(made, Profile(id: "p_1", name: "C", libraryRoot: "/Volumes/Music/Library (C)", isNew: true))
+        XCTAssertFalse(made.isChild)
+        // Nor one that's another profile's, however it's written.
+        var two = ProfileList(firstNamed: "D", libraryRoot: "/Users/someone/Music/music kids")
+        XCTAssertEqual(
+            two.suggestedRoot(for: "Kids", in: music), "/Users/someone/Music/Music Kids 2")
+        // A child's profile is marked as one, and the mark can be changed.
+        let kids = try two.add(name: "Kids", libraryRoot: "/k", isChild: true) { "p_k" }
+        XCTAssertTrue(kids.isChild)
+        two.setChild("p_k", false)
+        XCTAssertEqual(two.profile("p_k")?.isChild, false)
+        two.setChild("p_k", true)
+        // A list saved before the mark existed still reads, with nobody a child.
+        let old = Data(
+            #"{"profiles":[{"id":"default","name":"D","libraryRoot":"/x","isNew":false}],"currentId":"default"}"#
+                .utf8)
+        XCTAssertEqual(try JSONDecoder().decode(ProfileList.self, from: old).current.isChild, false)
+        XCTAssertEqual(
+            try JSONDecoder().decode(ProfileList.self, from: JSONEncoder().encode(two)), two)
         XCTAssertEqual(list.current.id, "default")  // adding doesn't switch
 
         // Names are one each, whatever their capitals; and so are folders.
@@ -994,6 +1022,28 @@ final class SongVideoTests: XCTestCase {
         XCTAssertTrue(Imports.looksLikeLastfmKey(" \(half)\(half)\n"))
         XCTAssertFalse(Imports.looksLikeLastfmKey(half))
         XCTAssertFalse(Imports.looksLikeLastfmKey(half + half.dropLast() + "g"))
+    }
+
+    func testKaraokeSaysWhatItCosts() throws {
+        // A song that's a file: only the video's sound is fetched.
+        XCTAssertEqual(KaraokeCost.downloads(songIsAFile: true), 1)
+        XCTAssertEqual(KaraokeCost.words(songIsAFile: true), "Uses 1 download from your daily limit.")
+        // A song played from YouTube: its sound is fetched as well.
+        XCTAssertEqual(KaraokeCost.downloads(songIsAFile: false), 2)
+        XCTAssertTrue(KaraokeCost.words(songIsAFile: false).hasPrefix("Uses 2 downloads"))
+        // The engine's answer says why, when it couldn't.
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let answer = try decoder.decode(
+            TrackLyrics.self,
+            from: Data(
+                #"{"synced": null, "plain": null, "how": null, "source": null, "note": "Today's download limit is used up."}"#
+                    .utf8))
+        XCTAssertNil(answer.synced)
+        XCTAssertEqual(answer.note, "Today's download limit is used up.")
+        let older = try decoder.decode(
+            TrackLyrics.self, from: Data(#"{"synced": "[00:01.00]La", "plain": null}"#.utf8))
+        XCTAssertNil(older.note)
     }
 
     func testAChangeMadeOnAPageIsOnlyForNow() {

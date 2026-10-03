@@ -339,6 +339,10 @@ private struct ProfileSettingsTab: View {
                         newName = profile.name
                         renaming = profile
                     }
+                    Toggle(
+                        "A Child's Profile",
+                        isOn: Binding(
+                            get: { profile.isChild }, set: { model.setChild(profile.id, $0) }))
                     Button("Remove from the List…") { removing = profile }
                         .disabled(inUse || model.profiles.profiles.count < 2)
                 } label: {
@@ -349,7 +353,17 @@ private struct ProfileSettingsTab: View {
                 .fixedSize()
             }
         } label: {
-            Text(profile.name).fontWeight(inUse ? .semibold : .regular)
+            HStack(spacing: 6) {
+                Text(profile.name).fontWeight(inUse ? .semibold : .regular)
+                if profile.isChild {
+                    Text("Child")
+                        .font(.caption.weight(.medium))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 1)
+                        .background(.quaternary, in: Capsule())
+                        .foregroundStyle(.secondary)
+                }
+            }
             Text(profile.libraryRoot ?? "No library folder chosen yet")
                 .lineLimit(1)
                 .truncationMode(.middle)
@@ -384,7 +398,16 @@ private struct NewProfileSheet: View {
     @State private var problem: String?
     @FocusState private var typing: Bool
 
-    private var folder: String? { chosen ?? model.profiles.suggestedRoot(for: name) }
+    @State private var isChild = false
+
+    /// In the Mac's Music folder, named after the profile ("Music Kids"), unless a
+    /// folder was chosen by hand.
+    private var folder: String? {
+        chosen
+            ?? model.profiles.suggestedRoot(for: name, in: AppModel.musicFolder) {
+                FileManager.default.fileExists(atPath: $0)
+            }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -407,6 +430,14 @@ private struct NewProfileSheet: View {
             Text(
                 "A new, empty library is made there. The profile in use now is put away exactly "
                     + "as it is, and comes back when you switch to it again."
+            )
+            .font(.callout)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Toggle("This is a child's profile", isOn: $isChild)
+            Text(
+                "For now this only marks the profile. What it will do is still to be decided: "
+                    + "most likely no explicit songs and nothing age-restricted."
             )
             .font(.callout)
             .foregroundStyle(.secondary)
@@ -444,7 +475,7 @@ private struct NewProfileSheet: View {
     private func create() {
         guard let folder else { return }
         do {
-            try model.addProfile(named: name, libraryRoot: folder)
+            try model.addProfile(named: name, libraryRoot: folder, isChild: isChild)
             dismiss()
         } catch {
             problem = error.localizedDescription

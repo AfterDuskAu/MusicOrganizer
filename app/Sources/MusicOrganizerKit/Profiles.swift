@@ -14,12 +14,40 @@ public struct Profile: Codable, Identifiable, Equatable, Sendable {
     public var libraryRoot: String?
     /// A library that hasn't been made yet: the engine makes it when it's first opened.
     public var isNew: Bool
+    /// A child's profile (owner, 2026-10-04). For now it's only a mark: what it will do
+    /// (most likely no explicit songs and nothing age-restricted) is still to be decided.
+    public var isChild: Bool
 
-    public init(id: String, name: String, libraryRoot: String? = nil, isNew: Bool = false) {
+    public init(
+        id: String, name: String, libraryRoot: String? = nil, isNew: Bool = false,
+        isChild: Bool = false
+    ) {
         self.id = id
         self.name = name
         self.libraryRoot = libraryRoot
         self.isNew = isNew
+        self.isChild = isChild
+    }
+
+    private enum Keys: String, CodingKey { case id, name, libraryRoot, isNew, isChild }
+
+    /// A list saved before there was a child's mark reads as nobody's being a child's.
+    public init(from decoder: Decoder) throws {
+        let saved = try decoder.container(keyedBy: Keys.self)
+        id = try saved.decode(String.self, forKey: .id)
+        name = try saved.decode(String.self, forKey: .name)
+        libraryRoot = try saved.decodeIfPresent(String.self, forKey: .libraryRoot)
+        isNew = try saved.decodeIfPresent(Bool.self, forKey: .isNew) ?? false
+        isChild = try saved.decodeIfPresent(Bool.self, forKey: .isChild) ?? false
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var saved = encoder.container(keyedBy: Keys.self)
+        try saved.encode(id, forKey: .id)
+        try saved.encode(name, forKey: .name)
+        try saved.encodeIfPresent(libraryRoot, forKey: .libraryRoot)
+        try saved.encode(isNew, forKey: .isNew)
+        try saved.encode(isChild, forKey: .isChild)
     }
 }
 
@@ -80,7 +108,8 @@ public struct ProfileList: Codable, Equatable, Sendable {
     /// first opened). `newId` makes the id; it's given in tests.
     @discardableResult
     public mutating func add(
-        name: String, libraryRoot: String, newId: () -> String = ProfileList.newId
+        name: String, libraryRoot: String, isChild: Bool = false,
+        newId: () -> String = ProfileList.newId
     ) throws -> Profile {
         let shown = try checked(name: name)
         let folder = Self.folderKey(libraryRoot)
@@ -89,7 +118,8 @@ public struct ProfileList: Codable, Equatable, Sendable {
         }
         var id = newId()
         while profiles.contains(where: { $0.id == id }) { id = Self.newId() }
-        let made = Profile(id: id, name: shown, libraryRoot: libraryRoot, isNew: true)
+        let made = Profile(
+            id: id, name: shown, libraryRoot: libraryRoot, isNew: true, isChild: isChild)
         profiles.append(made)
         return made
     }
@@ -105,6 +135,12 @@ public struct ProfileList: Codable, Equatable, Sendable {
         guard profiles.count > 1 else { throw Problem.lastOne }
         guard id != currentId else { throw Problem.inUse }
         profiles.removeAll { $0.id == id }
+    }
+
+    /// Mark a profile as a child's, or take the mark off.
+    public mutating func setChild(_ id: String, _ isChild: Bool) {
+        guard let index = profiles.firstIndex(where: { $0.id == id }) else { return }
+        profiles[index].isChild = isChild
     }
 
     public mutating func switchTo(_ id: String) {
@@ -128,18 +164,28 @@ public struct ProfileList: Codable, Equatable, Sendable {
         URL(fileURLWithPath: path).standardizedFileURL.path.lowercased()
     }
 
-    /// Where a new profile's library would go: beside the library in use, named after
-    /// the profile ("Music Library" → "Music Library (Kids)"). Nil when there's no
-    /// library yet to put it beside.
-    public func suggestedRoot(for name: String) -> String? {
-        guard let root = current.libraryRoot else { return nil }
+    /// Where a new profile's library goes: a folder of its own in the Mac's Music folder,
+    /// named after the profile ("Music Kids"; owner, 2026-10-04). `musicFolder` is that
+    /// Music folder; nil when the Mac has none to give. A folder that's there already, or
+    /// is another profile's, is never suggested: the next free name is ("Music Kids 2"),
+    /// so two people's music can't be mixed by a name. `exists` says whether a folder is
+    /// on the disk.
+    public func suggestedRoot(
+        for name: String, in musicFolder: String?, exists: (String) -> Bool = { _ in false }
+    ) -> String? {
+        guard let musicFolder, !musicFolder.isEmpty else { return nil }
         let allowed = name.split(whereSeparator: \.isWhitespace).joined(separator: " ")
             .filter { !"/:\\\0".contains($0) && !$0.isNewline }
         let shown = allowed.trimmingCharacters(in: CharacterSet(charactersIn: ". "))
         guard !shown.isEmpty else { return nil }
-        let folder = URL(fileURLWithPath: root).standardizedFileURL
-        return folder.deletingLastPathComponent()
-            .appendingPathComponent("\(folder.lastPathComponent) (\(shown))").path
+        let parent = URL(fileURLWithPath: musicFolder).standardizedFileURL
+        let taken = Set(profiles.compactMap { $0.libraryRoot.map(Self.folderKey) })
+        for number in 1...99 {
+            let folder = number == 1 ? "Music \(shown)" : "Music \(shown) \(number)"
+            let path = parent.appendingPathComponent(folder).path
+            if !taken.contains(Self.folderKey(path)), !exists(path) { return path }
+        }
+        return nil
     }
 }
 
