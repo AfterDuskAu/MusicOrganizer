@@ -29,6 +29,7 @@ public struct PlayQueue: Sendable {
         using generator: inout some RandomNumberGenerator
     ) {
         self.tracks = tracks
+        queuedNext = []
         guard !tracks.isEmpty else {
             order = []
             position = nil
@@ -96,6 +97,22 @@ public struct PlayQueue: Sendable {
         }
         return current
     }
+
+    /// Up Next (the YouTube Music page's button): play `track` after the song that's
+    /// playing, and after any others put there the same way, in the order they were put.
+    /// False when nothing is playing: there's nothing to put it after.
+    public mutating func queueNext(_ track: Track) -> Bool {
+        guard let position else { return false }
+        tracks.append(track)
+        var at = position + 1
+        while at < order.count, queuedNext.contains(order[at]) { at += 1 }
+        order.insert(tracks.count - 1, at: at)
+        queuedNext.insert(tracks.count - 1)
+        return true
+    }
+
+    /// Songs put there by `queueNext` (positions into `tracks`).
+    private var queuedNext = Set<Int>()
 
     /// Jump to a song in "up next" (0 is the very next one).
     public mutating func jump(toUpNext offset: Int) -> Track? {

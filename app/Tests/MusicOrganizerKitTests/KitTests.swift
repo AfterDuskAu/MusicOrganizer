@@ -738,6 +738,28 @@ final class SongVideoTests: XCTestCase {
         XCTAssertEqual(answer.found.first?.trackId, "t_1")
     }
 
+    func testUpNextPlaysAfterTheSongPlayingInTheOrderAsked() {
+        func song(_ title: String) -> Track { Track(path: "yt:\(title)", title: title) }
+        var queue = PlayQueue()
+        XCTAssertFalse(queue.queueNext(song("lonely")))  // nothing playing to put it after
+        queue.play([song("a"), song("b"), song("c")], startAt: 0)
+        XCTAssertTrue(queue.queueNext(song("x")))
+        XCTAssertTrue(queue.queueNext(song("y")))
+        XCTAssertEqual(queue.upNext.map(\.title), ["x", "y", "b", "c"])
+        XCTAssertEqual(queue.advance()?.title, "x")
+        // Asked for while x plays: after y, which was asked for first.
+        XCTAssertTrue(queue.queueNext(song("z")))
+        XCTAssertEqual(queue.upNext.map(\.title), ["y", "z", "b", "c"])
+        // A new list starts afresh.
+        queue.play([song("d")], startAt: 0)
+        XCTAssertTrue(queue.queueNext(song("w")))
+        XCTAssertEqual(queue.upNext.map(\.title), ["w"])
+        // A result is kept and read back whole (the YouTube Queue is saved this way).
+        let result = SearchResult(videoId: "DuQGokwsWF8", title: "T", artists: ["A"], durationS: 130)
+        let saved = try? JSONEncoder().encode([result])
+        XCTAssertEqual(saved.flatMap { try? JSONDecoder().decode([SearchResult].self, from: $0) }, [result])
+    }
+
     func testProfilesKeepPeopleApart() throws {
         // Before profiles there was one library: it becomes the first profile's.
         var list = ProfileList(firstNamed: "  D ", libraryRoot: "/Volumes/Music/Library")

@@ -84,7 +84,7 @@ struct Message<Buttons: View>: View {
 enum SidebarItem: Hashable {
     case songs, albums, artists, videos
     case favourites, recentlyAdded, mostPlayed, unconfirmed
-    case visualizer, whatsNew, find, importPlaylists, youtube, downloads
+    case visualizer, whatsNew, find, importPlaylists, youtube, youtubeQueue, downloads
     case playlist(String)
 
     /// A name for this entry that can be saved, and read back with `init(key:)`.
@@ -96,6 +96,7 @@ enum SidebarItem: Hashable {
         case .find: "find"
         case .importPlaylists: "import"
         case .youtube: "youtube"
+        case .youtubeQueue: "youtubeQueue"
         case .downloads: "downloads"
         default: libraryName ?? "songs"
         }
@@ -112,6 +113,7 @@ enum SidebarItem: Hashable {
         case "find": self = .find
         case "import": self = .importPlaylists
         case "youtube": self = .youtube
+        case "youtubeQueue": self = .youtubeQueue
         case "downloads": self = .downloads
         default: self = SidebarItem(libraryEntry: key) ?? .songs
         }
@@ -151,6 +153,7 @@ enum SidebarItem: Hashable {
         case .find: "Find"
         case .importPlaylists: "Import Playlists"
         case .youtube: "YouTube Music"
+        case .youtubeQueue: "YouTube Queue"
         case .visualizer: "Local Visualizer"
         case .downloads: "Downloads"
         case .playlist: "Playlist"
@@ -171,6 +174,7 @@ enum SidebarItem: Hashable {
         case .find: "wand.and.stars"
         case .importPlaylists: "square.and.arrow.down.on.square"
         case .youtube: "play.rectangle"
+        case .youtubeQueue: "text.append"
         case .visualizer: "waveform"
         case .downloads: "arrow.down.circle"
         case .playlist: "music.note.list"
@@ -377,6 +381,12 @@ struct MainView: View {
                 ForEach([SidebarItem.visualizer, .youtube], id: \.self) { entry in
                     Label(entry.title, systemImage: entry.symbol)
                 }
+                if !model.youtubeQueue.isEmpty {
+                    // Shown while anything is queued with Up Next.
+                    Label(SidebarItem.youtubeQueue.title, systemImage: SidebarItem.youtubeQueue.symbol)
+                        .badge(model.youtubeQueue.count)
+                        .tag(SidebarItem.youtubeQueue)
+                }
             }
             Section("Discover", isExpanded: $openDiscover) {
                 ForEach([SidebarItem.whatsNew, .find, .importPlaylists, .downloads], id: \.self) {
@@ -573,6 +583,8 @@ struct MainView: View {
                 isActive: active)
         case .youtube:
             YouTubeSearchView()
+        case .youtubeQueue:
+            YouTubeQueueView()
         case .visualizer:
             // The song that's playing, with its cover and lyrics: the player's own tab
             // (parked Fix A-3 will give it the owner's layout).

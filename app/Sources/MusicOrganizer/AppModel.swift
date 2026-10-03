@@ -74,6 +74,12 @@ final class AppModel {
     /// window changes, and forgot.
     @ObservationIgnored private var tookTheScreen = false
 
+    /// The YouTube Queue: songs from YouTube Music put on with Up Next, in order. A
+    /// playlist of songs that aren't downloaded, kept with the profile's settings. Shown
+    /// under YouTube Music in the sidebar while it has anything in it.
+    private(set) var youtubeQueue: [SearchResult] = AppModel.savedYouTubeQueue()
+    private static let youtubeQueueKey = "youtubeQueue"
+
     // The YouTube Music search page.
     var youtubeQuery = ""
     private(set) var youtubeResults: [SearchResult] = []
@@ -334,6 +340,47 @@ final class AppModel {
         retry()  // an engine serves one library, so a new choice starts a new engine
     }
 
+    // MARK: The YouTube Queue
+
+    /// Up Next on the YouTube Music page: the song joins the YouTube Queue, and plays
+    /// after the song that's playing (straight away, if nothing is).
+    func upNext(_ result: SearchResult) {
+        if !youtubeQueue.contains(result) {
+            youtubeQueue.append(result)
+            saveYouTubeQueue()
+        }
+        player.queueNext(result.track)
+    }
+
+    /// Play the YouTube Queue from one of its songs.
+    func playYouTubeQueue(from result: SearchResult? = nil) {
+        let start = result.flatMap { youtubeQueue.firstIndex(of: $0) } ?? 0
+        player.play(youtubeQueue.map(\.track), startAt: start)
+    }
+
+    func removeFromYouTubeQueue(_ result: SearchResult) {
+        youtubeQueue.removeAll { $0 == result }
+        saveYouTubeQueue()
+    }
+
+    func clearYouTubeQueue() {
+        youtubeQueue = []
+        saveYouTubeQueue()
+    }
+
+    private static func savedYouTubeQueue() -> [SearchResult] {
+        guard let data = UserDefaults.standard.data(forKey: youtubeQueueKey) else { return [] }
+        return (try? JSONDecoder().decode([SearchResult].self, from: data)) ?? []
+    }
+
+    private func saveYouTubeQueue() {
+        if youtubeQueue.isEmpty {
+            UserDefaults.standard.removeObject(forKey: Self.youtubeQueueKey)
+        } else if let data = try? JSONEncoder().encode(youtubeQueue) {
+            UserDefaults.standard.set(data, forKey: Self.youtubeQueueKey)
+        }
+    }
+
     // MARK: Profiles
 
     private static let profilesKey = "profiles"
@@ -425,6 +472,7 @@ final class AppModel {
         importing.reset()
         keepDownloadsSeparate =
             UserDefaults.standard.object(forKey: "keepDownloadsSeparate") as? Bool ?? true
+        youtubeQueue = Self.savedYouTubeQueue()  // the next profile's own
     }
 
     private func open(_ folder: URL) async {

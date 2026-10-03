@@ -159,6 +159,14 @@ final class Player {
         start(queue.current)
     }
 
+    /// Up Next: play `track` after the song that's playing (and after others put there
+    /// the same way). With nothing playing, it plays now.
+    func queueNext(_ track: Track) {
+        if !queue.queueNext(track) {
+            play([track])
+        }
+    }
+
     func playShuffled(_ tracks: [Track]) {
         guard !tracks.isEmpty else { return }
         queue.setShuffle(true)

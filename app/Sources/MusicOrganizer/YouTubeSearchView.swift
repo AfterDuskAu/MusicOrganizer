@@ -62,7 +62,7 @@ struct YouTubeSearchView: View {
     }
 }
 
-private struct ResultRow: View {
+struct ResultRow: View {
     let result: SearchResult
     let play: () -> Void
     @Environment(AppModel.self) private var model
@@ -96,9 +96,12 @@ private struct ResultRow: View {
                     .lineLimit(1)
             }
             Spacer(minLength: 8)
+            Button("Up Next", systemImage: "text.append") { model.upNext(result) }
+                .help("Play this after the song that's playing, and keep it in the YouTube Queue")
             Text(clockTime(result.durationS))
                 .monospacedDigit()
                 .foregroundStyle(.secondary)
+                .frame(width: 44, alignment: .trailing)
             status
                 .frame(width: 130, alignment: .trailing)
         }
@@ -129,6 +132,57 @@ private struct ResultRow: View {
             case nil:
                 Button("Download", systemImage: "arrow.down.circle") { model.download(result) }
                     .help("Save this song in your library")
+            }
+        }
+    }
+}
+
+/// Media → YouTube Queue: the songs put on with Up Next, in the order they'll play.
+/// None of them is downloaded; each can be, from here.
+struct YouTubeQueueView: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let queue = model.youtubeQueue
+        VStack(spacing: 0) {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text("YouTube Queue").font(.title2.weight(.semibold))
+                        Text(queue.count == 1 ? "1 song" : "\(queue.count) songs")
+                            .foregroundStyle(.secondary)
+                    }
+                    Text("Songs from YouTube Music you put on with Up Next. They play in this order.")
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button("Play", systemImage: "play.fill") { model.playYouTubeQueue() }
+                Button("Clear", systemImage: "xmark.circle") { model.clearYouTubeQueue() }
+                    .help("Empty the YouTube Queue. Nothing downloaded is touched.")
+            }
+            .disabled(queue.isEmpty)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            Divider()
+            if queue.isEmpty {
+                Text("Nothing is queued. On YouTube Music, click Up Next beside a song.")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List {
+                    ForEach(queue) { result in
+                        HStack(spacing: 8) {
+                            ResultRow(result: result) { model.playYouTubeQueue(from: result) }
+                            Button {
+                                model.removeFromYouTubeQueue(result)
+                            } label: {
+                                Image(systemName: "minus.circle").foregroundStyle(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                            .help("Take it out of the YouTube Queue")
+                        }
+                    }
+                }
             }
         }
     }

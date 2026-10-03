@@ -107,7 +107,7 @@ public struct TrackLyrics: Decodable, Sendable {
 }
 
 /// One result of a YouTube Music search (the engine's Candidate).
-public struct SearchResult: Decodable, Identifiable, Hashable, Sendable {
+public struct SearchResult: Codable, Identifiable, Hashable, Sendable {
     public let videoId: String
     public let title: String
     public let artists: [String]
