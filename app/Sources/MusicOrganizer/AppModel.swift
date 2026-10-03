@@ -98,6 +98,8 @@ final class AppModel {
     /// Downloads that couldn't even be queued, and why (by video id).
     private(set) var startProblems: [String: String] = [:]
     @ObservationIgnored private var watchingDownloads = false
+    /// The song that was playing, to know when the player has moved on from it.
+    @ObservationIgnored private var lastTrack: Track?
     /// The player page's Download Video, with the song showing: the video found for a
     /// song (by the song's id in the app), what's being looked for, and what has none.
     private(set) var videoFor: [String: String] = [:]
@@ -181,7 +183,13 @@ final class AppModel {
                 return try await self.suggest(seeds, count, shuffle, name, exclude: exclude)
             }
         }
-        player.onTrackChange = { [weak self] track in self?.showLyrics(for: track) }
+        player.onTrackChange = { [weak self] track in
+            guard let self else { return }
+            // The song before has been played: from the YouTube Queue, it's Played Already.
+            if let before = self.lastTrack, before != track { self.playedFromQueue(before) }
+            self.lastTrack = track
+            self.showLyrics(for: track)
+        }
         player.onTick = { [weak self] time in
             guard let self else { return }
             // A music video that isn't as long as the song isn't the song second for
@@ -347,14 +355,60 @@ final class AppModel {
 
     // MARK: The YouTube Queue
 
-    /// Up Next on the YouTube Music page: the song joins the YouTube Queue, and plays
-    /// after the song that's playing (straight away, if nothing is).
-    func upNext(_ result: SearchResult) {
-        if !youtubeQueue.contains(result) {
+    /// The Queue button (YouTube Music, What's New, Find): the song joins the YouTube
+    /// Queue and plays after the song that's playing (straight away, if nothing is).
+    /// Pressed again, it comes back out of both.
+    func toggleQueued(_ result: SearchResult) {
+        if isQueued(result) {
+            removeFromYouTubeQueue(result)
+        } else {
             youtubeQueue.append(result)
             saveYouTubeQueue()
+            player.queueNext(result.track)
         }
-        player.queueNext(result.track)
+    }
+
+    func isQueued(_ result: SearchResult) -> Bool {
+        youtubeQueue.contains { $0.videoId == result.videoId }
+    }
+
+    /// Songs from the YouTube Queue that have been played, newest first (Played Already).
+    private(set) var youtubePlayed: [SearchResult] = AppModel.savedResults(AppModel.youtubePlayedKey)
+    private static let youtubePlayedKey = "youtubeQueuePlayed"
+    private static let mostPlayedKept = 300
+
+    /// A song from the YouTube Queue has been played (the player moved on from it): it
+    /// leaves the queue for Played Already.
+    private func playedFromQueue(_ track: Track) {
+        guard let videoId = track.videoId,
+            let result = youtubeQueue.first(where: { $0.videoId == videoId })
+        else { return }
+        youtubeQueue.removeAll { $0.videoId == videoId }
+        saveYouTubeQueue()
+        youtubePlayed.removeAll { $0.videoId == videoId }
+        youtubePlayed.insert(result, at: 0)
+        if youtubePlayed.count > Self.mostPlayedKept {
+            youtubePlayed.removeLast(youtubePlayed.count - Self.mostPlayedKept)
+        }
+        saveResults(youtubePlayed, Self.youtubePlayedKey)
+    }
+
+    func clearPlayedFromQueue() {
+        youtubePlayed = []
+        saveResults([], Self.youtubePlayedKey)
+    }
+
+    private static func savedResults(_ key: String) -> [SearchResult] {
+        guard let data = UserDefaults.standard.data(forKey: key) else { return [] }
+        return (try? JSONDecoder().decode([SearchResult].self, from: data)) ?? []
+    }
+
+    private func saveResults(_ results: [SearchResult], _ key: String) {
+        if results.isEmpty {
+            UserDefaults.standard.removeObject(forKey: key)
+        } else if let data = try? JSONEncoder().encode(results) {
+            UserDefaults.standard.set(data, forKey: key)
+        }
     }
 
     /// Play the YouTube Queue from one of its songs.
@@ -364,8 +418,9 @@ final class AppModel {
     }
 
     func removeFromYouTubeQueue(_ result: SearchResult) {
-        youtubeQueue.removeAll { $0 == result }
+        youtubeQueue.removeAll { $0.videoId == result.videoId }
         saveYouTubeQueue()
+        player.unqueue(result.track)
     }
 
     func clearYouTubeQueue() {
@@ -563,6 +618,8 @@ final class AppModel {
         keepDownloadsSeparate =
             UserDefaults.standard.object(forKey: "keepDownloadsSeparate") as? Bool ?? true
         youtubeQueue = Self.savedYouTubeQueue()  // the next profile's own
+        youtubePlayed = Self.savedResults(Self.youtubePlayedKey)
+        lastTrack = nil
     }
 
     private func open(_ folder: URL) async {
@@ -1568,6 +1625,7 @@ final class AppModel {
 
     private func showLyrics(for track: Track?) {
         lyrics.videoTiming = .none
+        if lyrics.trackPath != track?.path { lyricsNote = nil }
         guard let track else {
             lyrics.show(.nothingPlaying, for: nil)
             return
@@ -1692,6 +1750,55 @@ final class AppModel {
         }
     }
 
+    /// Karaoke with the song showing (owner, 2026-10-03: "a karaoke button on all songs,
+    /// in case there aren't lyrics: this would search for lyrics, and add them"). Lyrics
+    /// are looked for by the song's names (LRCLIB, then YouTube Music; timed ones first).
+    /// A song of the owner's gets them saved into its file, as Edit Details would, so
+    /// they're there next time; a song played from YouTube shows them for now.
+    func karaokeSong() {
+        guard let track = player.current, lyrics.videoTiming != .working, !lyrics.isSynced
+        else { return }
+        lyrics.videoTiming = .working
+        lyricsNote = nil
+        Task {
+            defer { if lyrics.videoTiming == .working { lyrics.videoTiming = .none } }
+            let found = await findLyrics(
+                title: track.title, artist: track.artist ?? track.albumArtist ?? "",
+                album: track.album ?? "", for: track)
+            guard player.current == track else { return }
+            guard let found else {
+                lyricsNote = "No lyrics were found for this song."
+                return
+            }
+            if !found.timed, lyrics.hasLyrics {
+                lyricsNote = "Only the plain lyrics it has already were found; nothing timed."
+                return
+            }
+            let ownSong = track.trackId != nil && track.videoId == nil && !track.isVideo
+            if ownSong {
+                do {
+                    try await saveEdit(of: track, changes: [:], lyrics: found.text, coverFile: nil)
+                    lyricsNote = found.timed
+                        ? "Timed lyrics found and saved with the song."
+                        : "Lyrics found and saved with the song (not timed)."
+                } catch {
+                    lyricsNote = error.localizedDescription
+                }
+            } else {
+                let lines = found.timed ? LRC.parse(found.text) : []
+                if !lines.isEmpty {
+                    lyrics.show(.synced(lines), for: track.path)
+                    lyrics.follow(player.clock.time)
+                } else {
+                    lyrics.show(.plain(found.text), for: track.path)
+                }
+            }
+        }
+    }
+
+    /// What Karaoke with the song showing came to, said under the song's name.
+    private(set) var lyricsNote: String?
+
     /// The lyrics on screen were lined up with the video that's playing (by its sound
     /// or its captions), not just taken as the song's.
     var lyricsFitVideo: Bool {
@@ -1787,6 +1894,11 @@ final class LyricsModel {
     }
 
     /// There are lyrics to show right now: a song is on, and its words were found.
+    /// Timed lyrics are showing.
+    var isSynced: Bool {
+        if case .synced = state { true } else { false }
+    }
+
     var hasLyrics: Bool {
         switch state {
         case .synced, .plain: true

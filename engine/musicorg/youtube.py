@@ -112,6 +112,7 @@ class Candidate:
     video_type: str | None = None
     year: str | None = None
     thumbnail: str | None = None  # the largest
+    plays: str | None = None  # YouTube Music's own count, as it writes it ("497M"); search only
 
     @property
     def is_official_audio(self) -> bool:
@@ -140,6 +141,7 @@ class Candidate:
             video_type=data.get("video_type"),
             year=data.get("year"),
             thumbnail=data.get("thumbnail"),
+            plays=data.get("plays"),
         )
 
 
@@ -1331,6 +1333,7 @@ def _from_track(track: dict[str, Any], *, duration: int | None) -> Candidate | N
         video_type=track.get("videoType"),
         year=str(track["year"]) if track.get("year") else None,
         thumbnail=largest["url"] if largest else None,
+        plays=track["views"] if isinstance(track.get("views"), str) and track["views"] else None,
     )
 
 

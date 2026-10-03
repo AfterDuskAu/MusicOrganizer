@@ -180,6 +180,8 @@ Standard JSON-RPC codes, plus:
 
 ```jsonc
 // Candidate
+// `plays` (2026-10-03): how often it's been played, as YouTube Music writes it ("497M"),
+// from a search; null elsewhere.
 { "candidate_id": "c_…", "video_id": "…", "title": "…", "artists": ["…"], "album": "…",
   "album_browse_id": "MPRE…", "duration_s": 228, "is_official_audio": true, "is_explicit": false,
   "version_tokens": ["remix:adventure club"], "score": 0.917,

@@ -111,6 +111,17 @@ public struct PlayQueue: Sendable {
         return true
     }
 
+    /// Take a song that's still to come back out (the Queue button pressed again). Only
+    /// one that hasn't played yet; the song playing stays. False if it isn't to come.
+    public mutating func removeUpcoming(_ id: Track.ID) -> Bool {
+        guard let position else { return false }
+        guard let at = order.indices.first(where: { $0 > position && tracks[order[$0]].id == id })
+        else { return false }
+        queuedNext.remove(order[at])
+        order.remove(at: at)
+        return true
+    }
+
     /// Songs put there by `queueNext` (positions into `tracks`).
     private var queuedNext = Set<Int>()
 

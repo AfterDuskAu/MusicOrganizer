@@ -56,19 +56,11 @@ struct FullScreenVideo: View {
         }
     }
 
+    /// What's playing, along the top. No button up here: in full screen macOS keeps the
+    /// top edge for its menu bar, which slides down over it and took the click (owner,
+    /// 2026-10-03: "the leave full screen button still doesn't work").
     private func top(_ player: Player) -> some View {
         HStack(spacing: 12) {
-            Button {
-                model.setVideoFullScreen(false)
-            } label: {
-                Label("Leave Full Screen", systemImage: "arrow.down.right.and.arrow.up.left")
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(.white.opacity(0.18), in: Capsule())
-                    .contentShape(Capsule())
-            }
-            .buttonStyle(.plain)
-            .help("Back to the app (Esc)")
             if let track = player.current {
                 Text("\(track.title) · \(track.artistName)")
                     .font(.headline)
@@ -104,6 +96,17 @@ struct FullScreenVideo: View {
                 .controlSize(.small)
                 .frame(width: 90)
             QualityMenu()
+            Button {
+                model.setVideoFullScreen(false)
+            } label: {
+                Label("Leave Full Screen", systemImage: "arrow.down.right.and.arrow.up.left")
+                    .font(.callout)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(.white.opacity(0.18), in: Capsule())
+                    .contentShape(Capsule())
+            }
+            .help("Back to the app (Esc, or double-click the video)")
         }
         .buttonStyle(.plain)
         .font(.title3)

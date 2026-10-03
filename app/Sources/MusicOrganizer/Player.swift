@@ -167,6 +167,11 @@ final class Player {
         }
     }
 
+    /// The Queue button pressed again: the song doesn't come next after all.
+    func unqueue(_ track: Track) {
+        _ = queue.removeUpcoming(track.id)
+    }
+
     func playShuffled(_ tracks: [Track]) {
         guard !tracks.isEmpty else { return }
         queue.setShuffle(true)
@@ -315,6 +320,17 @@ final class Player {
         return ticket
     }
 
+    /// Settings → Play Options: with Video on, play the song while its video loads (the
+    /// standard), or wait for the video.
+    static let playWhileVideoLoadsKey = "playSongWhileVideoLoads"
+    /// Settings → Downloads: videos always at their sharpest; the size menu goes away.
+    static let alwaysBestVideoKey = "alwaysBestVideo"
+
+    /// The picture size wanted: the owner's choice, unless Settings says always the best.
+    private var wantedQuality: VideoPreference? {
+        UserDefaults.standard.bool(forKey: Self.alwaysBestVideoKey) ? nil : videoPreference
+    }
+
     private func start(_ track: Track?) {
         guard let track else { return }
         retries = 0
@@ -325,6 +341,13 @@ final class Player {
         // The song itself always starts at once. With Video on, its video is looked for
         // meanwhile and takes over when it's ready (owner, 2026-10-01: no waiting in
         // silence). A saved video needs nothing from YouTube.
+        // Settings → Play Options can say to wait for the video instead, in silence.
+        let playWhileLoading =
+            UserDefaults.standard.object(forKey: Self.playWhileVideoLoadsKey) as? Bool ?? true
+        if videoOn, !track.isVideo, !playWhileLoading {
+            startVideo(track, at: 0, interrupt: true, playing: true)
+            return
+        }
         startSound(track, at: 0, playing: true)
         if videoOn, !track.isVideo {
             startVideo(track, at: 0, interrupt: false, playing: true)
@@ -426,7 +449,7 @@ final class Player {
                     return
                 }
                 guard videoTicket == mine, current == track else { return }
-                let quality = found.quality(for: videoPreference)
+                let quality = found.quality(for: wantedQuality)
                 let item = try await Self.joined(found, quality)
                 guard videoTicket == mine, current == track else { return }
                 let keepsTime = found.keepsTime(with: track.durationS)

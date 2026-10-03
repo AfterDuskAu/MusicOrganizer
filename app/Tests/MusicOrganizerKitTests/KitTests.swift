@@ -750,6 +750,13 @@ final class SongVideoTests: XCTestCase {
         // Asked for while x plays: after y, which was asked for first.
         XCTAssertTrue(queue.queueNext(song("z")))
         XCTAssertEqual(queue.upNext.map(\.title), ["y", "z", "b", "c"])
+        // Pressed again: it comes back out; the song playing stays where it is.
+        XCTAssertTrue(queue.removeUpcoming(song("y").id))
+        XCTAssertEqual(queue.upNext.map(\.title), ["z", "b", "c"])
+        XCTAssertFalse(queue.removeUpcoming(song("x").id))  // playing now
+        XCTAssertFalse(queue.removeUpcoming(song("nope").id))
+        XCTAssertTrue(queue.queueNext(song("v")))  // still after z, the other one asked for
+        XCTAssertEqual(queue.upNext.map(\.title), ["z", "v", "b", "c"])
         // A new list starts afresh.
         queue.play([song("d")], startAt: 0)
         XCTAssertTrue(queue.queueNext(song("w")))

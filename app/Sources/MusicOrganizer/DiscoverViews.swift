@@ -310,6 +310,7 @@ struct PicksView: View {
     let page: DiscoverPage
     let empty: String
     @Environment(AppModel.self) private var model
+    @State private var showingQueue = false
 
     var body: some View {
         if page.working {
@@ -406,6 +407,12 @@ struct PicksView: View {
                 model.player.play(picks.map(\.result.track), startAt: 0)
             }
             .help("Play these from YouTube Music. Nothing is saved.")
+            Button("Queue (\(model.youtubeQueue.count))", systemImage: "text.append") {
+                showingQueue = true
+            }
+            .disabled(model.youtubeQueue.isEmpty)
+            .help("What's queued with Q, in the order it'll play")
+            .popover(isPresented: $showingQueue, arrowEdge: .bottom) { QueueList() }
             if page.selected.isEmpty {
                 Button("Select All") { page.selected = Set(available.map(\.id)) }
                     .disabled(available.isEmpty)
@@ -492,6 +499,19 @@ private struct PickCard: View {
                 .help(pick.why)
             HStack(spacing: 6) {
                 status(owned: owned)
+                let queued = model.isQueued(pick.result)
+                Button {
+                    model.toggleQueued(pick.result)
+                } label: {
+                    Image(systemName: queued ? "q.circle.fill" : "q.circle")
+                        .font(.title3)
+                        .foregroundStyle(queued ? Color.accentColor : .secondary)
+                }
+                .buttonStyle(.plain)
+                .help(
+                    queued
+                        ? "In the queue. Click to take it out."
+                        : "Queue: play this after the song that's playing (YouTube Queue)")
                 Spacer(minLength: 0)
                 Text(clockTime(pick.durationS))
                     .font(.caption)
@@ -554,5 +574,50 @@ struct HeardMark: View {
             .foregroundStyle(.red)
             .help("You've played this one all the way through")
             .accessibilityLabel("Played all the way through")
+    }
+}
+
+/// The YouTube Queue, shown from What's New and Find: what's queued with Q, in the
+/// order it'll play. A song can be taken out here (or with its Q again).
+private struct QueueList: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("Queue").font(.headline)
+                Spacer()
+                Button("Play", systemImage: "play.fill") { model.playYouTubeQueue() }
+                    .controlSize(.small)
+            }
+            .padding(12)
+            Divider()
+            List(model.youtubeQueue) { result in
+                HStack(spacing: 8) {
+                    CoverView(track: result.track, size: .small, corner: 3)
+                        .frame(width: 28, height: 28)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(result.title).lineLimit(1)
+                        Text(result.artists.joined(separator: ", "))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                    Spacer(minLength: 6)
+                    Text(clockTime(result.durationS))
+                        .font(.caption)
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                    Button {
+                        model.removeFromYouTubeQueue(result)
+                    } label: {
+                        Image(systemName: "minus.circle").foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Take it out of the queue")
+                }
+            }
+        }
+        .frame(width: 380, height: 400)
     }
 }

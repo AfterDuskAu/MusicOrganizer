@@ -40,27 +40,32 @@ struct NowPlayingView: View {
         .environment(\.colorScheme, .dark)
     }
 
-    /// The cover (or the video) on the left, the lyrics on the right.
+    /// The cover (or the video) on the left, the lyrics on the right. The left side, as
+    /// the owner drew it (2026-10-03): Song | Video on top, the picture, the song's name
+    /// centred under it, and the downloads below. Everything else makes room around the
+    /// name: nothing squeezes it.
     private func sideBySide(_ track: Track?, showsVideo: Bool) -> some View {
-        HStack(spacing: 40) {
+        HStack(spacing: 32) {
             VStack(spacing: 14) {
+                ShowPicker()
                 if showsVideo {
                     picture
                 } else {
                     CoverView(track: track, size: .large, corner: 12)
+                        .aspectRatio(1, contentMode: .fit)
                         .frame(maxWidth: 420, maxHeight: 420)
                         .shadow(color: .black.opacity(0.5), radius: 24, y: 10)
                 }
-                PlayerControls(track: track)
+                PlayerControls(track: track, showsVideo: showsVideo)
             }
-            .frame(maxWidth: .infinity)
+            .frame(minWidth: 320, maxWidth: .infinity)
             // A video gets the room: the lyrics move over, or make way if there are none.
             if !showsVideo {
                 LyricsView(large: true)
-                    .frame(maxWidth: .infinity)
+                    .frame(minWidth: 220, maxWidth: .infinity)
             } else if model.lyrics.hasLyrics {
                 LyricsView(large: false)
-                    .frame(width: 320)
+                    .frame(minWidth: 200, idealWidth: 320, maxWidth: 320)
             }
         }
     }
@@ -91,67 +96,106 @@ struct NowPlayingView: View {
     }
 }
 
-/// Under the cover or the video, as the owner drew it (2026-10-03): on the left, Song or
-/// Video and the three downloads; in the middle, what's playing; on the right, for a
-/// video only, Karaoke, the picture's size and Full Screen. A note about the video, if
-/// there is one, goes underneath.
-private struct PlayerControls: View {
-    let track: Track?
+/// Song or Video, always in the same place: above the picture, in the middle.
+private struct ShowPicker: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
         let player = model.player
-        VStack(spacing: 10) {
-            HStack(alignment: .top, spacing: 16) {
-                HStack(alignment: .top, spacing: 12) {
-                    Picker(
-                        "Show",
-                        selection: Binding(get: { player.pictureWanted }, set: { player.setVideo($0) })
-                    ) {
-                        Text("Song").tag(false)
-                        Text("Video").tag(true)
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    .fixedSize()
-                    .help("Play the song with its cover, or its official video from YouTube")
-                    if let track { DownloadButtons(track: track) }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+        Picker(
+            "Show", selection: Binding(get: { player.pictureWanted }, set: { player.setVideo($0) })
+        ) {
+            Text("Song").tag(false)
+            Text("Video").tag(true)
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .fixedSize()
+        .help("Play the song with its cover, or its official video from YouTube")
+    }
+}
+
+/// Under the picture: the song's name, artist and album, centred under it, and
+/// whatever goes with them to its right (Karaoke; for a video, the picture size and Full
+/// Screen too). When there isn't room beside the name, they go under it instead, still
+/// centred. Then the three downloads: in a row when there's room, one above the other
+/// when there isn't. A note about the video, if there is one, goes last.
+private struct PlayerControls: View {
+    let track: Track?
+    let showsVideo: Bool
+    @Environment(AppModel.self) private var model
+    @AppStorage("alwaysBestVideo") private var alwaysBestVideo = false
+
+    /// The room kept on each side of the name, so it stays in the middle.
+    private var side: CGFloat { showsVideo ? 116 : 52 }
+
+    var body: some View {
+        VStack(spacing: 14) {
+            ViewThatFits(in: .horizontal) {
+                // At most so wide, so what's beside the name stays near it.
                 names
-                    .frame(maxWidth: .infinity)
-                HStack(spacing: 10) {
-                    if player.showsPicture {
-                        KaraokeButton()  // a video from YouTube, or a saved one
-                        QualityMenu()  // only for a video played from YouTube
-                        Button("Full Screen", systemImage: "arrow.up.left.and.arrow.down.right") {
-                            model.setVideoFullScreen(true)
-                        }
-                        .help("Give the video the whole screen (Esc brings it back)")
+                    .frame(idealWidth: 240, maxWidth: 440)
+                    .padding(.horizontal, side)
+                    .overlay(alignment: .trailing) {
+                        VStack(alignment: .trailing, spacing: 8) { extras }
+                            .frame(width: side, alignment: .trailing)
                     }
+                VStack(spacing: 10) {
+                    names.frame(maxWidth: .infinity)
+                    HStack(spacing: 10) { extras }
                 }
-                .frame(maxWidth: .infinity, alignment: .trailing)
             }
+            if let track { DownloadButtons(track: track) }
             note
         }
-        .padding(.top, 6)
+        .padding(.top, 2)
     }
 
     @ViewBuilder
     private var names: some View {
         if let track {
             VStack(spacing: 4) {
-                Text(track.title).font(.title.weight(.bold)).multilineTextAlignment(.center)
-                Text(track.artistName).font(.title3).foregroundStyle(.secondary)
+                Text(track.title)
+                    .font(.title.weight(.bold))
+                    .multilineTextAlignment(.center)
+                    .lineLimit(3)
+                    .minimumScaleFactor(0.75)
+                Text(track.artistName)
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
                 if !track.albumName.isEmpty {
-                    Text(track.albumName).font(.callout).foregroundStyle(.tertiary)
+                    Text(track.albumName)
+                        .font(.callout)
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(1)
                 }
                 FavouriteButton(track: track)
                     .font(.title2)
                     .padding(.top, 4)
             }
+            .fixedSize(horizontal: false, vertical: true)
         } else {
             Text("Nothing playing").font(.title2).foregroundStyle(.secondary)
+        }
+    }
+
+    /// Beside the name: Karaoke for every song; and for a video, its picture size
+    /// (unless Settings keeps it at the sharpest) and Full Screen.
+    @ViewBuilder
+    private var extras: some View {
+        if track != nil {
+            KaraokeButton(videoShowing: showsVideo)
+        }
+        if showsVideo {
+            if !alwaysBestVideo { QualityMenu() }
+            Button {
+                model.setVideoFullScreen(true)
+            } label: {
+                Image(systemName: "arrow.up.left.and.arrow.down.right")
+            }
+            .help("Give the video the whole screen (Esc brings it back)")
         }
     }
 
@@ -159,57 +203,63 @@ private struct PlayerControls: View {
     private var note: some View {
         let player = model.player
         if let note = player.videoNote {
-            Text(note)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+            caption(note)
+        } else if let note = model.lyricsNote {
+            caption(note)
         } else if model.lyrics.videoTiming == .failed {
-            Text("The lyrics couldn't be lined up with this video.")
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+            caption("The lyrics couldn't be lined up with this video.")
         } else if let video = player.video, !video.keepsTime, model.lyrics.hasLyrics,
             model.lyrics.forVideo != video.source.videoId, model.lyrics.videoTiming == .none
         {
-            Text(
+            caption(
                 "The video isn't the same length as the song, so the lyrics aren't timed. "
                     + "Karaoke lines them up.")
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
         }
+    }
+
+    private func caption(_ words: String) -> some View {
+        Text(words)
+            .font(.callout)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: 420)
     }
 }
 
-/// Download Song, Download Video, Download Both, one above the other. Each says when
-/// it's done or on its way instead. The video is the one showing, at the size showing;
-/// with the song showing, it's the song's official video, found when it's asked for, at
-/// its sharpest up to 1080p.
+/// Download Song, Download Video, Download Both: in a row when there's room, one above
+/// the other when there isn't. Each says when it's done or on its way instead. The
+/// video is the one showing, at the size showing; with the song showing, it's the
+/// song's official video, found when it's asked for, at its sharpest up to 1080p.
 private struct DownloadButtons: View {
     let track: Track
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        let song = model.songState(of: track)
-        let video = model.videoState(of: track)
-        VStack(alignment: .leading, spacing: 6) {
-            row(song, start: "Download Song", done: "Song in Your Library", symbol: "music.note") {
-                model.downloadSongOf(track)
-            }
-            .help("Save the song itself, sound only, with its album details")
-            row(video, start: "Download Video", done: "Video in Your Library", symbol: "film") {
-                model.downloadVideoOf(track)
-            }
-            .help("Save the video whole, picture and sound. It counts as one of the day's downloads.")
-            Button("Download Both", systemImage: "square.and.arrow.down.on.square") {
-                if song == .ready { model.downloadSongOf(track) }
-                if video == .ready { model.downloadVideoOf(track) }
-            }
-            .disabled(song != .ready || video != .ready)
-            .help("The song and its video, as two downloads")
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) { buttons }
+            VStack(alignment: .leading, spacing: 6) { buttons }
         }
         .controlSize(.small)
-        .frame(width: 170, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private var buttons: some View {
+        let song = model.songState(of: track)
+        let video = model.videoState(of: track)
+        row(song, start: "Download Song", done: "Song in Your Library", symbol: "music.note") {
+            model.downloadSongOf(track)
+        }
+        .help("Save the song itself, sound only, with its album details")
+        row(video, start: "Download Video", done: "Video in Your Library", symbol: "film") {
+            model.downloadVideoOf(track)
+        }
+        .help("Save the video whole, picture and sound. It counts as one of the day's downloads.")
+        Button("Download Both", systemImage: "square.and.arrow.down.on.square") {
+            if song == .ready { model.downloadSongOf(track) }
+            if video == .ready { model.downloadVideoOf(track) }
+        }
+        .disabled(song != .ready || video != .ready)
+        .help("The song and its video, as two downloads")
     }
 
     @ViewBuilder
@@ -224,6 +274,7 @@ private struct DownloadButtons: View {
             Label(done, systemImage: "checkmark.circle.fill")
                 .foregroundStyle(.green)
                 .font(.callout)
+                .lineLimit(1)
         case .working(let words):
             HStack(spacing: 6) {
                 ProgressView().controlSize(.mini)
@@ -240,28 +291,38 @@ private struct DownloadButtons: View {
     }
 }
 
-/// Line the lyrics up with the video that's playing. Nothing is asked of YouTube for
-/// this until the button is clicked (owner, 2026-10-02); once done for a video it's
-/// remembered, and that video's lyrics are in time by themselves from then on.
+/// Karaoke, on every song (owner, 2026-10-03). With the video showing: line the lyrics up
+/// with it, by its sound and its captions (nothing is asked of YouTube for this until
+/// it's clicked; once done for a video it's remembered). With the song showing: find
+/// lyrics for a song that has none, or only plain ones (timed where they exist, from
+/// LRCLIB or YouTube Music), and keep them: saved into a song of the owner's, shown for
+/// one played from YouTube.
 private struct KaraokeButton: View {
+    let videoShowing: Bool
     @Environment(AppModel.self) private var model
 
     var body: some View {
         if model.lyrics.videoTiming == .working {
-            HStack(spacing: 6) {
-                ProgressView().controlSize(.small)
-                Text("Lining up the lyrics…").font(.callout).foregroundStyle(.secondary)
-            }
-        } else if model.lyricsFitVideo {
-            Label("Lyrics in time", systemImage: "checkmark.circle.fill")
+            ProgressView()
+                .controlSize(.small)
+                .help(videoShowing ? "Lining up the lyrics…" : "Looking for lyrics…")
+        } else if videoShowing && model.lyricsFitVideo {
+            Image(systemName: "checkmark.circle.fill")
                 .foregroundStyle(.green)
-                .font(.callout)
                 .help("The lyrics were lined up with this video")
-        } else {
-            Button("Karaoke", systemImage: "music.mic") { model.karaoke() }
+        } else if videoShowing {
+            Button { model.karaoke() } label: { Image(systemName: "music.mic") }
                 .help(
-                    "Line the lyrics up with this video, by its sound and its captions. It asks "
-                        + "YouTube for them once; after that this video is remembered.")
+                    "Karaoke: line the lyrics up with this video, by its sound and its captions. "
+                        + "It asks YouTube for them once; after that this video is remembered.")
+        } else {
+            let timed = model.lyrics.isSynced
+            Button { model.karaokeSong() } label: { Image(systemName: "music.mic") }
+                .disabled(timed)
+                .help(
+                    timed
+                        ? "Karaoke: these lyrics are timed already"
+                        : "Karaoke: find timed lyrics for this song and keep them")
         }
     }
 }

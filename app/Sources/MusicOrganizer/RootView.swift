@@ -214,7 +214,9 @@ struct MainView: View {
                         sidebar
                         StatusFooter()
                     }
-                    .navigationSplitViewColumnWidth(min: 180, ideal: 210, max: 280)
+                    // Its width is its own: a page that wants more room never squeezes it
+                    // (owner, 2026-10-03). Only the sidebar button hides it.
+                    .navigationSplitViewColumnWidth(min: 220, ideal: 220, max: 300)
                 } detail: {
                     NavigationStack(path: pathBinding) {
                         pagesWithLyrics
@@ -389,7 +391,7 @@ struct MainView: View {
                 }
             }
             Section("Discover", isExpanded: $openDiscover) {
-                ForEach([SidebarItem.whatsNew, .find, .importPlaylists, .downloads], id: \.self) {
+                ForEach([SidebarItem.whatsNew, .find, .downloads, .importPlaylists], id: \.self) {
                     entry in
                     if entry == .downloads {
                         Label(entry.title, systemImage: entry.symbol)

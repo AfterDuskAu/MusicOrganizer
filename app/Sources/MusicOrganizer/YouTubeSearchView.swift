@@ -64,6 +64,8 @@ struct YouTubeSearchView: View {
 
 struct ResultRow: View {
     let result: SearchResult
+    /// False on the YouTube Queue page itself: there's nothing to queue there.
+    var queueButton = true
     let play: () -> Void
     @Environment(AppModel.self) private var model
 
@@ -96,8 +98,23 @@ struct ResultRow: View {
                     .lineLimit(1)
             }
             Spacer(minLength: 8)
-            Button("Up Next", systemImage: "text.append") { model.upNext(result) }
-                .help("Play this after the song that's playing, and keep it in the YouTube Queue")
+            if let plays = result.plays {
+                Label(plays, systemImage: "play.circle")
+                    .font(.callout)
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                    .help("Played \(plays) times on YouTube Music")
+            }
+            if queueButton {
+                let queued = model.isQueued(result)
+                Button(queued ? "Queued" : "Queue", systemImage: queued ? "checkmark" : "text.append") {
+                    model.toggleQueued(result)
+                }
+                .help(
+                    queued
+                        ? "In the YouTube Queue. Click to take it out."
+                        : "Play this after the song that's playing, and keep it in the YouTube Queue")
+            }
             Text(clockTime(result.durationS))
                 .monospacedDigit()
                 .foregroundStyle(.secondary)
@@ -141,6 +158,7 @@ struct ResultRow: View {
 /// None of them is downloaded; each can be, from here.
 struct YouTubeQueueView: View {
     @Environment(AppModel.self) private var model
+    @State private var showingPlayed = false
 
     var body: some View {
         let queue = model.youtubeQueue
@@ -152,27 +170,36 @@ struct YouTubeQueueView: View {
                         Text(queue.count == 1 ? "1 song" : "\(queue.count) songs")
                             .foregroundStyle(.secondary)
                     }
-                    Text("Songs from YouTube Music you put on with Up Next. They play in this order.")
+                    Text("Songs from YouTube Music you queued. They play in this order; once played they move to Played Already.")
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
                 Button("Play", systemImage: "play.fill") { model.playYouTubeQueue() }
+                    .disabled(queue.isEmpty)
                 Button("Clear", systemImage: "xmark.circle") { model.clearYouTubeQueue() }
+                    .disabled(queue.isEmpty)
                     .help("Empty the YouTube Queue. Nothing downloaded is touched.")
+                Button("Played Already (\(model.youtubePlayed.count))", systemImage: "clock.arrow.circlepath") {
+                    showingPlayed = true
+                }
+                .disabled(model.youtubePlayed.isEmpty)
+                .help("Songs from the queue that have been played. Click one to play it again.")
+                .popover(isPresented: $showingPlayed, arrowEdge: .bottom) { PlayedAlready() }
             }
-            .disabled(queue.isEmpty)
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
             Divider()
             if queue.isEmpty {
-                Text("Nothing is queued. On YouTube Music, click Up Next beside a song.")
+                Text("Nothing is queued. Click Queue beside a song on YouTube Music, or Q on What's New and Find.")
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List {
                     ForEach(queue) { result in
                         HStack(spacing: 8) {
-                            ResultRow(result: result) { model.playYouTubeQueue(from: result) }
+                            ResultRow(result: result, queueButton: false) {
+                                model.playYouTubeQueue(from: result)
+                            }
                             Button {
                                 model.removeFromYouTubeQueue(result)
                             } label: {
@@ -185,5 +212,49 @@ struct YouTubeQueueView: View {
                 }
             }
         }
+    }
+}
+
+/// The songs played from the YouTube Queue, newest first: click one to play it again.
+private struct PlayedAlready: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("Played Already").font(.headline)
+                Spacer()
+                Button("Clear") { model.clearPlayedFromQueue() }
+                    .controlSize(.small)
+            }
+            .padding(12)
+            Divider()
+            List(model.youtubePlayed) { result in
+                Button {
+                    model.player.play([result.track])
+                } label: {
+                    HStack(spacing: 8) {
+                        CoverView(track: result.track, size: .small, corner: 3)
+                            .frame(width: 28, height: 28)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(result.title).lineLimit(1)
+                            Text(result.artists.joined(separator: ", "))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                        Spacer(minLength: 6)
+                        Text(clockTime(result.durationS))
+                            .font(.caption)
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help("Play it again")
+            }
+        }
+        .frame(width: 380, height: 420)
     }
 }

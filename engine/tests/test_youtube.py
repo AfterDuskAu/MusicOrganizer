@@ -451,3 +451,10 @@ def test_why_youtube_wont_give_a_video_is_said_plainly(said: str, plain: str) ->
     # None of yt-dlp's own words for people at a command line come through.
     for leftover in ("--cookies", "http", "wiki", "abcdefghijk", "DuQGokwsWF8"):
         assert leftover not in error.message
+
+
+def test_a_search_result_says_how_often_it_has_been_played() -> None:
+    found = youtube.search_songs("alessia cara here")
+    assert found and all(c.plays for c in found[:3])
+    assert found[0].plays == "497M"  # as YouTube Music writes it
+    assert youtube.Candidate.from_dict(found[0].to_dict()) == found[0]

@@ -11,12 +11,14 @@ struct SettingsView: View {
     static let tabKey = "settingsTab"
     /// Which account under Settings → Profile is open (its arrow turned down).
     static let openAccountKey = "settingsOpenAccount"
-    private static let tabs = ["profile", "downloads", "lyrics"]
+    private static let tabs = ["profile", "play", "downloads", "lyrics"]
 
     var body: some View {
         TabView(selection: $tab) {
             ProfileSettingsTab().tabItem { Label("Profile", systemImage: "person.crop.circle") }
                 .tag("profile")
+            PlaySettings().tabItem { Label("Play Options", systemImage: "play.circle") }
+                .tag("play")
             DownloadSettings().tabItem { Label("Downloads", systemImage: "arrow.down.circle") }
                 .tag("downloads")
             LyricsSettings().tabItem { Label("Lyrics", systemImage: "quote.bubble") }.tag("lyrics")
@@ -52,10 +54,36 @@ private struct ComingBadge: View {
     }
 }
 
+/// Settings → Play Options: how songs and videos play.
+private struct PlaySettings: View {
+    @AppStorage(Player.playWhileVideoLoadsKey) private var playWhileLoading = true
+
+    var body: some View {
+        Form {
+            Section("Playing a song with its video") {
+                Picker(
+                    "When Video is chosen on the Local Visualizer, play the song while its video loads?",
+                    selection: $playWhileLoading
+                ) {
+                    Text("Yes").tag(true)
+                    Text("No").tag(false)
+                }
+                .pickerStyle(.radioGroup)
+                SideNote(
+                    "Yes: the song starts at once, and its video takes over when it's ready. No: "
+                        + "nothing plays until the video is ready, then the video starts from its "
+                        + "beginning. A song with no video plays as soon as that's known.")
+            }
+        }
+        .formStyle(.grouped)
+    }
+}
+
 /// Settings → Downloads: where downloads show, the library folder, the quality, and
 /// how many a day.
 private struct DownloadSettings: View {
     @Environment(AppModel.self) private var model
+    @AppStorage(Player.alwaysBestVideoKey) private var alwaysBestVideo = false
     /// The limit moves in steps of this many.
     private static let step = 50
 
@@ -89,6 +117,12 @@ private struct DownloadSettings: View {
                 SideNote(
                     "This profile's library. Songs are kept in its Music folder by artist and "
                         + "album, and videos in Music/Videos.")
+            }
+            Section {
+                Toggle("Videos: always the highest quality available", isOn: $alwaysBestVideo)
+                SideNote(
+                    "Videos then play and download at their sharpest (up to 1080p), and the Local "
+                        + "Visualizer has no picture-size menu.")
             }
             Section {
                 Picker("Download quality", selection: .constant(128)) {

@@ -115,10 +115,13 @@ public struct SearchResult: Codable, Identifiable, Hashable, Sendable {
     public let durationS: Double?
     public let isExplicit: Bool?
     public let thumbnail: String?
+    /// How often it's been played on YouTube Music, as it writes it ("497M").
+    public let plays: String?
 
     public init(
         videoId: String, title: String, artists: [String], album: String? = nil,
-        durationS: Double? = nil, isExplicit: Bool? = nil, thumbnail: String? = nil
+        durationS: Double? = nil, isExplicit: Bool? = nil, thumbnail: String? = nil,
+        plays: String? = nil
     ) {
         self.videoId = videoId
         self.title = title
@@ -127,6 +130,7 @@ public struct SearchResult: Codable, Identifiable, Hashable, Sendable {
         self.durationS = durationS
         self.isExplicit = isExplicit
         self.thumbnail = thumbnail
+        self.plays = plays
     }
 
     public var id: String { videoId }
