@@ -11,6 +11,8 @@ public enum DiscoverSeed: Hashable, Sendable {
     /// Whatever the owner typed when asked what music they'd like: the engine works
     /// out whether it's a genre or an artist.
     case typed(String)
+    /// The owner's most played songs on Last.fm, once it's set up.
+    case lastfm
 
     /// The seed as `discover.suggest` takes it.
     public var params: [String: String] {
@@ -22,6 +24,7 @@ public enum DiscoverSeed: Hashable, Sendable {
         case .artist(let name): ["kind": "artist", "name": name]
         case .genre(let name): ["kind": "genre", "name": name]
         case .typed(let words): ["kind": "typed", "name": words]
+        case .lastfm: ["kind": "lastfm"]
         }
     }
 
@@ -39,7 +42,7 @@ public enum DiscoverSeed: Hashable, Sendable {
 /// or chosen for it.
 public struct FindChoice: Identifiable, Equatable, Sendable {
     public enum Start: String, CaseIterable, Identifiable, Sendable {
-        case artist, genre, playlist, mostPlayed, topArtist, library
+        case artist, genre, playlist, mostPlayed, topArtist, library, lastfm
 
         public var id: String { rawValue }
         public var title: String {
@@ -50,6 +53,7 @@ public struct FindChoice: Identifiable, Equatable, Sendable {
             case .mostPlayed: "The songs I play most"
             case .topArtist: "The artist I play most"
             case .library: "My whole library"
+            case .lastfm: "My most played on Last.fm"
             }
         }
     }
@@ -86,6 +90,7 @@ public struct FindChoice: Identifiable, Equatable, Sendable {
         case .mostPlayed: return [.mostPlayed]
         case .topArtist: return [.topArtist]
         case .library: return [.library]
+        case .lastfm: return [.lastfm]
         }
     }
 
@@ -193,6 +198,7 @@ public enum Guided {
         case "artist": return "\(count) \(songs) by \(seed.label) and artists like them"
         case "playlist": return "\(count) \(songs) like the ones in \(seed.label)"
         case "most_played": return "\(count) \(songs) like the ones you play most"
+        case "lastfm": return "\(count) \(songs) like your most played on Last.fm"
         default: return "\(count) \(songs) like the ones in your library"
         }
     }

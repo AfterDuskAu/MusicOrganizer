@@ -96,17 +96,58 @@ public struct ImportedPlaylist: Decodable, Sendable {
     public let tracks: [ImportTrack]
     /// The playlist is longer than was read (Spotify: more than 3,000 songs).
     public let more: Bool?
+    /// A file that holds several playlists names them all; `tracks` are one's.
+    public let playlists: [String]?
 }
 
 /// Which playlist to read, and from where (`import.playlist`'s params).
 public enum ImportRequest: Equatable, Sendable {
     case youtube(link: String)
     case spotify(playlistId: String)
+    /// A public Deezer playlist or album, by its link.
+    case deezer(link: String)
+    /// One of the owner's lists on Last.fm (`LastfmList`).
+    case lastfm(list: String)
+    /// A playlist saved as a file (an export from Amazon Music, say). `playlist`
+    /// chooses one of the playlists in a file that holds several.
+    case file(path: String, playlist: String?)
 
     public var params: [String: String] {
         switch self {
-        case .youtube(let link): ["source": "youtube", "link": link]
-        case .spotify(let id): ["source": "spotify", "playlist_id": id]
+        case .youtube(let link): return ["source": "youtube", "link": link]
+        case .spotify(let id): return ["source": "spotify", "playlist_id": id]
+        case .deezer(let link): return ["source": "deezer", "link": link]
+        case .lastfm(let list): return ["source": "lastfm", "list": list]
+        case .file(let path, let playlist):
+            var asked = ["source": "file", "path": path]
+            if let playlist { asked["playlist"] = playlist }
+            return asked
+        }
+    }
+}
+
+/// The lists Last.fm keeps for a listener, as Import Playlists offers them (the
+/// engine's "Last.fm list").
+public enum LastfmList: String, CaseIterable, Identifiable, Sendable {
+    case loved
+    case top7day = "top_7day"
+    case top1month = "top_1month"
+    case top3month = "top_3month"
+    case top6month = "top_6month"
+    case top12month = "top_12month"
+    case topOverall = "top_overall"
+
+    public var id: String { rawValue }
+
+    public var title: String {
+        switch self {
+        case .loved: "Loved Tracks"
+        case .top7day: "Most played: last 7 days"
+        case .top1month: "Most played: last month"
+        case .top3month: "Most played: last 3 months"
+        case .top6month: "Most played: last 6 months"
+        case .top12month: "Most played: last year"
+        case .topOverall: "Most played: all time"
         }
     }
 }
@@ -159,7 +200,28 @@ public struct AccountStatus: Decodable, Equatable, Sendable {
         }
     }
 
+    /// Last.fm, which has no sign-in: a username and the owner's own API key. The key
+    /// itself is never given out, only whether one is saved.
+    public struct Lastfm: Decodable, Equatable, Sendable {
+        public let user: String?
+        public let hasKey: Bool
+        public let connected: Bool
+
+        public init(user: String? = nil, hasKey: Bool = false, connected: Bool = false) {
+            self.user = user
+            self.hasKey = hasKey
+            self.connected = connected
+        }
+    }
+
     public let spotify: Spotify
+    /// Nil from an engine older than Last.fm.
+    public let lastfm: Lastfm?
+
+    public init(spotify: Spotify = Spotify(), lastfm: Lastfm? = nil) {
+        self.spotify = spotify
+        self.lastfm = lastfm
+    }
 }
 
 /// `account.sign_in`: the address to open in the browser.
@@ -223,6 +285,12 @@ public struct ImportRow: Identifiable, Hashable, Sendable {
 public enum Imports {
     /// How many songs `import.find` is asked about at a time.
     public static let atOnce = 50
+
+    /// Whether this could be a Last.fm API key: 32 hexadecimal digits.
+    public static func looksLikeLastfmKey(_ text: String) -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.count == 32 && trimmed.allSatisfy { $0.isASCII && $0.isHexDigit }
+    }
 
     /// Whether this could be a Spotify Client ID: 32 letters and digits.
     public static func looksLikeSpotifyClientId(_ text: String) -> Bool {

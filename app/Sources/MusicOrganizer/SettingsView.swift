@@ -57,9 +57,17 @@ private struct ComingBadge: View {
 /// Settings → Play Options: how songs and videos play.
 private struct PlaySettings: View {
     @AppStorage(Player.playWhileVideoLoadsKey) private var playWhileLoading = true
+    @AppStorage(Player.alwaysBestVideoKey) private var alwaysBestVideo = false
 
     var body: some View {
         Form {
+            Section("Playing videos") {
+                Toggle("Videos: always the highest quality available", isOn: $alwaysBestVideo)
+                SideNote(
+                    "Videos then always play at their sharpest (up to 1080p), and the Local "
+                        + "Visualizer has no picture-size menu. This is about playing only: what "
+                        + "a download saves is set under Downloads.")
+            }
             Section("Playing a song with its video") {
                 Picker(
                     "When Video is chosen on the Local Visualizer, play the song while its video loads?",
@@ -83,6 +91,9 @@ private struct PlaySettings: View {
 /// how many a day.
 private struct DownloadSettings: View {
     @Environment(AppModel.self) private var model
+    /// Nil until it's been set here: then it's what the playing setting says, which
+    /// used to cover downloading too (`Player.alwaysBestDownload`).
+    @AppStorage(Player.alwaysBestDownloadKey) private var alwaysBestDownload: Bool?
     @AppStorage(Player.alwaysBestVideoKey) private var alwaysBestVideo = false
     /// The limit moves in steps of this many.
     private static let step = 50
@@ -119,10 +130,18 @@ private struct DownloadSettings: View {
                         + "album, and videos in Music/Videos.")
             }
             Section {
-                Toggle("Videos: always the highest quality available", isOn: $alwaysBestVideo)
+                Toggle(
+                    "Always download the highest quality available",
+                    isOn: Binding(
+                        get: { alwaysBestDownload ?? alwaysBestVideo },
+                        set: { alwaysBestDownload = $0 })
+                )
                 SideNote(
-                    "Videos then play and download at their sharpest (up to 1080p), and the Local "
-                        + "Visualizer has no picture-size menu.")
+                    "On: Download Video always saves the video at its sharpest (up to 1080p), "
+                        + "whatever size is playing. Off: it saves the size that's showing. "
+                        + "Songs come in one quality for now, 128 kbps; when 256 kbps arrives "
+                        + "with the YouTube sign-in, this will take it too. How videos play is "
+                        + "set under Play Options.")
             }
             Section {
                 Picker("Download quality", selection: .constant(128)) {
@@ -383,8 +402,11 @@ private struct AccountSettings: View {
     @Environment(AppModel.self) private var model
     @AppStorage(SettingsView.openAccountKey) private var open = ""
     @State private var clientId = ""
+    @State private var lastfmUser = ""
+    @State private var lastfmKey = ""
 
     private static let dashboard = URL(string: "https://developer.spotify.com/dashboard")!
+    private static let lastfmKeyPage = URL(string: "https://www.last.fm/api/account/create")!
 
     var body: some View {
         Section("Accounts for \(model.profiles.current.name)") {
@@ -399,16 +421,102 @@ private struct AccountSettings: View {
                     "Will read your playlists from the Music app on this Mac. The songs are then "
                         + "found and downloaded from YouTube. Not built yet.")
             }
+            account("Deezer", symbol: "link", state: "No sign-in needed") {
+                SideNote(
+                    "A public Deezer playlist or album is read from its link, with nothing to "
+                        + "sign in to: Discover → Import Playlists → Deezer.")
+            }
+            account("Amazon Music", symbol: "doc", state: "From a file") {
+                SideNote(
+                    "Amazon Music can't be read directly and has no export of its own. Save a "
+                        + "playlist as a CSV or text file with a service such as TuneMyMusic or "
+                        + "Soundiiz, then choose the file under Discover → Import Playlists → "
+                        + "Amazon Music.")
+            }
+            account("Last.fm", symbol: "waveform", state: lastfmState) { lastfm }
             account("SoundCloud", symbol: "cloud", state: comingWords) {
                 SideNote("Not built yet.")
             }
         }
         .onAppear {
             model.loadAccounts()
-            if clientId.isEmpty { clientId = model.accounts?.spotify.clientId ?? "" }
+            fillIn()
         }
-        .onChange(of: model.accounts) {
-            if clientId.isEmpty { clientId = model.accounts?.spotify.clientId ?? "" }
+        .onChange(of: model.accounts) { fillIn() }
+    }
+
+    /// What's saved goes into the boxes that are still empty.
+    private func fillIn() {
+        if clientId.isEmpty { clientId = model.accounts?.spotify.clientId ?? "" }
+        if lastfmUser.isEmpty { lastfmUser = model.accounts?.lastfm?.user ?? "" }
+    }
+
+    private var lastfmState: String {
+        guard let status = model.accounts?.lastfm else { return "" }
+        if status.connected { return "Set up" + (status.user.map { " for \($0)" } ?? "") }
+        return model.connectingLastfm ? "Checking…" : "Not set up"
+    }
+
+    /// Last.fm has no sign-in: a username, and an API key the owner makes themselves.
+    @ViewBuilder
+    private var lastfm: some View {
+        let status = model.accounts?.lastfm
+        if status?.connected == true {
+            LabeledContent {
+                Button("Forget") {
+                    model.forgetLastfm()
+                    (lastfmUser, lastfmKey) = ("", "")
+                }
+            } label: {
+                Text("Set up" + (status?.user.map { " for \($0)" } ?? ""))
+                Text(
+                    "Your most played there is a starting point under Discover → Find (My "
+                        + "Last.fm), and your lists are under Discover → Import Playlists → Last.fm.")
+            }
+        } else {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Last.fm keeps a record of what you listen to, on Spotify and elsewhere. There's no password to type here, but Last.fm gives its answers only to an app with a key, and you make that yourself. It's free, and takes a minute, once:")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                step(1, "Your Last.fm username (the name in your profile's address, last.fm/user/…):")
+                TextField("Username", text: $lastfmUser, prompt: Text("Your Last.fm username"))
+                    .labelsHidden()
+                    .textFieldStyle(.roundedBorder)
+                    .padding(.leading, 22)
+                step(2, "Open Last.fm's page for a new API account and log in. Any name will do for the application; leave the other boxes empty, and submit.")
+                Link("Open last.fm/api/account/create", destination: Self.lastfmKeyPage)
+                    .padding(.leading, 22)
+                step(3, "Copy the one called API key (not the Shared secret) and paste it here:")
+                TextField("API key", text: $lastfmKey, prompt: Text("32 letters and digits"))
+                    .labelsHidden()
+                    .textFieldStyle(.roundedBorder)
+                    .font(.callout.monospaced())
+                    .padding(.leading, 22)
+                HStack(spacing: 10) {
+                    Button("Set Up Last.fm") {
+                        model.connectLastfm(user: lastfmUser, apiKey: lastfmKey)
+                    }
+                    .disabled(
+                        model.connectingLastfm
+                            || lastfmUser.trimmingCharacters(in: .whitespaces).isEmpty
+                            // A key saved before is kept: only a new one has to look right.
+                            || !(Imports.looksLikeLastfmKey(lastfmKey)
+                                || (lastfmKey.isEmpty && status?.hasKey == true)))
+                    if model.connectingLastfm {
+                        ProgressView().controlSize(.small)
+                        Text("Asking Last.fm…").foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.leading, 22)
+                if let note = model.lastfmNote {
+                    Text(note)
+                        .foregroundStyle(.orange)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            SideNote(
+                "The key and your username are kept on this Mac only, for this profile. Music "
+                    + "Organizer only reads from Last.fm: it never sends what you play here, and "
+                    + "your profile there has to be public to be read.")
         }
     }
 

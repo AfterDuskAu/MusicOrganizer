@@ -17,23 +17,37 @@ Sources (docs/ENGINE_API.md → "Import source"):
   through `musicorg.spotify` once they've signed in. Its songs arrive as a title,
   artists and a length, and are searched for.
 
+- `deezer`: a public Deezer playlist or album, by its link (`musicorg.deezer`). No
+  sign-in. Its songs arrive as a title, the main artist and a length, and are searched
+  for.
+
+- `lastfm`: the owner's Loved Tracks or most played on Last.fm (`musicorg.lastfm`),
+  once their username and API key are saved. A title and an artist, searched for.
+
+- `file`: a playlist saved as a file (`musicorg.playlistfile`): the way in for Amazon
+  Music, which can only be exported through a service such as TuneMyMusic. A CSV, a
+  text file of "Artist - Title" lines, or an M3U playlist, opened read-only.
+
 Apple Music comes next, through the same `find()`.
 
 How a song is found: `match.match_item`, the rule the owner's rips are matched by. Only
 its confident answer (the same artist, title and version, official audio, the length
 within 2 seconds) is `found`; a likely one is `unsure` and is only downloaded if the
 owner ticks it. A music video's length says nothing about the song's, so for one of
-those the same artist, title and version is enough.
+those the same artist, title and version is enough. The same goes for a song whose
+playlist gives no length at all (a text file, a table with no length column, Last.fm):
+there's nothing to compare, and without this every such song would be `unsure`.
 """
 
 from __future__ import annotations
 
 import logging
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
-from musicorg import discover, match, queue, spotify, youtube
+from musicorg import deezer, discover, lastfm, match, playlistfile, queue, spotify, youtube
 from musicorg.errors import UserError
 from musicorg.index import Index
 from musicorg.library import Library
@@ -43,7 +57,7 @@ from musicorg.youtube import Candidate
 
 log = logging.getLogger(__name__)
 
-SOURCES = ("youtube", "spotify")
+SOURCES = ("youtube", "spotify", "deezer", "lastfm", "file")
 STATES = ("owned", "queued", "found", "unsure", "not_found")
 FIND_AT_ONCE = 100  # songs in one `find()`: each may cost a search or two
 MUSIC_VIDEO = "MUSIC_VIDEO_TYPE_OMV"
@@ -128,6 +142,31 @@ def from_spotify(playlist_id: str) -> dict[str, Any]:
     }
 
 
+def from_deezer(link: str) -> dict[str, Any]:
+    """A public Deezer playlist or album as an import, by its link. A request for its
+    name and one for every hundred songs; nothing is signed in to."""
+    found = deezer.playlist(link)
+    return {"source": "deezer", **found}
+
+
+def from_lastfm(list_id: str) -> dict[str, Any]:
+    """The owner's Loved Tracks or most played on Last.fm as an import (`lastfm.LISTS`).
+    A request for every two hundred songs, up to a thousand."""
+    found = lastfm.playlist(list_id)
+    tracks = [{k: v for k, v in track.items() if k != "plays"} for track in found["tracks"]]
+    return {"source": "lastfm", "name": found["name"], "tracks": tracks, "more": found["more"]}
+
+
+def from_file(path: str, playlist: str | None = None) -> dict[str, Any]:
+    """A playlist saved as a file (an export from Amazon Music, say) as an import. The
+    file is only read. `playlists` names the playlists in a file that holds several;
+    `playlist` chooses one of them."""
+    if not path.strip() or not Path(path).is_absolute():
+        raise UserError("Choose the playlist's file first.")
+    found = playlistfile.read(Path(path), playlist)
+    return {"source": "file", **found}
+
+
 # ---- finding the songs -------------------------------------------------------------------
 
 
@@ -205,6 +244,8 @@ def _find_one(
         return _placed(given, waiting, "found")
 
     video = given is not None and given.video_type == MUSIC_VIDEO
+    # No length to go by: the video's is another cut's, or the playlist gave none.
+    no_length = video or track["duration_s"] is None
     rip = match.Rip(
         parse_tags(TrackTags(title=track["title"], artist=", ".join(track["artists"]) or None)),
         # A video is a different cut: its length would only mislead.
@@ -217,11 +258,11 @@ def _find_one(
         return {"state": "not_found"}
     if owned.has(best.candidate):  # under another name than the playlist's
         return {"state": "owned", "track_id": owned.track_id(best.candidate)}
-    if outcome.state == "matched_auto" or (video and best.same_song):
+    if outcome.state == "matched_auto" or (no_length and best.same_song):
         return _placed(best.candidate, waiting, "found")
     answer = _placed(best.candidate, waiting, "unsure")
     if answer["state"] == "unsure":
-        answer["why"] = _why(best)
+        answer["why"] = _why(best, no_length)
     return answer
 
 
@@ -240,7 +281,12 @@ _WHY = {
 }
 
 
-def _why(scored: match.Scored) -> str:
-    """One plain line on why the likeliest song isn't a certain one."""
-    reasons = [_WHY[code] for code in scored.codes if code in _WHY]
+def _why(scored: match.Scored, no_length: bool = False) -> str:
+    """One plain line on why the likeliest song isn't a certain one. With no length to
+    go by, the length isn't the reason."""
+    reasons = [
+        _WHY[code]
+        for code in scored.codes
+        if code in _WHY and not (no_length and code == "duration_mismatch")
+    ]
     return (reasons[0] if reasons else "it isn't a certain match").capitalize() + "."

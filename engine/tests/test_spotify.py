@@ -381,7 +381,8 @@ def test_accounts_over_rpc(  # noqa: F811
 ) -> None:
     assert result(opened, "account.status") == {
         "spotify": {"client_id": None, "signed_in": False, "name": None,
-                    "redirect_uri": spotify.redirect_uri()}
+                    "redirect_uri": spotify.redirect_uri()},
+        "lastfm": {"user": None, "has_key": False, "connected": False},
     }  # fmt: skip
     assert code(opened, "account.sign_in", service="spotify", client_id="nope") == rpc.USER_ERROR
     assert code(opened, "account.sign_in", service="apple") == rpc.INVALID_PARAMS

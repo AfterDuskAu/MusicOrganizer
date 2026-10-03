@@ -57,6 +57,12 @@ final class Player {
     private(set) var videoPreference = Player.savedPreference()
     /// The owner switched a saved video to its cover: its sound plays on, unseen.
     private(set) var pictureHidden = false
+    /// The thumbs-up count of the song playing from YouTube. It comes with the answer
+    /// that says where to play it from, so it costs nothing more; a song played from
+    /// the library's own file has none.
+    private(set) var songLikes: Int?
+    /// The thumbs-up count to show: the video's own while one is showing, else the song's.
+    var likes: Int? { video != nil ? video?.source.likes : songLikes }
 
     @ObservationIgnored var root: URL?
     @ObservationIgnored var onTrackChange: ((Track?) -> Void)?
@@ -66,7 +72,9 @@ final class Player {
     /// A song played to its end (not skipped): that's what counts as a play.
     @ObservationIgnored var onFinished: ((Track) -> Void)?
     /// Where a YouTube video's audio can be played from (the engine asks YouTube).
-    @ObservationIgnored var findStream: ((String) async throws -> (URL, [String: String], Double?))?
+    /// With it come the song's length and its thumbs-up count, when YouTube gives them.
+    @ObservationIgnored var findStream:
+        ((String) async throws -> (URL, [String: String], Double?, Int?))?
     /// A song's official video, or nil if it has none (the engine asks YouTube Music).
     @ObservationIgnored var findVideo: ((Track) async throws -> SongVideo?)?
     @ObservationIgnored private let audio = AVPlayer()
@@ -323,8 +331,20 @@ final class Player {
     /// Settings → Play Options: with Video on, play the song while its video loads (the
     /// standard), or wait for the video.
     static let playWhileVideoLoadsKey = "playSongWhileVideoLoads"
-    /// Settings → Downloads: videos always at their sharpest; the size menu goes away.
+    /// Settings → Play Options: videos always play at their sharpest, and the Local
+    /// Visualizer's picture-size menu goes away.
     static let alwaysBestVideoKey = "alwaysBestVideo"
+    /// Settings → Downloads: a video is always saved at its sharpest, whatever size is
+    /// playing.
+    static let alwaysBestDownloadKey = "alwaysBestVideoDownload"
+
+    /// Whether downloads always take the highest quality. Until it's been set, it's
+    /// what the one setting that used to cover both playing and downloading says.
+    static var alwaysBestDownload: Bool {
+        let defaults = UserDefaults.standard
+        return defaults.object(forKey: alwaysBestDownloadKey) as? Bool
+            ?? defaults.bool(forKey: alwaysBestVideoKey)
+    }
 
     /// The picture size wanted: the owner's choice, unless Settings says always the best.
     private var wantedQuality: VideoPreference? {
@@ -337,6 +357,7 @@ final class Player {
         video = nil
         videoNote = nil
         pictureHidden = false
+        songLikes = nil
         videoTicket += 1
         // The song itself always starts at once. With Video on, its video is looked for
         // meanwhile and takes over when it's ready (owner, 2026-10-01: no waiting in
@@ -400,8 +421,9 @@ final class Player {
         wait(for: track, at: position)
         Task {
             do {
-                let (url, headers, length) = try await findStream(videoId)
+                let (url, headers, length, likes) = try await findStream(videoId)
                 guard ticket == mine else { return }  // something else was chosen meanwhile
+                songLikes = likes
                 let asset = AVURLAsset(
                     url: Spoil.address(url), options: [Self.headersKey: headers])
                 begin(

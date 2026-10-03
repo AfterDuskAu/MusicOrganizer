@@ -172,6 +172,8 @@ struct FindView: View {
         }
         .sheet(isPresented: $guiding) { GuideSheet().environment(model) }
         .onAppear {
+            // Whether Last.fm is set up, for the starting point that needs it.
+            if model.accounts == nil { model.loadAccounts() }
             if choices.isEmpty {
                 choices = [
                     FindChoice(
@@ -213,6 +215,16 @@ struct FindView: View {
                 }
                 .labelsHidden()
                 .fixedSize()
+            }
+        case .lastfm:
+            if model.accounts?.lastfm?.connected != true {
+                Text("Last.fm isn't set up yet.").foregroundStyle(.secondary)
+                SettingsLink { Text("Open Settings…") }
+                    .simultaneousGesture(
+                        TapGesture().onEnded {
+                            UserDefaults.standard.set("profile", forKey: SettingsView.tabKey)
+                            UserDefaults.standard.set("Last.fm", forKey: SettingsView.openAccountKey)
+                        })
             }
         case .mostPlayed, .topArtist, .library:
             EmptyView()

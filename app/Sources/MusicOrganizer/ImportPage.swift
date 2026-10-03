@@ -34,6 +34,8 @@ final class ImportPage {
     private(set) var downloading = false
     /// The playlist is longer than was read: only its first songs are listed.
     private(set) var tooLong = false
+    /// The playlists in the file last read, when it holds several: one is chosen.
+    private(set) var filePlaylists: [String] = []
     /// The not-sure songs the owner ticked to download anyway.
     var ticked = Set<Int>()
     var note: Note?
@@ -60,7 +62,7 @@ final class ImportPage {
     func reset() {
         run += 1
         (phase, rows, name, ticked, note, done, problem) = (.idle, [], "", [], nil, 0, nil)
-        (tooLong, downloading) = (false, false)
+        (tooLong, downloading, filePlaylists) = (false, false, [])
         forgetSpotifyPlaylists()
     }
 
@@ -89,11 +91,13 @@ final class ImportPage {
         run += 1
         let mine = run
         (phase, rows, name, ticked, note, done, problem) = (.reading, [], "", [], nil, 0, nil)
+        if case .file = what {} else { filePlaylists = [] }
         Task {
             do {
                 let playlist = try await read(what)
                 guard mine == run else { return }
                 name = playlist.name
+                if case .file = what { filePlaylists = playlist.playlists ?? [] }
                 rows = playlist.tracks.enumerated().map { ImportRow(id: $0.offset, track: $0.element) }
                 guard !rows.isEmpty else {
                     phase = .failed("That playlist has no songs in it that can be read.")

@@ -96,7 +96,13 @@ A SwiftUI app that starts the engine and talks to it (`musicorg serve`). Code in
 **Built (2026-10-02):** Discover → Import Playlists, for a YouTube or YouTube Music playlist by its link (public or unlisted, no sign-in). The songs are found, listed, and downloaded with one click into a playlist of the same name. The finding, the list and the button are the same for every service.
 
 **Built (2026-10-03): Spotify sign-in.** Settings → Accounts walks through it: the owner registers a free app at developer.spotify.com (their account needs Spotify Premium; at most 5 people can sign in to one app), pastes its Client ID, and signs in on Spotify's own page in the browser. Their playlists and Liked Songs then appear under Import Playlists → Spotify. Only playlists the owner made or collaborates on give their songs. Not yet tried against Spotify itself.
-  - Someone without Premium has no sign-in. The other way would be a file: Spotify's own "Download your data" export, or an Exportify CSV. Not built.
+  - Someone without Premium has no sign-in. The other way is a file: an Exportify CSV reads through Import Playlists → Amazon Music → Choose File (2026-10-03). Spotify's own "Download your data" export (JSON) isn't read.
+
+**Built (2026-10-03, evening): Deezer, Amazon Music by file, Last.fm.** The owner asked which other big services were worth adding, and chose these three.
+  - **Deezer:** a public playlist or album by its link, no sign-in. Tried against Deezer itself.
+  - **Amazon Music:** it can't be read from outside and has no export, so the way in is a playlist saved as a CSV or text file by a service such as TuneMyMusic or Soundiiz. Any CSV, text (`Artist - Title` lines) or M3U playlist file reads, from any service. Not yet tried with a real Amazon export.
+  - **Last.fm:** the owner's username and their own free API key (Settings → Profile → Last.fm). Their Loved Tracks and most played import as playlists, and "My most played on Last.fm" is a starting point in Discover → Find. Not yet tried against Last.fm itself.
+  - **Looked at and left:** Tidal (would need a registered developer app, like Spotify's). SoundCloud is still a "Coming" row in Settings with nothing behind it.
 
 **Still to build, and what each needs from the owner** (checked on 2026-10-02):
 
@@ -107,7 +113,7 @@ A SwiftUI app that starts the engine and talks to it (`musicorg serve`). Code in
 
 Plan: [`docs/roadmap/0.4-discover.md`](roadmap/0.4-discover.md).
 
-**Built (2026-10-01):** picks from the whole library, most played, the top artist, a playlist, a named artist and similar bands, or a genre; the What's New and Find pages, with a grid of cards to play, download one by one, or download several together after seeing the plan. The guided "What music would you like today?" mode was added on 2026-10-02. **Still to build:** the `Discovered/` inbox, Last.fm as a second source. The plan's own list follows.
+**Built (2026-10-01):** picks from the whole library, most played, the top artist, a playlist, a named artist and similar bands, or a genre; the What's New and Find pages, with a grid of cards to play, download one by one, or download several together after seeing the plan. The guided "What music would you like today?" mode was added on 2026-10-02. Last.fm arrived on 2026-10-03 as a starting point: the owner's most played songs there. **Still to build:** the `Discovered/` inbox, and Last.fm's "similar tracks" as a source of picks (each would cost a YouTube search). The plan's own list follows.
 
 - Recommendations from a playlist, the whole library, most played, or an artist and similar bands.
 - A grid of cards: play in the app first, with small Spotify, Apple Music and SoundCloud logos, and download on demand.

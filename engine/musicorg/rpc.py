@@ -49,6 +49,7 @@ from musicorg import (
     discover,
     fileops,
     imports,
+    lastfm,
     library,
     listening,
     logging_setup,
@@ -90,7 +91,8 @@ RESUME_LEAST_S = 60.0
 REVIEW_STATES = ("review", "not_found", "matched_auto")
 SLOW_METHODS = frozenset(
     {"youtube.stream", "youtube.video", "search.ytmusic", "lyrics.find", "lyrics.for_video",
-     "discover.suggest", "import.playlist", "import.playlists", "import.find"}
+     "discover.suggest", "import.playlist", "import.playlists", "import.find",
+     "account.connect"}
 )  # fmt: skip
 MAX_EXCLUDE = 5000  # songs already on screen that Show More leaves out
 RPC_DECISIONS = ("accept", "candidate", "url", "only_copy", "skip", "reject")
@@ -292,6 +294,7 @@ class Server:
             "import.playlists": self.import_playlists,
             "account.status": self.account_status,
             "account.sign_in": self.account_sign_in,
+            "account.connect": self.account_connect,
             "account.sign_out": self.account_sign_out,
             "import.find": self.import_find,
             "queue.jobs": self.queue_jobs,
@@ -820,7 +823,8 @@ class Server:
 
     def youtube_stream(self, params: dict[str, Any]) -> dict[str, Any]:
         found = youtube.stream(need(params, "video_id", str))
-        return {"url": found.url, "http_headers": found.headers, "duration_s": found.duration_s}
+        return {"url": found.url, "http_headers": found.headers, "duration_s": found.duration_s,
+                "likes": found.likes}  # fmt: skip
 
     def youtube_video(self, params: dict[str, Any]) -> dict[str, Any]:
         """A song's official music video, to play in the app: its sound, and its picture
@@ -844,6 +848,7 @@ class Server:
             "duration_s": found.audio.duration_s or match.duration_s,
             "http_headers": found.audio.headers,
             "audio_url": found.audio.url,
+            "likes": found.audio.likes,
             "qualities": [{"label": q.label, "height": q.height, "fps": q.fps, "url": q.url}
                           for q in found.qualities],
         }  # fmt: skip
@@ -934,7 +939,13 @@ class Server:
             return imports.from_youtube(need(params, "link", str))
         if source == "spotify":
             return imports.from_spotify(need(params, "playlist_id", str))
-        raise RpcError(INVALID_PARAMS, "source should be youtube or spotify.")
+        if source == "deezer":
+            return imports.from_deezer(need(params, "link", str))
+        if source == "lastfm":
+            return imports.from_lastfm(need(params, "list", str))
+        if source == "file":
+            return imports.from_file(need(params, "path", str), want(params, "playlist", str))
+        raise RpcError(INVALID_PARAMS, f"source should be one of: {', '.join(imports.SOURCES)}.")
 
     def import_playlists(self, params: dict[str, Any]) -> dict[str, Any]:
         """The playlists a signed-in service has, to choose one from."""
@@ -945,7 +956,16 @@ class Server:
     # -- methods: sign-ins (for reading playlists) --
 
     def account_status(self, params: dict[str, Any]) -> dict[str, Any]:
-        return {"spotify": spotify.status()}
+        return {"spotify": spotify.status(), "lastfm": lastfm.status()}
+
+    def account_connect(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Save the owner's Last.fm username and API key, once Last.fm has answered for
+        them. There's no password and no sign-in page: Last.fm answers about any public
+        profile, but only to an app with a key."""
+        if need(params, "service", str) != "lastfm":
+            raise RpcError(INVALID_PARAMS, "service should be lastfm.")
+        lastfm.connect(need(params, "user", str), want(params, "api_key", str))
+        return self.account_status({})
 
     def account_sign_in(self, params: dict[str, Any]) -> dict[str, Any]:
         """Start signing in to Spotify: the engine listens on this computer for
@@ -962,9 +982,14 @@ class Server:
         return {"authorize_url": spotify.begin_sign_in(want(params, "client_id", str), done)}
 
     def account_sign_out(self, params: dict[str, Any]) -> dict[str, Any]:
-        if need(params, "service", str) != "spotify":
-            raise RpcError(INVALID_PARAMS, "service should be spotify.")
-        return {"spotify": spotify.sign_out()}
+        service = need(params, "service", str)
+        if service == "spotify":
+            spotify.sign_out()
+        elif service == "lastfm":
+            lastfm.forget()
+        else:
+            raise RpcError(INVALID_PARAMS, "service should be spotify or lastfm.")
+        return self.account_status({})
 
     def import_find(self, params: dict[str, Any]) -> dict[str, Any]:
         """Each imported song found on YouTube Music, or known to be the owner's

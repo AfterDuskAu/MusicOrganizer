@@ -170,6 +170,29 @@ def test_a_song_named_by_another_service(
     assert not any("got it" in query.lower() for query in asked)  # owned: no search
 
 
+def test_a_song_whose_playlist_gives_no_length(
+    lib: Library, searches: dict[str, list[Candidate]]
+) -> None:
+    # A text file or Last.fm names a song and its artist, and nothing more.
+    searches["band certain"] = [candidate("certainAAAA", "Certain", ("Band",), 200)]
+    searches["band live one"] = [candidate("liveBBBBBBB", "Live One (Live)", ("Band",), 200)]
+    searches["band video only"] = [
+        candidate("uploadCCCCC", "Video Only", ("Band",), 200, video_type=VIDEO)
+    ]
+    found = find(
+        lib,
+        named("Certain", "Band", seconds=None),
+        named("Live One", "Band", seconds=None),
+        named("Video Only", "Band", seconds=None),
+    )
+    # The same artist, title and version of official audio is enough...
+    assert found[0]["state"] == "found" and found[0]["candidate"]["video_id"] == "certainAAAA"
+    # ...and anything less is still unsure, for its own reason: never "the length".
+    assert [f["state"] for f in found[1:]] == ["unsure", "unsure"]
+    assert found[1]["why"] == "It may be another version."
+    assert found[2]["why"] == "It isn't youtube music's official audio.".capitalize()
+
+
 def test_a_song_already_waiting_to_download(
     lib: Library, searches: dict[str, list[Candidate]], monkeypatch: pytest.MonkeyPatch
 ) -> None:

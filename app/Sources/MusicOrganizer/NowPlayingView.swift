@@ -171,9 +171,15 @@ private struct PlayerControls: View {
                         .foregroundStyle(.tertiary)
                         .lineLimit(1)
                 }
-                FavouriteButton(track: track)
-                    .font(.title2)
-                    .padding(.top, 4)
+                // The thumbs-up count sits to the heart's right. An unseen copy of it on
+                // the left takes the same room, so the heart stays in the middle.
+                let likes = model.player.current?.id == track.id ? model.player.likes : nil
+                HStack(spacing: 12) {
+                    if let likes { LikesLabel(likes: likes, ofVideo: showsVideo).hidden() }
+                    FavouriteButton(track: track).font(.title2)
+                    if let likes { LikesLabel(likes: likes, ofVideo: showsVideo) }
+                }
+                .padding(.top, 4)
             }
             .fixedSize(horizontal: false, vertical: true)
         } else {
@@ -223,6 +229,26 @@ private struct PlayerControls: View {
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
             .frame(maxWidth: 420)
+    }
+}
+
+/// The thumbs-up count YouTube shows for the song (or its video) that's playing. It comes
+/// with the answer that says where to play it from, so it's only there for what plays
+/// from YouTube: a song played from the library's own file has none.
+private struct LikesLabel: View {
+    let likes: Int
+    let ofVideo: Bool
+
+    var body: some View {
+        Label(CompactCount.text(likes), systemImage: "hand.thumbsup")
+            .labelStyle(.titleAndIcon)
+            .font(.callout)
+            .monospacedDigit()
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .fixedSize()
+            .help(
+                "\(likes.formatted()) thumbs up on YouTube for this \(ofVideo ? "video" : "song")")
     }
 }
 

@@ -16,6 +16,9 @@ Where the picks come from (all through `musicorg.youtube` and its rate limiter, 
   few of those, YouTube Music's own playlist for the genre gives the starting songs.
 - words the owner typed (the guided "What music would you like today?"): worked out
   to be a genre or an artist (`_typed`), then as above.
+- the owner's most played songs on Last.fm (`musicorg.lastfm`, once it's set up): the
+  radios start from those, so what they've listened to elsewhere counts too. A song
+  of those the owner doesn't have is itself a pick.
 
 How they're ranked:
 
@@ -46,7 +49,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from typing import Any
 
-from musicorg import listening, naming, queue, state, youtube
+from musicorg import lastfm, listening, naming, queue, state, youtube
 from musicorg.errors import NotFoundError, UserError, YouTubeError
 from musicorg.index import Index
 from musicorg.library import Library
@@ -55,7 +58,9 @@ from musicorg.youtube import Candidate
 
 log = logging.getLogger(__name__)
 
-SEED_KINDS = ("library", "most_played", "top_artist", "playlist", "artist", "genre", "typed")
+SEED_KINDS = (
+    "library", "most_played", "top_artist", "playlist", "artist", "genre", "typed", "lastfm",
+)  # fmt: skip
 MAX_COUNT = 500
 MAX_SEEDS = 8
 MIN_RADIOS = 4  # fewer starting points and "found on several radios" means nothing
@@ -63,6 +68,10 @@ MAX_RADIOS = 24  # about 36 seconds of asking at the limiter's pace
 SONGS_PER_RADIO = 25  # new songs a radio usually adds, for saying how far along it is
 POOL = 3  # stop asking once there are this many times the songs wanted to choose from
 MAX_LOOKUPS = 8  # searches for starting songs whose YouTube id isn't known
+# A Last.fm seed's songs are all known by name only, so it may search for more of them.
+MAX_LOOKUPS_LASTFM = 16
+LASTFM_PERIOD = "6month"  # "most played" means lately; with too little there, of all time
+LASTFM_SONGS = 50
 ARTIST_BOOST_SONGS = 10  # owning more of an artist than this adds nothing further
 
 # Genre tags that mean the same thing, as `compare_key` spells them.
@@ -275,7 +284,7 @@ def suggest(
                 continue
             start = source.starts.pop(0)
             if not start.artist_radio and start.video_id is None:
-                if lookups >= MAX_LOOKUPS:
+                if lookups >= (MAX_LOOKUPS_LASTFM if source.kind == "lastfm" else MAX_LOOKUPS):
                     continue
                 lookups += 1
                 start.video_id = _look_up(start, index)
@@ -392,7 +401,60 @@ def _source(
         return _Source("artist", name, [_Start(artist=name, artist_radio=True)])
     if seed.kind == "typed":
         return _typed(seed.value or "", songs, weight, index, rng, notes)
+    if seed.kind == "lastfm":
+        return _lastfm(songs, rng, notes)
     return _genre(seed.value or "", songs, weight, index, rng, notes)
+
+
+def _lastfm(songs: list[dict[str, Any]], rng: random.Random, notes: list[str]) -> _Source | None:
+    """The owner's most played songs on Last.fm, over the last six months (of all time,
+    if that's too few to go on). One the owner has, with a known YouTube id, needs no
+    search before its radio."""
+    try:
+        played, _ = lastfm.top_tracks(LASTFM_PERIOD, LASTFM_SONGS)
+        if len(played) < MIN_RADIOS:
+            played, _ = lastfm.top_tracks("overall", LASTFM_SONGS)
+    except UserError as exc:  # not set up, or Last.fm said no: the other seeds still count
+        notes.append(exc.message)
+        return None
+    if not played:
+        notes.append("Last.fm has no plays for you yet, so there's nothing to go on there.")
+        return None
+    # The owner's songs YouTube Music is known to have, by title: version, credit, song.
+    mine: dict[str, list[tuple[frozenset[str], str, dict[str, Any]]]] = {}
+    for row in songs:
+        if _video_id(row):
+            parsed = parse_title(row.get("title") or "")
+            credit = f" {youtube.artist_key(row.get('artist') or '')} "
+            mine.setdefault(compare_key(parsed.title), []).append(
+                (_hard(parsed.version_tokens), credit, row)
+            )
+
+    def own(title: str, artist: str) -> dict[str, Any] | None:
+        parsed, name = parse_title(title), youtube.artist_key(artist)
+        for versions, credit, row in mine.get(compare_key(parsed.title), []):
+            if versions == _hard(parsed.version_tokens) and name and f" {name} " in credit:
+                return row
+        return None
+
+    # The most played likelier to come early; the same word gives the same order.
+    order = sorted(
+        played, key=lambda t: rng.random() ** (1.0 / (1.0 + min(t.get("plays") or 0, 50))),
+        reverse=True,
+    )  # fmt: skip
+    starts = []
+    for track in order:
+        artist = track["artists"][0] if track["artists"] else ""
+        have = own(track["title"], artist)
+        starts.append(
+            _Start(
+                title=track["title"],
+                artist=artist,
+                video_id=_video_id(have) if have else None,
+                genre=(_genre_tag(have) or None) if have else None,
+            )
+        )
+    return _Source("lastfm", "your Last.fm", starts)
 
 
 def _typed(
@@ -679,6 +741,8 @@ def _why(entry: _Found, owned: Owned) -> str:
             youtube.artist_key(name) for name in entry.candidate.artists
         }
         return f"By {source.label}" if own else f"Similar to {source.label}"
+    if source.kind == "lastfm" and entry.candidate.video_id == start.video_id:
+        return "One of your most played on Last.fm"
     if len(hits) > 1:
         labels = list(dict.fromkeys(_named(s) for s, _, _ in hits))
         if len(labels) == 2:  # found from both of two starting points: the best kind of pick
@@ -691,6 +755,8 @@ def _why(entry: _Found, owned: Owned) -> str:
             return f"On the radio for {len(hits)} of your most played songs"
         if source.kind == "playlist":
             return f"On the radio for {len(hits)} songs in {source.label}"
+        if source.kind == "lastfm":
+            return f"On the radio for {len(hits)} of your most played on Last.fm"
         return f"On the radio for {len(hits)} {source.label} songs"
     if start.listed_on and entry.candidate.video_id == start.video_id:
         return f"On YouTube Music's “{start.listed_on}”"

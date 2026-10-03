@@ -141,6 +141,10 @@ final class AppModel {
     private(set) var signingIn = false
     /// Why the last sign-in didn't work, until the next one is tried.
     private(set) var accountNote: String?
+    /// Last.fm is being asked whether the username and key are good.
+    private(set) var connectingLastfm = false
+    /// Why Last.fm couldn't be set up, in plain words.
+    private(set) var lastfmNote: String?
 
     /// Find and download in one go, with no more clicks.
     enum AutoDownload: Equatable {
@@ -211,7 +215,7 @@ final class AppModel {
             guard let url = URL(string: found.url) else {
                 throw RPCError(code: 0, message: "YouTube's answer couldn't be read.")
             }
-            return (url, found.httpHeaders, found.durationS)
+            return (url, found.httpHeaders, found.durationS, found.likes)
         }
         player.findVideo = { [weak self] track in
             guard let connection = self?.engine?.connection else {
@@ -610,6 +614,7 @@ final class AppModel {
         (listening, favourites, heard, status, root) = (.empty, [], [], nil, nil)
         (pending, starting, startProblems) = ([], [], [:])
         (queueStatus, accounts, accountNote, signingIn) = (nil, nil, nil, false)
+        (connectingLastfm, lastfmNote) = (false, nil)
         (auto, batch, deletingDownloads, lastAuto) = (nil, nil, nil, nil)
         (youtubeQuery, youtubeResults, youtubeProblem, searchText) = ("", [], nil, "")
         libraryVersion += 1
@@ -1073,6 +1078,40 @@ final class AppModel {
         }
     }
 
+    /// Save this profile's Last.fm username and API key, once Last.fm has answered for
+    /// them. `apiKey` empty keeps the key saved before. There's no password in this.
+    func connectLastfm(user: String, apiKey: String) {
+        guard let connection = engine?.connection, !connectingLastfm else { return }
+        (connectingLastfm, lastfmNote) = (true, nil)
+        Task {
+            defer { connectingLastfm = false }
+            do {
+                var params: [String: Any] = [
+                    "service": "lastfm",
+                    "user": user.trimmingCharacters(in: .whitespacesAndNewlines),
+                ]
+                let key = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !key.isEmpty { params["api_key"] = key }
+                accounts = try await connection.call(
+                    "account.connect", params, as: AccountStatus.self)
+            } catch {
+                lastfmNote = error.localizedDescription
+            }
+        }
+    }
+
+    func forgetLastfm() {
+        guard let connection = engine?.connection else { return }
+        lastfmNote = nil
+        Task {
+            if let found = try? await connection.call(
+                "account.sign_out", ["service": "lastfm"], as: AccountStatus.self)
+            {
+                accounts = found
+            }
+        }
+    }
+
     /// Spotify answered a sign-in (or nobody came back from its page in time).
     private func accountChanged(signedIn: Bool, problem: String?) {
         signingIn = false
@@ -1394,9 +1433,10 @@ final class AppModel {
         }
     }
 
-    /// Download Video on the player page. The video showing is saved at the size showing;
-    /// otherwise the song's official video is found first and saved at its sharpest, up
-    /// to 1080p (the most a saved video may be).
+    /// Download Video on the player page. The video showing is saved at the size showing
+    /// (or at its sharpest, if Settings → Downloads says so: `saveVideo`); otherwise the
+    /// song's official video is found first and saved at its sharpest, up to 1080p (the
+    /// most a saved video may be).
     func downloadVideoOf(_ track: Track) {
         if player.current?.id == track.id, let showing = player.video {
             saveVideo(showing)
@@ -1424,11 +1464,14 @@ final class AppModel {
     }
 
     /// Save the video that's playing into the library, whole, at the picture size
-    /// that's showing. It lands in Downloads, like a downloaded song.
+    /// that's showing; or, if Settings → Downloads says always the highest quality, at
+    /// its sharpest (up to 1080p, the most a saved video may be) whatever is showing.
+    /// It lands in Downloads, like a downloaded song.
     func saveVideo(_ showing: ShowingVideo) {
+        let sharpest = showing.source.qualities.first { $0.height <= 1080 }
+        let quality = Player.alwaysBestDownload ? sharpest ?? showing.quality : showing.quality
         let wanted: [String: Any] = [
-            "video_id": showing.source.videoId, "height": showing.quality.height,
-            "fps": showing.quality.fps,
+            "video_id": showing.source.videoId, "height": quality.height, "fps": quality.fps,
         ]
         startDownload(showing.source.videoId, ["videos": [wanted]])
     }

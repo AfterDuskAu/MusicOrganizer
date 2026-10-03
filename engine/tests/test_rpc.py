@@ -462,10 +462,12 @@ def test_stream_jobs_and_the_new_plan_kinds(
     from musicorg import youtube
 
     monkeypatch.setattr(
-        youtube, "stream", lambda video_id: youtube.Stream("https://example.invalid/a", {}, 9.0)
+        youtube,
+        "stream",
+        lambda video_id: youtube.Stream("https://example.invalid/a", {}, 9.0, 5200),
     )
     assert result(opened, "youtube.stream", video_id="abcdefghijk") == {
-        "url": "https://example.invalid/a", "http_headers": {}, "duration_s": 9.0,
+        "url": "https://example.invalid/a", "http_headers": {}, "duration_s": 9.0, "likes": 5200,
     }  # fmt: skip
     assert code(opened, "youtube.stream") == rpc.INVALID_PARAMS
 
@@ -485,6 +487,7 @@ def test_stream_jobs_and_the_new_plan_kinds(
     assert result(opened, "youtube.video", title="Work Out", artist="J. Cole") == {
         "found": True, "video_id": "W5hSdGt2M8w", "title": "Work Out", "duration_s": 245.0,
         "http_headers": {"User-Agent": "x"}, "audio_url": "https://example.invalid/a",
+        "likes": None,  # YouTube hid the count
         "qualities": [
             {"label": "1080p60", "height": 1080, "fps": 60, "url": "https://example.invalid/v1"},
             {"label": "720p", "height": 720, "fps": 24, "url": "https://example.invalid/v2"},

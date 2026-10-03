@@ -153,6 +153,27 @@ public struct StreamAnswer: Decodable, Sendable {
     public let url: String
     public let httpHeaders: [String: String]
     public let durationS: Double?
+    /// The song's thumbs-up count on YouTube, when YouTube shows one.
+    public let likes: Int?
+}
+
+/// A big count as YouTube writes them: 950, 5.2K, 900K, 1.3M, 2.1B.
+public enum CompactCount {
+    public static func text(_ count: Int) -> String {
+        let steps: [(Double, String)] = [(1e9, "B"), (1e6, "M"), (1e3, "K")]
+        let number = Double(max(count, 0))
+        for (index, (size, letter)) in steps.enumerated() {
+            guard number >= size else { continue }
+            let amount = number / size
+            // "999.6K" would round to "1000K": that's "1M".
+            if amount >= 999.5, index > 0 { return "1" + steps[index - 1].1 }
+            if amount >= 9.95 { return "\(Int(amount.rounded()))\(letter)" }
+            let tenths = (amount * 10).rounded() / 10
+            return tenths == tenths.rounded()
+                ? "\(Int(tenths))\(letter)" : String(format: "%.1f%@", tenths, letter)
+        }
+        return "\(Int(number))"
+    }
 }
 
 /// `settings.get`: the engine's own settings that the app shows.

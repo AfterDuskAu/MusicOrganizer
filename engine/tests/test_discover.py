@@ -13,7 +13,7 @@ from typing import Any
 import pytest
 from test_rpc import Capture, code, opened, out, result, root, server  # noqa: F401  (fixtures)
 
-from musicorg import discover, listening, pipeline, rpc, state, youtube
+from musicorg import discover, lastfm, listening, pipeline, rpc, state, youtube
 from musicorg.discover import Seed
 from musicorg.errors import NotFoundError, UserError
 from musicorg.index import open_index
@@ -430,6 +430,70 @@ def test_progress_is_reported(lib: Library, radios: dict[str, list[Candidate]]) 
             lib, index, [Seed("library")], 5, progress=lambda a, b: steps.append((a, b))
         )
     assert steps == [(1, 4), (2, 4)]
+
+
+# ---- from Last.fm ---------------------------------------------------------------------------
+
+
+def played(title: str, artist: str, plays: int) -> dict[str, Any]:
+    return {"title": title, "artists": [artist], "album": None, "duration_s": 200,
+            "is_explicit": None, "plays": plays}  # fmt: skip
+
+
+def test_most_played_on_lastfm(
+    lib: Library, radios: dict[str, list[Candidate]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    own(lib, ("Mine", "Owned One", "startAAAAAA"))
+    periods: list[str] = []
+
+    def top(period: str = "overall", limit: int = 50, **_: Any) -> tuple[list[Any], bool]:
+        periods.append(period)
+        if period != "overall":
+            return [played("Mine", "Owned One", 3)], False  # too little lately to go on
+        return [played("Mine", "Owned One", 30), played("Heard Elsewhere", "Far Band", 20),
+                played("Nowhere", "Nobody", 9)], False  # fmt: skip
+
+    monkeypatch.setattr(lastfm, "top_tracks", top)
+    elsewhere = song(20, "Heard Elsewhere", "Far Band")
+    searched: list[str] = []
+
+    def search(query: str, limit: int = 10, **_: Any) -> list[Candidate]:
+        searched.append(query)
+        return [elsewhere] if "Heard Elsewhere" in query else []
+
+    monkeypatch.setattr(youtube, "search_songs", search)
+    radios["startAAAAAA"] = [song(1, "Near Mine")]
+    radios[elsewhere.video_id] = [elsewhere, song(2, "Near Elsewhere"), song(1, "Near Mine")]
+
+    found = suggest(lib, Seed("lastfm"), count=10)
+    assert periods == ["6month", "overall"]
+    assert found["seeds"] == [{"kind": "lastfm", "label": "your Last.fm", "radios": 2}]
+    # The owner's own copy needed no search; a song nobody has on YouTube Music is skipped.
+    assert sorted(searched) == ["Far Band Heard Elsewhere", "Nobody Nowhere"]
+    whys = {pick["title"]: pick["why"] for pick in found["picks"]}
+    assert whys == {
+        "Near Mine": "On the radio for 2 of your most played on Last.fm",
+        # Much played there, and not in the library: a pick in its own right.
+        "Heard Elsewhere": "One of your most played on Last.fm",
+        "Near Elsewhere": "Like “Heard Elsewhere” by Far Band",
+    }
+    assert found["picks"][0]["title"] == "Near Mine"
+
+
+def test_lastfm_that_isnt_set_up_or_wont_answer(
+    lib: Library, radios: dict[str, list[Candidate]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with pytest.raises(UserError, match="Last.fm isn't set up yet"):
+        suggest(lib, Seed("lastfm"))
+    # With another starting point, that one still counts, and the note says what happened.
+    own(lib, ("A", "One", "startAAAAAA"))
+    radios["startAAAAAA"] = [song(1)]
+    found = suggest(lib, Seed("lastfm"), Seed("library"), count=1)
+    assert len(found["picks"]) == 1 and "Last.fm isn't set up yet" in found["note"]
+    monkeypatch.setattr(lastfm, "top_tracks", lambda *a, **k: ([], False))
+    with pytest.raises(UserError, match="no plays for you yet"):
+        suggest(lib, Seed("lastfm"))
+    assert Seed.from_dict({"kind": "lastfm", "name": "ignored"}) == Seed("lastfm")
 
 
 # ---- what's asked for -----------------------------------------------------------------------

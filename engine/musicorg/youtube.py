@@ -924,6 +924,9 @@ class Stream:
     url: str
     headers: dict[str, str]  # what the player must send with its requests
     duration_s: float | None
+    # Its thumbs-up count, which comes with the same answer at no extra cost (yt-dlp's
+    # `like_count`); None when YouTube hides it.
+    likes: int | None = None
 
 
 @dataclass(frozen=True)
@@ -1043,11 +1046,15 @@ def _audio_of(video_id: str, info: dict[str, Any]) -> Stream:
     if str(info.get("format_id") or "") != DOWNLOAD_FORMAT:
         raise FormatUnavailableError(f"YouTube doesn't offer {video_id} in the format we play.")
     headers = info.get("http_headers")
+    likes = info.get("like_count")
     return Stream(
         url=address,
         headers={str(k): str(v) for k, v in headers.items()} if isinstance(headers, dict) else {},
         duration_s=float(info["duration"])
         if isinstance(info.get("duration"), int | float)
+        else None,
+        likes=likes
+        if isinstance(likes, int) and not isinstance(likes, bool) and likes >= 0
         else None,
     )
 

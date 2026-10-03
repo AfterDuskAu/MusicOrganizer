@@ -15,6 +15,7 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
 1. **Files are the source of truth.** Everything about a recording lives in tags inside the file, including provenance tags (`MUSICORG_*`, see the contract). The SQLite index is a cache, rebuildable as described in the contract, section 5.
 2. **The engine writes user data only inside the library root.**
    - External folders (the owner's existing rips, friends' iTunes folders) are **read-only sources**: never renamed, retagged, moved or deleted. Only-copy tracks are *copied* into the library, and only the copy is tagged.
+   - A playlist file the owner chooses to import (`playlistfile`) is read-only in the same way, and nothing of where it was is kept.
    - **Engine-owned exceptions:**
      - the app's own config, log and cache folders (platformdirs): `config.json`, `accounts.json`, `downloads.json`, logs, and yt-dlp's cache via its `cachedir` option
      - exports the user asked for (`report`, `review export`, `auto-sample`), written only through `fileops.write_export()`, which never overwrites and refuses any path inside the library's managed folders or a registered source
@@ -62,6 +63,9 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
   - `discover`: songs the owner doesn't have, found from the ones they do (read-only; lookups through `youtube`)
   - `imports`: a playlist from elsewhere, each song found on YouTube Music (read-only; lookups through `youtube`)
   - `spotify`: signing in to Spotify in the browser (PKCE) and reading the owner's playlists; the only module that talks to Spotify, and it only reads
+  - `deezer`: a public Deezer playlist or album, read by its link with no sign-in; the only module that talks to Deezer, and it only reads
+  - `lastfm`: the owner's most played and loved songs on Last.fm, with their own API key; the only module that talks to Last.fm, and it only reads
+  - `playlistfile`: a playlist saved as a file (CSV, text, M3U), the way in for Amazon Music; the file is the owner's, opened read-only
   - `report`
   - `review` and `review_web`: the review spreadsheet, and the local review page
   - `rpc`: the JSON-RPC server
@@ -93,6 +97,7 @@ All states, decisions and tag values are defined **once**, in `docs/ENGINE_API.m
 - Tests that need a fake secret build it at runtime (e.g. `"ghp_" + "a1B2" * 10`), so the file never contains one.
 - YouTube logins (yt-dlp cookie files, ytmusicapi `browser.json` / `oauth.json`) live outside the repo, in the app's config folder.
 - A Spotify sign-in (`accounts.json`: the owner's app's Client ID and a refresh token that can only read playlists) lives there too. No token, one-time code or Client ID is ever logged, shown in an error, or written anywhere else.
+- So does Last.fm's set-up (the owner's username and their own API key), under the same rule: neither is logged, shown in an error, given out over RPC, or written anywhere else.
 
 ## Testing
 
@@ -114,8 +119,8 @@ All states, decisions and tag values are defined **once**, in `docs/ENGINE_API.m
 
 Weekly mix, phone/Subsonic server, packaging, signing, notarization, Windows app shell, accounts and cloud anything (but see imports, below).
 
-**Discover was started early, on 2026-10-01, at the owner's request** (it was on this list). Built: `discover.suggest`, the app's What's New and Find pages, the guided "What music would you like today?" mode, and Find's Download Automatically (find and queue a batch in one click). Still not yet, from its plan (`docs/roadmap/0.4-discover.md`): the `Discovered/` folder and its tag (a contract change), and Last.fm as a second source.
+**Discover was started early, on 2026-10-01, at the owner's request** (it was on this list). Built: `discover.suggest`, the app's What's New and Find pages, the guided "What music would you like today?" mode, and Find's Download Automatically (find and queue a batch in one click). Last.fm was added on 2026-10-03, also at the owner's request: the owner's most played songs there are a starting point (seed `lastfm`). Still not yet, from its plan (`docs/roadmap/0.4-discover.md`): the `Discovered/` folder and its tag (a contract change), and Last.fm's "similar tracks" as a source of picks.
 
-**Imports were started early, on 2026-10-02, at the owner's request** (Spotify/Apple Music import was on this list, and so were accounts). Built: Discover → Import Playlists for a YouTube or YouTube Music playlist by its link, with no sign-in; and for Spotify, after a sign-in on Spotify's own page (2026-10-03). Still not yet: Apple Music, and signing in to YouTube (`docs/ROADMAP.md`, v0.3). A sign-in is built only for reading playlists: logins stay on the Mac, never in the repo or the library.
+**Imports were started early, on 2026-10-02, at the owner's request** (Spotify/Apple Music import was on this list, and so were accounts). Built: Discover → Import Playlists for a YouTube or YouTube Music playlist by its link, with no sign-in; for Spotify, after a sign-in on Spotify's own page (2026-10-03); and, the same evening, for a public Deezer playlist or album by its link, for a playlist saved as a file (the way in for Amazon Music), and for the owner's lists on Last.fm. Still not yet: Apple Music, and signing in to YouTube (`docs/ROADMAP.md`, v0.3). A sign-in is built only for reading playlists: logins stay on the Mac, never in the repo or the library.
 
 **Profiles were built on 2026-10-03, at the owner's request** ("accounts" was on this list; these are local, with nothing online). A profile is a name and a library folder of its own, chosen in the app's Settings → Profiles; the app starts the engine for one profile at a time (`MUSICORG_PROFILE`), and the engine still serves one library. Sign-ins are kept per profile; the daily download limit is counted once for the whole computer. Still not yet, from `docs/roadmap/1.1-family-mode.md`: a parent PIN, and filtering a kids profile by the explicit tag.

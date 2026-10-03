@@ -23,10 +23,13 @@ public struct VideoAnswer: Decodable, Sendable {
     public let httpHeaders: [String: String]?
     public let audioUrl: String?
     public let qualities: [Quality]?
+    /// The video's own thumbs-up count on YouTube, when YouTube shows one.
+    public let likes: Int?
 
     public init(
         found: Bool, videoId: String? = nil, title: String? = nil, durationS: Double? = nil,
-        httpHeaders: [String: String]? = nil, audioUrl: String? = nil, qualities: [Quality]? = nil
+        httpHeaders: [String: String]? = nil, audioUrl: String? = nil, qualities: [Quality]? = nil,
+        likes: Int? = nil
     ) {
         self.found = found
         self.videoId = videoId
@@ -35,6 +38,7 @@ public struct VideoAnswer: Decodable, Sendable {
         self.httpHeaders = httpHeaders
         self.audioUrl = audioUrl
         self.qualities = qualities
+        self.likes = likes
     }
 }
 
@@ -67,6 +71,8 @@ public struct SongVideo: Equatable, Sendable {
     public let headers: [String: String]
     /// The sharpest first. Never empty.
     public let qualities: [Quality]
+    /// The video's thumbs-up count on YouTube, when YouTube shows one.
+    public let likes: Int?
 
     /// Nil unless the engine found a video with everything needed to play it.
     public init?(_ answer: VideoAnswer) {
@@ -84,6 +90,7 @@ public struct SongVideo: Equatable, Sendable {
         self.sound = sound
         self.headers = answer.httpHeaders ?? [:]
         self.qualities = qualities
+        self.likes = answer.likes
     }
 
     /// The picture to show. With nothing chosen, the sharpest. Otherwise the very size

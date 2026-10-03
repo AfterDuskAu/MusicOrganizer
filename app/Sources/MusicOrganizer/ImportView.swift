@@ -1,27 +1,39 @@
 import MusicOrganizerKit
 import SwiftUI
+import UniformTypeIdentifiers
 
-/// Discover → Import Playlists: choose a playlist (a YouTube link, or one of your
-/// Spotify playlists), see which of its songs you have and which were found on YouTube
-/// Music, and download the rest in one go. They arrive in a playlist of the same name.
+/// Discover → Import Playlists: choose a playlist from somewhere else, see which of its
+/// songs you have and which were found on YouTube Music, and download the rest in one
+/// go. They arrive in a playlist of the same name.
 ///
-/// Built so far: YouTube and YouTube Music playlists by their link (no sign-in), and
-/// Spotify once signed in (Settings → Profile → Spotify). Apple Music comes next, through the
-/// same list and the same button.
+/// Built so far: YouTube and YouTube Music playlists by their link (no sign-in);
+/// Spotify once signed in (Settings → Profile → Spotify); Deezer playlists and albums by
+/// their link (no sign-in); Amazon Music, or anything else, from a playlist saved as a
+/// file; and your Loved Tracks and most played on Last.fm, once it's set up (Settings →
+/// Profile → Last.fm). Apple Music comes next, through the same list and the same button.
 struct ImportView: View {
     @Environment(AppModel.self) private var model
     @AppStorage("importSource") private var source = Source.youtube
     @AppStorage("importLink") private var link = ""
+    @AppStorage("importDeezerLink") private var deezerLink = ""
+    @AppStorage("importLastfmList") private var lastfmList = LastfmList.loved
     @State private var spotifyChoice = ""
+    /// The playlist file chosen, for as long as this page is open: it isn't remembered.
+    @State private var filePath: String?
+    /// Which playlist of a file that holds several.
+    @State private var fileChoice: String?
 
     enum Source: String, CaseIterable, Identifiable {
-        case youtube, spotify
+        case youtube, spotify, deezer, amazon, lastfm
 
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .youtube: "YouTube link"
+            case .youtube: "YouTube"
             case .spotify: "Spotify"
+            case .deezer: "Deezer"
+            case .amazon: "Amazon Music"
+            case .lastfm: "Last.fm"
             }
         }
     }
@@ -30,27 +42,30 @@ struct ImportView: View {
         let page = model.importing
         VStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .firstTextBaseline, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Import Playlists").font(.title2.weight(.semibold))
-                        Text(
-                            "Bring a playlist across. Its songs are found on YouTube Music and "
-                                + "downloaded into a playlist of the same name here."
-                        )
-                        .foregroundStyle(.secondary)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    Picker("From", selection: $source) {
-                        ForEach(Source.allCases) { Text($0.title).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    .fixedSize()
-                    .disabled(page.isBusy)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Import Playlists").font(.title2.weight(.semibold))
+                    Text(
+                        "Bring a playlist across. Its songs are found on YouTube Music and "
+                            + "downloaded into a playlist of the same name here."
+                    )
+                    .foregroundStyle(.secondary)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                // On a row of its own: five places to bring a playlist from don't fit
+                // beside the title in a narrow window.
+                Picker("From", selection: $source) {
+                    ForEach(Source.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .fixedSize()
+                .disabled(page.isBusy)
                 switch source {
                 case .youtube: youtube(page)
                 case .spotify: spotify(page)
+                case .deezer: deezer(page)
+                case .amazon: file(page)
+                case .lastfm: lastfm(page)
                 }
             }
             .padding(.horizontal, 20)
@@ -62,6 +77,8 @@ struct ImportView: View {
             Divider()
             content(page)
         }
+        // Whether Last.fm is set up is asked for when the page opens.
+        .onAppear { if model.accounts == nil { model.loadAccounts() } }
     }
 
     // MARK: where from
@@ -140,6 +157,115 @@ struct ImportView: View {
         }
     }
 
+    @ViewBuilder
+    private func deezer(_ page: ImportPage) -> some View {
+        HStack(spacing: 10) {
+            TextField("A Deezer playlist's or album's link (Share → Copy link)", text: $deezerLink)
+                .textFieldStyle(.roundedBorder)
+                .onSubmit { page.open(.deezer(link: deezerLink)) }
+            Button("Read Playlist", systemImage: "list.bullet.rectangle") {
+                page.open(.deezer(link: deezerLink))
+            }
+            .keyboardShortcut(.defaultAction)
+            .disabled(page.isBusy || deezerLink.trimmingCharacters(in: .whitespaces).isEmpty)
+        }
+        caption(
+            "The playlist has to be public: nothing is signed in to. Each song is looked up on "
+                + "YouTube Music, a couple of seconds apiece.")
+    }
+
+    /// A playlist saved as a file: the way in for Amazon Music, which has no export of
+    /// its own and can't be read from outside.
+    @ViewBuilder
+    private func file(_ page: ImportPage) -> some View {
+        HStack(spacing: 10) {
+            Button("Choose File…", systemImage: "doc") { chooseFile(page) }
+                .disabled(page.isBusy)
+            if let filePath {
+                Text(URL(fileURLWithPath: filePath).lastPathComponent)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            if let filePath, page.filePlaylists.count > 1 {
+                Picker(
+                    "Playlist",
+                    selection: Binding(
+                        get: {
+                            fileChoice.flatMap { page.filePlaylists.contains($0) ? $0 : nil }
+                                ?? page.filePlaylists[0]
+                        },
+                        set: { chosen in
+                            fileChoice = chosen
+                            page.open(.file(path: filePath, playlist: chosen))
+                        })
+                ) {
+                    ForEach(page.filePlaylists, id: \.self) { Text($0).tag($0) }
+                }
+                .frame(maxWidth: 300)
+                .disabled(page.isBusy)
+                .help("This file holds several playlists: choose which one to bring across")
+            }
+            Spacer(minLength: 0)
+        }
+        caption(
+            "Amazon Music can't be read directly and has no export of its own. A service such "
+                + "as TuneMyMusic or Soundiiz can save one of your Amazon playlists as a CSV or "
+                + "text file: choose that file here. Any playlist file works, from any service: "
+                + "a CSV with Title and Artist columns, a text file with Artist - Title on each "
+                + "line, or an M3U playlist. The file is only read.")
+    }
+
+    private func chooseFile(_ page: ImportPage) {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.allowedContentTypes = ["csv", "tsv", "txt", "m3u", "m3u8"].compactMap {
+            UTType(filenameExtension: $0)
+        }
+        panel.message = "Choose a playlist file: a CSV, a text file or an M3U playlist."
+        panel.prompt = "Read Playlist"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        (filePath, fileChoice) = (url.path, nil)
+        page.open(.file(path: url.path, playlist: nil))
+    }
+
+    @ViewBuilder
+    private func lastfm(_ page: ImportPage) -> some View {
+        if let account = model.accounts?.lastfm, account.connected {
+            HStack(spacing: 10) {
+                Picker("List", selection: $lastfmList) {
+                    ForEach(LastfmList.allCases) { Text($0.title).tag($0) }
+                }
+                .labelsHidden()
+                .frame(maxWidth: 300)
+                Button("Read List", systemImage: "list.bullet.rectangle") {
+                    page.open(.lastfm(list: lastfmList.rawValue))
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(page.isBusy)
+                Spacer(minLength: 0)
+            }
+            caption(
+                "From \(account.user ?? "your")'s Last.fm, up to 1,000 songs. Each song is looked "
+                    + "up on YouTube Music, a couple of seconds apiece.")
+        } else {
+            HStack(spacing: 10) {
+                Text("Last.fm isn't set up yet.")
+                SettingsLink { Text("Open Settings…") }
+                    .simultaneousGesture(
+                        TapGesture().onEnded {
+                            UserDefaults.standard.set("profile", forKey: SettingsView.tabKey)
+                            UserDefaults.standard.set("Last.fm", forKey: SettingsView.openAccountKey)
+                        })
+                Spacer(minLength: 0)
+            }
+            caption(
+                "Settings → Profile → Last.fm has the steps: your Last.fm username, and a free "
+                    + "API key from Last.fm. There's no password to type.")
+        }
+    }
+
     /// Keep the choice on a playlist that's there and can be read.
     private func chooseFirst(_ lists: [SpotifyPlaylist]) {
         if lists.first(where: { $0.id == spotifyChoice })?.readable != true {
@@ -200,6 +326,10 @@ struct ImportView: View {
         switch source {
         case .youtube: page.open(.youtube(link: link))
         case .spotify: page.open(.spotify(playlistId: spotifyChoice))
+        case .deezer: page.open(.deezer(link: deezerLink))
+        case .amazon:
+            if let filePath { page.open(.file(path: filePath, playlist: fileChoice)) }
+        case .lastfm: page.open(.lastfm(list: lastfmList.rawValue))
         }
     }
 

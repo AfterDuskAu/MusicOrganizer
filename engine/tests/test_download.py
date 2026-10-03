@@ -241,6 +241,12 @@ def test_stream_gives_an_address_and_downloads_nothing(
     found = youtube.stream("abcdefghijk")
     assert found == youtube.Stream("https://example.invalid/audio", {"User-Agent": "x"}, 187.0)
     assert StreamYDL.calls == [("https://www.youtube.com/watch?v=abcdefghijk", False)]
+    # The thumbs-up count comes with the same answer; one that isn't a count is left out.
+    StreamYDL.info = {**StreamYDL.info, "like_count": 899796}
+    assert youtube.stream("abcdefghijk").likes == 899796
+    for hidden in (None, "many", -1, True):
+        StreamYDL.info = {**StreamYDL.info, "like_count": hidden}
+        assert youtube.stream("abcdefghijk").likes is None
 
     with pytest.raises(YouTubeError):
         youtube.stream("not an id")

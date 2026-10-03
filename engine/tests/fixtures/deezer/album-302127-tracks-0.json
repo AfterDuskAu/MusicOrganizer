@@ -1,0 +1,132 @@
+{
+ "data": [
+  {
+   "id": 3135553,
+   "readable": true,
+   "title": "One More Time",
+   "title_short": "One More Time",
+   "title_version": "",
+   "duration": 320,
+   "rank": 930849,
+   "explicit_lyrics": false,
+   "type": "track",
+   "track_position": 1,
+   "disk_number": 1,
+   "artist": {
+    "id": 27,
+    "name": "Daft Punk",
+    "type": "artist"
+   }
+  },
+  {
+   "id": 3135554,
+   "readable": true,
+   "title": "Aerodynamic",
+   "title_short": "Aerodynamic",
+   "title_version": "",
+   "duration": 212,
+   "rank": 765541,
+   "explicit_lyrics": false,
+   "type": "track",
+   "track_position": 2,
+   "disk_number": 1,
+   "artist": {
+    "id": 27,
+    "name": "Daft Punk",
+    "type": "artist"
+   }
+  },
+  {
+   "id": 3135555,
+   "readable": true,
+   "title": "Digital Love",
+   "title_short": "Digital Love",
+   "title_version": "",
+   "duration": 301,
+   "rank": 758096,
+   "explicit_lyrics": false,
+   "type": "track",
+   "track_position": 3,
+   "disk_number": 1,
+   "artist": {
+    "id": 27,
+    "name": "Daft Punk",
+    "type": "artist"
+   }
+  },
+  {
+   "id": 3135556,
+   "readable": true,
+   "title": "Harder, Better, Faster, Stronger",
+   "title_short": "Harder, Better, Faster, Stronger",
+   "title_version": "",
+   "duration": 226,
+   "rank": 810329,
+   "explicit_lyrics": false,
+   "type": "track",
+   "track_position": 4,
+   "disk_number": 1,
+   "artist": {
+    "id": 27,
+    "name": "Daft Punk",
+    "type": "artist"
+   }
+  },
+  {
+   "id": 3135557,
+   "readable": true,
+   "title": "Crescendolls",
+   "title_short": "Crescendolls",
+   "title_version": "",
+   "duration": 211,
+   "rank": 631746,
+   "explicit_lyrics": false,
+   "type": "track",
+   "track_position": 5,
+   "disk_number": 1,
+   "artist": {
+    "id": 27,
+    "name": "Daft Punk",
+    "type": "artist"
+   }
+  },
+  {
+   "id": 3135558,
+   "readable": true,
+   "title": "Nightvision",
+   "title_short": "Nightvision",
+   "title_version": "",
+   "duration": 104,
+   "rank": 583077,
+   "explicit_lyrics": false,
+   "type": "track",
+   "track_position": 6,
+   "disk_number": 1,
+   "artist": {
+    "id": 27,
+    "name": "Daft Punk",
+    "type": "artist"
+   }
+  },
+  {
+   "id": 3135559,
+   "readable": true,
+   "title": "Superheroes",
+   "title_short": "Superheroes",
+   "title_version": "",
+   "duration": 237,
+   "rank": 622611,
+   "explicit_lyrics": false,
+   "type": "track",
+   "track_position": 7,
+   "disk_number": 1,
+   "artist": {
+    "id": 27,
+    "name": "Daft Punk",
+    "type": "artist"
+   }
+  }
+ ],
+ "total": 14,
+ "next": "https://api.deezer.com/album/302127/tracks?limit=7&index=7"
+}

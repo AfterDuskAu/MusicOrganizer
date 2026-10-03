@@ -428,9 +428,42 @@ final class SongVideoTests: XCTestCase {
         XCTAssertEqual(video.length, 245)
         XCTAssertEqual(video.headers, ["User-Agent": "x"])
         XCTAssertEqual(video.qualities.map(\.label), ["720p"])
+        XCTAssertNil(video.likes)  // an answer from before likes were sent
 
         let none = try decoder.decode(VideoAnswer.self, from: Data(#"{"found": false}"#.utf8))
         XCTAssertNil(SongVideo(none))
+    }
+
+    func testThumbsUpCountsComeWithWhatPlaysFromYouTube() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let stream = try decoder.decode(
+            StreamAnswer.self,
+            from: Data(
+                #"{"url": "https://example.invalid/a", "http_headers": {}, "duration_s": 199, "likes": 899796}"#
+                    .utf8))
+        XCTAssertEqual(stream.likes, 899_796)
+        let hidden = try decoder.decode(
+            StreamAnswer.self,
+            from: Data(
+                #"{"url": "https://example.invalid/a", "http_headers": {}, "duration_s": 199, "likes": null}"#
+                    .utf8))
+        XCTAssertNil(hidden.likes)
+        let video = VideoAnswer(
+            found: true, videoId: "abcdefghijk", durationS: 245,
+            audioUrl: "https://example.invalid/a",
+            qualities: [.init(label: "720p", height: 720, fps: 24, url: "https://example.invalid/v")],
+            likes: 5200)
+        XCTAssertEqual(SongVideo(video)?.likes, 5200)
+        // Written as YouTube writes them.
+        let written = [
+            0: "0", 950: "950", 1000: "1K", 5200: "5.2K", 9949: "9.9K", 9950: "10K",
+            899_796: "900K", 999_499: "999K", 999_500: "1M", 1_250_000: "1.3M",
+            12_000_000: "12M", 2_100_000_000: "2.1B", -5: "0",
+        ]
+        for (count, words) in written {
+            XCTAssertEqual(CompactCount.text(count), words, "\(count)")
+        }
     }
 
     func testAnAnswerThatCantBePlayedIsNoVideo() {
@@ -499,6 +532,8 @@ final class SongVideoTests: XCTestCase {
         XCTAssertEqual(
             DiscoverSeed.playlist("pl_1").params, ["kind": "playlist", "playlist_id": "pl_1"])
         XCTAssertEqual(DiscoverSeed.genre("hip hop").params, ["kind": "genre", "name": "hip hop"])
+        XCTAssertEqual(DiscoverSeed.lastfm.params, ["kind": "lastfm"])
+        XCTAssertEqual(FindChoice(start: .lastfm).seeds(playlists: []), [.lastfm])
         XCTAssertEqual(
             DiscoverSeed.artists(" Linkin Park, Korn ;linkin park,, "),
             [.artist("Linkin Park"), .artist("Korn")])
@@ -629,6 +664,9 @@ final class SongVideoTests: XCTestCase {
         XCTAssertEqual(
             Guided.what(10, from: [Seed(kind: "most_played", label: "your most played")]),
             "10 songs like the ones you play most")
+        XCTAssertEqual(
+            Guided.what(25, from: [Seed(kind: "lastfm", label: "your Last.fm")]),
+            "25 songs like your most played on Last.fm")
         XCTAssertEqual(Guided.what(10, from: []), "10 songs")
         XCTAssertTrue(Guided.downloadNote(minutes: 150, days: 1).contains("about 2½ hours"))
         XCTAssertFalse(Guided.downloadNote(minutes: 150, days: 1).contains("daily limit"))
@@ -873,6 +911,7 @@ final class SongVideoTests: XCTestCase {
                 """.utf8))
         XCTAssertFalse(status.spotify.signedIn)
         XCTAssertEqual(status.spotify.redirectUri, "http://127.0.0.1:36463/callback")
+        XCTAssertNil(status.lastfm)  // an engine from before Last.fm
         let lists = try decoder.decode(
             SpotifyPlaylistsAnswer.self,
             from: Data(
@@ -909,6 +948,52 @@ final class SongVideoTests: XCTestCase {
         XCTAssertTrue(Imports.looksLikeSpotifyClientId(" \(half)\(half.uppercased())\n"))
         XCTAssertFalse(Imports.looksLikeSpotifyClientId(half))
         XCTAssertFalse(Imports.looksLikeSpotifyClientId(half + half.dropLast() + "!"))
+    }
+
+    func testDeezerLastfmAndFilesAreAskedFor() throws {
+        XCTAssertEqual(
+            ImportRequest.deezer(link: "deezer.com/playlist/1").params,
+            ["source": "deezer", "link": "deezer.com/playlist/1"])
+        XCTAssertEqual(
+            ImportRequest.lastfm(list: LastfmList.top6month.rawValue).params,
+            ["source": "lastfm", "list": "top_6month"])
+        XCTAssertEqual(
+            ImportRequest.file(path: "/tmp/list.csv", playlist: nil).params,
+            ["source": "file", "path": "/tmp/list.csv"])
+        XCTAssertEqual(
+            ImportRequest.file(path: "/tmp/list.csv", playlist: "Gym").params,
+            ["source": "file", "path": "/tmp/list.csv", "playlist": "Gym"])
+        // The lists as the engine names them.
+        XCTAssertEqual(
+            LastfmList.allCases.map(\.rawValue),
+            ["loved", "top_7day", "top_1month", "top_3month", "top_6month", "top_12month",
+             "top_overall"])
+
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let status = try decoder.decode(
+            AccountStatus.self,
+            from: Data(
+                """
+                {"spotify": {"client_id": null, "signed_in": false, "name": null, "redirect_uri": ""},
+                 "lastfm": {"user": "Listener", "has_key": true, "connected": true}}
+                """.utf8))
+        XCTAssertEqual(status.lastfm, .init(user: "Listener", hasKey: true, connected: true))
+        let read = try decoder.decode(
+            ImportedPlaylist.self,
+            from: Data(
+                """
+                {"source": "file", "name": "Road Trip", "more": false, "playlists": ["Road Trip", "Gym"],
+                 "tracks": [{"title": "One", "artists": ["Band"], "album": null, "duration_s": null,
+                             "is_explicit": null}]}
+                """.utf8))
+        XCTAssertEqual(read.playlists, ["Road Trip", "Gym"])
+        XCTAssertEqual(read.tracks.map(\.title), ["One"])
+        // Made up here, so no file holds something shaped like a real key.
+        let half = "0123456789abcdef"
+        XCTAssertTrue(Imports.looksLikeLastfmKey(" \(half)\(half)\n"))
+        XCTAssertFalse(Imports.looksLikeLastfmKey(half))
+        XCTAssertFalse(Imports.looksLikeLastfmKey(half + half.dropLast() + "g"))
     }
 
     func testWhatAnImportWillDownload() {

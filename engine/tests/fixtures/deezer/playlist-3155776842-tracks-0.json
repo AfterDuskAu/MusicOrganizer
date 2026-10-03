@@ -1,0 +1,69 @@
+{
+ "data": [
+  {
+   "id": 3895241341,
+   "readable": true,
+   "title": "Boston",
+   "title_short": "Boston",
+   "title_version": "",
+   "duration": 170,
+   "rank": 873262,
+   "explicit_lyrics": false,
+   "type": "track",
+   "artist": {
+    "id": 181157207,
+    "name": "STELLA LEFTY",
+    "type": "artist"
+   },
+   "album": {
+    "id": 937796461,
+    "title": "Boston",
+    "type": "album"
+   }
+  },
+  {
+   "id": 3602074142,
+   "readable": true,
+   "title": "Choosin' Texas",
+   "title_short": "Choosin' Texas",
+   "title_version": "",
+   "duration": 232,
+   "rank": 978085,
+   "explicit_lyrics": false,
+   "type": "track",
+   "artist": {
+    "id": 14867123,
+    "name": "Ella Langley",
+    "type": "artist"
+   },
+   "album": {
+    "id": 837881302,
+    "title": "Choosin' Texas",
+    "type": "album"
+   }
+  },
+  {
+   "id": 4058916481,
+   "readable": true,
+   "title": "I Knew It, I Knew You (From \"Toy Story 5\")",
+   "title_short": "I Knew It, I Knew You",
+   "title_version": "(From \"Toy Story 5\")",
+   "duration": 178,
+   "rank": 862274,
+   "explicit_lyrics": false,
+   "type": "track",
+   "artist": {
+    "id": 12246,
+    "name": "Taylor Swift",
+    "type": "artist"
+   },
+   "album": {
+    "id": 996462431,
+    "title": "I Knew It, I Knew You (From \"Toy Story 5\")",
+    "type": "album"
+   }
+  }
+ ],
+ "total": 100,
+ "next": "https://api.deezer.com/playlist/3155776842/tracks?limit=3&index=3"
+}
