@@ -106,6 +106,7 @@ struct EditSheet: View {
                 lyricsNote = "Timed by tapping. Save to keep it."
             }
             .environment(model)
+            .dressed()
         }
         .task {
             title = track.title

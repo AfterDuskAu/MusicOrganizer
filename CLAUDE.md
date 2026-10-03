@@ -8,6 +8,8 @@ A personal music app that replaces Spotify, Apple Music and YouTube Music for a 
 
 **v0.2 (from 2026-10-01): the Mac app** lives in `app/`, a Swift package: `MusicOrganizerKit` (the engine connection, the library's shape, the play queue, the lyrics parser, all tested without a window) and `MusicOrganizer` (the SwiftUI screens). `scripts/build_app.sh` builds `app/build/Music Organizer.app`. **The app never writes inside the library:** it reads audio and cover files to play and show them, and every change goes through the engine over JSON-RPC. What the app needs from the library, it asks the engine for (`library.tracks`, `library.lyrics`, `lyrics.for_video`, `listening.*`, `playlist.*`, `youtube.stream`, `youtube.video`, `discover.suggest`, `import.*`, `artist.*`, `account.*`); it doesn't parse tags or the index itself.
 
+**Looks (2026-10-03):** Settings → App Layout chooses how the app is dressed: "Apple Native Build" (macOS's own colours and type) or "Warm Look" (`AppLook` and `WarmPalette` in the Kit, `Theme` in the app). A screen takes its surfaces, the colour of its words and its headings' type from `Theme` (`dressed()`, `heading()`, `Theme.current.panel`), never a colour of its own, so it works in every look; and in the native look every one of those is macOS's own, so that look stays exactly as macOS draws it. A look is put on when the app opens.
+
 The owner builds with Claude Code and is not a professional programmer. Prefer boring, obvious code with good error messages over clever code. The development machine is an **Intel iMac**.
 
 ## Non-negotiable rules (the library contract)

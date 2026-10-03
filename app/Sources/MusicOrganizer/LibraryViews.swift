@@ -208,7 +208,7 @@ struct SongList: View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(title).font(.title2.weight(.semibold)).lineLimit(1)
+                    Text(title).font(.title2.weight(.semibold)).heading().lineLimit(1)
                     Text(counted(total))
                         .foregroundStyle(.secondary)
                 }
@@ -218,6 +218,7 @@ struct SongList: View {
             }
             Spacer()
             Button("Play", systemImage: "play.fill") { model.player.play(rows.map(\.track)) }
+                .mainButton()
                 .help("Play these songs in order")
             Button("Shuffle", systemImage: "shuffle") { model.player.playShuffled(rows.map(\.track)) }
                 .help("Play these songs in a random order")
@@ -247,13 +248,13 @@ struct SongList: View {
         ) {
             TableColumn("") { row in
                 // Table cells don't inherit the window's environment on macOS.
-                FavouriteButton(track: row.track).environment(model)
+                FavouriteButton(track: row.track).environment(model).lookText()
             }
             .width(20)
             .customizationID("favourite")
             .disabledCustomizationBehavior(.all)
             TableColumn("Title", value: \.track.title) { row in
-                SongTitle(track: row.track).environment(model)
+                SongTitle(track: row.track).environment(model).lookText()
             }
             // Every other column has a set width, so the columns are in the same places
             // in every list, however long the names are and whenever the list is opened
@@ -261,31 +262,39 @@ struct SongList: View {
             .width(min: SongColumns.titleLeast, ideal: titleWidth)
             .customizationID("title")
             .disabledCustomizationBehavior(.visibility)
-            TableColumn("Artist", value: \.track.artistName)
-                .width(SongColumns.widths["artist"]!)
-                .customizationID("artist")
-            TableColumn("Album", value: \.track.albumName)
-                .width(SongColumns.widths["album"]!)
-                .customizationID("album")
+            TableColumn("Artist", value: \.track.artistName) { row in
+                Text(row.track.artistName).lookText()
+            }
+            .width(SongColumns.widths["artist"]!)
+            .customizationID("artist")
+            TableColumn("Album", value: \.track.albumName) { row in
+                Text(row.track.albumName).lookText()
+            }
+            .width(SongColumns.widths["album"]!)
+            .customizationID("album")
             TableColumn("Year", value: \.track.sortYear) { row in
                 Text(row.track.year.map(String.init) ?? "").foregroundStyle(.secondary)
+                    .lookText()
             }
             .width(SongColumns.widths["year"]!)
             .customizationID("year")
             TableColumn("Genre", value: \.track.sortGenre) { row in
                 Text(row.track.sortGenre).foregroundStyle(.secondary)
+                    .lookText()
             }
             .width(SongColumns.widths["genre"]!)
             .defaultVisibility(.hidden)
             .customizationID("genre")
             TableColumn("Quality", value: \.track.quality) { row in
                 Text(row.track.quality).foregroundStyle(.secondary)
+                    .lookText()
             }
             .width(SongColumns.widths["quality"]!)
             .defaultVisibility(.hidden)
             .customizationID("quality")
             TableColumn("Added", value: \.track.sortAdded) { row in
                 Text(row.track.addedDay).foregroundStyle(.secondary)
+                    .lookText()
             }
             .width(SongColumns.widths["added"]!)
             .defaultVisibility(.hidden)
@@ -294,6 +303,7 @@ struct SongList: View {
                 Text(row.plays > 0 ? String(row.plays) : "")
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
+                    .lookText()
             }
             .width(SongColumns.widths["plays"]!)
             .customizationID("plays")
@@ -301,6 +311,7 @@ struct SongList: View {
                 Text(clockTime(row.track.durationS))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
+                    .lookText()
             }
             .width(SongColumns.widths["time"]!)
             .customizationID("time")
@@ -317,6 +328,9 @@ struct SongList: View {
             }
         }
         .background(FixedRows(height: 34))
+        .scrollContentBackground(Theme.current.listBackground)
+        // macOS stripes a table with greys of its own, which don't sit on a warm page.
+        .alternatingRowBackgrounds(Theme.current.isWarm ? .disabled : .automatic)
         .contextMenu(forSelectionType: Int.self) { ids in
             menu(for: ids)
         } primaryAction: { ids in
@@ -564,6 +578,7 @@ struct AlbumPage: View {
         } primaryAction: { ids in
             if let index = index(of: ids) { model.player.play(album.tracks, startAt: index) }
         }
+        .scrollContentBackground(Theme.current.listBackground)
         .navigationTitle(album.title)
     }
 
@@ -577,7 +592,7 @@ struct AlbumPage: View {
                 .frame(width: 210, height: 210)
                 .shadow(color: .black.opacity(0.25), radius: 10, y: 4)
             VStack(alignment: .leading, spacing: 6) {
-                Text(album.title).font(.largeTitle.weight(.bold)).lineLimit(2)
+                Text(album.title).font(.largeTitle.weight(.bold)).heading().lineLimit(2)
                 Text(album.artist).font(.title2).foregroundStyle(.secondary)
                 Text(summary).font(.callout).foregroundStyle(.secondary)
                 HStack {

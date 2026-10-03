@@ -43,7 +43,7 @@ struct ImportView: View {
         VStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 10) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Import Playlists").font(.title2.weight(.semibold))
+                    Text("Import Playlists").font(.title2.weight(.semibold)).heading()
                     Text(
                         "Bring a playlist across. Its songs are found on YouTube Music and "
                             + "downloaded into a playlist of the same name here."
@@ -339,7 +339,7 @@ struct ImportView: View {
         let songs = page.toDownload.count
         return HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(page.name).font(.title3.weight(.semibold)).lineLimit(1)
+                Text(page.name).font(.title3.weight(.semibold)).heading().lineLimit(1)
                 if page.phase == .finding {
                     ProgressView(value: Double(page.done), total: Double(max(page.rows.count, 1)))
                         .frame(maxWidth: 260)
@@ -485,7 +485,7 @@ private struct ImportNote: View {
         .font(.callout)
         .padding(.horizontal, 20)
         .padding(.vertical, 9)
-        .background(.background.secondary)
+        .background(Theme.current.panel)
     }
 
     private var words: String {

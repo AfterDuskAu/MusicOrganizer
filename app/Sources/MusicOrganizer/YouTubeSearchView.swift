@@ -57,6 +57,7 @@ struct YouTubeSearchView: View {
                         .padding(.vertical, 6)
                     }
                 }
+                .scrollContentBackground(Theme.current.listBackground)
             }
         }
     }
@@ -219,7 +220,7 @@ struct YouTubeQueueView: View {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text("YouTube Queue").font(.title2.weight(.semibold))
+                        Text("YouTube Queue").font(.title2.weight(.semibold)).heading()
                         Text(queue.count == 1 ? "1 song" : "\(queue.count) songs")
                             .foregroundStyle(.secondary)
                     }
@@ -228,6 +229,7 @@ struct YouTubeQueueView: View {
                 }
                 Spacer()
                 Button("Play", systemImage: "play.fill") { model.playYouTubeQueue() }
+                    .mainButton()
                     .disabled(queue.isEmpty)
                 Button("Clear", systemImage: "xmark.circle") { model.clearYouTubeQueue() }
                     .disabled(queue.isEmpty)
@@ -263,6 +265,7 @@ struct YouTubeQueueView: View {
                         }
                     }
                 }
+                .scrollContentBackground(Theme.current.listBackground)
             }
         }
     }

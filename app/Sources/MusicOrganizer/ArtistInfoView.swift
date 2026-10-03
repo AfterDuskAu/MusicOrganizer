@@ -51,7 +51,7 @@ struct ArtistsPage: View {
             }
         }
         .sheet(item: $page.album) { album in
-            ArtistAlbumSheet(album: album).environment(model)
+            ArtistAlbumSheet(album: album).environment(model).dressed()
         }
         .task(id: model.phase) {
             // The Discover side starts from What's New's artists: asked for once, as the
@@ -75,7 +75,7 @@ struct ArtistsPage: View {
                                 ? "Back to \(page.before.last?.name ?? "the artist before")"
                                 : "Back to the lists")
                 }
-                Text("Mine").font(.title2.weight(.semibold))
+                Text("Mine").font(.title2.weight(.semibold)).heading()
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             HStack(spacing: 8) {
@@ -98,6 +98,7 @@ struct ArtistsPage: View {
             .frame(width: 320)
             Text("Discover")
                 .font(.title2.weight(.semibold))
+                .heading()
                 .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .padding(.horizontal, 20)
@@ -272,7 +273,7 @@ private struct MineForArtist: View {
         return ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("In Your Library").font(.title3.weight(.semibold))
+                    Text("In Your Library").font(.title3.weight(.semibold)).heading()
                     Text(
                         "\(stats.songs) \(stats.songs == 1 ? "song" : "songs") · "
                             + "\(stats.albums) \(stats.albums == 1 ? "album" : "albums")"
@@ -486,6 +487,7 @@ private struct ArtistPageBody: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(info.name)
                     .font(.largeTitle.weight(.bold))
+                    .heading()
                     .lineLimit(2)
                     .textSelection(.enabled)
                 if !info.numbers.isEmpty {
@@ -519,7 +521,7 @@ private struct ArtistPageBody: View {
 
     private func aboutSection(_ about: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("About").font(.title3.weight(.semibold))
+            Text("About").font(.title3.weight(.semibold)).heading()
             Text(about)
                 .lineLimit(aboutOpen ? nil : 4)
                 .textSelection(.enabled)
@@ -537,6 +539,7 @@ private struct ArtistPageBody: View {
         let title = HStack(spacing: 12) {
             Text(page.allSongs == nil ? "Top Songs" : "Songs")
                 .font(.title3.weight(.semibold))
+                .heading()
             if page.allSongs != nil {
                 Text("\(listed.count)" + (page.moreSongs ? "+" : ""))
                     .foregroundStyle(.secondary)
@@ -592,7 +595,7 @@ private struct ArtistPageBody: View {
     private func releases(_ title: String, _ listed: [ArtistRelease]) -> some View {
         if !listed.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                Text(title).font(.title3.weight(.semibold))
+                Text(title).font(.title3.weight(.semibold)).heading()
                 if let problem = page.albumProblem {
                     Text(problem).font(.callout).foregroundStyle(.orange)
                 }
@@ -633,7 +636,7 @@ private struct ArtistPageBody: View {
         let listed = info.related ?? []
         if !listed.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Fans Also Like").font(.title3.weight(.semibold))
+                Text("Fans Also Like").font(.title3.weight(.semibold)).heading()
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack(alignment: .top, spacing: 18) {
                         ForEach(listed) { artist in
@@ -700,7 +703,7 @@ private struct ArtistAlbumSheet: View {
                 RemotePicture(address: album.thumbnail)
                     .frame(width: 96, height: 96)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(album.title).font(.title2.weight(.semibold)).lineLimit(2)
+                    Text(album.title).font(.title2.weight(.semibold)).heading().lineLimit(2)
                     Text(
                         ([album.artists.joined(separator: ", "), album.year ?? ""]
                             .filter { !$0.isEmpty } + [songCount]).joined(separator: " · ")

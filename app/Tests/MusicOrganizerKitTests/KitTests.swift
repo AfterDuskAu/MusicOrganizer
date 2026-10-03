@@ -927,6 +927,61 @@ final class SongVideoTests: XCTestCase {
             ["findArtist", "importSource", "sidebarLibrary"])
     }
 
+    func testTheLookIsReadBackAndIsTheComputersOwn() {
+        XCTAssertEqual(AppLook(saved: nil), .native)
+        XCTAssertEqual(AppLook(saved: "warm"), .warm)
+        // A look from a newer version, or a typo: the app opens as it always did.
+        XCTAssertEqual(AppLook(saved: "neon"), .native)
+        XCTAssertEqual(AppLook.allCases.map(\.title), ["Apple Native Build", "Warm Look"])
+        // The look is put on when the app opens, so it isn't put away with a profile's
+        // settings; nor is the highlight colour macOS keeps for the app.
+        XCTAssertFalse(ProfileSettings.belongsToProfile(AppLook.key))
+        XCTAssertFalse(ProfileSettings.belongsToProfile("AppleAccentColor"))
+    }
+
+    func testTheWarmLooksWordsCanBeReadOnEverySurface() {
+        XCTAssertEqual(RGB(0xFFFFFF).contrast(with: RGB(0x000000)), 21, accuracy: 0.01)
+        XCTAssertEqual(RGB(0x808080).contrast(with: RGB(0x808080)), 1, accuracy: 0.01)
+        XCTAssertEqual(RGB(0xFF8000).red, 1)
+        XCTAssertEqual(RGB(0xFF8000).green, 128.0 / 255, accuracy: 0.0001)
+        for surface in WarmPalette.surfaces {
+            // 7 is "comfortable" for words; the quieter words on a page are drawn at
+            // about half strength, so the full-strength ones need plenty to spare.
+            XCTAssertGreaterThan(WarmPalette.text.contrast(with: surface), 12)
+            // And every surface is warm: more red than green, more green than blue.
+            XCTAssertGreaterThan(surface.red, surface.green)
+            XCTAssertGreaterThan(surface.green, surface.blue)
+        }
+    }
+
+    func testWhatACoverGivesTheGlow() {
+        let amber = WarmPalette.glow
+        // Black, white and grey have no colour to give: the look's own amber.
+        XCTAssertEqual(RGB(0x000000).glow(plain: amber), amber)
+        XCTAssertEqual(RGB(0x0A0503).glow(plain: amber), amber)
+        XCTAssertEqual(RGB(0xFFFFFF).glow(plain: amber), amber)
+        XCTAssertEqual(RGB(0x777777).glow(plain: amber), amber)
+        // A dark red glows red, bright enough to see on a dark page.
+        let red = RGB(0x3C0A0A).glow(plain: amber)
+        XCTAssertEqual(red.red, 0.5, accuracy: 0.001)
+        XCTAssertEqual(red.green, red.blue, accuracy: 0.001)
+        XCTAssertLessThan(red.green, 0.1)
+        // A pale pink keeps its hue, and doesn't glare.
+        let pink = RGB(0xF7C6D0).glow(plain: amber)
+        XCTAssertEqual(pink.red, 0.72, accuracy: 0.001)
+        XCTAssertGreaterThan(pink.blue, pink.green)
+        XCTAssertGreaterThan(pink.green, 0.5)
+        // Every hue comes back as itself: green stays green, blue stays blue.
+        let green = RGB(0x1E7A2C).glow(plain: amber)
+        XCTAssertTrue(green.green > green.blue && green.blue > green.red)
+        let blue = RGB(0x2040C0).glow(plain: amber)
+        XCTAssertTrue(blue.blue > blue.green && blue.green > blue.red)
+        let yellow = RGB(0xC8B400).glow(plain: amber)
+        XCTAssertTrue(yellow.red > yellow.green && yellow.green > yellow.blue)
+        let purple = RGB(0x7020A0).glow(plain: amber)
+        XCTAssertTrue(purple.blue > purple.red && purple.red > purple.green)
+    }
+
     func testSpotifyAccountsAndPlaylistsAreRead() throws {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase

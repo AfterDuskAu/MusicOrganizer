@@ -66,7 +66,7 @@ struct Message<Buttons: View>: View {
             Image(systemName: symbol)
                 .font(.system(size: 44))
                 .foregroundStyle(.secondary)
-            Text(title).font(.title2.weight(.semibold))
+            Text(title).font(.title2.weight(.semibold)).heading()
             Text(text)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
@@ -218,6 +218,7 @@ struct MainView: View {
                         sidebar
                         StatusFooter()
                     }
+                    .background(Theme.current.sidebar)
                     // Its width is its own: a page that wants more room never squeezes it
                     // (owner, 2026-10-03). Only the sidebar button hides it.
                     .navigationSplitViewColumnWidth(min: 220, ideal: 220, max: 300)
@@ -226,7 +227,7 @@ struct MainView: View {
                         pagesWithLyrics
                             .navigationTitle(title(of: current))
                             .navigationDestination(for: Album.self) {
-                                AlbumPage(album: $0).environment(model)
+                                AlbumPage(album: $0).environment(model).belowTitleBar()
                             }
                     }
                 }
@@ -244,6 +245,8 @@ struct MainView: View {
                         .help(model.searching ? "Close search" : "Search your library (⌘F)")
                     }
                 }
+                // The Warm Look's glow shows through the title bar.
+                .toolbarBackground(Theme.current.isWarm ? .hidden : .automatic, for: .windowToolbar)
                 .onChange(of: item, initial: true) { opened(current) }
                 .onAppear {
                     let caughtUp = SidebarChoice.catchUp(saved: savedEntries, seen: seenEntries)
@@ -288,6 +291,9 @@ struct MainView: View {
                     : $showLyrics,
                 lyricsForPlayerPage: onPlayerPage, showNowPlaying: $showNowPlaying)
         }
+        // The Warm Look's glow, behind everything, from the very top of the window: it
+        // shows through the title bar and the top of the page (the sidebar covers it).
+        .background { CoverWash().environment(model).ignoresSafeArea() }
         // Over everything, the player bar included: the video's own controls take over.
         .overlay {
             if model.videoFullScreen {
@@ -295,8 +301,8 @@ struct MainView: View {
             }
         }
         .animation(.easeInOut(duration: 0.25), value: showNowPlaying)
-        .sheet(item: $model.namePrompt) { NameSheet(prompt: $0) }
-        .sheet(item: $model.editing) { EditSheet(track: $0).environment(model) }
+        .sheet(item: $model.namePrompt) { NameSheet(prompt: $0).dressed() }
+        .sheet(item: $model.editing) { EditSheet(track: $0).environment(model).dressed() }
         .alert(
             "That didn't work", isPresented: Binding(
                 get: { model.notice != nil }, set: { if !$0 { model.notice = nil } })
@@ -462,6 +468,7 @@ struct MainView: View {
             }
         }
         .listStyle(.sidebar)
+        .scrollContentBackground(Theme.current.listBackground)
     }
 
     private func header(_ title: String, @ViewBuilder button: () -> some View) -> some View {
@@ -504,7 +511,7 @@ struct MainView: View {
                 LyricsView()
                     .environment(model)
                     .frame(width: 320)
-                    .background(.background.secondary)
+                    .background(Theme.current.panel)
             }
         }
         .transaction { $0.animation = nil }

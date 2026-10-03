@@ -35,7 +35,8 @@ enum Snapshot {
     }
 
     private static func take(into folder: URL) {
-        for window in NSApp.windows where window.canBecomeMain {
+        // The main window and Settings, and a sheet that's up on either.
+        for window in NSApp.windows where window.canBecomeMain || window.isSheet {
             // `MUSICORG_SNAPSHOT_WIDTH=<points>`: after the first picture the window
             // is made this wide, to see a page follow the change.
             if taken == 1, let wanted = ProcessInfo.processInfo.environment["MUSICORG_SNAPSHOT_WIDTH"],
@@ -45,15 +46,17 @@ enum Snapshot {
                 frame.size.width = width
                 window.setFrame(frame, display: true)
             }
-            guard let view = window.contentView,
+            // The view around the content, so the title bar and its buttons are in the
+            // picture too.
+            guard let view = window.contentView?.superview ?? window.contentView,
                 let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds)
             else { continue }
-            // The window's own background first: the content view doesn't draw it.
+            // The window's own background first: the views don't draw it.
             if let context = NSGraphicsContext(bitmapImageRep: bitmap) {
                 NSGraphicsContext.saveGraphicsState()
                 NSGraphicsContext.current = context
                 window.effectiveAppearance.performAsCurrentDrawingAppearance {
-                    NSColor.windowBackgroundColor.setFill()
+                    window.backgroundColor.setFill()
                     NSRect(origin: .zero, size: bitmap.size).fill()
                 }
                 NSGraphicsContext.restoreGraphicsState()

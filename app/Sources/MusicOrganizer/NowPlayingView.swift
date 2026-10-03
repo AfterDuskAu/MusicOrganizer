@@ -154,6 +154,7 @@ private struct PlayerControls: View {
             VStack(spacing: 4) {
                 Text(track.title)
                     .font(.title.weight(.bold))
+                    .heading()
                     .multilineTextAlignment(.center)
                     .lineLimit(3)
                     .minimumScaleFactor(0.75)

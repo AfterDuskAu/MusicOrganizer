@@ -46,7 +46,7 @@ struct DownloadsByGenre: View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text("Downloads").font(.title2.weight(.semibold))
+                    Text("Downloads").font(.title2.weight(.semibold)).heading()
                     Text(total == 1 ? "1 song" : "\(total.formatted()) songs")
                         .foregroundStyle(.secondary)
                 }
@@ -71,6 +71,7 @@ struct DownloadsByGenre: View {
             .fixedSize()
             .help("Which box comes first")
             Button("Play", systemImage: "play.fill") { model.player.play(shown) }
+                .mainButton()
                 .help("Play these songs in order")
             Button("Shuffle", systemImage: "shuffle") { model.player.playShuffled(shown) }
                 .help("Play these songs in a random order")
@@ -128,7 +129,7 @@ struct DownloadsByGenre: View {
                 }
             }
         }
-        .background(.background.secondary, in: RoundedRectangle(cornerRadius: 10))
+        .background(Theme.current.panel, in: RoundedRectangle(cornerRadius: 10))
         .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(.quaternary))
         .frame(maxWidth: .infinity)
     }

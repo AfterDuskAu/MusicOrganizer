@@ -35,7 +35,7 @@ struct PlayerBar: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
         }
-        .background(.bar)
+        .background(Theme.current.bar)
     }
 
     private func nowPlaying(_ player: Player) -> some View {

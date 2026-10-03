@@ -62,7 +62,7 @@ struct FullScreenVideo: View {
             CoverView(track: player.current, size: .large, corner: 12)
                 .frame(maxWidth: 420, maxHeight: 420)
             if let track = player.current {
-                Text(track.title).font(.title.weight(.bold))
+                Text(track.title).font(.title.weight(.bold)).heading()
                 Text(track.artistName).font(.title3).foregroundStyle(.secondary)
             }
             if let note = player.videoNote {

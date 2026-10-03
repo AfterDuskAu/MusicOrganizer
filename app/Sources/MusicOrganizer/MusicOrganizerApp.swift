@@ -7,6 +7,7 @@ struct MusicOrganizerApp: App {
     @State private var model = AppModel()
 
     init() {
+        Theme.current.putOn()
         // Started as a plain program (`swift run`) the app would have no Dock icon or
         // menu bar; in the built app this changes nothing.
         NSApplication.shared.setActivationPolicy(Snapshot.isOn ? .accessory : .regular)
@@ -20,6 +21,8 @@ struct MusicOrganizerApp: App {
             RootView()
                 .environment(model)
                 .frame(minWidth: 880, minHeight: 540)
+                .dressed()
+                .background(WindowLook())
                 .task {
                     if !Snapshot.isOn { NSApplication.shared.activate(ignoringOtherApps: true) }
                     await model.start()
@@ -58,6 +61,8 @@ struct MusicOrganizerApp: App {
         }
         Settings {
             SettingsView().environment(model)
+                .dressed()
+                .background(WindowLook())
         }
     }
 }

@@ -35,7 +35,7 @@ struct PendingDownloads: View {
                     Divider()
                 }
             }
-            .background(.background.secondary)
+            .background(Theme.current.panel)
             .confirmationDialog(
                 "Cancel the \(waiting) downloads still waiting?", isPresented: $cancelling
             ) {

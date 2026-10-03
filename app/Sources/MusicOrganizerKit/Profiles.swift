@@ -224,11 +224,12 @@ public struct PendingShare: Codable, Equatable, Sendable {
 /// Which of the app's saved settings belong to a profile, so they can be put away when
 /// another profile is switched to and brought back afterwards.
 public enum ProfileSettings {
-    /// The app's own keys for the profiles themselves, and what macOS keeps for the
+    /// The app's own keys for the profiles themselves, the look the app is dressed in
+    /// (the computer's: it's put on when the app opens), and what macOS keeps for the
     /// app (window places, its own switches): those stay as they are.
     public static func belongsToProfile(_ key: String) -> Bool {
         if key == "profiles" || key == "libraryRoot" || key == "pendingShares"
-            || key.hasPrefix("profileSettings.")
+            || key == AppLook.key || key.hasPrefix("profileSettings.")
         {
             return false
         }

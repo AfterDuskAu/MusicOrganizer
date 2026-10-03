@@ -12,7 +12,7 @@ struct WhatsNewView: View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("What's New").font(.title2.weight(.semibold))
+                    Text("What's New").font(.title2.weight(.semibold)).heading()
                     Text("Songs you don't have yet, picked from the ones you do.")
                         .foregroundStyle(.secondary)
                 }
@@ -170,7 +170,7 @@ struct FindView: View {
                 }
             }
         }
-        .sheet(isPresented: $guiding) { GuideSheet().environment(model) }
+        .sheet(isPresented: $guiding) { GuideSheet().environment(model).dressed() }
         .onAppear {
             // Whether Last.fm is set up, for the starting point that needs it.
             if model.accounts == nil { model.loadAccounts() }
@@ -295,7 +295,7 @@ private struct AutoDownloadNote: View {
         .font(.callout)
         .padding(.horizontal, 20)
         .padding(.vertical, 9)
-        .background(.background.secondary)
+        .background(Theme.current.panel)
     }
 }
 
@@ -418,6 +418,7 @@ struct PicksView: View {
             Button("Play All", systemImage: "play.fill") {
                 model.player.play(picks.map(\.result.track), startAt: 0)
             }
+            .mainButton()
             .help("Play these from YouTube Music. Nothing is saved.")
             Button("Queue (\(model.youtubeQueue.count))", systemImage: "text.append") {
                 showingQueue = true

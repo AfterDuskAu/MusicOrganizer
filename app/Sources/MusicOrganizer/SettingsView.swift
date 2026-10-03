@@ -11,7 +11,7 @@ struct SettingsView: View {
     static let tabKey = "settingsTab"
     /// Which account under Settings → Profile is open (its arrow turned down).
     static let openAccountKey = "settingsOpenAccount"
-    private static let tabs = ["profile", "play", "downloads", "lyrics"]
+    private static let tabs = ["profile", "play", "downloads", "lyrics", "layout"]
 
     var body: some View {
         TabView(selection: $tab) {
@@ -22,6 +22,8 @@ struct SettingsView: View {
             DownloadSettings().tabItem { Label("Downloads", systemImage: "arrow.down.circle") }
                 .tag("downloads")
             LyricsSettings().tabItem { Label("Lyrics", systemImage: "quote.bubble") }.tag("lyrics")
+            LayoutSettings().tabItem { Label("App Layout", systemImage: "paintpalette") }
+                .tag("layout")
         }
         .frame(width: 560)
         // A tab remembered from before Settings was regrouped (2026-10-03) opens Profile.
@@ -51,6 +53,59 @@ private struct ComingBadge: View {
             .padding(.vertical, 2)
             .background(.quaternary, in: Capsule())
             .foregroundStyle(.secondary)
+    }
+}
+
+/// Settings → App Layout: the look the app is dressed in (owner, 2026-10-03). The look is
+/// put on when the app opens (`Theme`), so a new choice shows once it's been reopened.
+private struct LayoutSettings: View {
+    @AppStorage(AppLook.key) private var saved = AppLook.native.rawValue
+
+    var body: some View {
+        let chosen = AppLook(saved: saved)
+        Form {
+            Section {
+                Picker(
+                    "Look",
+                    selection: Binding(
+                        get: { chosen },
+                        set: { look in
+                            saved = look.rawValue
+                            Theme.saveHighlight(for: look)
+                        })
+                ) {
+                    ForEach(AppLook.allCases, id: \.self) { look in
+                        Text(look.title).tag(look)
+                    }
+                }
+                .pickerStyle(.radioGroup)
+                ForEach(AppLook.allCases, id: \.self) { look in
+                    SideNote("\(look.title): \(look.about)")
+                }
+                SideNote(
+                    "The pages and everything on them are the same in both. The look is for "
+                        + "everyone who uses Music Organizer on this Mac, not one profile.")
+            }
+            if chosen != Theme.current.look {
+                Section {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(
+                            "Music Organizer will be in the \(chosen.title) the next time "
+                                + "it's opened.")
+                        Spacer()
+                        if Theme.canReopen {
+                            Button("Reopen Now") { Theme.reopen() }
+                        }
+                    }
+                    SideNote(
+                        Theme.canReopen
+                            ? "Reopening takes a few seconds, and stops the music that's playing."
+                            : "Quit Music Organizer and open it again.")
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .scrollContentBackground(Theme.current.listBackground)
     }
 }
 
@@ -132,6 +187,7 @@ private struct PlaySettings: View {
             }
         }
         .formStyle(.grouped)
+        .scrollContentBackground(Theme.current.listBackground)
     }
 
     private func yesNo(_ question: String, _ answer: Binding<Bool>) -> some View {
@@ -256,6 +312,7 @@ private struct DownloadSettings: View {
             }
         }
         .formStyle(.grouped)
+        .scrollContentBackground(Theme.current.listBackground)
         .onAppear { model.loadSettings() }
     }
 }
@@ -296,7 +353,8 @@ private struct ProfileSettingsTab: View {
             AccountSettings()
         }
         .formStyle(.grouped)
-        .sheet(isPresented: $adding) { NewProfileSheet().environment(model) }
+        .scrollContentBackground(Theme.current.listBackground)
+        .sheet(isPresented: $adding) { NewProfileSheet().environment(model).dressed() }
         .alert("Rename Profile", isPresented: renamingShown, presenting: renaming) { profile in
             TextField("Name", text: $newName)
             Button("Rename") { attempt { try model.renameProfile(profile.id, to: newName) } }
@@ -411,7 +469,7 @@ private struct NewProfileSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("New Profile").font(.title3.weight(.semibold))
+            Text("New Profile").font(.title3.weight(.semibold)).heading()
             TextField("Name", text: $name, prompt: Text("A name: a person's, or Kids"))
                 .textFieldStyle(.roundedBorder)
                 .focused($typing)
@@ -733,5 +791,6 @@ private struct LyricsSettings: View {
                     + "runs, and the whole run can be undone.")
         }
         .formStyle(.grouped)
+        .scrollContentBackground(Theme.current.listBackground)
     }
 }
