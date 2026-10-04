@@ -110,3 +110,40 @@ def test_reset_empties_only_the_index(lib: Library) -> None:
     assert lib.paths.queue_file.read_bytes() == b"queue"
     with closing(sqlite3.connect(lib.paths.index_file)) as conn:
         assert conn.execute("PRAGMA user_version").fetchone() == (index_module.SCHEMA_VERSION,)
+
+
+# ---- the order of an item's candidates --------------------------------------------------
+
+
+def a_candidate(video_id: str, score: float, **payload: object) -> dict[str, object]:
+    return {"id": f"c_{video_id}", "video_id": video_id, "score": score, "reasons": [],
+            "payload": {"video_id": video_id, "title": video_id, **payload}}  # fmt: skip
+
+
+def test_candidates_come_best_first_and_a_pasted_link_before_them(lib: Library) -> None:
+    with open_index(lib.paths, write=True) as index:
+        index.put_source("s_000000000001", "/rips", "2026-09-29T00:00:00Z")
+        item = an_item()
+        iid = str(item["id"])
+        index.put_items([item])
+        plain = [a_candidate("low", 0.61), a_candidate("tie1", 0.8), a_candidate("top", 0.97),
+                 a_candidate("tie2", 0.8)]  # fmt: skip
+
+        # No mark: the best score first, and equal scores in the order they were stored.
+        index.set_match(iid, "review", [], plain)
+        by_score = ["top", "tie1", "tie2", "low"]
+        assert [c["video_id"] for c in index.candidates(iid)] == by_score
+        assert [c["video_id"] for c in index.all_candidates()[iid]] == by_score
+        # A mark that isn't true is no mark.
+        index.set_match(iid, "review", [], [*plain, a_candidate("off", 0.3, pasted=False)])
+        assert [c["video_id"] for c in index.candidates(iid)] == [*by_score, "off"]
+
+        # The owner's pasted link, marked: first whatever its score, the rest as before.
+        index.set_match(iid, "review", [], [*plain, a_candidate("link", 0.3, pasted=True)])
+        assert [c["video_id"] for c in index.candidates(iid)] == ["link", *by_score]
+        assert [c["video_id"] for c in index.all_candidates()[iid]] == ["link", *by_score]
+        assert index.candidates(iid)[0]["score"] == 0.3  # its real score
+
+        # A new match result replaces every row: nothing of the mark is left.
+        index.set_match(iid, "review", [], [*plain, a_candidate("link", 0.3)])
+        assert [c["video_id"] for c in index.candidates(iid)] == [*by_score, "link"]

@@ -107,6 +107,17 @@ _TABLE_NAMES = (
 _JSON_COLUMNS = ("raw_tags_json", "parsed_version_json", "parsed_json", "flags_json",
                  "reasons_json")  # fmt: skip
 
+# The mark on a link the owner pasted in review that scored too low to be accepted
+# (review reason `url_low_score`): `"pasted": true` in that stored candidate's payload.
+# `candidates()` and `all_candidates()` give the marked candidate out first, whatever its
+# score, so it's candidate 1 wherever the item's candidates are shown and the owner can
+# accept it. Only `review` puts the mark on and takes it off. The matcher leaves an item
+# alone while its marked link waits for the owner's answer (`match.link_waiting`), and the
+# rows it stores for any other item are made afresh and never carry a mark. A rebuild
+# empties the candidates, the mark with them.
+# It lives in the payload, not in a column of its own, so the index's version is the same.
+PASTED = "pasted"
+
 
 def item_id(source_id: str, rel_path: str) -> str:
     """An external item's stable id: `i_` + 16 hex characters of SHA-1 of
@@ -396,34 +407,21 @@ class Index:
             )
 
     def candidates(self, item_id: str) -> list[dict[str, Any]]:
-        """An item's candidates, best first."""
+        """An item's candidates, best first. A link the owner pasted that scored too low
+        to be accepted (`PASTED`) comes before all of them."""
         rows = self._rows(
             "SELECT * FROM candidates WHERE item_id = ? ORDER BY score DESC, rowid", (item_id,)
         )
-        return [
-            {
-                "id": row["id"],
-                "video_id": row["video_id"],
-                "payload": json.loads(row["payload_json"]),
-                "score": row["score"],
-                "reasons": json.loads(row["reasons_json"]),
-            }
-            for row in rows
-        ]
+        return _pasted_first([_candidate(row) for row in rows])
 
     def all_candidates(self) -> dict[str, list[dict[str, Any]]]:
-        """Every item's candidates, best first, by item id (one query for a report)."""
+        """Every item's candidates, in the order `candidates()` gives them, by item id
+        (one query for a report)."""
         rows = self._rows("SELECT * FROM candidates ORDER BY item_id, score DESC, rowid")
         found: dict[str, list[dict[str, Any]]] = {}
         for row in rows:
-            found.setdefault(row["item_id"], []).append({
-                "id": row["id"],
-                "video_id": row["video_id"],
-                "payload": json.loads(row["payload_json"]),
-                "score": row["score"],
-                "reasons": json.loads(row["reasons_json"]),
-            })  # fmt: skip
-        return found
+            found.setdefault(row["item_id"], []).append(_candidate(row))
+        return {item_id: _pasted_first(options) for item_id, options in found.items()}
 
     # ---- search cache (step 06) ---------------------------------------------------------
 
@@ -539,6 +537,22 @@ class Index:
     def library_track_count(self) -> int:
         rows = self._rows("SELECT COUNT(*) AS n FROM library_tracks")
         return int(rows[0]["n"]) if rows else 0
+
+
+def _candidate(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "video_id": row["video_id"],
+        "payload": json.loads(row["payload_json"]),
+        "score": row["score"],
+        "reasons": json.loads(row["reasons_json"]),
+    }
+
+
+def _pasted_first(options: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """`options` (best first) with the owner's pasted link, if one is marked, moved to
+    the front. The rest keep their order; with no mark nothing moves."""
+    return sorted(options, key=lambda c: 0 if c["payload"].get(PASTED) else 1)
 
 
 def _to_row(item: dict[str, Any]) -> dict[str, Any]:

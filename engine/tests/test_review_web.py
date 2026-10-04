@@ -177,6 +177,56 @@ def test_a_pasted_link(server: review_web.ReviewServer, index: Index) -> None:
     assert done["item"]["decision"]["video_id"] == "xjj_OVvVQFc"
 
 
+def test_a_low_scoring_pasted_link_is_first_on_the_page(
+    server: review_web.ReviewServer, index: Index, lib: Library
+) -> None:
+    """Replayed: SpTYh-uYgQs is Michael Franti & Spearhead's Bomb the World (4:29). It
+    scores 0.35 against this rip; the three candidates already there score more."""
+    iid = add_item(index, "Kygo - Bomb the World R", state="review", seconds=240,
+                   reasons=["version_mismatch"])  # fmt: skip
+    add_candidates(index, iid, [
+        candidate("Bom1xxxxxxx", "Bomb the World", ("Kygo",), 240),
+        candidate("Bom2xxxxxxx", "Bomb the World (Live)", ("Kygo",), 300),
+        candidate("Bom3xxxxxxx", "Bomb the World", ("Kygo",), 250),
+    ])  # fmt: skip
+    pasted = api(server, "/api/decide", {"item_id": iid, "decision": "url",
+                                         "link": "https://youtu.be/SpTYh-uYgQs"})  # fmt: skip
+    assert not pasted["changed"] and "below 0.60" in pasted["warnings"][0]
+    assert pasted["item"]["state"] == "review" and pasted["item"]["decision"] is None
+    assert pasted["item"]["reasons"][0]["code"] == "url_low_score"
+    # First of the three the page shows, with its real score; then the best by score.
+    shown = pasted["item"]["candidates"]
+    assert [c["video_id"] for c in shown] == ["SpTYh-uYgQs", "Bom1xxxxxxx", "Bom3xxxxxxx"]
+    assert (shown[0]["score"], shown[0]["artists"]) == (0.35, ["Michael Franti & Spearhead"])
+    # The list the page loads says the same.
+    listed = next(i for i in api(server, "/api/items?group=doubts")["items"] if i["id"] == iid)
+    assert [c["video_id"] for c in listed["candidates"]] == [c["video_id"] for c in shown]
+
+    used = api(server, "/api/decide", {"item_id": iid, "decision": "use",
+                                       "video_id": "SpTYh-uYgQs"})  # fmt: skip
+    assert used["changed"] and used["warnings"] == []
+    assert used["item"]["state"] == "matched_user"
+    assert used["item"]["decision"]["decision"] == "accept"  # it was candidate 1
+    assert used["item"]["decision"]["video_id"] == "SpTYh-uYgQs"
+    decisions = json.loads(lib.paths.state_file.read_text(encoding="utf-8"))["decisions"]
+    assert decisions[iid]["video_id"] == "SpTYh-uYgQs"
+
+
+def test_rejecting_a_pasted_link_on_the_page(server: review_web.ReviewServer, index: Index) -> None:
+    iid = add_item(index, "Kygo - Bomb the World R", state="review", seconds=240,
+                   reasons=["version_mismatch"])  # fmt: skip
+    add_candidates(index, iid, [
+        candidate("Bom1xxxxxxx", "Bomb the World", ("Kygo",), 240),
+        candidate("Bom3xxxxxxx", "Bomb the World", ("Kygo",), 250),
+    ])  # fmt: skip
+    api(server, "/api/decide", {"item_id": iid, "decision": "url",
+                                "link": "https://youtu.be/SpTYh-uYgQs"})  # fmt: skip
+    gone = api(server, "/api/decide", {"item_id": iid, "decision": "reject",
+                                       "video_id": "SpTYh-uYgQs"})  # fmt: skip
+    assert [c["video_id"] for c in gone["item"]["candidates"]] == ["Bom1xxxxxxx", "Bom3xxxxxxx"]
+    assert [r["code"] for r in gone["item"]["reasons"]] == ["version_mismatch"]
+
+
 def test_bad_decisions_say_why(server: review_web.ReviewServer, items: dict[str, str]) -> None:
     cases = [
         ({"item_id": "i_0000000000000000", "decision": "skip"}, "There's no item"),
@@ -269,6 +319,42 @@ def test_a_choice_by_another_artist_offers_to_remember_the_name(
     saved = json.loads(lib.paths.state_file.read_text(encoding="utf-8"))["aliases"]
     assert saved["biggie smalls"]["name"] == "The Notorious B.I.G."
     assert saved["biggie smalls"]["from"] == "Biggie Smalls"
+
+
+def test_confirming_a_name_leaves_a_song_with_a_pasted_link_as_it_is(
+    server: review_web.ReviewServer, index: Index
+) -> None:
+    """Replayed links: Bomb the World by Michael Franti & Spearhead (SpTYh-uYgQs) and
+    Daddy Issues by The Neighbourhood (lqSgsq4Bn2c). Both score low against these rips.
+    The page asks about the artist's name right after the first is used; saying yes
+    re-checks the artist's other songs, and the other pasted link must stay first."""
+    bomb = add_item(index, "Kygo - Bomb the World R", state="review", seconds=240,
+                    reasons=["version_mismatch"])  # fmt: skip
+    add_candidates(index, bomb, [candidate("Bom1xxxxxxx", "Bomb the World", ("Kygo",), 240)])
+    daddy = add_item(index, "Kygo - Daddy Issues R", state="review", seconds=261,
+                     reasons=["version_mismatch"])  # fmt: skip
+    add_candidates(index, daddy, [
+        candidate("Dad1xxxxxxx", "Daddy Issues", ("Kygo",), 261),
+        candidate("Dad2xxxxxxx", "Daddy Issues (Live)", ("Kygo",), 300),
+        candidate("Dad3xxxxxxx", "Daddy Issues", ("Kygo",), 271),
+    ])  # fmt: skip
+    for iid, video_id in ((bomb, "SpTYh-uYgQs"), (daddy, "lqSgsq4Bn2c")):
+        pasted = api(server, "/api/decide", {"item_id": iid, "decision": "url",
+                                             "link": "https://youtu.be/" + video_id})  # fmt: skip
+        assert "below 0.60" in pasted["warnings"][0]
+    used = api(server, "/api/decide", {"item_id": bomb, "decision": "use",
+                                       "video_id": "SpTYh-uYgQs"})  # fmt: skip
+    assert used["alias_offer"] == {"from": "Kygo", "to": "Michael Franti & Spearhead",
+                                   "others": 1}  # fmt: skip
+
+    confirmed = api(server, "/api/alias", {"from": "Kygo", "to": "Michael Franti & Spearhead"})
+    assert (confirmed["items"], confirmed["waiting"], confirmed["changed"]) == (0, 1, {})
+    listed = next(i for i in api(server, "/api/items?group=doubts")["items"] if i["id"] == daddy)
+    assert [c["video_id"] for c in listed["candidates"]] == [
+        "lqSgsq4Bn2c", "Dad1xxxxxxx", "Dad3xxxxxxx"]  # fmt: skip
+    assert [r["code"] for r in listed["reasons"]] == ["url_low_score"]
+    # The page's message after a yes mentions the ones left as they are.
+    assert "data.waiting" in review_web.PAGE.read_text(encoding="utf-8")
 
 
 def test_no_offer_when_the_artist_is_the_same(

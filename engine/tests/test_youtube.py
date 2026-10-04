@@ -4,12 +4,14 @@ the album lookup, the search cache and the rate limiter."""
 from __future__ import annotations
 
 import json
+import re
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 import pytest
 import requests
+from conftest import YTM_FIXTURES
 from ytmusicapi.exceptions import YTMusicServerError
 
 from musicorg import youtube
@@ -83,6 +85,47 @@ def test_get_track_refuses_a_different_track(
     record(tmp_path, "watch", "aaaaaaaaaaa", {"tracks": [{"videoId": "bbbbbbbbbbb", "title": "X"}]})
     monkeypatch.setenv(youtube.REPLAY_ENV, str(tmp_path))
     assert youtube.get_track("aaaaaaaaaaa") is None
+
+
+def test_a_pasted_links_names_arrive_as_plain_text() -> None:
+    """The recorded answer for a link (`get_watch_playlist`, ytmusicapi 1.12.3) names the
+    artist "Michael Franti & Spearhead": a plain "&", not the web entity "&amp;". So the
+    Candidate made from a pasted link, and the tags written from it when it's accepted,
+    carry the name as it is; there's nothing for the gate to decode."""
+    track = youtube.get_track("SpTYh-uYgQs")
+    assert track is not None
+    assert (track.title, track.artists) == ("Bomb the World", ("Michael Franti & Spearhead",))
+    assert track.to_dict()["artists"] == ["Michael Franti & Spearhead"]
+
+
+def test_no_recorded_answer_carries_a_web_entity() -> None:
+    """Every recorded YouTube Music answer (searches, links, radios, albums, videos,
+    playlists, artist pages) gives its text plain: many names with "&" in them, and not
+    one web entity ("&amp;", "&#39;"). If a new recording ever carries one, this fails:
+    decode it then at the gate (`youtube._from_track` and `_names`), in that one place,
+    before it can reach a message or a song's tags."""
+    entity = re.compile(r"&(?:[A-Za-z][A-Za-z0-9]*|#[0-9]+|#[xX][0-9A-Fa-f]+);")
+    with_entity: list[str] = []
+    with_ampersand = 0
+
+    def look(value: Any, where: str) -> None:
+        nonlocal with_ampersand
+        if isinstance(value, dict):
+            for inner in value.values():
+                look(inner, where)
+        elif isinstance(value, list):
+            for inner in value:
+                look(inner, where)
+        elif isinstance(value, str) and not value.startswith("http"):
+            with_ampersand += "&" in value
+            if entity.search(value):
+                with_entity.append(f"{where}: {value}")
+
+    recordings = sorted(YTM_FIXTURES.rglob("*.json"))
+    for path in recordings:
+        look(json.loads(path.read_text(encoding="utf-8")).get("response"), path.name)
+    assert len(recordings) > 50 and with_ampersand > 100  # there was something to look at
+    assert with_entity == []
 
 
 def test_find_video_takes_only_the_artists_official_video() -> None:

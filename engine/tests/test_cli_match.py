@@ -9,7 +9,7 @@ import pytest
 
 from musicorg import cli
 from musicorg.errors import EXIT_OK, EXIT_USER_ERROR
-from musicorg.index import item_id, open_index
+from musicorg.index import PASTED, item_id, open_index
 from musicorg.library import Library
 from musicorg.normalize import parse_filename
 
@@ -82,3 +82,41 @@ def test_recheck(capsys: pytest.CaptureFixture[str], scanned: Library) -> None:
     assert "Nothing changed." in out
     code, _, err = run(capsys, "match", "--recheck", "--rescan")
     assert code == EXIT_USER_ERROR and "takes neither" in err
+
+
+def test_an_item_with_a_pasted_link_waiting_is_left_alone(
+    capsys: pytest.CaptureFixture[str], scanned: Library
+) -> None:
+    """A link the owner pasted in review that scored low is the item's candidate 1 until
+    they answer it; `match --recheck` and `--rescan` don't touch the item, and say so."""
+    run(capsys, "match")
+    one_dance = item_id(SOURCE, "Drake - One Dance.mp3")
+    with open_index(scanned.paths, write=True) as index:
+        assert index.item(one_dance)["state"] == "review"  # type: ignore[index]
+        rows = index.candidates(one_dance)
+        rows[-1]["payload"][PASTED] = True  # as `review` marks a low-scoring pasted link
+        index.set_match(one_dance, "review", ["url_low_score"], rows)
+        waiting = index.candidates(one_dance)
+        assert waiting[0]["video_id"] == rows[-1]["video_id"]
+
+    code, out, _ = run(capsys, "match", "--recheck")
+    assert code == EXIT_OK
+    assert "Re-checked 0 review and not-found items (no searching)." in out
+    assert "1 item was left as it is: a link you pasted in review is waiting" in out
+
+    code, out, _ = run(capsys, "match", "--rescan")
+    assert code == EXIT_OK
+    assert "1 item was left as it is: a link you pasted in review is waiting" in out
+    assert "No new, review or not-found items" not in out  # there is one; it's waiting
+    assert "Matched" not in out
+
+    code, out, _ = run(capsys, "match", "--rescan", "--json")
+    result = json.loads(out)
+    assert (result["items"], result["waiting"], result["searches"]) == (0, 1, 0)
+    code, out, _ = run(capsys, "match", "--recheck", "--json")
+    assert json.loads(out) == {"items": 0, "changed": {}, "waiting": 1}
+    with open_index(scanned.paths, write=False) as index:
+        assert index.candidates(one_dance) == waiting
+        item = index.item(one_dance)
+        assert item is not None
+        assert (item["state"], item["reasons_json"]) == ("review", ["url_low_score"])

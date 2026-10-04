@@ -565,6 +565,7 @@ def _cmd_match(args: argparse.Namespace) -> int:
             print(f"  {n:>6,}  {change}")
         if not checked.changed:
             print("  Nothing changed.")
+        _print_links_waiting(checked.waiting)
         return EXIT_OK
     if args.limit is not None and args.limit < 1:
         raise UserError("--limit must be 1 or more.")
@@ -575,10 +576,7 @@ def _cmd_match(args: argparse.Namespace) -> int:
     if args.json:
         _print_json(result.to_dict())
         return EXIT_OK
-    if not result.items:
-        what = "new, review or not-found" if args.rescan else "new"
-        print(f"No {what} items to match. Scan a source first with `musicorg scan`.")
-    else:
+    if result.items:
         minutes = result.seconds / 60
         took = f"{minutes:.0f} min" if minutes >= 1 else f"{result.seconds:.0f} s"
         print(
@@ -586,11 +584,25 @@ def _cmd_match(args: argparse.Namespace) -> int:
             f"{result.review:,} to review, {result.not_found:,} not found "
             f"({result.searches:,} searches; the rest came from the cache)."
         )
+    elif not result.waiting:
+        what = "new, review or not-found" if args.rescan else "new"
+        print(f"No {what} items to match. Scan a source first with `musicorg scan`.")
+    _print_links_waiting(result.waiting)
     if result.left:
         print(f"{result.left:,} more items are waiting; run `musicorg match` again to carry on.")
     if result.sample is not None:
         print(f"Listen to {result.sample_size} of the automatic matches: {result.sample}")
     return EXIT_OK
+
+
+def _print_links_waiting(count: int) -> None:
+    """Items the matcher left as they are (`match.link_waiting`)."""
+    if count == 1:
+        print("1 item was left as it is: a link you pasted in review is waiting there for "
+              "your answer (accept it, reject it or paste another).")  # fmt: skip
+    elif count:
+        print(f"{count:,} items were left as they are: a link you pasted in review is waiting "
+              "on each for your answer (accept it, reject it or paste another).")  # fmt: skip
 
 
 def _cmd_report(args: argparse.Namespace) -> int:

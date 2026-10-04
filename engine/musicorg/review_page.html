@@ -371,8 +371,13 @@ async function confirmAlias(o) {
     const data = await api("/api/alias", { from: o.from, to: o.to });
     const changes = describeChanges(data.changed);
     const songs = `${data.items} other song${data.items === 1 ? "" : "s"}`;
+    // A song with a pasted link waiting for an answer isn't re-checked: the link stays first.
+    const waiting = data.waiting
+      ? `. ${data.waiting} with a link you pasted ${data.waiting === 1 ? "was" : "were"} left as ` +
+        (data.waiting === 1 ? "it is" : "they are")
+      : "";
     notice(`Remembered that ${o.from} is ${o.to} — re-checked ${songs}: ` +
-           (changes.length ? changes.join(", ") : "nothing changed"), "good");
+           (changes.length ? changes.join(", ") : "nothing changed") + waiting, "good");
     const current = S.items[S.at] && S.items[S.at].id;
     const before = S.at;
     const fresh = await api("/api/items?group=" + encodeURIComponent(S.group));

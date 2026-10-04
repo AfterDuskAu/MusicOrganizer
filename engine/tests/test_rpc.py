@@ -290,6 +290,47 @@ def test_review_list_and_decide(opened: rpc.Server, tmp_path: Path, out: Capture
                 candidate_id="c_nope") == rpc.NOT_FOUND  # fmt: skip
 
 
+def test_a_low_scoring_pasted_link_is_the_first_candidate(
+    opened: rpc.Server, tmp_path: Path
+) -> None:
+    """Replayed: SpTYh-uYgQs is Michael Franti & Spearhead's Bomb the World (4:29). It
+    scores 0.35 against this rip; the three candidates already there score more."""
+    lib = opened._library()
+    with open_index(lib.paths, write=True) as index:
+        add_source(index, tmp_path / "rips")
+        iid = add_item(index, "Kygo - Bomb the World R", state="review", seconds=240,
+                       reasons=["version_mismatch"])  # fmt: skip
+        add_candidates(index, iid, [
+            candidate("Bom1xxxxxxx", "Bomb the World", ("Kygo",), 240),
+            candidate("Bom2xxxxxxx", "Bomb the World (Live)", ("Kygo",), 300),
+            candidate("Bom3xxxxxxx", "Bomb the World", ("Kygo",), 250),
+        ])  # fmt: skip
+    by_score = ["Bom1xxxxxxx", "Bom3xxxxxxx", "Bom2xxxxxxx"]
+    (before,) = result(opened, "review.list", state="review")["items"]
+    assert [c["video_id"] for c in before["candidates"]] == by_score
+    assert all("pasted" not in c for c in before["candidates"])
+
+    kept = result(opened, "review.decide", item_id=iid, decision="url",
+                  url="https://music.youtube.com/watch?v=SpTYh-uYgQs")["item"]  # fmt: skip
+    assert (kept["state"], kept["reasons"]) == ("review", ["url_low_score"])
+    assert [c["video_id"] for c in kept["candidates"]] == ["SpTYh-uYgQs", *by_score]
+    first = kept["candidates"][0]
+    assert (first["pasted"], first["score"]) == (True, 0.35)  # marked, with its real score
+    assert first["artists"] == ["Michael Franti & Spearhead"]
+    assert all("pasted" not in c for c in kept["candidates"][1:])
+    (listed,) = result(opened, "review.list", state="review")["items"]
+    assert listed["candidates"] == kept["candidates"]
+
+    # `accept` with no candidate_id takes candidate 1: the pasted track.
+    decided = result(opened, "review.decide", item_id=iid, decision="accept")["item"]
+    assert decided["state"] == "matched_user"
+    assert all("pasted" not in c for c in decided["candidates"])
+    from musicorg import state
+
+    chosen = state.decisions(opened._library().load_state().data)[iid]
+    assert (chosen["decision"], chosen["video_id"]) == ("accept", "SpTYh-uYgQs")
+
+
 def test_plans_queue_and_journal(opened: rpc.Server, tmp_path: Path, samples: dict[str, Path],
                                  out: Capture) -> None:  # fmt: skip
     lib = opened._library()

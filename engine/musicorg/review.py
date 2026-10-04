@@ -11,6 +11,19 @@ Decisions (docs/ENGINE_API.md → CSV decision): `accept` (candidate 1), `cand:<
 (a pasted link, fetched and scored: below 0.6 it stays in review as `url_low_score`),
 `only_copy` (with the `*_fix` columns), `skip`, and `reject:<n>` (never proposed again).
 
+A pasted link that scored low isn't accepted, but it is the owner's own suggestion, so
+its track becomes the item's candidate 1 whatever its score (`index.PASTED`), on the
+export, the review page and over RPC. `accept` then takes it like any candidate 1: the
+owner's decision, with no score check. It stays first until the owner decides the item,
+rejects it, or pastes another link; the matcher leaves the item alone meanwhile
+(`match.link_waiting`).
+
+A pasted link is scored as the matcher scores a candidate, with the artist names the
+owner confirmed. Pasting a link the owner rejected for the rip before takes that
+rejection back: theirs is the newer word. And a low-scoring link that is already the
+item's decision (the sheet with the link, imported again after the accept) changes
+nothing.
+
 Candidates are identified by the videoId in the row's own `candN_url`, never by position
 in the index, so a spreadsheet exported before `index rebuild` still imports correctly
 afterwards, and importing the same file twice changes nothing the second time.
@@ -30,7 +43,7 @@ from typing import Any
 
 from musicorg import fileops, match, scan, state, youtube
 from musicorg.errors import UserError
-from musicorg.index import Index
+from musicorg.index import PASTED, Index
 from musicorg.library import Library
 from musicorg.normalize import compare_key, render_versions
 from musicorg.report import minutes
@@ -219,8 +232,9 @@ def import_csv(lib: Library, index: Index, path: Path) -> ImportResult:
     with state.edit(lib.paths.state_file) as st:
         decisions = st.data.setdefault("decisions", {})
         rejected = st.data.setdefault("rejected", {})
+        aliases = state.aliases(st.data)
         for plan in planned:
-            outcome = _decide(plan, decisions, rejected, tracks.get(plan.video_id), now)
+            outcome = _decide(plan, decisions, rejected, tracks.get(plan.video_id), now, aliases)
             outcomes.append((plan, outcome))
             if outcome.warning:
                 result.warnings.append(f"row {plan.row}: {outcome.warning}")
@@ -309,7 +323,7 @@ def decide_one(
     with state.edit(lib.paths.state_file) as st:
         decisions = st.data.setdefault("decisions", {})
         rejected = st.data.setdefault("rejected", {})
-        outcome = _decide(plan, decisions, rejected, track, now)
+        outcome = _decide(plan, decisions, rejected, track, now, state.aliases(st.data))
         turned_down = state.rejected(st.data).get(item_id, set())
     _update_index(index, plan, outcome, turned_down)
     result = OneResult(outcome.changed, outcome.warning)
@@ -428,6 +442,7 @@ class _Outcome:
     reasons: list[str] = field(default_factory=list)
     chosen: dict[str, Any] | None = None  # the candidate to put first
     warning: str | None = None  # kept in review, and why
+    pasted: bool = False  # `chosen` is a pasted link that scored low: first until decided
 
 
 def _decide(
@@ -436,8 +451,11 @@ def _decide(
     rejected: dict[str, Any],
     track: Candidate | None,
     now: str,
+    aliases: dict[str, str],
 ) -> _Outcome:
-    """Record one decision in state.json's data, and say what the index should become."""
+    """Record one decision in state.json's data, and say what the index should become.
+    `aliases`: the artist names the owner confirmed (`state.aliases`), so a pasted link
+    is scored as the matcher would score it."""
     item_id = plan.item["id"]
     if plan.kind == "reject":
         ids = rejected.setdefault(item_id, [])
@@ -451,6 +469,7 @@ def _decide(
 
     entry: dict[str, Any] = {"decision": plan.kind}
     chosen: dict[str, Any] | None = None
+    took_back = False  # a pasted link the owner had rejected before: that rejection goes
     if plan.kind in ("accept", "candidate"):
         chosen = _row_candidate(plan)
         entry.update(video_id=plan.video_id, candidate_id=chosen["id"],
@@ -460,14 +479,22 @@ def _decide(
             return _Outcome(False, "review", ["video_unavailable"],
                             warning=f"{plan.link} isn't on YouTube Music; the item stays in "
                             "review.")  # fmt: skip
-        scored = match.assess(match.rip_of(plan.item), track)
+        took_back = _take_back_rejection(rejected, item_id, plan.video_id)
+        scored = match.assess(match.rip_of(plan.item, aliases), track)
         chosen = _candidate_row(item_id, scored)
         if scored.score < match.REVIEW_SCORE:
+            decided = decisions.get(item_id, {})
+            if (decided.get("video_id") == plan.video_id
+                    and decided.get("decision") in scan.DECISION_STATES):  # fmt: skip
+                # The owner already took this very track for the rip (the sheet with its
+                # link, imported again after the accept): that decision stands.
+                return _Outcome(took_back, scan.DECISION_STATES[decided["decision"]], [], chosen)
             return _Outcome(
-                False, "review", ["url_low_score"], chosen,
+                took_back, "review", ["url_low_score"], chosen,
                 warning=f"{track.title} — {', '.join(track.artists)} scores {scored.score:.2f} "
                 "against this rip (below 0.60), so it stays in review; it's candidate 1 on "
                 "the next export.",
+                pasted=True,
             )  # fmt: skip
         entry.update(url=plan.link, video_id=plan.video_id, candidate_id=chosen["id"],
                      title=track.title, score=round(scored.score, 3))  # fmt: skip
@@ -477,9 +504,22 @@ def _decide(
     new_state = scan.DECISION_STATES[plan.kind]
     before = {k: v for k, v in decisions.get(item_id, {}).items() if k != "decided_at"}
     if before == entry:
-        return _Outcome(False, new_state, [], chosen)
+        return _Outcome(took_back, new_state, [], chosen)
     decisions[item_id] = {**entry, "decided_at": now}
     return _Outcome(True, new_state, [], chosen)
+
+
+def _take_back_rejection(rejected: dict[str, Any], item_id: str, video_id: str | None) -> bool:
+    """The owner pasted this track's link for the rip themselves, so if they rejected it
+    for the rip before, that rejection no longer stands: it comes off state.json's
+    `rejected` list, and the track is an ordinary candidate again. True if there was one."""
+    ids = rejected.get(item_id)
+    if not isinstance(ids, list) or video_id not in ids:
+        return False
+    ids.remove(video_id)
+    if not ids:
+        del rejected[item_id]
+    return True
 
 
 def _update_index(index: Index, plan: Planned, outcome: _Outcome, turned_down: set[str]) -> None:
@@ -487,8 +527,10 @@ def _update_index(index: Index, plan: Planned, outcome: _Outcome, turned_down: s
     current = [c for c in index.candidates(item_id) if c["video_id"] not in turned_down]
     if outcome.state is None:
         # A rejection: an undecided item is classified again from what's left, without
-        # searching; a decided one keeps its state.
-        if plan.item["state"] in set(scan.DECISION_STATES.values()):
+        # searching; a decided one keeps its state. So does one whose pasted link is still
+        # waiting for the owner (another candidate was the one rejected): it stays first.
+        waiting = any(c["payload"].get(PASTED) for c in current)
+        if waiting or plan.item["state"] in set(scan.DECISION_STATES.values()):
             index.set_match(item_id, plan.item["state"], plan.item.get("reasons_json") or [],
                             current)  # fmt: skip
             return
@@ -498,11 +540,25 @@ def _update_index(index: Index, plan: Planned, outcome: _Outcome, turned_down: s
         index.set_match(item_id, classified.state, classified.reasons, rows)
         return
     chosen = outcome.chosen
+    if outcome.state != "review" or outcome.pasted:
+        # The owner decided the item, or pasted another link: an earlier pasted link's
+        # turn at the front is over. (A link that isn't on YouTube Music changes nothing.)
+        current = [_marked(c, False) for c in current]
     if chosen is not None:
         # The index's own copy has the album and versions; the row's copy is the fallback.
         chosen = next((c for c in current if c["video_id"] == chosen["video_id"]), chosen)
+        # A pasted link that scored low is marked: candidate 1, whatever its score.
+        chosen = _marked(chosen, outcome.pasted)
         current = [chosen, *(c for c in current if c["video_id"] != chosen["video_id"])]
     index.set_match(item_id, outcome.state, outcome.reasons, current)
+
+
+def _marked(row: dict[str, Any], pasted: bool) -> dict[str, Any]:
+    """A stored candidate with the pasted-link mark (`index.PASTED`) put on or taken off."""
+    payload = {k: v for k, v in row["payload"].items() if k != PASTED}
+    if pasted:
+        payload[PASTED] = True
+    return {**row, "payload": payload}
 
 
 def _row_candidate(plan: Planned) -> dict[str, Any]:

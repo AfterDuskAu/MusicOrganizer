@@ -56,10 +56,10 @@ Global options:
 | `musicorg sources remove <id>` | Forget a source; never touches its files | yes | 05 |
 | `musicorg scan [<source_id>…]` | Read-only index of sources | yes | 05 |
 | `musicorg index rebuild` | Rebuild per contract section 5 | yes | 05 |
-| `musicorg match [--limit N] [--rescan] [--recheck]` | Search and score `new` items. `--rescan` re-matches `review` and `not_found` items and bypasses the search cache. Ends by writing `Reports/auto-sample.csv`. `--recheck` (07b) searches nothing: it classifies `review` and `not_found` items again from the candidates already found. | yes | 06 |
+| `musicorg match [--limit N] [--rescan] [--recheck]` | Search and score `new` items. `--rescan` re-matches `review` and `not_found` items and bypasses the search cache. Ends by writing `Reports/auto-sample.csv`. `--recheck` (07b) searches nothing: it classifies `review` and `not_found` items again from the candidates already found. Neither `--rescan` nor `--recheck` touches an item with a pasted link waiting for the owner's answer (2026-10-04; "paste a link" under section 2): it stays as it is, and the summary counts those items in `waiting`. | yes | 06 |
 | `musicorg report [--out <dir>]` | Decision report, markdown and CSV | no | 07 |
-| `musicorg review export <csv> [--include-auto]` | Review CSV. Never overwrites: a ` (2)` suffix if the file exists. | no | 07 |
-| `musicorg review import <csv>` | Apply decisions (CSV decision enum) | yes | 07 |
+| `musicorg review export <csv> [--include-auto]` | Review CSV. Never overwrites: a ` (2)` suffix if the file exists. Each row carries the item's first three candidates, the best score first. A link the owner pasted that scored too low to be accepted is `cand1`, with its real score, until the item is decided (2026-10-04; see "paste a link" under section 2). | no | 07 |
+| `musicorg review import <csv>` | Apply decisions (CSV decision enum). `accept` takes the row's `cand1`, the owner's own decision, with no score check. `url` with a link that scores below 0.6 changes no decision: the item stays in `review` (`url_low_score`), and the link's track is `cand1` on the next export, where `accept` takes it. If that track is already the item's decision (the sheet with the link, imported again after the accept), the row changes nothing and the item stays as decided. | yes | 07 |
 | `musicorg review serve [--port N] [--no-open]` | The local review page in the browser: play each rip and its candidates, click to decide (same checks as `review import`). Only on 127.0.0.1. | yes | 07b |
 | `musicorg journal list [--limit N]` | Recent batches (default 20) with counts and open/closed status | no | 03b |
 | `musicorg undo <batch_id> [--dry-run]` | Reverse a batch. Refused, with nothing changed, when it couldn't put things back (2026-10-04): a later batch moved or renamed one of the batch's files (undo finds files where the batch left them; each is followed through the journal first), or a file the batch renamed can't go back to its own name because something else has that name now (a folder, or another letter case, counts). The message names the later batch to undo first: batches that build on each other are undone newest first. `--dry-run` shows a renamed file's tags as restored, as the real undo does. | yes | 03b, extended 09b |
@@ -159,7 +159,18 @@ Exit codes:
 
 **CLI-only in v0.1** (RPC comes with the v0.2 app when needed): `sources.remove`, `index.rebuild`, `report`, `review export/import`, `lyrics`, `artwork`, `doctor`.
 
-`review.decide` with `"url"` is the **Other → paste a link** path. The URL is fetched through `youtube.get_track()`, scored like any candidate, and kept in `review` with reason `url_low_score` if it scores below 0.6. It's never accepted blindly.
+`review.decide` with `"url"` is the **Other → paste a link** path. The URL is fetched through `youtube.get_track()`, scored like any candidate (with the artist names the owner confirmed, as the matcher scores), and kept in `review` with reason `url_low_score` if it scores below 0.6. It's never accepted blindly.
+
+**A pasted link that scored low is the item's first candidate** (2026-10-04). It isn't a decision, but it is the owner's own suggestion, so they must be able to see it and take it:
+
+- Its track is candidate 1 of the item whatever its score, ahead of candidates that score higher: first in `review.list` and in `review.decide`'s answer, first on the review page, and `cand1` of the next `review export`. It's shown with its real score, and its Candidate carries `"pasted": true`.
+- `accept` (the CSV's `accept`, the page's "Use this", `review.decide` with `accept`) then takes it like any candidate 1: the item becomes `matched_user` with that video. That is the owner's decision, so there's no score check. Replacing the rip with it still needs the fingerprint gate, as for every match.
+- It stays first until the owner decides the item (any decision), rejects it (`reject`: it's taken out like any other candidate and the item is classified again from the rest), or pastes another link that's on YouTube Music (the new one is first; the old one stays as an ordinary candidate, by its score). Rejecting a different candidate leaves it first. Pasting the same link again changes nothing.
+- **The matcher leaves the item alone meanwhile.** `match --rescan`, `match --recheck` and confirming an artist's other name on the review page (which rechecks that artist's items) don't touch an item with a pasted link waiting: its state, reasons and candidates stay as they are, and nothing is searched for it. Their results count such items in `waiting`. The exception is a link the fingerprint gate found `different` for the rip: that one is never proposed again, so the item is matched as usual and the link goes.
+- **Pasting a link the owner rejected before takes that rejection back** (any score): the video comes off `rejected` in `state.json`, because the owner's newer word wins. From then on it's a pasted link like any other.
+- **A low-scoring link that is already the item's decision changes nothing.** The item stays `matched_user` with that video; there's no message and no mark. (A low link for a different track is still only a suggestion: the item goes to `review` in the index with the link first, and the earlier decision stays in `state.json` until another is made.)
+- An item's candidates are otherwise in order of score, the best first, and equal scores in the order they were stored. Items with no pasted link are untouched by this.
+- The link is kept in the index, not in `state.json` (it isn't a decision). So `index rebuild`, which makes the index afresh, forgets it: after the next `match` the item's candidates are the matcher's best three with nothing put first, and the link is pasted again if its track isn't one of them.
 
 ### Notifications (engine → app, no `id`)
 
@@ -198,6 +209,8 @@ Standard JSON-RPC codes, plus:
 // Candidate
 // `plays` (2026-10-03): how often it's been played, as YouTube Music writes it ("497M"),
 // from a search; null elsewhere.
+// `pasted` (2026-10-04): true on a review item's candidate that is a link the owner pasted
+// which scored below 0.6. It's the first of the item's candidates. Absent everywhere else.
 { "candidate_id": "c_…", "video_id": "…", "title": "…", "artists": ["…"], "album": "…",
   "album_browse_id": "MPRE…", "duration_s": 228, "is_official_audio": true, "is_explicit": false,
   "version_tokens": ["remix:adventure club"], "score": 0.917,
@@ -223,7 +236,8 @@ Standard JSON-RPC codes, plus:
   "playlists": [ { "id": "pl_…", "name": "Road trip", "created_at": "…", "track_ids": ["t_…"] } ],
   "heard": ["DuQGokwsWF8"] }
 
-// ReviewItem
+// ReviewItem. `candidates`: the best score first, after a pasted link that scored low
+// (`pasted`), if there is one. `fingerprint` is the gate's result for the first of them.
 { "item_id": "i_3fa2…", "source_path": "…", "parsed": { "artist": "…", "title": "…", "version_tokens": [..], "confidence": 0.9 },
   "duration_s": 229, "state": "review", "reasons": ["version_mismatch"], "candidates": [Candidate],
   "fingerprint": null }

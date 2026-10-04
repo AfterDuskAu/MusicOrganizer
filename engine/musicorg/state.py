@@ -22,7 +22,8 @@ Keys (contract section 5), each written by the step named:
   (step 09b). A download costs YouTube's patience, so a result is kept: a `different`
   video is never proposed for that rip again, and an `uncertain` one never goes AUTO.
 - "rejected": {item_id: [YouTube videoId, ...]}: candidates the owner turned down, never
-  proposed again (read by step 06, written by step 07)
+  proposed again (read by step 06, written by step 07). One comes off the list when the
+  owner pastes that track's link for the rip in review: theirs is the newer word.
 - "names": {a spelling YouTube Music uses: {"name": the owner's preferred spelling,
   "decided_at": ISO time}}: preferred names in tags and folders, e.g. "JAŸ-Z" → "Jay Z"
   (step 09d)

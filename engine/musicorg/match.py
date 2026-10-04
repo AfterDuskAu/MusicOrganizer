@@ -39,7 +39,7 @@ from rapidfuzz.distance import Levenshtein
 
 from musicorg import fileops, scan, state, youtube
 from musicorg.config import Config
-from musicorg.index import Index
+from musicorg.index import PASTED, Index
 from musicorg.library import Library
 from musicorg.normalize import (
     LOW_CONFIDENCE,
@@ -447,6 +447,16 @@ def candidate_rows(item_id: str, scored: Iterable[Scored]) -> list[dict[str, Any
     ]  # fmt: skip
 
 
+def link_waiting(stored: Iterable[dict[str, Any]], turned_down: Iterable[str]) -> bool:
+    """Whether one of an item's stored candidates is a link the owner pasted in review
+    that scored low and that they haven't answered yet (`index.PASTED`). `match --rescan`
+    and `--recheck` leave such an item exactly as it is: the link stays its candidate 1
+    until the owner decides the item, rejects the link or pastes another. A link the
+    fingerprint gate found `different` isn't waiting: it's never proposed again."""
+    gone = set(turned_down)
+    return any(c["payload"].get(PASTED) and c["video_id"] not in gone for c in stored)
+
+
 def match_item(
     rip: Rip,
     *,
@@ -473,6 +483,7 @@ class MatchResult:
     review: int = 0
     not_found: int = 0
     left: int = 0  # items still waiting (beyond --limit)
+    waiting: int = 0  # left as they are: a link the owner pasted awaits their answer
     searches: int = 0  # requests that reached YouTube Music
     seconds: float = 0.0
     sample: Path | None = None
@@ -496,16 +507,26 @@ def run(
 ) -> MatchResult:
     """`musicorg match`: match `new` items (with `rescan`, `review` and `not_found`
     ones too, skipping the search cache). Each item's result is saved as soon as it's
-    known, so an interrupted run carries on where it stopped."""
+    known, so an interrupted run carries on where it stopped. An item with a pasted link
+    waiting for the owner's answer is left as it is (`link_waiting`)."""
     started = time.monotonic()
     states = ("new", "review", "not_found") if rescan else ("new",)
     todo = index.items_in_states(states)
     result = MatchResult()
+    data = lib.load_state().data
+    rejected = state.turned_down(data)
+    if rescan:  # `new` items have no candidates yet, so nothing of theirs can be waiting
+        stored = index.all_candidates()
+        held = {
+            item["id"]
+            for item in todo
+            if link_waiting(stored.get(item["id"], ()), rejected.get(item["id"], ()))
+        }
+        todo = [item for item in todo if item["id"] not in held]
+        result.waiting = len(held)
     if limit is not None:
         result.left = max(0, len(todo) - limit)
         todo = todo[:limit]
-    data = lib.load_state().data
-    rejected = state.turned_down(data)
     gate = state.gate(data)
     aliases = state.aliases(data)
     prefer = Config.load().prefer_explicit if prefer_explicit is None else prefer_explicit
@@ -542,6 +563,7 @@ def run(
 class RecheckResult:
     items: int = 0
     changed: dict[str, int] = field(default_factory=dict)  # "review → matched_auto": n
+    waiting: int = 0  # left as they are: a link the owner pasted awaits their answer
 
     def to_dict(self) -> dict[str, Any]:
         return dict(self.__dict__)
@@ -556,7 +578,8 @@ def recheck(
 ) -> RecheckResult:
     """Classify `review` and `not_found` items again from the candidates already found,
     with the current rules, confirmed artist names and rejections. Nothing is searched;
-    items the owner decided are left alone."""
+    items the owner decided are left alone, and so is an item with a pasted link waiting
+    for the owner's answer (`link_waiting`)."""
     data = lib.load_state().data
     rejected, aliases = state.turned_down(data), state.aliases(data)
     gate = state.gate(data)
@@ -567,8 +590,11 @@ def recheck(
     for item in index.items_in_states(["review", "not_found"]):
         if wanted is not None and item["id"] not in wanted:
             continue
-        options = [Candidate.from_dict(c["payload"]) for c in stored.get(item["id"], [])]
         turned_down = rejected.get(item["id"], ())
+        if link_waiting(stored.get(item["id"], ()), turned_down):
+            result.waiting += 1
+            continue
+        options = [Candidate.from_dict(c["payload"]) for c in stored.get(item["id"], [])]
         outcome = classify(
             rip_of(item, aliases), options, rejected=turned_down, prefer_explicit=prefer
         )
