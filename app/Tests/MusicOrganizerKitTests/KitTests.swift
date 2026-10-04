@@ -1118,6 +1118,29 @@ final class SongVideoTests: XCTestCase {
         XCTAssertTrue(PageChanges.options.contains(PageChanges.standard))
     }
 
+    func testTheCustomVisualizersOfferedAndTheStandardOne() {
+        // The owner's three, and Visualizer 7 until another is chosen.
+        XCTAssertEqual(CustomVisualizer.offered, [5, 7, 8])
+        XCTAssertEqual(CustomVisualizer.standard, 7)
+        XCTAssertEqual(CustomVisualizer.chosen(nil), 7)
+        XCTAssertEqual(CustomVisualizer.chosen(5), 5)
+        XCTAssertEqual(CustomVisualizer.chosen(8), 8)
+        // A number saved once and not offered any more (or never): the standard.
+        XCTAssertEqual(CustomVisualizer.chosen(3), 7)
+        XCTAssertEqual(CustomVisualizer.chosen(0), 7)
+        XCTAssertEqual(CustomVisualizer.offered.map(CustomVisualizer.title),
+            ["Visualizer 5", "Visualizer 7", "Visualizer 8"])
+    }
+
+    func testTheLocalVisualizersSwitch() {
+        XCTAssertEqual(PagePicture.allCases.map(\.label), ["Song", "Video", "Visualizer"])
+        XCTAssertEqual(PagePicture.chosen(videoWanted: false, visualizerOn: false), .song)
+        XCTAssertEqual(PagePicture.chosen(videoWanted: false, visualizerOn: true), .visualizer)
+        // The visualizer stands in for the cover only: a video is still a video.
+        XCTAssertEqual(PagePicture.chosen(videoWanted: true, visualizerOn: false), .video)
+        XCTAssertEqual(PagePicture.chosen(videoWanted: true, visualizerOn: true), .video)
+    }
+
     func testAnArtistsPageIsRead() throws {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
@@ -1398,5 +1421,100 @@ final class SongVideoTests: XCTestCase {
         XCTAssertEqual(roughTime(minutes: 150), "about 2½ hours")
         XCTAssertEqual(roughTime(minutes: 90), "about 1½ hours")
         XCTAssertEqual(roughTime(minutes: 600), "about 10 hours")
+    }
+}
+
+/// Sharing with a phone player at home. No address or pairing code is written here:
+/// each is put together while the test runs.
+final class SharingTests: XCTestCase {
+    private let address = [192, 168, 1, 20].map(String.init).joined(separator: ".")
+    private let code = (1...6).map(String.init).joined()
+
+    func testWhatTheEngineSaysIsRead() throws {
+        let json = """
+            {"on": true, "port": 40000, "address": "\(address)", "name": "A Library",
+             "service": "_homemusicsync._tcp", "pairing": true, "pairing_seconds_left": 280,
+             "devices": [{"id": "d_1", "device": "iPhone", "paired_at": "2026-01-31T09:30:00Z",
+                          "last_synced": null}]}
+            """
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let status = try decoder.decode(SharingStatus.self, from: Data(json.utf8))
+        XCTAssertEqual(status.whereToFind, "\(address):40000")
+        XCTAssertEqual(status.devices.map(\.device), ["iPhone"])
+        XCTAssertEqual(status.pairingSecondsLeft, 280)
+        XCTAssertTrue(status.pairing)
+
+        let off = try decoder.decode(
+            SharingStatus.self,
+            from: Data(
+                """
+                {"on": false, "port": null, "address": null, "name": "A Library", "service": "s",
+                 "devices": [], "pairing": false, "pairing_seconds_left": 0}
+                """.utf8))
+        XCTAssertNil(off.whereToFind)
+    }
+
+    func testTheAddressIsOnlyShownWhenThereIsOne() {
+        XCTAssertNil(SharingStatus(on: true, port: 40000, address: nil).whereToFind)
+        XCTAssertNil(SharingStatus(on: false, port: 40000, address: address).whereToFind)
+        XCTAssertNil(SharingStatus(on: true, port: nil, address: address).whereToFind)
+    }
+
+    func testWhoWasJustPaired() {
+        let phone = SharingStatus.Device(id: "d_1", device: "iPhone")
+        let tablet = SharingStatus.Device(id: "d_2", device: "iPad")
+        let before = SharingStatus(on: true, devices: [phone])
+        let after = SharingStatus(on: true, devices: [phone, tablet])
+        XCTAssertEqual(after.newDevices(since: before), [tablet])
+        XCTAssertEqual(after.newDevices(since: nil), [phone, tablet])
+        XCTAssertEqual(before.newDevices(since: after), [])
+    }
+
+    func testADevicesLine() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        let locale = Locale(identifier: "en_GB")
+        let never = SharingStatus.Device(
+            id: "d_1", device: "iPhone", pairedAt: "2026-01-31T09:30:00Z")
+        XCTAssertEqual(
+            never.about(calendar: calendar, locale: locale),
+            "Paired 31 Jan 2026. Not synced yet.")
+        let synced = SharingStatus.Device(
+            id: "d_1", device: "iPhone", pairedAt: "2026-01-31T09:30:00Z",
+            lastSynced: "2026-02-01T18:05:00Z")
+        let line = synced.about(calendar: calendar, locale: locale)
+        XCTAssertTrue(line.hasPrefix("Paired 31 Jan 2026. Last synced 1 Feb 2026"), line)
+        XCTAssertTrue(line.contains("18:05"), line)
+        XCTAssertEqual(
+            SharingStatus.Device(id: "d_1", device: "iPhone").about(), "Not synced yet.")
+    }
+
+    func testAPairingCodeOnTheScreen() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let shown = try decoder.decode(
+            PairingCode.self, from: Data("{\"code\": \"\(code)\", \"seconds\": 300}".utf8))
+        XCTAssertEqual(shown, PairingCode(code: code, seconds: 300))
+        XCTAssertEqual(shown.spaced, "\(code.prefix(3)) \(code.suffix(3))")
+        XCTAssertEqual(PairingCode(code: "12", seconds: 1).spaced, "12")
+        XCTAssertEqual(PairingCode.clock(300), "5:00")
+        XCTAssertEqual(PairingCode.clock(61), "1:01")
+        XCTAssertEqual(PairingCode.clock(7), "0:07")
+        XCTAssertEqual(PairingCode.clock(-3), "0:00")
+    }
+
+    func testTheSwitchIsAProfilesOwnSetting() {
+        // Each profile has its own switch: one person sharing doesn't share the next's.
+        XCTAssertTrue(ProfileSettings.belongsToProfile("shareWithDevices"))
+    }
+
+    func testAnAnnouncerThatWasNeverStartedAnnouncesNothing() {
+        let announcer = HomeAnnouncer()
+        XCTAssertNil(announcer.port)
+        XCTAssertFalse(announcer.start(type: "_homemusicsync._tcp", port: 0))
+        XCTAssertFalse(announcer.start(type: "_homemusicsync._tcp", port: 70000))
+        XCTAssertNil(announcer.port)
+        announcer.stop()  // twice is fine
     }
 }

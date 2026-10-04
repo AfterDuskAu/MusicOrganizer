@@ -120,6 +120,8 @@ final class AppModel {
     }
 
     let player = Player()
+    /// What the custom visualizer hears (`hearForVisualizer`).
+    let visualizerSound = VisualizerSound()
     let lyrics = LyricsModel()
     /// Discover → What's New and Discover → Find: each keeps its own picks.
     let whatsNew = DiscoverPage(named: "whatsNew")
@@ -153,6 +155,15 @@ final class AppModel {
     private(set) var accountNote: String?
     /// Last.fm is being asked whether the username and key are good.
     private(set) var connectingLastfm = false
+    /// Sharing with a phone player at home: what the engine says of it (nil until asked).
+    private(set) var sharing: SharingStatus?
+    /// Why sharing couldn't be switched on, or what's amiss with it, in plain words.
+    private(set) var sharingNote: String?
+    /// The pairing code that's showing for a device to type, and when it stops working.
+    private(set) var pairingCode: PairingCode?
+    private(set) var pairingUntil: Date?
+    /// The kind of device the last code was used by ("iPhone"), to say so.
+    private(set) var justPaired: String?
     /// Why Last.fm couldn't be set up, in plain words.
     private(set) var lastfmNote: String?
 
@@ -174,6 +185,8 @@ final class AppModel {
     }
 
     @ObservationIgnored private var engine: EngineProcess?
+    /// Tells the home network this Mac is sharing, while it is.
+    @ObservationIgnored private let announcer = HomeAnnouncer()
     @ObservationIgnored private var stopping = false
     @ObservationIgnored private var keyMonitor: Any?
     /// While set, the space bar does this instead of play/pause (tap-along lyrics).
@@ -181,6 +194,9 @@ final class AppModel {
     private static let rootKey = "libraryRoot"
 
     init() {
+        // Settings says to use the custom visualizer: its listener is given the player
+        // now, before any song starts, so nothing is heard of it.
+        if UserDefaults.standard.bool(forKey: CustomVisualizer.useKey) { hearForVisualizer() }
         artistBrowser.lookUp = { [weak self] name, artistId in
             var asked: [String: Any] = [:]
             if let artistId { asked["artist_id"] = artistId } else { asked["name"] = name ?? "" }
@@ -341,6 +357,7 @@ final class AppModel {
     }
 
     private func stopEngine() {
+        announcer.stop()  // nothing is shared once the engine has gone
         stopping = true
         engine?.stop()
         engine = nil
@@ -349,6 +366,8 @@ final class AppModel {
     private func engineClosed(_ closed: EngineProcess?) {
         guard !stopping, let closed, closed === engine else { return }
         engine = nil
+        announcer.stop()
+        (sharing, pairingCode) = (nil, nil)
         let detail = closed.lastErrors.split(whereSeparator: \.isNewline).last.map(String.init)
         phase = .failed("The engine stopped unexpectedly." + (detail.map { "\n\($0)" } ?? ""))
     }
@@ -651,6 +670,7 @@ final class AppModel {
         (pending, starting, startProblems) = ([], [], [:])
         (queueStatus, accounts, accountNote, signingIn) = (nil, nil, nil, false)
         (connectingLastfm, lastfmNote) = (false, nil)
+        (sharing, sharingNote, pairingCode, justPaired) = (nil, nil, nil, nil)
         (auto, batch, deletingDownloads, lastAuto) = (nil, nil, nil, nil)
         (youtubeQuery, youtubeResults, youtubeProblem, searchText) = ("", [], nil, "")
         libraryVersion += 1
@@ -683,6 +703,13 @@ final class AppModel {
             watchDownloads()
             watchDailyLimit()
             loadAccounts()
+            // Sharing is this profile's own switch in Settings, off until it's switched
+            // on there. The engine never shares by itself: it's told each time.
+            if sharingWanted, let connection = engine?.connection {
+                await applySharing(true, connection)
+            } else {
+                loadSharing()  // off: Settings still lists the paired devices
+            }
             await receiveShares()
         } catch {
             phase = .failed(error.localizedDescription)
@@ -775,6 +802,7 @@ final class AppModel {
             // The queue's worker started or stopped: at the daily limit, say.
             await refreshQueueStatus()
             await refreshDownloads()
+        case "sharing.changed": loadSharing()  // a device was paired, or has synced
         case "review.changed":
             if let connection = engine?.connection {
                 status = try? await connection.call("library.status", as: LibraryStatus.self)
@@ -971,6 +999,12 @@ final class AppModel {
         pageChangeTimers[key]?.cancel()
         pageChangeTimers[key] = nil
         pageChanges[key] = nil
+    }
+
+    /// A custom visualizer is wanted: its listener is given the player, once, and keeps
+    /// it until the app is closed (`VisualizerSound`).
+    func hearForVisualizer() {
+        visualizerSound.hear(player.screen)
     }
 
     // MARK: the Artist page
@@ -1256,6 +1290,104 @@ final class AppModel {
         loadAccounts()
         // Back to the app from the browser, now that there's something to see.
         if signedIn { NSApp.activate(ignoringOtherApps: true) }
+    }
+
+    // MARK: Sharing with a phone player at home
+
+    /// Where Settings keeps the switch. It's one of the profile's own settings.
+    static let sharingKey = "shareWithDevices"
+
+    private var sharingWanted: Bool { UserDefaults.standard.bool(forKey: Self.sharingKey) }
+
+    /// Ask the engine whether it's sharing, where, and which devices are paired.
+    func loadSharing() {
+        guard let connection = engine?.connection else { return }
+        Task {
+            if let found = try? await connection.call("sharing.status", as: SharingStatus.self) {
+                sharingSaid(found)
+            }
+        }
+    }
+
+    /// Settings' switch was turned: the engine starts listening on the home network, or
+    /// stops at once.
+    func setSharing(_ on: Bool) {
+        guard phase == .ready, let connection = engine?.connection else { return }
+        Task { await applySharing(on, connection) }
+    }
+
+    private func applySharing(_ on: Bool, _ connection: RPCConnection) async {
+        sharingNote = nil
+        do {
+            sharingSaid(try await connection.call("sharing.set", ["on": on], as: SharingStatus.self))
+        } catch {
+            announcer.stop()
+            sharingNote = error.localizedDescription
+        }
+    }
+
+    private func sharingSaid(_ status: SharingStatus) {
+        let before = sharing
+        sharing = status
+        if status.on, let port = status.port {
+            if !announcer.start(type: status.service, port: port) {
+                sharingNote =
+                    "Sharing is on, but this Mac couldn't announce itself on the network, so a "
+                    + "device won't find it by itself. Type the address above into the device."
+            }
+        } else {
+            announcer.stop()
+            justPaired = nil
+        }
+        // A code that has been used comes off the screen, and Settings says who used it.
+        if pairingCode != nil, !status.pairing {
+            if let device = status.newDevices(since: before).last { justPaired = device.device }
+            pairingCode = nil
+        }
+    }
+
+    /// Show a six-digit code for a device to type. It works once, for a few minutes.
+    func pairDevice() {
+        guard let connection = engine?.connection else { return }
+        justPaired = nil
+        Task {
+            do {
+                let code = try await connection.call("sharing.pair", as: PairingCode.self)
+                pairingUntil = Date().addingTimeInterval(Double(code.seconds))
+                pairingCode = code
+            } catch {
+                sharingNote = error.localizedDescription
+            }
+        }
+    }
+
+    /// The code's window was closed: the code stops working.
+    func stopPairing() {
+        pairingCode = nil
+        guard let connection = engine?.connection else { return }
+        Task {
+            if let found = try? await connection.call(
+                "sharing.stop_pairing", as: SharingStatus.self)
+            {
+                sharingSaid(found)
+            }
+        }
+    }
+
+    /// Unpair a device: it can't sync again until it's paired again. Its copies stay.
+    func forgetDevice(_ id: String) {
+        guard let connection = engine?.connection else { return }
+        justPaired = nil
+        Task {
+            do {
+                sharingSaid(
+                    try await connection.call(
+                        "sharing.forget", ["device_id": id], as: SharingStatus.self))
+            } catch {
+                sharingNote = error.localizedDescription
+                loadSharing()
+            }
+        }
     }
 
     /// Which of these songs the owner has, and what the rest are on YouTube Music.

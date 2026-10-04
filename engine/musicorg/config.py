@@ -1,7 +1,8 @@
 """Settings (config.json) and the app's own folders for config, logs and cache.
 
-Under rule 3 of CLAUDE.md this module may write config.json, atomically, and it is the
-one place that creates the app's own folders. The library is never stored here.
+Under rule 3 of CLAUDE.md this module may write config.json (and beside it accounts.json,
+downloads.json and devices.json), atomically, and it is the one place that creates the
+app's own folders. The library is never stored here.
 
 Setting MUSICORG_HOME puts all three folders under that one folder instead of the
 platform defaults. Tests use it so they never touch the real settings.
@@ -319,6 +320,61 @@ def save_account(service: str, account: dict[str, Any] | None) -> None:
     except OSError as exc:
         raise ConfigError(
             f"Couldn't save the sign-in on this computer: {exc.strerror or exc}."
+        ) from exc
+
+
+# ---- devices paired for sharing (2026-10-04) -----------------------------------------------
+
+DEVICES_FILE_NAME = "devices.json"
+
+
+def devices_path() -> Path:
+    """Where the devices paired with this computer are kept (`sharing`): beside
+    config.json, in the app's own settings folder. Never in the library and never in
+    the repo. What's kept of a device's key is its SHA-256, so the file can't be used
+    to pass for a device."""
+    return app_dirs().config / DEVICES_FILE_NAME
+
+
+def _all_devices() -> dict[str, list[dict[str, Any]]]:
+    """Every profile's paired devices. A missing or damaged file reads as none: the
+    owner just pairs again."""
+    try:
+        loaded = json.loads(devices_path().read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    profiles = loaded.get("profiles") if isinstance(loaded, dict) else None
+    if not isinstance(profiles, dict):
+        return {}
+    return {
+        k: [dict(d) for d in v if isinstance(d, dict)]
+        for k, v in profiles.items()
+        if isinstance(k, str) and isinstance(v, list)
+    }
+
+
+def load_devices() -> list[dict[str, Any]]:
+    """The devices paired with this profile's library. Another profile's are never
+    given out: a phone paired for one person's music can't read the next person's."""
+    return _all_devices().get(current_profile()) or []
+
+
+def save_devices(devices: list[dict[str, Any]]) -> None:
+    """Replace this profile's paired devices. Written atomically, and readable by this
+    user only (the temp file it's written through is made that way)."""
+    everyone = _all_devices()
+    if devices:
+        everyone[current_profile()] = [dict(d) for d in devices]
+    else:
+        everyone.pop(current_profile(), None)
+    path = devices_path()
+    ensure_app_dir(path.parent)
+    text = json.dumps({"profiles": everyone}, indent=2, ensure_ascii=False) + "\n"
+    try:
+        _write_atomic(path, text)
+    except OSError as exc:
+        raise ConfigError(
+            f"Couldn't save the paired device on this computer: {exc.strerror or exc}."
         ) from exc
 
 

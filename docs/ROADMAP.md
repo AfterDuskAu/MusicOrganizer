@@ -59,7 +59,7 @@ A SwiftUI app that starts the engine and talks to it (`musicorg serve`). Code in
 
 **The owner's layout for the sidebar and Settings** is in [`roadmap/0.2-app-layout.md`](roadmap/0.2-app-layout.md).
 
-**The Visualizer** (2026-10-03, at the owner's request): visuals that move with the real sound, each made from a reference picture the owner sends. It's now a project of its own, **Particle Accelerator**, built separately first. When it reaches 1.0, the Local Visualizer page gets it as a Swift package. What that takes here: [`roadmap/0.2-visualizer.md`](roadmap/0.2-visualizer.md).
+**The Visualizer** (2026-10-03, at the owner's request): visuals that move with the real sound, each made from a reference picture the owner sends. It's now a project of its own, **Particle Accelerator**, built separately first. When it reaches 1.0, the Local Visualizer page gets it as a Swift package. **Three of its visuals (5, 7 and 8) were added early, on 2026-10-04, at the owner's request.** What was done and what's left: [`roadmap/0.2-visualizer.md`](roadmap/0.2-visualizer.md).
 
 **Parked by the owner (2026-10-01):** Fix A-1 (the app feels rough), Fix A-2 (automatic downloads stay out of the main library) and Fix A-3 (a real media player tab). All three are written up in `docs/KNOWN-ISSUES.md`.
 
@@ -136,7 +136,7 @@ A signed and notarised DMG with Python, ffmpeg, fpcalc and deno bundled, automat
 
 ## 1.1
 
-- A phone server (Subsonic-compatible, on home Wi-Fi).
+- A phone server (Subsonic-compatible, on home Wi-Fi). **Started early, on 2026-10-04, in another shape:** the engine shares the library read-only with a phone player on the home network (`sharing`; `docs/ENGINE_API.md`, section 3). Not built: the Subsonic-compatible server, and favourites and play counts coming back from the phone.
 - A weekly mix in its own `Mix/` folder.
 - Shareable playlist links.
 - An Inbox for Bandcamp, CD rips and iTunes purchases.

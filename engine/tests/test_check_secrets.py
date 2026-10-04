@@ -42,6 +42,7 @@ FAKE = {
     "password in a URL": "https://" + "me:hunter2" + "@example.org/x",
     "secret written into code": "lastfm_api" + '_key = "' + "9f8e7d6c5b4a39281706" + '"',
     "email address": "Contact: jane.doe" + "@" + "gmail.com",
+    "home network address": "listening on " + ".".join(["192", "168", "1", "20"]) + ":8000",
 }
 PERSONAL_EMAIL = "jane.doe" + "@" + "gmail.com"
 
@@ -77,9 +78,27 @@ def test_never_prints_the_whole_secret(kind: str) -> None:
         "@pytest.mark.live",
         "      - uses: actions/checkout@v7",
         "https://deno.land/x/install@v0.3.3/install.sh",
+        "private (RFC 1918: 10.x, 172.16 to 172.31, 192.168.x), link-local (169.254.x)",
+        "macOS 10.15.7, Windows 10.0.19045.3803, ffmpeg 7.1.1, yt-dlp 2026.8.19",
+        "Only on 127.0.0.1.",
     ],
 )
 def test_ignores_ordinary_lines(line: str) -> None:
+    assert cs.check_line("f.py:1", line) == []
+
+
+@pytest.mark.parametrize(
+    "parts",
+    [(10, 0, 0, 5), (172, 16, 4, 1), (172, 31, 255, 254), (192, 168, 0, 1), (169, 254, 3, 7)],
+)
+def test_detects_every_kind_of_home_address(parts: tuple[int, ...]) -> None:
+    line = "http://" + ".".join(str(part) for part in parts) + ":8000/"
+    assert [f.kind for f in cs.check_line("f.py:1", line)] == ["home network address"]
+
+
+@pytest.mark.parametrize("parts", [(172, 32, 0, 1), (172, 160, 1, 1), (11, 0, 0, 1), (8, 8, 8, 8)])
+def test_other_numbers_with_dots_are_left_alone(parts: tuple[int, ...]) -> None:
+    line = "version " + ".".join(str(part) for part in parts)
     assert cs.check_line("f.py:1", line) == []
 
 

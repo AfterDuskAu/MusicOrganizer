@@ -206,6 +206,49 @@ public enum PageChanges {
     public static func shown(_ change: Bool?, setting: Bool) -> Bool { change ?? setting }
 }
 
+/// The custom visualizers the app offers (owner, 2026-10-04): three of the visuals made
+/// in their own project, Particle Accelerator, by the numbers that project gives them.
+/// One of them moves to the music on the Local Visualizer, where the song's cover would
+/// be. Both choices are made in Settings → Play Options.
+public enum CustomVisualizer {
+    public static let offered = [5, 7, 8]
+    /// The one that shows until another is chosen.
+    public static let standard = 7
+    /// The key the chosen one is saved under: its number.
+    public static let whichKey = "customVisualizer"
+    /// The key for "use the custom visualizer instead of the song or album cover".
+    public static let useKey = "useCustomVisualizer"
+
+    /// The one to show for what was saved: that one while it's still offered, or else
+    /// the standard.
+    public static func chosen(_ saved: Int?) -> Int {
+        guard let saved, offered.contains(saved) else { return standard }
+        return saved
+    }
+
+    /// What a menu calls one: "Visualizer 7".
+    public static func title(_ number: Int) -> String { "Visualizer \(number)" }
+}
+
+/// What the Local Visualizer's switch says: the song with its cover, its video, or the
+/// song with the custom visualizer where the cover would be.
+public enum PagePicture: String, CaseIterable, Sendable {
+    case song, video, visualizer
+
+    public var label: String {
+        switch self {
+        case .song: "Song"
+        case .video: "Video"
+        case .visualizer: "Visualizer"
+        }
+    }
+
+    /// The video comes first: the visualizer only ever stands in for the cover.
+    public static func chosen(videoWanted: Bool, visualizerOn: Bool) -> PagePicture {
+        videoWanted ? .video : visualizerOn ? .visualizer : .song
+    }
+}
+
 /// A big count as YouTube writes them: 950, 5.2K, 900K, 1.3M, 2.1B.
 public enum CompactCount {
     public static func text(_ count: Int) -> String {

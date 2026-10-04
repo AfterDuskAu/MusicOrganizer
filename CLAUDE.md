@@ -6,9 +6,11 @@ Standing rules for every Claude Code session in this project. Read this file, `d
 
 A personal music app that replaces Spotify, Apple Music and YouTube Music for a home library. Music comes from YouTube Music, and the app turns it into a clean, permanent, tagged library of files. This repo's `engine/` is the part with no UI. It scans, matches, downloads, tags and protects the library. From v0.2 a Mac app (SwiftUI) sits on top, and later a Windows app. Both talk to the engine over JSON-RPC.
 
-**v0.2 (from 2026-10-01): the Mac app** lives in `app/`, a Swift package: `MusicOrganizerKit` (the engine connection, the library's shape, the play queue, the lyrics parser, all tested without a window) and `MusicOrganizer` (the SwiftUI screens). `scripts/build_app.sh` builds `app/build/Music Organizer.app`. **The app never writes inside the library:** it reads audio and cover files to play and show them, and every change goes through the engine over JSON-RPC. What the app needs from the library, it asks the engine for (`library.tracks`, `library.lyrics`, `lyrics.for_video`, `listening.*`, `playlist.*`, `youtube.stream`, `youtube.video`, `discover.suggest`, `import.*`, `artist.*`, `account.*`); it doesn't parse tags or the index itself.
+**v0.2 (from 2026-10-01): the Mac app** lives in `app/`, a Swift package: `MusicOrganizerKit` (the engine connection, the library's shape, the play queue, the lyrics parser, all tested without a window) and `MusicOrganizer` (the SwiftUI screens). `scripts/build_app.sh` builds `app/build/Music Organizer.app`. **The app never writes inside the library:** it reads audio and cover files to play and show them, and every change goes through the engine over JSON-RPC. What the app needs from the library, it asks the engine for (`library.tracks`, `library.lyrics`, `lyrics.for_video`, `listening.*`, `playlist.*`, `youtube.stream`, `youtube.video`, `discover.suggest`, `import.*`, `artist.*`, `account.*`, `sharing.*`); it doesn't parse tags or the index itself.
 
 **Looks (2026-10-03):** Settings → App Layout chooses how the app is dressed: "Apple Native Build" (macOS's own colours and type) or "Warm Look" (`AppLook` and `WarmPalette` in the Kit, `Theme` in the app). A screen takes its surfaces, the colour of its words and its headings' type from `Theme` (`dressed()`, `heading()`, `Theme.current.panel`), never a colour of its own, so it works in every look; and in the native look every one of those is macOS's own, so that look stays exactly as macOS draws it. A look is put on when the app opens.
+
+**The custom visualizer (2026-10-04):** on the Local Visualizer, one of three visuals from the owner's other project, Particle Accelerator (5, 7 or 8; 7 is the standard), moves to the music where the song's cover would be. Particle Accelerator is the app's one Swift package, pinned to one commit in `app/Package.swift` and used only by the `MusicOrganizer` target (`CustomVisualizerView`); which visuals are offered is in the Kit (`CustomVisualizer`). It listens to the app's player and writes nothing. A visual's look is changed in Particle Accelerator, never here. Ask before adding any other package. What's left for its 1.0: `docs/roadmap/0.2-visualizer.md`.
 
 The owner builds with Claude Code and is not a professional programmer. Prefer boring, obvious code with good error messages over clever code. The development machine is an **Intel iMac**.
 
@@ -19,12 +21,12 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
    - External folders (the owner's existing rips, friends' iTunes folders) are **read-only sources**: never renamed, retagged, moved or deleted. Only-copy tracks are *copied* into the library, and only the copy is tagged.
    - A playlist file the owner chooses to import (`playlistfile`) is read-only in the same way, and nothing of where it was is kept.
    - **Engine-owned exceptions:**
-     - the app's own config, log and cache folders (platformdirs): `config.json`, `accounts.json`, `downloads.json`, logs, and yt-dlp's cache via its `cachedir` option
+     - the app's own config, log and cache folders (platformdirs): `config.json`, `accounts.json`, `downloads.json`, `devices.json`, logs, and yt-dlp's cache via its `cachedir` option
      - exports the user asked for (`report`, `review export`, `auto-sample`), written only through `fileops.write_export()`, which never overwrites and refuses any path inside the library's managed folders or a registered source
 3. **All filesystem writes go through `musicorg.fileops`.** Other modules may not create, write, move, copy, rename, replace or delete files or folders. The only exceptions, enforced by an AST-based test (step 03a):
    - `state.py`: `state.json`, written atomically
    - `index.py`: owns the SQLite files (`index.sqlite`, `queue.sqlite`)
-   - `config.py`: `config.json`, and beside it `accounts.json` (sign-ins) and `downloads.json` (the computer's count of the day's downloads), written atomically
+   - `config.py`: `config.json`, and beside it `accounts.json` (sign-ins), `downloads.json` (the computer's count of the day's downloads) and `devices.json` (the devices paired for sharing), written atomically
    - `tags.py`: its single mutagen save call, which only `fileops` ever calls, on staged copies
    - yt-dlp itself, writing **only** into the `_Staging/<batch_id>/` folder `fileops` hands it
    - a single line marked `# fileops-ok: in-memory`, for writes to in-memory buffers (e.g. Pillow saving into `BytesIO`)
@@ -69,6 +71,7 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
   - `deezer`: a public Deezer playlist or album, read by its link with no sign-in; the only module that talks to Deezer, and it only reads
   - `lastfm`: the owner's most played and loved songs on Last.fm, with their own API key; the only module that talks to Last.fm, and it only reads
   - `playlistfile`: a playlist saved as a file (CSV, text, M3U), the way in for Amazon Music; the file is the owner's, opened read-only
+  - `sharing`: the library shared with a phone player on the home network: the list of everything, the files it names, and pairing, over HTTP (read-only; the only module that listens beyond this computer, and only when the app's Settings switch is on)
   - `report`
   - `review` and `review_web`: the review spreadsheet, and the local review page
   - `rpc`: the JSON-RPC server
@@ -101,6 +104,7 @@ All states, decisions and tag values are defined **once**, in `docs/ENGINE_API.m
 - YouTube logins (yt-dlp cookie files, ytmusicapi `browser.json` / `oauth.json`) live outside the repo, in the app's config folder.
 - A Spotify sign-in (`accounts.json`: the owner's app's Client ID and a refresh token that can only read playlists) lives there too. No token, one-time code or Client ID is ever logged, shown in an error, or written anywhere else.
 - So does Last.fm's set-up (the owner's username and their own API key), under the same rule: neither is logged, shown in an error, given out over RPC, or written anywhere else.
+- **Sharing (the owner's one hard rule, 2026-10-04): nothing private on GitHub or the web.** No network address, computer name, pairing code or key in this repository: not in code, tests, fixtures, docs, logs, the changelog or commit messages. A test that needs one builds it while it runs. The keys given to paired devices are kept only as their SHA-256, in `devices.json` in the app's config folder, for each profile; a key, a pairing code and a caller's address are never logged or shown in an error, and no key is given out over RPC.
 
 ## Testing
 
@@ -120,10 +124,19 @@ All states, decisions and tag values are defined **once**, in `docs/ENGINE_API.m
 
 ## Not yet (see `docs/ROADMAP.md` for the version each belongs to)
 
-Weekly mix, phone/Subsonic server, packaging, signing, notarization, Windows app shell, accounts and cloud anything (but see imports, below).
+Weekly mix, a Subsonic-compatible server (but see sharing, below), packaging, signing, notarization, Windows app shell, accounts and cloud anything (but see imports, below).
 
 **Discover was started early, on 2026-10-01, at the owner's request** (it was on this list). Built: `discover.suggest`, the app's What's New and Find pages, the guided "What music would you like today?" mode, and Find's Download Automatically (find and queue a batch in one click). Last.fm was added on 2026-10-03, also at the owner's request: the owner's most played songs there are a starting point (seed `lastfm`). The Artist page was added the same day (`artist.*`: who an artist is, their songs, albums and similar artists, from YouTube Music's own page). Still not yet, from its plan (`docs/roadmap/0.4-discover.md`): the `Discovered/` folder and its tag (a contract change), Last.fm's "similar tracks" as a source of picks, and concerts on the Artist page.
 
 **Imports were started early, on 2026-10-02, at the owner's request** (Spotify/Apple Music import was on this list, and so were accounts). Built: Discover → Import Playlists for a YouTube or YouTube Music playlist by its link, with no sign-in; for Spotify, after a sign-in on Spotify's own page (2026-10-03); and, the same day, for a public Deezer playlist or album by its link, for a playlist saved as a file (the way in for Amazon Music), and for the owner's lists on Last.fm. Still not yet: Apple Music, and signing in to YouTube (`docs/ROADMAP.md`, v0.3). A sign-in is built only for reading playlists: logins stay on the Mac, never in the repo or the library.
 
 **Profiles were built on 2026-10-03, at the owner's request** ("accounts" was on this list; these are local, with nothing online). A profile is a name and a library folder of its own, chosen in the app's Settings → Profiles; the app starts the engine for one profile at a time (`MUSICORG_PROFILE`), and the engine still serves one library. Sign-ins are kept per profile; the daily download limit is counted once for the whole computer. A new profile's library is made in the Mac's Music folder, named after it ("Music Kids"); and a profile can be marked as a child's (both 2026-10-03). The mark does nothing yet. Still not yet, from `docs/roadmap/1.1-family-mode.md`: a parent PIN, and filtering a child's profile by the explicit tag.
+
+**Sharing with a phone player was started early, on 2026-10-04, at the owner's request** (the phone server was on this list). The owner's one condition is the privacy rule under Secrets. Built: `sharing`, a read-only server inside `musicorg serve` that gives a phone player on the home network the library's songs, videos, covers, lyrics and playlists (format 1: `docs/ENGINE_API.md`, section 3); Settings → Sharing in the app (the switch, this Mac's address, Pair a Device, the paired devices); and the app announces the share with Bonjour. **The limits the owner was promised, which every later change keeps:**
+
+- Off until they switch it on in the app's Settings. The engine never starts sharing by itself.
+- Read-only for the music files: the server never writes inside the library.
+- A device is paired once, with a six-digit code shown on the Mac.
+- The home network only, and only while Music Organizer is open: only callers with a private (RFC 1918), link-local or loopback address are answered, no port is ever opened on the router (no UPnP), and nothing is sent to the internet.
+
+**The phone player is a separate project. It is never named, described or linked to here:** in code, docs, the changelog and commit messages it is "a phone player". Still not yet: favourites and play counts coming back from the phone, carrying on a file that was cut off, lyrics timed to a video, and a Subsonic-compatible server.
