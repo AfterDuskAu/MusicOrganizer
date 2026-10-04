@@ -67,7 +67,9 @@ def filled(lib: Library, samples: dict[str, Path], video_mp4: Path) -> Library:
                album="Album", year=2020, track=1, disc=1, genre="Rock", explicit=True,
                musicorg_id=SONG_ID, source="youtube_music", source_id=SOURCE_ID,
                acquired="2026-01-31T09:30:00Z", cover=PNG)  # fmt: skip
-    song.with_suffix(".lrc").write_text(LRC, encoding="utf-8")
+    # As bytes: written as text, Windows turns each line ending into two, and the file
+    # is then longer than the words the tests compare it with.
+    song.with_suffix(".lrc").write_bytes(LRC.encode())
     (song.parent / "cover.jpg").write_bytes(ALBUM_COVER)
     add(lib, samples["mp3"], OTHER, title="Other", artist="Band feat. Guest", album="Album",
         musicorg_id=OTHER_ID, lyrics=WORDS, origin_path="/somewhere/rips/Other.mp3")  # fmt: skip

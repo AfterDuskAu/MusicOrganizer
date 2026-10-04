@@ -527,6 +527,12 @@
   - No full screen for the visualizer, and which visualizer is chosen only in Settings.
   - Nothing about a visual can be changed here: its look is changed in Particle Accelerator, and arrives when the pin is moved.
 
+2026-10-04, about 3:30pm. **CI's first run with sharing and the visualizer failed on two runners.** The two commits had been pushed together, and neither had been through CI before.
+
+- **The Intel Mac couldn't build Particle Accelerator.** It has Xcode 16, where one of Apple's audio functions (`MTAudioProcessingTapCreate`) hands its result back differently than in the Xcode 26 on the owner's iMac. Put right in Particle Accelerator, which builds with either now, and the pin in `app/Package.swift` is moved to that commit. Nothing in this repo's own code changed for it.
+- **Windows failed two sharing tests.** They wrote the song's `.lrc` as text, which on Windows turns each line ending into two, so the file was two bytes longer than the words it was compared with. The tests write it as bytes now. The engine was right: it sends a file as it is on the disk.
+- **Checked here:** `swift build` and `swift test` with the new pin (69 tests), the sharing tests (35) and `ruff`. Neither failure can be reproduced on this Mac: the real check is the next CI run.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)
