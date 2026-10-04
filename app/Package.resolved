@@ -1,0 +1,14 @@
+{
+  "originHash" : "ac949fbb7f8bd19b19a78a4103f53bcb4c9311335da8cd47b8ba0a17f127ebb4",
+  "pins" : [
+    {
+      "identity" : "particleaccelerator",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/AfterDuskAu/ParticleAccelerator",
+      "state" : {
+        "revision" : "da956fa781639b6fc8ae98798f873681e496a18e"
+      }
+    }
+  ],
+  "version" : 3
+}

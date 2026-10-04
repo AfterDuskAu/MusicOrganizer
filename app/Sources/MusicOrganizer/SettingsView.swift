@@ -46,17 +46,6 @@ struct SideNote: View {
     }
 }
 
-private struct ComingBadge: View {
-    var body: some View {
-        Text("Coming")
-            .font(.caption.weight(.medium))
-            .padding(.horizontal, 7)
-            .padding(.vertical, 2)
-            .background(.quaternary, in: Capsule())
-            .foregroundStyle(.secondary)
-    }
-}
-
 /// Settings → App Layout: the look the app is dressed in (owner, 2026-10-03). The look is
 /// put on when the app opens (`Theme`), so a new choice shows once it's been reopened.
 private struct LayoutSettings: View {
@@ -111,13 +100,15 @@ private struct LayoutSettings: View {
 }
 
 /// Settings → Play Options: how songs and videos play, as the owner laid it out
-/// (2026-10-03): the Local Visualizer's options, then the custom visualizer's, which wait
-/// for that project (Particle Accelerator) to be finished.
+/// (2026-10-03): the Local Visualizer's options, then the custom visualizer's (three of
+/// Particle Accelerator's visuals, since 2026-10-04).
 private struct PlaySettings: View {
     @AppStorage(Player.playWhileVideoLoadsKey) private var playWhileLoading = true
     @AppStorage(Player.alwaysBestVideoKey) private var alwaysBestVideo = false
     @AppStorage(Player.visualizerLyricsKey) private var visualizerLyrics = true
     @AppStorage(Player.fullScreenLyricsKey) private var fullScreenLyrics = false
+    @AppStorage(CustomVisualizer.whichKey) private var whichVisualizer = CustomVisualizer.standard
+    @AppStorage(CustomVisualizer.useKey) private var useVisualizer = false
     @AppStorage(PageChanges.key) private var changesLast = PageChanges.standard
     @Environment(AppModel.self) private var model
 
@@ -167,24 +158,31 @@ private struct PlaySettings: View {
                         + "nothing plays until the video is ready, then the video starts from its "
                         + "beginning. A song with no video plays as soon as that's known.")
             }
-            Section {
-                Picker("Which visualizer", selection: .constant("")) {
-                    Text("None yet").tag("")
+            Section("Custom Visualizer") {
+                Picker(
+                    "Which visualizer",
+                    selection: Binding(
+                        get: { CustomVisualizer.chosen(whichVisualizer) },
+                        set: { whichVisualizer = $0 })
+                ) {
+                    ForEach(CustomVisualizer.offered, id: \.self) { number in
+                        Text(CustomVisualizer.title(number)).tag(number)
+                    }
                 }
-                .disabled(true)
                 yesNo(
                     "Use the custom visualizer instead of the song or album cover",
-                    .constant(false)
+                    $useVisualizer
                 )
-                .disabled(true)
-                SideNote(
-                    "For the visualizers being made as their own project, Particle Accelerator. "
-                        + "These two will work once it's finished and added here.")
-            } header: {
-                HStack(spacing: 8) {
-                    Text("Custom Visualizer")
-                    ComingBadge()
+                .onChange(of: useVisualizer) {
+                    model.forgetPageChange(CustomVisualizer.useKey)
+                    if useVisualizer { model.hearForVisualizer() }
                 }
+                SideNote(
+                    "Yes: on the Local Visualizer, the visualizer moves to the music where "
+                        + "the song's cover would be. No: the cover is there. The Song, Video, "
+                        + "Visualizer switch on that page changes it for now, without changing "
+                        + "this. A video is always shown as a video. The visualizers are made "
+                        + "in their own project, Particle Accelerator.")
             }
         }
         .formStyle(.grouped)

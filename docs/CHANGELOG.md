@@ -504,6 +504,29 @@
 - **Not checked:** a real phone or tablet over Wi-Fi; a caller from outside the home network (tests only); the switch, Pair a Device, New Code, Done and Remove clicked by hand (the unseen copy can't be clicked: the switch came from a start-up argument, and the code from a temporary line that isn't in the commit); macOS asking about incoming connections (this Mac's firewall is off); the owner's own library, which wasn't touched, so how long the list takes for two thousand songs isn't measured; lyrics and the video on the phone's own player screens (not opened: they would have played sound); Windows, beyond CI.
 - **Known:** a phone that forgets the computer and pairs again is listed a second time until the old entry is removed (a device says only what kind it is). A file's version is its size and time, so a song that's retagged is copied again at the next sync.
 
+2026-10-04, about 3pm. **The custom visualizer: Visualizers 5, 7 and 8 on the Local Visualizer.** The owner asked for three of Particle Accelerator's visuals in the app now, with Visualizer 7 as the standard one. The roadmap had this waiting for Particle Accelerator's 1.0.
+
+- **The app's first package:** Particle Accelerator, in `app/Package.swift`, pinned to one commit (it has no 1.0.0 to pin), used by the `MusicOrganizer` target only. `app/Package.resolved` is committed. CI fetches it from its public repo. It needs macOS 14 and Apple's own frameworks, and brings no packages of its own.
+- **The page:** the Local Visualizer's switch is Song | Video | Visualizer. Visualizer plays the song itself and shows the visual where the cover would be, in the video's shape and place, with the lyrics in the narrow column a video gets. A video is still a video: the visualizer only ever takes the cover's place (so with Video chosen and no video to show, it's there if it's on). With nothing playing, the cover's place is as it was.
+- **Settings → Play Options → Custom Visualizer:** the two rows that were marked "Coming" work. Which visualizer: 5, 7 or 8, and 7 until another is chosen. Use it instead of the song or album cover: No until it's turned on. The page's switch changes the second only for now (`switchForNow`), as the lyrics button does: Settings keeps the standing choice.
+- **It only listens.** Particle Accelerator's listener adds a listening tap to what the app's one player plays and passes the sound on untouched. It writes nothing and uses no network. The app's rule that it never writes inside the library is untouched, and nothing in the engine changed.
+- **The Kit:** `CustomVisualizer` (which are offered, the standard one, what's shown for a saved number) and `PagePicture` (what the switch says). Two new tests.
+- **The owner's own looks came across.** They had tuned the three and pressed Set Standard, which keeps a standard in the Particle Accelerator app's settings only, so the library still had older ones. Asked, the owner chose to have theirs written into the library as its standards; that was done there the same afternoon, and this pin is that commit.
+- **Deviations:**
+  - **Earlier than the roadmap said,** at the owner's request. `docs/roadmap/0.2-visualizer.md` now says what was done and what's left for 1.0 (its settings panel in Settings, every finished visual, its version in place of a commit).
+  - **The listener is given the player when a visualizer is first wanted,** not always when the app starts as Particle Accelerator's notes advise: when the app opens if the setting is Yes, otherwise when the page is first switched to Visualizer. An app whose owner never uses a visualizer then plays exactly as before. The cost, by Particle Accelerator's own measurement: switched to for the first time in the middle of a song, the song stops for about half a second, once.
+  - **Drawn at Medium quality, not Auto.** Measured in Particle Accelerator that afternoon, off screen with a made-up loud reading, on the 2019 iMac: at High (which Auto means there), Visualizer 8 as the owner has it takes the graphics card about 18 ms a frame, and 60 frames a second allows 16.7; at Medium, 4.4 ms. Visualizers 5 and 7 take 5.9 and 9.4 ms at High. Medium is also the quality the owner tuned the three at.
+- **Checked:**
+  - `swift build` and `swift test` (69 tests), with the package fetched from GitHub at the pinned commit. `pytest` (1,497 passed) and `ruff`, though the engine wasn't touched.
+  - In the unseen test copy, on an empty scratch library with settings of its own: Settings → Play Options shows the Custom Visualizer rows with Visualizer 7 chosen and "No"; the Local Visualizer shows the three-way switch; and with the setting on and Visualizer 8 chosen, the visual's stage was drawing in the page at Medium (its own frame-time line read 150,000 sparks at 1736×978 and 1.0 ms on the graphics card, in silence).
+- **Not checked:**
+  - **The picture itself in this app.** An unseen window's picture can't be saved off the graphics card, so what was seen is the stage's own report that it was drawing, not the sparks.
+  - **Anything with a song playing:** the visual moving to music here, the switch clicked by hand, the half-second stop, a song played from YouTube or a video with the listener on, a saved video's sound with Visualizer chosen. The unseen copy never plays (it would take the media keys). The owner was told what to try.
+  - Changing the setting in the Settings window by hand.
+- **Known:**
+  - No full screen for the visualizer, and which visualizer is chosen only in Settings.
+  - Nothing about a visual can be changed here: its look is changed in Particle Accelerator, and arrives when the pin is moved.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

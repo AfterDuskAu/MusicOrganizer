@@ -1118,6 +1118,29 @@ final class SongVideoTests: XCTestCase {
         XCTAssertTrue(PageChanges.options.contains(PageChanges.standard))
     }
 
+    func testTheCustomVisualizersOfferedAndTheStandardOne() {
+        // The owner's three, and Visualizer 7 until another is chosen.
+        XCTAssertEqual(CustomVisualizer.offered, [5, 7, 8])
+        XCTAssertEqual(CustomVisualizer.standard, 7)
+        XCTAssertEqual(CustomVisualizer.chosen(nil), 7)
+        XCTAssertEqual(CustomVisualizer.chosen(5), 5)
+        XCTAssertEqual(CustomVisualizer.chosen(8), 8)
+        // A number saved once and not offered any more (or never): the standard.
+        XCTAssertEqual(CustomVisualizer.chosen(3), 7)
+        XCTAssertEqual(CustomVisualizer.chosen(0), 7)
+        XCTAssertEqual(CustomVisualizer.offered.map(CustomVisualizer.title),
+            ["Visualizer 5", "Visualizer 7", "Visualizer 8"])
+    }
+
+    func testTheLocalVisualizersSwitch() {
+        XCTAssertEqual(PagePicture.allCases.map(\.label), ["Song", "Video", "Visualizer"])
+        XCTAssertEqual(PagePicture.chosen(videoWanted: false, visualizerOn: false), .song)
+        XCTAssertEqual(PagePicture.chosen(videoWanted: false, visualizerOn: true), .visualizer)
+        // The visualizer stands in for the cover only: a video is still a video.
+        XCTAssertEqual(PagePicture.chosen(videoWanted: true, visualizerOn: false), .video)
+        XCTAssertEqual(PagePicture.chosen(videoWanted: true, visualizerOn: true), .video)
+    }
+
     func testAnArtistsPageIsRead() throws {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase

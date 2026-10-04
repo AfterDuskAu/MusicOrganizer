@@ -13,16 +13,28 @@ struct NowPlayingView: View {
     /// Settings → Play Options → Always show lyrics. The lyrics button in the player bar
     /// switches the page for now, without changing the setting.
     @AppStorage(Player.visualizerLyricsKey) private var lyricsOn = true
+    /// Settings → Play Options → Custom Visualizer. The page's Song | Video | Visualizer
+    /// switch changes the first for now, without changing the setting.
+    @AppStorage(CustomVisualizer.useKey) private var useVisualizer = false
+    @AppStorage(CustomVisualizer.whichKey) private var whichVisualizer = CustomVisualizer.standard
 
     var body: some View {
         let track = model.player.current
         // In full screen the picture is drawn there, not here as well.
         let showsVideo = isActive && model.player.showsPicture && !model.videoFullScreen
+        // The custom visualizer stands where the cover would, for a song that's playing.
+        // It's only drawn while the page can be seen.
+        let showsVisualizer =
+            isActive && track != nil && !model.player.showsPicture
+            && model.shows(CustomVisualizer.useKey, setting: useVisualizer)
         // A song with no lyrics, or lyrics turned off: the cover or video has the page.
         let showsLyrics =
             model.shows(Player.visualizerLyricsKey, setting: lyricsOn) && model.lyrics.settled
         ZStack(alignment: .topLeading) {
-            sideBySide(track, showsVideo: showsVideo, showsLyrics: showsLyrics)
+            sideBySide(
+                track, showsVideo: showsVideo, showsVisualizer: showsVisualizer,
+                showsLyrics: showsLyrics
+            )
                 .padding(.horizontal, 40)
                 .padding(.top, 52)
                 .padding(.bottom, 24)
@@ -46,18 +58,22 @@ struct NowPlayingView: View {
         .environment(\.colorScheme, .dark)
     }
 
-    /// The cover (or the video) on the left, the lyrics on the right. The left side, as
-    /// the owner drew it (2026-10-03): Song | Video on top, the picture, and everything
-    /// else centred under it: the song's name, the heart, Karaoke (and Full Screen), then
-    /// the downloads. With no lyrics to show, the left side is the whole page, and the
-    /// cover may be bigger.
-    private func sideBySide(_ track: Track?, showsVideo: Bool, showsLyrics: Bool) -> some View {
+    /// The cover (or the video, or the custom visualizer) on the left, the lyrics on the
+    /// right. The left side, as the owner drew it (2026-10-03): Song | Video | Visualizer
+    /// on top, the picture, and everything else centred under it: the song's name, the
+    /// heart, Karaoke (and Full Screen), then the downloads. With no lyrics to show, the
+    /// left side is the whole page, and the cover may be bigger.
+    private func sideBySide(
+        _ track: Track?, showsVideo: Bool, showsVisualizer: Bool, showsLyrics: Bool
+    ) -> some View {
         let cover: CGFloat = showsLyrics ? 420 : 560
         return HStack(spacing: 32) {
             VStack(spacing: 14) {
                 ShowPicker()
                 if showsVideo {
                     picture
+                } else if showsVisualizer {
+                    visualizer
                 } else {
                     CoverView(track: track, size: .large, corner: 12)
                         .aspectRatio(1, contentMode: .fit)
@@ -67,9 +83,10 @@ struct NowPlayingView: View {
                 PlayerControls(track: track, showsVideo: showsVideo)
             }
             .frame(minWidth: 320, maxWidth: .infinity)
-            // A video gets the room: the lyrics take a narrow column beside it.
+            // A video or a visualizer gets the room: the lyrics take a narrow column
+            // beside it.
             if showsLyrics {
-                if showsVideo {
+                if showsVideo || showsVisualizer {
                     LyricsView(large: false)
                         .frame(minWidth: 200, idealWidth: 320, maxWidth: 320)
                 } else {
@@ -86,6 +103,14 @@ struct NowPlayingView: View {
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .shadow(color: .black.opacity(0.5), radius: 24, y: 10)
             .onTapGesture(count: 2) { model.setVideoFullScreen(true) }
+    }
+
+    /// The custom visualizer chosen in Settings, in the video's shape and place.
+    private var visualizer: some View {
+        CustomVisualizerView(number: CustomVisualizer.chosen(whichVisualizer))
+            .aspectRatio(16.0 / 9.0, contentMode: .fit)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .shadow(color: .black.opacity(0.5), radius: 24, y: 10)
     }
 
     /// The cover, blurred right out, under a dark wash: the screen takes the album's colour.
@@ -106,22 +131,42 @@ struct NowPlayingView: View {
     }
 }
 
-/// Song or Video, always in the same place: above the picture, in the middle.
+/// Song, Video or Visualizer, always in the same place: above the picture, in the middle.
+/// Song and Visualizer both play the song itself: the one shows its cover, the other the
+/// custom visualizer where the cover would be.
 private struct ShowPicker: View {
     @Environment(AppModel.self) private var model
+    @AppStorage(CustomVisualizer.useKey) private var useVisualizer = false
 
     var body: some View {
         let player = model.player
         Picker(
-            "Show", selection: Binding(get: { player.pictureWanted }, set: { player.setVideo($0) })
+            "Show",
+            selection: Binding(
+                get: {
+                    PagePicture.chosen(
+                        videoWanted: player.pictureWanted,
+                        visualizerOn: model.shows(CustomVisualizer.useKey, setting: useVisualizer))
+                },
+                set: { show($0) })
         ) {
-            Text("Song").tag(false)
-            Text("Video").tag(true)
+            ForEach(PagePicture.allCases, id: \.self) { Text($0.label).tag($0) }
         }
         .pickerStyle(.segmented)
         .labelsHidden()
         .fixedSize()
-        .help("Play the song with its cover, or its official video from YouTube")
+        .help(
+            "Play the song with its cover, its official video from YouTube, or the song "
+                + "with the visualizer moving to it")
+    }
+
+    private func show(_ picture: PagePicture) {
+        model.player.setVideo(picture == .video)
+        guard picture != .video else { return }
+        // Only for now: whether the visualizer takes the cover's place is a standing
+        // choice, made in Settings → Play Options.
+        model.switchForNow(
+            CustomVisualizer.useKey, to: picture == .visualizer, setting: useVisualizer)
     }
 }
 

@@ -120,6 +120,8 @@ final class AppModel {
     }
 
     let player = Player()
+    /// What the custom visualizer hears (`hearForVisualizer`).
+    let visualizerSound = VisualizerSound()
     let lyrics = LyricsModel()
     /// Discover → What's New and Discover → Find: each keeps its own picks.
     let whatsNew = DiscoverPage(named: "whatsNew")
@@ -192,6 +194,9 @@ final class AppModel {
     private static let rootKey = "libraryRoot"
 
     init() {
+        // Settings says to use the custom visualizer: its listener is given the player
+        // now, before any song starts, so nothing is heard of it.
+        if UserDefaults.standard.bool(forKey: CustomVisualizer.useKey) { hearForVisualizer() }
         artistBrowser.lookUp = { [weak self] name, artistId in
             var asked: [String: Any] = [:]
             if let artistId { asked["artist_id"] = artistId } else { asked["name"] = name ?? "" }
@@ -994,6 +999,12 @@ final class AppModel {
         pageChangeTimers[key]?.cancel()
         pageChangeTimers[key] = nil
         pageChanges[key] = nil
+    }
+
+    /// A custom visualizer is wanted: its listener is given the player, once, and keeps
+    /// it until the app is closed (`VisualizerSound`).
+    func hearForVisualizer() {
+        visualizerSound.hear(player.screen)
     }
 
     // MARK: the Artist page

@@ -6,6 +6,9 @@
 #
 # The app is for this Mac only: it uses the engine in this project's .venv, and isn't
 # signed for other computers (packaging is v0.5). Nothing here touches a music library.
+#
+# The first build after the visualizers' package changes fetches it from GitHub (Particle
+# Accelerator, pinned in app/Package.swift), so that one build needs the internet.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
