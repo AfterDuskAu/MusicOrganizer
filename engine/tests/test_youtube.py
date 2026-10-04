@@ -119,6 +119,16 @@ def test_a_video_of_another_version_or_artist_isnt_the_songs() -> None:
     )
 
 
+def test_a_version_in_both_the_title_and_the_tag_is_searched_for_once() -> None:
+    """A library title names its version ("Crave You (Adventure Club Remix)") and its
+    version tag says the same. The search words are the title's alone: with the remix
+    named a second time the search would be another one, and no recording answers it."""
+    title = "Crave You (Adventure Club Remix)"
+    plain = youtube.find_video(title, "Flight Facilities")
+    tagged = youtube.find_video(title, "Flight Facilities", versions=("remix:adventure club",))
+    assert plain is not None and tagged == plain
+
+
 def test_a_remix_never_gets_the_originals_video() -> None:
     """A library copy can be titled plainly while the rip it came from was "Song R" or
     "Song (Somebody Remix)": the version comes with the request, not from the title."""
@@ -142,6 +152,28 @@ def test_a_remix_never_gets_the_originals_video() -> None:
     assert remix is not None and "Adventure Club Remix" in remix.title
     assert youtube.find_video("Crave You (Adventure Club Remix)", "Flight Facilities",
                               versions=("remix:adventure club",)) == remix  # fmt: skip
+
+
+def test_a_title_with_the_owners_remix_mark_gets_no_video() -> None:
+    """A copy named after the owner's rip is titled "Work Out R" and tagged `remix`
+    (2026-10-04). Which remix it is isn't known, so no video is its video: least of all
+    the original's, which is what such a search finds."""
+    fixtures = Path(__file__).parent / "fixtures" / "ytm"
+    recorded = youtube.read_recording(fixtures, "videos", "j cole work out")
+    asked: list[str] = []
+
+    class Cache:
+        def cached_search(self, key: str, *, max_age_days: float) -> Any | None:
+            asked.append(key)
+            return recorded  # the original's official video
+
+        def put_search(self, key: str, response: Any) -> None:
+            pytest.fail("nothing new to keep")
+
+    assert youtube.find_video("Work Out R", "J. Cole", versions=("remix",), cache=Cache()) is None
+    assert asked == ["videos j cole work out r remix"]  # the title as it stands, said once
+    # The plain song, asked the same way, does get that video: it's the R that stops it.
+    assert youtube.find_video("Work Out", "J. Cole", cache=Cache()) is not None
 
 
 def test_video_searches_are_cached_apart_from_song_searches(

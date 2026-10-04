@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from test_rpc import code, out, result, server  # noqa: F401  (out and server are fixtures)
 
-from musicorg import browse, rpc, scan, tags
+from musicorg import browse, fileops, rpc, scan, tags
 from musicorg.errors import NotFoundError, OutsideLibraryError
 from musicorg.index import open_index
 from musicorg.library import Library
@@ -87,20 +87,167 @@ def test_a_saved_video_is_marked_as_one(filled: Library, video_mp4: Path) -> Non
     assert by_path[rel]["source_id"] == "videoVVVVVV" and by_path[rel]["duration_s"] > 19
 
 
-def test_a_songs_version_comes_from_its_tag_and_its_rips_name(
+def test_a_songs_version_comes_from_its_tag_and_its_title(
     lib: Library, samples: dict[str, Path]
 ) -> None:
-    plain = add(lib, samples, SONG, title="Song", musicorg_id="t_1",
-                origin_path="/somewhere/rips/Song R.mp3")  # fmt: skip
+    waiting = {"source": "rip_copy", "match": "unconfirmed"}  # a copy not identified yet
+    song = add(lib, samples, SONG, title="Song R", musicorg_id="t_1", version=["remix"],
+               origin_path="/somewhere/rips/Song R.mp3", **waiting)  # fmt: skip
+    assert browse.version_tokens(lib, SONG) == ("remix",)  # tag and title agree: said once
+    # The title alone says it, read as the owner writes a remix. (A title they typed
+    # before the tag was kept in step with it has no tag.)
+    tags.write_tags(song, tags.TrackTags(version=tags.REMOVE, origin_path="/rips/Song.mp3"))
     assert browse.version_tokens(lib, SONG) == ("remix",)
-    tags.write_tags(plain, tags.TrackTags(origin_path="C:\\Rips\\Band - Song (Somebody Remix).mp3"))
-    assert browse.version_tokens(lib, SONG) == ("remix:somebody",)
-    tags.write_tags(plain, tags.TrackTags(version=["live"], origin_path="/rips/Song.mp3"))
-    assert browse.version_tokens(lib, SONG) == ("live",)
+    tags.write_tags(song, tags.TrackTags(title="Song (Somebody Remix) (slowed)"))
+    assert browse.version_tokens(lib, SONG) == ("remix:somebody", "slowed")
+    # The tag says more than the title does: both count.
+    tags.write_tags(song, tags.TrackTags(title="Song", version=["live:wembley"]))
+    assert browse.version_tokens(lib, SONG) == ("live:wembley",)
     add(lib, samples, OTHER, title="Other")  # no version tag, and no rip behind it
     assert browse.version_tokens(lib, OTHER) == ()
     with pytest.raises(OutsideLibraryError):
         browse.version_tokens(lib, "../elsewhere.mp3")
+
+
+def test_only_an_unconfirmed_copy_with_no_version_tag_is_read_by_its_rips_name(
+    lib: Library, samples: dict[str, Path]
+) -> None:
+    """A copy made before 2026-10-04 carries the plain title while its rip is called
+    "Song R": until `plan tidy` gives it its name back, the rip's name still counts.
+    Once a song is found, or the owner has named it, the rip's old name says nothing."""
+    rip = "/somewhere/rips/Song R.mp3"
+    song = add(lib, samples, SONG, title="Song", musicorg_id="t_1", source="rip_copy",
+               match="unconfirmed", origin_path=rip)  # fmt: skip
+    assert browse.version_tokens(lib, SONG) == ("remix",)
+    tags.write_tags(song, tags.TrackTags(origin_path="C:\\Rips\\Band - Song (Somebody Remix).mp3"))
+    assert browse.version_tokens(lib, SONG) == ("remix:somebody",)
+    # It has a version tag: that's what it is, whatever the rip was called.
+    tags.write_tags(song, tags.TrackTags(version=["live"], origin_path=rip))
+    assert browse.version_tokens(lib, SONG) == ("live",)
+    # The same when its title names its version (a copy that kept its rip's own title).
+    tags.write_tags(song, tags.TrackTags(title="Song (Acoustic)", version=tags.REMOVE))
+    assert browse.version_tokens(lib, SONG) == ("acoustic",)
+    tags.write_tags(song, tags.TrackTags(title="Song"))
+    assert browse.version_tokens(lib, SONG) == ("remix",)
+    # Found: the owner chose the plain official track for the rip "Song R".
+    for match in ("auto_details", "user_details", "auto_exact", "user_confirmed"):
+        tags.write_tags(song, tags.TrackTags(match=match))
+        assert browse.version_tokens(lib, SONG) == (), match
+    # Kept as an only copy: with the owner's own names, or with no match tag at all.
+    tags.write_tags(song, tags.TrackTags(match="manual"))
+    assert browse.version_tokens(lib, SONG) == ()
+    tags.write_tags(song, tags.TrackTags(match=tags.REMOVE, only_copy=True))
+    assert browse.version_tokens(lib, SONG) == ()
+
+
+def test_only_a_title_the_owner_named_is_read_for_their_mark(
+    lib: Library, samples: dict[str, Path]
+) -> None:
+    """ "Lost Boy R" is the owner's remix of "Lost Boy". An official title that happens
+    to end in " R" is just that title: YouTube Music never writes the owner's mark."""
+    song = add(lib, samples, SONG, title="Vitamin R", musicorg_id="t_1", source="rip_copy")
+    for match in ("unconfirmed", "manual", tags.REMOVE):
+        tags.write_tags(song, tags.TrackTags(match=match))
+        assert browse.version_tokens(lib, SONG) == ("remix",), match
+    for match in ("auto_details", "user_details"):
+        tags.write_tags(song, tags.TrackTags(match=match))
+        assert browse.version_tokens(lib, SONG) == (), match
+    tags.write_tags(song, tags.TrackTags(match="auto_exact", source="youtube_music"))
+    assert browse.version_tokens(lib, SONG) == ()
+    tags.write_tags(song, tags.TrackTags(match=tags.REMOVE))  # a download: no rip behind it
+    assert browse.version_tokens(lib, SONG) == ()
+    # An official title's own version words are read as ever.
+    tags.write_tags(song, tags.TrackTags(title="Vitamin R (Somebody Remix)"))
+    assert browse.version_tokens(lib, SONG) == ("remix:somebody",)
+    assert browse.owner_named("rip_copy", None) and browse.owner_named("rip_copy", "manual")
+    assert not browse.owner_named("youtube_music", None)
+    assert not browse.owner_named(None, None)  # not a file the engine made
+
+
+def test_a_title_typed_in_edit_details_isnt_read_past_to_the_rips_name(
+    lib: Library, samples: dict[str, Path]
+) -> None:
+    """The owner takes the R off "Song R" in Edit Details: it isn't a remix. That leaves
+    just what a copy made before 2026-10-04 looks like (a plain title, no version tag,
+    a rip called "Song R"). The journal remembers who wrote the title, and a title the
+    owner typed is the last word."""
+    waiting = {"source": "rip_copy", "match": "unconfirmed"}
+    song = add(lib, samples, SONG, title="Song", musicorg_id="t_1",
+               origin_path="/somewhere/rips/Song R.mp3", **waiting)  # fmt: skip
+    assert browse.typed_titles(lib) == {}
+    # The engine's own title, not repaired yet: the rip's name still counts.
+    assert browse.version_tokens(lib, SONG) == ("remix",)
+
+    # A title the engine writes (any batch that isn't an edit) isn't the owner's.
+    with fileops.batch(lib, "tidy") as b:
+        fileops.write_tags(b, song, tags.TrackTags(title="Song R", version=["remix"]))
+    assert browse.typed_titles(lib) == {}
+
+    with fileops.batch(lib, "edit") as b:  # Edit Details: the R comes off, and its tag
+        fileops.write_tags(b, song, tags.TrackTags(title="Song", version=tags.REMOVE))
+    assert browse.typed_titles(lib) == {"t_1": {"Song"}}
+    assert browse.version_tokens(lib, SONG) == ()
+    assert browse.typed_by_owner(browse.typed_titles(lib), "t_1", "Song")
+    assert not browse.typed_by_owner(browse.typed_titles(lib), "t_2", "Song")
+
+    # An edit that is undone was never the owner's last word. (An edit that changes
+    # another field types no title.)
+    with fileops.batch(lib, "edit") as b:
+        fileops.write_tags(b, song, tags.TrackTags(genre="Rock"))
+    with fileops.batch(lib, "edit") as undone:
+        fileops.write_tags(undone, song, tags.TrackTags(title="Something Else"))
+    assert browse.typed_titles(lib) == {"t_1": {"Song", "Something Else"}}
+    fileops.undo(lib, undone.batch_id)
+    assert tags.read_tags(song).title == "Song"
+    assert browse.typed_titles(lib) == {"t_1": {"Song"}}
+
+
+def test_the_video_lookup_reads_a_library_songs_version_from_its_file(
+    server: rpc.Server,  # noqa: F811
+    lib: Library,
+    samples: dict[str, Path],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`youtube.video` with a `path`, with nothing stubbed in between: the versions the
+    video search is given are the ones the file says, by the one rule."""
+    from musicorg import youtube
+
+    asked: list[tuple[str, ...]] = []
+
+    def find_nothing(title: str, artist: str, **kw: object) -> None:
+        asked.append(kw["versions"])  # type: ignore[arg-type]
+
+    monkeypatch.setattr(youtube, "find_video", find_nothing)
+    song = add(lib, samples, SONG, title="Song R", musicorg_id="t_1", version=["remix"],
+               source="rip_copy", match="unconfirmed", origin_path="/rips/Song R.mp3")  # fmt: skip
+    lib.close()
+    result(server, "engine.hello", client="pytest", client_version="1")
+    result(server, "library.open", root=str(lib.root))
+
+    def versions_asked() -> tuple[str, ...]:
+        found = result(server, "youtube.video", title="Song", artist="Band", path=SONG)
+        assert found == {"found": False}
+        return asked[-1]
+
+    assert versions_asked() == ("remix",)
+    # A copy made before 2026-10-04, not repaired yet: its rip's name still says remix.
+    tags.write_tags(song, tags.TrackTags(title="Song", version=tags.REMOVE))
+    assert versions_asked() == ("remix",)
+    # Found: the owner chose the plain official track. The rip's old name says nothing.
+    tags.write_tags(song, tags.TrackTags(match="user_details"))
+    assert versions_asked() == ()
+
+
+def test_a_tracks_match_comes_from_what_its_tags_said(lib: Library) -> None:
+    """The index's `match` column is empty on rows written before it existed, whatever
+    their tags say; the details read off the tags hold the truth."""
+    assert browse.row_match({"match": "unconfirmed", "details_json": None}) == "unconfirmed"
+    stale = {"match": None, "details_json": '{"v": 2, "match": "auto_details"}'}
+    assert browse.row_match(stale) == "auto_details"
+    assert browse.row_match({"match": None, "details_json": '{"genre": "Rock"}'}) is None
+    assert browse.row_match({"match": "manual", "details_json": "not json"}) == "manual"
+    assert browse.row_match({"match": "manual", "details_json": '{"match": null}'}) is None
+    assert browse.row_match({}) is None
 
 
 def test_details_are_read_once_then_come_from_the_index(

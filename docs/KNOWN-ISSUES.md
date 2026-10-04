@@ -29,6 +29,49 @@ Most of these came from comparing the engine with the Photonizer project's lesso
   - Proposed: one read-only review session of fileops' guard, reserve-then-replace, recovery and undo; the pipeline's commit and undo; queue recovery; and state.json writes.
   - Run it after 09b's calibration run and before `plan replace` without `--stage-only`. Decide: yes or no.
 
+## Versions in a copy's name (2026-10-04): what's left
+
+On 1 Oct, `plan adopt --unconfirmed` copied 1,062 rips in under their parsed titles, which leave the version out. 139 copies lost theirs: the rip "Come As You Are R" became "Come As You Are", and the real original became "Come As You Are (2)". The rule and the repair are in `CHANGELOG.md` (2026-10-04). These are still open.
+
+**To do first, by the owner:** the repair has not been run on the real library. With the app closed, in this order, running the queue after each `apply`:
+
+1. `musicorg plan adopt --matched`, `plan show`, `apply`, **`queue run`**. The waiting decisions go straight to their official titles.
+2. `musicorg plan tidy`, `plan show`, `apply`, `queue run`. The remixes get their names back.
+3. `musicorg plan tidy`, `apply`, `queue run` once more. The " (2)" originals get their plain names back.
+
+How many songs step 2 lists depends on how many have been decided by then. Run alone, the first `plan tidy` would retitle 140 copies, tag 1 more and leave 2 alone, and the second would give 18 originals their plain names back. After step 1 with the 183 decisions waiting on 4 Oct, it is about 111 retitles and 1 retag, with the plain names split between the two tidy runs; with more songs decided first, fewer still, since a decided song takes its found name in step 1.
+
+Read each dry run before applying it: it is the first real check. If step 2 is planned while step 1's jobs are still waiting, `plan tidy` leaves those copies out and says so ("a job for their rip is waiting in the queue"); run the queue and plan again.
+
+Needs the owner's decision:
+
+- **Lyrics on about 42 of these copies were looked up under the original's name.** The 1 Oct lyrics batch saw "Come As You Are", not the remix. About 42 have a timed `.lrc` and about 49 have words in their tags. Nobody has checked whether they are wrong: each passed the 2-second length check when it was written, so many may be right. The repair moves each `.lrc` along with its song and changes no lyrics. Decide: leave them, set the timed files aside in `_Replaced/` (undoable; karaoke and the lyrics pane then show plain words for those songs), or remove both. Either way a later `lyrics --missing` now asks as the remix, and will mostly find nothing for a bare "R".
+  - **The same goes for a copy that is found** (`plan adopt --matched`): its `.lrc` now moves with it to the found song's name. Before, it was left behind under the old name. For the copies among the waiting decisions that have such a `.lrc`, the original's timed lyrics become the found remix's, unless the lookup for the found song finds timed lyrics of its own, which then take their place. Say so with this decision if they should be set aside instead.
+  - Related: the changelog for 2026-10-01 says no lyrics are looked up for unconfirmed copies, but `plan lyrics` doesn't leave them out. That is how these copies got lyrics. Decide which is meant.
+- **Shortened artist names and dropped featured artists, from the same batch.** The same code path cut about 18 artists short ("Ashford & Simpson" became "Ashford", "Down With Webster" became "Down") and dropped about 12 "(Featuring …)" credits. Not fixed here. Decide how a featured artist is written (in the artist tag as "A, B", or in the title as "(feat. B)") before it is built. Fixing it later renames some of the same files a second time.
+- **The R isn't always a remix.** Of the 88 bare-R rips the research confirmed by listening, 70 are remixes; the others are covers (both "Crazy R"), a live session, mashups, edits, and six whose real title names no version (Tuesday, 1998, Memories, Who Gon Stop Me, Cooler Than Me, Road To Zion). The copy keeps the owner's "R" either way, and its version tag says `remix`. It's put right when the song is decided (a match, or only-copy with a title), or in Edit Details: a new title takes the version tag with it, and a title typed there stays (see the limits below for the one case where it doesn't).
+- **The research's exact names** come in through the owner's review decisions, not through this repair: official ones as accepted matches, and the ones found only on SoundCloud, YouTube or Bandcamp as only-copy with a title and artist fix. A song decided that way takes its found name in step 1 and is never touched by `plan tidy`.
+- **"(Explicit)" in a title.** A rip named "Run This Town (Explicit)" keeps "(Explicit)" in its title, like any version the rip names. Decide whether that one, "(Clean)" and remasters belong in a title.
+
+Limits that stay:
+
+- **`plan tidy` needs two runs.** The first gives the remix its name; the " (2)" original gets its plain name from the next one, once the name is free.
+- **Undo goes newest first, and is strict about it.** An undo is refused, with nothing changed, when a later batch moved or renamed one of the batch's files, or when a file it would move back (a song, its `.lrc`, an album's cover) finds its old name taken. The message names the batch to undo first.
+  - After the repair, the two tidy batches must be undone (the second, then the first) before any older batch that brought those songs in or wrote their lyrics. Without the refusal, undoing the 1 Oct batch would have set 18 originals aside in their remixes' places and left the 140 renamed copies in the library.
+  - This is new for every kind of batch: a title changed in Edit Details also has to be undone before the batch that brought the song in. Before, such a song was skipped ("no longer there") and stayed in the library while its rip went back to waiting.
+  - A song deleted to the Trash and then downloaded again under the same name: the first download's batch can no longer be undone as a whole, and the message says so.
+- **A title typed in Edit Details is known from the journal.** That is how the engine tells "Cooler Than Me", typed by the owner over "Cooler Than Me R", from the same words written by the old rule: `plan tidy` leaves the first alone, and nothing reads the rip's name past it. If the journal's files were ever lost, the two would look the same again and the next `plan tidy` would put the R back. An edit that was undone doesn't count.
+- **An only-copy decision with an artist or album fix but no title fix** still writes the title from the rip's names, and one with no artist fix writes the artist from them, so a hand edit to that field is lost (seen: "Come As You Are (Cover)" typed by hand went back to "Come As You Are R"). A decision with no fixes at all leaves the copy's names alone. To keep a typed title through such a decision, give it as the title fix.
+- **A rip whose names weren't trusted (confidence under 0.8) gets no version tag**, now or from the repair: a guess isn't written into a file. `plan tidy` counts them and `plan show` lists them (2 on this library). The engine reads such a copy's version from its title and, failing that, its rip's name.
+- **Parser limits.** Version words the parser has no token for stay in the title but give no version tag: an unbracketed "Old School Remix", "[G-Mix]", "Mashup", "Dub", "(Long Version)". A file named "Solo Dolo R 1" with no title tag isn't read as the owner's mark. The version always goes after everything else the parser keeps as the title, so two of the 140 come out with their words in another order than the rip has them: "E.T. (AIZZO REMIX) CAR VIDEO LIMMA" becomes "E.T. CAR VIDEO LIMMA (AIZZO REMIX)", and "Polozhenie [Extended] (Night Drive)" becomes "Polozhenie (Night Drive) (Extended)". Both still read back as the same song and versions.
+- **A long title loses its version from the file name first**, since names are cut from the end. The title tag and the version tag still carry it. Two versions of a long-titled song can then meet again as " (2)".
+- **An Edit Details rename that is killed after its move** ends `needs_review` when run again, and the index points at the old path until `musicorg index rebuild` (which also throws away the matcher's candidates, so it is a last resort). Nothing is lost or copied twice. An upgrade of an unconfirmed copy and a `plan tidy` rename are both carried on from wherever they stopped.
+- **An upgrade given up for good after it moved the copy** (five tries, each stopped after the move) leaves the copy's `.lrc` under the old name. The copy itself is in the index at its new place, so no later plan copies the rip in again. Undoing that batch puts everything back.
+- **`plan replace` doesn't look for an unconfirmed copy** of the rip it replaces, so the download would land beside the copy instead of taking its place. Read from the code, not tried.
+- **Two adopts in one plan that want one name, with a file outside the plan already there:** the first lands on " (2)" and the second job ends `needs_review`. Nothing is overwritten.
+- **New for Discover and imports:** owning a remix no longer counts as owning the original, so the original of a song the owner has only as a remix can now be suggested.
+- **A copy still titled with the owner's R doesn't start a Discover radio.** "Come As You Are R" is a remix by nobody in particular, so it isn't the same song as the official "Come As You Are" and no radio is seeded from it (a named remix, "Here (Lucian Remix)", still finds its own upload). The roughly 120 unfound R copies stop seeding radios until they are decided. Say so if they should seed from the original instead.
+
 ## Parked fixes for the Mac app (owner, 2026-10-01)
 
 The owner named these and parked them: nothing here is built until the owner says so.

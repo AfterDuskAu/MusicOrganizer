@@ -132,6 +132,31 @@ def test_a_remix_whose_record_isnt_the_remix_gets_plain_lyrics(replay: Path) -> 
     assert lyrics.find(query).status == "synced"
 
 
+def test_a_title_with_the_owners_remix_mark_doesnt_take_the_plain_songs_record(
+    replay: Path,
+) -> None:
+    """A copy named after the owner's rip is titled "Test Song R" (2026-10-04; before, it
+    was titled "Test Song" and took that song's lyrics). LRCLIB is asked for the title
+    as it stands, and a record called "Test Song" of the very same length isn't it."""
+    query = lyrics.Query("Test Song R", "Test Band", None, 200.0, versions=("remix",))
+    record(replay, "lrclib", get_key(query), None)
+    record(replay, "lrclib", search_key(query), [lrclib_record()])
+    found = lyrics.find(query)
+    assert (found.status, found.synced, found.plain) == ("not_found", None, None)
+
+
+def test_a_title_that_names_its_remix_takes_the_record_of_that_name(replay: Path) -> None:
+    title = "Test Song (Someone Remix)"
+    query = lyrics.Query(title, "Test Band", None, 200.0, versions=("remix:someone",))
+    record(replay, "lrclib", get_key(query), None)
+    record(replay, "lrclib", search_key(query), [
+        lrclib_record(id=2),  # the plain song, the same length: not this track
+        lrclib_record(id=3, trackName=title, syncedLyrics="[00:02.00]The remix's line\n"),
+    ])  # fmt: skip
+    found = lyrics.find(query)
+    assert (found.status, found.synced) == ("synced", "[00:02.00]The remix's line\n")
+
+
 def test_synced_lyrics_timed_for_another_length_are_left_out(replay: Path) -> None:
     query = lyrics.Query("Test Song", "Test Band", "Test Album", 230.0)  # a video intro
     record(replay, "lrclib", get_key(query), lrclib_record(duration=200.0))

@@ -577,3 +577,99 @@ def test_which_of_the_owners_songs_a_track_is(lib: Library) -> None:
     remix = Candidate("remixIDxxxx", "Their Own Rip (Club Remix)", ("Band",))
     assert [owned.track_id(c) for c in (by_id, by_name, remix)] == ["t_0", "t_1", None]
     assert [owned.has(c) for c in (by_id, by_name, remix)] == [True, True, False]
+
+
+# ---- which version of a song the owner has (2026-10-04) ---------------------------------
+
+
+def copy_row(title: str, match: str | None, rip: str | None = None, **more: Any) -> dict[str, Any]:
+    """The index's row for a copy of one of the owner's rips, by Band."""
+    return {
+        "rel_path": f"Music/Band/Unsorted/{title}.mp3", "musicorg_id": "t_copy", "title": title,
+        "artist": "Band", "source": "rip_copy", "source_id": None, "origin_path": rip,
+        "match": match, "details_json": None, **more,
+    }  # fmt: skip
+
+
+def has(row: dict[str, Any], title: str) -> bool:
+    return discover.Owned([row]).has(Candidate("someVideoID", title, ("Band",)))
+
+
+def test_owning_a_remix_is_not_owning_the_original() -> None:
+    """A copy keeps the name the owner had on it, "Melody R": their remix of "Melody".
+    The original can still be suggested, and the remix isn't offered again."""
+    mine = copy_row("Melody R", "unconfirmed", "/rips/Band - Melody R.mp3")
+    assert not has(mine, "Melody")
+    assert has(mine, "Melody (Remix)")
+    assert discover.Owned([mine]).track_id(Candidate("x", "Melody - Remix", ("Band",))) == "t_copy"
+    # The same for a title the owner typed for an only copy, with or without their fixes.
+    assert not has(copy_row("Melody R", "manual"), "Melody")
+    assert not has(copy_row("Melody R", None), "Melody")
+    # A named remix is that remix, not any other.
+    named = copy_row("Melody (Somebody Remix)", "unconfirmed", "/rips/Melody R.mp3")
+    assert has(named, "Melody (Somebody Remix)")
+    assert not has(named, "Melody") and not has(named, "Melody (Remix)")
+
+
+def test_a_found_song_is_not_read_by_its_rips_old_name() -> None:
+    """The owner chose the plain official track for the rip "Melody R": it's the
+    original they have, and no remix. The rip's name used to say otherwise for ever."""
+    rip = "/rips/Band - Melody R.mp3"
+    for match in ("auto_details", "user_details"):
+        found = copy_row("Melody", match, rip, source_id="officialID1")
+        assert has(found, "Melody") and not has(found, "Melody (Remix)"), match
+    # The index's own `match` can be empty on an old row: what its tags said counts.
+    old_row = copy_row("Melody", None, rip, details_json=json.dumps({"match": "auto_details"}))
+    assert has(old_row, "Melody") and not has(old_row, "Melody (Remix)")
+    # Decided as an only copy, under the name the owner gave it.
+    assert not has(copy_row("Melody", "manual", rip), "Melody (Remix)")
+    assert not has(copy_row("Melody", None, rip), "Melody (Remix)")
+    # An official title that ends in " R" isn't the owner's mark for a remix.
+    vitamin = copy_row("Vitamin R", "user_details", "/rips/Vitamin R.mp3")
+    assert has(vitamin, "Vitamin R") and not has(vitamin, "Vitamin (Remix)")
+
+
+def test_a_copy_still_waiting_is_read_by_its_rips_name_until_it_names_its_version() -> None:
+    """A copy made before 2026-10-04 is titled "Melody" though its rip is "Melody R":
+    until `plan tidy` puts the name right, the rip's name still counts."""
+    rip = "/rips/Band - Melody R.mp3"
+    old = copy_row("Melody", "unconfirmed", rip)
+    assert has(old, "Melody (Remix)")
+    # A rip's name can also say who it's by when the copy's own tags don't.
+    untitled = copy_row("track 07", "unconfirmed", "C:\\Rips\\Band - Melody.mp3", artist="")
+    assert has(untitled, "Melody")
+    # Once its title names its version, that is all it is.
+    live = copy_row("Melody (Live)", "unconfirmed", rip)
+    assert has(live, "Melody (Live)") and not has(live, "Melody (Remix)")
+
+
+def test_a_title_the_owner_typed_is_not_read_past_to_the_rips_name() -> None:
+    """The owner took the R off in Edit Details: "Melody", with no version tag, from the
+    rip "Melody R". A copy made before 2026-10-04 looks the same; the journal says which
+    this is (`browse.typed_titles`), and a title the owner typed is all the song is."""
+    row = copy_row("Melody", "unconfirmed", "/rips/Band - Melody R.mp3")
+    remix = Candidate("someVideoID", "Melody (Remix)", ("Band",))
+    asked: list[int] = []
+
+    def typed(found: dict[str, set[str]]) -> Any:
+        def ask() -> dict[str, set[str]]:
+            asked.append(1)
+            return found
+
+        return ask
+
+    theirs = discover.Owned([row, row], typed({"t_copy": {"Melody"}}))
+    assert not theirs.has(remix) and theirs.has(Candidate("someVideoID", "Melody", ("Band",)))
+    assert asked == [1]  # the journal is read once, however many copies there are
+    # Somebody else's title, or another title of this song: the rip's name still counts.
+    assert discover.Owned([row], typed({"t_other": {"Melody"}})).has(remix)
+    assert discover.Owned([row], typed({"t_copy": {"Tune"}})).has(remix)
+    # And it isn't read at all when no copy's rip names a version its file doesn't.
+    asked.clear()
+    rows = [
+        copy_row("Melody R", "unconfirmed", "/rips/Band - Melody R.mp3"),
+        copy_row("Song", "unconfirmed", "/rips/Band - Song.mp3"),
+        copy_row("Melody", "user_details", "/rips/Band - Melody R.mp3"),
+    ]
+    discover.Owned(rows, typed({}))
+    assert asked == []

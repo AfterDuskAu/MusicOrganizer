@@ -28,7 +28,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from musicorg import discover, youtube
+from musicorg import browse, discover, youtube
 from musicorg.errors import UserError
 from musicorg.index import Index
 from musicorg.library import Library
@@ -40,7 +40,8 @@ SONGS_MOST = 300  # of an artist's songs read at once (three requests)
 
 
 def _owned(lib: Library, index: Index) -> discover.Owned:
-    return discover.Owned([row for row in index.library_tracks() if discover.is_there(lib, row)])
+    rows = [row for row in index.library_tracks() if discover.is_there(lib, row)]
+    return discover.Owned(rows, lambda: browse.typed_titles(lib))
 
 
 def _songs(found: list[Candidate] | tuple[Candidate, ...], owned: discover.Owned) -> list[Any]:

@@ -7,10 +7,17 @@ Video". This module turns them into what matching needs:
 - `parse_filename(stem)` and `parse_tags(tags)` give a `Parsed`: the main artist, the
   clean title, version tokens, what was stripped as junk, and a confidence 0–1.
 - `best_parse(stem, tags)` prefers the tags when they look real, otherwise the filename.
+- `parse_title(title)` reads an official title (YouTube Music's, or real tags);
+  `parse_owner_title(title)` reads a title the owner named, and knows their R mark.
+- `full_title(parsed)`: the title a copy named from a rip is given: the clean title and
+  every version the rip names, in the rip's own words.
 - `compare_key(text)`: the form names are compared in.
 
 Version tokens are `kind[:detail]`, e.g. `remix:adventure club`, `live:wembley`,
-`slowed`. They are kept, never thrown away: a remix is not the original.
+`slowed`. They are kept, never thrown away: a remix is not the original. Tokens are made
+for comparing (lower case, no accents). The words the name itself uses are kept beside
+them (`version_words`: "Âme Remix", "Acoustic Version", the owner's "R"), because a
+song's title is written in those.
 
 Confidence: a clean "Artist - Title" is at least 0.8; a single token, or a likely
 reversed order, is below 0.5. "Low confidence" means below 0.5 everywhere.
@@ -66,6 +73,11 @@ class Parsed:
     artist_uncertain: bool = False  # e.g. a remixer named where the artist should be
     source: str = "filename"  # "filename" or "tags"
     notes: tuple[str, ...] = field(default=(), compare=False)
+    # Each version as the name words it, in the name's order: "Lucian Remix", "Acoustic
+    # Version", and the owner's mark as typed ("R", "(R)"). `full_title` writes a title
+    # with them; comparing uses `version_tokens` only, so two parses that differ just in
+    # these words are equal.
+    version_words: tuple[str, ...] = field(default=(), compare=False)
 
     @property
     def band(self) -> str:
@@ -73,19 +85,24 @@ class Parsed:
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
-        for key in ("version_tokens", "junk_removed", "artists", "notes"):
+        for key in _TUPLE_FIELDS:
             data[key] = list(data[key])
         return data
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Parsed:
         """The inverse of `to_dict` (e.g. the index's `parsed_json`). Unknown keys are
-        ignored, so an index from an older engine still reads."""
+        ignored, and missing ones are empty, so an index from an older or a newer engine
+        still reads. A parse stored before `version_words` existed has none: to get them,
+        parse the names again (`scan.parse_again`)."""
         known = {f.name for f in fields(cls)}
         values = {k: v for k, v in data.items() if k in known}
-        for key in ("version_tokens", "junk_removed", "artists", "notes"):
+        for key in _TUPLE_FIELDS:
             values[key] = tuple(values.get(key) or ())
         return cls(**values)
+
+
+_TUPLE_FIELDS = ("version_tokens", "junk_removed", "artists", "notes", "version_words")
 
 
 def confidence_band(confidence: float) -> str:
@@ -415,9 +432,19 @@ class _Found:
 
     junk: list[str] = field(default_factory=list)
     versions: list[str] = field(default_factory=list)
+    words: list[str] = field(default_factory=list)  # the versions, as the name words them
     featured: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
     title_groups: int = 0  # groups a part had that weren't junk/version/featured
+
+
+def _note_versions(found: _Found, tokens: list[str], words: str) -> None:
+    """Record a version taken out of a name: its tokens, for comparing, and the words
+    the name used for it ("Lucian Remix"), for writing a title (`full_title`)."""
+    found.versions += tokens
+    words = " ".join(_drop_unmatched(words).split())
+    if tokens and words:
+        found.words.append(words)
 
 
 def _resolve(part: str, groups: list[_Group], found: _Found, *, last_part: bool) -> str:
@@ -458,7 +485,7 @@ def _classify(group: _Group, found: _Found, *, is_last: bool) -> str | None:
         return None
     versions = _version_tokens(content)
     if versions is not None:
-        found.versions += versions
+        _note_versions(found, versions, content)
         return None
     # "(Adventure Club Remix Official Audio)": a version with junk after it.
     for cut in range(len(content.split()) - 1, 0, -1):
@@ -466,7 +493,7 @@ def _classify(group: _Group, found: _Found, *, is_last: bool) -> str | None:
         head, tail = " ".join(words[:cut]), " ".join(words[cut:])
         versions = _version_tokens(head)
         if versions is not None and _is_junk(tail):
-            found.versions += versions
+            _note_versions(found, versions, head)
             found.junk.append(tail.casefold())
             return None
     return content
@@ -497,7 +524,7 @@ def _strip_free_ends(text: str, found: _Found) -> str:
             continue
         match = _FREE_TRAILING_VERSION.search(text)
         if match and match.start() > 0:
-            found.versions += _version_tokens(match.group("v")) or []
+            _note_versions(found, _version_tokens(match.group("v")) or [], match.group("v"))
             text = text[: match.start()]
             continue
         return text
@@ -542,6 +569,14 @@ def _prepare(text: str) -> str:
 # The owner's own mark for a remix: a final "R" or "(R)" ("Stressed Out R", "Done Wrong
 # (R)", "Black Out Days R(slowed)"). Upper case only, and never the whole title.
 _OWNER_REMIX = re.compile(r"(?:(?<=\s)R|\(R\)|\[R\])$")
+OWNER_REMIX_MARKS = ("R", "(R)", "[R]")  # the ways the mark is typed
+
+
+def is_owner_mark(words: str) -> bool:
+    """Whether a version's words (an entry of `Parsed.version_words`) are the owner's
+    mark for a remix. It is the one version that isn't written in round brackets: it
+    stays as the owner typed it."""
+    return words in OWNER_REMIX_MARKS
 
 
 def _owner_remix(parsed: Parsed) -> Parsed:
@@ -549,20 +584,46 @@ def _owner_remix(parsed: Parsed) -> Parsed:
     match = _OWNER_REMIX.search(title)
     if not match or not title[: match.start()].strip():
         return parsed
-    versions = parsed.version_tokens
+    versions, words = parsed.version_tokens, parsed.version_words
     if not any(t.partition(":")[0] == "remix" for t in versions):
         versions = (*versions, "remix")
+        words = (*words, match.group(0))  # as typed: it is the owner's name for the song
     return _replace(
         parsed,
         title=title[: match.start()].rstrip(" -–(["),
         version_tokens=versions,
+        version_words=words,
         notes=(*parsed.notes, "R: the owner's mark for a remix"),
     )
 
 
+def _in_name_order(parsed: Parsed, name: str | None) -> Parsed:
+    """`parsed`, with its version words in the order `name` has them. Parsing finds
+    them in another order (brackets, then loose words at the end, then the owner's
+    mark): "Black Out Days R(slowed)" is found as slowed, R, and named R, slowed."""
+    words = parsed.version_words
+    if len(words) < 2 or not isinstance(name, str):
+        return parsed
+    text = " ".join(_prepare(name).replace("_", " ").split())
+    ordered = tuple(sorted(words, key=lambda entry: _position(entry, text)))
+    return parsed if ordered == words else _replace(parsed, version_words=ordered)
+
+
+def _position(words: str, text: str) -> int:
+    """Where a version's words sit in a name, counted from its start. Words that can't
+    be found go last. The owner's mark, if it can't be found, goes first: it was read
+    off the end of the title itself."""
+    if is_owner_mark(words):
+        pattern = r"(?<=\s)R(?!\w)" if words == "R" else re.escape(words)
+        places = [match.start() for match in re.finditer(pattern, text)]
+        return places[-1] if places else -1
+    place = text.rfind(words)
+    return place if place >= 0 else len(text)
+
+
 def parse_filename(stem: str) -> Parsed:
     """Parse a rip's file name (without its extension)."""
-    return _owner_remix(_parse_filename(stem))
+    return _in_name_order(_owner_remix(_parse_filename(stem)), stem)
 
 
 def _parse_filename(stem: str) -> Parsed:
@@ -607,6 +668,10 @@ def _parse_filename(stem: str) -> Parsed:
     loose = any("|" not in s and not (s[0].isspace() and s[-1].isspace()) for s in separators)
     parts = [p for p in parts if p.strip()]
 
+    if not parts:
+        # Nothing is left to name the song: the name was empty, only symbols, or only
+        # junk in brackets ("(Official Video)", "---", a lone emoji).
+        return _result(None, None, found, _NOTHING)
     if len(parts) == 1:
         quoted = _QUOTED_TITLE.match(text)
         if quoted and quoted.group("artist").strip():
@@ -625,7 +690,7 @@ def _parse_filename(stem: str) -> Parsed:
                 if versions is not None or _is_junk(plain):
                     _merge(found, trial)
                     if versions is not None:
-                        found.versions += versions
+                        _note_versions(found, versions, plain)
                     else:
                         found.junk.append(plain.casefold())
                     continue
@@ -664,6 +729,7 @@ def _parse_filename(stem: str) -> Parsed:
 def _merge(found: _Found, more: _Found) -> None:
     found.junk += more.junk
     found.versions += more.versions
+    found.words += more.words
     found.featured += more.featured
     found.notes += more.notes
 
@@ -681,7 +747,7 @@ def _quoted(match: re.Match[str], found: _Found) -> Parsed:
         if versions is None:
             found.notes.append(f"ignored: {rest}")
         else:
-            found.versions += versions
+            _note_versions(found, versions, rest)
     elif rest:
         found.junk.append(rest.casefold())
     title_skeleton, title_groups = _extract_groups(match.group("title"))
@@ -761,6 +827,8 @@ def _result(
 
     if credit and compare_key(credit) == "nightcore":
         # "Nightcore - Title": a channel, and a version, not the artist.
+        if "nightcore" not in versions:
+            found.words.append(credit)
         versions = list(dict.fromkeys([*versions, "nightcore"]))
         credit, names, confidence = None, [], min(confidence, _TITLE_ONLY)
         found.notes.append("channel name")
@@ -789,6 +857,7 @@ def _result(
         artist_uncertain=uncertain,
         source="filename",
         notes=tuple(found.notes),
+        version_words=_unique_words(found.words),
     )
 
 
@@ -809,7 +878,7 @@ _PROMO_CHANNELS = frozenset({
 def parse_tags(tags: TrackTags) -> Parsed:
     """Parse a rip's own tags. Rip converters often put the video title in the title
     and the channel in the artist; those are recognised and parsed like a file name."""
-    return _owner_remix(_parse_tags(tags))
+    return _in_name_order(_owner_remix(_parse_tags(tags)), tags.title)
 
 
 def _parse_tags(tags: TrackTags) -> Parsed:
@@ -853,10 +922,57 @@ def _not_an_artist(artist: str | None) -> bool:
 def parse_title(title: str) -> Parsed:
     """A title as YouTube Music or real tags give it, with no artist in it: "Crave You
     (Adventure Club Remix)", "Yesterday - Remastered 2009", "Hotline Bling (feat. X)".
-    Version tokens and featured artists come out; nothing is taken as the artist."""
+    Version tokens and featured artists come out; nothing is taken as the artist.
+
+    This is the reader for an official title. It doesn't know the owner's R mark, and
+    mustn't: YouTube Music never writes it, and an official title that happens to end
+    in " R" is not a remix. For a title the owner named, use `parse_owner_title`."""
     found = _Found()
     clean = _title_with_versions(_prepare(title), found)
-    return _replace(_result(None, clean, found, _TAGS), source="tags")
+    parsed = _replace(_result(None, clean, found, _TAGS), source="tags")
+    return _in_name_order(parsed, title)
+
+
+def parse_owner_title(title: str) -> Parsed:
+    """A title the owner named, with no artist in it: the title of a copy still named
+    after their rip, a title fix, a title typed in Edit Details. Read as `parse_title`
+    reads it, and the owner's mark for a remix is understood too: "Lost Boy R" is the
+    song "Lost Boy", version `remix`. It reads back what `full_title` writes."""
+    return _in_name_order(_owner_remix(parse_title(title)), title)
+
+
+def full_title(parsed: Parsed) -> str | None:
+    """The title a copy named from a rip is given: the clean title, then every version
+    the rip names, in the rip's own words and order. A named version goes in round
+    brackets, whatever brackets the rip used: "Here (Lucian Remix)", "Still Here
+    (Acoustic Version)". The owner's mark for a remix stays as they typed it, and is
+    never spelled out or dropped: "Come As You Are R", "Done Wrong (R)", "Black Out Days
+    R (slowed)". Junk ("(320 kbps)") is left out.
+
+    None when there is no title. Also None when the parse names versions but not their
+    words: a parse stored by an older engine, which must be parsed again first
+    (`scan.parse_again`). Leaving the version out of the name is the mistake this
+    function exists to stop."""
+    if not parsed.title:
+        return None
+    if parsed.version_tokens and not parsed.version_words:
+        return None
+    versions = [
+        words if is_owner_mark(words) else f"({words})"
+        for words in _unique_words(parsed.version_words)
+    ]
+    return " ".join([parsed.title, *versions])
+
+
+def _unique_words(words: tuple[str, ...] | list[str]) -> tuple[str, ...]:
+    """Version words with spaces collapsed, and one that only repeats an earlier one
+    (in any letter case) left out: "(Live) (live)" names one version."""
+    kept: dict[str, str] = {}
+    for entry in words:
+        entry = " ".join(entry.split())
+        if entry:
+            kept.setdefault(entry.casefold(), entry)
+    return tuple(kept.values())
 
 
 def _title_with_versions(title: str, found: _Found) -> str:
@@ -874,7 +990,7 @@ def _title_with_versions(title: str, found: _Found) -> str:
             if versions is not None or _is_junk(plain) or _SOUNDTRACK.fullmatch(plain):
                 _merge(found, trial)
                 if versions is not None:
-                    found.versions += versions
+                    _note_versions(found, versions, plain)
                 else:
                     found.junk.append(plain.casefold())
                 continue
@@ -889,7 +1005,8 @@ def _replace(parsed: Parsed, **changes: Any) -> Parsed:
 def best_parse(stem: str, tags: TrackTags | None) -> Parsed:
     """The tags when they look real, otherwise the file name. When both name the same
     song, version tokens from either are kept: a remix named only in the file name is
-    still a remix."""
+    still a remix. The version's words are the tags', with the file name's for any kind
+    of version the tags don't name."""
     from_name = parse_filename(stem)
     from_tags = parse_tags(tags) if tags is not None else None
     if from_tags is None or from_tags.title is None:
@@ -899,8 +1016,32 @@ def best_parse(stem: str, tags: TrackTags | None) -> Parsed:
     if compare_key(from_tags.title) == compare_key(from_name.title):
         versions = tuple(dict.fromkeys([*from_tags.version_tokens, *from_name.version_tokens]))
         junk = tuple(dict.fromkeys([*from_tags.junk_removed, *from_name.junk_removed]))
-        return _replace(from_tags, version_tokens=versions, junk_removed=junk)
+        words = _merged_words(from_tags, from_name)
+        return _replace(from_tags, version_tokens=versions, junk_removed=junk, version_words=words)
     return from_tags
+
+
+def _merged_words(from_tags: Parsed, from_name: Parsed) -> tuple[str, ...]:
+    """The tags' version words, then the file name's for each kind of version the tags
+    don't name. A tag title "Song" with the file "Song R" gives "R"; a tag title "Here
+    (Lucian Remix)" with the file "Here R" stays "Lucian Remix", so one remix isn't
+    named twice."""
+    have = {token.partition(":")[0] for token in from_tags.version_tokens}
+    words = list(from_tags.version_words)
+    for more in from_name.version_words:
+        kinds = _kinds(more)
+        if kinds and kinds <= have:
+            continue
+        words.append(more)
+        have |= kinds
+    return _unique_words(words)
+
+
+def _kinds(words: str) -> set[str]:
+    """The kinds of version some version words name: "Lucian Remix" → {"remix"}."""
+    if is_owner_mark(words):
+        return {"remix"}
+    return {token.partition(":")[0] for token in _version_tokens(words) or []}
 
 
 def _with_tag_artist(from_name: Parsed, tags: TrackTags | None) -> Parsed:

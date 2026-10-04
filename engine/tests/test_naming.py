@@ -390,6 +390,26 @@ def test_windows_budget_cuts_the_title() -> None:
     assert on_mac.endswith("01 " + "T" * 113 + ".m4a")
 
 
+def test_a_version_in_the_title_is_made_safe_and_cut_like_the_rest_of_it() -> None:
+    """From 2026-10-04 a copy's title carries its version ("Here (Lucian Remix)"), so the
+    version reaches the file name through the title. On Windows its words lose only the
+    characters a name can't hold, and a title too long for the path is cut from its end:
+    the version goes first, and the title tag still has it."""
+    live = name(platform="win32", artist="Band", title="Club Night (Live @ 9:30 Club)")
+    assert live == "Band/Unsorted/Club Night (Live @ 9_30 Club).m4a"
+    mix = name(platform="win32", artist="Band", title="Club Night (Mix 1/2)")
+    assert mix == "Band/Unsorted/Club Night (Mix 1_2).m4a"
+
+    fields = dict(artist="Artist Name", album="Album Name", year=2001, track=1)
+    long = name(root=LONG_ROOT, platform="win32", title="T" * 150 + " (Somebody Remix)", **fields)
+    assert long == "Artist Name/Album Name (2001)/01 " + "T" * 89 + ".m4a"
+    assert windows_length(LONG_ROOT, long) == 254  # room is left for a " (99)"
+    plain = name(root=LONG_ROOT, platform="win32", title="T" * 150, **fields)
+    assert plain == long  # the two meet, and the move gives the second its " (2)"
+    short = name(root=LONG_ROOT, platform="win32", title="Song (Somebody Remix)", **fields)
+    assert short == "Artist Name/Album Name (2001)/01 Song (Somebody Remix).m4a"
+
+
 def test_windows_budget_counts_emoji_as_two() -> None:
     """Windows measures paths in UTF-16 units, where an emoji takes two."""
     root = PureWindowsPath("C:/" + "x" * 147)  # 150 characters

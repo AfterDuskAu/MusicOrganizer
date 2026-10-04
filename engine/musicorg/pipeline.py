@@ -27,6 +27,13 @@ staging → check → tag → commit, through `fileops`, journaled and undoable.
   state changes. `calibration_pairs` turns the notes into a pairs.csv to fill in.
 - **An adopt job** copies one rip into `_Staging/`, tags the copy, and commits it. Only
   MP3, M4A, FLAC, Ogg and Opus are adopted; any other format → `unsupported_format`.
+- **What a copy is called** (the owner's rule, 2026-10-04): a song that has been found
+  takes the found title; one that hasn't keeps the title the owner had on it, its
+  version included. So a copy named from its rip gets the clean title followed by every
+  version the rip names, in the rip's own words ("Here (Lucian Remix)"), and the owner's
+  own mark for a remix as typed ("Come As You Are R"): `normalize.full_title`. The
+  versions the title names go into MUSICORG_VERSION. Leaving them out is what made a
+  remix take its original's name.
 - **Keep your own audio** (step 09c, `plan adopt --matched`): a matched rip is copied in
   the same way, with its match's official details (title, artist, album, year, track
   number) and no download. MUSICORG_MATCH says so: `auto_details` or `user_details`.
@@ -38,8 +45,13 @@ staging → check → tag → commit, through `fileops`, journaled and undoable.
 - **Tidy** (step 09d, `plan tidy`): songs already in the library twice keep their best
   copy (the other goes to `_Replaced/`), and the owner's preferred names ("JAŸ-Z" →
   "Jay Z") are written into the tags and folders. New songs use them from the start.
+  A copy made before 2026-10-04, whose name lost the version its rip names, gets it
+  back here too: title, file name and MUSICORG_VERSION (`_lost_version`).
 - **`undo`** wraps `fileops.undo`: after the files are back, the batch's `superseded` and
-  `adopted` rips return to the state the plan found them in, and their links go.
+  `adopted` rips return to the state the plan found them in, and their links go. It
+  refuses, changing nothing, when a later batch has moved one of the batch's files
+  since, or when a renamed file's old name now belongs to another file. Either way it
+  names the batch to undo first.
 """
 
 from __future__ import annotations
@@ -51,6 +63,7 @@ import json
 import logging
 import math
 import re
+import unicodedata
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime
@@ -65,6 +78,7 @@ from musicorg import (
     listening,
     lyrics,
     naming,
+    normalize,
     queue,
     scan,
     state,
@@ -76,6 +90,7 @@ from musicorg.errors import (
     AudioError,
     NotFoundError,
     PlanOutOfDateError,
+    UndoError,
     UserError,
     YouTubeError,
 )
@@ -105,7 +120,7 @@ WORK_S_PER_DOWNLOAD = 10  # download, check, fingerprint, tag: a rough figure fo
 WORK_S_PER_ADOPT = 2
 WORK_S_PER_DETAILS = 4  # an adopt with official details: a copy plus an album lookup
 DONE_STATES = ("superseded", "adopted")
-UNCONFIRMED = "unconfirmed"  # MUSICORG_MATCH of a rip copied in before it was identified
+UNCONFIRMED = browse.UNCONFIRMED  # MUSICORG_MATCH of a rip copied in before it was identified
 UNCONFIRMED_STATES = ("review", "not_found")
 LOSSLESS = frozenset({"flac", "alac", "wavpack", "pcm_s16le", "pcm_s24le"})
 KEPT_DIR = "kept"
@@ -165,7 +180,26 @@ EXTRAS: list[ExtrasHook] = [lyrics_extras, cover_extras]
 
 
 def _versions(op: fileops.PlanOp) -> tuple[str, ...]:
-    return tuple(str(v) for v in (op.params["candidate"].get("version_tokens") or []))
+    """The versions the official track's own title names ("remix:lucian", "live"): what
+    goes into MUSICORG_VERSION for a found song, and to the lyrics lookup.
+
+    Read from the title, not from the candidate's `version_tokens`. For a candidate the
+    matcher made the two are the same. One rebuilt from a review row, or one from a
+    search, carries an empty list, and that used to remove the version tag from a song
+    whose official title says remix."""
+    title = op.params["candidate"].get("title")
+    if not isinstance(title, str) or not title:
+        return ()
+    return normalize.parse_title(title).version_tokens
+
+
+def _owner_versions(title: object) -> list[str]:
+    """The versions a title the owner named shows, for MUSICORG_VERSION: a title written
+    from their rip's names, or one they typed. Their mark for a remix counts ("Lost Boy
+    R" → `remix`). The tag says what the title says, so the two can't disagree."""
+    if not isinstance(title, str) or not title:
+        return []
+    return list(normalize.parse_owner_title(title).version_tokens)
 
 
 def _extras(query: ExtrasQuery) -> Extras:
@@ -291,17 +325,22 @@ def plan_adopt(
 
     With `matched` (step 09c), matched rips come too, keeping their own audio, with their
     match's official details. A rip whose match the fingerprint gate turned down stays
-    out, and so does a WebM, raw AAC or WAV rip (only a download would fix those).
+    out, and so does a WebM, raw AAC or WAV rip (only a download would fix those). The
+    summary's `version_not_in_title` counts the ones whose rip names a version (a remix,
+    a live recording) while the official title chosen for it names none: the choice
+    stands, and `plan show` marks each so it can be looked at before it's applied.
 
     With `unconfirmed` (v0.2), every rip still in `review` or `not_found` is copied in
     under its own names, tagged `MUSICORG_MATCH=unconfirmed`, so it can be played now.
     Its state doesn't change: it stays in the review queue. When it's decided later, the
     usual adopt finds that copy and upgrades it where it is (new tags, new name) instead
-    of copying the rip a second time."""
+    of copying the rip a second time. An upgrade the owner gave no fixes for leaves the
+    copy's names as they are (`_upgrade_place`)."""
     states = ("only_copy", "not_found") if include_not_found else ("only_copy",)
     if unconfirmed:
         states = tuple(dict.fromkeys(states + UNCONFIRMED_STATES))
     copies = _unconfirmed_copies(index)
+    typed: dict[str, set[str]] | None = None  # titles typed in Edit Details, read if needed
     data = lib.load_state().data
     decisions, gate = state.decisions(data), state.gate(data)
     folders = scan.source_folders(lib, index)
@@ -353,12 +392,24 @@ def plan_adopt(
         elif not trusted:
             low_confidence += 1
         names = _adopt_names(item, fixes, trusted, rip)
-        meta = naming.TrackMeta(
-            title=names["title"], artist=names["artist"], album_artist=names.get("album_artist"),
-            album=names.get("album"), year=names.get("year"), track=names.get("track"),
-            ext=suffix, source_file=rip.name,
-        )  # fmt: skip
-        ideal = naming.library_path(meta, lib.root)
+        params = {"rip": str(rip), "names": names, "fixes": fixes, "trusted": trusted}
+        # A copy upgraded with no fixes from the owner keeps the names it has.
+        place = None
+        if prior and not fixes:
+            typed = browse.typed_titles(lib) if typed is None else typed
+            place = _upgrade_place(lib, prior, item, names, trusted, typed)
+        if place is not None:
+            ideal, retitle_from = place
+            if retitle_from is not None:
+                params["retitle_from"] = retitle_from
+        else:
+            meta = naming.TrackMeta(
+                title=names["title"], artist=names["artist"],
+                album_artist=names.get("album_artist"), album=names.get("album"),
+                year=names.get("year"), track=names.get("track"), ext=suffix,
+                source_file=rip.name,
+            )  # fmt: skip
+            ideal = naming.library_path(meta, lib.root)
         stays = prior is not None and _fold(PurePosixPath(naming.MUSIC_DIR, *ideal.parts)) == (
             _fold(PurePosixPath(prior))
         )
@@ -378,10 +429,10 @@ def plan_adopt(
                 target_folder=None
                 if stays
                 else fileops.FolderCheck.of(lib, lib.paths.music / target.parent),
-                params={"rip": str(rip), "names": names, "fixes": fixes, "trusted": trusted},
+                params=params,
             )
         )
-    details = duplicates = 0
+    details = duplicates = unnamed_versions = 0
     if matched:
         wanted: dict[str, list[tuple[dict[str, Any], dict[str, Any], Path, fileops.FileCheck]]] = {}
         for item in index.items_in_states(ONLY["all-eligible"]):
@@ -426,6 +477,11 @@ def plan_adopt(
                     params={"rip": str(rip), "video_id": video_id,
                             "candidate": chosen["payload"], "score": chosen["score"]},
                 )  # fmt: skip
+                if action == "adopt_details":
+                    lost = _version_not_in_title(item, op)
+                    if lost:
+                        unnamed_versions += 1
+                        op.params["version_not_in_title"] = lost
                 (ops if action == "adopt_details" else linked).append(op)
         ops.extend(linked)  # after the copies they link to
     adopts = len(ops) - unsupported - details - duplicates - waiting_count
@@ -442,6 +498,7 @@ def plan_adopt(
         "days": 0,
         "disk_mb": round(size / 1e6, 1),
         "low_confidence_adopts": low_confidence,
+        "version_not_in_title": unnamed_versions,
         "include_not_found": include_not_found,
         "matched": matched,
         "skipped": skipped,
@@ -504,21 +561,131 @@ def _unconfirmed_copy(lib: Library, index: Index, rip: Path) -> Path | None:
     if not path.is_file():
         return None
     found = tags.read_tags(path)
-    same_rip = isinstance(found.origin_path, str) and state.normalise_path(
-        Path(found.origin_path)
-    ) == state.normalise_path(rip)
-    return path if found.match == UNCONFIRMED and same_rip else None
+    return path if found.match == UNCONFIRMED and _came_from(found, rip) else None
 
 
-def _move_upgraded(ctx: JobContext, index: Index, path: Path, rel_target: Path) -> Path:
-    """Move an upgraded copy to `Music/<rel_target>` if that isn't where it is, and
-    forget its old index row. Returns where it is now."""
-    index.remove_library_tracks([_rel_path(ctx.lib, path)])
-    if _fold(_music_rel(ctx.lib, path)) == _fold(rel_target):
-        return path
-    old_folder = path.parent
-    final = fileops.move(ctx.batch, path, rel_target)
-    fileops.remove_empty_folders(ctx.lib, old_folder)
+def _came_from(found: tags.TrackTags, rip: Path) -> bool:
+    """Whether a library file's tags say it is a copy of this rip."""
+    origin = found.origin_path
+    return isinstance(origin, str) and state.normalise_path(Path(origin)) == (
+        state.normalise_path(rip)
+    )
+
+
+def _copy_to_upgrade(ctx: JobContext, index: Index, rip: Path) -> tuple[Path, Path | None] | None:
+    """The copy of `rip` an upgrade job works on: `(where it is, where it was)`, or None
+    when the rip has no copy in the library and is to be copied in afresh.
+
+    Usually that is the rip's unconfirmed copy, and the second value is None.
+
+    A copy that has been worked on before is found too, so that a rip is never copied
+    in a second time. That is what an upgrade leaves when it stops part way (the engine
+    stopped, or a move was refused, and the queue runs the job again): the copy's tags
+    say it's decided, and it may have been moved.
+
+    - The index lists it: any copy of the owner's own audio (`rip_copy`) whose row and
+      whose own tags both name this rip. The index is told of a move the moment it
+      happens (`_move_upgraded`), so it knows the copy's place even then.
+    - The journal says what this job's own batch did (`_upgrade_begun`): where the copy
+      was before the batch moved it, which is the second value, so the job can finish
+      what goes with the move (the `.lrc`). And where the copy is, should the engine
+      have been killed between the move and telling the index.
+
+    Before 2026-10-04 a job run again after its move looked where the old row pointed,
+    found nothing, and copied the rip in again under a new id."""
+    key = state.normalise_path(rip)
+    rows = [
+        t
+        for t in index.library_tracks()
+        if t.get("origin_path") and state.normalise_path(Path(t["origin_path"])) == key
+    ]
+    if not rows:
+        return None  # nothing in the library came from this rip
+    there = None
+    for row in rows:
+        path = _library_path(ctx.lib, row["rel_path"])
+        if not path.is_file():
+            continue
+        found = tags.read_tags(path)
+        if found.source != "rip_copy" or not _came_from(found, rip):
+            continue
+        if found.match == UNCONFIRMED:
+            return path, None  # not touched yet: the usual case
+        there = path
+    begun = _upgrade_begun(ctx, rip)
+    if begun is not None:
+        return begun
+    return (there, None) if there is not None else None
+
+
+def _upgrade_begun(ctx: JobContext, rip: Path) -> tuple[Path, Path | None] | None:
+    """Where this job's batch left the copy of `rip` it had begun to upgrade: `(where it
+    is, where it was before the batch moved it)`. The second is None if it wasn't moved.
+    None if the batch hasn't touched a copy of this rip.
+
+    Read from the journal: the batch's first tag write on a library file whose tags name
+    this rip, then every move of that file. The file found must still say it came from
+    this rip."""
+    record = fileops.read_journal(ctx.lib).get(ctx.batch.batch_id)
+    start = place = None
+    for done in record.ops if record else []:
+        if done.status != "done":
+            continue
+        if place is None and done.op == "write_tags":
+            rel = str(done.intent.get("path") or "")
+            origin = (done.intent.get("after") or {}).get("origin_path")
+            if (
+                rel.startswith(naming.MUSIC_DIR + "/")
+                and isinstance(origin, str)
+                and state.normalise_path(Path(origin)) == state.normalise_path(rip)
+            ):
+                start = place = rel
+        elif place is not None and done.op == "move" and done.intent.get("src") == place:
+            place = done.result_path or place
+    if start is None or place is None:
+        return None
+    path = _library_path(ctx.lib, place)
+    if not path.is_file() or not _came_from(tags.read_tags(path), rip):
+        return None
+    return path, (None if place == start else _library_path(ctx.lib, start))
+
+
+def _move_upgraded(
+    ctx: JobContext,
+    index: Index,
+    path: Path,
+    rel_target: Path,
+    written: tags.TrackTags,
+    duration: float | None,
+    *,
+    was_at: Path | None = None,
+) -> Path:
+    """Move an upgraded copy to `Music/<rel_target>` if that isn't where it is, tell the
+    index, and move its `.lrc` after it (as in a rename). `written` are the copy's tags
+    as they now are. Returns where the copy is.
+
+    The index is told the moment the copy has moved, before anything else is tried:
+    its new row first, then the old one goes. Whatever stops the job after that (the
+    `.lrc`'s own move refused, the engine stopped), the index knows where the copy is,
+    and neither the job run again nor a later plan copies the rip in a second time.
+
+    `was_at`: the job is being run again and its batch moved the copy already, from
+    there to `path` (`_copy_to_upgrade`). It isn't moved a second time; what was left
+    undone is done: its `.lrc` follows it, and the folder it left is cleared."""
+    if was_at is not None:
+        old, final = was_at, path
+    elif _fold(_music_rel(ctx.lib, path)) == _fold(rel_target):
+        old = final = path
+    else:
+        old, final = path, fileops.move(ctx.batch, path, rel_target)
+    index.put_library_tracks([_track_row(ctx.lib, final, written, duration)])
+    if old == final:
+        return final
+    index.remove_library_tracks([_rel_path(ctx.lib, old)])
+    lrc = old.with_suffix(".lrc")
+    if lrc.is_file():
+        fileops.move(ctx.batch, lrc, _music_rel(ctx.lib, final.with_suffix(".lrc")))
+    fileops.remove_empty_folders(ctx.lib, old.parent)
     return final
 
 
@@ -532,14 +699,32 @@ def _adopt_names(
 ) -> dict[str, Any]:
     """Title, artist and album for an adopted rip (step 09b's metadata rule): the parsed
     names (or the owner's fixes) when trusted, else the rip's own tags. A missing artist
-    is Unknown Artist; a missing title, the file's name."""
+    is Unknown Artist; a missing title, the file's name.
+
+    The title is the song's whole name, its version included: the clean parsed title
+    followed by every version the rip names, in the rip's own words, and the owner's own
+    mark for a remix as they typed it ("Here (Lucian Remix)", "Come As You Are R":
+    `normalize.full_title`). A title fix is used exactly as the owner typed it.
+
+    `names["version"]` is what goes into MUSICORG_VERSION: the versions that title
+    names, read with the reader that knows the owner's R. It's empty when the title
+    names none, and also when the names came from a parse that isn't trusted
+    (confidence under 0.8): a guess at a version isn't written into the file."""
     own = (item.get("raw_tags_json") or {}).get("tags") or {}
     names: dict[str, Any] = {
         k: own.get(k) for k in ("album_artist", "album", "year", "track") if own.get(k)
     }
+    names["version"] = []
     if trusted:
         names["artist"] = fixes.get("artist_fix") or item.get("parsed_artist") or own.get("artist")
-        names["title"] = fixes.get("title_fix") or item.get("parsed_title") or own.get("title")
+        if fixes.get("title_fix"):
+            names["title"] = fixes["title_fix"]
+            names["version"] = _owner_versions(names["title"])
+        else:
+            # Parsed again: an index scanned before 2026-10-04 holds no version words.
+            names["title"] = normalize.full_title(scan.parse_again(item)) or own.get("title")
+            if (item.get("parse_confidence") or 0) >= TRUSTED_PARSE:
+                names["version"] = _owner_versions(names["title"])
         if fixes.get("album_fix"):
             names["album"] = fixes["album_fix"]
     else:
@@ -547,6 +732,76 @@ def _adopt_names(
     names["artist"] = names.get("artist") or naming.UNKNOWN_ARTIST
     names["title"] = names.get("title") or rip.stem
     return names
+
+
+def _upgrade_place(
+    lib: Library,
+    prior: str,
+    item: dict[str, Any],
+    names: dict[str, Any],
+    trusted: bool,
+    typed: dict[str, set[str]],
+) -> tuple[Path, str | None] | None:
+    """For a rip decided with no fixes from the owner, whose unconfirmed copy (`prior`,
+    from the library root) is already in the library: where that copy belongs afterwards,
+    relative to `Music/`, and the title the engine may still replace, if any.
+
+    The copy keeps the names it has. The owner may have corrected them in Edit Details
+    since it was copied in, and a decision that says nothing about names mustn't undo
+    that: the file isn't retitled and isn't moved.
+
+    One title is put right. A copy made before 2026-10-04 has the parsed title with the
+    version left out ("Come As You Are" for the rip "Come As You Are R"). If the title is
+    still exactly that, the engine wrote it, so it becomes the full title and the file
+    is renamed to match. The place is worked out from the copy's own tags, so nothing
+    else about it changes.
+
+    Unless the owner typed that title themselves: taking the R off in Edit Details gives
+    the same words, and means it. `typed` are the titles typed there, by MUSICORG_ID
+    (`browse.typed_titles`).
+
+    None if the copy can't be read: the job then copies the rip in afresh."""
+    path = lib.root / Path(*PurePosixPath(prior).parts)
+    if not path.is_file():
+        return None
+    current = tags.read_tags(path)
+    stripped = item.get("parsed_title")
+    full = names["title"]
+    engines = trusted and isinstance(stripped, str) and current.title == stripped != full
+    if not engines or browse.typed_by_owner(typed, current.musicorg_id, current.title):
+        return Path(*PurePosixPath(prior).parts[1:]), None
+    meta = naming.TrackMeta(
+        title=full, artist=_str(current.artist), album_artist=_str(current.album_artist),
+        album=_str(current.album), year=current.year if isinstance(current.year, int) else None,
+        track=current.track if isinstance(current.track, int) else None,
+        compilation=current.album_artist == naming.VARIOUS_ARTISTS, ext=path.suffix,
+        source_file=path.name,
+    )  # fmt: skip
+    return naming.library_path(meta, lib.root), stripped
+
+
+def _retitles(op: fileops.PlanOp, current: tags.TrackTags) -> bool:
+    """Whether an upgrade with no fixes from the owner gives the copy its full title
+    (see `_upgrade_place`): the plan found the title with its version left out, and it's
+    still that. It also counts when the title is the full one already: this job wrote it
+    and the engine stopped before the file was renamed, so the job run again must carry
+    on and rename it. Any other title is the owner's own, and stays."""
+    was = op.params.get("retitle_from")
+    return isinstance(was, str) and current.title in (was, op.params["names"]["title"])
+
+
+def _version_not_in_title(item: dict[str, Any], op: fileops.PlanOp) -> list[str]:
+    """The versions a rip names that make it a different recording (a remix, a live
+    take: not "explicit" or a remaster), when the official title chosen for it names
+    none at all. The copy then gets a plain title and no version tag: right if the rip's
+    name was wrong, a loss if the match was. Empty when there's nothing to point out."""
+    mine = [str(t) for t in item.get("parsed_version_json") or [] if _is_hard(str(t))]
+    theirs = [t for t in _versions(op) if _is_hard(t)]
+    return mine if mine and not theirs else []
+
+
+def _is_hard(token: str) -> bool:
+    return token.partition(":")[0] not in normalize.SOFT_VERSION_KINDS
 
 
 def _free_target(lib: Library, target: Path, planned: set[str]) -> Path:
@@ -605,6 +860,17 @@ def apply(lib: Library, index: Index, plan_id: str) -> ApplyResult:
         )
     if not plan.operations:
         raise UserError(f"Plan {plan_id} has nothing to do.")
+    if any(
+        op.action in ("adopt", "adopt_unconfirmed") and "version" not in op.params.get("names", {})
+        for op in plan.operations
+    ):
+        # Before 2026-10-04 a plan named a copy without its version ("Come As You Are"
+        # for the rip "Come As You Are R"). Applying one now would do that again.
+        raise PlanOutOfDateError(
+            f"Plan {plan_id} was made by an older version of the engine, which left the "
+            "version (remix, live…) out of a copy's name, so nothing was queued. Make a new "
+            "plan (`musicorg plan adopt`) and apply that."
+        )
 
     problems = [p.message for p in fileops.validate(lib, plan, item_state=_state_lookup(index))]
     busy = _items_in_open_jobs(lib)
@@ -931,7 +1197,7 @@ def _download_tags(
     origin: fileops.PlanOp,
     score: float,
 ) -> tags.TrackTags:
-    versions = [str(v) for v in (origin.params["candidate"].get("version_tokens") or [])]
+    versions = list(_versions(origin))
     return tags.TrackTags(
         title=candidate.title,
         artist=", ".join(candidate.artists) or None,
@@ -1018,7 +1284,15 @@ def adopt_job(ctx: JobContext) -> Outcome:
             return Outcome.needs_review(FILE_CHANGED, f"Item {item_id} is no longer indexed.")
         if item["state"] in DONE_STATES:
             return Outcome.done("Already in the library.")
-        problem = fileops.check_op(ctx.lib, op, item_state=_state_lookup(index))
+        rip = Path(str(op.params.get("rip") or ""))
+        # The rip's copy to upgrade, for a rip decided since it was copied in.
+        upgrade = _copy_to_upgrade(ctx, index, rip) if op.action == "adopt" else None
+        check = op
+        if upgrade is not None and upgrade[1] is not None:
+            # Run again after this job's own move: the folder it moved the copy into has
+            # changed because of that, which isn't the plan going out of date.
+            check = replace(op, target_folder=None)
+        problem = fileops.check_op(ctx.lib, check, item_state=_state_lookup(index))
         if problem is not None:
             index.set_state(item_id, "review", [FILE_CHANGED])
             return Outcome.needs_review(FILE_CHANGED, problem.message)
@@ -1030,18 +1304,26 @@ def adopt_job(ctx: JobContext) -> Outcome:
         if op.action == "adopt_duplicate":
             return _link_duplicate(ctx, index, op)
 
-        rip = Path(op.params["rip"])
         assert op.target is not None
         rel = PurePosixPath(op.target).relative_to(naming.MUSIC_DIR)
-        prior = _unconfirmed_copy(ctx.lib, index, rip)
-        if op.action == "adopt_unconfirmed" and prior is not None:
-            return Outcome.done(f"Already in the library as {prior.name}.")
-        if prior is not None:  # decided since it was copied in: upgrade that copy
+        if op.action == "adopt_unconfirmed":
+            there = _unconfirmed_copy(ctx.lib, index, rip)
+            if there is not None:
+                return Outcome.done(f"Already in the library as {there.name}.")
+        if upgrade is not None:  # decided since it was copied in: upgrade that copy
+            prior, was_at = upgrade
             probe = tags.probe(prior)
             current = tags.read_tags(prior)
-            new_tags = _adopt_tags(op, current, probe, rip)
+            new_tags = _adopt_tags(op, current, probe, rip, upgrade=True)
+            # With no fixes from the owner the copy stays where it is, unless the engine
+            # is putting back the version its title lost (`_upgrade_place`).
+            moves = bool(op.params.get("fixes")) or _retitles(op, current)
             fileops.write_tags(ctx.batch, prior, new_tags)
-            final = _move_upgraded(ctx, index, prior, Path(*rel.parts))
+            place = Path(*rel.parts) if moves else _music_rel(ctx.lib, prior)
+            written = tags.merge(current, new_tags)
+            final = _move_upgraded(
+                ctx, index, prior, place, written, probe.duration_s, was_at=was_at
+            )
         else:
             staged = fileops.stage_copy(ctx.batch, rip)
             probe = tags.probe(staged)
@@ -1049,8 +1331,8 @@ def adopt_job(ctx: JobContext) -> Outcome:
             new_tags = _adopt_tags(op, current, probe, rip)
             fileops.write_tags(ctx.batch, staged, new_tags)
             final = fileops.commit(ctx.batch, staged, Path(*rel.parts))
-        written = tags.merge(current, new_tags)
-        index.put_library_tracks([_track_row(ctx.lib, final, written, probe.duration_s)])
+            written = tags.merge(current, new_tags)
+            index.put_library_tracks([_track_row(ctx.lib, final, written, probe.duration_s)])
         if op.action == "adopt_unconfirmed":
             return Outcome.done(f"Copied in, still to be reviewed, as {final.name}.")
         index.set_state(item_id, "adopted", [])
@@ -1064,7 +1346,8 @@ def _adopt_with_details(ctx: JobContext, index: Index, op: fileops.PlanOp) -> Ou
     names = state.names(ctx.lib.load_state().data)
     candidate = _preferred(Candidate.from_dict(op.params["candidate"]), names)
     album = _preferred_album(_album(candidate, index), names)
-    prior = _unconfirmed_copy(ctx.lib, index, rip)
+    upgrade = _copy_to_upgrade(ctx, index, rip)  # its unconfirmed copy, if it has one
+    prior, was_at = upgrade if upgrade is not None else (None, None)
     staged = prior if prior is not None else fileops.stage_copy(ctx.batch, rip)
     probe = tags.probe(staged)
     extras = _extras(ExtrasQuery(candidate, album, probe.duration_s, _versions(op), index))
@@ -1078,12 +1361,12 @@ def _adopt_with_details(ctx: JobContext, index: Index, op: fileops.PlanOp) -> Ou
         source_file=rip.name,
     )  # fmt: skip
     target = naming.library_path(meta, ctx.lib.root)
+    written = tags.merge(current, change)
     if prior is not None:  # copied in unconfirmed earlier: upgrade that copy where it is
-        final = _move_upgraded(ctx, index, prior, target)
+        final = _move_upgraded(ctx, index, prior, target, written, probe.duration_s, was_at=was_at)
     else:
         final = fileops.commit(ctx.batch, staged, target)
-    written = tags.merge(current, change)
-    index.put_library_tracks([_track_row(ctx.lib, final, written, probe.duration_s)])
+        index.put_library_tracks([_track_row(ctx.lib, final, written, probe.duration_s)])
     _write_sidecars(ctx, final, extras)
     index.set_state(item_id, "adopted", [])
     return Outcome.done(f"Copied in with its official details as {final.name}.")
@@ -1100,8 +1383,12 @@ def _details_tags(
 ) -> tags.TrackTags:
     """The official details over the rip's own tags. A track number, total or disc that
     YouTube Music doesn't give is removed rather than kept from the rip: the rip's numbers
-    may belong to another album (a compilation, a greatest-hits CD). Never a guess."""
-    versions = [str(v) for v in (op.params["candidate"].get("version_tokens") or [])]
+    may belong to another album (a compilation, a greatest-hits CD). Never a guess.
+
+    The version tag says what the official title says: a found song takes the found
+    name. A title that names no version removes a tag the copy had from its rip's name
+    (`plan show` points those out: `_version_not_in_title`)."""
+    versions = list(_versions(op))
     change = tags.TrackTags(
         title=candidate.title,
         artist=", ".join(candidate.artists) or None,
@@ -1134,8 +1421,20 @@ def _details_tags(
 
 
 def _adopt_tags(
-    op: fileops.PlanOp, current: tags.TrackTags, probe: tags.Probe, rip: Path
+    op: fileops.PlanOp,
+    current: tags.TrackTags,
+    probe: tags.Probe,
+    rip: Path,
+    *,
+    upgrade: bool = False,
 ) -> tags.TrackTags:
+    """The tags an adopt writes on its copy of a rip. `current` are the tags the file
+    has now; `upgrade` says the file is the rip's unconfirmed copy, already in the
+    library, rather than a fresh copy in staging.
+
+    MUSICORG_VERSION is the versions the title names (`names["version"]`). When there
+    are none, a tag the rip already carried is left alone, except after a title fix:
+    the owner's own title naming no version says there is none, and the tag goes."""
     names = op.params["names"]
     fixes = op.params.get("fixes") or {}
     change = tags.TrackTags(
@@ -1152,6 +1451,18 @@ def _adopt_tags(
         change.only_copy, change.match = None, UNCONFIRMED
     if not isinstance(current.musicorg_id, str):
         change.musicorg_id = tags.new_track_id()
+    version = [str(token) for token in names.get("version") or []]
+    if upgrade and not fixes:
+        # The owner decided, and said nothing about names: the copy keeps the ones it
+        # has, which may be their own corrections (`_upgrade_place`).
+        if not current.artist:
+            change.artist = names["artist"]
+        engines_title = not current.title or _retitles(op, current)
+        if engines_title:
+            change.title = names["title"]
+        if version and (engines_title or current.title == names["title"]):
+            change.version = version
+        return change
     if op.params.get("trusted"):
         change.artist, change.title = names["artist"], names["title"]
         if fixes.get("album_fix"):
@@ -1161,6 +1472,10 @@ def _adopt_tags(
             change.artist = names["artist"]
         if not current.title:
             change.title = names["title"]
+    if version:
+        change.version = version
+    elif fixes.get("title_fix"):
+        change.version = tags.REMOVE
     return change
 
 
@@ -1254,18 +1569,53 @@ def remove_name(lib: Library, original: str) -> dict[str, str]:
 
 TIDY_FIELDS = ("title", "artist", "album_artist", "album")
 
+# Why `plan tidy` left a copy alone whose rip names a version (the summary's
+# `versions_skipped`, and `versions_left` for which copies):
+TITLE_NAMES_NO_VERSION = "title_names_no_version"  # its title was changed by hand
+NAMES_NOT_TRUSTED = "names_not_trusted"  # the rip's name was too hard to read
+RIP_NOT_INDEXED = "rip_not_indexed"  # its rip is no longer in the index
+RIP_IN_QUEUE = "rip_in_queue"  # a job for its rip is waiting: that may rename it first
+VERSION_LEFT_WHY = {
+    TITLE_NAMES_NO_VERSION: "their title was changed by hand and names none",
+    NAMES_NOT_TRUSTED: "the rip's name was too hard to read to be sure of it",
+    RIP_NOT_INDEXED: "the rip isn't in the index any more, so it can't be checked",
+    RIP_IN_QUEUE: "a job for their rip is waiting in the queue (run the queue, then plan again)",
+}
+
 
 def plan_tidy(lib: Library, index: Index) -> fileops.Plan:
     """`musicorg plan tidy`: songs in the library twice keep their best copy, and every
     file gets the owner's preferred names, moving to the folder and name they now give.
-    A file whose name has a ` (2)` it no longer needs is renamed too."""
+    A file whose name has a ` (2)` it no longer needs is renamed too.
+
+    A copy that lost its version gets it back (`_lost_version`). Before 2026-10-04 a
+    copy named from its rip left the version out: "Come As You Are R" was copied in as
+    "Come As You Are", and the real original then had to be "Come As You Are (2)". The
+    title is put right, the file renamed to match and MUSICORG_VERSION written, all in
+    the same `rename` operation as a preferred name. Its `.lrc` moves with it. The
+    " (2)" original gets its plain name back from the next `plan tidy`, once that name
+    is free.
+
+    The summary counts each kind apart: `versions` (a version put back), `renames` (a
+    preferred name), `numbers_dropped` (a " (2)" no longer needed). The copies left
+    alone though their rip names a version are counted by reason in `versions_skipped`
+    and listed in `versions_left`, so `plan show` can say which they are.
+
+    A new name that is taken (by a file already there, or by an earlier rename in the
+    same plan) is planned with the " (2)" it will get, so the dry run shows where each
+    file will land.
+
+    A job for a rip that is waiting in the queue is run first: its copy is left out
+    (`rip_in_queue`), because that job may be about to give it another name."""
     names = state.names(lib.load_state().data)
     files = _library_files(lib, index)
     by_video: dict[str, list[tuple[dict[str, Any], Path]]] = {}
     for track, path in files:
         if track.get("source_id"):
             by_video.setdefault(str(track["source_id"]), []).append((track, path))
-    items_by_rip = _items_by_rip(lib, index)
+    rips = _items_by_rip(lib, index, states=None)
+    typed = browse.typed_titles(lib)
+    busy = _items_in_open_jobs(lib)
     ops: list[fileops.PlanOp] = []
     dropped: set[str] = set()
     for group in by_video.values():
@@ -1274,7 +1624,9 @@ def plan_tidy(lib: Library, index: Index) -> fileops.Plan:
         group.sort(key=lambda g: _file_quality(g[1]), reverse=True)
         keep_track, _ = group[0]
         for track, path in group[1:]:
-            item = items_by_rip.get(state.normalise_path(Path(track.get("origin_path") or "")))
+            item = rips.get(state.normalise_path(Path(track.get("origin_path") or "")))
+            if item is not None and item["state"] not in DONE_STATES:
+                item = None
             dropped.add(track["rel_path"])
             ops.append(
                 fileops.PlanOp(
@@ -1291,17 +1643,36 @@ def plan_tidy(lib: Library, index: Index) -> fileops.Plan:
                 )  # fmt: skip
             )
     duplicates = len(ops)
+    versions = numbers = 0
+    left: dict[str, int] = {}
+    left_alone: list[dict[str, str]] = []
+    # The names in use as each rename runs: every file's place now, less what the
+    # duplicates above and earlier renames vacate, plus where earlier renames land.
+    taken = {
+        _fold(PurePosixPath(track["rel_path"]))
+        for track, _ in files
+        if track["rel_path"] not in dropped
+    }
     for track, path in files:
         if track["rel_path"] in dropped:
             continue
         current = tags.read_tags(path)
-        changes = {
-            field: prefer(getattr(current, field), names)
-            for field in TIDY_FIELDS
-            if isinstance(getattr(current, field), str)
-            and prefer(getattr(current, field), names) != getattr(current, field)
+        full_title, why_not = _lost_version(current, rips, typed, busy)
+        if why_not is not None:
+            left[why_not] = left.get(why_not, 0) + 1
+            left_alone.append({"path": track["rel_path"], "why": why_not})
+        wanted = {field: getattr(current, field) for field in TIDY_FIELDS}
+        if full_title is not None:
+            wanted["title"] = full_title
+        after = {
+            field: prefer(value, names) if isinstance(value, str) else value
+            for field, value in wanted.items()
         }
-        after = {f: changes.get(f, getattr(current, f)) for f in TIDY_FIELDS}
+        changes: dict[str, Any] = {
+            field: after[field] for field in TIDY_FIELDS if after[field] != getattr(current, field)
+        }
+        if full_title is not None:  # the tag says what the title, as it will be, says
+            changes["version"] = _owner_versions(after["title"]) or _owner_versions(full_title)
         meta = naming.TrackMeta(
             title=after["title"], artist=after["artist"], album_artist=after["album_artist"],
             album=after["album"], year=current.year if isinstance(current.year, int) else None,
@@ -1311,25 +1682,47 @@ def plan_tidy(lib: Library, index: Index) -> fileops.Plan:
         )  # fmt: skip
         here = PurePosixPath(track["rel_path"])
         target = _ideal_path(lib, meta, here)
-        if not changes:
-            if target == here or not _just_a_number_added(here, target):
-                continue
+        number_only = False  # nothing changes but a " (2)" the file no longer needs
+        # A version put back that got as far as the tags: only the file's name is left.
+        unfinished = not changes and _named_before_its_version(lib, current, rips, busy, here, meta)
+        if _just_a_number_added(here, target):
             ideal = lib.root / Path(*target.parts)
-            if (ideal.exists() or ideal.is_symlink()) and target.as_posix() not in dropped:
-                continue  # the plain name belongs to another song: keep the number
+            on_disk = (ideal.exists() or ideal.is_symlink()) and target.as_posix() not in dropped
+            if on_disk or _fold(target) in taken:
+                target = here  # the plain name belongs to another song: keep the number
+            number_only = not changes and target != here
+        elif not changes and not unfinished:
+            target = here  # only a number no longer needed moves a file nothing else changes
+        if not changes and target == here:
+            continue
+        if _fold(target) != _fold(here):  # it moves: to the first name that will be free
+            target = _free_place(target, taken)
+            taken.discard(_fold(here))
+            taken.add(_fold(target))
+        params: dict[str, Any] = {"musicorg_id": track["musicorg_id"], "changes": changes}
+        if full_title is not None or unfinished:
+            # What the plan found. The job acts only on a copy that is still this one:
+            # it replaces this title and no other, on a copy still named after its rip.
+            params["from_title"] = current.title
+            params["from_version"] = current.version if isinstance(current.version, list) else None
+            versions += 1
+        elif number_only:
+            numbers += 1
         ops.append(
             fileops.PlanOp(
                 action="rename",
                 source=fileops.FileCheck.of(lib, path),
                 target=target.as_posix(),
-                params={"musicorg_id": track["musicorg_id"], "changes": changes},
+                params=params,
             )
         )
-    renames = len(ops) - duplicates
+    renames = len(ops) - duplicates - versions - numbers
     empty = _empty_folders(lib)
     if empty:
         ops.append(fileops.PlanOp(action="empty_folders", params={"folders": empty}))
     summary = {"operations": len(ops), "duplicates": duplicates, "renames": renames,
+               "versions": versions, "numbers_dropped": numbers,
+               "versions_skipped": left, "versions_left": left_alone,
                "empty_folders": len(empty), "downloads": 0,
                "est_minutes": math.ceil(len(ops) * 2 / 60), "days": 0, "disk_mb": 0,
                "low_confidence_adopts": 0}  # fmt: skip
@@ -1338,9 +1731,136 @@ def plan_tidy(lib: Library, index: Index) -> fileops.Plan:
     return plan
 
 
+def _free_place(target: PurePosixPath, taken: set[str]) -> PurePosixPath:
+    """`target` (a path from the library root), or the " (2)" it will land on because
+    the name is in `taken`. The move itself never overwrites, whatever the plan says."""
+    for candidate in naming.candidate_names(Path(*target.parts)):
+        if _fold(candidate) not in taken:
+            return PurePosixPath(*candidate.parts)
+    raise UserError(f"Too many files would be named {target.name}.")
+
+
+def _owner_named_copy(current: tags.TrackTags) -> bool:
+    """A copy still named after its rip, as `plan tidy` looks at it: `rip_copy`, with
+    MUSICORG_MATCH `unconfirmed` or absent. A copy with official details, one the owner
+    gave fixes for (`manual`) and a download are never touched."""
+    return current.source == "rip_copy" and current.match in (None, UNCONFIRMED)
+
+
+def _lost_version(
+    current: tags.TrackTags,
+    rips: dict[str, dict[str, Any]],
+    typed: dict[str, set[str]],
+    busy: set[str],
+) -> tuple[str | None, str | None]:
+    """For `plan tidy`: the title a copy should carry so that it names the version its
+    rip names, when the file doesn't say which version it is. Returns `(title, None)`
+    when there is something to put right, `(None, reason)` when the copy is left alone
+    for a reason worth telling the owner, and `(None, None)` when there's nothing to do.
+
+    Everything is decided from the file's own tags (`current`), never from the index's
+    row for it: that row's `match` is empty for many copies whose tags say they have
+    official details. `rips` are the index's items by their rip's path, which is where
+    what the rip names comes from. The rip itself is not opened.
+
+    Only a copy still named after its rip is looked at (`_owner_named_copy`), and only
+    one with no MUSICORG_VERSION.
+
+    - The title is still exactly the parsed title the old rule wrote ("Come As You
+      Are"): the engine wrote it, so it becomes the full title ("Come As You Are R").
+    - The title was changed by hand and still shows the rip's versions ("Lost Boy R"):
+      the title is the same one, and only the tag is missing.
+    - The title was changed by hand and names no version: left alone. The owner may
+      have meant it. That includes a title typed in Edit Details that happens to be the
+      parsed title again (the R taken off by hand): `typed` are the titles typed there,
+      by MUSICORG_ID (`browse.typed_titles`). Without it the R would come straight back.
+    - The rip's names weren't trusted (confidence under 0.8): left alone, as a copy
+      made today would get no version tag either.
+    - A job for the rip is waiting in the queue (`busy`: the items of queued jobs): left
+      alone. The job may be about to give the copy its official title, and a rename
+      planned now would be out of date when it ran."""
+    if not _owner_named_copy(current):
+        return None, None
+    if isinstance(current.version, list) and current.version:
+        return None, None
+    origin, title = current.origin_path, current.title
+    if not isinstance(origin, str) or not origin or not isinstance(title, str) or not title:
+        return None, None
+    item = rips.get(state.normalise_path(Path(origin)))
+    if item is None:
+        named = normalize.parse_filename(browse.rip_stem(origin)).version_tokens
+        return None, (RIP_NOT_INDEXED if named else None)
+    parsed = scan.parse_again(item)
+    if not parsed.version_tokens:
+        return None, None
+    if (item.get("parse_confidence") or 0) < TRUSTED_PARSE:
+        return None, NAMES_NOT_TRUSTED
+    if item["id"] in busy:
+        return None, RIP_IN_QUEUE
+    full = normalize.full_title(parsed)
+    # Parsed again, the rip must still give the title the scan stored: if the parser has
+    # changed its mind since, the title in the file can't be told from a hand edit.
+    engines = title == item.get("parsed_title") == parsed.title
+    if engines and browse.typed_by_owner(typed, current.musicorg_id, title):
+        engines = False  # the same words, but the owner typed them
+    if full and full != title and engines:
+        return full, None
+    if _names_the_versions(_owner_versions(title), parsed.version_tokens):
+        return title, None
+    return None, TITLE_NAMES_NO_VERSION
+
+
+def _named_before_its_version(
+    lib: Library,
+    current: tags.TrackTags,
+    rips: dict[str, dict[str, Any]],
+    busy: set[str],
+    here: PurePosixPath,
+    meta: naming.TrackMeta,
+) -> bool:
+    """Whether a file is a version put back that stopped half way: its title and version
+    tag are right ("Melody R", `remix`) and its file is still named for the title the
+    old rule wrote ("Melody.mp3"). That is what a rename job leaves when its tag write
+    lands and its move then fails for good. The next `plan tidy` finishes it: the title
+    is exactly what the engine gives this rip, so the name is the engine's to put right.
+
+    `meta` is the file's naming details as its tags stand; `here`, where it is. A copy
+    whose rip has a job waiting in the queue (`busy`) is left to that job."""
+    if not _owner_named_copy(current) or not current.version:
+        return False
+    origin, title = current.origin_path, current.title
+    if not isinstance(origin, str) or not origin or not isinstance(title, str):
+        return False
+    item = rips.get(state.normalise_path(Path(origin)))
+    stripped = item.get("parsed_title") if item is not None else None
+    if item is None or not isinstance(stripped, str) or not stripped or stripped == title:
+        return False
+    if item["id"] in busy:
+        return False
+    if normalize.full_title(scan.parse_again(item)) != title:
+        return False
+    old_place = _ideal_path(lib, replace(meta, title=stripped), here)
+    return here == old_place or _just_a_number_added(here, old_place)
+
+
+def _names_the_versions(title_tokens: list[str], rip_tokens: tuple[str, ...]) -> bool:
+    """Whether a title still names the versions its rip names, kind by kind: "Lost Boy
+    R" for the rip "Lost Boy R", and "Here (Lucian Remix)" for a rip whose tags and
+    file name between them say `remix:lucian` and `remix`. Only the kinds that make it
+    a different recording are asked for (a remix, a live take), unless the rip names
+    none of those ("(2007 Remaster)")."""
+    shown = {token.partition(":")[0] for token in title_tokens}
+    named = {token.partition(":")[0] for token in rip_tokens}
+    hard = {kind for kind in named if kind not in normalize.SOFT_VERSION_KINDS}
+    return bool(shown) and (hard or named) <= shown
+
+
 def _just_a_number_added(here: PurePosixPath, ideal: PurePosixPath) -> bool:
-    """`here` is the ideal name with a " (2)"-style number the file may no longer need."""
-    return here.parent == ideal.parent and here.stem != ideal.stem and (
+    """`here` is the ideal name with a " (2)"-style number the file may no longer need.
+    Folders are compared without regard to letter case: the index can hold a folder as
+    "Kid CuDi" where the name it's given today is "Kid Cudi", and on the owner's disk
+    those are one folder."""
+    return _fold(here.parent) == _fold(ideal.parent) and here.stem != ideal.stem and (
         here.stem.startswith(ideal.stem + " (") and here.stem.endswith(")")
     )  # fmt: skip
 
@@ -1356,12 +1876,14 @@ def _file_quality(path: Path) -> tuple[int, int, int, int]:
     return lossless, original, int(found.bitrate_kbps or 0), path.stat().st_size
 
 
-def _items_by_rip(lib: Library, index: Index) -> dict[str, dict[str, Any]]:
+def _items_by_rip(
+    lib: Library, index: Index, *, states: tuple[str, ...] | None = DONE_STATES
+) -> dict[str, dict[str, Any]]:
+    """The index's items by their rip's path (normalised): the ones in `states`, or
+    every one when `states` is None."""
     folders = scan.source_folders(lib, index)
-    return {
-        state.normalise_path(Path(scan.item_path(folders, item))): item
-        for item in index.items_in_states(DONE_STATES)
-    }
+    items = index.items() if states is None else index.items_in_states(states)
+    return {state.normalise_path(Path(scan.item_path(folders, item))): item for item in items}
 
 
 def _empty_folders(lib: Library) -> list[str]:
@@ -1387,12 +1909,37 @@ def tidy_job(ctx: JobContext) -> Outcome:
                 removed += len(fileops.remove_empty_folders(ctx.lib, folder))
         return Outcome.done(f"Removed {removed} empty folder(s).")
     path = _same_file(ctx.lib, op)
+    was_at = None
+    if path is None and op.action == "rename":
+        # Run again after the engine stopped: this batch may have moved the file already.
+        path = _moved_by_this_batch(ctx, op)
+        was_at = _library_path(ctx.lib, op.source.path) if op.source and path else None
     if path is None:
         return Outcome.needs_review(FILE_CHANGED, "The file has moved or changed since the plan.")
     with open_index(ctx.lib.paths, write=True) as index:
         if op.action == "duplicate":
             return _set_aside_duplicate(ctx, index, op, path)
-        return _rename(ctx, index, op, path)
+        return _rename(ctx, index, op, path, was_at=was_at)
+
+
+def _moved_by_this_batch(ctx: JobContext, op: fileops.PlanOp) -> Path | None:
+    """Where this job's batch already moved the operation's file, if it did. That is the
+    state a rename is left in when the engine stops after the move and before the index
+    is told: the queue runs the job again, and the file is no longer where the plan
+    found it. The journal says where it went. None if it wasn't this batch that moved
+    it, or the file there isn't the same song."""
+    assert op.source is not None
+    record = fileops.read_journal(ctx.lib).get(ctx.batch.batch_id)
+    for done in reversed(record.ops if record else []):
+        landed = done.result_path
+        if done.op != "move" or done.status != "done" or not landed:
+            continue
+        if done.intent.get("src") != op.source.path:
+            continue
+        path = _library_path(ctx.lib, landed)
+        if path.is_file() and tags.read_tags(path).musicorg_id == op.params["musicorg_id"]:
+            return path
+    return None
 
 
 def _set_aside_duplicate(ctx: JobContext, index: Index, op: fileops.PlanOp, path: Path) -> Outcome:
@@ -1413,17 +1960,56 @@ def _set_aside_duplicate(ctx: JobContext, index: Index, op: fileops.PlanOp, path
     return Outcome.done(f"{path.name} set aside; {keep.name} is the better copy.")
 
 
-def _rename(ctx: JobContext, index: Index, op: fileops.PlanOp, path: Path) -> Outcome:
+def _rename(
+    ctx: JobContext, index: Index, op: fileops.PlanOp, path: Path, *, was_at: Path | None = None
+) -> Outcome:
+    """Write an operation's tag changes, then move the file to its target with its
+    `.lrc` (and the album's cover, once its old folder has no songs left), and bring the
+    index's row for it up to date. The row is written from the file's own tags, so it
+    keeps its match and the rip it came from.
+
+    `from_title` (a version put back by `plan tidy`) is the title the plan found, and
+    the only one the job may replace. The new title is let through as well: then this
+    job wrote it already and the engine stopped before the file was renamed, and the
+    job run again must carry on and rename it. Any other title was typed by the owner
+    since the plan was made: nothing is written, and the job ends `needs_review`.
+
+    The copy must also still be one named after its rip, with the version tag the plan
+    found (`from_version`) or the one this job writes. A job that ran in between may
+    have found the song (an upgrade queued before this plan was made): a found song
+    keeps its official title, even when that happens to be the very title the plan saw.
+
+    `was_at`: the job is being run again and its batch moved the file already, from
+    there to `path` (`_moved_by_this_batch`). It isn't moved a second time; what was
+    left undone is done: its `.lrc`, the cover, and the index."""
     changes = dict(op.params.get("changes") or {})
+    was = op.params.get("from_title")
+    if isinstance(was, str):
+        found = tags.read_tags(path)
+        if found.title not in (was, changes.get("title", was)):
+            return Outcome.needs_review(
+                FILE_CHANGED,
+                f"The title of {path.name} was changed after the plan was made, so the song "
+                "was left as it is. Make a new plan (`musicorg plan tidy`) to look at it again.",
+            )
+        versions = (op.params.get("from_version"), changes.get("version"))
+        if not _owner_named_copy(found) or found.version not in versions:
+            return Outcome.needs_review(
+                FILE_CHANGED,
+                f"{path.name} was found or decided after the plan was made, so its name was "
+                "left as it is. Make a new plan (`musicorg plan tidy`) to look at it again.",
+            )
     if changes:
         fileops.write_tags(ctx.batch, path, tags.TrackTags(**changes))
     assert op.target is not None
     target = PurePosixPath(op.target).relative_to(naming.MUSIC_DIR)
+    old = was_at if was_at is not None else path
     final = path
-    if PurePosixPath(_rel_path(ctx.lib, path)) != PurePosixPath(op.target):
-        old_folder = path.parent
+    if was_at is None and PurePosixPath(_rel_path(ctx.lib, path)) != PurePosixPath(op.target):
         final = fileops.move(ctx.batch, path, Path(*target.parts))
-        lrc = path.with_suffix(".lrc")
+    if final != old:
+        old_folder = old.parent
+        lrc = old.with_suffix(".lrc")
         if lrc.is_file():
             fileops.move(ctx.batch, lrc, _music_rel(ctx.lib, final.with_suffix(".lrc")))
         cover = old_folder / naming.COVER_NAME
@@ -1435,11 +2021,19 @@ def _rename(ctx: JobContext, index: Index, op: fileops.PlanOp, path: Path) -> Ou
         ):
             fileops.move(ctx.batch, cover, _music_rel(ctx.lib, final.parent / naming.COVER_NAME))
         fileops.remove_empty_folders(ctx.lib, old_folder)
-    index.remove_library_tracks([_rel_path(ctx.lib, path)])
+    index.remove_library_tracks([_rel_path(ctx.lib, old)])
     written = tags.read_tags(final)
     index.put_library_tracks([_track_row(ctx.lib, final, written, tags.probe(final).duration_s)])
-    what = ", ".join(f"{k} → {v}" for k, v in changes.items())
+    what = ", ".join(f"{k} → {_shown(v)}" for k, v in changes.items())
     return Outcome.done(f"{final.name}" + (f" ({what})" if what else " (renamed)"))
+
+
+def _shown(value: object) -> str:
+    """A tag value as a line of a plan or a job's message shows it: version tokens as
+    they are written in the tag ("remix:lucian; slowed"), anything else as it is."""
+    if isinstance(value, list):
+        return tags.VERSION_SEPARATOR.join(str(token) for token in value) or "(none)"
+    return "(cleared)" if value is None else str(value)
 
 
 def _rel_path(lib: Library, path: Path) -> str:
@@ -1596,7 +2190,8 @@ def download_job(ctx: JobContext) -> Outcome:
         candidate = _preferred(candidate, names)
         album = _preferred_album(_album(candidate, index), names)
         probe = tags.probe(path)
-        extras = _extras(ExtrasQuery(candidate, album, probe.duration_s, (), index))
+        versions = _versions(op)  # what the official title names: a remix's lyrics are its own
+        extras = _extras(ExtrasQuery(candidate, album, probe.duration_s, versions, index))
         new_tags = tags.TrackTags(
             title=candidate.title,
             artist=", ".join(candidate.artists) or None,
@@ -1620,6 +2215,7 @@ def download_job(ctx: JobContext) -> Outcome:
             source_format=str(info["format_id"]),
             source_bitrate=probe.bitrate_kbps,
             acquired=_now(),
+            version=list(versions) or None,
         )
         fileops.write_tags(ctx.batch, path, new_tags)
         meta = naming.TrackMeta(
@@ -1676,6 +2272,7 @@ def _download_video(ctx: JobContext, op: fileops.PlanOp) -> Outcome:
             source_format=str(info["format_id"]),
             source_bitrate=probe.bitrate_kbps,
             acquired=_now(),
+            version=list(_versions(op)) or None,
         )
         fileops.write_tags(ctx.batch, path, new_tags)
         meta = naming.TrackMeta(title=candidate.title, artist=artist, album_artist=first)
@@ -1748,6 +2345,10 @@ def plan_edit(
 
     - `changes`: title, artist, album_artist, album, genre (text), year, track (numbers),
       explicit (true or false). None or "" clears a field; a song always keeps a title.
+      A new title takes MUSICORG_VERSION with it: the tag says what the title the owner
+      typed says, their R mark for a remix included ("Melody R" → `remix`, "Melody
+      (Live)" → `live`), and a title that names no version removes it. That's how a
+      wrong version is put right by hand. The plan's `version` holds the new tokens.
       `explicit` is the owner's to correct: for a rip it was copied from the match on
       YouTube Music, and nothing checks that the owner's own audio isn't the clean edit.
     - `lyrics_text`: the song's lyrics. Timed lyrics (`[mm:ss.xx]words` lines) become its
@@ -1784,6 +2385,10 @@ def plan_edit(
         if value != getattr(current, name):
             cleaned[name] = value
     params: dict[str, Any] = {"musicorg_id": current.musicorg_id, "changes": cleaned}
+    if "title" in cleaned:
+        version = _owner_versions(cleaned["title"])
+        if version != (list(current.version) if isinstance(current.version, list) else []):
+            params["version"] = version  # an empty list: the tag is removed
     if lyrics_text is not None:
         if len(lyrics_text) > MAX_LYRICS_CHARS:
             raise UserError("Those lyrics are too long to save.")
@@ -1842,6 +2447,8 @@ def edit_job(ctx: JobContext) -> Outcome:
     change = tags.TrackTags(
         **{k: tags.REMOVE if v is None else v for k, v in op.params["changes"].items()}
     )
+    if isinstance(op.params.get("version"), list):  # the new title's versions (`plan_edit`)
+        change.version = [str(token) for token in op.params["version"]] or tags.REMOVE
     text = op.params.get("lyrics")
     synced = lyrics.check_lrc(text) if text else None
     if text is not None:
@@ -2241,7 +2848,9 @@ def lyrics_job(ctx: JobContext) -> Outcome:
         album=current.album if isinstance(current.album, str) else None,
         duration_s=duration, video_id=op.params.get("video_id"),
         official_s=float(op.params["official_s"]) if op.params.get("official_s") else None,
-        versions=tuple(current.version) if isinstance(current.version, list) else (),
+        # The version tag, and what the title names: a remix whose tag is missing must
+        # not be given the original's timed lyrics (`browse.versions_of`).
+        versions=browse.versions_of(current, ctx.lib),
     )  # fmt: skip
     with open_index(ctx.lib.paths, write=True) as index:
         found = lyrics.find(query, cache=index)
@@ -2278,15 +2887,34 @@ def artwork_job(ctx: JobContext) -> Outcome:
 def undo(lib: Library, batch_id: str, *, dry_run: bool = False) -> fileops.UndoResult:
     """`musicorg undo`: the files first (`fileops.undo`, which cancels the batch's queued
     jobs and refuses while one runs), then the rips the batch replaced or adopted go back
-    to the state the plan found them in, and their links in state.json are removed."""
+    to the state the plan found them in, and their links in state.json are removed.
+
+    Undo finds each file by the path the batch left it at. It is refused, with nothing
+    changed, when that can't work:
+
+    - a later batch moved or renamed one of the batch's files since
+      (`_refuse_if_files_moved_on`): undo would not find the file, or would find
+      another song under its old name;
+    - a file the batch renamed can't go back to its own name because something else has
+      that name now (`_refuse_if_names_are_taken`).
+
+    Each message names the batch to undo first. The index is brought up to date for
+    every file the batch touched, and for wherever a file landed that came back under
+    another name (a restore onto a taken name)."""
+    _refuse_if_files_moved_on(lib, batch_id)
+    _refuse_if_names_are_taken(lib, batch_id)
     result = fileops.undo(lib, batch_id, dry_run=dry_run, jobs=queue.BatchJobs(lib))
     if dry_run:
+        _say_which_tags_come_back(lib, result)
         return result
     with open_queue(lib.paths, write=False) as store:
         jobs = store.jobs(batch_id=batch_id)
     ops = [op for job in jobs if job["payload"].get("ops") for op in _ops(job["payload"])]
     record = fileops.read_journal(lib).get(batch_id)
     touched = _touched_paths(record)
+    touched |= {
+        step.to for step in result.steps if step.status == "done" and _is_track_path(step.to)
+    }
     with open_index(lib.paths, write=True) as index:
         restored: list[fileops.PlanOp] = []
         for op in ops:
@@ -2313,15 +2941,277 @@ def undo(lib: Library, batch_id: str, *, dry_run: bool = False) -> fileops.UndoR
 LINKING_ACTIONS = frozenset({"replace", "duplicate", "adopt_duplicate"})
 
 
+def _say_which_tags_come_back(lib: Library, result: fileops.UndoResult) -> None:
+    """Put right what a dry run says about a file the batch retagged and then moved.
+
+    A dry run plans every step against the disk as it is now. Such a file isn't under
+    its old name yet, so its tag step reads "no longer there, so its tags can't be
+    restored". The real undo moves the file back first and then does restore its tags
+    (each step is planned again right before it runs). So the step is shown as planned,
+    which is what will happen."""
+    back: set[str] = set()  # the names earlier steps will have put a file back under
+    for step in result.steps:  # newest first, as undo runs them
+        if step.status == "planned" and step.action in ("move", "restore") and step.to:
+            back.add(step.to)
+        elif (
+            step.op == "write_tags"
+            and step.status == "skipped"
+            and step.path in back
+            and not _library_path(lib, step.path).is_file()
+        ):
+            step.action, step.status = "write_tags", "planned"
+            step.note = f"Restore the tags of {step.path} (once it is back under that name)"
+
+
+def _undone_ops(journal: dict[str, fileops.BatchRecord], record: fileops.BatchRecord) -> set[Any]:
+    """The operations of a batch that an undo has already reversed (their op ids)."""
+    return {
+        op.intent.get("undoes")
+        for other in record.undone_by
+        for op in journal[other].ops
+        if op.status == "done"
+    }
+
+
+def _when(op: fileops.OpRecord) -> str:
+    """When the journal says an operation finished (its start, failing that). The
+    journal's times are text that sorts in time order."""
+    for line in (op.done, op.recovered, op.intent):
+        if line and isinstance(line.get("ts"), str):
+            return str(line["ts"])
+    return ""
+
+
+def _refuse_if_files_moved_on(lib: Library, batch_id: str) -> None:
+    """Stop an undo when a later batch has moved one of this batch's files since.
+
+    Undo looks for each file where the batch left it. If a later batch renamed or moved
+    the file (`plan tidy` giving a remix its name back, an edit in Edit Details), undo
+    doesn't find it there. The song would stay in the library while its rip went back to
+    waiting. Worse, if another song has been given the old name since, undo would act
+    on that one: after the two `plan tidy` runs that put versions back, undoing the
+    batch that first copied the rips in would have set the original aside in the remix's
+    place, and left the remix where it was.
+
+    So each of the batch's files is followed through the journal, move by move, to
+    where it is now:
+
+    - still where the batch left it (or moved away and back again): fine;
+    - somewhere else in `Music/`: refused;
+    - set aside or sent to the Trash since: it's simply no longer there, and undo says
+      so and goes on. Unless something else has its old name now: refused.
+
+    Nothing is undone, and the message names the batch to undo first: the newest one
+    that moved a file and hasn't been undone itself. Batches that build on each other
+    are undone newest first."""
+    journal = fileops.read_journal(lib)
+    record = journal.get(batch_id)
+    if record is None:
+        return
+    order = list(journal)  # the journal is oldest first
+    mine = order.index(batch_id)
+    undone = _undone_ops(journal, record)
+    left: dict[str, tuple[str, int, int]] = {}  # where this batch left a file → when
+    for op in record.ops:
+        if op.status != "done" or op.op_id in undone:
+            continue
+        if op.op in FILE_MOVES:
+            left.pop(_moved_from(op), None)
+        place = op.intent.get("path") if op.op == "write_tags" else op.result_path
+        if op.op != "trash" and isinstance(place, str) and place.startswith(MUSIC_PREFIX):
+            left[place] = (_when(op), mine, op.op_id)
+    if not left:
+        return
+    # Every other batch's finished moves, oldest first, by where they took a file from.
+    # `stands`: not undone, and not itself part of an undo.
+    later: dict[str, list[tuple[tuple[str, int, int], fileops.OpRecord, bool]]] = {}
+    for position, other in enumerate(journal.values()):
+        if other.batch_id == batch_id:
+            continue
+        others_undone = _undone_ops(journal, other)
+        for op in other.ops:
+            if op.status == "done" and op.op in FILE_MOVES:
+                stands = other.undo_of is None and op.op_id not in others_undone
+                key = (_when(op), position, op.op_id)
+                later.setdefault(_moved_from(op), []).append((key, op, stands))
+    moved: list[tuple[str, fileops.OpRecord | None]] = []  # a file, and the move to undo first
+    for place, when in left.items():
+        now, at, blame = place, when, None
+        while True:  # follow the file: the first move from where it is, after it got there
+            step = min(
+                (found for found in later.get(now, []) if found[0] > at),
+                key=lambda found: found[0],
+                default=None,
+            )
+            if step is None:
+                break
+            at, op, stands = step
+            blame = op if stands else blame
+            now = "" if op.op == "trash" else str(op.result_path or "")
+        if now == place:
+            continue
+        if now.startswith(MUSIC_PREFIX) or _name_is_taken(_library_path(lib, place)):
+            moved.append((place, blame))
+    if not moved:
+        return
+    paths = sorted(place for place, _ in moved)
+    blamed = [op for _, op in moved if op is not None]
+    last = max(blamed, key=lambda op: (_when(op), order.index(op.batch_id)), default=None)
+    count = "One of its files was" if len(paths) == 1 else f"{len(paths):,} of its files were"
+    example = f": {paths[0]}" if len(paths) == 1 else f" (the first is {paths[0]})"
+    if last is None:
+        how = "`musicorg journal list` shows the batches since; undo the ones that moved them."
+    elif last.op == "trash":
+        how = (
+            f"Batch {last.batch_id} sent a file to the Trash, and another file has its "
+            "name now. A file in the Trash can't be put back by an undo, so this batch "
+            "can no longer be undone as a whole."
+        )
+    else:
+        how = f"Undo batch {last.batch_id} first (`musicorg undo {last.batch_id}`), then this one."
+    raise UndoError(
+        f"Batch {batch_id} can't be undone yet. {count} renamed or moved by a later "
+        f"batch{example}. {how} Nothing was changed."
+    )
+
+
+FILE_MOVES = ("move", "supersede", "restore", "trash")  # journal operations that move a file
+
+
+def _moved_from(op: fileops.OpRecord) -> str:
+    """Where a journaled move took its file from, library-relative."""
+    return str(op.intent.get("path") if op.op == "trash" else op.intent.get("src"))
+
+
+def _refuse_if_names_are_taken(lib: Library, batch_id: str) -> None:
+    """Stop an undo that couldn't put a renamed file back under the name it had.
+
+    Undo moves such a file back. If something else has its old name now, the move never
+    overwrites: the file would land on " (2)" instead. That happens when a later batch
+    gave the name away: `plan tidy` gives a remix its full name ("Melody R"), and the
+    next `plan tidy` gives the original, until then "Melody (2)", its plain name back.
+    Undoing the first batch alone would leave the remix as "Melody (2)" with its new
+    title still in its tags, because undo looks for the tags to put back under the old
+    name, where the other song now is.
+
+    So nothing is undone, and the message says which batch to undo first. The batch's
+    moves are walked newest first, as undo runs them, keeping count of the names the
+    undo itself would free or fill on the way (a batch that moved one file away and
+    another into its place is undone without trouble).
+
+    A name counts as taken the way `fileops` counts it when it moves a file: anything
+    of that name is in the way (a folder too), whatever its letter case."""
+    journal = fileops.read_journal(lib)
+    record = journal.get(batch_id)
+    if record is None:
+        return
+    undone = _undone_ops(journal, record)
+    freed: set[str] = set()  # names this undo will have emptied by then
+    filled: set[str] = set()  # names it will have put a file back under
+    taken: list[str] = []
+
+    def there(rel: str) -> bool:  # a file undo will find, to move back or take out
+        if _fold_name(rel) in filled:
+            return True
+        return _fold_name(rel) not in freed and _library_path(lib, rel).is_file()
+
+    def in_use(rel: str) -> bool:  # a name a file can't be moved back to
+        if _fold_name(rel) in filled:
+            return True
+        return _fold_name(rel) not in freed and _name_is_taken(_library_path(lib, rel))
+
+    def leaves(rel: str) -> None:
+        freed.add(_fold_name(rel))
+        filled.discard(_fold_name(rel))
+
+    for op in reversed(record.ops):
+        now = op.result_path
+        if op.status != "done" or op.op_id in undone or not now or not there(now):
+            continue
+        if op.op in ("commit", "copy_in", "write_sidecar", "restore"):
+            leaves(now)  # undo takes it out of Music/ again
+        elif op.op in ("move", "supersede"):
+            old = str(op.intent["src"])
+            if op.op == "move" and old != now and in_use(old) and not _one_file(lib, old, now):
+                taken.append(old)
+                continue
+            leaves(now)  # the file leaves where it is now…
+            freed.discard(_fold_name(old))  # …and is back under its old name
+            filled.add(_fold_name(old))
+    if not taken:
+        return
+    giver = None
+    later = list(journal)[list(journal).index(batch_id) + 1 :]  # the journal is oldest first
+    for other in (journal[name] for name in later):
+        if other.undo_of is None and any(
+            op.status == "done" and op.result_path == taken[0] for op in other.ops
+        ):
+            giver = other.batch_id  # the newest batch that left a file under that name
+    count = "One of its files" if len(taken) == 1 else f"{len(taken):,} of its files"
+    example = f": {taken[0]}" if len(taken) == 1 else f" (the first is {taken[0]})"
+    if giver is not None:
+        how = (
+            f"Batch {giver} gave that name to another file. Undo that batch first "
+            f"(`musicorg undo {giver}`), then this one."
+        )
+    else:
+        how = "Rename or move the file that has the name now, then try again."
+    raise UndoError(
+        f"Batch {batch_id} can't be undone yet. {count} would go back to a name that "
+        f"another file has now{example}. {how} Nothing was changed."
+    )
+
+
+MUSIC_PREFIX = naming.MUSIC_DIR + "/"
+
+
+def _fold_name(name: str) -> str:
+    """A name or library path as it's compared for "is that name taken?": without
+    regard to letter case or to how its accents are stored."""
+    return unicodedata.normalize("NFC", name).casefold()
+
+
+def _name_is_taken(path: Path) -> bool:
+    """Whether a file moved to `path` would find the name in use: anything of that name
+    in the folder counts, a folder too, whatever its letter case. This is the test
+    `fileops` applies when it moves a file, which never overwrites."""
+    if path.exists() or path.is_symlink():
+        return True
+    wanted = _fold_name(path.name)
+    try:
+        return any(_fold_name(entry.name) == wanted for entry in path.parent.iterdir())
+    except OSError:
+        return False
+
+
+def _library_path(lib: Library, rel: str) -> Path:
+    return lib.root / Path(*PurePosixPath(rel).parts)
+
+
+def _one_file(lib: Library, first: str, second: str) -> bool:
+    """Whether two library paths are one file: a rename that only changed letter case,
+    on a disk that doesn't tell the two names apart."""
+    try:
+        return _library_path(lib, first).samefile(_library_path(lib, second))
+    except OSError:
+        return False
+
+
+def _is_track_path(value: object) -> bool:
+    """A song or a saved video in `Music/`, as the index lists them."""
+    if not isinstance(value, str) or not value.startswith(naming.MUSIC_DIR + "/"):
+        return False
+    return Path(value).suffix.lower() in ADOPT_SUFFIXES or naming.is_video_path(value)
+
+
 def _touched_paths(record: fileops.BatchRecord | None) -> set[str]:
     """Every audio path in `Music/` an undone batch's operations named."""
     found: set[str] = set()
     for op in record.ops if record else []:
         for value in (op.result_path, op.intent.get("src"), op.intent.get("dst"),
                       op.intent.get("path")):  # fmt: skip
-            if isinstance(value, str) and value.startswith(naming.MUSIC_DIR + "/"):
-                if Path(value).suffix.lower() in ADOPT_SUFFIXES or naming.is_video_path(value):
-                    found.add(value)
+            if _is_track_path(value):
+                found.add(value)
     return found
 
 
@@ -2406,8 +3296,11 @@ def describe(plan: fileops.Plan) -> list[str]:
         elif op.action == "adopt_details":
             c = op.params["candidate"]
             artists = ", ".join(c.get("artists") or [])
+            lost = op.params.get("version_not_in_title") or []
+            said = ", ".join(normalize.render_versions([token]) for token in lost)
+            mark = f"  [the rip says {said}; this title names no version]" if lost else ""
             lines.append(f"{op.op_id:>5}  adopt    {rip}  +  official details: {artists} – "
-                         f"{c.get('title', '')} ({op.params['video_id']})")  # fmt: skip
+                         f"{c.get('title', '')} ({op.params['video_id']}){mark}")  # fmt: skip
         elif op.action == "adopt":
             unsure = "" if op.params.get("trusted") else "  [keeps the rip's own names]"
             lines.append(f"{op.op_id:>5}  adopt    {rip}  →  {op.target}{unsure}")
@@ -2425,6 +3318,8 @@ def describe(plan: fileops.Plan) -> list[str]:
             assert op.source is not None
             what = [f"{k}: {v if v is not None else '(cleared)'}"
                     for k, v in op.params["changes"].items()]  # fmt: skip
+            if isinstance(op.params.get("version"), list):
+                what.append(f"version: {_shown(op.params['version'])}")
             what += ["lyrics"] if "lyrics" in op.params else []
             what += ["cover"] if "cover_b64" in op.params else []
             lines.append(f"{op.op_id:>5}  edit     {op.source.path}  ({', '.join(what)})")
@@ -2440,9 +3335,14 @@ def describe(plan: fileops.Plan) -> list[str]:
                          f"{op.params['keep']})")  # fmt: skip
         elif op.action == "rename":
             assert op.source is not None
-            changes = ", ".join(f"{k}: {v}" for k, v in (op.params.get("changes") or {}).items())
-            lines.append(f"{op.op_id:>5}  rename   {op.source.path}  →  {op.target}"
-                         + (f"  ({changes})" if changes else ""))  # fmt: skip
+            changes = ", ".join(
+                f"{k}: {_shown(v)}" for k, v in (op.params.get("changes") or {}).items()
+            )
+            if op.target == op.source.path:  # its tags change; the file stays where it is
+                lines.append(f"{op.op_id:>5}  retag    {op.source.path}  ({changes})")
+            else:
+                lines.append(f"{op.op_id:>5}  rename   {op.source.path}  →  {op.target}"
+                             + (f"  ({changes})" if changes else ""))  # fmt: skip
         elif op.action == "empty_folders":
             for rel in op.params["folders"]:
                 lines.append(f"{op.op_id:>5}  remove   {rel}/  (an empty folder)")
@@ -2455,7 +3355,16 @@ def describe(plan: fileops.Plan) -> list[str]:
             lines.append(f"{op.op_id:>5}  {op.action:<8} {op.source.path}{what}")
         else:
             lines.append(f"{op.op_id:>5}  skip     {rip}  (format not adopted in v0.1)")
+    # `plan tidy`: the copies it left alone though their rip names a version, and why.
+    for left in plan.summary.get("versions_left") or []:
+        why = VERSION_LEFT_WHY.get(left["why"], str(left["why"]).replace("_", " "))
+        lines.append(f"{'':>5}  left     {left['path']}  (its rip names a version; {_its(why)})")
     return lines
+
+
+def _its(why: str) -> str:
+    """A reason worded for several songs ("their title was…"), for one ("its title…")."""
+    return why.replace("their ", "its ")
 
 
 queue.register("replace", replace_job, network=True)

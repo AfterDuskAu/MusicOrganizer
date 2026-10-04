@@ -43,13 +43,12 @@ import json
 import logging
 import math
 import random
-import re
 from collections import Counter
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from typing import Any
 
-from musicorg import lastfm, listening, naming, queue, state, youtube
+from musicorg import browse, lastfm, listening, naming, queue, state, youtube
 from musicorg.errors import NotFoundError, UserError, YouTubeError
 from musicorg.index import Index
 from musicorg.library import Library
@@ -162,8 +161,16 @@ class Owned:
     """What the owner has, for "is this pick already mine?" and "how much of this artist
     do I have?"."""
 
-    def __init__(self, rows: list[dict[str, Any]]) -> None:
+    def __init__(
+        self,
+        rows: list[dict[str, Any]],
+        typed: Callable[[], dict[str, set[str]]] | None = None,
+    ) -> None:
+        """`rows` are the index's library tracks. `typed` gives the titles the owner
+        typed in Edit Details (`browse.typed_titles`); it's asked at most once, and only
+        if a copy would otherwise be read by its rip's name for a version."""
         self.ids: set[str] = set()
+        typed_titles: dict[str, set[str]] | None = None
         # By title: the version, the artists credited, and the song's own id.
         self.songs: dict[str, list[tuple[frozenset[str], str, str | None]]] = {}
         self.credits: list[str] = []
@@ -179,26 +186,47 @@ class Owned:
                 self._by_source[row["source_id"]] = track_id
             credit = f" {youtube.artist_key(row.get('artist') or '')} "
             self.credits.append(credit)
-            self._add(row.get("title") or "", credit, (), track_id)
-            # A copy not identified yet can carry the plain title while the rip it came
-            # from is named "Song R" (a remix) or "Artist - Song": its name counts too.
+            # A title the owner named is read with their mark for a remix: owning
+            # "Melody R" is owning a remix of "Melody", not "Melody" itself.
+            match = browse.row_match(row)
+            owner = browse.owner_named(row.get("source"), match)
+            named = self._add(row.get("title") or "", credit, (), track_id, owner=owner)
+            # A copy not identified yet, whose title names no version, can carry a plain
+            # title while the rip it came from is named "Song R" (a remix) or "Artist -
+            # Song": its name counts too. (A title that names no version has no version
+            # tag either: the tag is written from the title.) Once the copy is found or
+            # the owner has named it, the rip's old name says nothing more about it. That
+            # goes for a title the owner typed in Edit Details too: taking the R off by
+            # hand says the song isn't a remix.
             origin = row.get("origin_path")
-            if isinstance(origin, str) and origin:
-                name = re.split(r"[\\/]", origin)[-1]
-                parsed = parse_filename(name.rsplit(".", 1)[0] if "." in name else name)
-                if parsed.title:
+            if match == browse.UNCONFIRMED and not named and isinstance(origin, str) and origin:
+                parsed = parse_filename(browse.rip_stem(origin))
+                theirs = False  # the title is one the owner typed
+                if parsed.version_tokens and typed is not None:
+                    if typed_titles is None:
+                        typed_titles = typed()
+                    theirs = browse.typed_by_owner(typed_titles, track_id, row.get("title"))
+                if parsed.title and not theirs:
                     by = f" {youtube.artist_key(parsed.artist or '')} "
                     self._add(parsed.title, credit if by.strip() == "" else by,
                               parsed.version_tokens, track_id)  # fmt: skip
 
     def _add(
-        self, title: str, credit: str, versions: tuple[str, ...], track_id: str | None
-    ) -> None:
-        parsed = parse_title(title)
+        self,
+        title: str,
+        credit: str,
+        versions: tuple[str, ...],
+        track_id: str | None,
+        *,
+        owner: bool = False,
+    ) -> tuple[str, ...]:
+        """Note one of the owner's songs. Returns the versions its title names."""
+        parsed = browse.read_title(title, owner=owner)
         key = compare_key(parsed.title)
         if key:
             hard = _hard(parsed.version_tokens + tuple(versions))
             self.songs.setdefault(key, []).append((hard, credit, track_id))
+        return parsed.version_tokens
 
     def has(self, candidate: Candidate) -> bool:
         return candidate.video_id in self.ids or self._song(candidate) is not None
@@ -256,7 +284,7 @@ def suggest(
         raise UserError(f"How many songs should be 1 to {MAX_COUNT}.")
 
     rows = [row for row in index.library_tracks() if is_there(lib, row)]
-    owned = Owned(rows)
+    owned = Owned(rows, lambda: browse.typed_titles(lib))
     heard = listening.get(lib)
     skip_ids = set().union(*state.rejected(lib.load_state().data).values())
     skip_ids |= {

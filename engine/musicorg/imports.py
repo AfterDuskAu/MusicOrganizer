@@ -47,7 +47,17 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
-from musicorg import deezer, discover, lastfm, match, playlistfile, queue, spotify, youtube
+from musicorg import (
+    browse,
+    deezer,
+    discover,
+    lastfm,
+    match,
+    playlistfile,
+    queue,
+    spotify,
+    youtube,
+)
 from musicorg.errors import UserError
 from musicorg.index import Index
 from musicorg.library import Library
@@ -192,7 +202,7 @@ def find(
     if len(tracks) > FIND_AT_ONCE:
         raise UserError(f"That's too many songs at once (the limit is {FIND_AT_ONCE}).")
     rows = [row for row in index.library_tracks() if discover.is_there(lib, row)]
-    owned = discover.Owned(rows)
+    owned = discover.Owned(rows, lambda: browse.typed_titles(lib))
     waiting = {
         row["video_id"] for row in queue.downloads(lib.paths) if isinstance(row["video_id"], str)
     }

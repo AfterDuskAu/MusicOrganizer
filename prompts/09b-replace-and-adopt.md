@@ -33,7 +33,8 @@ Build `musicorg.pipeline`: replace jobs, adopt jobs, `plan replace`, `plan adopt
      5. Commit.
      6. Mark the item `adopted`.
    - **Metadata rule:** use the parsed artist and title only if `parse_confidence ≥ 0.8` or the owner filled `artist_fix`/`title_fix`. Otherwise keep the rip's own title and artist tags and write provenance only. Missing artist → `Unknown Artist`; missing title → the file name.
-   - Provenance: `SOURCE=rip_copy`, `ONLY_COPY=1`, `ORIGIN_PATH`, a new `MUSICORG_ID`. `MATCH=manual` only when the owner's fixes were used.
+     - **The title is the whole name, version included** (the owner's rule, 2026-10-04: a song that has been found takes the found title; one that hasn't keeps the title the owner had on it). The parsed title has the versions taken out, for matching. The copy's title puts them back: the clean title followed by every version the rip names, in the rip's own words, with a named version in round brackets ("Here (Lucian Remix)") and the owner's `R` mark for a remix exactly as typed ("Come As You Are R"): `normalize.full_title`. A `title_fix` is used as typed. Before this rule a remix was copied in under its original's name, and the original became " (2)".
+   - Provenance: `SOURCE=rip_copy`, `ONLY_COPY=1`, `ORIGIN_PATH`, a new `MUSICORG_ID`. `MATCH=manual` only when the owner's fixes were used. `VERSION` = the versions the title names (the owner's `R` is `remix`), read from the title being written; not written when the names came from a parse under 0.8.
 3. **Plans:**
    - `plan replace [--only auto|accepted|all-eligible] [--limit N] [--stage-only]`:
      - **Groups items by videoId:** one download per video, gated against each rip separately, all linked to one `MUSICORG_ID`.

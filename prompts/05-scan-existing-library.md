@@ -23,6 +23,7 @@ Implement the CLI commands `sources add|list|remove`, `scan` and `index rebuild`
    - `fingerprints(path, size, mtime, duration_s, fp_blob)`
 2. **`normalize.py`:** the heart of matching quality.
    - `parse_filename(stem) -> Parsed(artist, title, version_tokens, junk_removed, confidence)`
+     - Added 2026-10-04: `Parsed.version_words`, each version as the name words it ("Lucian Remix", the owner's `R` as typed). `full_title(parsed)` puts them back after the clean title: it is what a copy named from its rip is called (step 09b). `parse_owner_title` reads such a title back, the owner's `R` included; `parse_title` is for official titles and doesn't know that mark.
    - `parse_tags(TrackTags) -> Parsed`
    - `best_parse(file) -> Parsed`: prefer tags when they look real, otherwise the filename.
    - **Junk to strip** (case-insensitive, in brackets or free): official (music) video/audio, official lyric video, lyric(s) video, lyrics, visualizer/visualiser, audio, HQ, HD, 4K, 1080p, 320kbps and other bitrates, free download, out now, premiere, `[… release]` label tags, full song, emoji decorations.

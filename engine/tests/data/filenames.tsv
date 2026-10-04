@@ -1,131 +1,148 @@
-input	artist	title	versions	band	what it shows
-Kanye West - Stronger	Kanye West	Stronger		high	clean Artist - Title
-Artist – Title	Artist	Title		high	en dash
-Artist — Title (Audio)	Artist	Title		high	em dash, audio junk
-ARTIST - TITLE (OFFICIAL VIDEO)	ARTIST	TITLE		high	upper case junk
-Artist - "Title" (Official Video)	Artist	Title		high	quoted title
-Beyoncé - Halo	Beyoncé	Halo		high	accents kept
-Drake - Hotline Bling (Official Video)	Drake	Hotline Bling		high	official video
-Rihanna - Diamonds (Official Music Video) [HD]	Rihanna	Diamonds		high	two junk groups
-The Weeknd - Blinding Lights (Official Audio)	The Weeknd	Blinding Lights		high	official audio
-Artist - Title (Official Lyric Video)	Artist	Title		high	lyric video
-Artist - Title [Lyrics]	Artist	Title		high	lyrics in square brackets
-Artist - Title Lyrics	Artist	Title		high	free-standing lyrics
-Artist - Title (Visualizer)	Artist	Title		high	visualizer
-Artist - Title 320kbps	Artist	Title		high	bitrate
-Artist - Title [HQ]	Artist	Title		high	HQ
-Artist - Title (4K)	Artist	Title		high	4K
-Artist - Title (Official Video HD)	Artist	Title		high	junk phrase run
-Artist - Title (Audio + Lyrics)	Artist	Title		high	junk joined by +
-Artist - Title [FREE DOWNLOAD]	Artist	Title		high	free download
-Premiere: Artist - Title	Artist	Title		high	premiere prefix
-[MV] Artist - Title	Artist	Title		high	leading junk tag
-Artist - Title - Official Video	Artist	Title		high	junk as a dash part
-Travis Scott - SICKO MODE (Prod. by Hit-Boy)	Travis Scott	SICKO MODE		high	producer credit
-Artist - Title (Original Mix)	Artist	Title		high	original mix is the original
-Marshmello - Alone (Official Music Video) 🔥	Marshmello	Alone		high	emoji decoration
-★ Artist - Title ★	Artist	Title		high	symbol decoration
-Artist - Title [Dubstep]	Artist	Title		high	genre tag
-Avicii - Wake Me Up (Official Video) (1)	Avicii	Wake Me Up		high	browser duplicate counter
-y2mate.com - Avicii - Wake Me Up (Official Video)	Avicii	Wake Me Up		high	download site prefix
-Artist_-_Title_(Official_Video)	Artist	Title		high	underscores for spaces
-01 - Artist - Title	Artist	Title		high	track number with dash
-01. Artist - Title	Artist	Title		high	track number with dot
-07 Artist - Title	Artist	Title		high	zero-padded track number
-Pegboard Nerds - Hero (feat. Elizaveta) [Monstercat Release]	Pegboard Nerds	Hero		high	Monstercat release
-Pegboard Nerds - Hero ft. Elizaveta [Monstercat FREE Release]	Pegboard Nerds	Hero		high	Monstercat FREE release, inline ft.
-Artist - Title - X Remix [Monstercat Release]	Artist	Title	remix:x	high	remix as a dash part, then a label tag
-[NCS Release] Artist - Title	Artist	Title		high	leading NCS tag
-Artist - Title (feat. X & Y)	Artist	Title		high	feat. in the title
-Pegboard Nerds feat. Elizaveta - Hero [Monstercat Release]	Pegboard Nerds	Hero		high	feat. in the artist
-Artist ft. X - Title (Remix)	Artist	Title	remix	high	ft. in the artist, remix
-Artist - Title (Official Audio) ft. X	Artist	Title		high	ft. after the junk
-The Chainsmokers - Closer (Lyric) ft. Halsey	The Chainsmokers	Closer		high	ft. after a group
-Artist - Title (with X)	Artist	Title		high	with X in brackets
-Lil Nas X x Billy Ray Cyrus - Old Town Road	Lil Nas X	Old Town Road		high	lower-case x splits; the X in the name doesn't
-DJ Snake, Lil Jon - Turn Down for What	DJ Snake	Turn Down for What		high	comma-separated artists
-Simon & Garfunkel - The Sound of Silence	Simon	The Sound of Silence		high	& splits (the full credit is kept separately)
-Flight Facilities - Crave You (Adventure Club Remix)	Flight Facilities	Crave You	remix:adventure club	high	remix
-Artist - Title (Remix by X)	Artist	Title	remix:x	high	remix by
-Artist - Title (X's Remix)	Artist	Title	remix:x	high	possessive remixer
-Artist - Title (X Rmx)	Artist	Title	remix:x	high	Rmx
-Artist - Title (Remix)	Artist	Title	remix	high	remix without a remixer
-Artist - Title (Club Mix)	Artist	Title	remix:club	high	named mix
-Artist - Title - Adventure Club Remix	Artist	Title	remix:adventure club	high	remix as a dash part
-Lil Nas X - Old Town Road (feat. Billy Ray Cyrus) [Remix]	Lil Nas X	Old Town Road	remix	high	feat. and remix
-Artist - Title (X Bootleg)	Artist	Title	bootleg:x	high	bootleg
-Artist - Title (Bootleg by X)	Artist	Title	bootleg:x	high	bootleg by
-Artist - Title (X Flip)	Artist	Title	flip:x	high	flip
-Artist - Title (X VIP Mix)	Artist	Title	vip:x	high	VIP mix
-Artist - Title (VIP)	Artist	Title	vip	high	VIP
-Artist - Title (Radio Edit)	Artist	Title	radio edit	high	radio edit
-Artist - Title (X Edit)	Artist	Title	edit:x	high	someone's edit
-Artist - Title (Extended Mix)	Artist	Title	extended	high	extended
-Artist - Title (Live at Wembley Stadium)	Artist	Title	live:wembley stadium	high	live at a venue
-Artist - Title (Live)	Artist	Title	live	high	live
-Artist - Title - Live	Artist	Title	live	high	live as a dash part
-Artist - Title (Acoustic Version)	Artist	Title	acoustic	high	acoustic
-Artist - Title (MTV Unplugged)	Artist	Title	unplugged	high	unplugged
-Queen - Bohemian Rhapsody (Remastered 2011)	Queen	Bohemian Rhapsody	remaster:2011	high	remaster with year after
-The Beatles - Let It Be (2009 Remaster)	The Beatles	Let It Be	remaster:2009	high	remaster with year before
-Artist - Title (Instrumental)	Artist	Title	instrumental	high	instrumental
-Artist - Title (slowed + reverb)	Artist	Title	slowed	high	slowed + reverb
-Artist - Title slowed + reverb	Artist	Title	slowed	high	slowed + reverb, no brackets
-Artist - Title (Slowed Down)	Artist	Title	slowed	high	slowed down
-SZA - Kill Bill (Sped Up Version)	SZA	Kill Bill	sped up	high	sped up
-Artist - Title (Nightcore)	Artist	Title	nightcore	high	nightcore
-Boyce Avenue - Wonderwall (Oasis Cover)	Boyce Avenue	Wonderwall	cover:oasis	high	cover of someone
-Artist - Title (Demo)	Artist	Title	demo	high	demo
-Artist - Title (Clean)	Artist	Title	clean	high	clean
-Artist - Title [Official Music Video] (Explicit)	Artist	Title	explicit	high	explicit with junk
-Artist - Title (Radio Edit) [Official Audio]	Artist	Title	radio edit	high	version then junk
-Artist - Title (Adventure Club Remix [Official Audio])	Artist	Title	remix:adventure club	high	junk inside a version group
-Artist - Title (X Remix) [Official Audio] (Lyrics)	Artist	Title	remix:x	high	version and two junk groups
-Artist - Title (Part 2)	Artist	Title (Part 2)		high	a real part of the title stays
-Artist - Title (Piano Version)	Artist	Title (Piano Version)		high	unknown version words stay in the title
-米津玄師 - Lemon (Official Video)	米津玄師	Lemon		high	Japanese artist
-YOASOBI「夜に駆ける」Official Music Video	YOASOBI	夜に駆ける		high	Japanese quoted title
-BTS (방탄소년단) 'Dynamite' Official MV	BTS	Dynamite		high	Korean alias and quoted title
-[MV] IU(아이유) _ Palette(팔레트) (Feat. G-DRAGON)	IU	Palette (팔레트)		high	Korean upload with an underscore separator
-Кино - Группа крови	Кино	Группа крови		high	Cyrillic
-Adventure Club - Crave You (Adventure Club Remix)	Adventure Club	Crave You	remix:adventure club	mid	remixer named as the artist
-TaylorSwiftVEVO - Shake It Off	TaylorSwift	Shake It Off		mid	VEVO channel name
-Nightcore - Angel With A Shotgun		Angel With A Shotgun	nightcore	low	Nightcore channel as the artist
-Blinding Lights (Official Video) - The Weeknd	The Weeknd	Blinding Lights		low	reversed Title - Artist
-Blinding Lights | The Weeknd	Blinding Lights	The Weeknd		low	pipe: order unknown
-Hello		Hello		low	single token
-Crave You (Adventure Club Remix)		Crave You	remix:adventure club	low	title and remixer, no artist
-Title (Official Video)		Title		low	title only
-Kanye West ft. Chris Martin- Homecoming(with lyrics)	Kanye West	Homecoming		mid	dash spaced on one side only
-Rxseboy -Dying inside lyric	Rxseboy	Dying inside		mid	dash spaced on the left only, a trailing lyric
-Camila Cabello~ Shameless (lyric) (320 kbps)	Camila Cabello	Shameless		mid	tilde spaced on one side only
-The Chainsmokers ‒ Sick Boy (Lyrics)	The Chainsmokers	Sick Boy		high	figure dash
-Y2meta.app - Drake - One Dance (320 kbps)	Drake	One Dance		high	download site first
-x2mate.com - The Neighbourhood - Daddy Issues (lyrics) (128 kbps)	The Neighbourhood	Daddy Issues		high	another download site first
-onlymp3.to - Future - Low Life (Official Music Video) ft. The Weeknd-Ab3dE_6hIjK-192k-1660198157171	Future	Low Life		high	converter's video id, bitrate and timestamp at the end
-Ed_Sheeran_-_Bad_Habits_Official_Video_(mp3convert.org)	Ed Sheeran	Bad Habits		high	underscores, free junk, download site in brackets
-john-newman-love-me-again-(mp3convert.org)		john newman love me again		low	hyphens for spaces
-Kylie Minogue - Can&#39t Get You Out Of My Head	Kylie Minogue	Can't Get You Out Of My Head		high	web entity without its semicolon
-Rihanna - S&M	Rihanna	S&M		high	an ampersand that isn't a web entity
-OneRepublic - I Ain_t Worried (From _Top Gun- Maverick_) [Official Music Video]	OneRepublic	I Ain't Worried		high	underscores for an apostrophe and quotes; a soundtrack note is junk
-Linkin Park - Breaking the Habit (Official Music Video) [HD UPGRADE]	Linkin Park	Breaking the Habit		high	junk words together
-Imagine Dragons - Birds (Animated Video)	Imagine Dragons	Birds		high	animated video
-Cartel de Santa - Si te Vienen a Contar (Video Oficial)	Cartel de Santa	Si te Vienen a Contar		high	Spanish junk
-DragonForce - Through the Fire and Flames [HQ (Very High Audio Quality)]	DragonForce	Through the Fire and Flames		high	junk inside junk
-Masked Wolf - Astronaut in the Ocean (Josh Peters Remix) [Supported by Timmy Trumpet]	Masked Wolf	Astronaut in the Ocean	remix:josh peters	high	a DJ's support tag
-Alessia Cara - Here (Lucian Remix))	Alessia Cara	Here	remix:lucian	high	a stray bracket
-Future - Mask Off (Lyrics  Lyric Video)	Future	Mask Off		high	lyric words together
-Linkin Park - Crawling [FULL-HD]	Linkin Park	Crawling		high	hyphenated junk
-Mase-Feel So Good		Mase-Feel So Good		low	a hyphen without spaces isn't a separator
-Mr.Kitty - After Dark	Mr.Kitty	After Dark		high	a dotted name isn't a web address
-The Beatles - From Me To You	The Beatles	From Me To You		high	a title starting with From isn't a soundtrack note
-Stressed Out R		Stressed Out	remix	low	the owner's R mark means remix
-Oh Wonder - Body Gold (R)	Oh Wonder	Body Gold	remix	high	the owner's (R) mark means remix
-Phantogram - Black Out Days R(slowed)	Phantogram	Black Out Days	slowed; remix	high	R mark before a slowed tag
-Kodaline - High Hopes (Filous Remix) R	Kodaline	High Hopes	remix:filous	high	R mark next to a named remix
-Artist - Song r	Artist	Song r		high	only a capital R is the mark
-Artist - Song (Clean Version)	Artist	Song	clean	high	clean version
-Artist - Song (Edited)	Artist	Song	clean	high	edited means clean
-Artist - Song [Censored]	Artist	Song	clean	high	censored means clean
-Artist - Song (Uncensored)	Artist	Song	explicit	high	uncensored means explicit
-Clean Bandit - Rather Be	Clean Bandit	Rather Be		high	Clean in a name isn't a version
+input	artist	title	versions	band	what it shows	full title
+Kanye West - Stronger	Kanye West	Stronger		high	clean Artist - Title	Stronger
+Artist – Title	Artist	Title		high	en dash	Title
+Artist — Title (Audio)	Artist	Title		high	em dash, audio junk	Title
+ARTIST - TITLE (OFFICIAL VIDEO)	ARTIST	TITLE		high	upper case junk	TITLE
+Artist - "Title" (Official Video)	Artist	Title		high	quoted title	Title
+Beyoncé - Halo	Beyoncé	Halo		high	accents kept	Halo
+Drake - Hotline Bling (Official Video)	Drake	Hotline Bling		high	official video	Hotline Bling
+Rihanna - Diamonds (Official Music Video) [HD]	Rihanna	Diamonds		high	two junk groups	Diamonds
+The Weeknd - Blinding Lights (Official Audio)	The Weeknd	Blinding Lights		high	official audio	Blinding Lights
+Artist - Title (Official Lyric Video)	Artist	Title		high	lyric video	Title
+Artist - Title [Lyrics]	Artist	Title		high	lyrics in square brackets	Title
+Artist - Title Lyrics	Artist	Title		high	free-standing lyrics	Title
+Artist - Title (Visualizer)	Artist	Title		high	visualizer	Title
+Artist - Title 320kbps	Artist	Title		high	bitrate	Title
+Artist - Title [HQ]	Artist	Title		high	HQ	Title
+Artist - Title (4K)	Artist	Title		high	4K	Title
+Artist - Title (Official Video HD)	Artist	Title		high	junk phrase run	Title
+Artist - Title (Audio + Lyrics)	Artist	Title		high	junk joined by +	Title
+Artist - Title [FREE DOWNLOAD]	Artist	Title		high	free download	Title
+Premiere: Artist - Title	Artist	Title		high	premiere prefix	Title
+[MV] Artist - Title	Artist	Title		high	leading junk tag	Title
+Artist - Title - Official Video	Artist	Title		high	junk as a dash part	Title
+Travis Scott - SICKO MODE (Prod. by Hit-Boy)	Travis Scott	SICKO MODE		high	producer credit	SICKO MODE
+Artist - Title (Original Mix)	Artist	Title		high	original mix is the original	Title
+Marshmello - Alone (Official Music Video) 🔥	Marshmello	Alone		high	emoji decoration	Alone
+★ Artist - Title ★	Artist	Title		high	symbol decoration	Title
+Artist - Title [Dubstep]	Artist	Title		high	genre tag	Title
+Avicii - Wake Me Up (Official Video) (1)	Avicii	Wake Me Up		high	browser duplicate counter	Wake Me Up
+y2mate.com - Avicii - Wake Me Up (Official Video)	Avicii	Wake Me Up		high	download site prefix	Wake Me Up
+Artist_-_Title_(Official_Video)	Artist	Title		high	underscores for spaces	Title
+01 - Artist - Title	Artist	Title		high	track number with dash	Title
+01. Artist - Title	Artist	Title		high	track number with dot	Title
+07 Artist - Title	Artist	Title		high	zero-padded track number	Title
+Pegboard Nerds - Hero (feat. Elizaveta) [Monstercat Release]	Pegboard Nerds	Hero		high	Monstercat release	Hero
+Pegboard Nerds - Hero ft. Elizaveta [Monstercat FREE Release]	Pegboard Nerds	Hero		high	Monstercat FREE release, inline ft.	Hero
+Artist - Title - X Remix [Monstercat Release]	Artist	Title	remix:x	high	remix as a dash part, then a label tag	Title (X Remix)
+[NCS Release] Artist - Title	Artist	Title		high	leading NCS tag	Title
+Artist - Title (feat. X & Y)	Artist	Title		high	feat. in the title	Title
+Pegboard Nerds feat. Elizaveta - Hero [Monstercat Release]	Pegboard Nerds	Hero		high	feat. in the artist	Hero
+Artist ft. X - Title (Remix)	Artist	Title	remix	high	ft. in the artist, remix	Title (Remix)
+Artist - Title (Official Audio) ft. X	Artist	Title		high	ft. after the junk	Title
+The Chainsmokers - Closer (Lyric) ft. Halsey	The Chainsmokers	Closer		high	ft. after a group	Closer
+Artist - Title (with X)	Artist	Title		high	with X in brackets	Title
+Lil Nas X x Billy Ray Cyrus - Old Town Road	Lil Nas X	Old Town Road		high	lower-case x splits; the X in the name doesn't	Old Town Road
+DJ Snake, Lil Jon - Turn Down for What	DJ Snake	Turn Down for What		high	comma-separated artists	Turn Down for What
+Simon & Garfunkel - The Sound of Silence	Simon	The Sound of Silence		high	& splits (the full credit is kept separately)	The Sound of Silence
+Flight Facilities - Crave You (Adventure Club Remix)	Flight Facilities	Crave You	remix:adventure club	high	remix	Crave You (Adventure Club Remix)
+Artist - Title (Remix by X)	Artist	Title	remix:x	high	remix by	Title (Remix by X)
+Artist - Title (X's Remix)	Artist	Title	remix:x	high	possessive remixer	Title (X's Remix)
+Artist - Title (X Rmx)	Artist	Title	remix:x	high	Rmx	Title (X Rmx)
+Artist - Title (Remix)	Artist	Title	remix	high	remix without a remixer	Title (Remix)
+Artist - Title (Club Mix)	Artist	Title	remix:club	high	named mix	Title (Club Mix)
+Artist - Title - Adventure Club Remix	Artist	Title	remix:adventure club	high	remix as a dash part	Title (Adventure Club Remix)
+Lil Nas X - Old Town Road (feat. Billy Ray Cyrus) [Remix]	Lil Nas X	Old Town Road	remix	high	feat. and remix	Old Town Road (Remix)
+Artist - Title (X Bootleg)	Artist	Title	bootleg:x	high	bootleg	Title (X Bootleg)
+Artist - Title (Bootleg by X)	Artist	Title	bootleg:x	high	bootleg by	Title (Bootleg by X)
+Artist - Title (X Flip)	Artist	Title	flip:x	high	flip	Title (X Flip)
+Artist - Title (X VIP Mix)	Artist	Title	vip:x	high	VIP mix	Title (X VIP Mix)
+Artist - Title (VIP)	Artist	Title	vip	high	VIP	Title (VIP)
+Artist - Title (Radio Edit)	Artist	Title	radio edit	high	radio edit	Title (Radio Edit)
+Artist - Title (X Edit)	Artist	Title	edit:x	high	someone's edit	Title (X Edit)
+Artist - Title (Extended Mix)	Artist	Title	extended	high	extended	Title (Extended Mix)
+Artist - Title (Live at Wembley Stadium)	Artist	Title	live:wembley stadium	high	live at a venue	Title (Live at Wembley Stadium)
+Artist - Title (Live)	Artist	Title	live	high	live	Title (Live)
+Artist - Title - Live	Artist	Title	live	high	live as a dash part	Title (Live)
+Artist - Title (Acoustic Version)	Artist	Title	acoustic	high	acoustic	Title (Acoustic Version)
+Artist - Title (MTV Unplugged)	Artist	Title	unplugged	high	unplugged	Title (MTV Unplugged)
+Queen - Bohemian Rhapsody (Remastered 2011)	Queen	Bohemian Rhapsody	remaster:2011	high	remaster with year after	Bohemian Rhapsody (Remastered 2011)
+The Beatles - Let It Be (2009 Remaster)	The Beatles	Let It Be	remaster:2009	high	remaster with year before	Let It Be (2009 Remaster)
+Artist - Title (Instrumental)	Artist	Title	instrumental	high	instrumental	Title (Instrumental)
+Artist - Title (slowed + reverb)	Artist	Title	slowed	high	slowed + reverb	Title (slowed + reverb)
+Artist - Title slowed + reverb	Artist	Title	slowed	high	slowed + reverb, no brackets	Title (slowed + reverb)
+Artist - Title (Slowed Down)	Artist	Title	slowed	high	slowed down	Title (Slowed Down)
+SZA - Kill Bill (Sped Up Version)	SZA	Kill Bill	sped up	high	sped up	Kill Bill (Sped Up Version)
+Artist - Title (Nightcore)	Artist	Title	nightcore	high	nightcore	Title (Nightcore)
+Boyce Avenue - Wonderwall (Oasis Cover)	Boyce Avenue	Wonderwall	cover:oasis	high	cover of someone	Wonderwall (Oasis Cover)
+Artist - Title (Demo)	Artist	Title	demo	high	demo	Title (Demo)
+Artist - Title (Clean)	Artist	Title	clean	high	clean	Title (Clean)
+Artist - Title [Official Music Video] (Explicit)	Artist	Title	explicit	high	explicit with junk	Title (Explicit)
+Artist - Title (Radio Edit) [Official Audio]	Artist	Title	radio edit	high	version then junk	Title (Radio Edit)
+Artist - Title (Adventure Club Remix [Official Audio])	Artist	Title	remix:adventure club	high	junk inside a version group	Title (Adventure Club Remix)
+Artist - Title (X Remix) [Official Audio] (Lyrics)	Artist	Title	remix:x	high	version and two junk groups	Title (X Remix)
+Artist - Title (Part 2)	Artist	Title (Part 2)		high	a real part of the title stays	Title (Part 2)
+Artist - Title (Piano Version)	Artist	Title (Piano Version)		high	unknown version words stay in the title	Title (Piano Version)
+米津玄師 - Lemon (Official Video)	米津玄師	Lemon		high	Japanese artist	Lemon
+YOASOBI「夜に駆ける」Official Music Video	YOASOBI	夜に駆ける		high	Japanese quoted title	夜に駆ける
+BTS (방탄소년단) 'Dynamite' Official MV	BTS	Dynamite		high	Korean alias and quoted title	Dynamite
+[MV] IU(아이유) _ Palette(팔레트) (Feat. G-DRAGON)	IU	Palette (팔레트)		high	Korean upload with an underscore separator	Palette (팔레트)
+Кино - Группа крови	Кино	Группа крови		high	Cyrillic	Группа крови
+Adventure Club - Crave You (Adventure Club Remix)	Adventure Club	Crave You	remix:adventure club	mid	remixer named as the artist	Crave You (Adventure Club Remix)
+TaylorSwiftVEVO - Shake It Off	TaylorSwift	Shake It Off		mid	VEVO channel name	Shake It Off
+Nightcore - Angel With A Shotgun		Angel With A Shotgun	nightcore	low	Nightcore channel as the artist	Angel With A Shotgun (Nightcore)
+Blinding Lights (Official Video) - The Weeknd	The Weeknd	Blinding Lights		low	reversed Title - Artist	Blinding Lights
+Blinding Lights | The Weeknd	Blinding Lights	The Weeknd		low	pipe: order unknown	The Weeknd
+Hello		Hello		low	single token	Hello
+Crave You (Adventure Club Remix)		Crave You	remix:adventure club	low	title and remixer, no artist	Crave You (Adventure Club Remix)
+Title (Official Video)		Title		low	title only	Title
+Kanye West ft. Chris Martin- Homecoming(with lyrics)	Kanye West	Homecoming		mid	dash spaced on one side only	Homecoming
+Rxseboy -Dying inside lyric	Rxseboy	Dying inside		mid	dash spaced on the left only, a trailing lyric	Dying inside
+Camila Cabello~ Shameless (lyric) (320 kbps)	Camila Cabello	Shameless		mid	tilde spaced on one side only	Shameless
+The Chainsmokers ‒ Sick Boy (Lyrics)	The Chainsmokers	Sick Boy		high	figure dash	Sick Boy
+Y2meta.app - Drake - One Dance (320 kbps)	Drake	One Dance		high	download site first	One Dance
+x2mate.com - The Neighbourhood - Daddy Issues (lyrics) (128 kbps)	The Neighbourhood	Daddy Issues		high	another download site first	Daddy Issues
+onlymp3.to - Future - Low Life (Official Music Video) ft. The Weeknd-Ab3dE_6hIjK-192k-1660198157171	Future	Low Life		high	converter's video id, bitrate and timestamp at the end	Low Life
+Ed_Sheeran_-_Bad_Habits_Official_Video_(mp3convert.org)	Ed Sheeran	Bad Habits		high	underscores, free junk, download site in brackets	Bad Habits
+john-newman-love-me-again-(mp3convert.org)		john newman love me again		low	hyphens for spaces	john newman love me again
+Kylie Minogue - Can&#39t Get You Out Of My Head	Kylie Minogue	Can't Get You Out Of My Head		high	web entity without its semicolon	Can't Get You Out Of My Head
+Rihanna - S&M	Rihanna	S&M		high	an ampersand that isn't a web entity	S&M
+OneRepublic - I Ain_t Worried (From _Top Gun- Maverick_) [Official Music Video]	OneRepublic	I Ain't Worried		high	underscores for an apostrophe and quotes; a soundtrack note is junk	I Ain't Worried
+Linkin Park - Breaking the Habit (Official Music Video) [HD UPGRADE]	Linkin Park	Breaking the Habit		high	junk words together	Breaking the Habit
+Imagine Dragons - Birds (Animated Video)	Imagine Dragons	Birds		high	animated video	Birds
+Cartel de Santa - Si te Vienen a Contar (Video Oficial)	Cartel de Santa	Si te Vienen a Contar		high	Spanish junk	Si te Vienen a Contar
+DragonForce - Through the Fire and Flames [HQ (Very High Audio Quality)]	DragonForce	Through the Fire and Flames		high	junk inside junk	Through the Fire and Flames
+Masked Wolf - Astronaut in the Ocean (Josh Peters Remix) [Supported by Timmy Trumpet]	Masked Wolf	Astronaut in the Ocean	remix:josh peters	high	a DJ's support tag	Astronaut in the Ocean (Josh Peters Remix)
+Alessia Cara - Here (Lucian Remix))	Alessia Cara	Here	remix:lucian	high	a stray bracket	Here (Lucian Remix)
+Future - Mask Off (Lyrics  Lyric Video)	Future	Mask Off		high	lyric words together	Mask Off
+Linkin Park - Crawling [FULL-HD]	Linkin Park	Crawling		high	hyphenated junk	Crawling
+Mase-Feel So Good		Mase-Feel So Good		low	a hyphen without spaces isn't a separator	Mase-Feel So Good
+Mr.Kitty - After Dark	Mr.Kitty	After Dark		high	a dotted name isn't a web address	After Dark
+The Beatles - From Me To You	The Beatles	From Me To You		high	a title starting with From isn't a soundtrack note	From Me To You
+Stressed Out R		Stressed Out	remix	low	the owner's R mark means remix	Stressed Out R
+Oh Wonder - Body Gold (R)	Oh Wonder	Body Gold	remix	high	the owner's (R) mark means remix	Body Gold (R)
+Phantogram - Black Out Days R(slowed)	Phantogram	Black Out Days	slowed; remix	high	R mark before a slowed tag	Black Out Days R (slowed)
+Kodaline - High Hopes (Filous Remix) R	Kodaline	High Hopes	remix:filous	high	R mark next to a named remix	High Hopes (Filous Remix)
+Artist - Song r	Artist	Song r		high	only a capital R is the mark	Song r
+Artist - Song (Clean Version)	Artist	Song	clean	high	clean version	Song (Clean Version)
+Artist - Song (Edited)	Artist	Song	clean	high	edited means clean	Song (Edited)
+Artist - Song [Censored]	Artist	Song	clean	high	censored means clean	Song (Censored)
+Artist - Song (Uncensored)	Artist	Song	explicit	high	uncensored means explicit	Song (Uncensored)
+Clean Bandit - Rather Be	Clean Bandit	Rather Be		high	Clean in a name isn't a version	Rather Be
+Jill Scott - Still Here [Acoustic Version]	Jill Scott	Still Here	acoustic	high	full title: square brackets become round ones	Still Here (Acoustic Version)
+Artist - Title (X Remix Official Audio)	Artist	Title	remix:x	high	full title: junk after a version in one group is left out	Title (X Remix)
+Imagine Dragons - Bones [Epic Remix] (128 kbps)	Imagine Dragons	Bones	remix:epic	high	full title: a bitrate is left out	Bones (Epic Remix)
+Ry X - Howling (Âme Remix)	Ry X	Howling	remix:ame	high	full title: the rip's accents are kept, the token has none	Howling (Âme Remix)
+Katy Perry - E.T. (AIZZO REMIX) CAR VIDEO LIMMA	Katy Perry	E.T. CAR VIDEO LIMMA	remix:aizzo	high	full title: the rip's capitals are kept, and the version goes after the title	E.T. CAR VIDEO LIMMA (AIZZO REMIX)
+Snoop Dogg - Gin and Juice (Explicit Video Mix)	Snoop Dogg	Gin and Juice	remix	high	full title: the rip's own words, where the token is only a guess	Gin and Juice (Explicit Video Mix)
+Night Lovell - Polozhenie [Extended] (Night Drive)	Night Lovell	Polozhenie (Night Drive)	extended	high	full title: a version in the middle goes after the whole title	Polozhenie (Night Drive) (Extended)
+Artist - Title (Extended Mix / Remastered)	Artist	Title	extended; remaster	high	full title: two versions named in one group stay together	Title (Extended Mix / Remastered)
+Artist - Title (Live at Wembley) [Remastered 2011]	Artist	Title	live:wembley; remaster:2011	high	full title: two versions, each in round brackets	Title (Live at Wembley) (Remastered 2011)
+Artist - Title slowed (Live)	Artist	Title	live; slowed	high	full title: versions in the rip's order, whatever order they were found in	Title (slowed) (Live)
+Artist - Song (Live) (live)	Artist	Song	live	high	full title: a version named twice is written once	Song (Live)
+Artist - Song [R]	Artist	Song	remix	high	the owner's [R] mark stays as typed	Song [R]
+Artist - Song (slowed) R	Artist	Song	slowed; remix	high	R mark after a slowed tag: the rip's order is kept	Song (slowed) R
+Artist - Title R - Live	Artist	Title	live; remix	high	R mark before a version as a dash part	Title R (Live)
+Artist - Song R (Official Video)	Artist	Song	remix	high	R mark before junk	Song R
+Biggie Smalls - I Wanna Go To Hell  R	Biggie Smalls	I Wanna Go To Hell	remix	high	R mark after two spaces	I Wanna Go To Hell R
+Kid Cudi - Solo Dolo R 1	Kid Cudi	Solo Dolo R 1		high	an R that isn't last isn't read as the mark: the name stays as typed	Solo Dolo R 1

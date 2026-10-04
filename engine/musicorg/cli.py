@@ -940,6 +940,15 @@ def _print_plan_summary(plan: fileops.Plan) -> None:
     if plan.kind == "tidy":
         print(f"  {s.get('duplicates', 0):,} duplicate(s) to set aside (the best copy is kept)")
         print(f"  {s.get('renames', 0):,} song(s) to rename with your preferred names")
+        if s.get("versions"):
+            print(f"  {s['versions']:,} song(s) to give back the version their name lost "
+                  "(remix, live…), as their rip names it")  # fmt: skip
+        if s.get("numbers_dropped"):
+            print(f"  {s['numbers_dropped']:,} song(s) to give their plain name back: the "
+                  '" (2)" on the file is no longer needed')  # fmt: skip
+        for why, n in sorted((s.get("versions_skipped") or {}).items()):
+            print(f"  {n:,} song(s) left as they are, though their rip names a version: "
+                  f"{pipeline.VERSION_LEFT_WHY.get(why, why.replace('_', ' '))}")  # fmt: skip
         if s.get("empty_folders"):
             print(f"  {s['empty_folders']:,} empty folder(s) to remove")
     elif plan.kind == "lyrics":
@@ -974,6 +983,10 @@ def _print_plan_summary(plan: fileops.Plan) -> None:
         if s.get("matched"):
             print(f"  {s.get('with_details', 0):,} matched rip(s) to copy in with their official "
                   "details (your own audio; nothing is downloaded)")  # fmt: skip
+        if s.get("version_not_in_title"):
+            print(f"  {s['version_not_in_title']:,} of those: the rip's name says remix, live or "
+                  "another version, and the official title chosen for it names none (marked "
+                  "in `plan show`)")  # fmt: skip
         if s.get("low_confidence_adopts"):
             print(f"  {s['low_confidence_adopts']:,} of them keep the rip's own names "
                   "(the file name was hard to read)")  # fmt: skip

@@ -48,6 +48,15 @@ Music/<Album Artist>/<Album> (<Year>)/<Track> <Title>.<ext>
   - Unknown album: `Music/<Artist>/Unsorted/<Title>.<ext>`.
   - Unknown title: the source file's name without its extension.
   - Compilations: album artist `Various Artists`.
+- **The title is the song's whole name, its version included** (the owner's rule, 2026-10-04): *a song that has been found takes the found title; a song that hasn't been found keeps the title I had on it.*
+  - **Found** (a download, a replacement, or a rip kept with its match's official details): the title is YouTube Music's own, e.g. `Lost Boy (Radio Remix)`.
+  - **Not found yet, or kept as an only copy** (a copy named after its rip): the rip's clean title, followed by every version the rip names, in the rip's own words and order.
+    - A named version goes in round brackets, whatever brackets the rip used: `Here (Lucian Remix)`, `Still Here (Acoustic Version)`. Spelling, capitals and accents are kept.
+    - **The owner's own mark for a remix, a final `R`, stays exactly as typed:** `Come As You Are R`, `Done Wrong (R)`. It is never written out as "(Remix)" and never dropped. (Where the rip names the remix as well, as in `High Hopes (Filous Remix) R`, the R says nothing more, and the title is `High Hopes (Filous Remix)`.)
+    - Junk such as `(320 kbps)` or `[Official Audio]` stays out.
+    - A rip whose names couldn't be read with confidence (under 0.8) keeps its own title tag, untouched.
+  - **A title the owner typed** (a title fix in review, or Edit Details) is used exactly as typed, and stays: `plan tidy`, and a later decision that gives no fixes, don't change it back, even when it is word for word what an older engine wrote. (The journal records that it was typed.)
+  - The file name follows from the title by the rules below. So a remix and its original never compete for one name: `Come As You Are R.mp3` and `Come As You Are.mp3`.
 - **Track numbers:** two digits, `01`. Multi-disc albums use `<Disc>-<Track>`, e.g. `2-07`. No track number: no prefix.
 - **Sanitising, applied to every path component:**
   - NFC Unicode normalisation.
@@ -111,7 +120,14 @@ In M4A these are freeform atoms `----:com.apple.iTunes:<NAME>`. The `com.apple.i
 | `MUSICORG_MATCH_SCORE` | 0.000–1.000 | `0.987` |
 | `MUSICORG_ONLY_COPY` | `1` if no official source exists. Protect it. Absent for a rip kept with official details: an official source exists. | `1` |
 | `MUSICORG_ORIGIN_PATH` | Copies and replacements: the original external rip path | `/Users/…/rips/x.mp3` |
-| `MUSICORG_VERSION` | Normalised version tokens, **separated by `; `** | `remix:adventure club` |
+| `MUSICORG_VERSION` | The versions the title names, as normalised tokens **separated by `; `**. The owner's `R` is `remix`. Absent when the title names no version. | `remix:adventure club` |
+
+`MUSICORG_VERSION` says what the title says, for every file the engine brings in:
+
+- a found song (a download, a saved video, a replacement, a rip kept with official details): read from the official title
+- a copy named after its rip, and a title the owner typed: read from that title, with the owner's `R` understood as a remix
+- Edit Details keeps it in step with an edited title: a new title that names no version removes it
+- not written for a copy whose rip's names couldn't be read with confidence (under 0.8). A guess at a version isn't put into a file. A version tag the rip already carried is left as it is.
 
 MusicBrainz IDs use Picard's standard names and are optional in v0.1. Leave room for them without writing them.
 
@@ -184,6 +200,9 @@ It's written atomically (temp file, fsync, rename) after every batch and every r
    - Every batch has a `batch_id`. `musicorg undo <batch_id>` first cancels the batch's queued jobs (it refuses while one is running), then reverses its done operations in reverse order, using the journal's before-states.
    - A tag write restores the before-state **exactly**: fields that were absent before are removed.
    - Undo is itself a journaled batch.
+   - **Undo refuses, changing nothing, when it couldn't put things back** (2026-10-04), and says which later batch to undo first. Batches that build on each other are undone newest first.
+     - A later batch moved or renamed one of the batch's files. Undo finds a file by where the batch left it; without this it would miss the file, or act on another song that has the name now.
+     - A file the batch renamed can't go back to its own name because something else has that name now. Without this the file would come back as ` (2)` with its newer tags still on it.
 9. **Plans with preconditions.**
    - Each planned operation stores its preconditions: the source's size, mtime and `sha1_head`, the item's state, and the target folder.
    - `apply` **and each job right before it acts** re-check them. A failed check ends the job `needs_review` with "the file changed since the plan was made".

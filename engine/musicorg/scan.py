@@ -10,6 +10,8 @@ moved or deleted (CLAUDE.md rule 2).
   files, junk and any library inside it) and indexes every audio file: probe, tags, the
   best parse of its name and tags, and `sha1_head`. Incremental: a file whose size and
   modification time haven't changed isn't read again.
+- `parse_again(item)`: an item's names parsed again from what the scan stored, for
+  what a newer parser adds (the words a rip names its version in).
 - `scan_library` and `rebuild`: `musicorg index rebuild` (contract section 5).
 """
 
@@ -358,7 +360,7 @@ def _analyse(job: _Todo) -> dict[str, Any]:
         file_tags, extra, head = tags.TrackTags(), {}, None
         if FLAG_UNREADABLE not in flags:
             flags.append(FLAG_UNREADABLE)
-    parsed = normalize.best_parse(Path(job.rel).stem, file_tags)
+    parsed = _parse_names(job.rel, file_tags)
     bitrate = probe.bitrate_kbps if probe else None
     if _suspect_upscale(ext, bitrate, parsed, extra, job.rel):
         flags.append(FLAG_SUSPECT_UPSCALE)
@@ -384,6 +386,27 @@ def _analyse(job: _Todo) -> dict[str, Any]:
         "reasons_json": [],
         "scanned_at": _now(),
     }
+
+
+def _parse_names(rel: str, file_tags: tags.TrackTags) -> normalize.Parsed:
+    """The best parse of a rip's file name and its own title and artist tags."""
+    return normalize.best_parse(Path(rel).stem, file_tags)
+
+
+def parse_again(item: dict[str, Any]) -> normalize.Parsed:
+    """An item's names parsed again, from what the scan stored about it: its path, and
+    its own title and artist tags. It is the parse the scan made, with whatever the
+    parser has learned since. An index scanned by an older engine holds no version
+    words (`Parsed.version_words`), and a scan doesn't read an unchanged file again,
+    so a plan that names a copy after its rip parses the names again here.
+
+    Nothing is read from the rip, and the index isn't rebuilt (a rebuild would throw
+    away the matcher's candidates). If the parser has changed what it makes of a name,
+    the result differs from the stored `parsed_title`: compare them before trusting
+    that a title in the library is the one the engine wrote."""
+    own = (item.get("raw_tags_json") or {}).get("tags") or {}
+    file_tags = tags.TrackTags(title=_text(own.get("title")), artist=_text(own.get("artist")))
+    return _parse_names(item["rel_path"], file_tags)
 
 
 def youtube_converted(extra: dict[str, str], name: str) -> bool:

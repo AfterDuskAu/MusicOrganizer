@@ -19,10 +19,11 @@ import pytest
 from fileops_support import place, sha256, symlink_or_skip
 from mutagen.id3 import ID3, TSSE
 
-from musicorg import library, scan, state, tags
+from musicorg import fileops, library, normalize, scan, state, tags
 from musicorg.errors import NotFoundError, UserError
 from musicorg.index import Index, item_id, open_index
 from musicorg.library import Library
+from musicorg.normalize import Parsed
 from musicorg.tags import TrackTags
 
 RIPS = {
@@ -215,6 +216,109 @@ def test_scanning_one_source(lib: Library, index: Index, rips: Path, tmp_path: P
 def test_a_scan_needs_a_source(lib: Library, index: Index) -> None:
     with pytest.raises(UserError, match="sources add"):
         scan.scan(lib, index)
+
+
+# ---- parsing the names again -----------------------------------------------------------
+
+# Rips laid out as the owner's are, with their own tags: file → (title tag, artist tag).
+TAGGED = {
+    "Nirvana/Unknown Album/Come As You Are R.mp3": ("Come As You Are R", "Nirvana"),
+    "Alessia Cara/Unknown Album/Here (Lucian Remix)).mp3": ("Here (Lucian Remix))", "Alessia Cara"),
+    "Jill Scott/Beautifully Human/17 Still Here [Acoustic Version].m4a": (
+        "Still Here [Acoustic Version]",
+        "Jill Scott",
+    ),
+    "Band/Unknown Album/Melody R.mp3": ("Melody", "Band"),  # the version only in the name
+    "Kid Cudi/Unknown Album/Solo Dolo R 1.mp3": (None, "Kid Cudi"),  # no title tag
+}
+# The title a copy named from each rip is given (normalize.full_title).
+FULL_TITLES = {
+    "Come As You Are R.mp3": "Come As You Are R",
+    "Here (Lucian Remix)).mp3": "Here (Lucian Remix)",
+    "17 Still Here [Acoustic Version].m4a": "Still Here (Acoustic Version)",
+    "Melody R.mp3": "Melody R",
+    "Solo Dolo R 1.mp3": "Solo Dolo R 1",
+    "Flight Facilities - Crave You (Adventure Club Remix).m4a": "Crave You (Adventure Club Remix)",
+    "Drake - Hotline Bling (Official Video).mp3": "Hotline Bling",
+    "Nightcore - Angel With A Shotgun.opus": "Angel With A Shotgun (Nightcore)",
+}
+
+
+@pytest.fixture
+def tagged_rips(rips: Path, samples: dict[str, Path]) -> Path:
+    """The rips folder, with some rips that carry a title and an artist tag."""
+    for name, (title, artist) in TAGGED.items():
+        path = place(samples[Path(name).suffix.lstrip(".")], rips / name)
+        tags.write_tags(path, TrackTags(title=title, artist=artist))
+    return rips
+
+
+def test_parse_again_is_the_scans_own_parse(lib: Library, index: Index, tagged_rips: Path) -> None:
+    add(lib, index, tagged_rips)
+    scan.scan(lib, index)
+    items = items_by_name(index)
+    assert len(items) == len(RIPS) + len(TAGGED) + 1  # and garbage.mp3, which has no tags
+    for name, item in items.items():
+        again = scan.parse_again(item)
+        stored = Parsed.from_dict(item["parsed_json"])
+        assert again == stored, name
+        assert again.version_words == stored.version_words, name
+        assert (again.title, again.artist, list(again.version_tokens), again.confidence) == (
+            item["parsed_title"],
+            item["parsed_artist"],
+            item["parsed_version_json"],
+            item["parse_confidence"],
+        ), name
+    assert items["Come As You Are R.mp3"]["parsed_json"]["version_words"] == ["R"]
+    titles = {name: normalize.full_title(scan.parse_again(items[name])) for name in FULL_TITLES}
+    assert titles == FULL_TITLES
+
+
+def test_parse_again_serves_an_index_from_an_older_engine(
+    lib: Library, index: Index, tagged_rips: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An older engine stored no version words, and a scan doesn't read an unchanged file
+    again. The names are parsed again from what the index holds; no rip is opened."""
+    add(lib, index, tagged_rips)
+    scan.scan(lib, index)
+    old_items = {}
+    for name, item in items_by_name(index).items():
+        parsed_json = {k: v for k, v in item["parsed_json"].items() if k != "version_words"}
+        old_items[name] = {**item, "parsed_json": parsed_json}
+
+    def no_reading(*args: Any, **kwargs: Any) -> Any:
+        raise AssertionError("parse_again read a rip")
+
+    for name in ("read_tags", "read_extra", "probe"):
+        monkeypatch.setattr(tags, name, no_reading)
+    monkeypatch.setattr(fileops, "sha1_head", no_reading)
+    before = snapshot(tagged_rips)
+
+    stale = Parsed.from_dict(old_items["Come As You Are R.mp3"]["parsed_json"])
+    assert (stale.title, stale.version_tokens, stale.version_words) == (
+        "Come As You Are",
+        ("remix",),
+        (),
+    )
+    assert normalize.full_title(stale) is None  # the stored parse can't name a copy
+    for name, title in FULL_TITLES.items():
+        again = scan.parse_again(old_items[name])
+        assert normalize.full_title(again) == title, name
+        assert again == Parsed.from_dict(old_items[name]["parsed_json"]), name  # same matching
+    assert snapshot(tagged_rips) == before
+
+
+def test_parse_again_needs_only_the_path_and_the_stored_tags() -> None:
+    item = {
+        "rel_path": "Phantogram/Unknown Album/Black Out Days R(slowed).mp3",
+        "raw_tags_json": {"tags": {"title": "Black Out Days R(slowed)", "artist": "Phantogram"}},
+    }
+    parsed = scan.parse_again(item)
+    assert (parsed.artist, parsed.title) == ("Phantogram", "Black Out Days")
+    assert parsed.version_tokens == ("slowed", "remix")
+    assert normalize.full_title(parsed) == "Black Out Days R (slowed)"
+    untagged = scan.parse_again({"rel_path": "Artist - Song (X Remix).mp3", "raw_tags_json": None})
+    assert (untagged.artist, normalize.full_title(untagged)) == ("Artist", "Song (X Remix)")
 
 
 # ---- flags -----------------------------------------------------------------------------
