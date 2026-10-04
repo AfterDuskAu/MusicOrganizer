@@ -136,7 +136,7 @@ A signed and notarised DMG with Python, ffmpeg, fpcalc and deno bundled, automat
 
 ## 1.1
 
-- A phone server (Subsonic-compatible, on home Wi-Fi).
+- A phone server (Subsonic-compatible, on home Wi-Fi). **Started early, on 2026-10-04, in another shape:** the engine shares the library read-only with a phone player on the home network (`sharing`; `docs/ENGINE_API.md`, section 3). Not built: the Subsonic-compatible server, and favourites and play counts coming back from the phone.
 - A weekly mix in its own `Mix/` folder.
 - Shareable playlist links.
 - An Inbox for Bandcamp, CD rips and iTunes purchases.

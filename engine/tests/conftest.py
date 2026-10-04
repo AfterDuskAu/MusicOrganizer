@@ -10,13 +10,17 @@
 - The system Trash is replaced by a folder for every test. The one test marked
   `integration` uses the real Trash; it only runs with MUSICORG_INTEGRATION=1, and never
   in CI.
+- A library shared in a test (`sharing`) listens on this computer's own loopback address
+  only, on whatever port is free: no test is ever reachable from the network.
 """
 
 from __future__ import annotations
 
 import contextlib
+import ipaddress
 import os
 import re
+import socket
 import subprocess
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
@@ -24,7 +28,7 @@ from pathlib import Path
 
 import pytest
 
-from musicorg import artwork, fileops, library, state, tools
+from musicorg import artwork, fileops, library, sharing, state, tools
 
 REQUIRE_TOOLS = os.environ.get("MUSICORG_REQUIRE_TOOLS") == "1"
 RUN_LIVE = os.environ.get("MUSICORG_LIVE") == "1"
@@ -69,6 +73,17 @@ def replay_youtube(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPat
         monkeypatch.delenv("MUSICORG_REPLAY_DIR", raising=False)
     else:
         monkeypatch.setenv("MUSICORG_REPLAY_DIR", str(YTM_FIXTURES))
+
+
+# This computer's own address for talking to itself, worked out here rather than written.
+LOOPBACK = str(ipaddress.IPv4Address(socket.INADDR_LOOPBACK))
+
+
+@pytest.fixture(autouse=True)
+def share_on_this_computer_only(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A share started in a test can only be reached from this computer itself."""
+    monkeypatch.setattr(sharing, "HOST", LOOPBACK)
+    monkeypatch.setattr(sharing, "PORT", 0)
 
 
 @pytest.fixture(autouse=True)

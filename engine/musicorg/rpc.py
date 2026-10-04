@@ -60,6 +60,7 @@ from musicorg import (
     queue,
     review,
     scan,
+    sharing,
     spotify,
     state,
     status,
@@ -255,6 +256,7 @@ class Server:
         self._queue_thread: threading.Thread | None = None
         self._queue_lock = threading.Lock()
         self._resume_wait = 0  # counts the waits to start the queue again; the newest wins
+        self._share: sharing.Share | None = None  # the library shared at home, while it's on
         self.methods: dict[str, Callable[[dict[str, Any]], Any]] = {
             "engine.hello": self.engine_hello,
             "library.init": self.library_init,
@@ -307,6 +309,11 @@ class Server:
             "queue.dismiss": self.queue_dismiss,
             "settings.get": self.settings_get,
             "settings.set": self.settings_set,
+            "sharing.status": self.sharing_status,
+            "sharing.set": self.sharing_set,
+            "sharing.pair": self.sharing_pair,
+            "sharing.stop_pairing": self.sharing_stop_pairing,
+            "sharing.forget": self.sharing_forget,
         }
 
     # -- the loop --
@@ -392,6 +399,7 @@ class Server:
             return
         self.stopping.set()
         spotify.cancel_sign_in()  # stop listening for a sign-in nobody finished
+        self._stop_sharing()  # first of all: nothing is shared once the app has gone
         deadline = time.monotonic() + SHUTDOWN_GRACE_S
         for thread in (self._queue_thread, self._job.thread if self._job else None):
             if thread is not None and thread.is_alive():
@@ -825,6 +833,47 @@ class Server:
         if cap is not None:
             return _settings(save_daily_cap(cap))  # config.py does its own writing (rule 3)
         return _settings(Config.load())
+
+    # -- methods: sharing the library with a phone player at home (2026-10-04) --
+
+    def _stop_sharing(self) -> None:
+        share, self._share = self._share, None
+        if share is not None:
+            share.stop()
+
+    def sharing_status(self, params: dict[str, Any]) -> dict[str, Any]:
+        lib = self._library()
+        return self._share.status() if self._share is not None else sharing.status_off(lib)
+
+    def sharing_set(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Switch sharing on or off. On, this engine listens on the home network until
+        it's switched off or the engine stops; it never starts listening by itself."""
+        on = need(params, "on", bool)
+        lib = self._library()
+        if on and self._share is None:
+            share = sharing.Share(lib, changed=lambda: self.writer.notify("sharing.changed", {}))
+            share.start()
+            self._share = share
+        elif not on:
+            self._stop_sharing()
+        return self.sharing_status({})
+
+    def sharing_pair(self, params: dict[str, Any]) -> dict[str, Any]:
+        """A six-digit code for the app to show, which a phone types to be paired."""
+        self._library()
+        if self._share is None:
+            raise RpcError(USER_ERROR, "Switch sharing on first, then pair a device.")
+        return self._share.new_code()
+
+    def sharing_stop_pairing(self, params: dict[str, Any]) -> dict[str, Any]:
+        if self._share is not None:
+            self._share.stop_pairing()
+        return self.sharing_status({})
+
+    def sharing_forget(self, params: dict[str, Any]) -> dict[str, Any]:
+        self._library()
+        sharing.forget(need(params, "device_id", str))
+        return self.sharing_status({})
 
     def youtube_stream(self, params: dict[str, Any]) -> dict[str, Any]:
         found = youtube.stream(need(params, "video_id", str))

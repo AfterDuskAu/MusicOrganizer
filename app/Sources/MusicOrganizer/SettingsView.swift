@@ -11,7 +11,7 @@ struct SettingsView: View {
     static let tabKey = "settingsTab"
     /// Which account under Settings → Profile is open (its arrow turned down).
     static let openAccountKey = "settingsOpenAccount"
-    private static let tabs = ["profile", "play", "downloads", "lyrics", "layout"]
+    private static let tabs = ["profile", "play", "downloads", "lyrics", "sharing", "layout"]
 
     var body: some View {
         TabView(selection: $tab) {
@@ -22,6 +22,7 @@ struct SettingsView: View {
             DownloadSettings().tabItem { Label("Downloads", systemImage: "arrow.down.circle") }
                 .tag("downloads")
             LyricsSettings().tabItem { Label("Lyrics", systemImage: "quote.bubble") }.tag("lyrics")
+            SharingSettings().tabItem { Label("Sharing", systemImage: "iphone") }.tag("sharing")
             LayoutSettings().tabItem { Label("App Layout", systemImage: "paintpalette") }
                 .tag("layout")
         }
@@ -32,7 +33,7 @@ struct SettingsView: View {
 }
 
 /// A small grey explanation under a setting.
-private struct SideNote: View {
+struct SideNote: View {
     let text: String
 
     init(_ text: String) { self.text = text }

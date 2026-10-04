@@ -2,6 +2,8 @@
 
 The engine has two front doors onto the **same functions**. The CLI is for the owner, for testing and for v0.1. JSON-RPC is for the Mac app from v0.2 on. Neither may contain business logic of its own: both call into `musicorg` modules.
 
+A third door, section 3, is for a phone player on the home network. It only reads, and it's closed until the owner opens it in the app's Settings.
+
 ## 0. Enums (the only allowed values)
 
 | Name | Values |
@@ -24,6 +26,8 @@ The engine has two front doors onto the **same functions**. The CLI is for the o
 | **Batch status** | `open` (running, or an open batch from `apply`) · `closed` · `interrupted` (closed by recovery after a crash) |
 | **Journal operation** | `commit` · `copy_in` · `supersede` · `restore` (back from `_Replaced/`, by undo) · `move` · `trash` · `write_tags` · `write_sidecar` |
 | **Undo step status** | `planned` (dry run) · `done` · `skipped` (already undone, or the file is gone) · `manual` (restore from the Trash by hand) |
+| **Sync file type** (home sync, section 3) | `m4a` · `mp3` · `flac` (sound) · `mp4` (a video) · `jpg` · `png` (a cover) · `lrc` (timed lyrics) · `txt` (plain lyrics) |
+| **Sync error** (home sync, section 3) | `not_paired` (401) · `wrong_code` (403) · `not_home` (403: the request wasn't sent to this computer at home, or a web page is behind it) · `not_found` (404) · `too_many_tries` (429) · `unavailable` (500: the library couldn't be read just now) · `bad_request` (any other request that isn't part of the format) |
 | **`MUSICORG_SOURCE`** | `youtube_music` · `youtube` · `rip_copy` · `bandcamp` · `cd` · `itunes` · `other` |
 | **`MUSICORG_MATCH`** | `auto_exact` (AUTO match and fingerprint pass) · `user_confirmed` (owner's decision and fingerprint pass) · `manual` (adopt using the owner's `*_fix` values) · `auto_details` (step 09c: the owner's own audio with an AUTO match's official details; no fingerprint check) · `user_details` (step 09c: the same, from the owner's review choice) · `unconfirmed` (v0.2: a rip copied in under its own names before it was identified, so it can be played; its item stays in `review` or `not_found`, and the copy is upgraded in place when it's decided). Absent for adopts without fixes. |
 
@@ -145,8 +149,13 @@ Exit codes:
 | `queue.dismiss` | `{ "job_id" }` or `{ "waiting": true }` | the same as `queue.downloads`. Takes one download off that list: one still `queued` is cancelled before it starts, one that ended without the song is no longer shown (both become `cancelled`). One that's `running` is refused. With `waiting`, every download still `queued` is cancelled at once (the app's Cancel Waiting, after Download Automatically); the `running` one carries on, and the ones that ended without the song stay listed. |
 | `settings.get` | — | `{ "daily_cap", "daily_cap_default", "daily_cap_max" }`: the engine's settings the app shows (kept in `config.json`) |
 | `settings.set` | `{ "daily_cap"? }` (1 to `daily_cap_max`, which is 500; the app offers steps of 50) | the same as `settings.get`. A new cap applies from the next queue run. |
+| `sharing.status` | — | `{ "on", "port", "address", "name", "service", "devices": [{ "id", "device", "paired_at", "last_synced" }], "pairing", "pairing_seconds_left" }`: sharing the library with a phone player at home (section 3; 2026-10-04). `on`: whether this engine is listening. `port`: the port it listens on, and `address`: this computer's own address on the home network, both for the app's Settings to show (a phone that can't find the computer by itself is given them by hand); each is null while sharing is off, and `address` is null when the computer isn't on a home network. `name` is the library's name as a phone shows it (its folder's). `service` is what the app announces the share as (Bonjour). `devices` are the ones paired with this profile: what kind each says it is ("iPhone"), when it was paired, and when it last asked for the list. `pairing`: whether a code is showing and still works. **No key, and nothing made from one, is ever in an answer.** |
+| `sharing.set` | `{ "on": true \| false }` | the same as `sharing.status`. On: the engine listens on the home network, on its usual port (or, if another program has that, any free one), until it's switched off or the engine stops. **The engine keeps no "on" of its own:** the app asks each time it opens, when its Settings switch is on. Off: it stops listening at once (a file on its way to a phone is cut off), and a code that was showing stops working. Needs an open library. |
+| `sharing.pair` | — | `{ "code", "seconds" }`: a fresh six-digit code for the app to show, good once and for `seconds` (300). A code made before stops working. -32000 while sharing is off. The code is never logged. |
+| `sharing.stop_pairing` | — | the same as `sharing.status`. The code is taken off the screen and no longer works. |
+| `sharing.forget` | `{ "device_id" }` | the same as `sharing.status`. The device is unpaired: its key stops working at once. What it has already copied stays on it. A device that isn't paired is -32006. Works with sharing off too. |
 
-**RPC-only:** `plan.create` with kind `edit` (the app's Edit Details sheet) or `remove` (the app's Delete on a download), `youtube.stream`, `youtube.video`, `lyrics.find`, `lyrics.for_video`, `discover.suggest`, `import.playlist`, `import.playlists`, `import.find`, `artist.*`, `account.*`, `listening.*`, `playlist.*`, `queue.downloads`, `queue.dismiss`.
+**RPC-only:** `sharing.*`, `plan.create` with kind `edit` (the app's Edit Details sheet) or `remove` (the app's Delete on a download), `youtube.stream`, `youtube.video`, `lyrics.find`, `lyrics.for_video`, `discover.suggest`, `import.playlist`, `import.playlists`, `import.find`, `artist.*`, `account.*`, `listening.*`, `playlist.*`, `queue.downloads`, `queue.dismiss`.
 
 **CLI-only in v0.1** (RPC comes with the v0.2 app when needed): `sources.remove`, `index.rebuild`, `report`, `review export/import`, `lyrics`, `artwork`, `doctor`.
 
@@ -162,6 +171,7 @@ Exit codes:
 | `account.changed` | `{ "service", "signed_in", "problem" }`, once for each `account.sign_in`: Spotify answered (`problem` is null when it worked, else why not in plain words), or nobody came back from its page in time |
 | `import.progress` | `{ "token", "done", "of" }`, after each song of an `import.find` that gave a `token` |
 | `queue.state` | `{ "state", "reason"?, "resume_at"? }`, when the queue worker starts or stops, and after `queue.pause`. A worker that stopped until a known time (the daily limit, a pause by YouTube, a retry that isn't due) is started again at that time by `serve` itself. |
+| `sharing.changed` | `{}`: a device was paired, or a paired device asked for the list. The app asks `sharing.status` again. |
 | `review.changed` | `{ "review", "not_found" }` |
 | `library.changed` | `{ "batch_id"?, "tracks_added", "tracks_changed" }`, after a queue run that finished jobs (`tracks_changed` = jobs done) and after an undo |
 
@@ -218,3 +228,81 @@ Standard JSON-RPC codes, plus:
   "duration_s": 229, "state": "review", "reasons": ["version_mismatch"], "candidates": [Candidate],
   "fingerprint": null }
 ```
+
+## 3. Home sync over HTTP (`sharing`, format 1)
+
+A phone player on the same home network copies the library from the computer, and then plays its own copies. This section is the whole agreement between the two: the phone knows nothing else about the engine, and the engine nothing about the phone. It was started early, on 2026-10-04, at the owner's request.
+
+**What the owner was promised**, and the engine keeps:
+
+- **Off until they switch it on** in the app's Settings (`sharing.set`). The engine never starts it by itself.
+- **Read-only.** A phone can ask for the list and for files, and can pair. Nothing else. No request changes anything on the computer, and nothing inside the library is written while serving one.
+- **A device is paired once**, with a six-digit code the computer shows.
+- **The home network only, and only while the app is open.** Nothing is sent to the internet, and no port is opened on the router (no UPnP).
+
+**Nothing private leaves the computer's own folders.** No address, computer name, pairing code or key is ever in this repository, in a log, or in an error. A device's key is kept only as its SHA-256, in `devices.json` in the app's settings folder, for the profile it was paired with, readable by this user only.
+
+### Who is answered
+
+- The engine listens on IPv4 only. A caller whose address isn't **private** (RFC 1918), **link-local** or **loopback** is dropped before it's answered.
+- A request must be sent to the computer by its address at home, by `localhost`, or by a `.local` name (the `Host` header), and must not carry an `Origin` header: a web page somewhere else can't use the share through a browser on the home network. Otherwise 403 `not_home`.
+- The app announces the share on the local network with Bonjour: service type `_homemusicsync._tcp`, under the computer's own name, in the `local.` domain only. The announcement ends when sharing is switched off or the app closes. A phone can also be given the computer's address and port by hand: Settings shows them beside the switch.
+
+### Requests
+
+Plain HTTP. Every path starts with `/sync/v1/`. Every answer is JSON in UTF-8, except a file's own bytes. After pairing, every request carries the device's key:
+
+    Authorization: Bearer <key>
+
+When something goes wrong the status isn't 200, and the body is
+
+    { "error": "wrong_code", "message": "That code isn't the one on the computer's screen." }
+
+`error` is a **Sync error** (Enums). `message` is a plain English sentence, written to be shown as it is.
+
+| Request | Key | Answer |
+|---|---|---|
+| `GET /sync/v1/hello` | no | `{ "format": 1, "library": { "id", "name" }, "paired" }`. `paired` says whether the key that was sent (if one was) is still known. `library.id` never changes for a library: it's made from when the library was created, so it stays the same when the folder is renamed or moved, or the computer's address or name changes. `library.name` is the library folder's name. |
+| `POST /sync/v1/pair` | no | Body `{ "code", "device" }`, as `application/json`: the code on the computer's screen, and what kind of device is asking (`iPhone`, `iPad`: up to 20 letters, digits and spaces, else it's listed as "Device"). Answer: `{ "key" }`, a long random string, given this once. A code works once and for five minutes. A wrong code, a code that has run out, or no code showing: 403 `wrong_code`. After five wrong codes every code is refused for a minute: 429 `too_many_tries`. |
+| `GET /sync/v1/library` | yes | The list of everything (below). |
+| `GET /sync/v1/files/<file id>` | yes | The file's bytes, with `Content-Length`. The id is percent-encoded in the path. Only a file the list names is ever given out: no path comes from a phone. A file that's gone, or has been written again since the list was made, is 404 `not_found` (never the old list's size with the new bytes); the next list has it under its new version. |
+
+Without a key, or with one the computer doesn't know: 401 `not_paired`.
+
+### The list
+
+    {
+      "format": 1,
+      "library": { "id": "lib-…", "name": "…" },
+      "revision": "changes whenever anything in the list does",
+      "tracks": [
+        { "id": "t-…", "title": "…", "artist": "…", "album": "…", "albumArtist": "…",
+          "trackNumber": 1, "discNumber": 1, "year": 2020, "genre": "…", "duration": 201.5,
+          "explicit": false, "favourite": true, "playCount": 12, "added": "2026-01-31T09:30:00Z",
+          "audio":  { "id": "f-…", "size": 3312345, "version": "…", "type": "m4a" },
+          "cover":  { "id": "c-…", "size": 48211,   "version": "…", "type": "jpg" },
+          "lyrics": { "id": "l-…", "size": 1870,    "version": "…", "type": "lrc" } }
+      ],
+      "videos": [
+        { "id": "v-…", "title": "…", "artist": "…", "duration": 215.0, "track": "t-…",
+          "video": { "id": "f-…", "size": 21034567, "version": "…", "type": "mp4" },
+          "cover": { "id": "c-…", "size": 51200,    "version": "…", "type": "jpg" } }
+      ],
+      "playlists": [ { "id": "p-…", "name": "…", "tracks": ["t-…", "t-…"] } ]
+    }
+
+- **What's in it.** Every song in `Music/` that the index has and whose file is there, downloads included; every saved video in `Music/Videos/`; and the owner's playlists. Favourites and play counts come from `listening`. A song in a format the list has no name for (Ogg, Opus) is left out: a phone can't play it.
+- **A track** always has `id`, `title`, `artist`, `duration`, `explicit`, `favourite`, `playCount` and `audio`. `album`, `albumArtist`, `trackNumber`, `discNumber`, `year`, `genre`, `added` (when it came into the library), `cover` and `lyrics` are left out when the song has none.
+- **Every `id` is only a name**: a letter for what it names, and a hash. Nothing can be read out of one: not the library's own id for the song, not a path, not where the song came from. No tag name of the engine's is sent either.
+  - A song's ids are made from its own id in the library (`MUSICORG_ID`), so they stay the same from one sync to the next, and when the file is renamed, moved or retagged. A file with no id of its own goes by its path.
+- **A file** is `id`, `size` (exactly the bytes that will arrive), `version` and `type` (a **Sync file type**). `version` changes whenever the bytes do: a phone fetches a file again when its version differs from the one it has.
+  - **A file needn't be a file on the computer.** A song's cover is its album folder's `cover.jpg` when there is one (one file for the whole album), and otherwise the picture inside the song's own tags, given out under an id of its own. Lyrics are the song's `.lrc` (timed, `lrc`), and otherwise the plain lyrics inside its tags (`txt`, UTF-8). A video's cover is the picture inside the video.
+  - The size and version of what's inside a file's tags are measured when the tags are read for `library.tracks`, and kept in the index with the rest of the file's details. The list reads them from there, so making it opens no song. A file whose details aren't there (or are out of date) has its tags read once while sharing is on.
+- **`track` in a video** is the id of the song the video is of, when exactly one song in the library has its title and artist.
+- **Playlists** hold track ids in the owner's order. A song may be there twice. A song that isn't in the list is left out.
+
+### Not in format 1
+
+- Sending favourites and play counts back to the computer.
+- Carrying on a file from where it was cut off.
+- Lyrics timed to a video.

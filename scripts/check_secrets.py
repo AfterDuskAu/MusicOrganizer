@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Stop keys, passwords, login cookies and email addresses from being committed.
+"""Stop keys, passwords, login cookies, email addresses and home network addresses from
+being committed.
 
 This repository is public. Anything committed is exposed for good, even if a later
 commit deletes it, and bots scan GitHub for secrets within minutes. This check runs as
@@ -97,6 +98,14 @@ PATTERNS = [
         r"[A-Za-z0-9._~+/=\-]{12,}",
     ),
     ("password in a URL", r"\b[a-z][a-z0-9+.\-]*://[^/\s:@\"']+:[^/\s@\"']{3,}@"),
+    # The owner's rule for sharing (2026-10-04): no network address in this repository.
+    # An address on a home network (RFC 1918, or link-local) is somebody's own. A test
+    # that needs one puts it together while it runs.
+    (
+        "home network address",
+        r"(?<![\d.])(?:10\.\d{1,3}|192\.168|169\.254|172\.(?:1[6-9]|2\d|3[01]))"
+        r"\.\d{1,3}\.\d{1,3}(?![\d.])",
+    ),
     (
         "secret written into code",
         r"(?i)\b" + _KEY_NAME + r"[\"']?\s*[:=]\s*[\"'](?P<value>[^\"'\s]{8,})[\"']",

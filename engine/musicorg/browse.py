@@ -11,8 +11,10 @@ Paths in and out are relative to the library root with `/` separators, as in the
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
+import os
 import re
 from collections import Counter
 from pathlib import Path
@@ -26,7 +28,9 @@ from musicorg.normalize import parse_filename
 
 log = logging.getLogger(__name__)
 
-DETAILS_VERSION = 2  # raise it when `_details` gains a field, so old rows are read again
+DETAILS_VERSION = 3  # raise it when `_details` gains a field, so old rows are read again
+# What's kept about a file but isn't part of the `Track` shape the app is given.
+NOT_SHOWN = ("v", "plain_lyrics", "cover_file", "lyrics_file")
 
 
 def tracks(lib: Library, index: Index) -> list[dict[str, Any]]:
@@ -53,7 +57,7 @@ def tracks(lib: Library, index: Index) -> list[dict[str, Any]]:
         if folder not in covers:
             covers[folder] = (folder / naming.COVER_NAME).is_file()
         synced = path.with_suffix(".lrc").is_file()
-        shown = {k: v for k, v in details.items() if k not in ("v", "plain_lyrics")}
+        shown = {k: v for k, v in details.items() if k not in NOT_SHOWN}
         found.append({
             "track_id": row["musicorg_id"],
             "path": rel,
@@ -138,6 +142,32 @@ def track_path(lib: Library, rel_path: str) -> Path:
     return path
 
 
+def details(
+    row: dict[str, Any], path: Path, info: os.stat_result, *, video: bool = False
+) -> dict[str, Any]:
+    """What's known about one library file, for a caller that only reads (`sharing`): the
+    index's details if the file hasn't changed since they were read, else read from the
+    file now. Nothing is stored."""
+    return _stored(row, info.st_size, info.st_mtime_ns) or _details(path, video=video)
+
+
+def inside(path: Path, part: str) -> bytes | None:
+    """A file's own cover (`part` "cover") or plain lyrics ("lyrics"), taken out of its
+    tags: the very bytes `cover_file` and `lyrics_file` in its details measure. None if
+    it has none."""
+    found = tags.read_tags(path)
+    if part == "cover":
+        return found.cover if isinstance(found.cover, bytes) else None
+    words = found.lyrics
+    return words.encode("utf-8") if isinstance(words, str) and words else None
+
+
+def _measured(data: bytes, kind: str) -> dict[str, Any]:
+    """Something inside a file's tags, as the file it would be if taken out: how many
+    bytes, a version that changes when they do, and what kind of file."""
+    return {"size": len(data), "version": hashlib.sha256(data).hexdigest()[:16], "type": kind}
+
+
 def _stored(row: dict[str, Any], size: int, mtime_ns: int) -> dict[str, Any] | None:
     if (row["size"], row["mtime_ns"]) != (size, mtime_ns) or not row.get("details_json"):
         return None
@@ -180,5 +210,13 @@ def _details(path: Path, *, video: bool = False) -> dict[str, Any]:
         "bitrate_kbps": number(found.source_bitrate),
         "embedded_cover": isinstance(found.cover, bytes),
         "plain_lyrics": text(found.lyrics) is not None,
+        # The cover and the plain lyrics inside the file, measured, so that they can be
+        # listed as files of their own without opening the song again (`sharing`).
+        "cover_file": _measured(found.cover, "png" if found.cover_mime == tags.PNG else "jpg")
+        if isinstance(found.cover, bytes) and found.cover
+        else None,
+        "lyrics_file": _measured(found.lyrics.encode("utf-8"), "txt")
+        if text(found.lyrics) is not None
+        else None,
         **({"height": height} if video else {}),  # only a video's row carries it
     }
