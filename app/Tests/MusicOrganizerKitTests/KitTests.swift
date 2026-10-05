@@ -1132,6 +1132,20 @@ final class SongVideoTests: XCTestCase {
             ["Visualizer 5", "Visualizer 7", "Visualizer 8"])
     }
 
+    func testTheVisualizersQualities() {
+        // Particle Accelerator's five, and Medium until another is chosen.
+        XCTAssertEqual(CustomVisualizer.qualities, ["auto", "low", "medium", "high", "ultra"])
+        XCTAssertEqual(CustomVisualizer.standardQuality, "medium")
+        XCTAssertEqual(CustomVisualizer.quality(nil), "medium")
+        XCTAssertEqual(CustomVisualizer.quality("ultra"), "ultra")
+        XCTAssertEqual(CustomVisualizer.quality("auto"), "auto")
+        // A name that isn't one of them: the standard.
+        XCTAssertEqual(CustomVisualizer.quality("ultimate"), "medium")
+        XCTAssertEqual(
+            CustomVisualizer.qualities.map(CustomVisualizer.qualityTitle),
+            ["Auto", "Low", "Medium", "High", "Ultra"])
+    }
+
     func testTheLocalVisualizersSwitch() {
         XCTAssertEqual(PagePicture.allCases.map(\.label), ["Song", "Video", "Visualizer"])
         XCTAssertEqual(PagePicture.chosen(videoWanted: false, visualizerOn: false), .song)

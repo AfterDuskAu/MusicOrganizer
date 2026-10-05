@@ -228,6 +228,26 @@ public enum CustomVisualizer {
 
     /// What a menu calls one: "Visualizer 7".
     public static func title(_ number: Int) -> String { "Visualizer \(number)" }
+
+    /// How much the visualizer draws: how many sparks, and how sharp a picture (owner,
+    /// 2026-10-05: "offer the choices"). These are Particle Accelerator's own names for
+    /// its qualities, in its menu's order.
+    public static let qualities = ["auto", "low", "medium", "high", "ultra"]
+    /// The quality the owner tuned the three at, and the one the 2019 iMac holds at 60
+    /// frames a second for all of them.
+    public static let standardQuality = "medium"
+    /// The key the chosen quality is saved under: its name.
+    public static let qualityKey = "customVisualizerQuality"
+
+    /// The quality to draw at for what was saved: that one while it's still offered, or
+    /// else the standard.
+    public static func quality(_ saved: String?) -> String {
+        guard let saved, qualities.contains(saved) else { return standardQuality }
+        return saved
+    }
+
+    /// What a menu calls a quality: "Medium".
+    public static func qualityTitle(_ name: String) -> String { name.capitalized }
 }
 
 /// What the Local Visualizer's switch says: the song with its cover, its video, or the

@@ -17,7 +17,7 @@ let package = Package(
         // the commit, run `swift package resolve` here, and commit Package.resolved.
         .package(
             url: "https://github.com/AfterDuskAu/ParticleAccelerator",
-            revision: "3243820496a8799bea8f1ae211d1e21ee1186046"),
+            revision: "19474f060a24ffa917ad1ba544d763336fd2efe2"),
     ],
     targets: [
         .target(name: "MusicOrganizerKit", swiftSettings: settings),

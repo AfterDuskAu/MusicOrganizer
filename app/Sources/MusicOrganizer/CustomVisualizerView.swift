@@ -32,6 +32,8 @@ struct CustomVisualizerView: View {
     /// Which one, by Particle Accelerator's number for it (`CustomVisualizer.offered`).
     let number: Int
     @Environment(AppModel.self) private var model
+    /// Settings → Play Options → Custom Visualizer → Quality.
+    @AppStorage(CustomVisualizer.qualityKey) private var quality = CustomVisualizer.standardQuality
 
     var body: some View {
         let listener = model.visualizerSound.listener
@@ -53,12 +55,14 @@ struct CustomVisualizerView: View {
     private var settings: AcceleratorSettings {
         var settings = AcceleratorSettings()
         settings.visual = number
-        // Medium, not Auto. It's the quality the owner tuned these three at, so it's the
-        // picture they chose. And on the 2019 iMac Auto means High, where Visualizer 8
-        // as the owner has it takes the graphics card about 18 ms a frame, more than
-        // the 16.7 that 60 frames a second allows; at Medium it takes 4.5 (Particle
-        // Accelerator's docs/OUTPUT.md, 2026-10-04). Auto belongs here once it adapts.
-        settings.quality = .medium
+        // The quality chosen in Settings, which is Medium until it's changed, not Auto.
+        // Medium is the quality the owner tuned these three at, so it's the picture
+        // they chose. And on the 2019 iMac Auto means High, where Visualizer 8 as the
+        // owner has it takes the graphics card about 18 ms a frame, more than the 16.7
+        // that 60 frames a second allows; at Medium it takes 4.5 (Particle
+        // Accelerator's docs/OUTPUT.md, 2026-10-04).
+        settings.quality =
+            ParticleAccelerator.Quality(rawValue: CustomVisualizer.quality(quality)) ?? .medium
         return settings
     }
 }

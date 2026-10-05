@@ -109,6 +109,8 @@ private struct PlaySettings: View {
     @AppStorage(Player.fullScreenLyricsKey) private var fullScreenLyrics = false
     @AppStorage(CustomVisualizer.whichKey) private var whichVisualizer = CustomVisualizer.standard
     @AppStorage(CustomVisualizer.useKey) private var useVisualizer = false
+    @AppStorage(CustomVisualizer.qualityKey) private var visualizerQuality =
+        CustomVisualizer.standardQuality
     @AppStorage(PageChanges.key) private var changesLast = PageChanges.standard
     @Environment(AppModel.self) private var model
 
@@ -183,6 +185,21 @@ private struct PlaySettings: View {
                         + "Visualizer switch on that page changes it for now, without changing "
                         + "this. A video is always shown as a video. The visualizers are made "
                         + "in their own project, Particle Accelerator.")
+                Picker(
+                    "Quality",
+                    selection: Binding(
+                        get: { CustomVisualizer.quality(visualizerQuality) },
+                        set: { visualizerQuality = $0 })
+                ) {
+                    ForEach(CustomVisualizer.qualities, id: \.self) { name in
+                        Text(CustomVisualizer.qualityTitle(name)).tag(name)
+                    }
+                }
+                SideNote(
+                    "A higher quality draws more sparks and a sharper picture, and asks more "
+                        + "of the graphics card. If the picture stutters, choose a lower one. "
+                        + "Medium is the quality the three were tuned at. Auto chooses for "
+                        + "this Mac.")
             }
         }
         .formStyle(.grouped)
