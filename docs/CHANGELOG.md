@@ -675,6 +675,18 @@
 - **Still wanted by the owner:** Play. "The song countdown starts going down, but it still takes 2 seconds to hear something." In the log the song's clock starts about a second after Play and the sound is due a second after that, so the countdown does run ahead of the sound. Nothing here changes that yet.
 - **Known:** for those two seconds the Mac shows its sound as muted; if the app crashed in those two seconds the output would stay muted until unmuted by hand; skipping to another song or jumping within one still lets two seconds of the old sound play on, since only Pause does this.
 
+2026-10-05, about 2:15pm. **Why there was no delay the day before, and an AirPlay button in the player bar (first version).** The owner: "yesterday, about 24 hours ago, there was no delay… and now there's a delay? HAVE THE APP SEND it to the apple tv itself then." And then, their own guess: full screen mirroring has no delay, sound only has two seconds.
+
+- **The owner's guess is right, and measured.** The Apple TV as the Mac's sound output holds 2.012 s of sound with sound only, and **0.082 s with the screen mirrored** (read from Core Audio a minute after the owner turned mirroring on). The system log for the day before, 12:30 to 3:30pm, has the screen-mirroring engine reporting once a second throughout. So nothing in the app got slower: the Apple TV was being used the other way.
+  - With the screen mirrored, the two fixes above stand down by themselves, since both go by the output's delay: nothing is muted on Pause, and the visualizer listens.
+- **The AirPlay button** (`AirPlayButton`, new: macOS's own button and list of devices, left of the volume slider). Choosing a device makes the app's player send what it plays to that device itself, not through the Mac's sound output. The device is then told to play and pause, and isn't two seconds behind.
+  - While a device is being chosen, and while one is in use, the visualizer's tap is off: a player with a tap on it can't be sent to an AirPlay device. The page says so.
+  - Pause doesn't mute the Mac's output then (the device pauses when told), and the picture watchdog stands down (the picture is drawn on the device).
+  - The player notes when it starts and stops sending ("AirPlay from the app: on") in its log.
+- **Seen in the owner's first try** (their app, a song playing, 2:09pm), in the system log: the player handed the song to the Apple TV; five pauses and plays in eight seconds each went to it as a command; the next song was handed over when the first ended, and was ready there 2.2 s later. No error was logged.
+- **Not known yet:** how it sounded to the owner (how quickly Play and Pause act, and the gap between songs); a song played from YouTube; a song's video (two streams joined, which AirPlay may not take); the volume slider, the position slider and the lyrics' timing while sending; what the Apple TV's own remote does to the app.
+- **Checked:** `swift build` and `swift test` (72 tests).
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

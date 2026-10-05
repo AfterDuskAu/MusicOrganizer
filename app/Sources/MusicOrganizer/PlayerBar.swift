@@ -127,6 +127,12 @@ struct PlayerBar: View {
     private func extras(_ player: Player) -> some View {
         @Bindable var player = player
         return HStack(spacing: 12) {
+            AirPlayButton(player: player.screen) { model.visualizerSound.choosingADevice($0) }
+                .frame(width: 22, height: 22)
+                .help(
+                    "AirPlay: send what's playing to an Apple TV or speaker from the app itself. "
+                        + "Play and Pause then act at once there. Leave the Mac's own sound "
+                        + "output on its speakers when you use this.")
             Image(systemName: "speaker.fill").foregroundStyle(.secondary)
             Slider(value: $player.volume, in: 0...1)
                 .controlSize(.small)

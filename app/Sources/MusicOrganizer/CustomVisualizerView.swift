@@ -31,6 +31,12 @@ final class VisualizerSound {
     /// The app's player, from the first time a visualizer is wanted.
     @ObservationIgnored private var player: AVPlayer?
     @ObservationIgnored private var isListening = false
+    /// The owner has the AirPlay button's list of devices open, or the player is sending
+    /// to one of them. A player with a listening tap on it can't be sent to an AirPlay
+    /// device, so the tap comes off while a device is being chosen and stays off while
+    /// one is in use.
+    @ObservationIgnored private var isChoosingADevice = false
+    @ObservationIgnored private var isSendingToAirPlay = false
 
     func hear(_ player: AVPlayer) {
         guard self.player == nil else { return }
@@ -39,9 +45,26 @@ final class VisualizerSound {
         followTheOutput()
     }
 
-    /// Listens, or stops listening, to suit where the Mac's sound is going now.
+    func choosingADevice(_ choosing: Bool) {
+        isChoosingADevice = choosing
+        followTheOutput()
+    }
+
+    func sendingToAirPlay(_ sending: Bool) {
+        isSendingToAirPlay = sending
+        followTheOutput()
+    }
+
+    /// Listens, or stops listening, to suit where the sound is going now.
     private func followTheOutput() {
         guard let player else { return }
+        if isChoosingADevice || isSendingToAirPlay {
+            note = isSendingToAirPlay ? CustomVisualizer.notListening(to: "an AirPlay device") : nil
+            guard isListening else { return }
+            isListening = false
+            listener.stop()
+            return
+        }
         let output = SoundOutput.current()
         if CustomVisualizer.mayListen(outputDelay: output?.delay) {
             note = nil

@@ -197,6 +197,9 @@ final class AppModel {
         // Settings says to use the custom visualizer: its listener is given the player
         // now, before any song starts, so nothing is heard of it.
         if UserDefaults.standard.bool(forKey: CustomVisualizer.useKey) { hearForVisualizer() }
+        player.onAirPlayChange = { [weak self] sending in
+            self?.visualizerSound.sendingToAirPlay(sending)
+        }
         artistBrowser.lookUp = { [weak self] name, artistId in
             var asked: [String: Any] = [:]
             if let artistId { asked["artist_id"] = artistId } else { asked["name"] = name ?? "" }

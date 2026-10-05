@@ -105,6 +105,11 @@ final class Player {
     private static let maxRetries = 2
     @ObservationIgnored private var itemWatch: NSKeyValueObservation?
     @ObservationIgnored private var waitingWatch: NSKeyValueObservation?
+    @ObservationIgnored private var airPlayWatch: NSKeyValueObservation?
+    /// The player is sending what it plays to an AirPlay device itself (the AirPlay
+    /// button in the player bar), and not through the Mac's sound output.
+    private(set) var isSendingToAirPlay = false
+    @ObservationIgnored var onAirPlayChange: ((Bool) -> Void)?
     @ObservationIgnored private var bufferingTimer: Task<Void, Never>?
     /// The videos found so far, by song. Their addresses stop working after a few hours,
     /// so each is kept for half an hour.
@@ -134,6 +139,10 @@ final class Player {
                 let item = note.object as? AVPlayerItem
                 MainActor.assumeIsolated { self?.failed(item) }
             })
+        airPlayWatch = audio.observe(\.isExternalPlaybackActive) { [weak self] player, _ in
+            let sending = player.isExternalPlaybackActive
+            Task { @MainActor in self?.airPlayChanged(sending) }
+        }
         waitingWatch = audio.observe(\.timeControlStatus) { [weak self] player, _ in
             let waiting = player.timeControlStatus == .waitingToPlayAtSpecifiedRate
             Task { @MainActor in self?.waitingChanged(waiting) }
@@ -194,7 +203,9 @@ final class Player {
         if isPlaying {
             audio.pause()
             isPlaying = false
-            pauseSilence.paused()
+            // A device the player sends to itself pauses when it's told. Only the Mac's
+            // own output needs muting to stop at once.
+            if !isSendingToAirPlay { pauseSilence.paused() }
         } else if audio.currentItem == nil || audio.currentItem?.status == .failed {
             start(current)  // it never got going (YouTube refused it): ask afresh
             return
@@ -639,7 +650,9 @@ final class Player {
     /// minutes of real playback with a pause and three jumps: the longest gap between
     /// frames was 0.17 s, and this never fired.
     private func checkPicture() {
-        guard let frames, isPlaying, audio.timeControlStatus == .playing else {
+        // Sent to an AirPlay device, the picture is drawn there, and none arrives here.
+        guard let frames, isPlaying, audio.timeControlStatus == .playing, !isSendingToAirPlay
+        else {
             lastFrame = Date()
             return
         }
@@ -667,6 +680,13 @@ final class Player {
                 + "\(Int(now.seconds)) s of “\(current?.title ?? "?")”; nudge \(nudges)")
         pictureRefresh += 1
         audio.seek(to: now, toleranceBefore: .zero, toleranceAfter: .zero)
+    }
+
+    private func airPlayChanged(_ sending: Bool) {
+        guard sending != isSendingToAirPlay else { return }
+        isSendingToAirPlay = sending
+        PlayerLog.note("AirPlay from the app: \(sending ? "on" : "off")")
+        onAirPlayChange?(sending)
     }
 
     private func finished(_ item: AVPlayerItem?) {
