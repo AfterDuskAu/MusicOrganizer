@@ -275,7 +275,8 @@ struct MainView: View {
                 }
             }
             .toolbar(
-                showNowPlaying || model.videoFullScreen ? .hidden : .automatic, for: .windowToolbar)
+                showNowPlaying || model.pictureFullScreen ? .hidden : .automatic,
+                for: .windowToolbar)
             // Below the split view, not an inset: the sidebar runs the window's full height
             // and would otherwise sit underneath the bar.
             // The lyrics button switches the lyrics of the page that's showing. On the
@@ -294,10 +295,11 @@ struct MainView: View {
         // The Warm Look's glow, behind everything, from the very top of the window: it
         // shows through the title bar and the top of the page (the sidebar covers it).
         .background { CoverWash().environment(model).ignoresSafeArea() }
-        // Over everything, the player bar included: the video's own controls take over.
+        // Over everything, the player bar included: the whole screen's own controls take
+        // over.
         .overlay {
-            if model.videoFullScreen {
-                FullScreenVideo().environment(model)
+            if model.pictureFullScreen {
+                FullScreenPicture().environment(model)
             }
         }
         .animation(.easeInOut(duration: 0.25), value: showNowPlaying)

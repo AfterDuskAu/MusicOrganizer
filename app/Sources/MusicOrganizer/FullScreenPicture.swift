@@ -2,25 +2,37 @@ import AppKit
 import MusicOrganizerKit
 import SwiftUI
 
-/// The video on the whole screen. The controls come up when the mouse moves and go
-/// away again when it rests; Esc, or a double click, brings the app back. With Settings →
-/// Play Options → Show lyrics in full screen, a song's lyrics take a column on the
-/// right and the video the rest: nothing is laid over the picture.
-struct FullScreenVideo: View {
+/// The video, or the custom visualizer, on the whole screen (the visualizer since
+/// 2026-10-05, the owner: "just like video"). The controls come up when the mouse moves
+/// and go away again when it rests; Esc, or a double click, brings the app back. With
+/// Settings → Play Options → Show lyrics in full screen, a song's lyrics take a column on
+/// the right and the picture the rest: nothing is laid over it.
+struct FullScreenPicture: View {
     @Environment(AppModel.self) private var model
     @AppStorage(Player.fullScreenLyricsKey) private var lyricsOn = false
+    @AppStorage(CustomVisualizer.useKey) private var useVisualizer = false
+    @AppStorage(CustomVisualizer.whichKey) private var whichVisualizer = CustomVisualizer.standard
+    /// The visualizer has had the screen. Switched on for now on the page, it goes back
+    /// to the cover when its time is up (Settings → Play Options); here it stays until
+    /// the screen is given back, so it never turns into a cover in the middle of a song.
+    @State private var keepsVisualizer = false
     @State private var controlsShown = true
     @State private var hiding: Task<Void, Never>?
 
     var body: some View {
         let player = model.player
+        let showing = showing
         ZStack {
             Color.black
             HStack(spacing: 0) {
                 Group {
-                    if player.showsPicture {
+                    switch showing {
+                    case .video:
                         VideoSurface(player: player.screen, refresh: player.pictureRefresh)
-                    } else {
+                    case .visualizer:
+                        // It fills what it's given: its own background is black too.
+                        CustomVisualizerView(number: CustomVisualizer.chosen(whichVisualizer))
+                    case .song:
                         noVideo(player)
                     }
                 }
@@ -34,7 +46,7 @@ struct FullScreenVideo: View {
                 VStack(spacing: 0) {
                     top(player)
                     Spacer()
-                    bottom(player)
+                    bottom(player, beside: showing == .visualizer ? "visualizer" : "video")
                 }
                 .transition(.opacity)
             }
@@ -42,11 +54,14 @@ struct FullScreenVideo: View {
         .ignoresSafeArea()
         .environment(\.colorScheme, .dark)
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) { model.setVideoFullScreen(false) }
+        .onTapGesture(count: 2) { model.setPictureFullScreen(false) }
         .onContinuousHover { phase in
             if case .active = phase { wake() }
         }
         .onAppear { wake() }
+        .onChange(of: showing, initial: true) {
+            if showing == .visualizer { keepsVisualizer = true }
+        }
         .onDisappear {
             hiding?.cancel()
             NSCursor.setHiddenUntilMouseMoves(false)
@@ -55,6 +70,15 @@ struct FullScreenVideo: View {
 
     /// The lyrics column: the setting, unless it's been switched here for now.
     private var lyricsShown: Bool { model.shows(Player.fullScreenLyricsKey, setting: lyricsOn) }
+
+    /// What has the screen: what the Local Visualizer would show in the cover's place.
+    private var showing: PagePicture {
+        PagePicture.showing(
+            videoReady: model.player.showsPicture,
+            visualizerOn: keepsVisualizer
+                || model.shows(CustomVisualizer.useKey, setting: useVisualizer),
+            songPlaying: model.player.current != nil)
+    }
 
     /// A song with no video of its own, while the screen is given to videos.
     private func noVideo(_ player: Player) -> some View {
@@ -88,7 +112,9 @@ struct FullScreenVideo: View {
         .background(.black.opacity(0.55))
     }
 
-    private func bottom(_ player: Player) -> some View {
+    /// The controls along the bottom. `picture` is what the lyrics would be beside,
+    /// "video" or "visualizer", for the buttons' own words.
+    private func bottom(_ player: Player, beside picture: String) -> some View {
         @Bindable var player = player
         return HStack(spacing: 16) {
             Button { player.previous() } label: { Image(systemName: "backward.fill") }
@@ -120,11 +146,11 @@ struct FullScreenVideo: View {
             .disabled(!model.lyrics.settled)
             .help(
                 model.lyrics.settled
-                    ? "Lyrics beside the video: \(lyricsShown ? "on" : "off"). Click to switch them "
-                        + "for now; your setting is in Settings → Play Options."
+                    ? "Lyrics beside the \(picture): \(lyricsShown ? "on" : "off"). Click to "
+                        + "switch them for now; your setting is in Settings → Play Options."
                     : "This song has no lyrics to show")
             Button {
-                model.setVideoFullScreen(false)
+                model.setPictureFullScreen(false)
             } label: {
                 Label("Leave Full Screen", systemImage: "arrow.down.right.and.arrow.up.left")
                     .font(.callout)
@@ -133,7 +159,7 @@ struct FullScreenVideo: View {
                     .background(.white.opacity(0.18), in: Capsule())
                     .contentShape(Capsule())
             }
-            .help("Back to the app (Esc, or double-click the video)")
+            .help("Back to the app (Esc, or double-click the \(picture))")
         }
         .buttonStyle(.plain)
         .font(.title3)

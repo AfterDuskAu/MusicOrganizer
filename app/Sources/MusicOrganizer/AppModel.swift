@@ -67,11 +67,11 @@ final class AppModel {
         let title: String
         let text: String
     }
-    /// The video has the whole screen (`setVideoFullScreen`).
-    private(set) var videoFullScreen = false
-    /// The app put its window into macOS's full screen for the video, so it takes it
-    /// out again afterwards. Kept here, not in the view: the view is rebuilt as the
-    /// window changes, and forgot.
+    /// The video, or the custom visualizer, has the whole screen (`setPictureFullScreen`).
+    private(set) var pictureFullScreen = false
+    /// The app put its window into macOS's full screen for that, so it takes it out
+    /// again afterwards. Kept here, not in the view: the view is rebuilt as the window
+    /// changes, and forgot.
     @ObservationIgnored private var tookTheScreen = false
 
     /// The YouTube Queue: songs from YouTube Music put on with Up Next, in order. A
@@ -286,13 +286,13 @@ final class AppModel {
             MainActor.assumeIsolated { self?.stopEngine() }
         }
         // Leaving macOS's full screen by its own means (the green button, the menu)
-        // puts the video back in the page as well.
+        // puts the video or the visualizer back in the page as well.
         NotificationCenter.default.addObserver(
             forName: NSWindow.didExitFullScreenNotification, object: nil, queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.tookTheScreen = false
-                self?.videoFullScreen = false
+                self?.pictureFullScreen = false
             }
         }
         await connect()
@@ -1753,13 +1753,14 @@ final class AppModel {
         return RPCError(code: 0, message: "Nothing to do" + (why.map { " (\($0))." } ?? "."))
     }
 
-    // MARK: the video on the whole screen
+    // MARK: the video or the visualizer on the whole screen
 
-    /// Give the video the whole screen, or bring the app back. The window goes into
-    /// macOS's full screen for it, and comes out again if it went in for this.
-    func setVideoFullScreen(_ on: Bool) {
-        guard on != videoFullScreen else { return }
-        videoFullScreen = on
+    /// Give the video, or the custom visualizer, the whole screen, or bring the app
+    /// back. The window goes into macOS's full screen for it, and comes out again if it
+    /// went in for this.
+    func setPictureFullScreen(_ on: Bool) {
+        guard on != pictureFullScreen else { return }
+        pictureFullScreen = on
         guard let window = mainWindow else { return }
         let isFull = window.styleMask.contains(.fullScreen)
         if on {
@@ -2132,12 +2133,12 @@ final class AppModel {
     private func installSpaceBar() {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            // Esc leaves the video's full screen, whatever has the keyboard's attention
-            // (a button's own shortcut wasn't reliable there).
+            // Esc leaves the video's or the visualizer's full screen, whatever has the
+            // keyboard's attention (a button's own shortcut wasn't reliable there).
             if event.keyCode == 53 {
                 let left = MainActor.assumeIsolated { () -> Bool in
-                    guard let self, self.videoFullScreen else { return false }
-                    self.setVideoFullScreen(false)
+                    guard let self, self.pictureFullScreen else { return false }
+                    self.setPictureFullScreen(false)
                     return true
                 }
                 return left ? nil : event

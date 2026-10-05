@@ -1184,6 +1184,27 @@ final class SongVideoTests: XCTestCase {
         XCTAssertEqual(PagePicture.chosen(videoWanted: true, visualizerOn: true), .video)
     }
 
+    func testWhatStandsWhereTheCoverWouldBe() {
+        // A video, once its picture is ready, whatever else is switched on.
+        XCTAssertEqual(
+            PagePicture.showing(videoReady: true, visualizerOn: true, songPlaying: true), .video)
+        XCTAssertEqual(
+            PagePicture.showing(videoReady: true, visualizerOn: false, songPlaying: true), .video)
+        // The visualizer, for a song that's playing: with nothing playing it has nothing
+        // to move to, and the page shows what it always did.
+        XCTAssertEqual(
+            PagePicture.showing(videoReady: false, visualizerOn: true, songPlaying: true),
+            .visualizer)
+        XCTAssertEqual(
+            PagePicture.showing(videoReady: false, visualizerOn: true, songPlaying: false), .song)
+        XCTAssertEqual(
+            PagePicture.showing(videoReady: false, visualizerOn: false, songPlaying: true), .song)
+        // The whole screen is for a video or the visualizer, never for a cover.
+        XCTAssertTrue(PagePicture.video.canFillTheScreen)
+        XCTAssertTrue(PagePicture.visualizer.canFillTheScreen)
+        XCTAssertFalse(PagePicture.song.canFillTheScreen)
+    }
+
     func testAnArtistsPageIsRead() throws {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase

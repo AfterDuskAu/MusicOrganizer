@@ -20,21 +20,21 @@ struct NowPlayingView: View {
 
     var body: some View {
         let track = model.player.current
-        // In full screen the picture is drawn there, not here as well.
-        let showsVideo = isActive && model.player.showsPicture && !model.videoFullScreen
-        // The custom visualizer stands where the cover would, for a song that's playing.
-        // It's only drawn while the page can be seen.
-        let showsVisualizer =
-            isActive && track != nil && !model.player.showsPicture
-            && model.shows(CustomVisualizer.useKey, setting: useVisualizer)
+        // A video, or the custom visualizer for a song that's playing, stands where the
+        // cover would. It's only drawn while the page can be seen; and in full screen
+        // it's drawn there, not here as well.
+        let showing: PagePicture =
+            isActive && !model.pictureFullScreen
+            ? PagePicture.showing(
+                videoReady: model.player.showsPicture,
+                visualizerOn: model.shows(CustomVisualizer.useKey, setting: useVisualizer),
+                songPlaying: track != nil)
+            : .song
         // A song with no lyrics, or lyrics turned off: the cover or video has the page.
         let showsLyrics =
             model.shows(Player.visualizerLyricsKey, setting: lyricsOn) && model.lyrics.settled
         ZStack(alignment: .topLeading) {
-            sideBySide(
-                track, showsVideo: showsVideo, showsVisualizer: showsVisualizer,
-                showsLyrics: showsLyrics
-            )
+            sideBySide(track, showing: showing, showsLyrics: showsLyrics)
                 .padding(.horizontal, 40)
                 .padding(.top, 52)
                 .padding(.bottom, 24)
@@ -46,7 +46,7 @@ struct NowPlayingView: View {
                 }
                 .buttonStyle(.plain)
                 .keyboardShortcut(.cancelAction)
-                .disabled(model.videoFullScreen)  // Esc leaves full screen first
+                .disabled(model.pictureFullScreen)  // Esc leaves full screen first
                 .help("Back to the library (Esc)")
                 .padding(.leading, 16)
                 .padding(.top, 44)  // below the window's close, minimise and zoom buttons
@@ -64,29 +64,30 @@ struct NowPlayingView: View {
     /// heart, Karaoke (and Full Screen), then the downloads. With no lyrics to show, the
     /// left side is the whole page, and the cover may be bigger.
     private func sideBySide(
-        _ track: Track?, showsVideo: Bool, showsVisualizer: Bool, showsLyrics: Bool
+        _ track: Track?, showing: PagePicture, showsLyrics: Bool
     ) -> some View {
         let cover: CGFloat = showsLyrics ? 420 : 560
         return HStack(spacing: 32) {
             VStack(spacing: 14) {
                 ShowPicker()
-                if showsVideo {
+                switch showing {
+                case .video:
                     picture
-                } else if showsVisualizer {
+                case .visualizer:
                     visualizer
-                } else {
+                case .song:
                     CoverView(track: track, size: .large, corner: 12)
                         .aspectRatio(1, contentMode: .fit)
                         .frame(maxWidth: cover, maxHeight: cover)
                         .shadow(color: .black.opacity(0.5), radius: 24, y: 10)
                 }
-                PlayerControls(track: track, showsVideo: showsVideo)
+                PlayerControls(track: track, showing: showing)
             }
             .frame(minWidth: 320, maxWidth: .infinity)
             // A video or a visualizer gets the room: the lyrics take a narrow column
             // beside it.
             if showsLyrics {
-                if showsVideo || showsVisualizer {
+                if showing != .song {
                     LyricsView(large: false)
                         .frame(minWidth: 200, idealWidth: 320, maxWidth: 320)
                 } else {
@@ -102,15 +103,17 @@ struct NowPlayingView: View {
             .aspectRatio(16.0 / 9.0, contentMode: .fit)
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .shadow(color: .black.opacity(0.5), radius: 24, y: 10)
-            .onTapGesture(count: 2) { model.setVideoFullScreen(true) }
+            .onTapGesture(count: 2) { model.setPictureFullScreen(true) }
     }
 
-    /// The custom visualizer chosen in Settings, in the video's shape and place.
+    /// The custom visualizer chosen in Settings, in the video's shape and place. Like
+    /// the video, a double click gives it the whole screen.
     private var visualizer: some View {
         CustomVisualizerView(number: CustomVisualizer.chosen(whichVisualizer))
             .aspectRatio(16.0 / 9.0, contentMode: .fit)
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .shadow(color: .black.opacity(0.5), radius: 24, y: 10)
+            .onTapGesture(count: 2) { model.setPictureFullScreen(true) }
     }
 
     /// The cover, blurred right out, under a dark wash: the screen takes the album's colour.
@@ -172,14 +175,17 @@ private struct ShowPicker: View {
 
 /// Under the picture, everything centred, one thing under the next (the owner,
 /// 2026-10-03: "I quite like this, it's all centred"): the song's name, artist and album;
-/// the heart; Karaoke, and for a video its picture size and Full Screen; then the three
-/// downloads, in a row when there's room and one above the other when there isn't. A
-/// note about the video, if there is one, goes last.
+/// the heart; Karaoke, for a video its picture size, and for a video or the visualizer
+/// Full Screen; then the three downloads, in a row when there's room and one above the
+/// other when there isn't. A note about the video, if there is one, goes last.
 private struct PlayerControls: View {
     let track: Track?
-    let showsVideo: Bool
+    /// What's drawn above: the video, the custom visualizer or the cover.
+    let showing: PagePicture
     @Environment(AppModel.self) private var model
     @AppStorage("alwaysBestVideo") private var alwaysBestVideo = false
+
+    private var showsVideo: Bool { showing == .video }
 
     var body: some View {
         VStack(spacing: 14) {
@@ -230,21 +236,23 @@ private struct PlayerControls: View {
         }
     }
 
-    /// Under the heart: Karaoke for every song; and for a video, its picture size
-    /// (unless Settings keeps it at the sharpest) and Full Screen.
+    /// Under the heart: Karaoke for every song; for a video, its picture size (unless
+    /// Settings keeps it at the sharpest); and for a video or the visualizer, Full Screen.
     @ViewBuilder
     private var extras: some View {
         if track != nil {
             KaraokeButton(videoShowing: showsVideo)
         }
-        if showsVideo {
-            if !alwaysBestVideo { QualityMenu() }
+        if showsVideo && !alwaysBestVideo { QualityMenu() }
+        if showing.canFillTheScreen {
             Button {
-                model.setVideoFullScreen(true)
+                model.setPictureFullScreen(true)
             } label: {
                 Image(systemName: "arrow.up.left.and.arrow.down.right")
             }
-            .help("Give the video the whole screen (Esc brings it back)")
+            .help(
+                "Give the \(showsVideo ? "video" : "visualizer") the whole screen "
+                    + "(Esc brings it back)")
         }
     }
 

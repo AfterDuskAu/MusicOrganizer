@@ -309,6 +309,18 @@ public enum PagePicture: String, CaseIterable, Sendable {
     public static func chosen(videoWanted: Bool, visualizerOn: Bool) -> PagePicture {
         videoWanted ? .video : visualizerOn ? .visualizer : .song
     }
+
+    /// What's drawn where the cover would be, on the page and on the whole screen alike:
+    /// a video once its picture is ready (until then, whatever the song has), the
+    /// visualizer for a song that's playing, or else the cover.
+    public static func showing(
+        videoReady: Bool, visualizerOn: Bool, songPlaying: Bool
+    ) -> PagePicture {
+        videoReady ? .video : visualizerOn && songPlaying ? .visualizer : .song
+    }
+
+    /// A video and the visualizer can be given the whole screen. A cover can't.
+    public var canFillTheScreen: Bool { self != .song }
 }
 
 /// A big count as YouTube writes them: 950, 5.2K, 900K, 1.3M, 2.1B.

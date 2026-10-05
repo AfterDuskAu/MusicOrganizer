@@ -150,9 +150,10 @@ private struct PlaySettings: View {
                         model.forgetPageChange(Player.fullScreenLyricsKey)
                     }
                 SideNote(
-                    "Yes: with a video on the whole screen, the song's lyrics take a column on "
-                        + "the right and the video the rest. No: the video has the whole screen. "
-                        + "The lyrics button in full screen switches them for now.")
+                    "Yes: with a video or the visualizer on the whole screen, the song's lyrics "
+                        + "take a column on the right and the picture the rest. No: the picture "
+                        + "has the whole screen. The lyrics button in full screen switches them "
+                        + "for now.")
                 yesNo(
                     "When Video is chosen, play the song while its video loads?", $playWhileLoading)
                 SideNote(
