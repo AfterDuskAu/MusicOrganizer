@@ -671,7 +671,9 @@
   - **This is the one way the app ever changes anything about the Mac's sound output.** `SoundOutput` still never chooses the output.
 - **Play is not quicker, and can't be made so on this output.** The stream runs the Apple TV 1.75 s behind what's sent (measured the same for both kinds of player), so any app's sound takes that long to come out after it starts.
 - **Checked:** `swift build` and `swift test` (72 tests, one new).
-- **Not checked when this was written:** the owner's ears. Known: for those two seconds the Mac shows its sound as muted; if the app crashed in those two seconds the output would stay muted until unmuted by hand; skipping to another song or jumping within one still lets two seconds of the old sound play on, since only Pause does this.
+- **Confirmed afterwards** (about 1:40pm): the owner, on the rebuilt app: "the pause happens immediately." The log for their two pauses shows the output muted 0.001 s after each, the volume command leaving for the Apple TV at once, and the unmute 2.2 s later (1.3 s after Play, in the one case where Play came inside the two seconds).
+- **Still wanted by the owner:** Play. "The song countdown starts going down, but it still takes 2 seconds to hear something." In the log the song's clock starts about a second after Play and the sound is due a second after that, so the countdown does run ahead of the sound. Nothing here changes that yet.
+- **Known:** for those two seconds the Mac shows its sound as muted; if the app crashed in those two seconds the output would stay muted until unmuted by hand; skipping to another song or jumping within one still lets two seconds of the old sound play on, since only Pause does this.
 
 ## 0.1.1 — in progress
 
