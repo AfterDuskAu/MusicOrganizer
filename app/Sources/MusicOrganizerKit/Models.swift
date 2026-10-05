@@ -256,13 +256,12 @@ public enum CustomVisualizer {
     /// Measured on 2026-10-05: on a two-second output the system tops the player's
     /// sound queue up with a tenth of a second to spare, and listening takes that
     /// tenth away, so the queue runs dry every six seconds and the song skips.
-    public static let longestOutputDelay = 1.0
+    public static let longestOutputDelay = LongDelayOutput.threshold
 
     /// Whether the visualizer may listen to the player, for the delay of the output the
     /// sound is going to. With no delay known, it listens as it always has.
     public static func mayListen(outputDelay: Double?) -> Bool {
-        guard let outputDelay else { return true }
-        return outputDelay < longestOutputDelay
+        !LongDelayOutput.isOne(delay: outputDelay)
     }
 
     /// What the page says where the visualizer would move, while it isn't listening.
@@ -271,6 +270,26 @@ public enum CustomVisualizer {
             + "Listening there makes the song skip, so it's off until the sound is back on "
             + "the Mac's speakers, headphones or a wired output."
     }
+}
+
+/// A sound output that holds sound for a long time before it's heard. An AirPlay device
+/// holds two seconds; the Mac's speakers, headphones and wired outputs hold a fraction
+/// of one. Two things in the app go by it: the visualizer doesn't listen on one
+/// (`CustomVisualizer.mayListen`), and Pause mutes one for a moment so the song stops
+/// at once (the app's `PauseSilence`).
+public enum LongDelayOutput {
+    /// An output counts as one from this many seconds of delay.
+    public static let threshold = 1.0
+
+    /// Whether an output with this delay is one. With no delay known, it isn't.
+    public static func isOne(delay: Double?) -> Bool {
+        guard let delay else { return false }
+        return delay >= threshold
+    }
+
+    /// How long the output stays muted after Pause, in seconds: until the sound that had
+    /// already been sent has run out, and a little over.
+    public static func silenceAfterPause(delay: Double) -> Double { delay + 0.2 }
 }
 
 /// What the Local Visualizer's switch says: the song with its cover, its video, or the

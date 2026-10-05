@@ -1161,6 +1161,20 @@ final class SongVideoTests: XCTestCase {
                 + "on the Mac's speakers, headphones or a wired output.")
     }
 
+    func testWhatCountsAsAnOutputWithALongDelay() {
+        // As measured: the iMac's speakers, Bluetooth headphones, an Apple TV over AirPlay.
+        XCTAssertFalse(LongDelayOutput.isOne(delay: 0.026))
+        XCTAssertFalse(LongDelayOutput.isOne(delay: 0.195))
+        XCTAssertTrue(LongDelayOutput.isOne(delay: 2.012))
+        XCTAssertTrue(LongDelayOutput.isOne(delay: LongDelayOutput.threshold))
+        XCTAssertFalse(LongDelayOutput.isOne(delay: nil))
+        // After Pause the output stays muted until what was already sent has run out.
+        XCTAssertEqual(LongDelayOutput.silenceAfterPause(delay: 2.012), 2.212, accuracy: 0.0001)
+        XCTAssertGreaterThan(LongDelayOutput.silenceAfterPause(delay: 2.012), 2.012)
+        // The visualizer goes by the same line.
+        XCTAssertEqual(CustomVisualizer.longestOutputDelay, LongDelayOutput.threshold)
+    }
+
     func testTheLocalVisualizersSwitch() {
         XCTAssertEqual(PagePicture.allCases.map(\.label), ["Song", "Video", "Visualizer"])
         XCTAssertEqual(PagePicture.chosen(videoWanted: false, visualizerOn: false), .song)

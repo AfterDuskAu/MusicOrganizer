@@ -78,6 +78,8 @@ final class Player {
     /// A song's official video, or nil if it has none (the engine asks YouTube Music).
     @ObservationIgnored var findVideo: ((Track) async throws -> SongVideo?)?
     @ObservationIgnored private let audio = AVPlayer()
+    /// Makes Pause stop the sound at once on an AirPlay device.
+    @ObservationIgnored private let pauseSilence = PauseSilence()
     @ObservationIgnored private var observers: [Any] = []
 
     /// What the player has been given to play.
@@ -192,6 +194,7 @@ final class Player {
         if isPlaying {
             audio.pause()
             isPlaying = false
+            pauseSilence.paused()
         } else if audio.currentItem == nil || audio.currentItem?.status == .failed {
             start(current)  // it never got going (YouTube refused it): ask afresh
             return

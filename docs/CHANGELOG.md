@@ -653,10 +653,25 @@
   - Nothing else was wrong: one program sending sound, a steady AirPlay stream with an exact clock, a strong Wi-Fi link, and no simulator running (the cause of the stutter found earlier the same day).
 - **The fix:** the app doesn't listen while the sound goes to an output that holds a second of sound or more (`CustomVisualizer.longestOutputDelay`). `SoundOutput` (new, in the app) reads the output's delay from Core Audio and says when the Mac's output changes; `VisualizerSound` takes the tap off when the sound moves to such an output and puts it back when it returns. On the Local Visualizer the visual's place says why nothing moves ("The visualizer can't follow the music while the sound is going to Apple TV…").
 - **So the visualizer doesn't move to the music over AirPlay.** That's the price of an unbroken song there. Hearing the music some other way on such an output (the Mac's own sound, with macOS's permission) would be a piece of work of its own, in Particle Accelerator.
-- **Also measured, and left as it is:** pausing and playing are about two seconds late on the Apple TV. That's AirPlay's own two seconds: the app pauses its sound queue within 0.04 s of being asked and has sound leaving the Mac within 0.3 s. The owner said it doesn't bother them.
+- **Also measured, and left as it was at the time:** pausing and playing are about two seconds late on the Apple TV. The app pauses its sound queue within 0.04 s of being asked and has sound leaving the Mac within 0.3 s; the rest is the two seconds an AirPlay device holds. (The next entry puts Pause right, and corrects what was first said here: that every app has it.)
 - **Checked:** `swift build` and `swift test` (71 tests, one new). The app's own `SoundOutput` code, run on this Mac with the sound on the Apple TV, read "Apple TV, 2.012 s". In the unseen test copy, with the setting on, the Local Visualizer showed the note in the visual's place.
 - **Confirmed afterwards** (about 1:10pm): the owner reopened the rebuilt app, played to the Apple TV, and the skip was gone. The player's log for that minute showed no tap, and sound still in hand at every one of eleven top-ups (it went 1.2 to 1.3 s with nothing to decode each time, never the 1.5 s that empties the queue).
 - **Not checked:** the tap coming off and going back on as the output is changed by hand (the app never changes the Mac's output itself, and neither did these checks); other long-delay outputs than an Apple TV; screen mirroring switched on.
+
+2026-10-05, about 1:30pm. **Pause stops the sound at once on an AirPlay device.** The owner: "I would like the two second buffer to be removed. It doesn't happen for anything else, but for our app it does??" They were right, for Pause, and the entry above was wrong to say every app has it.
+
+- **Measured on the Apple TV,** with two silent test players and the AirPlay sender's own log:
+  - A player built as the app is (Apple's AVPlayer): on Pause its sound queue stops at once, but the stream to the Apple TV stays open, so the two seconds already sent play out. Earlier the same day the app's own pauses showed the stream shut 2.1 s after the queue stopped.
+  - A player built on an audio engine, as many apps are: the stream is shut within 0.03 s of Pause, and the Apple TV goes quiet at once.
+  - Taking the song out of the AVPlayer on Pause didn't help: the stream still ran on for 2.1 s.
+  - Muting the Mac's output did: the mute left for the Apple TV in 0.001 s and was acknowledged in 0.006 s, and unmuting put the volume back as it was.
+- **So on Pause, on an output with a long delay, the app mutes the Mac's output,** and unmutes it when what was already sent has run out (the output's delay and a fifth of a second: 2.2 s on the Apple TV). `PauseSilence` (new, in the app) does it; `LongDelayOutput` in the Kit says which outputs and for how long. It's what the Mac's own mute key does.
+  - Only for a pause the owner asked for, only on such an output, and never to an output that's already muted. Only the output it muted is unmuted, and it's unmuted if the app is quit in those two seconds.
+  - Play before the two seconds are up doesn't unmute early: what's left in the pipe is the old sound, and the new sound doesn't arrive before the unmute does.
+  - **This is the one way the app ever changes anything about the Mac's sound output.** `SoundOutput` still never chooses the output.
+- **Play is not quicker, and can't be made so on this output.** The stream runs the Apple TV 1.75 s behind what's sent (measured the same for both kinds of player), so any app's sound takes that long to come out after it starts.
+- **Checked:** `swift build` and `swift test` (72 tests, one new).
+- **Not checked when this was written:** the owner's ears. Known: for those two seconds the Mac shows its sound as muted; if the app crashed in those two seconds the output would stay muted until unmuted by hand; skipping to another song or jumping within one still lets two seconds of the old sound play on, since only Pause does this.
 
 ## 0.1.1 — in progress
 

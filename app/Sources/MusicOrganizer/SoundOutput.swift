@@ -1,14 +1,15 @@
 import CoreAudio
 import Foundation
 
-/// Where the Mac's sound is going, as Core Audio tells it. It's only ever read: the app
-/// never chooses or changes the Mac's output.
+/// Where the Mac's sound is going, as Core Audio tells it. The app never chooses the
+/// Mac's output. The one thing it ever changes is the output's mute, for a moment, when a
+/// song is paused on an output with a long delay (`PauseSilence`).
 enum SoundOutput {
     /// The output the Mac is using, and how long sound waits in it before it's heard, in
     /// seconds: the device's own delay, its safety margin, its buffer and its stream's
     /// delay. Measured on 2026-10-05: 0.026 for the iMac's speakers, 2.012 for an Apple
     /// TV over AirPlay. Nil if the Mac has no output or Core Audio won't say.
-    static func current() -> (name: String, delay: Double)? {
+    static func current() -> (device: AudioObjectID, name: String, delay: Double)? {
         guard
             let device: AudioObjectID = value(
                 of: AudioObjectID(kAudioObjectSystemObject),
@@ -27,7 +28,25 @@ enum SoundOutput {
             frames += value(
                 of: stream, kAudioStreamPropertyLatency, kAudioObjectPropertyScopeGlobal) ?? 0
         }
-        return (name(of: device) ?? "this output", Double(frames) / rate)
+        return (device, name(of: device) ?? "this output", Double(frames) / rate)
+    }
+
+    /// Whether an output is muted, as the Mac's own mute key would leave it. Nil if the
+    /// output has no mute.
+    static func isMuted(_ device: AudioObjectID) -> Bool? {
+        let muted: UInt32? = value(
+            of: device, kAudioDevicePropertyMute, kAudioObjectPropertyScopeOutput)
+        return muted.map { $0 != 0 }
+    }
+
+    /// Mutes or unmutes an output, as the Mac's own mute key does. False if it wouldn't.
+    static func setMuted(_ muted: Bool, on device: AudioObjectID) -> Bool {
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioDevicePropertyMute, mScope: kAudioObjectPropertyScopeOutput,
+            mElement: kAudioObjectPropertyElementMain)
+        var value: UInt32 = muted ? 1 : 0
+        return AudioObjectSetPropertyData(
+            device, &address, 0, nil, UInt32(MemoryLayout<UInt32>.size), &value) == noErr
     }
 
     /// Calls `changed` on the main thread whenever the Mac's sound goes to a different
