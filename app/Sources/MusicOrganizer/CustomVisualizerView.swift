@@ -13,15 +13,47 @@ import SwiftUI
 /// over in the middle of a song, the song stops for about half a second, once (that's
 /// Particle Accelerator's own measurement); before a song starts, nothing is heard. An
 /// app whose owner never uses a visualizer plays exactly as it did before there was one.
+///
+/// **It doesn't listen while the sound goes to an output with a long delay** (an AirPlay
+/// device holds two seconds). The owner heard the song skip every few seconds on an
+/// Apple TV (2026-10-05), on every page and not only this one, because once listening
+/// started it went on. Measured there: without the tap, each new piece of the song
+/// reaches the player's sound queue with a tenth of a second of sound still in hand;
+/// with it, the queue is empty every time. On the Mac's speakers there are two seconds
+/// in hand either way. So the tap is taken off when the sound moves to such an output,
+/// and put back when it returns.
 @MainActor
+@Observable
 final class VisualizerSound {
-    let listener = MusicListener()
-    private var isListening = false
+    @ObservationIgnored let listener = MusicListener()
+    /// Why the visualizer isn't listening, while it isn't: words for the page.
+    private(set) var note: String?
+    /// The app's player, from the first time a visualizer is wanted.
+    @ObservationIgnored private var player: AVPlayer?
+    @ObservationIgnored private var isListening = false
 
     func hear(_ player: AVPlayer) {
-        guard !isListening else { return }
-        isListening = true
-        listener.listen(to: player)
+        guard self.player == nil else { return }
+        self.player = player
+        SoundOutput.onChange { [weak self] in self?.followTheOutput() }
+        followTheOutput()
+    }
+
+    /// Listens, or stops listening, to suit where the Mac's sound is going now.
+    private func followTheOutput() {
+        guard let player else { return }
+        let output = SoundOutput.current()
+        if CustomVisualizer.mayListen(outputDelay: output?.delay) {
+            note = nil
+            guard !isListening else { return }
+            isListening = true
+            listener.listen(to: player)
+        } else {
+            note = CustomVisualizer.notListening(to: output?.name ?? "this output")
+            guard isListening else { return }
+            isListening = false
+            listener.stop()
+        }
     }
 }
 
@@ -39,9 +71,10 @@ struct CustomVisualizerView: View {
         let listener = model.visualizerSound.listener
         AcceleratorView(listener: listener, settings: settings)
             .overlay(alignment: .bottom) {
-                // Why nothing moves, when the listener can't hear what's playing.
-                if let problem = listener.problem {
-                    Text(problem)
+                // Why nothing moves: the app isn't listening (the sound is going to an
+                // AirPlay device), or the listener can't hear what's playing.
+                if let why = model.visualizerSound.note ?? listener.problem {
+                    Text(why)
                         .font(.callout)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)

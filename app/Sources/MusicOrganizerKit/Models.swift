@@ -248,6 +248,29 @@ public enum CustomVisualizer {
 
     /// What a menu calls a quality: "Medium".
     public static func qualityTitle(_ name: String) -> String { name.capitalized }
+
+    /// The longest a sound output may hold sound before it's heard, in seconds, for the
+    /// visualizer to listen to the player. The Mac's speakers, headphones and wired
+    /// outputs hold a fraction of a second; an AirPlay device holds two.
+    ///
+    /// Measured on 2026-10-05: on a two-second output the system tops the player's
+    /// sound queue up with a tenth of a second to spare, and listening takes that
+    /// tenth away, so the queue runs dry every six seconds and the song skips.
+    public static let longestOutputDelay = 1.0
+
+    /// Whether the visualizer may listen to the player, for the delay of the output the
+    /// sound is going to. With no delay known, it listens as it always has.
+    public static func mayListen(outputDelay: Double?) -> Bool {
+        guard let outputDelay else { return true }
+        return outputDelay < longestOutputDelay
+    }
+
+    /// What the page says where the visualizer would move, while it isn't listening.
+    public static func notListening(to output: String) -> String {
+        "The visualizer can't follow the music while the sound is going to \(output). "
+            + "Listening there makes the song skip, so it's off until the sound is back on "
+            + "the Mac's speakers, headphones or a wired output."
+    }
 }
 
 /// What the Local Visualizer's switch says: the song with its cover, its video, or the

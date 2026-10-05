@@ -643,6 +643,20 @@
 - **Checked:** `swift build` and `swift test` (70 tests) with the new pin, fetched from GitHub; Particle Accelerator's own CI passed on both Macs first. In the unseen test copy: the Quality row in Settings, showing Medium; and the stage's own report with Low chosen (75,000 sparks at 1280×720) and with High (300,000 sparks).
 - **Not checked:** Ultra and Auto in the app (they go through the same line as Low and High; the unseen copy's window was covered at the time, and a covered window isn't drawn). Changing the quality while a visual is showing, and the row clicked by hand. Visualizer 8's new picture seen here by anyone but the owner.
 
+2026-10-05, about 1pm. **The song skipped every few seconds on an Apple TV: the visualizer's listener, on an output with a long delay.** The owner heard the music drop for a moment every few seconds with the Mac's sound going to an Apple TV over AirPlay, on every page of the app.
+
+- **The cause:** to hear the music, the visualizer puts a listening tap on what the player plays. Once a visualizer had been shown, the tap stayed on until the app was closed, whatever page was showing. On the Mac's speakers that costs nothing. An AirPlay device holds two seconds of sound, and there the system tops the player's sound queue up with almost nothing to spare; the tap takes the rest.
+- **Measured,** with a small silent test player (zero volume, a made-up tone) and the system's own log, the Apple TV reporting a 2.012 s delay:
+  - On the iMac's speakers, with or without a tap: each new piece of the song reaches the sound queue with 2.1 s of sound still in hand.
+  - On the Apple TV, without a tap: the queue goes 1.2 to 1.3 s with nothing new to decode, and has about 0.1 s in hand when the next piece arrives.
+  - On the Apple TV, with a tap: 1.5 to 1.6 s with nothing to decode, and the queue is empty every time, once every six seconds. The owner's own app showed the same (1.63 s, empty).
+  - Nothing else was wrong: one program sending sound, a steady AirPlay stream with an exact clock, a strong Wi-Fi link, and no simulator running (the cause of the stutter found earlier the same day).
+- **The fix:** the app doesn't listen while the sound goes to an output that holds a second of sound or more (`CustomVisualizer.longestOutputDelay`). `SoundOutput` (new, in the app) reads the output's delay from Core Audio and says when the Mac's output changes; `VisualizerSound` takes the tap off when the sound moves to such an output and puts it back when it returns. On the Local Visualizer the visual's place says why nothing moves ("The visualizer can't follow the music while the sound is going to Apple TV…").
+- **So the visualizer doesn't move to the music over AirPlay.** That's the price of an unbroken song there. Hearing the music some other way on such an output (the Mac's own sound, with macOS's permission) would be a piece of work of its own, in Particle Accelerator.
+- **Also measured, and left as it is:** pausing and playing are about two seconds late on the Apple TV. That's AirPlay's own two seconds: the app pauses its sound queue within 0.04 s of being asked and has sound leaving the Mac within 0.3 s. The owner said it doesn't bother them.
+- **Checked:** `swift build` and `swift test` (71 tests, one new). The app's own `SoundOutput` code, run on this Mac with the sound on the Apple TV, read "Apple TV, 2.012 s". In the unseen test copy, with the setting on, the Local Visualizer showed the note in the visual's place.
+- **Not checked yet when this was written:** the owner's ears on the rebuilt app; the tap coming off and going back on as the output is changed by hand (the app never changes the Mac's output itself, and neither did these checks); other long-delay outputs than an Apple TV.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

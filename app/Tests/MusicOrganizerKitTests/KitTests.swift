@@ -1146,6 +1146,21 @@ final class SongVideoTests: XCTestCase {
             ["Auto", "Low", "Medium", "High", "Ultra"])
     }
 
+    func testTheVisualizerDoesNotListenOnAnOutputWithALongDelay() {
+        // As measured: the iMac's speakers, Bluetooth headphones, an Apple TV over AirPlay.
+        XCTAssertTrue(CustomVisualizer.mayListen(outputDelay: 0.026))
+        XCTAssertTrue(CustomVisualizer.mayListen(outputDelay: 0.195))
+        XCTAssertFalse(CustomVisualizer.mayListen(outputDelay: 2.012))
+        XCTAssertFalse(CustomVisualizer.mayListen(outputDelay: CustomVisualizer.longestOutputDelay))
+        // Nothing known about the output: as it always was.
+        XCTAssertTrue(CustomVisualizer.mayListen(outputDelay: nil))
+        XCTAssertEqual(
+            CustomVisualizer.notListening(to: "Apple TV"),
+            "The visualizer can't follow the music while the sound is going to Apple TV. "
+                + "Listening there makes the song skip, so it's off until the sound is back "
+                + "on the Mac's speakers, headphones or a wired output.")
+    }
+
     func testTheLocalVisualizersSwitch() {
         XCTAssertEqual(PagePicture.allCases.map(\.label), ["Song", "Video", "Visualizer"])
         XCTAssertEqual(PagePicture.chosen(videoWanted: false, visualizerOn: false), .song)
