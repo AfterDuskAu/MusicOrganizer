@@ -983,6 +983,11 @@
 - **Cause:** the staged copy is named after the rip, cut to 120 characters. The rip's name is longer than that, so the cut took ".mp3" off, and everything after the first dot in "Y2meta.app" was read as the file's kind. The file always had its ".mp3": the known-issues note that said it had no extension was wrong, and is gone.
 - **Fix:** `fileops.stage_path` cuts the name before its extension and keeps the extension (`_staged_name`). A name with no extension, or one that fits, is named as before.
 
+2026-10-07, later. **Tidy sets aside the copy of a rip that a download has replaced.** The owner had 29 rips replaced by official downloads today, and each one's earlier copy (made on 1 Oct so it could be played, `MUSICORG_MATCH=unconfirmed`) stayed in the library beside the download: the same song twice.
+
+- **Cause:** a replace job links the rip to the download and marks it `superseded`, but never looked for a copy of that rip already in the library. `plan tidy` only paired copies that share a YouTube id, and an unconfirmed copy has none.
+- **Fix:** `plan tidy` now treats an unconfirmed copy whose rip is `superseded`, and whose replacement is in the library, as a duplicate: it goes to `_Replaced/`, like any other. The summary's `replaced_copies` counts them. The rip itself is never touched. Left for later: doing this in the replace job itself, so no tidy is needed.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

@@ -1279,6 +1279,42 @@ def test_an_unconfirmed_copy_that_turns_out_to_be_a_duplicate_is_set_aside(
     assert len(index.library_tracks()) == 1
 
 
+def test_tidy_sets_aside_the_copy_of_a_rip_a_download_has_replaced(
+    lib: Library, index: Index, rips: Path, audio: AudioFixtures, downloads: FakeDownloads
+) -> None:
+    """The owner's library, 2026-10-07: 29 rips were replaced by downloads, and the copies
+    made of them on 1 Oct, to play them meanwhile, stayed beside the downloads."""
+    iid = rip(index, rips, audio.melody_a_mp3, state_="review")
+    other = rip(
+        index, rips, audio.melody_a_mp3, "Band - Another", state_="review", video_id=VIDEO_B
+    )
+    adopt_unconfirmed(lib, index)
+    assert music_files(lib) == ["Band/Unsorted/Another.mp3", "Band/Unsorted/Melody.mp3"]
+
+    index.set_state(iid, "matched_user", [])  # the owner chose the official track
+    plan_and_run(lib, index, only="accepted")
+    assert item_state(index, iid)[0] == "superseded"
+    assert len([f for f in music_files(lib) if f.endswith("Melody.mp3")]) == 1  # still there
+
+    plan = pipeline.plan_tidy(lib, index)
+    assert (plan.summary["replaced_copies"], plan.summary["duplicates"]) == (1, 1)
+    batch_id = pipeline.apply(lib, index, plan.plan_id).batch_id
+    run_queue(lib)
+
+    songs = [f for f in music_files(lib) if f.endswith((".mp3", ".m4a"))]
+    assert songs == ["Band/Tunes (2020)/03 Melody.m4a", "Band/Unsorted/Another.mp3"]
+    assert len(list(lib.paths.replaced.rglob("Melody.mp3"))) == 1  # kept, out of the way
+    assert {t["match"] for t in index.library_tracks()} == {"user_confirmed", "unconfirmed"}
+    assert item_state(index, iid)[0] == "superseded"
+    assert item_state(index, other)[0] == "review"  # a rip still waiting keeps its copy
+    assert (rips / "Band - Melody.mp3").is_file()  # the rip itself is never touched
+    assert pipeline.plan_tidy(lib, index).summary["replaced_copies"] == 0
+
+    pipeline.undo(lib, batch_id)
+    assert len([f for f in music_files(lib) if f.endswith("Melody.mp3")]) == 1
+    assert item_state(index, iid)[0] == "superseded"
+
+
 # ---- what a copy is called: the version stays in its name (2026-10-04) ------------------
 #
 # The owner's rule: a song that has been found takes the found name; one that hasn't keeps

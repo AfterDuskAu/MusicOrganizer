@@ -1588,6 +1588,9 @@ def plan_tidy(lib: Library, index: Index) -> fileops.Plan:
     file gets the owner's preferred names, moving to the folder and name they now give.
     A file whose name has a ` (2)` it no longer needs is renamed too.
 
+    The copy made of a rip to play it meanwhile (`unconfirmed`) is set aside too, once
+    a download has replaced that rip: the summary's `replaced_copies` (2026-10-07).
+
     A copy that lost its version gets it back (`_lost_version`). Before 2026-10-04 a
     copy named from its rip left the version out: "Come As You Are R" was copied in as
     "Come As You Are", and the real original then had to be "Come As You Are (2)". The
@@ -1642,6 +1645,39 @@ def plan_tidy(lib: Library, index: Index) -> fileops.Plan:
                     },
                 )  # fmt: skip
             )
+    # A rip replaced by a download since it was copied in to be played meanwhile: that
+    # copy (`unconfirmed`) is the same song a second time, and the download is the keeper.
+    links = state.superseded(lib.load_state().data)
+    by_id = {str(track["musicorg_id"]): track for track, _ in files if track.get("musicorg_id")}
+    replaced_copies = 0
+    for track, path in files:
+        if track.get("match") != "unconfirmed" or track["rel_path"] in dropped:
+            continue
+        rip_key = state.normalise_path(Path(track.get("origin_path") or ""))
+        item = rips.get(rip_key)
+        keep_track = by_id.get(links.get(rip_key, ""))
+        if item is None or item["state"] != "superseded" or item["id"] in busy:
+            continue
+        if keep_track is None or keep_track["rel_path"] == track["rel_path"]:
+            continue
+        if keep_track["rel_path"] in dropped:
+            continue
+        dropped.add(track["rel_path"])
+        replaced_copies += 1
+        ops.append(
+            fileops.PlanOp(
+                action="duplicate",
+                item_id=item["id"],
+                item_state=item["state"],
+                source=fileops.FileCheck.of(lib, path),
+                params={
+                    "musicorg_id": track["musicorg_id"],
+                    "rip": track.get("origin_path"),
+                    "keep": keep_track["rel_path"],
+                    "keep_id": keep_track["musicorg_id"],
+                },
+            )
+        )
     duplicates = len(ops)
     versions = numbers = 0
     left: dict[str, int] = {}
@@ -1721,7 +1757,7 @@ def plan_tidy(lib: Library, index: Index) -> fileops.Plan:
     if empty:
         ops.append(fileops.PlanOp(action="empty_folders", params={"folders": empty}))
     summary = {"operations": len(ops), "duplicates": duplicates, "renames": renames,
-               "versions": versions, "numbers_dropped": numbers,
+               "replaced_copies": replaced_copies, "versions": versions, "numbers_dropped": numbers,
                "versions_skipped": left, "versions_left": left_alone,
                "empty_folders": len(empty), "downloads": 0,
                "est_minutes": math.ceil(len(ops) * 2 / 60), "days": 0, "disk_mb": 0,

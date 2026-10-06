@@ -951,6 +951,9 @@ def _print_plan_summary(plan: fileops.Plan) -> None:
     s = plan.summary
     if plan.kind == "tidy":
         print(f"  {s.get('duplicates', 0):,} duplicate(s) to set aside (the best copy is kept)")
+        if s.get("replaced_copies"):
+            print(f"  (of those, {s['replaced_copies']:,} are your own copies of songs a "
+                  "download has replaced)")  # fmt: skip
         print(f"  {s.get('renames', 0):,} song(s) to rename with your preferred names")
         if s.get("versions"):
             print(f"  {s['versions']:,} song(s) to give back the version their name lost "
