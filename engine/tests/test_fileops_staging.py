@@ -34,6 +34,22 @@ def test_stage_path(lib: Library) -> None:
         assert fileops.stage_path(b, "Artist: Song?.m4a").name == "Artist_ Song_ (2).m4a"
 
 
+def test_stage_path_keeps_the_extension_of_a_long_name(lib: Library) -> None:
+    """A rip from a download site: a dot early in a name longer than the limit."""
+    long = "Y2meta.app - Artist - Song (Some Remix) " + "words of the song " * 6 + "(320 kbps).mp3"
+    assert len(long) > 120
+    with fileops.batch(lib, "demo") as b:
+        path = fileops.stage_path(b, long)
+        assert path.suffix == ".mp3"
+        assert len(path.name) <= 120
+        assert path.name.startswith("Y2meta.app - Artist - Song (Some Remix)")
+        put(path)
+        again = fileops.stage_path(b, long)
+        assert again != path and again.suffix == ".mp3"
+        # A long name with no extension of its own is cut as before.
+        assert len(fileops.stage_path(b, "word " * 40).name) <= 120
+
+
 def test_stage_dir(lib: Library, precious: Path) -> None:
     with fileops.batch(lib, "demo") as b:
         folder = fileops.stage_dir(b, "job-7")

@@ -978,6 +978,10 @@
 - **The arrows stand beside the cards, in room kept for them at each end, not over a card.** Laid over the last card (as the owner's picture has it) the arrow lost its clicks to the card underneath, the same fault View More had. The room is kept whether an arrow is showing or not, so nothing shifts sideways as one comes and goes (it did, in the first try).
 - **Checked:** `swift test` (105; one new, for how many fit). In the owner's app: nine whole cards across in the window as it was; forward three times through a custom search's 25 films, more fetched, and on into the next; the back arrow appearing.
 - **Not checked:** other window sizes by eye, the back arrow being clicked, and the fix for a short last page being topped up (made after the last look).
+2026-10-07. **A rip with a very long file name can be copied in.** One of the owner's rips failed every adopt since 1 Oct with "Music Organizer doesn't write tags to .app - onerepublic … files".
+
+- **Cause:** the staged copy is named after the rip, cut to 120 characters. The rip's name is longer than that, so the cut took ".mp3" off, and everything after the first dot in "Y2meta.app" was read as the file's kind. The file always had its ".mp3": the known-issues note that said it had no extension was wrong, and is gone.
+- **Fix:** `fileops.stage_path` cuts the name before its extension and keeps the extension (`_staged_name`). A name with no extension, or one that fits, is named as before.
 
 ## 0.1.1 — in progress
 

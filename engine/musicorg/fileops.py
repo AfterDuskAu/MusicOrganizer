@@ -934,12 +934,32 @@ def _remove_placeholder(paths: LibraryPaths, path: Path, not_before: float | Non
 # ---- operations ------------------------------------------------------------------------
 
 
+# An extension worth keeping when a name is cut: ".mp3", ".m4a", ".flac", ".lrc", ".jpg".
+_SHORT_SUFFIX = re.compile(r"\.[A-Za-z0-9]{1,5}")
+
+
 def stage_path(b: Batch, name: str) -> Path:
     """A free path in `_Staging/<batch_id>/` for a download or a copy in progress. The
     folder is created; the file isn't."""
     _require_lock(b.paths, "Staging")
     folder = _ensure_folder(b.paths, b.paths.staging / b.batch_id, STAGING)
-    return _first_free(folder / (naming.safe_component(name) or "file"))
+    return _first_free(folder / (_staged_name(name) or "file"))
+
+
+def _staged_name(name: str) -> str:
+    """`name` made safe as a file name, keeping its extension when the name is too long.
+    Cutting a long name at the limit took the ".mp3" off with it, and what was left
+    after the first dot ("Y2meta.app - …") was then read as the file's kind."""
+    safe = naming.safe_component(name)
+    suffix = PurePath(name).suffix
+    if not _SHORT_SUFFIX.fullmatch(suffix) or safe.lower().endswith(suffix.lower()):
+        return safe
+    stem = naming.safe_component(
+        name[: -len(suffix)],
+        naming.MAX_CHARS - len(suffix),
+        naming.MAX_BYTES - len(suffix),
+    )
+    return stem + suffix if stem else safe
 
 
 def stage_dir(b: Batch, name: str) -> Path:
