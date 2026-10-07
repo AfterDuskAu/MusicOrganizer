@@ -1828,3 +1828,20 @@ final class VideoHitTests: XCTestCase {
         XCTAssertNil(ChannelRef(item: try item("tt0012349")))
     }
 }
+
+final class WebPicturesTests: XCTestCase {
+    func testAChannelsPictureIsAskedForAtTheSizeShown() {
+        XCTAssertEqual(
+            WebPictures.sized("https://yt3.ggpht.com/abc=s800-c-k-c0x00ffffff-no-rj", points: 200),
+            "https://yt3.ggpht.com/abc=s400-c-k-c0x00ffffff-no-rj")
+        XCTAssertEqual(
+            WebPictures.sized("https://yt3.googleusercontent.com/abc=s900-c-k", points: 56),
+            "https://yt3.googleusercontent.com/abc=s112-c-k")
+        // Anything else is left as it is.
+        XCTAssertEqual(
+            WebPictures.sized("https://images.metahub.space/poster/small/tt1/img", points: 200),
+            "https://images.metahub.space/poster/small/tt1/img")
+        XCTAssertEqual(WebPictures.sized("https://yt3.ggpht.com/no-size", points: 200), "https://yt3.ggpht.com/no-size")
+        XCTAssertNil(WebPictures.sized(nil, points: 200))
+    }
+}

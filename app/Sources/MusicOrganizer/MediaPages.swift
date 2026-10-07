@@ -81,7 +81,11 @@ struct MediaCard: View {
         VStack(spacing: 8) {
             Color.clear
                 .aspectRatio(square ? 1 : 2.0 / 3.0, contentMode: .fit)
-                .overlay { WebPicture(address: poster, symbol: square ? "play.tv" : "film") }
+                .overlay {
+                    WebPicture(
+                        address: WebPictures.sized(poster, points: 200),
+                        symbol: square ? "play.tv" : "film")
+                }
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
@@ -296,7 +300,10 @@ struct ChannelView: View {
                 Button("Back", systemImage: "chevron.left", action: back)
                     .labelStyle(.iconOnly)
                     .help("Back")
-                WebPicture(address: page?.thumbnail ?? channel.thumbnail, symbol: "play.tv")
+                WebPicture(
+                    address: WebPictures.sized(page?.thumbnail ?? channel.thumbnail, points: 56),
+                    symbol: "play.tv"
+                )
                     .frame(width: 56, height: 56)
                     .clipShape(Circle())
                 VStack(alignment: .leading, spacing: 2) {

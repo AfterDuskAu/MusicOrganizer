@@ -78,6 +78,10 @@ struct FixedRows: NSViewRepresentable {
                 for table in Self.tables(in: view) where table.numberOfColumns > 1 {
                     guard let scroll = table.enclosingScrollView else { continue }
                     let theirs = scroll.convert(scroll.bounds, to: nil)
+                    // (Taking hold of the table before its first layout, when it's
+                    // found close by but not yet in place, halved the wait on first
+                    // opening a list, but the table then showed only its Title column:
+                    // tried and taken out, 2026-10-07. It's held once it's in place.)
                     if abs(theirs.minX - mine.minX) < 2, abs(theirs.minY - mine.minY) < 2,
                         abs(theirs.width - mine.width) < 2, abs(theirs.height - mine.height) < 2
                     {

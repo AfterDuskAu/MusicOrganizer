@@ -103,7 +103,12 @@ REVIEW_STATES = ("review", "not_found", "matched_auto")
 SLOW_METHODS = frozenset(
     {"youtube.stream", "youtube.video", "search.ytmusic", "lyrics.find", "lyrics.for_video",
      "discover.suggest", "import.playlist", "import.playlists", "import.find",
-     "account.connect", "artist.info", "artist.songs", "artist.album", "artist.search"}
+     "account.connect", "artist.info", "artist.songs", "artist.album", "artist.search",
+     # Add-ons and video lookups wait on the network too (an add-on for up to 8 seconds).
+     # Answered on the main line they held up every other request the app made
+     # meanwhile, a favourite or a list of songs included (found 2026-10-07).
+     "addon.list", "addon.add", "addon.catalog", "addon.details", "addon.streams",
+     "video.search", "channel.videos", "channel.search", "torrent.stop"}
 )  # fmt: skip
 MAX_EXCLUDE = 5000  # songs already on screen that Show More leaves out
 RPC_DECISIONS = ("accept", "candidate", "url", "only_copy", "skip", "reject")

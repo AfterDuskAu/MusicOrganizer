@@ -1406,8 +1406,22 @@ def _video_result(entry: Any) -> VideoResult | None:
         duration_s=round(duration) if isinstance(duration, (int, float)) else None,
         views=views if isinstance(views, int) and not isinstance(views, bool) else None,
         published=published,
-        thumbnail=_widest_picture(entry.get("thumbnails")),
+        thumbnail=_list_picture(entry.get("thumbnails")),
     )
+
+
+LIST_PICTURE_WIDTH = 320  # a list shows a video's picture about 130 points wide
+
+
+def _list_picture(thumbnails: Any) -> str | None:
+    """A video's picture for a line in a list: the smallest one that's still sharp
+    there, not the widest (1280 across, a hundred times the pixels the line shows, and
+    slow to fetch and draw for a page of them)."""
+    found = _pictures(thumbnails)
+    enough = [t for t in found if (t.get("width") or 0) >= LIST_PICTURE_WIDTH]
+    if enough:
+        return min(enough, key=lambda t: t["width"])["url"]
+    return _widest_picture(thumbnails)
 
 
 def _pictures(thumbnails: Any) -> list[dict[str, Any]]:

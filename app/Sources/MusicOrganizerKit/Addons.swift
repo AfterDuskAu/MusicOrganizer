@@ -321,3 +321,22 @@ public struct ChannelPage: Decodable, Sendable {
     public let followed: Bool
     public let videos: [VideoHit]
 }
+
+/// Pictures from the web, asked for at the size they're shown.
+public enum WebPictures {
+    /// The address of a picture `points` wide on a Retina screen. A channel's picture
+    /// comes from a server that makes any size on request (the size is in the address,
+    /// "=s800"): asking for the 800-pixel one to fill a 150-point card fetched and drew
+    /// seven times the pixels shown, for a hundred cards. Other addresses are left alone.
+    public static func sized(_ address: String?, points: Int) -> String? {
+        guard let address else { return nil }
+        guard address.contains("ggpht.com/") || address.contains("googleusercontent.com/") else {
+            return address
+        }
+        let pixels = max(points * 2, 64)
+        guard let found = address.range(of: #"=s\d+"#, options: .regularExpression) else {
+            return address
+        }
+        return address.replacingCharacters(in: found, with: "=s\(pixels)")
+    }
+}
