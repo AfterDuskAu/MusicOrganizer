@@ -760,6 +760,14 @@
 - **CI:** the app's build now fetches MPVKit's ready-made libraries (about 1.7 GB with the GPL ones it also lists, which aren't linked), so the Mac runs will take longer.
 - **Two test hooks, for checking unseen:** `MUSICORG_FILM=<file>` or `torrent:<info-hash>:<file number>` plays it once, silently, when Videos → Movies opens; `MUSICORG_FILM_LOG=1` has mpv say what it's doing on stderr.
 
+2026-10-07, about 6pm. **A film's page was bigger than the window, and made every other page so.** The owner, with a picture of a film's page cut off under the sidebar: "there's no set frame… This has messed with the music library, and other libraries."
+
+- **The fault:** a film's page laid its backdrop picture out as part of the page, filling the frame from edge to edge, so the page took the picture's size, not the window's. In a window narrower or shorter than the picture it spilled out on every side. And since the app keeps the pages already opened stacked together, each as it was left, the stack grew to the biggest of them: once a film had been opened, the song lists and the other pages were laid out to that size too.
+- **The fix:** the page takes the room it's given, and the picture is laid behind it, cut to fit, where its size can't change the page's. Nothing else on the page moved.
+- **Checked:** `swift build`, `swift test`, and in the unseen test copy a film's page in a 900-point window: title, chips, summary and the Back arrow all inside the page, beside the sidebar.
+- **Not checked:** in the owner's app, with the sidebar open and shut and the window dragged to other sizes; and that the song lists are their right size again after a film has been opened (by reasoning they are, since nothing else was larger than its room).
+- **Why it was missed:** the page was pictured once, in a 1,500-point window, where the picture happened to fit. A new page is to be pictured narrow as well as wide.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

@@ -375,13 +375,10 @@ struct MovieView: View {
     @State private var problem: String?
 
     var body: some View {
+        // The page is the size of the room it's given. The film's picture is laid over a
+        // plain black behind it and cut to fit, so a big picture never makes the page (and
+        // with it every other page) bigger than the window.
         ZStack(alignment: .topLeading) {
-            Color.black
-            WebPicture(address: details?.background ?? film.poster, symbol: "film")
-                .opacity(0.35)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .clipped()
-                .allowsHitTesting(false)
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     Button("Back", systemImage: "chevron.left", action: back)
@@ -419,6 +416,16 @@ struct MovieView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background {
+            Color.black
+                .overlay {
+                    WebPicture(address: details?.background ?? film.poster, symbol: "film")
+                        .opacity(0.35)
+                }
+                .clipped()
+        }
+        .clipped()
         .foregroundStyle(.white)
         .environment(\.colorScheme, .dark)
         .task(id: film.id) {
