@@ -133,8 +133,6 @@ final class AppModel {
     let film = FilmPlayer()
     /// The torrent the film player is playing from, if it is, and how that's going.
     private(set) var filmTorrent: String?
-    /// The film was opened in a window that was already full screen (see `filmHidesTopBar`).
-    private(set) var filmInFullScreen = false
     private(set) var filmStatus: TorrentStatus?
     /// Videos played as themselves (a channel's video, a trailer): the picture shown is
     /// that very video, not the official video of a song with its name.
@@ -314,10 +312,14 @@ final class AppModel {
             MainActor.assumeIsolated {
                 self?.tookTheScreen = false
                 self?.pictureFullScreen = false
-                // A film that was full screen is in a window now, where its top bar is
-                // simply taken away.
-                self?.filmInFullScreen = false
             }
+        }
+        // The window has just gone full screen (the green button, or a double click on
+        // a film): if a picture has it, the top bar's strip goes out of sight.
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.didEnterFullScreenNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.tidyFullScreenTopBar() }
         }
         await connect()
     }
@@ -497,25 +499,22 @@ final class AppModel {
     /// Play a film or a video file in the film player. The music stops for it.
     func playFilm(_ address: URL, title: String) {
         if player.isPlaying { player.toggle() }
-        setFilmTopBar(open: true)
         film.open(address, title: title)
+        tidyFullScreenTopBar()
     }
 
-    /// A film has the top of the window too. In a window, the top bar is taken away for
-    /// it. A window that's already full screen is different: taking its top bar away
-    /// there leaves an empty strip across the film (seen by the owner, 2026-10-07), so
-    /// instead the bar is left alone and told to stay out of sight with the menu bar,
-    /// coming down only when the mouse goes to the top of the screen.
-    var filmHidesTopBar: Bool { film.isOpen && !filmInFullScreen }
-
-    private func setFilmTopBar(open: Bool) {
-        let full = mainWindow?.styleMask.contains(.fullScreen) ?? false
-        if open, full {
-            filmInFullScreen = true
+    /// In macOS's full screen, a window's top bar lives in a strip of its own, above
+    /// the window. Taking the bar's buttons away (as is done for a film, and for a video
+    /// or visualizer given the whole screen) leaves that strip there, empty, across the
+    /// top of the picture: the owner saw it from the first full-screen video on. So
+    /// while a picture has the whole screen, macOS is asked to keep the strip out of
+    /// sight with the menu bar; it comes down when the mouse goes to the top.
+    func tidyFullScreenTopBar() {
+        guard mainWindow?.styleMask.contains(.fullScreen) == true else { return }
+        if film.isOpen || pictureFullScreen {
             NSApp.presentationOptions.insert(.autoHideToolbar)
-        } else if filmInFullScreen {
-            filmInFullScreen = false
-            if full { NSApp.presentationOptions.remove(.autoHideToolbar) }
+        } else {
+            NSApp.presentationOptions.remove(.autoHideToolbar)
         }
     }
 
@@ -560,7 +559,7 @@ final class AppModel {
     /// Shut the film player. A film from a torrent is left, and what arrived is deleted.
     func closeFilm() {
         film.close()
-        setFilmTopBar(open: false)
+        tidyFullScreenTopBar()
         if let hash = filmTorrent {
             (filmTorrent, filmStatus) = (nil, nil)
             Task { _ = try? await ask("torrent.stop", ["info_hash": hash], as: Empty.self) }
@@ -1903,6 +1902,7 @@ final class AppModel {
     func setPictureFullScreen(_ on: Bool) {
         guard on != pictureFullScreen else { return }
         pictureFullScreen = on
+        tidyFullScreenTopBar()
         guard let window = mainWindow else { return }
         let isFull = window.styleMask.contains(.fullScreen)
         if on {

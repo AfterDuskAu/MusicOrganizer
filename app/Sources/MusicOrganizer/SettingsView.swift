@@ -1,36 +1,101 @@
 import MusicOrganizerKit
 import SwiftUI
 
-/// The Settings window (the cog wheel, or ⌘,), laid out as the owner designed it
-/// (docs/roadmap/0.2-app-layout.md). A row marked "Coming" is planned but not built.
+/// Settings, as a page of the app (the cog wheel, or ⌘,), laid out as the owner asked on
+/// 2026-10-07: the sections named down the left, the one chosen on the right. Until then
+/// it was a window of its own with tabs. A row marked "Coming" is planned but not built.
 struct SettingsView: View {
-    /// The tab that's showing: remembered, and set by a page that sends the owner here
-    /// for one thing (Import Playlists → Spotify opens Profile, with Spotify open).
+    @Environment(AppModel.self) private var model
+    /// The section that's showing: remembered, and set by a page that sends the owner
+    /// here for one thing (Import Playlists → Spotify opens Profile, with Spotify open).
     @AppStorage(SettingsView.tabKey) private var tab = "profile"
 
     static let tabKey = "settingsTab"
     /// Which account under Settings → Profile is open (its arrow turned down).
     static let openAccountKey = "settingsOpenAccount"
-    private static let tabs = ["profile", "play", "downloads", "lyrics", "sharing", "layout"]
+    private static let sections: [(key: String, title: String)] = [
+        ("profile", "Profile"), ("play", "Play Options"), ("downloads", "Downloads"),
+        ("lyrics", "Lyrics"), ("sharing", "Sharing"), ("layout", "App Layout"),
+    ]
+
+    /// The section showing. One remembered from before Settings was regrouped opens Profile.
+    private var chosen: (key: String, title: String) {
+        Self.sections.first { $0.key == tab } ?? Self.sections[0]
+    }
 
     var body: some View {
-        TabView(selection: $tab) {
-            ProfileSettingsTab().tabItem { Label("Profile", systemImage: "person.crop.circle") }
-                .tag("profile")
-            PlaySettings().tabItem { Label("Play Options", systemImage: "play.circle") }
-                .tag("play")
-            DownloadSettings().tabItem { Label("Downloads", systemImage: "arrow.down.circle") }
-                .tag("downloads")
-            LyricsSettings().tabItem { Label("Lyrics", systemImage: "quote.bubble") }.tag("lyrics")
-            SharingSettings().tabItem { Label("Sharing", systemImage: "iphone") }.tag("sharing")
-            LayoutSettings().tabItem { Label("App Layout", systemImage: "paintpalette") }
-                .tag("layout")
+        HStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: 6) {
+                ForEach(Self.sections, id: \.key) { section in
+                    let isChosen = section.key == chosen.key
+                    Button {
+                        tab = section.key
+                    } label: {
+                        Text(section.title)
+                            .font(.title3.weight(isChosen ? .semibold : .regular))
+                            .foregroundStyle(isChosen ? .primary : .secondary)
+                            .padding(.horizontal, 18)
+                            .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(
+                                isChosen ? AnyShapeStyle(.quaternary.opacity(0.7)) : AnyShapeStyle(.clear),
+                                in: Capsule()
+                            )
+                            .contentShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+                Spacer()
+                VStack(alignment: .leading, spacing: 4) {
+                    if let app = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+                        Text("App Version: \(app)")
+                    }
+                    if let engine = model.engineVersion { Text("Engine Version: \(engine)") }
+                }
+                .font(.callout)
+                .foregroundStyle(.tertiary)
+                .padding(.horizontal, 18)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 20)
+            .frame(width: 220)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(chosen.title)
+                    .font(.largeTitle)
+                    .heading()
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                Group {
+                    switch chosen.key {
+                    case "play": PlaySettings()
+                    case "downloads": DownloadSettings()
+                    case "lyrics": LyricsSettings()
+                    case "sharing": SharingSettings()
+                    case "layout": LayoutSettings()
+                    default: ProfileSettingsTab()
+                    }
+                }
+                .frame(maxWidth: 720, maxHeight: .infinity, alignment: .topLeading)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .frame(width: 560)
-        // A tab remembered from before Settings was regrouped (2026-10-03) opens Profile.
-        .onAppear { if !Self.tabs.contains(tab) { tab = "profile" } }
     }
 }
+
+/// What a click on "Open Settings…" or the cog wheel does: the Settings page, in the app.
+struct OpenSettings<Label: View>: View {
+    @Environment(AppModel.self) private var model
+    @ViewBuilder let label: () -> Label
+
+    var body: some View {
+        Button {
+            model.goTo = .settings
+        } label: {
+            label()
+        }
+    }
+}
+
 
 /// A small grey explanation under a setting.
 struct SideNote: View {

@@ -141,7 +141,7 @@ struct ImportView: View {
         } else {
             HStack(spacing: 10) {
                 Text("Spotify isn't signed in to yet.")
-                SettingsLink { Text("Open Settings…") }
+                OpenSettings { Text("Open Settings…") }
                     // Settings opens on its Accounts tab.
                     .simultaneousGesture(
                         TapGesture().onEnded {
@@ -252,7 +252,7 @@ struct ImportView: View {
         } else {
             HStack(spacing: 10) {
                 Text("Last.fm isn't set up yet.")
-                SettingsLink { Text("Open Settings…") }
+                OpenSettings { Text("Open Settings…") }
                     .simultaneousGesture(
                         TapGesture().onEnded {
                             UserDefaults.standard.set("profile", forKey: SettingsView.tabKey)

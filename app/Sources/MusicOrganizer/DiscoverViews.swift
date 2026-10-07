@@ -219,7 +219,7 @@ struct FindView: View {
         case .lastfm:
             if model.accounts?.lastfm?.connected != true {
                 Text("Last.fm isn't set up yet.").foregroundStyle(.secondary)
-                SettingsLink { Text("Open Settings…") }
+                OpenSettings { Text("Open Settings…") }
                     .simultaneousGesture(
                         TapGesture().onEnded {
                             UserDefaults.standard.set("profile", forKey: SettingsView.tabKey)

@@ -40,6 +40,11 @@ struct MusicOrganizerApp: App {
                     .keyboardShortcut("r")
                     .disabled(model.phase != .ready)
             }
+            // Settings is a page of the app, not a window of its own (owner, 2026-10-07).
+            CommandGroup(replacing: .appSettings) {
+                Button("Settings…") { model.goTo = .settings }
+                    .keyboardShortcut(",")
+            }
             // View → Columns: what's shown beside each song, for every list at once.
             CommandGroup(after: .sidebar) {
                 ColumnsMenu()
@@ -58,11 +63,6 @@ struct MusicOrganizerApp: App {
                     model.player.cycleRepeat()
                 }
             }
-        }
-        Settings {
-            SettingsView().environment(model)
-                .dressed()
-                .background(WindowLook())
         }
     }
 }

@@ -87,6 +87,8 @@ enum SidebarItem: Hashable {
     case visualizer, musicExplore, importPlaylists, youtube, youtubeQueue, downloads
     /// The owner's drawing of 2026-10-07: videos and movies beside the music.
     case channels, movies, videoFinder, videoExplore, movieFinder
+    /// Settings: a page like the others, opened by the cog wheel or ⌘, (no row of its own).
+    case settings
     case playlist(String)
 
     /// A name for this entry that can be saved, and read back with `init(key:)`.
@@ -95,6 +97,7 @@ enum SidebarItem: Hashable {
         case .playlist(let id): "playlist:\(id)"
         case .visualizer: "visualizer"
         case .musicExplore: "musicExplore"
+        case .settings: "settings"
         case .channels: "channels"
         case .movies: "movies"
         case .videoFinder: "videoFinder"
@@ -117,6 +120,7 @@ enum SidebarItem: Hashable {
         case "visualizer": self = .visualizer
         // What's New and Find were pages of their own until 2026-10-07: one page now.
         case "whatsNew", "find", "musicExplore": self = .musicExplore
+        case "settings": self = .settings
         case "channels": self = .channels
         case "movies": self = .movies
         case "videoFinder": self = .videoFinder
@@ -163,6 +167,7 @@ enum SidebarItem: Hashable {
         case .mostPlayed: "Most Played"
         case .unconfirmed: "Not Identified Yet"
         case .musicExplore, .videoExplore: "Explore"
+        case .settings: "Settings"
         case .channels: "Channel"
         case .movies: "Movies"
         case .videoFinder: "Video Finder"
@@ -187,6 +192,7 @@ enum SidebarItem: Hashable {
         case .mostPlayed: "chart.bar"
         case .unconfirmed: "questionmark.circle"
         case .musicExplore, .videoExplore: "sparkles"
+        case .settings: "gearshape"
         case .channels: "play.tv"
         case .movies: "popcorn"
         case .videoFinder: "play.rectangle.on.rectangle"
@@ -287,7 +293,7 @@ struct MainView: View {
             }
             .toolbar(
                 // A film, like the big cover, has the top of the window too.
-                showNowPlaying || model.pictureFullScreen || model.filmHidesTopBar ? .hidden : .automatic,
+                showNowPlaying || model.pictureFullScreen || model.film.isOpen ? .hidden : .automatic,
                 for: .windowToolbar)
             // Below the split view, not an inset: the sidebar runs the window's full height
             // and would otherwise sit underneath the bar.
@@ -605,7 +611,7 @@ struct MainView: View {
     /// showing. A hidden page keeps its place but does no work.
     private var pages: some View {
         VStack(spacing: 0) {
-            if model.searching, current != .youtube, current != .visualizer {
+            if model.searching, current != .youtube, current != .visualizer, current != .settings {
                 SearchBar()
                 Divider()
             }
@@ -700,6 +706,8 @@ struct MainView: View {
                 PendingDownloads()
                 DownloadsByGenre()
             }
+        case .settings:
+            SettingsView()
         case .musicExplore:
             MusicExploreView()
         case .videoExplore:
@@ -830,7 +838,7 @@ private struct StatusFooter: View {
         VStack(alignment: .leading, spacing: 3) {
             if model.profiles.profiles.count > 1 {
                 // Whose music this is, once there's more than one person. Click to switch.
-                SettingsLink {
+                OpenSettings {
                     Label(model.profiles.current.name, systemImage: "person.crop.circle")
                         .font(.callout.weight(.medium))
                 }
@@ -857,7 +865,7 @@ private struct StatusFooter: View {
             }
         }
         Spacer()
-        SettingsLink {
+        OpenSettings {
             Image(systemName: "gearshape").font(.title3)
         }
         .buttonStyle(.plain)
