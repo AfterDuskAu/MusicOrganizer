@@ -212,6 +212,8 @@ struct MainView: View {
     /// What's been opened inside each page (an album, an artist), page by page.
     @State private var paths: [SidebarItem: NavigationPath] = [:]
     @State private var showNowPlaying = false
+    /// Whether the sidebar is open: search's button sits beside the sidebar's, wherever that is.
+    @State private var columns = NavigationSplitViewVisibility.all
     @State private var deleting: Playlist?
     @AppStorage("showLyrics") private var showLyrics = false
     /// Lyrics beside the cover or video on the player page (Settings → Play Options).
@@ -230,36 +232,36 @@ struct MainView: View {
         @Bindable var model = model
         VStack(spacing: 0) {
             Group {
-                NavigationSplitView {
+                NavigationSplitView(columnVisibility: $columns) {
                     VStack(spacing: 0) {
                         sidebar
                         StatusFooter()
                     }
                     .background(Theme.current.sidebar)
+                    // Search sits beside the sidebar button, at the top of the sidebar
+                    // (the owner's drawing, 2026-10-07).
+                    .toolbar {
+                        ToolbarItem { searchButton }
+                    }
                     // Its width is its own: a page that wants more room never squeezes it
                     // (owner, 2026-10-03). Only the sidebar button hides it.
                     .navigationSplitViewColumnWidth(min: 220, ideal: 220, max: 300)
                 } detail: {
                     NavigationStack(path: pathBinding) {
                         pagesWithLyrics
-                            .navigationTitle(title(of: current))
+                            // No page's name in the top bar (owner, 2026-10-07): each
+                            // page says what it is itself.
+                            .navigationTitle("")
                             .navigationDestination(for: Album.self) {
                                 AlbumPage(album: $0).environment(model).belowTitleBar()
                             }
                     }
                 }
                 .toolbar {
-                    // Search lives behind this button, beside the sidebar button, so no
-                    // page carries a search field it isn't using.
-                    ToolbarItem(placement: .navigation) {
-                        Button {
-                            model.searching.toggle()
-                        } label: {
-                            Image(systemName: "magnifyingglass")
-                                .foregroundStyle(model.searching ? Color.accentColor : .primary)
-                        }
-                        .keyboardShortcut("f")
-                        .help(model.searching ? "Close search" : "Search your library (⌘F)")
+                    // With the sidebar shut, its button moves to the top bar, and search
+                    // goes with it, so the two stay side by side.
+                    if columns == .detailOnly {
+                        ToolbarItem(placement: .navigation) { searchButton }
                     }
                 }
                 // The Warm Look's glow shows through the title bar.
@@ -292,7 +294,8 @@ struct MainView: View {
                 }
             }
             .toolbar(
-                showNowPlaying || model.pictureFullScreen ? .hidden : .automatic,
+                // A film, like the big cover, has the top of the window too.
+                showNowPlaying || model.pictureFullScreen || model.film.isOpen ? .hidden : .automatic,
                 for: .windowToolbar)
             // Below the split view, not an inset: the sidebar runs the window's full height
             // and would otherwise sit underneath the bar.
@@ -583,8 +586,16 @@ struct MainView: View {
             set: { paths[current] = $0 })
     }
 
-    private func title(of entry: SidebarItem) -> String {
-        if case .playlist(let id) = entry { model.playlist(id)?.name ?? "Playlist" } else { entry.title }
+    /// Search lives behind this button, so no page carries a search field it isn't using.
+    private var searchButton: some View {
+        Button {
+            model.searching.toggle()
+        } label: {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(model.searching ? Color.accentColor : .primary)
+        }
+        .keyboardShortcut("f")
+        .help(model.searching ? "Close search" : "Search your library (⌘F)")
     }
 
     private func opened(_ entry: SidebarItem) {

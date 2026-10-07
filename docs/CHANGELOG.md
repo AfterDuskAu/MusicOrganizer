@@ -768,6 +768,17 @@
 - **Not checked:** in the owner's app, with the sidebar open and shut and the window dragged to other sizes; and that the song lists are their right size again after a film has been opened (by reasoning they are, since nothing else was larger than its room).
 - **Why it was missed:** the page was pictured once, in a 1,500-point window, where the picture happened to fit. A new page is to be pictured narrow as well as wide.
 
+2026-10-07, about 6:45pm. **The film's picture fits the window and stays in the middle; no page's name in the top bar; search beside the sidebar button.** The owner, with three pictures of a film drawn enlarged or off to one side under a top bar that was still showing, and a fourth of the top bar as they want it: "I moved the search bar, and removed the title. This should be done on absolutely every page." They also found the sound in time with the picture.
+
+- **The film was drawn at the size the window had when it started.** The first version drew through the MPVKit package's Metal patch, which has no way to hear that the window changed (its `control` is "not implemented", and the size is read only when a film loads). Make the window bigger, or go full screen, and the film stayed its old size in a corner; make it smaller and only a part of the film showed, enlarged.
+- **Now mpv draws into the app's own view, and is told the view's size with every frame** (mpv's render API, over OpenGL: `FilmGLView`, in a small target of its own, `FilmDrawing`). The film is fitted and centred whatever the window does. OpenGL is marked deprecated by Apple, though still shipped; that one target is built with warnings off, since every line in it would raise one. The Metal patch isn't used any more.
+- **Frames are drawn on a thread of their own.** Drawn on the main thread, the unseen test copy dropped about five frames a second; on their own thread, none. So a busy interface doesn't cost the film frames.
+- **The graphics chip still decodes** (VideoToolbox), straight into the drawing, once the view asks for modern OpenGL (3.2 core; with the old kind mpv fell back to copying each frame through memory).
+- **The top bar goes away for a film,** as it does for the big cover: the title and search no longer sit over it, in a window or full screen.
+- **No page's name in the top bar, on every page** (an album's page too): each page says what it is itself. **Search is beside the sidebar button** at the top of the sidebar; with the sidebar shut, both are at the left of the top bar, still side by side. ⌘F as before.
+- **Checked:** `swift build` (no warnings), `swift test` (88). In the unseen test copy, by mpv's own log: the test film decoded by VideoToolbox; with the window changed from 3,400 to 2,600 pixels wide while it played, mpv laid the film out again for the new size, centred (2702×1520 at 349,0, then 2600×1462 at 0,29); no frames dropped and sound and picture in time over 14 seconds. A picture of the Explore page with the new top bar.
+- **Not checked:** by eye, in the owner's app: the film in a window, resized, full screen, with the sidebar open and shut; and the top bar with the sidebar shut. mpv logs one OpenGL error as the first frame is set up ("invalid framebuffer operation") and none after; the film plays, and it's left as found.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

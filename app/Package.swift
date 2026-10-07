@@ -25,10 +25,18 @@ let package = Package(
     ],
     targets: [
         .target(name: "MusicOrganizerKit", swiftSettings: settings),
+        // The one view a film is drawn in, over OpenGL (mpv's own way of drawing inside
+        // an app). Apple marks all of OpenGL deprecated, so this target alone is built
+        // with warnings off; nothing else belongs in it.
+        .target(
+            name: "FilmDrawing",
+            dependencies: [.product(name: "MPVKit", package: "MPVKit")],
+            swiftSettings: settings + [.unsafeFlags(["-suppress-warnings"])]),
         .executableTarget(
             name: "MusicOrganizer",
             dependencies: [
                 "MusicOrganizerKit",
+                "FilmDrawing",
                 .product(name: "ParticleAccelerator", package: "ParticleAccelerator"),
                 .product(name: "MPVKit", package: "MPVKit"),
             ],

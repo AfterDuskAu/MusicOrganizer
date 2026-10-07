@@ -579,7 +579,7 @@ struct AlbumPage: View {
             if let index = index(of: ids) { model.player.play(album.tracks, startAt: index) }
         }
         .scrollContentBackground(Theme.current.listBackground)
-        .navigationTitle(album.title)
+        .navigationTitle("")  // no page's name in the top bar (owner, 2026-10-07)
     }
 
     private func index(of ids: Set<Track.ID>) -> Int? {

@@ -1,19 +1,9 @@
 import AppKit
+import FilmDrawing
 import Libmpv
 import MusicOrganizerKit
 import Observation
 import SwiftUI
-
-/// The layer a film is drawn on. (MoltenVK sets the drawable to 1×1 to finish a frame,
-/// which flickers and can stick; a size that small is never taken. From MPVKit's example.)
-final class FilmLayer: CAMetalLayer {
-    override var drawableSize: CGSize {
-        get { super.drawableSize }
-        set {
-            if newValue.width > 1, newValue.height > 1 { super.drawableSize = newValue }
-        }
-    }
-}
 
 /// The player for films and for any video file: libmpv, which plays nearly every kind
 /// (MKV, MP4, MOV, AVI…) with the Mac's graphics chip doing the decoding where it can.
@@ -34,7 +24,8 @@ final class FilmPlayer {
         didSet { set("volume", volume) }
     }
 
-    @ObservationIgnored let layer = FilmLayer()
+    /// Where the film is drawn. One view for the player's whole life.
+    @ObservationIgnored let surface = FilmGLView()
     @ObservationIgnored private var mpv: OpaquePointer?
     @ObservationIgnored private var clock: Timer?
 
@@ -50,13 +41,9 @@ final class FilmPlayer {
             return
         }
         mpv = made
-        layer.backgroundColor = NSColor.black.cgColor
-        // mpv is told where to draw by the layer's address, as a number.
-        var surface = Int64(Int(bitPattern: Unmanaged.passUnretained(layer).toOpaque()))
-        mpv_set_option(made, "wid", MPV_FORMAT_INT64, &surface)
         for (name, value) in [
-            ("vo", "gpu-next"), ("gpu-api", "vulkan"), ("gpu-context", "moltenvk"),
-            ("hwdec", "videotoolbox"),  // the graphics chip decodes what it can
+            ("vo", "libmpv"),  // mpv draws into the app's own view, at the view's size
+            ("hwdec", "auto-safe"),  // the graphics chip decodes what it can
             ("ytdl", "no"),  // nothing is looked up or fetched by the player itself
             ("input-default-bindings", "no"), ("input-media-keys", "no"),
             ("subs-fallback", "yes"), ("keep-open", "yes"),
@@ -73,6 +60,11 @@ final class FilmPlayer {
         }
         guard mpv_initialize(made) >= 0 else {
             problem = "The film player couldn't start."
+            shut()
+            return
+        }
+        guard surface.attach(made) else {
+            problem = "The film player couldn't draw on this Mac."
             shut()
             return
         }
@@ -111,6 +103,7 @@ final class FilmPlayer {
         clock = nil
         if let mpv {
             self.mpv = nil
+            surface.detach()  // before the player goes: its drawing belongs to it
             // Off the main thread: stopping waits for the picture's last frame.
             let address = Int(bitPattern: mpv)
             DispatchQueue.global().async { mpv_terminate_destroy(OpaquePointer(bitPattern: address)) }
@@ -153,32 +146,13 @@ final class FilmPlayer {
     }
 }
 
-/// Where the film is drawn: a plain view whose layer is the player's.
+/// Where the film is drawn: the player's own view, the size SwiftUI gives it.
 struct FilmSurface: NSViewRepresentable {
-    let layer: FilmLayer
+    let view: FilmGLView
 
-    final class Surface: NSView {
-        var film: FilmLayer?
+    func makeNSView(context: Context) -> FilmGLView { view }
 
-        override func layout() {
-            super.layout()
-            guard let film else { return }
-            let scale = window?.backingScaleFactor ?? 2
-            film.frame = bounds
-            film.contentsScale = scale
-            film.drawableSize = CGSize(width: bounds.width * scale, height: bounds.height * scale)
-        }
-    }
-
-    func makeNSView(context: Context) -> Surface {
-        let view = Surface()
-        view.film = layer
-        view.layer = layer
-        view.wantsLayer = true
-        return view
-    }
-
-    func updateNSView(_ view: Surface, context: Context) {}
+    func updateNSView(_ view: FilmGLView, context: Context) {}
 }
 
 /// A film over the whole window: the picture, and its controls along the bottom, which
@@ -193,7 +167,7 @@ struct FilmPlayerView: View {
         let film = model.film
         ZStack(alignment: .bottom) {
             Color.black
-            FilmSurface(layer: film.layer)
+            FilmSurface(view: film.surface)
             if let problem = film.problem {
                 Text(problem).foregroundStyle(.white).frame(maxHeight: .infinity)
             } else if film.buffering {
