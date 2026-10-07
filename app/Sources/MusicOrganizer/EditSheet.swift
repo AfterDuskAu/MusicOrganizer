@@ -58,7 +58,7 @@ struct EditSheet: View {
                     Toggle("Explicit", isOn: $explicit)
                         .help(
                             "The E beside a song. For your own rips it was copied from the match "
-                                + "on YouTube Music, so a censored copy can be marked wrongly: untick it here.")
+                                + "on the music service, so a censored copy can be marked wrongly: untick it here.")
                 }
                 .frame(width: 380)
             }

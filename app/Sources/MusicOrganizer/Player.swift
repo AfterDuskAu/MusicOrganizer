@@ -451,7 +451,7 @@ final class Player {
             } catch {
                 guard ticket == mine else { return }
                 isFetching = false
-                problem = "“\(track.title)” can't be played from YouTube: \(error.localizedDescription)"
+                problem = "“\(track.title)” can't be played from the service: \(error.localizedDescription)"
             }
         }
     }
@@ -483,7 +483,7 @@ final class Player {
             do {
                 guard let found = try await lookUpVideo(of: track) else {
                     guard videoTicket == mine, current == track else { return }
-                    videoNote = "YouTube Music has no official video for this song."
+                    videoNote = "The music service has no official video for this song."
                     if interrupt {
                         startSound(track, at: inVideoTime ? 0 : position, playing: playing)
                     }
@@ -750,7 +750,7 @@ final class Player {
         problem =
             loaded == .file
             ? "“\(track.title)” couldn't be played."
-            : "“\(track.title)” can't be played from YouTube right now. Try it again in a minute."
+            : "“\(track.title)” can't be played from the service right now. Try it again in a minute."
         publishNowPlaying()
     }
 

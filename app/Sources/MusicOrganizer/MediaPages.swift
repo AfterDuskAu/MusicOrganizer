@@ -157,17 +157,14 @@ struct VideoExploreView: View {
                     .labelsHidden()
                     .fixedSize()
                     Spacer()
-                    let missing = VideoExplore.missing(from: source?.catalog.genres ?? [])
-                    if source != nil, !missing.isEmpty {
-                        Text("\(missing.joined(separator: " and ")) aren't in this list yet.")
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                    }
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
                 Divider()
-                if let source {
+                if let words = section.search {
+                    // A section the list has no genre for: channels found by a search.
+                    ChannelSearchGrid(words: words) { opened = $0 }
+                } else if let source {
                     MediaGrid(list: media.channels, width: 150, open: { opened = ChannelRef(item: $0) }) {
                         Task {
                             await media.channels.load(
@@ -187,6 +184,48 @@ struct VideoExploreView: View {
             }
         }
         .task(id: model.phase) { await media.load(model) }
+    }
+}
+
+/// Channels found by a search, in a grid: Explore's Learning and Podcasts. Asked once
+/// for each set of words while the app is open.
+struct ChannelSearchGrid: View {
+    let words: String
+    let open: (ChannelRef) -> Void
+    @Environment(AppModel.self) private var model
+    @State private var problem: String?
+
+    var body: some View {
+        let channels = model.channelSearches[words]
+        Group {
+            if let channels, !channels.isEmpty {
+                ScrollView {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 22)], spacing: 22) {
+                        ForEach(channels) { channel in
+                            Button { open(channel) } label: { MediaCard(channel: channel) }
+                                .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(20)
+                }
+            } else if let problem = problem ?? (channels == nil ? nil : "Nothing was found.") {
+                Text(problem).foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+        .task(id: words) {
+            guard model.channelSearches[words] == nil else { return }
+            problem = nil
+            do {
+                model.channelSearches[words] = try await model.ask(
+                    "channel.search", ["query": words, "limit": 40], as: ChannelsAnswer.self
+                ).channels
+            } catch {
+                problem = error.localizedDescription
+            }
+        }
     }
 }
 

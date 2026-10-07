@@ -1,0 +1,86 @@
+{
+ "kind": "channel-search",
+ "key": "6 podcasts",
+ "response": {
+  "entries": [
+   {
+    "id": "UCuED7rU3gwC6_9_0v2GrFVA",
+    "channel": "The Divorce Course Podcast",
+    "title": "The Divorce Course Podcast",
+    "channel_follower_count": 4880,
+    "thumbnails": [
+     {
+      "url": "//yt3.ggpht.com/BU0g_lVtq8RN16QlWQJPaelzaNT5u7kJFGinhD-fTmPRvWJnEtobPyRKbR8Kbn7pEPEZMB51=s176-c-k-c0x00ffffff-no-rj-mo",
+      "width": 176,
+      "height": 176
+     }
+    ]
+   },
+   {
+    "id": "UCbk_QsfaFZG6PdQeCvaYXJQ",
+    "channel": "Jay Shetty Podcast",
+    "title": "Jay Shetty Podcast",
+    "channel_follower_count": 6090000,
+    "thumbnails": [
+     {
+      "url": "//yt3.ggpht.com/FPk4BUkb_OaCmCW7oiBaFWo4e25JqPV5mMWq3GMIGRBKikyGasog1d49He-fu16BlB5oSpXWaA=s176-c-k-c0x00ffffff-no-rj-mo",
+      "width": 176,
+      "height": 176
+     }
+    ]
+   },
+   {
+    "id": "UCoZLtkZi4v5b2WzerOf0ACA",
+    "channel": "The Rosebud Podcast",
+    "title": "The Rosebud Podcast",
+    "channel_follower_count": 89700,
+    "thumbnails": [
+     {
+      "url": "//yt3.ggpht.com/LvDUcENv7fQfnwq_ZH7RWTp-LmdoyU0x6HI6-94qhcp-C9TDcp1M1sg1qWRkGga4F3vfcrsQG_0=s176-c-k-c0x00ffffff-no-rj-mo",
+      "width": 176,
+      "height": 176
+     }
+    ]
+   },
+   {
+    "id": "UCPHzAcg5sT62cO5hgAeTpVg",
+    "channel": "Dish Podcast",
+    "title": "Dish Podcast",
+    "channel_follower_count": 593000,
+    "thumbnails": [
+     {
+      "url": "//yt3.ggpht.com/XQ4i0yJyTo_h-jcDDWA9Xrzmwa4M5Lt5zEKdbHVcquLtl9X6pqIgjq46iMEcOTDt6CqgyWx_AA=s176-c-k-c0x00ffffff-no-rj-mo",
+      "width": 176,
+      "height": 176
+     }
+    ]
+   },
+   {
+    "id": "UCSmxtnPw-aVg_hQ9zLb_Fug",
+    "channel": "Podcast Cringe",
+    "title": "Podcast Cringe",
+    "channel_follower_count": 306000,
+    "thumbnails": [
+     {
+      "url": "//yt3.ggpht.com/CZ-68PZBmZKx2Fewx0mgHLhQlqJoQEsTtmBAKCa6bAFcTKbbORU98lDOeN-L9LVuSGubfnYJfDk=s176-c-k-c0x00ffffff-no-rj-mo",
+      "width": 176,
+      "height": 176
+     }
+    ]
+   },
+   {
+    "id": "UCbGdNkuGB5e3cnf6xJWrluA",
+    "channel": "The Primal Podcast",
+    "title": "The Primal Podcast",
+    "channel_follower_count": 652000,
+    "thumbnails": [
+     {
+      "url": "//yt3.ggpht.com/HgFOAwNrBcJls195QlPCSbXnqIidB2eJrpVOuU8jSwkebrRGS0Ad605kj_BSNxO5Lam-8WuD4uc=s176-c-k-c0x00ffffff-no-rj-mo",
+      "width": 176,
+      "height": 176
+     }
+    ]
+   }
+  ]
+ }
+}

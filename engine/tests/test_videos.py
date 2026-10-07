@@ -78,3 +78,15 @@ def test_following_a_channel_is_kept_with_the_library(tmp_path: Path) -> None:
     assert listening.follow(lib, other, False) == listening.followed(lib)  # twice is fine
     with pytest.raises(UserError):
         listening.follow(lib, "nasa", True)
+
+
+def test_a_search_for_channels() -> None:
+    found = youtube.search_channels("podcasts", 6)
+    assert 1 <= len(found) <= 6
+    for channel in found:
+        assert channel["channel_id"].startswith("UC") and len(channel["channel_id"]) == 24
+        assert channel["name"]
+        assert channel["thumbnail"] is None or channel["thumbnail"].startswith("https://")
+    assert any(isinstance(channel["followers"], int) for channel in found)
+    with pytest.raises(youtube.YouTubeError):
+        youtube.search_channels("  ")

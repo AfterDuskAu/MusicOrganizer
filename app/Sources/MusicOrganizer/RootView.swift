@@ -647,7 +647,7 @@ struct MainView: View {
 
     /// What a batch of downloads will take, said before the owner agrees to it.
     private static func batchNote(_ batch: AppModel.BatchDownload) -> String {
-        var note = "It takes \(roughTime(minutes: batch.minutes)), paced so YouTube doesn't refuse "
+        var note = "It takes \(roughTime(minutes: batch.minutes)), paced so the service doesn't refuse "
             + "this Mac. The songs show up under Discover → Downloads as they arrive."
         if batch.days > 1 {
             note += " Your daily limit spreads them over \(batch.days) days."

@@ -132,7 +132,7 @@ struct GuideSheet: View {
                 } else {
                     ProgressView().controlSize(.small)
                 }
-                Text("YouTube Music is asked one radio at a time, a few seconds each.")
+                Text("The music service is asked one radio at a time, a few seconds each.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }

@@ -89,7 +89,7 @@ struct ArtistsPage: View {
                     Button("Look Up") { page.search() }
                         .controlSize(.small)
                         .disabled(page.query.trimmingCharacters(in: .whitespaces).isEmpty)
-                        .help("Narrow your artists to this, and ask YouTube Music who goes by it")
+                        .help("Narrow your artists to this, and ask the music service who goes by it")
                 }
             }
             .padding(.horizontal, 10)
@@ -183,12 +183,12 @@ private struct DiscoverList: View {
 
     var body: some View {
         if page.searching {
-            waiting("Asking YouTube Music who goes by “\(page.searched)”…")
+            waiting("Asking the music service who goes by “\(page.searched)”…")
         } else if let problem = page.searchProblem {
             note(problem)
         } else if let found = page.results {
             if found.isEmpty {
-                note("YouTube Music found no artist called “\(page.searched)”.")
+                note("The music service found no artist called “\(page.searched)”.")
             } else {
                 rows(found)
             }
@@ -378,13 +378,13 @@ private struct ArtistDiscoverPane: View {
         case .loading(let name):
             VStack(spacing: 12) {
                 ProgressView()
-                Text("Asking YouTube Music about \(name)…")
+                Text("Asking the music service about \(name)…")
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .missing(let name):
             Message(
                 symbol: "person.crop.circle.badge.questionmark", title: "No artist found",
-                text: "YouTube Music has no artist called “\(name)”. Check the spelling, or try "
+                text: "The music service has no artist called “\(name)”. Check the spelling, or try "
                     + "the name as it's written on their songs."
             ) {}
         case .failed(let why):
@@ -501,7 +501,7 @@ private struct ArtistPageBody: View {
                         model.player.play(page.songs.map(\.result.track), startAt: 0)
                     }
                     .disabled(page.songs.isEmpty)
-                    .help("Play the songs listed below, from YouTube Music. Nothing is saved.")
+                    .help("Play the songs listed below, from the music service. Nothing is saved.")
                     Menu {
                         ForEach(ElsewhereLink.allCases) { link in
                             if let url = link.url(title: "", artist: info.name) {
@@ -551,7 +551,7 @@ private struct ArtistPageBody: View {
                 Text("Fetching their songs…").foregroundStyle(.secondary)
             } else if page.allSongs == nil, info.songsPlaylistId != nil {
                 Button("Show All Songs", systemImage: "list.bullet") { page.showAllSongs() }
-                    .help("Every song YouTube Music lists for them, up to 300, with lengths")
+                    .help("Every song the music service lists for them, up to 300, with lengths")
             }
             Button(
                 missing.isEmpty ? "Download Missing" : "Download Missing (\(missing.count))",
@@ -582,7 +582,7 @@ private struct ArtistPageBody: View {
                 Text(problem).font(.callout).foregroundStyle(.orange)
             }
             if listed.isEmpty {
-                Text("YouTube Music lists no songs for them.").foregroundStyle(.secondary)
+                Text("The music service lists no songs for them.").foregroundStyle(.secondary)
             } else {
                 ArtistSongRows(songs: listed)
             }
@@ -736,7 +736,7 @@ private struct ArtistAlbumSheet: View {
             .padding(16)
             Divider()
             if album.songs.isEmpty {
-                Text("YouTube Music lists no songs that can be played for this one.")
+                Text("The music service lists no songs that can be played for this one.")
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {

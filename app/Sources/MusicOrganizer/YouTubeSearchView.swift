@@ -11,7 +11,7 @@ struct YouTubeSearchView: View {
         VStack(spacing: 0) {
             HStack {
                 Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                TextField("Search YouTube Music for a song, artist or album", text: $model.youtubeQuery)
+                TextField("Search for a song, artist or album", text: $model.youtubeQuery)
                     .textFieldStyle(.plain)
                     .font(.title3)
                     .onSubmit { model.searchYouTube() }
@@ -104,7 +104,7 @@ struct ResultRow: View {
                 }
             }
             .buttonStyle(.plain)
-            .help("Play from YouTube Music")
+            .help("Play from the music service")
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(result.title).fontWeight(playing ? .semibold : .regular).lineLimit(1)
@@ -124,7 +124,7 @@ struct ResultRow: View {
                     .font(.callout)
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
-                    .help("Played \(plays) times on YouTube Music")
+                    .help("Played \(plays) times on the music service")
             }
             if artistButton, let artist = result.artists.first {
                 Button {
@@ -144,9 +144,9 @@ struct ResultRow: View {
                 }
                 .help(
                     queued
-                        ? "In the YouTube Queue. Click to take it out."
+                        ? "In the Queue. Click to take it out."
                         : "Queue: play this after the song that's playing, and keep it in the "
-                            + "YouTube Queue")
+                            + "Queue")
                 if narrow { button.labelStyle(.iconOnly) } else { button }
             }
             if !narrow || result.durationS != nil {
@@ -230,11 +230,11 @@ struct YouTubeQueueView: View {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text("YouTube Queue").font(.title2.weight(.semibold)).heading()
+                        Text("Queue").font(.title2.weight(.semibold)).heading()
                         Text(queue.count == 1 ? "1 song" : "\(queue.count) songs")
                             .foregroundStyle(.secondary)
                     }
-                    Text("Songs from YouTube Music you queued. They play in this order; once played they move to Played Already.")
+                    Text("Songs from the music service you queued. They play in this order; once played they move to Played Already.")
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -243,7 +243,7 @@ struct YouTubeQueueView: View {
                     .disabled(queue.isEmpty)
                 Button("Clear", systemImage: "xmark.circle") { model.clearYouTubeQueue() }
                     .disabled(queue.isEmpty)
-                    .help("Empty the YouTube Queue. Nothing downloaded is touched.")
+                    .help("Empty the Queue. Nothing downloaded is touched.")
                 Button("Played Already (\(model.youtubePlayed.count))", systemImage: "clock.arrow.circlepath") {
                     showingPlayed = true
                 }
@@ -255,7 +255,7 @@ struct YouTubeQueueView: View {
             .padding(.vertical, 12)
             Divider()
             if queue.isEmpty {
-                Text("Nothing is queued. Click Queue beside a song on YouTube Music, or Q on What's New and Find.")
+                Text("Nothing is queued. Click Queue beside a song on the music service, or Q on What's New and Find.")
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -271,7 +271,7 @@ struct YouTubeQueueView: View {
                                 Image(systemName: "minus.circle").foregroundStyle(.secondary)
                             }
                             .buttonStyle(.plain)
-                            .help("Take it out of the YouTube Queue")
+                            .help("Take it out of the Queue")
                         }
                     }
                 }

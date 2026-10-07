@@ -333,8 +333,8 @@ struct PicksView: View {
                 } else {
                     ProgressView()
                 }
-                Text("Asking YouTube Music for songs like yours…")
-                Text("One radio at a time, so YouTube doesn't mind. It takes a few seconds a radio.")
+                Text("Asking the music service for songs like yours…")
+                Text("One radio at a time, so the service doesn't mind. It takes a few seconds a radio.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -419,7 +419,7 @@ struct PicksView: View {
                 model.player.play(picks.map(\.result.track), startAt: 0)
             }
             .mainButton()
-            .help("Play these from YouTube Music. Nothing is saved.")
+            .help("Play these from the music service. Nothing is saved.")
             Button("Queue (\(model.youtubeQueue.count))", systemImage: "text.append") {
                 showingQueue = true
             }
@@ -481,7 +481,7 @@ private struct PickCard: View {
                     }
             }
             .buttonStyle(.plain)
-            .help("Play from YouTube Music. Nothing is saved.")
+            .help("Play from the music service. Nothing is saved.")
             .overlay(alignment: .topLeading) {
                 if !owned {
                     Button(action: toggle) {
@@ -536,7 +536,7 @@ private struct PickCard: View {
                 .help(
                     queued
                         ? "In the queue. Click to take it out."
-                        : "Queue: play this after the song that's playing (YouTube Queue)")
+                        : "Queue: play this after the song that's playing")
                 Spacer(minLength: 0)
                 Text(clockTime(pick.durationS))
                     .font(.caption)

@@ -159,7 +159,7 @@ private struct ShowPicker: View {
         .labelsHidden()
         .fixedSize()
         .help(
-            "Play the song with its cover, its official video from YouTube, or the song "
+            "Play the song with its cover, its official video from the service, or the song "
                 + "with the visualizer moving to it")
     }
 
@@ -303,7 +303,7 @@ private struct LikesLabel: View {
             .lineLimit(1)
             .fixedSize()
             .help(
-                "\(likes.formatted()) thumbs up on YouTube for this \(ofVideo ? "video" : "song")")
+                "\(likes.formatted()) thumbs up on the service for this \(ofVideo ? "video" : "song")")
     }
 }
 

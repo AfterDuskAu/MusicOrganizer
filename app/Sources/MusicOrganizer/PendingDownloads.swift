@@ -95,7 +95,7 @@ struct PendingDownloads: View {
                     .help(problem)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Button("Try Again") { model.retry(download) }
-                    .help("Ask YouTube for it again")
+                    .help("Ask the service for it again")
             } else {
                 VStack(alignment: .leading, spacing: 3) {
                     // A bar that fills while the engine can say how far along it is; a

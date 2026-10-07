@@ -335,7 +335,7 @@ private struct DownloadSettings: View {
                     "On: Download Video always saves the video at its sharpest (up to 1080p), "
                         + "whatever size is playing. Off: it saves the size that's showing. "
                         + "Songs come in one quality for now, 128 kbps; when 256 kbps arrives "
-                        + "with the YouTube sign-in, this will take it too. How videos play is "
+                        + "with the service's sign-in, this will take it too. How videos play is "
                         + "set under Play Options.")
             }
             Section {
@@ -346,8 +346,8 @@ private struct DownloadSettings: View {
                 .pickerStyle(.radioGroup)
                 .disabled(true)
                 SideNote(
-                    "Standard is 128 kbps AAC. YouTube Premium offers 256. Signing in to your "
-                        + "YouTube account will turn this on; that isn't built yet.")
+                    "Standard is 128 kbps AAC. The service Premium offers 256. Signing in to your "
+                        + "account with the service will turn this on; that isn't built yet.")
             }
             Section {
                 if let settings {
@@ -372,16 +372,16 @@ private struct DownloadSettings: View {
                     }
                     SideNote(
                         "Songs and videos count alike. The standard is \(settings.dailyCapDefault) "
-                            + "in 24 hours, kept low on purpose to avoid trouble with YouTube. It "
+                            + "in 24 hours, kept low on purpose to avoid trouble with the service. It "
                             + "can be changed in steps of \(Self.step), up to \(settings.dailyCapMax).")
                     if settings.dailyCap > settings.dailyCapDefault {
                         Label {
                             Text(
-                                "Above \(settings.dailyCapDefault) there is a high risk that YouTube "
+                                "Above \(settings.dailyCapDefault) there is a high risk that the service "
                                     + "refuses this Mac for some hours. While it does, nothing can "
                                     + "be downloaded, and songs and videos may not play from "
-                                    + "YouTube either. Downloads wait and carry on by themselves "
-                                    + "afterwards; how long the wait is, is up to YouTube.")
+                                    + "the service either. Downloads wait and carry on by themselves "
+                                    + "afterwards; how long the wait is, is up to the service.")
                         } icon: {
                             Image(systemName: "exclamationmark.triangle.fill")
                         }
@@ -430,7 +430,7 @@ private struct ProfileSettingsTab: View {
                         + "mixed with anyone else's. Switching deletes nothing: a profile is "
                         + "exactly as it was left when you switch back, and downloads it was "
                         + "still waiting for carry on then. The daily download limit is shared, "
-                        + "because YouTube counts the computer, not the person.")
+                        + "because the service counts the computer, not the person.")
             }
             AccountSettings()
         }
@@ -647,16 +647,16 @@ private struct AccountSettings: View {
 
     var body: some View {
         Section("Accounts for \(model.profiles.current.name)") {
-            account("YouTube", symbol: "play.rectangle", state: comingWords) {
+            account("Music Service", symbol: "play.rectangle", state: comingWords) {
                 SideNote(
-                    "For private playlists and Liked Music, age-restricted songs, and, with YouTube "
+                    "For private playlists and Liked Music, age-restricted songs, and, with the service "
                         + "Premium, 256 kbps downloads. Not built yet.")
             }
             account("Spotify", symbol: "music.note.list", state: spotifyState) { spotify }
             account("Apple Music", symbol: "applelogo", state: comingWords) {
                 SideNote(
                     "Will read your playlists from the Music app on this Mac. The songs are then "
-                        + "found and downloaded from YouTube. Not built yet.")
+                        + "found and downloaded from the service. Not built yet.")
             }
             account("Deezer", symbol: "link", state: "No sign-in needed") {
                 SideNote(

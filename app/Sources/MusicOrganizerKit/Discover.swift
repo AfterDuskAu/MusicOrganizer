@@ -206,7 +206,7 @@ public enum Guided {
     /// What the owner is told before a download starts.
     public static func downloadNote(minutes: Int, days: Int) -> String {
         var note = "They're weighted towards the artists you have most of, and skip anything "
-            + "you already have. It takes \(roughTime(minutes: minutes)), paced so YouTube "
+            + "you already have. It takes \(roughTime(minutes: minutes)), paced so the service "
             + "doesn't refuse this Mac."
         if days > 1 { note += " Your daily limit spreads them over \(days) days." }
         return note
@@ -226,7 +226,7 @@ extension Guided {
         note += count < wanted ? " (\(wanted) were asked for; that's all that was new). " : ". "
         let now = min(count, max(allowance, 0))
         if now == count {
-            note += "It takes \(roughTime(minutes: minutes)), paced so YouTube doesn't refuse "
+            note += "It takes \(roughTime(minutes: minutes)), paced so the service doesn't refuse "
                 + "this Mac."
         } else if now == 0 {
             note += "Your limit of \(limit) downloads in 24 hours is used up for now, so they "

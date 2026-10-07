@@ -371,7 +371,7 @@ public enum Imports {
             ? " (\(owned) you already had \(owned == 1 ? "is" : "are") in it now). " : ". "
         let now = min(count, max(allowance, 0))
         if now == count {
-            note += "It takes \(roughTime(minutes: minutes)), paced so YouTube doesn't refuse "
+            note += "It takes \(roughTime(minutes: minutes)), paced so the service doesn't refuse "
                 + "this Mac."
         } else if now == 0 {
             note += "Your limit of \(limit) downloads in 24 hours is used up for now, so they "

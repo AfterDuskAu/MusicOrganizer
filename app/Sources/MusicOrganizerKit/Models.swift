@@ -545,7 +545,7 @@ public struct QueueStatus: Decodable, Equatable, Sendable {
     public func holdUp(clock: (Date) -> String) -> String? {
         if state == "paused_by_youtube" {
             let until = engineDate(resumeAt).map { " until \(clock($0))" } ?? " for a few hours"
-            return "YouTube is slowing this Mac down, so downloads are resting\(until). "
+            return "The service is slowing this Mac down, so downloads are resting\(until). "
                 + "They carry on by themselves after that."
         }
         if state == "paused" { return "Downloads are paused." }
@@ -589,7 +589,7 @@ public struct DailyUse: Equatable, Sendable {
 
     /// What the counter says when the pointer rests on it.
     public var explained: String {
-        var words = "\(used) of your \(limit) downloads from YouTube in the last 24 hours. Songs "
+        var words = "\(used) of your \(limit) downloads from the service in the last 24 hours. Songs "
             + "and videos count alike; playing and searching don't count. Each one comes off "
             + "the count a day after it was downloaded."
         if used >= limit {

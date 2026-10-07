@@ -331,6 +331,7 @@ class Server:
             "addon.streams": self.addon_streams,
             "video.search": self.video_search,
             "channel.videos": self.channel_videos,
+            "channel.search": self.channel_search,
             "channel.follow": self.channel_follow,
             "channel.followed": self.channel_followed,
             "torrent.play": self.torrent_play,
@@ -922,6 +923,15 @@ class Server:
             "followed": any(c["channel_id"] == channel_id for c in listening.followed(lib)),
             "videos": [v.to_dict() for v in found.videos],
         }
+
+    def channel_search(self, params: dict[str, Any]) -> dict[str, Any]:
+        query = need(params, "query", str).strip()
+        limit = want(params, "limit", int, 24) or 24
+        if not query:
+            raise RpcError(INVALID_PARAMS, "query is empty.")
+        if not 1 <= limit <= youtube.VIDEOS_MOST:
+            raise RpcError(INVALID_PARAMS, f"limit must be 1 to {youtube.VIDEOS_MOST}.")
+        return {"channels": youtube.search_channels(query, limit)}
 
     def channel_follow(self, params: dict[str, Any]) -> dict[str, Any]:
         channels = listening.follow(

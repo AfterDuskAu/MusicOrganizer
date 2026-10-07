@@ -148,43 +148,50 @@ public struct StreamsAnswer: Decodable, Sendable {
 
 /// What the Explore page under Video Finder offers (the owner's drawing, 2026-10-07):
 /// Channels, Gaming, News, Sports, Learning and Podcasts. Each is one of the channel
-/// add-on's genres, under the owner's name for it; one the add-on has no genre for
-/// isn't offered until there's somewhere to read it from.
+/// add-on's genres, under the owner's name for it; one the add-on has no genre for is
+/// filled by a search for channels of that kind instead.
 public enum VideoExplore {
     public struct Section: Identifiable, Hashable, Sendable {
         public let name: String
-        /// The add-on's genre; nil for every channel.
+        /// The add-on's genre; nil for every channel, and for a section that's searched.
         public let genre: String?
+        /// The words channels are searched by, for a section the add-on has no list for.
+        public let search: String?
         public var id: String { name }
+
+        public init(name: String, genre: String? = nil, search: String? = nil) {
+            self.name = name
+            self.genre = genre
+            self.search = search
+        }
     }
 
-    /// The owner's names, and the genre each is under in a channel add-on.
-    static let wanted: [(name: String, genres: [String])] = [
-        ("Gaming", ["Gaming"]),
-        ("News", ["News", "News & Politics"]),
-        ("Sports", ["Sports"]),
-        ("Learning", ["Learning", "Education", "Science & Education"]),
-        ("Podcasts", ["Podcasts"]),
+    /// The owner's names, the genre each is under in a channel add-on, and the words
+    /// to search channels by when the add-on has none of those genres.
+    static let wanted: [(name: String, genres: [String], search: String)] = [
+        ("Gaming", ["Gaming"], "gaming"),
+        ("News", ["News", "News & Politics"], "news"),
+        ("Sports", ["Sports"], "sports"),
+        ("Learning", ["Learning", "Education", "Science & Education"], "educational"),
+        ("Podcasts", ["Podcasts"], "podcast"),
     ]
 
-    /// The sections a catalog can fill, Channels first, then the rest of its genres
-    /// under their own names.
+    /// The sections, in the owner's order: Channels, then the five by name (from the
+    /// catalog's genre where it has one, or else searched), then the rest of the
+    /// catalog's genres under their own names.
     public static func sections(for genres: [String]) -> [Section] {
-        var found = [Section(name: "Channels", genre: nil)]
+        var found = [Section(name: "Channels")]
         var used = Set<String>()
-        for (name, names) in wanted {
+        for (name, names, search) in wanted {
             if let genre = names.first(where: genres.contains) {
                 found.append(Section(name: name, genre: genre))
                 used.insert(genre)
+            } else {
+                found.append(Section(name: name, search: search))
             }
         }
         found += genres.filter { !used.contains($0) }.map { Section(name: $0, genre: $0) }
         return found
-    }
-
-    /// The owner's sections this catalog has nothing for.
-    public static func missing(from genres: [String]) -> [String] {
-        wanted.filter { !$0.genres.contains(where: genres.contains) }.map(\.name)
     }
 }
 

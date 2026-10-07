@@ -131,6 +131,9 @@ final class AppModel {
     let media = MediaBrowser()
     /// The player for films and video files (libmpv). One film at a time.
     let film = FilmPlayer()
+    /// Channels found for Explore's searched sections, by the words searched: kept while
+    /// the app is open, so going back to a section doesn't ask again.
+    var channelSearches: [String: [ChannelRef]] = [:]
     /// The channels the owner follows (Videos → Channel), by name.
     private(set) var followedChannels: [ChannelRef] = []
     /// The torrent the film player is playing from, if it is, and how that's going.
@@ -271,7 +274,7 @@ final class AppModel {
             let found = try await connection.call(
                 "youtube.stream", ["video_id": videoId], as: StreamAnswer.self)
             guard let url = URL(string: found.url) else {
-                throw RPCError(code: 0, message: "YouTube's answer couldn't be read.")
+                throw RPCError(code: 0, message: "The service's answer couldn't be read.")
             }
             return (url, found.httpHeaders, found.durationS, found.likes)
         }
@@ -1840,7 +1843,7 @@ final class AppModel {
     func songState(of track: Track) -> SaveState {
         guard let songId = track.videoId else {
             return track.isVideo
-                ? .unavailable("This is a saved video. Find the song on YouTube Music to download it.")
+                ? .unavailable("This is a saved video. Find the song on the music service to download it.")
                 : .saved
         }
         if everything.videoIDs.contains(songId) { return .saved }
@@ -1886,7 +1889,7 @@ final class AppModel {
             defer { findingVideoFor.remove(track.id) }
             do {
                 guard let found = try await findVideo(track) else {
-                    noVideoFor[track.id] = "YouTube Music has no official video for this song."
+                    noVideoFor[track.id] = "The music service has no official video for this song."
                     return
                 }
                 videoFor[track.id] = found.videoId
@@ -2096,7 +2099,7 @@ final class AppModel {
     func explainSwap(of track: Track) {
         info = Info(
             title: "Swap Audio is coming",
-            text: "This will replace “\(track.title)” with YouTube Music's official audio, "
+            text: "This will replace “\(track.title)” with the music service's official audio, "
                 + "keeping its names, cover, lyrics, favourites and playlists, and keeping your "
                 + "old file so it can be undone.\n\nIt isn't switched on yet. The checks that "
                 + "have to pass first are still being decided: that it's the same song, the same "

@@ -54,6 +54,7 @@ from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Protocol, TypeVar
+from urllib.parse import quote
 
 from musicorg import tools
 from musicorg.config import app_dirs, ensure_app_dir
@@ -1307,6 +1308,44 @@ def channel_videos(channel_id: str, limit: int = 50) -> Channel:
         thumbnail=_square_picture(raw.get("thumbnails")),
         videos=videos,
     )
+
+
+# YouTube's own filter for "channels only" on its search page (its `sp` value), as
+# yt-dlp is given it. Checked 2026-10-07: the entries are then channels, each with
+# `id` (UC…), `channel`, `channel_follower_count` and `thumbnails` whose `url` starts
+# "//" with no scheme.
+CHANNELS_ONLY = "EgIQAg%253D%253D"
+
+
+def search_channels(query: str, limit: int = 24) -> list[dict[str, Any]]:
+    """Channels YouTube finds for these words, best first: `[{channel_id, name,
+    thumbnail, followers}]`. One request."""
+    words = " ".join(query.split())
+    if not words:
+        raise YouTubeError("Type something to search for first.")
+    limit = max(1, min(limit, VIDEOS_MOST))
+    url = f"https://www.youtube.com/results?search_query={quote(words)}&sp={CHANNELS_ONLY}"
+    found = []
+    for entry in _entries(_flat("channel-search", f"{limit} {words}", url, limit)):
+        channel_id = entry.get("id") if isinstance(entry, dict) else None
+        name = entry.get("channel") or entry.get("title") if isinstance(entry, dict) else None
+        if not isinstance(channel_id, str) or not CHANNEL_ID.fullmatch(channel_id):
+            continue
+        if not isinstance(name, str) or not name:
+            continue
+        followers = entry.get("channel_follower_count")
+        picture = _widest_picture(entry.get("thumbnails"))
+        if picture and picture.startswith("//"):
+            picture = "https:" + picture
+        found.append(
+            {
+                "channel_id": channel_id,
+                "name": name,
+                "thumbnail": picture,
+                "followers": followers if isinstance(followers, int) else None,
+            }
+        )
+    return found
 
 
 def _flat(

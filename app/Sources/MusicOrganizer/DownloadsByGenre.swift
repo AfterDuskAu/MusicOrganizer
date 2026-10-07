@@ -22,7 +22,7 @@ struct DownloadsByGenre: View {
             header(shown, of: all.count)
             Divider()
             if all.isEmpty {
-                Text("Songs and videos you download from YouTube Music show up here.")
+                Text("Songs and videos you download from the music service show up here.")
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if shown.isEmpty {

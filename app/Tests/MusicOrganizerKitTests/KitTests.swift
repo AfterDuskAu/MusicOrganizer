@@ -1683,10 +1683,14 @@ final class AddonTests: XCTestCase {
     func testTheExplorePageOffersTheOwnersSectionsThatTheAddonCanFill() {
         let genres = ["Animation", "Gaming", "News & Politics", "Sports"]
         let sections = VideoExplore.sections(for: genres)
-        XCTAssertEqual(sections.map(\.name), ["Channels", "Gaming", "News", "Sports", "Animation"])
-        XCTAssertEqual(sections.map(\.genre), [nil, "Gaming", "News & Politics", "Sports", "Animation"])
-        XCTAssertEqual(VideoExplore.missing(from: genres), ["Learning", "Podcasts"])
-        XCTAssertEqual(VideoExplore.sections(for: []).map(\.name), ["Channels"])
+        XCTAssertEqual(
+            sections.map(\.name),
+            ["Channels", "Gaming", "News", "Sports", "Learning", "Podcasts", "Animation"])
+        XCTAssertEqual(
+            sections.map(\.genre), [nil, "Gaming", "News & Politics", "Sports", nil, nil, "Animation"])
+        // What the add-on has no list for is searched instead.
+        XCTAssertEqual(sections.map(\.search), [nil, nil, nil, nil, "educational", "podcast", nil])
+        XCTAssertEqual(VideoExplore.sections(for: []).count, 6)
     }
 
     func testAnAddonAndItsListsAreRead() throws {

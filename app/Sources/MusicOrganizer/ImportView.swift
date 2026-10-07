@@ -29,7 +29,7 @@ struct ImportView: View {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .youtube: "YouTube"
+            case .youtube: "Playlist Link"
             case .spotify: "Spotify"
             case .deezer: "Deezer"
             case .amazon: "Amazon Music"
@@ -45,7 +45,7 @@ struct ImportView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Import Playlists").font(.title2.weight(.semibold)).heading()
                     Text(
-                        "Bring a playlist across. Its songs are found on YouTube Music and "
+                        "Bring a playlist across. Its songs are found on the music service and "
                             + "downloaded into a playlist of the same name here."
                     )
                     .foregroundStyle(.secondary)
@@ -86,7 +86,7 @@ struct ImportView: View {
     @ViewBuilder
     private func youtube(_ page: ImportPage) -> some View {
         HStack(spacing: 10) {
-            TextField("A YouTube or YouTube Music playlist's link (Share → Copy link)", text: $link)
+            TextField("A playlist's link (Share → Copy link)", text: $link)
                 .textFieldStyle(.roundedBorder)
                 .onSubmit { page.open(.youtube(link: link)) }
             Button("Read Playlist", systemImage: "list.bullet.rectangle") {
@@ -137,7 +137,7 @@ struct ImportView: View {
             .onAppear { chooseFirst(lists) }
             caption(
                 "Signed in as \(model.accounts?.spotify.name ?? "your Spotify account"). Each song "
-                    + "is looked up on YouTube Music, a couple of seconds apiece.")
+                    + "is looked up on the music service, a couple of seconds apiece.")
         } else {
             HStack(spacing: 10) {
                 Text("Spotify isn't signed in to yet.")
@@ -171,7 +171,7 @@ struct ImportView: View {
         }
         caption(
             "The playlist has to be public: nothing is signed in to. Each song is looked up on "
-                + "YouTube Music, a couple of seconds apiece.")
+                + "the music service, a couple of seconds apiece.")
     }
 
     /// A playlist saved as a file: the way in for Amazon Music, which has no export of
@@ -248,7 +248,7 @@ struct ImportView: View {
             }
             caption(
                 "From \(account.user ?? "your")'s Last.fm, up to 1,000 songs. Each song is looked "
-                    + "up on YouTube Music, a couple of seconds apiece.")
+                    + "up on the music service, a couple of seconds apiece.")
         } else {
             HStack(spacing: 10) {
                 Text("Last.fm isn't set up yet.")
@@ -343,7 +343,7 @@ struct ImportView: View {
                 if page.phase == .finding {
                     ProgressView(value: Double(page.done), total: Double(max(page.rows.count, 1)))
                         .frame(maxWidth: 260)
-                    Text("Finding its songs on YouTube Music: \(page.done) of \(page.rows.count)")
+                    Text("Finding its songs on the music service: \(page.done) of \(page.rows.count)")
                         .font(.callout)
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
@@ -424,7 +424,7 @@ private struct ImportRowView: View {
             // Hear what was found before downloading it. Nothing is saved.
             if let candidate { model.player.play([candidate.result.track], startAt: 0) }
         }
-        .help(candidate == nil ? "" : "Double-click to play what was found, from YouTube Music")
+        .help(candidate == nil ? "" : "Double-click to play what was found, from the music service")
     }
 
     @ViewBuilder
