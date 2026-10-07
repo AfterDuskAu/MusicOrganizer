@@ -129,7 +129,7 @@ struct PendingDownloads: View {
     }
 
     private func detail(_ download: PendingDownload) -> String {
-        let what = download.video ? "Video" + (download.height.map { ", \($0)p" } ?? "") : "Song"
+        let what = download.kind
         return download.artists.isEmpty ? what : "\(download.artistName) · \(what)"
     }
 }

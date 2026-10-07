@@ -843,6 +843,19 @@
   - **Videos that aren't music can't be kept yet** (gaming, news, sports, learning, podcasts into Downloads/Media). The rule and the writer are ready for them; what's missing is the download itself, which has to go through the same paced queue as every song (rule 8), and that's the next piece.
   - A kept film is a plain file: no tags, no cover, not in the index, and not shared with a phone yet.
 
+2026-10-07, about 11pm. **Keeping a video that isn't music, in Downloads.** The other half of the step above (the owner: "Lets move onto the next step").
+
+- **A `download` plan takes `media`:** videos as `video.search` or `channel.videos` gave them, with the most their picture may be. Each becomes a `keep_video` operation and one job in the throttled queue (rule 8): it waits its turn, counts towards the day's limit and shows in `queue.downloads` (marked `kept`) like a song. It isn't looked up on YouTube Music.
+- **What's fetched:** H.264 at the largest size there is up to the one asked for, joined to format-140 sound without converting (`youtube.download_video(..., at_most=True)`). A saved music video still asks for exactly one size; these don't, because a channel's videos come in whatever sizes they were made. Not H.264 with AAC, larger than asked, or the wrong length: review, and nothing is kept.
+- **Where it goes:** `<Title>.mp4` in `Media` in Downloads, written by `fileops.keep_media` from the job's staging folder (the contract's kept-media rule now names `_Staging/` beside the app's cache as a place it copies from). Flat, with no folder per channel or section: the owner named one folder. Never overwriting; a title that makes no file name is saved under the video's id. Nothing goes into the library or the index, and there's nothing in the journal to undo.
+- **The app:** Download in the right-click menu of a video in Video Finder and on a channel's page; the player page's Download Video does the same for a video played from those (before, it would have looked the video up as a song's). It shows in Downloads while on its way ("Video, up to 1080p · to Downloads"), and a line says when it's in the folder. No screen was re-laid-out.
+- **Checked:** a real run, into a scratch home folder: one 19-second video through the queue arrived as a 240-line H.264 MP4 in `Downloads/Media`, with nothing left in the library or staging. `pytest`, `ruff`, `swift build`, `swift test`.
+- **Not checked:** the menu item and the player's button by eye in the app.
+- **Limits, for the owner:**
+  - Kept videos aren't listed anywhere in the app yet; they're files in the folder.
+  - At most 1080p, like a saved music video.
+- **Noted for later, not built (the owner, the same evening):** a kept film or video that isn't MP4 or MOV (AVI, MKV) should be converted automatically, so it can be sent on to a phone player. Videos kept here are already MP4; a film from a torrent stays as it arrived. The contract says a kept film is never converted, so that line changes first.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

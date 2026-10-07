@@ -353,6 +353,12 @@ def test_download_video_asks_for_one_picture_size_joined_to_format_140(
     youtube.download_video(VIDEO, dest, height=1080, fps=60)
     assert "[height=1080][fps>30]+140" in FakeYoutubeDL.calls[1]["format"]
 
+    # A video kept outside the library: the largest H.264 picture up to that height.
+    youtube.download_video(VIDEO, dest, height=1080, at_most=True)
+    assert FakeYoutubeDL.calls[2]["format"] == (
+        "bestvideo[vcodec^=avc1][ext=mp4][protocol=https][height<=1080][fps<=?30]+140"
+    )
+
 
 def test_download_video_refuses_what_it_cant_do(
     fake_ydl: Callable[..., None], dest: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch

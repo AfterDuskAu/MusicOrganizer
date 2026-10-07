@@ -33,10 +33,10 @@ The engine guarantees everything in this document. It's written so that if the a
 - **Other places the engine writes:** the app's own config, log and cache folders, and exports the user explicitly asked for (via `fileops.write_export`, which never overwrites).
 - **Kept media, outside the library (the owner, 2026-10-07).** Films and videos that aren't music are not part of the library and don't go in it:
   - a film the owner keeps goes in the computer's own **Movies** folder (Videos on Windows): `<Title> (<Year>).<ending>`, the file exactly as it arrived (never converted);
-  - a video that isn't music (gaming, news, sports, learning, a podcast) will go in **`Media` inside Downloads** (not built yet).
+  - a video that isn't music (gaming, news, sports, learning, a podcast) goes in **`Media` inside Downloads**: `<Title>.mp4`, downloaded through the throttled queue like every download and counted towards the day's limit. Its picture is H.264 at the largest size there is up to the one asked for (a channel's videos come in whatever sizes they were made, so "exactly this size" would refuse most of them), joined to format-140 sound without converting either. Anything else goes to review and nothing is kept.
 
   Both are written only by `fileops.keep_media`, under these guarantees:
-  - it copies only a file the app fetched itself, out of the app's own cache folder, and leaves that file where it is;
+  - it copies only a file the app fetched itself: out of the app's own cache folder (a film), or out of the library's `_Staging/` folder (a video downloaded by the queue, whose staging folder is then cleared as after any job). It leaves that file where it is;
   - it writes only inside those two folders, and never inside a library's managed folders or a source;
   - **it never overwrites** (` (2)`, ` (3)` if the name is taken), and a file appears complete or not at all;
   - it makes a missing folder inside those two, and the `Media` folder itself, but never the Movies or Downloads folder;

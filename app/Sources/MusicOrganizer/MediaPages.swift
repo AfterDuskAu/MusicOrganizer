@@ -239,6 +239,7 @@ struct VideoRow: View {
     let video: VideoHit
     var openChannel: ((ChannelRef) -> Void)?
     let play: () -> Void
+    @Environment(AppModel.self) private var model
 
     var body: some View {
         HStack(spacing: 14) {
@@ -280,7 +281,11 @@ struct VideoRow: View {
         .padding(.vertical, 4)
         .contentShape(Rectangle())
         .onTapGesture(count: 2, perform: play)
-        .contextMenu { Button("Play", action: play) }
+        .contextMenu {
+            Button("Play", action: play)
+            Button("Download") { model.keepVideo(video.result) }
+                .disabled(model.downloadState(of: video.videoId) == .working)
+        }
     }
 }
 

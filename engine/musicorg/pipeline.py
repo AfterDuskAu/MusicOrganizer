@@ -85,7 +85,7 @@ from musicorg import (
     tags,
     youtube,
 )
-from musicorg.config import Config
+from musicorg.config import Config, media_folders
 from musicorg.errors import (
     AudioError,
     NotFoundError,
@@ -2061,10 +2061,17 @@ def plan_download(
     *,
     known: list[dict[str, Any]] | None = None,
     playlist_id: str | None = None,
+    media: list[dict[str, Any]] | None = None,
 ) -> fileops.Plan:
     """A plan downloading these from YouTube Music into the library (v0.2): songs (the
     app's "download" button), and `videos`, each `{"video_id", "height", "fps"?}`: a video
     saved whole, its picture at that height (the app's "save video" button).
+
+    `media` are videos that aren't music (gaming, news, sports, learning, a podcast),
+    each `{"video_id", "title", "height", "channel"?, "duration_s"?, "thumbnail"?}` as a
+    list of videos gave it. One of these is kept outside the library, in Media in
+    Downloads (contract, section 1), at the largest picture up to that height. It isn't
+    looked up on YouTube Music, and it's downloaded through the queue like everything.
 
     `known` are tracks as the engine gave them out a moment ago (Discover's picks, in the
     Candidate shape). One of those isn't looked up on YouTube Music again, so a plan for
@@ -2151,10 +2158,19 @@ def plan_download(
             )  # fmt: skip
         )
         size += (found.duration_s or 0) * (VIDEO_KBPS[height] * 125 + BYTES_PER_SECOND)
+    for wanted in media or []:
+        op = _keep_video_op(wanted)
+        if op.params["video_id"] in seen:
+            continue
+        seen.add(op.params["video_id"])
+        ops.append(op)
+        length = op.params["candidate"]["duration_s"] or 0
+        size += length * (VIDEO_KBPS[op.params["height"]] * 125 + BYTES_PER_SECOND)
     summary = {
         "operations": len(ops),
         "downloads": len(ops),
         "videos": sum(op.action == "download_video" for op in ops),
+        "kept": sum(op.action == "keep_video" for op in ops),
         "est_minutes": estimate_minutes(len(ops), 0),
         "days": download_days(len(ops)),
         "disk_mb": round(size / 1e6, 1),
@@ -2166,10 +2182,100 @@ def plan_download(
     return plan
 
 
+def _keep_video_op(wanted: object) -> fileops.PlanOp:
+    """The plan's line for one video to keep in Downloads, from what the app sent."""
+    if not isinstance(wanted, dict):
+        raise UserError("A video to keep should be a video as the engine gave it.")
+    video_id, title, height = wanted.get("video_id"), wanted.get("title"), wanted.get("height")
+    if not isinstance(video_id, str) or not youtube.VIDEO_ID.fullmatch(video_id):
+        raise UserError(f"{video_id!r} isn't a YouTube video id.")
+    if not isinstance(title, str) or not title.strip() or len(title) > MAX_KEPT_TITLE_CHARS:
+        raise UserError("A video to keep needs its title.")
+    if isinstance(height, bool) or not isinstance(height, int) or height not in VIDEO_KBPS:
+        sizes = ", ".join(str(h) for h in VIDEO_KBPS)
+        raise UserError(f"A video's height should be one of {sizes}.")
+    channel, length, picture = (wanted.get(k) for k in ("channel", "duration_s", "thumbnail"))
+    known_length = isinstance(length, int | float) and not isinstance(length, bool)
+    return fileops.PlanOp(
+        action="keep_video",
+        params={
+            "video_id": video_id,
+            # The same shape a song's candidate has, so the Downloads list shows it.
+            "candidate": {
+                "video_id": video_id,
+                "title": " ".join(title.split()),
+                "artists": [channel] if isinstance(channel, str) and channel.strip() else [],
+                "duration_s": int(length) if known_length and length > 0 else None,
+                "thumbnail": picture if isinstance(picture, str) else None,
+            },
+            "height": height,
+        },
+    )
+
+
+def _keep_video(ctx: JobContext, op: fileops.PlanOp) -> Outcome:
+    """Keep a video that isn't music: downloaded like any other, then copied out of this
+    job's staging folder into Media in Downloads by `fileops.keep_media` (contract,
+    section 1). Nothing goes into the library, and the index isn't told."""
+    video_id = str(op.params["video_id"])
+    wanted = op.params["candidate"]
+    height = int(op.params["height"])
+    path, info = ctx.download_video(video_id, height, at_most=True)
+    problem = _check_kept_video(path, info, wanted.get("duration_s"), height)
+    if problem is not None:
+        return Outcome.needs_review(*problem)
+    folder = media_folders()["media"]
+    with open_index(ctx.lib.paths, write=False) as index:
+        sources = list(scan.source_folders(ctx.lib, index).values())
+    name = str(wanted.get("title") or "")
+    for stem in (name, video_id):  # a title that's no file name: the video's id instead
+        try:
+            kept = fileops.keep_media(
+                path, folder, f"{stem}{path.suffix}", cache=ctx.lib.paths.staging,
+                allowed=[folder], forbidden=[ctx.lib.root, *sources],
+            )  # fmt: skip
+            break
+        except ValueError:
+            if stem == video_id:
+                raise
+    return Outcome.done(f"Kept in {folder.parent.name}/{folder.name} as {kept.name}.")
+
+
+def _check_kept_video(
+    path: Path, info: dict[str, Any], expected: object, height: int
+) -> tuple[str, str] | None:
+    """Is this the video we asked for? Like `_check_video`, but the picture may be
+    smaller than `height` (the largest there is, up to it)."""
+    delivered = str(info.get("format_id") or "")
+    picture, _, sound = delivered.partition("+")
+    if not picture or sound != youtube.DOWNLOAD_FORMAT:
+        return (
+            "video_format_unavailable",
+            f"YouTube delivered format {delivered or 'unknown'}, not a picture joined to "
+            "sound format 140; nothing is kept.",
+        )
+    probe = tags.probe(path)  # AudioError: the queue retries
+    if (probe.video_codec or "").lower() != "h264" or not 0 < (probe.height or 0) <= height:
+        return ("video_format_unavailable",
+                f"The download's picture is {probe.video_codec or 'unknown'} at "
+                f"{probe.height or 'an unknown'} lines, not H.264 at up to {height}.")  # fmt: skip
+    if (probe.codec or "").lower() != "aac":
+        return ("video_format_unavailable",
+                f"The download's audio is {probe.codec or 'unknown'}, not AAC.")  # fmt: skip
+    if isinstance(expected, int | float) and probe.duration_s is not None:
+        if abs(probe.duration_s - expected) > DURATION_TOLERANCE_S:
+            return ("duration_mismatch",
+                    f"The download is {probe.duration_s:.0f} s long; the list said "
+                    f"{expected:.0f} s.")  # fmt: skip
+    return None
+
+
 def download_job(ctx: JobContext) -> Outcome:
     (op,) = _ops(ctx.payload)
     if op.action == "download_video":
         return _download_video(ctx, op)
+    if op.action == "keep_video":
+        return _keep_video(ctx, op)
     video_id = str(op.params["video_id"])
     candidate = Candidate.from_dict(op.params["candidate"])
     with open_index(ctx.lib.paths, write=True) as index:
@@ -2477,6 +2583,7 @@ def edit_job(ctx: JobContext) -> Outcome:
 
 MAX_REMOVE = 500
 MAX_GENRE_CHARS = 60
+MAX_KEPT_TITLE_CHARS = 300  # a video's title, before it's made a file name
 
 
 def plan_remove(lib: Library, index: Index, rel_paths: list[str]) -> fileops.Plan:
@@ -3314,6 +3421,11 @@ def describe(plan: fileops.Plan) -> list[str]:
             artists = ", ".join(c.get("artists") or [])
             lines.append(f"{op.op_id:>5}  video    {artists} – {c.get('title', '')} "
                          f"({op.params['video_id']}, {op.params['height']}p)")  # fmt: skip
+        elif op.action == "keep_video":
+            c = op.params["candidate"]
+            lines.append(f"{op.op_id:>5}  keep     {c.get('title', '')} "
+                         f"({op.params['video_id']}, up to {op.params['height']}p, "
+                         "into Downloads)")  # fmt: skip
         elif op.action == "edit":
             assert op.source is not None
             what = [f"{k}: {v if v is not None else '(cleared)'}"

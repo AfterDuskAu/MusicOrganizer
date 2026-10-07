@@ -780,12 +780,13 @@ class Server:
             elif kind == "download":
                 ids = want(options, "video_ids", list, [])
                 videos = want(options, "videos", list, [])
-                if not ids and not videos:
-                    raise RpcError(INVALID_PARAMS, "Give video_ids, videos, or both.")
+                media = want(options, "media", list, [])
+                if not ids and not videos and not media:
+                    raise RpcError(INVALID_PARAMS, "Give video_ids, videos or media.")
                 known = want(options, "candidates", list, [])
                 plan = pipeline.plan_download(
                     lib, index, ids, videos, known=known,
-                    playlist_id=want(options, "playlist_id", str),
+                    playlist_id=want(options, "playlist_id", str), media=media,
                 )  # fmt: skip
             elif kind == "edit":
                 cover = want(options, "cover_file", str)

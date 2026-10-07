@@ -3807,8 +3807,9 @@ class FakeVideoDownloads:
 
     def __call__(
         self, video_id: str, dest: Path, *, height: int, fps: int | None = None,
-        progress: Any = None,
+        at_most: bool = False, progress: Any = None,
     ) -> tuple[Path, dict[str, Any]]:  # fmt: skip
+        self.at_most = at_most
         self.calls.append((video_id, height, fps))
         target = Path(dest) / f"{video_id}.mp4"
         shutil.copyfile(self.source, target)
@@ -4495,3 +4496,111 @@ def test_edits_that_are_refused(lib: Library, index: Index, adopted: Path) -> No
         pipeline.plan_edit(lib, index, rel, changes={"title": current.title})
     with pytest.raises(OutsideLibraryError):
         pipeline.plan_edit(lib, index, "../elsewhere.mp3", changes={"title": "X"})
+
+
+# ---- a video that isn't music, kept in Downloads (2026-10-07) ----------------------------
+
+KEPT = {"video_id": VIDEO_V, "title": "Speedrun: World  Record", "channel": "Some Channel",
+        "duration_s": SECONDS, "thumbnail": "https://example.invalid/frame.jpg",
+        "height": 1080}  # fmt: skip
+
+
+def media_files(home: Path) -> list[str]:
+    folder = home / "Downloads" / "Media"
+    return sorted(p.name for p in folder.iterdir()) if folder.is_dir() else []
+
+
+@pytest.fixture
+def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """A stand-in for the owner's home folder, with a Downloads folder in it."""
+    from musicorg import config
+
+    found = tmp_path / "home"
+    (found / "Downloads").mkdir(parents=True)
+    monkeypatch.setenv(config.HOME_ENV, str(found))
+    return found
+
+
+def test_a_video_that_isnt_music_is_kept_in_downloads_not_the_library(
+    lib: Library, index: Index, videos: FakeVideoDownloads, home: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:  # fmt: skip
+    monkeypatch.setattr(youtube, "get_track", lambda video_id: pytest.fail("not looked up"))
+    plan = pipeline.plan_download(lib, index, [], media=[KEPT, dict(KEPT)])
+    assert (plan.summary["downloads"], plan.summary["kept"], plan.summary["videos"]) == (1, 1, 0)
+    (line,) = pipeline.describe(plan)
+    assert "keep     Speedrun: World Record (videoVVVVVV, up to 1080p, into Downloads)" in line
+    pipeline.apply(lib, index, plan.plan_id)
+
+    # While it waits, the Downloads list shows it like any other, marked as kept.
+    (row,) = queue.downloads(lib.paths)
+    assert (row["title"], row["artists"], row["video"], row["kept"], row["height"]) == (
+        "Speedrun: World Record", ["Some Channel"], True, True, 1080,
+    )  # fmt: skip
+
+    result = run_queue(lib)
+    assert result.counts == {"done": 1}
+    # The largest picture up to the size asked for, through the paced queue, counted.
+    assert videos.calls == [(VIDEO_V, 1080, None)] and videos.at_most is True
+    assert queue.status(lib.paths)["daily_count"] == 1
+    # In Downloads/Media under its title (made a safe file name), exactly as delivered.
+    (name,) = media_files(home)
+    assert name.startswith("Speedrun") and name.endswith("World Record.mp4")
+    kept = home / "Downloads" / "Media" / name
+    assert kept.read_bytes() == videos.source.read_bytes()
+    # Nothing went into the library, the index, or stayed behind in staging.
+    assert music_files(lib) == [] and index.library_tracks() == []
+    assert not any(p.is_file() for p in lib.paths.staging.rglob("*"))
+    assert queue.downloads(lib.paths) == []
+
+    # Kept again, the first one isn't overwritten.
+    plan = pipeline.plan_download(lib, index, [], media=[KEPT])
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    assert len(media_files(home)) == 2 and any(" (2).mp4" in n for n in media_files(home))
+
+
+def test_a_kept_video_that_isnt_what_was_asked_for_goes_to_review(
+    lib: Library, index: Index, videos: FakeVideoDownloads, home: Path
+) -> None:
+    # The fixture's picture is 240 lines: more than the 144 asked for at most.
+    plan = pipeline.plan_download(lib, index, [], media=[{**KEPT, "height": 144}])
+    pipeline.apply(lib, index, plan.plan_id)
+    assert run_queue(lib).counts == {"needs_review": 1}
+    assert media_files(home) == []
+    (row,) = queue.downloads(lib.paths)
+    assert row["reason"] == "video_format_unavailable" and "up to 144" in row["message"]
+
+    # Nor one whose length isn't the one the list gave.
+    plan = pipeline.plan_download(lib, index, [], media=[{**KEPT, "duration_s": SECONDS + 60}])
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    assert media_files(home) == []
+    assert queue.downloads(lib.paths)[0]["reason"] == "duration_mismatch"
+
+
+def test_a_kept_video_with_no_usable_title_is_named_by_its_id(
+    lib: Library, index: Index, videos: FakeVideoDownloads, home: Path
+) -> None:
+    plan = pipeline.plan_download(lib, index, [], media=[{**KEPT, "title": ".DS_Store"}])
+    pipeline.apply(lib, index, plan.plan_id)
+    assert run_queue(lib).counts == {"done": 1}
+    assert media_files(home) == [f"{VIDEO_V}.mp4"]
+
+
+@pytest.mark.parametrize(
+    "wrong",
+    [
+        "a video",
+        {**KEPT, "video_id": "nope"},
+        {**KEPT, "title": "  "},
+        {**KEPT, "title": "x" * 301},
+        {**KEPT, "height": 1000},
+        {**KEPT, "height": True},
+    ],
+)
+def test_a_video_to_keep_is_checked_before_anything_is_planned(
+    lib: Library, index: Index, wrong: object
+) -> None:
+    with pytest.raises(UserError):
+        pipeline.plan_download(lib, index, [], media=[wrong])  # type: ignore[list-item]

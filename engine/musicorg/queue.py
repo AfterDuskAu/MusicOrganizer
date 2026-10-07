@@ -228,16 +228,24 @@ class JobContext:
         height: int,
         fps: int | None = None,
         progress: youtube.ProgressHook | None = None,
+        *,
+        at_most: bool = False,
     ) -> tuple[Path, dict[str, Any]]:
         """Download a video (its picture at `height`, joined to its sound) into this
-        job's staging folder. One download, for the pace and the daily cap, like a song."""
+        job's staging folder. One download, for the pace and the daily cap, like a song.
+        `at_most`: the largest picture up to `height` (a video kept outside the library)."""
         self._runner.wait_for_download_turn()
         self._runner.count_download()
         self.downloaded += 1
         meter = _Meter(self.job["id"], progress, expected_extra=self._sound_bytes())
         try:
             found = youtube.download_video(
-                video_id, self.staging(), height=height, fps=fps, progress=meter
+                video_id,
+                self.staging(),
+                height=height,
+                fps=fps,
+                at_most=at_most,
+                progress=meter,
             )
             meter.finished()
             return found
@@ -778,7 +786,8 @@ def _download_row(job: dict[str, Any]) -> dict[str, Any]:
     op = ops[0] if isinstance(ops, list) and ops and isinstance(ops[0], dict) else {}
     params = op.get("params") if isinstance(op.get("params"), dict) else {}
     candidate = params.get("candidate") if isinstance(params.get("candidate"), dict) else {}
-    video = op.get("action") == "download_video"
+    kept = op.get("action") == "keep_video"  # into Downloads, not the library
+    video = kept or op.get("action") == "download_video"
     return {
         "job_id": job["id"],
         "batch_id": job["batch_id"],
@@ -789,6 +798,7 @@ def _download_row(job: dict[str, Any]) -> dict[str, Any]:
         "title": candidate.get("title"),
         "artists": [a for a in candidate.get("artists") or [] if isinstance(a, str)],
         "video": video,
+        "kept": kept,
         "height": params.get("height") if video else None,
         "fps": params.get("fps") if video else None,
         "thumbnail": candidate.get("thumbnail"),

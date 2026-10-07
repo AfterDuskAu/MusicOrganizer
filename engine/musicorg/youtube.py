@@ -1066,6 +1066,7 @@ def download_video(
     *,
     height: int,
     fps: int | None = None,
+    at_most: bool = False,
     progress: ProgressHook | None = None,
 ) -> tuple[Path, dict[str, Any]]:
     """Download a video as one MP4 into `dest_dir` (a folder from `fileops.stage_dir`):
@@ -1075,11 +1076,16 @@ def download_video(
     doesn't offer is FormatUnavailableError, and nothing else is fetched in its place.
     Returns the file and yt-dlp's info (`format_id` is like "137+140").
 
+    `at_most` is for a video kept outside the library (gaming, news and the like, in
+    Downloads): the largest H.264 picture up to `height`, since a channel's videos come
+    in whatever sizes they were made. Still H.264 with format-140 sound, or nothing.
+
     The same errors, rate limiter and staging rule as `download_audio`."""
     if isinstance(height, bool) or not isinstance(height, int) or not 100 <= height <= 4320:
         raise YouTubeError(f"{height!r} isn't a picture height.")
     pace = "[fps>30]" if fps is not None and fps > 30 else "[fps<=?30]"
-    picture = f"bestvideo[vcodec^=avc1][ext=mp4][protocol=https][height={height}]{pace}"
+    size = f"[height<={height}]" if at_most else f"[height={height}]"
+    picture = f"bestvideo[vcodec^=avc1][ext=mp4][protocol=https]{size}{pace}"
     opts = {
         **download_options(Path(dest_dir), progress),
         "format": f"{picture}+{DOWNLOAD_FORMAT}",
@@ -1089,7 +1095,8 @@ def download_video(
         return _download(video_id, Path(dest_dir), opts)
     except FormatUnavailableError:
         raise FormatUnavailableError(
-            f"YouTube doesn't offer {video_id} as a {height}p picture the library keeps "
+            f"YouTube doesn't offer {video_id} as a {'picture up to ' if at_most else ''}"
+            f"{height}p{'' if at_most else ' picture'} the library keeps "
             "(H.264 in MP4, with the usual sound). No other format is used."
         ) from None
 

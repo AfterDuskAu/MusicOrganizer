@@ -619,6 +619,27 @@ final class AppModel {
             (try? await ask("channel.followed", [:], as: ChannelsAnswer.self).channels) ?? []
     }
 
+    /// Keep a video that isn't music (gaming, news, sports, learning, a podcast) in Media
+    /// in the Downloads folder: its largest picture up to `height`. It goes through the
+    /// same paced queue as a song, counts as one of the day's downloads, and shows in
+    /// Downloads while it's on its way. Nothing of it goes into the library.
+    func keepVideo(_ video: SearchResult, height: Int = 1080) {
+        var wanted: [String: Any] = [
+            "video_id": video.videoId, "title": video.title,
+            "height": PendingDownload.keptHeight(upTo: height),
+        ]
+        if let channel = video.artists.first { wanted["channel"] = channel }
+        if let length = video.durationS { wanted["duration_s"] = length }
+        if let picture = video.thumbnail { wanted["thumbnail"] = picture }
+        startDownload(video.videoId, ["media": [wanted]])
+    }
+
+    /// Whether this video was played as itself (from a channel or a search of videos),
+    /// and so is kept in Downloads rather than saved into the library as a song's video.
+    func isOwnVideo(_ videoId: String?) -> Bool {
+        videoId.map(exactVideos.contains) ?? false
+    }
+
     /// Play videos as themselves (a channel's videos, a trailer), from one of them.
     func playVideos(_ videos: [SearchResult], startAt index: Int) {
         exactVideos.formUnion(videos.map(\.videoId))
@@ -1800,6 +1821,11 @@ final class AppModel {
             let found = try? await connection.call("queue.downloads", as: DownloadsAnswer.self)
         else { return }
         let onTheirWay = Set(pending.filter(\.isActive).map(\.jobId))
+        let here = Set(found.downloads.map(\.jobId))
+        // A video on its way to Downloads that's off the list has arrived there.
+        if let kept = pending.first(where: { $0.isActive && $0.isKept && !here.contains($0.jobId) }) {
+            notice = "\(kept.name) is in Media, in your Downloads folder."
+        }
         // A download counts towards the daily limit as it starts: the counter is asked
         // for again whenever a different one is downloading, or the list got shorter.
         let before = (pending.filter(\.isRunning).map(\.jobId), pending.count)
@@ -1826,7 +1852,13 @@ final class AppModel {
     /// Try a download again that ended without the song.
     func retry(_ download: PendingDownload) {
         guard let videoId = download.videoId else { return }
-        if download.video, let height = download.height {
+        if download.isKept {
+            keepVideo(
+                SearchResult(
+                    videoId: videoId, title: download.name, artists: download.artists,
+                    durationS: nil, thumbnail: download.thumbnail),
+                height: download.height ?? 1080)
+        } else if download.video, let height = download.height {
             var wanted: [String: Any] = ["video_id": videoId, "height": height]
             if let fps = download.fps { wanted["fps"] = fps }
             startDownload(videoId, ["videos": [wanted]])
@@ -1902,6 +1934,16 @@ final class AppModel {
     /// song's official video is found first and saved at its sharpest, up to 1080p (the
     /// most a saved video may be).
     func downloadVideoOf(_ track: Track) {
+        if let videoId = track.videoId, isOwnVideo(videoId) {
+            // Not a song's video: it's kept in Downloads, at the size showing at most.
+            let showing = player.current?.id == track.id ? player.video?.quality.height : nil
+            keepVideo(
+                SearchResult(
+                    videoId: videoId, title: track.title, artists: track.artist.map { [$0] } ?? [],
+                    durationS: track.durationS, thumbnail: track.artUrl),
+                height: Player.alwaysBestDownload ? 1080 : showing ?? 1080)
+            return
+        }
         if player.current?.id == track.id, let showing = player.video {
             saveVideo(showing)
             return
