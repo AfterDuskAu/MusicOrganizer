@@ -271,7 +271,7 @@ struct VideoRow: View {
                             Text(name)
                         }
                     }
-                    Text([video.viewsLabel, video.published ?? ""].filter { !$0.isEmpty }.joined(separator: " · "))
+                    Text([video.viewsLabel, video.age()].filter { !$0.isEmpty }.joined(separator: " · "))
                 }
                 .font(.callout)
                 .foregroundStyle(.secondary)
@@ -388,8 +388,10 @@ struct VideoFinderView: View {
     @State private var working = false
     @State private var problem: String?
     @State private var opened: ChannelRef?
+    @State private var sort = VideoSort.bestMatch
 
     var body: some View {
+        let shown = sort.arranged(videos)
         ZStack {
             VStack(spacing: 0) {
                 HStack(spacing: 12) {
@@ -397,6 +399,13 @@ struct VideoFinderView: View {
                     TextField("Search for a video", text: $typed)
                         .textFieldStyle(.roundedBorder)
                         .onSubmit { search() }
+                    Picker("Sort", selection: $sort) {
+                        ForEach(VideoSort.allCases, id: \.self) { Text($0.title).tag($0) }
+                    }
+                    .labelsHidden()
+                    .fixedSize()
+                    .disabled(videos.isEmpty)
+                    .help("How the videos found are arranged")
                     if working {
                         ProgressView().controlSize(.small)
                     } else {
@@ -419,10 +428,10 @@ struct VideoFinderView: View {
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    List(videos) { video in
+                    List(shown) { video in
                         VideoRow(video: video, openChannel: { opened = $0 }) {
-                            if let start = videos.firstIndex(of: video) {
-                                model.playVideos(videos.map(\.result), startAt: start)
+                            if let start = shown.firstIndex(of: video) {
+                                model.playVideos(shown.map(\.result), startAt: start)
                             }
                         }
                     }

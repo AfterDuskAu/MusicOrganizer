@@ -15,7 +15,7 @@ struct SettingsView: View {
     static let openAccountKey = "settingsOpenAccount"
     private static let sections: [(key: String, title: String)] = [
         ("profile", "Profile"), ("play", "Play Options"), ("downloads", "Downloads"),
-        ("lyrics", "Lyrics"), ("sharing", "Sharing"), ("layout", "App Layout"),
+        ("lyrics", "Lyrics"), ("sharing", "Sync"),
     ]
 
     /// The section showing. One remembered from before Settings was regrouped opens Profile.
@@ -71,7 +71,6 @@ struct SettingsView: View {
                     case "downloads": DownloadSettings()
                     case "lyrics": LyricsSettings()
                     case "sharing": SharingSettings()
-                    case "layout": LayoutSettings()
                     default: ProfileSettingsTab()
                     }
                 }
@@ -111,15 +110,17 @@ struct SideNote: View {
     }
 }
 
-/// Settings → App Layout: the look the app is dressed in (owner, 2026-10-03). The look is
-/// put on when the app opens (`Theme`), so a new choice shows once it's been reopened.
+/// Settings → Profile → App Layout, under the profile's accounts (moved there from a
+/// section of its own at the owner's word, 2026-10-07): the look the app is dressed in
+/// (owner, 2026-10-03). The look is put on when the app opens (`Theme`), so a new choice
+/// shows once it's been reopened. These are sections of the Profile page's form.
 private struct LayoutSettings: View {
     @AppStorage(AppLook.key) private var saved = AppLook.native.rawValue
 
     var body: some View {
         let chosen = AppLook(saved: saved)
-        Form {
-            Section {
+        Group {
+            Section("App Layout") {
                 Picker(
                     "Look",
                     selection: Binding(
@@ -159,8 +160,6 @@ private struct LayoutSettings: View {
                 }
             }
         }
-        .formStyle(.grouped)
-        .scrollContentBackground(Theme.current.listBackground)
     }
 }
 
@@ -169,6 +168,7 @@ private struct LayoutSettings: View {
 /// Particle Accelerator's visuals, since 2026-10-04).
 private struct PlaySettings: View {
     @AppStorage(Player.playWhileVideoLoadsKey) private var playWhileLoading = true
+    @AppStorage(Player.opensVisualizerKey) private var opensVisualizer = false
     @AppStorage(Player.alwaysBestVideoKey) private var alwaysBestVideo = false
     @AppStorage(Player.visualizerLyricsKey) private var visualizerLyrics = true
     @AppStorage(Player.fullScreenLyricsKey) private var fullScreenLyrics = false
@@ -194,6 +194,12 @@ private struct PlaySettings: View {
                         + "the page goes back to what's chosen here.")
             }
             Section("Visualizer") {
+                Toggle("Open the Visualizer when something is played", isOn: $opensVisualizer)
+                SideNote(
+                    "Playing a song, a video or a channel's video then opens the Visualizer "
+                        + "page straight away, instead of leaving you on the list. A song "
+                        + "that follows on by itself doesn't bring the page back once you've "
+                        + "closed it.")
                 Toggle("Videos: always the highest quality available", isOn: $alwaysBestVideo)
                 SideNote(
                     "Videos then always play at their sharpest (up to 1080p), and the Local "
@@ -433,6 +439,7 @@ private struct ProfileSettingsTab: View {
                         + "because the service counts the computer, not the person.")
             }
             AccountSettings()
+            LayoutSettings()
         }
         .formStyle(.grouped)
         .scrollContentBackground(Theme.current.listBackground)

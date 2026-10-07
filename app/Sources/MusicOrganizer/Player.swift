@@ -27,6 +27,9 @@ struct ShowingVideo: Equatable {
 final class Player {
     private(set) var queue = PlayQueue()
     private(set) var current: Track?
+    /// How many times the owner has asked for something to be played (a click on a song,
+    /// a video, Play on a list). A song that follows on by itself doesn't count.
+    private(set) var playsAsked = 0
     private(set) var isPlaying = false
     /// Waiting for YouTube to say where the song can be played from.
     private(set) var isFetching = false
@@ -174,6 +177,7 @@ final class Player {
     }
 
     func play(_ tracks: [Track], startAt index: Int = 0) {
+        playsAsked += 1
         queue.play(tracks, startAt: index)
         start(queue.current)
     }
@@ -348,6 +352,8 @@ final class Player {
     /// Settings → Play Options: videos always play at their sharpest, and the Local
     /// Visualizer's picture-size menu goes away.
     static let alwaysBestVideoKey = "alwaysBestVideo"
+    /// Settings → Play Options: playing something opens the Visualizer page (off as standard).
+    static let opensVisualizerKey = "playOpensVisualizer"
     /// Settings → Play Options: the lyrics beside the cover or video on the Local
     /// Visualizer (on unless turned off), and beside a video on the whole screen (off
     /// unless turned on).

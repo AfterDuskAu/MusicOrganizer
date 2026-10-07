@@ -355,8 +355,10 @@ def test_download_video_asks_for_one_picture_size_joined_to_format_140(
 
     # A video kept outside the library: the largest H.264 picture up to that height.
     youtube.download_video(VIDEO, dest, height=1080, at_most=True)
+    # With a dubbed video's original-language sound as the other way it may be named.
+    picture = "bestvideo[vcodec^=avc1][ext=mp4][protocol=https][height<=1080][fps<=?30]"
     assert FakeYoutubeDL.calls[2]["format"] == (
-        "bestvideo[vcodec^=avc1][ext=mp4][protocol=https][height<=1080][fps<=?30]+140"
+        f"{picture}+140/{picture}+bestaudio[format_id^=140-][format_id!*=drc]"
     )
 
 

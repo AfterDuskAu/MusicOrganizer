@@ -856,6 +856,20 @@
   - At most 1080p, like a saved music video.
 - **Noted for later, not built (the owner, the same evening):** a kept film or video that isn't MP4 or MOV (AVI, MKV) should be converted automatically, so it can be sent on to a phone player. Videos kept here are already MP4; a film from a torrent stays as it arrived. The contract says a kept film is never converted, so that line changes first.
 
+2026-10-07, about 11:40pm. **The owner's list after trying Video Finder** (eight things, with a screenshot of a video that wouldn't play).
+
+- **A video with dubbed sound couldn't be played** ("didn't offer the usual audio format (140, AAC)"). Such a video has no format called `140`: it has one format 140 for each language, `140-0`, `140-1` … (checked against yt-dlp 2026.08.19). For playing (`youtube.stream`, `youtube.video`) and for a video kept in Downloads, the engine now asks for `140`, or else the best of those, which yt-dlp orders with the original language first (`ORIGINAL_SOUND`, `is_format_140`). `140-drc` is never used. What goes into the library is still asked for as plain `140`.
+- **Not fixed, and found on the way: a long video doesn't start.** With that out of the way the same video sat at "loading". Measured outside the app: YouTube delivers a large sound file at about 32 KB/s when it's asked for whole, which is how Apple's player asks, and instantly when asked for in pieces of a couple of megabytes. A song is small enough to arrive in the first burst; an hour-long video never gets going (70 seconds without starting, dubbed or not). The way round is to play long videos from YouTube's segmented (HLS) formats, or to fetch in pieces; neither is built. Downloads aren't affected (yt-dlp fetches in pieces).
+- **YouTube's bot check was tripped by this testing** (a dozen lookups in a few minutes, some outside the limiter's pacing). Lookups from this computer may be refused for a while. Lesson: test players against addresses already in hand, not fresh lookups.
+- **`video.search` gives dates.** It reads the search page with its "videos only" filter instead of `ytsearchN:`, with `approximate_date`, so each video has the day it came out, as a channel's do. The recording's key is unchanged.
+- **Video Finder:** each video says about how old it is ("2 days ago", in words, because that's all the service gives a list), and a menu arranges what was found: Best Match, Newest, Oldest, Most Views, Least Views, Longest, Shortest (`VideoSort`, in the Kit; nothing more is asked of the service). **Likes** show on the player page once a video is playing (they come with the lookup that plays it); in the list they'd cost one paced request for each video. **Dislikes aren't given out by the service at all** (since 2021).
+- **Explore's Gaming, News, Sports, Learning and Podcasts are searched afresh** each time, all five now, rather than read from the channels add-on, whose lists are as they stood in 2023. The first tab, Channels, is still the add-on's list; a channel's own page has always been read afresh.
+- **The big player page:** its close button is always in the page's top corner (it sat at the top of the centred cover and buttons, so it wandered down the edge). A search box left with the cursor no longer shows its outline through the page.
+- **Settings → Play Options: "Open the Visualizer when something is played"** (off as standard). A play the owner asked for opens the page; a song following on by itself doesn't bring it back.
+- **Settings:** Sharing is called Sync; App Layout is under the accounts on the Profile page.
+- **Checked:** `pytest` (2,042 passed), `ruff`, `swift build`, `swift test` (97). By eye in the owner's app: the two Settings changes, Video Finder's ages and menu, the close button's place, no outline, likes on the player page.
+- **Not checked:** the new play setting switched on; each order of the sort menu (tested in the Kit); Explore's sections after the change; a short dubbed video playing.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

@@ -38,6 +38,12 @@ struct NowPlayingView: View {
                 .padding(.horizontal, 40)
                 .padding(.top, 52)
                 .padding(.bottom, 24)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // Always in the page's top corner, whatever is showing and however tall it is.
+        // (It used to sit at the top of the cover, lyrics and buttons taken together,
+        // which are centred in the window, so it wandered down the left edge.)
+        .overlay(alignment: .topLeading) {
             if closable {
                 Button { isShown = false } label: {
                     Image(systemName: "chevron.down.circle.fill")
@@ -52,7 +58,6 @@ struct NowPlayingView: View {
                 .padding(.top, 44)  // below the window's close, minimise and zoom buttons
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background { backdrop(track) }
         .clipped()
         .environment(\.colorScheme, .dark)

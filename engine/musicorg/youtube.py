@@ -1023,6 +1023,22 @@ def find_track(
 
 VIDEO_ID = re.compile(r"[A-Za-z0-9_-]{11}")
 DOWNLOAD_FORMAT = "140"  # AAC in M4A, ~128 kbps. No fallback (CLAUDE.md rule 6).
+# A video with dubbed sound tracks (found 2026-10-07, checked against yt-dlp 2026.08.19)
+# has no format called "140": it has one format 140 for each language, named "140-0",
+# "140-1" ... and yt-dlp's own ordering puts the original language first. For playing,
+# and for a video kept outside the library, that one is format 140. ("140-drc" is the
+# same sound with its loudness evened out, and isn't used.) What goes into the library
+# is still asked for as plain "140".
+ORIGINAL_SOUND = f"{DOWNLOAD_FORMAT}/bestaudio[format_id^={DOWNLOAD_FORMAT}-][format_id!*=drc]"
+_ONE_LANGUAGE_OF_140 = re.compile(rf"{DOWNLOAD_FORMAT}-\d+")
+
+
+def is_format_140(format_id: object) -> bool:
+    """Format 140 itself, or one language's format 140 of a video with dubbed sound."""
+    text = str(format_id or "")
+    return text == DOWNLOAD_FORMAT or _ONE_LANGUAGE_OF_140.fullmatch(text) is not None
+
+
 SOCKET_TIMEOUT_S = 30
 
 # What yt-dlp's error messages say, lower-cased, checked in this order.
@@ -1088,7 +1104,10 @@ def download_video(
     picture = f"bestvideo[vcodec^=avc1][ext=mp4][protocol=https]{size}{pace}"
     opts = {
         **download_options(Path(dest_dir), progress),
-        "format": f"{picture}+{DOWNLOAD_FORMAT}",
+        # A kept video may have dubbed sound: its original language's format 140.
+        "format": "/".join(f"{picture}+{sound}" for sound in ORIGINAL_SOUND.split("/"))
+        if at_most
+        else f"{picture}+{DOWNLOAD_FORMAT}",
         "merge_output_format": "mp4",
     }
     try:
@@ -1275,13 +1294,23 @@ class Channel:
     videos: tuple[VideoResult, ...]
 
 
+VIDEOS_ONLY = "EgIQAQ%253D%253D"  # the search page's own filter for videos (its `sp`)
+
+
 def search_videos(query: str, limit: int = 25) -> list[VideoResult]:
     """Videos of any kind that YouTube finds for these words, best first."""
     words = " ".join(query.split())
     if not words:
         raise YouTubeError("Type something to search for first.")
     limit = max(1, min(limit, VIDEOS_MOST))
-    raw = _flat("video-search", f"{limit} {words}", f"ytsearch{limit}:{words}", limit)
+    # The search page itself, with its "videos only" filter, rather than yt-dlp's
+    # `ytsearchN:`: asked this way (and with `approximate_date`) each video comes with
+    # the day it came out, worked out from "3 days ago" (checked 2026-10-07).
+    url = f"https://www.youtube.com/results?search_query={quote(words)}&sp={VIDEOS_ONLY}"
+    raw = _flat(
+        "video-search", f"{limit} {words}", url, limit,
+        {"youtubetab": {"approximate_date": [""]}},
+    )  # fmt: skip
     return [v for v in (_video_result(e) for e in _entries(raw)) if v is not None]
 
 
@@ -1473,7 +1502,7 @@ def _look_up(video_id: str) -> dict[str, Any]:
     url = f"https://www.youtube.com/watch?v={video_id}"
 
     def run() -> Any:
-        with _make_ydl(_base_options()) as ydl:
+        with _make_ydl({**_base_options(), "format": ORIGINAL_SOUND}) as ydl:
             return ydl.extract_info(url, download=False)
 
     try:
@@ -1511,7 +1540,7 @@ def _audio_of(video_id: str, info: dict[str, Any]) -> Stream:
     address = info.get("url")
     if not isinstance(address, str) or not address.startswith("https://"):
         raise DownloadError(f"YouTube gave no address to play {video_id} from.")
-    if str(info.get("format_id") or "") != DOWNLOAD_FORMAT:
+    if not is_format_140(info.get("format_id")):
         raise FormatUnavailableError(f"YouTube doesn't offer {video_id} in the format we play.")
     headers = info.get("http_headers")
     likes = info.get("like_count")

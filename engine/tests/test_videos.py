@@ -90,3 +90,17 @@ def test_a_search_for_channels() -> None:
     assert any(isinstance(channel["followers"], int) for channel in found)
     with pytest.raises(youtube.YouTubeError):
         youtube.search_channels("  ")
+
+
+def test_the_original_language_of_a_dubbed_video_is_format_140() -> None:
+    """A video with dubbed sound has a format 140 for each language, "140-0", "140-1"…
+    and no plain "140" (found 2026-10-07)."""
+    assert youtube.is_format_140("140") and youtube.is_format_140("140-20")
+    for other in ("", None, "251", "140-drc", "1400", "140-", "x140-2"):
+        assert not youtube.is_format_140(other)
+    # What's asked of yt-dlp: plain 140, or else the best of the languages' 140s.
+    assert youtube.ORIGINAL_SOUND == "140/bestaudio[format_id^=140-][format_id!*=drc]"
+    info = {"url": "https://example.invalid/sound", "format_id": "140-20", "duration": 60}
+    assert youtube._audio_of("abcdefghijk", info).duration_s == 60
+    with pytest.raises(youtube.FormatUnavailableError):
+        youtube._audio_of("abcdefghijk", {**info, "format_id": "251-20"})

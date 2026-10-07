@@ -167,7 +167,7 @@ public enum VideoExplore {
     }
 
     /// The owner's names, the genre each is under in a channel add-on, and the words
-    /// to search channels by when the add-on has none of those genres.
+    /// channels are searched by for it.
     static let wanted: [(name: String, genres: [String], search: String)] = [
         ("Gaming", ["Gaming"], "gaming"),
         ("News", ["News", "News & Politics"], "news"),
@@ -176,19 +176,17 @@ public enum VideoExplore {
         ("Podcasts", ["Podcasts"], "podcast"),
     ]
 
-    /// The sections, in the owner's order: Channels, then the five by name (from the
-    /// catalog's genre where it has one, or else searched), then the rest of the
-    /// catalog's genres under their own names.
+    /// The sections, in the owner's order: Channels, then the five by name, then the
+    /// rest of the catalog's genres under their own names. The five are always searched
+    /// afresh (the owner, 2026-10-07: "make sure that all the channels are up to date"):
+    /// the channels add-on's own lists are as they stood in 2023. Its genre for one of
+    /// the five is so not shown a second time under its own name.
     public static func sections(for genres: [String]) -> [Section] {
         var found = [Section(name: "Channels")]
         var used = Set<String>()
         for (name, names, search) in wanted {
-            if let genre = names.first(where: genres.contains) {
-                found.append(Section(name: name, genre: genre))
-                used.insert(genre)
-            } else {
-                found.append(Section(name: name, search: search))
-            }
+            found.append(Section(name: name, search: search))
+            used.formUnion(names)
         }
         found += genres.filter { !used.contains($0) }.map { Section(name: $0, genre: $0) }
         return found
@@ -276,6 +274,32 @@ public struct VideoHit: Decodable, Identifiable, Hashable, Sendable {
             videoId: videoId, title: title, artists: channel.map { [$0] } ?? [],
             durationS: durationS, thumbnail: thumbnail)
     }
+
+    /// About when it came out, in words: "today", "3 days ago", "2 months ago", "4 years
+    /// ago". The service gives a list only "3 days ago", never the day, so that's all
+    /// that's honestly known. Empty when there's no date.
+    public func age(now: Date = Date()) -> String {
+        guard let published, let day = Self.day.date(from: published) else { return "" }
+        let days = Int(now.timeIntervalSince(day) / 86_400)
+        func said(_ count: Int, _ unit: String) -> String {
+            "\(count) \(unit)\(count == 1 ? "" : "s") ago"
+        }
+        switch days {
+        case ..<1: return "today"
+        case 1..<7: return said(days, "day")
+        case 7..<30: return said(days / 7, "week")
+        case 30..<365: return said(days / 30, "month")
+        default: return said(days / 365, "year")
+        }
+    }
+
+    private static let day: DateFormatter = {
+        let format = DateFormatter()
+        format.locale = Locale(identifier: "en_US_POSIX")
+        format.timeZone = TimeZone(identifier: "UTC")
+        format.dateFormat = "yyyy-MM-dd"
+        return format
+    }()
 
     /// How long it is, as a clock: "2:24", "1:02:03". Empty when unknown.
     public var length: String {
@@ -366,5 +390,49 @@ public enum WebPictures {
             return address
         }
         return address.replacingCharacters(in: found, with: "=s\(pixels)")
+    }
+}
+
+/// How a list of videos is arranged (Video Finder's menu). The list is the one the
+/// search gave, put in another order: nothing more is asked of the service.
+public enum VideoSort: String, CaseIterable, Sendable {
+    case bestMatch, newest, oldest, mostViews, leastViews, longest, shortest
+
+    public var title: String {
+        switch self {
+        case .bestMatch: "Best Match"
+        case .newest: "Newest"
+        case .oldest: "Oldest"
+        case .mostViews: "Most Views"
+        case .leastViews: "Least Views"
+        case .longest: "Longest"
+        case .shortest: "Shortest"
+        }
+    }
+
+    /// The videos in this order. One with nothing to go by (no date, no count) goes
+    /// last, and videos that tie stay in the order the search gave them.
+    public func arranged(_ videos: [VideoHit]) -> [VideoHit] {
+        func by<Value: Comparable>(
+            _ value: (VideoHit) -> Value?, descending: Bool
+        ) -> [VideoHit] {
+            videos.enumerated().sorted { one, other in
+                switch (value(one.element), value(other.element)) {
+                case let (a?, b?) where a != b: descending ? a > b : a < b
+                case (_?, nil): true
+                case (nil, _?): false
+                default: one.offset < other.offset
+                }
+            }.map(\.element)
+        }
+        switch self {
+        case .bestMatch: return videos
+        case .newest: return by(\.published, descending: true)
+        case .oldest: return by(\.published, descending: false)
+        case .mostViews: return by(\.views, descending: true)
+        case .leastViews: return by(\.views, descending: false)
+        case .longest: return by(\.durationS, descending: true)
+        case .shortest: return by(\.durationS, descending: false)
+        }
     }
 }

@@ -2248,7 +2248,7 @@ def _check_kept_video(
     smaller than `height` (the largest there is, up to it)."""
     delivered = str(info.get("format_id") or "")
     picture, _, sound = delivered.partition("+")
-    if not picture or sound != youtube.DOWNLOAD_FORMAT:
+    if not picture or not youtube.is_format_140(sound):
         return (
             "video_format_unavailable",
             f"YouTube delivered format {delivered or 'unknown'}, not a picture joined to "

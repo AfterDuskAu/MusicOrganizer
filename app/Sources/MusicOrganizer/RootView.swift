@@ -329,6 +329,7 @@ struct MainView: View {
             }
         }
         .animation(.easeInOut(duration: 0.25), value: showNowPlaying)
+        .modifier(PlayerPageOpening(shown: $showNowPlaying, onVisualizer: current == .visualizer))
         .sheet(item: $model.namePrompt) { NameSheet(prompt: $0).dressed() }
         .sheet(item: $model.editing) { EditSheet(track: $0).environment(model).dressed() }
         .alert(
@@ -911,5 +912,33 @@ private struct StatusFooter: View {
         .font(.caption)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
+    }
+}
+
+/// Two things about the big player page covering the window, kept out of `RootView`'s
+/// body, which is as much as the compiler will take in one piece.
+private struct PlayerPageOpening: ViewModifier {
+    @Environment(AppModel.self) private var model
+    @Binding var shown: Bool
+    let onVisualizer: Bool
+
+    func body(content: Content) -> some View {
+        content
+            // Settings → Play Options: playing something opens the Visualizer page.
+            .onChange(of: model.player.playsAsked) {
+                if UserDefaults.standard.bool(forKey: Player.opensVisualizerKey),
+                    !onVisualizer, !model.film.isOpen
+                {
+                    shown = true
+                }
+            }
+            // A search box left with the typing cursor would show its outline through
+            // the page that has just covered it.
+            .onChange(of: shown) { _, isShown in
+                if isShown {
+                    NSApp.keyWindow?.makeFirstResponder(nil)
+                    model.searching = false
+                }
+            }
     }
 }

@@ -1696,10 +1696,10 @@ final class AddonTests: XCTestCase {
         XCTAssertEqual(
             sections.map(\.name),
             ["Channels", "Gaming", "News", "Sports", "Learning", "Podcasts", "Animation"])
+        // The owner's five are searched afresh, whatever the add-on lists (its lists are old).
+        XCTAssertEqual(sections.map(\.genre), [nil, nil, nil, nil, nil, nil, "Animation"])
         XCTAssertEqual(
-            sections.map(\.genre), [nil, "Gaming", "News & Politics", "Sports", nil, nil, "Animation"])
-        // What the add-on has no list for is searched instead.
-        XCTAssertEqual(sections.map(\.search), [nil, nil, nil, nil, "educational", "podcast", nil])
+            sections.map(\.search), [nil, "gaming", "news", "sports", "educational", "podcast", nil])
         XCTAssertEqual(VideoExplore.sections(for: []).count, 6)
     }
 
@@ -1824,6 +1824,48 @@ final class TorrentStatusTests: XCTestCase {
 }
 
 final class VideoHitTests: XCTestCase {
+    private func videos() throws -> [VideoHit] {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let said = Data(
+            #"""
+            {"videos":[
+             {"video_id":"aaaaaaaaaaa","title":"A","channel":null,"channel_id":null,
+              "duration_s":100,"views":50,"published":"2026-10-01","thumbnail":null},
+             {"video_id":"bbbbbbbbbbb","title":"B","channel":null,"channel_id":null,
+              "duration_s":null,"views":null,"published":null,"thumbnail":null},
+             {"video_id":"ccccccccccc","title":"C","channel":null,"channel_id":null,
+              "duration_s":900,"views":7000,"published":"2024-10-08","thumbnail":null},
+             {"video_id":"ddddddddddd","title":"D","channel":null,"channel_id":null,
+              "duration_s":100,"views":50,"published":"2026-10-07","thumbnail":null}]}
+            """#.utf8)
+        return try decoder.decode(VideosAnswer.self, from: said).videos
+    }
+
+    func testVideosArrangedEachWay() throws {
+        let found = try videos()
+        func order(_ sort: VideoSort) -> String { sort.arranged(found).map(\.title).joined() }
+        XCTAssertEqual(order(.bestMatch), "ABCD")
+        // One with nothing to go by is last; ties keep the search's order.
+        XCTAssertEqual(order(.newest), "DACB")
+        XCTAssertEqual(order(.oldest), "CADB")
+        XCTAssertEqual(order(.mostViews), "CADB")
+        XCTAssertEqual(order(.leastViews), "ADCB")
+        XCTAssertEqual(order(.longest), "CADB")
+        XCTAssertEqual(order(.shortest), "ADCB")
+        XCTAssertEqual(VideoSort.allCases.map(\.title).count, 7)
+    }
+
+    func testAVideosAgeInWords() throws {
+        let found = try videos()
+        var day = DateComponents()
+        (day.year, day.month, day.day, day.hour) = (2026, 10, 7, 12)
+        day.timeZone = TimeZone(identifier: "UTC")
+        let now = Calendar(identifier: .gregorian).date(from: day)!
+        XCTAssertEqual(
+            found.map { $0.age(now: now) }, ["6 days ago", "", "1 year ago", "today"])
+    }
+
     func testAVideosLengthAndViewsInRoundNumbers() throws {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase

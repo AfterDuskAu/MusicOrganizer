@@ -1549,7 +1549,7 @@ final class AppModel {
         if status.on, let port = status.port {
             if !announcer.start(type: status.service, port: port) {
                 sharingNote =
-                    "Sharing is on, but this Mac couldn't announce itself on the network, so a "
+                    "Sync is on, but this Mac couldn't announce itself on the network, so a "
                     + "device won't find it by itself. Type the address above into the device."
             }
         } else {
