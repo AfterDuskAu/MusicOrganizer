@@ -1582,3 +1582,61 @@ final class SharingTests: XCTestCase {
         announcer.stop()  // twice is fine
     }
 }
+
+final class RowSelectionTests: XCTestCase {
+    private let order = ["a", "b", "c", "d", "e"]
+
+    func testAClickPicksOneAndCommandClickAddsAndDrops() {
+        var selection = RowSelection()
+        selection.click("b", .one, in: order)
+        selection.click("d", .toggle, in: order)
+        XCTAssertEqual(selection.chosen, ["b", "d"])
+        selection.click("b", .toggle, in: order)
+        XCTAssertEqual(selection.chosen, ["d"])
+        selection.click("a", .one, in: order)
+        XCTAssertEqual(selection.chosen, ["a"])
+    }
+
+    func testShiftClickPicksTheRunEitherWay() {
+        var selection = RowSelection()
+        selection.click("d", .one, in: order)
+        selection.click("b", .extend, in: order)
+        XCTAssertEqual(selection.chosen, ["b", "c", "d"])
+        // Measured from the same line again, not from the last Shift-click.
+        selection.click("e", .extend, in: order)
+        XCTAssertEqual(selection.chosen, ["d", "e"])
+    }
+
+    func testShiftClickWithNothingPickedIsAPlainClick() {
+        var selection = RowSelection()
+        selection.click("c", .extend, in: order)
+        XCTAssertEqual(selection.chosen, ["c"])
+    }
+
+    func testLinesThatLeaveThePageAreForgotten() {
+        var selection = RowSelection()
+        selection.click("b", .one, in: order)
+        selection.click("d", .toggle, in: order)
+        selection.keep(only: ["a", "b", "c"])
+        XCTAssertEqual(selection.chosen, ["b"])
+        // "d" was where Shift measured from, and it's gone.
+        selection.click("a", .extend, in: ["a", "b", "c"])
+        XCTAssertEqual(selection.chosen, ["a"])
+        selection.clear()
+        XCTAssertTrue(selection.isEmpty)
+    }
+
+    func testARightClickIsAboutThePickedLinesOnlyWhenItIsOnOne() {
+        var selection = RowSelection()
+        selection.click("d", .one, in: order)
+        selection.click("b", .toggle, in: order)
+        XCTAssertEqual(selection.acting(on: "b", in: order), ["b", "d"])
+        XCTAssertEqual(selection.acting(on: "e", in: order), ["e"])
+    }
+
+    func testSeveralSongsTravelInOneDrag() {
+        let text = DraggedSongs.text(of: ["one", "two"])
+        XCTAssertEqual(DraggedSongs.ids(in: [text, "three"]), ["one", "two", "three"])
+        XCTAssertEqual(DraggedSongs.ids(in: ["only"]), ["only"])
+    }
+}

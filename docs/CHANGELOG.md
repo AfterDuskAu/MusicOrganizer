@@ -697,6 +697,15 @@
 - **Checked:** `swift build` and `swift test` (73 tests, one new). In the unseen test copy: the Full Screen button under the visualizer; the whole-screen layout with and without the lyrics column and the controls; and the visual drawing at the new shape (150,000 sparks at 2024×1024 with the screen to itself in a 1500-point window, 1668×1242 beside the lyrics; Medium's limit on pixels holds).
 - **Not checked:** the real thing on the owner's screen, with a song playing: the double click, Esc, the mouse hiding, and how smoothly it runs at the iMac's full size. The owner's quality is High, where Visualizer 8 was already a little over what 60 frames a second allows on this iMac; the quality caps how many pixels are drawn, and the page's picture in a large window is at that cap already, so the whole screen shouldn't be much heavier; but that's by reasoning, not measured.
 
+2026-10-07, about 2:15pm. **Picking several downloads at once.** The owner: "Discover downloads allow multiple selection of songs with cmd click, to move to library easier. Or mouse click and highlight several."
+
+- **Discover → Downloads works like a Mac list now.** A click picks a line, ⌘-click adds a line or drops it, and Shift-click picks every line from the last one clicked to this one, across the Videos and Songs boxes. A click on the page beside the lines lets go of them. Double-click still plays.
+- **What's picked moves together.** A right-click on a picked line is about all of them (Move to Library, Delete, Add to Playlist, Favourites: the menu every list of songs has), and dragging one onto Library in the sidebar takes the rest with it. A right-click or drag on a line that isn't picked is about that line alone, as before.
+- **How:** which lines are picked is worked out in the Kit (`RowSelection`, tested). One drag carries one piece of text, so several songs' ids travel as its lines (`DraggedSongs`), and the sidebar's Library and Downloads rows read them back. No engine change: `listening.move` already took a list.
+- **The one thing that looks new** is a picked line's tint (the app's highlight colour, lightly), and the words at the top of the page now say how to pick several. Nothing else on the page moved.
+- **Checked:** `swift build` and `swift test` (79 tests, six new).
+- **Not checked:** clicked in the running app. The unseen test copy can't click, so the tint, the Shift-click run and the drag of several are for the owner to try. Dragging the mouse across lines to pick them isn't built: a drag there carries the song to the sidebar.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

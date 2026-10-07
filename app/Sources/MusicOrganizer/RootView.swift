@@ -377,7 +377,7 @@ struct MainView: View {
                         .badge(entry == .unconfirmed ? waiting : 0)
                         // A download dragged here moves into the main library.
                         .dropDestination(for: String.self) { ids, _ in
-                            model.moveDownloads(ids, toLibrary: true)
+                            model.moveDownloads(DraggedSongs.ids(in: ids), toLibrary: true)
                             return true
                         }
                         .contextMenu {
@@ -425,7 +425,7 @@ struct MainView: View {
                             .badge(model.downloaded.count + model.pending.filter(\.isActive).count)
                             // Dragged back here, a download leaves the main library's lists.
                             .dropDestination(for: String.self) { ids, _ in
-                                model.moveDownloads(ids, toLibrary: false)
+                                model.moveDownloads(DraggedSongs.ids(in: ids), toLibrary: false)
                                 return true
                             }
                     } else {
