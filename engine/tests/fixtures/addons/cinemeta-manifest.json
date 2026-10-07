@@ -1,0 +1,306 @@
+{
+ "id": "com.linvo.cinemeta",
+ "version": "3.0.14",
+ "description": "The official addon for movie and series catalogs",
+ "name": "Cinemeta",
+ "resources": [
+  "catalog",
+  "meta",
+  "addon_catalog"
+ ],
+ "types": [
+  "movie",
+  "series"
+ ],
+ "idPrefixes": [
+  "tt"
+ ],
+ "addonCatalogs": [
+  {
+   "type": "all",
+   "id": "official",
+   "name": "Official"
+  },
+  {
+   "type": "movie",
+   "id": "official",
+   "name": "Official"
+  },
+  {
+   "type": "series",
+   "id": "official",
+   "name": "Official"
+  },
+  {
+   "type": "channel",
+   "id": "official",
+   "name": "Official"
+  },
+  {
+   "type": "all",
+   "id": "community",
+   "name": "Community"
+  },
+  {
+   "type": "movie",
+   "id": "community",
+   "name": "Community"
+  },
+  {
+   "type": "series",
+   "id": "community",
+   "name": "Community"
+  },
+  {
+   "type": "channel",
+   "id": "community",
+   "name": "Community"
+  },
+  {
+   "type": "tv",
+   "id": "community",
+   "name": "Community"
+  },
+  {
+   "type": "Podcasts",
+   "id": "community",
+   "name": "Community"
+  },
+  {
+   "type": "other",
+   "id": "community",
+   "name": "Community"
+  }
+ ],
+ "catalogs": [
+  {
+   "type": "movie",
+   "id": "top",
+   "genres": [
+    "Action",
+    "Adventure",
+    "Animation",
+    "Biography"
+   ],
+   "extra": [
+    {
+     "name": "genre",
+     "options": [
+      "Action",
+      "Adventure",
+      "Animation",
+      "Biography"
+     ]
+    },
+    {
+     "name": "search"
+    },
+    {
+     "name": "skip"
+    }
+   ],
+   "extraSupported": [
+    "search",
+    "genre",
+    "skip"
+   ],
+   "name": "Popular"
+  },
+  {
+   "type": "series",
+   "id": "top",
+   "genres": [
+    "Action",
+    "Adventure",
+    "Animation",
+    "Biography"
+   ],
+   "extra": [
+    {
+     "name": "genre",
+     "options": [
+      "Action",
+      "Adventure",
+      "Animation",
+      "Biography"
+     ]
+    },
+    {
+     "name": "search"
+    },
+    {
+     "name": "skip"
+    }
+   ],
+   "extraSupported": [
+    "search",
+    "genre",
+    "skip"
+   ],
+   "name": "Popular"
+  },
+  {
+   "type": "movie",
+   "id": "year",
+   "genres": [
+    "2026",
+    "2025",
+    "2024",
+    "2023"
+   ],
+   "extra": [
+    {
+     "name": "genre",
+     "options": [
+      "2026",
+      "2025",
+      "2024",
+      "2023"
+     ],
+     "isRequired": true
+    },
+    {
+     "name": "skip"
+    }
+   ],
+   "extraSupported": [
+    "genre",
+    "skip"
+   ],
+   "extraRequired": [
+    "genre"
+   ],
+   "name": "New"
+  },
+  {
+   "type": "series",
+   "id": "year",
+   "genres": [
+    "2026",
+    "2025",
+    "2024",
+    "2023"
+   ],
+   "extra": [
+    {
+     "name": "genre",
+     "options": [
+      "2026",
+      "2025",
+      "2024",
+      "2023"
+     ],
+     "isRequired": true
+    },
+    {
+     "name": "skip"
+    }
+   ],
+   "extraSupported": [
+    "genre",
+    "skip"
+   ],
+   "extraRequired": [
+    "genre"
+   ],
+   "name": "New"
+  },
+  {
+   "type": "movie",
+   "id": "imdbRating",
+   "genres": [
+    "Action",
+    "Adventure",
+    "Animation",
+    "Biography"
+   ],
+   "extra": [
+    {
+     "name": "genre",
+     "options": [
+      "Action",
+      "Adventure",
+      "Animation",
+      "Biography"
+     ]
+    },
+    {
+     "name": "skip"
+    }
+   ],
+   "extraSupported": [
+    "genre",
+    "skip"
+   ],
+   "name": "Featured"
+  },
+  {
+   "type": "series",
+   "id": "imdbRating",
+   "genres": [
+    "Action",
+    "Adventure",
+    "Animation",
+    "Biography"
+   ],
+   "extra": [
+    {
+     "name": "genre",
+     "options": [
+      "Action",
+      "Adventure",
+      "Animation",
+      "Biography"
+     ]
+    },
+    {
+     "name": "skip"
+    }
+   ],
+   "extraSupported": [
+    "genre",
+    "skip"
+   ],
+   "name": "Featured"
+  },
+  {
+   "type": "series",
+   "id": "last-videos",
+   "extra": [
+    {
+     "name": "lastVideosIds",
+     "isRequired": true,
+     "optionsLimit": 100
+    }
+   ],
+   "extraSupported": [
+    "lastVideosIds"
+   ],
+   "extraRequired": [
+    "lastVideosIds"
+   ],
+   "name": "Last videos"
+  },
+  {
+   "type": "series",
+   "id": "calendar-videos",
+   "extra": [
+    {
+     "name": "calendarVideosIds",
+     "isRequired": true,
+     "optionsLimit": 100
+    }
+   ],
+   "extraSupported": [
+    "calendarVideosIds"
+   ],
+   "extraRequired": [
+    "calendarVideosIds"
+   ],
+   "name": "Calendar videos"
+  }
+ ],
+ "behaviorHints": {
+  "newEpisodeNotifications": true
+ }
+}

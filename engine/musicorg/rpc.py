@@ -45,6 +45,7 @@ from typing import IO, Any
 
 from musicorg import (
     __version__,
+    addons,
     artist,
     browse,
     discover,
@@ -314,6 +315,12 @@ class Server:
             "settings.get": self.settings_get,
             "settings.set": self.settings_set,
             "kids.set": self.kids_set,
+            "addon.list": self.addon_list,
+            "addon.add": self.addon_add,
+            "addon.remove": self.addon_remove,
+            "addon.catalog": self.addon_catalog,
+            "addon.details": self.addon_details,
+            "addon.streams": self.addon_streams,
             "sharing.status": self.sharing_status,
             "sharing.set": self.sharing_set,
             "sharing.pair": self.sharing_pair,
@@ -839,6 +846,39 @@ class Server:
             return _settings(save_daily_cap(cap))  # config.py does its own writing (rule 3)
         return _settings(Config.load())
 
+    # -- methods: add-ons, where movies and channels are listed (2026-10-07) --
+    # Lookups only: nothing is played, downloaded or written in the library.
+
+    def addon_list(self, params: dict[str, Any]) -> dict[str, Any]:
+        return {"addons": addons.listed()}
+
+    def addon_add(self, params: dict[str, Any]) -> dict[str, Any]:
+        return {"addons": addons.add(need(params, "address", str))}
+
+    def addon_remove(self, params: dict[str, Any]) -> dict[str, Any]:
+        return {"addons": addons.remove(need(params, "addon_id", str))}
+
+    def addon_catalog(self, params: dict[str, Any]) -> dict[str, Any]:
+        skip = want(params, "skip", int, 0) or 0
+        if skip < 0:
+            raise RpcError(INVALID_PARAMS, "skip can't be less than 0.")
+        return addons.catalog(
+            addons.named(need(params, "addon_id", str)),
+            need(params, "type", str),
+            need(params, "id", str),
+            search=want(params, "search", str),
+            genre=want(params, "genre", str),
+            skip=skip,
+        )
+
+    def addon_details(self, params: dict[str, Any]) -> dict[str, Any]:
+        return addons.details(
+            need(params, "type", str), need(params, "id", str), want(params, "addon_id", str)
+        )
+
+    def addon_streams(self, params: dict[str, Any]) -> dict[str, Any]:
+        return addons.streams(addons.listed(), need(params, "type", str), need(params, "id", str))
+
     # -- methods: a child's profile (2026-10-07) --
 
     def kids_set(self, params: dict[str, Any]) -> dict[str, Any]:
@@ -909,6 +949,13 @@ class Server:
         in each size on offer. Nothing is saved."""
         title, artist = need(params, "title", str), need(params, "artist", str)
         path = want(params, "path", str)
+        video_id = want(params, "video_id", str)
+        if video_id is not None:
+            # A video played as itself (a channel's video, a trailer): that very one,
+            # with nothing looked for by name.
+            if not youtube.VIDEO_ID.fullmatch(video_id):
+                raise RpcError(INVALID_PARAMS, "That isn't a video's id.")
+            return self._video_answer(youtube.video(video_id), title, None)
         # A library song's file says which version it is: its version tag, and its title
         # as the owner writes a remix ("Song R"). Without it a remix would get the
         # original's video.
@@ -917,14 +964,17 @@ class Server:
             match = youtube.find_video(title, artist, versions=versions, cache=index)
         if match is None:
             return {"found": False}
-        found = youtube.video(match.video_id)
+        return self._video_answer(youtube.video(match.video_id), match.title, match.duration_s)
+
+    @staticmethod
+    def _video_answer(found: Any, title: str, duration_s: float | None) -> dict[str, Any]:
         if not found.qualities:
             return {"found": False}
         return {
             "found": True,
             "video_id": found.video_id,
-            "title": match.title,
-            "duration_s": found.audio.duration_s or match.duration_s,
+            "title": title,
+            "duration_s": found.audio.duration_s or duration_s,
             "http_headers": found.audio.headers,
             "audio_url": found.audio.url,
             "likes": found.audio.likes,

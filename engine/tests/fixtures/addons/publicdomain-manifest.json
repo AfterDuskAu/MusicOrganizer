@@ -1,0 +1,31 @@
+{
+ "id": "org.stremio.pubdomainmovies",
+ "version": "1.0.0",
+ "logo": "https://johnserv531.github.io/gh-images/1586344884.jpg",
+ "name": "Public Domain Movies",
+ "description": "Torrents for public domain movies. Includes a collection of more then 500 public domain movies.",
+ "resources": [
+  "catalog",
+  "stream"
+ ],
+ "types": [
+  "movie"
+ ],
+ "catalogs": [
+  {
+   "type": "movie",
+   "id": "publicdomainmovies",
+   "extra": [
+    {
+     "name": "skip"
+    },
+    {
+     "name": "search"
+    }
+   ]
+  }
+ ],
+ "idPrefixes": [
+  "tt"
+ ]
+}

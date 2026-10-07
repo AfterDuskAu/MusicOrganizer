@@ -84,7 +84,9 @@ struct Message<Buttons: View>: View {
 enum SidebarItem: Hashable {
     case songs, albums, artists, videos
     case favourites, recentlyAdded, mostPlayed, unconfirmed
-    case visualizer, whatsNew, find, importPlaylists, youtube, youtubeQueue, downloads
+    case visualizer, musicExplore, importPlaylists, youtube, youtubeQueue, downloads
+    /// The owner's drawing of 2026-10-07: videos and movies beside the music.
+    case channels, movies, videoFinder, videoExplore, movieFinder
     case playlist(String)
 
     /// A name for this entry that can be saved, and read back with `init(key:)`.
@@ -92,8 +94,12 @@ enum SidebarItem: Hashable {
         switch self {
         case .playlist(let id): "playlist:\(id)"
         case .visualizer: "visualizer"
-        case .whatsNew: "whatsNew"
-        case .find: "find"
+        case .musicExplore: "musicExplore"
+        case .channels: "channels"
+        case .movies: "movies"
+        case .videoFinder: "videoFinder"
+        case .videoExplore: "videoExplore"
+        case .movieFinder: "movieFinder"
         case .importPlaylists: "import"
         case .youtube: "youtube"
         case .youtubeQueue: "youtubeQueue"
@@ -109,8 +115,13 @@ enum SidebarItem: Hashable {
         }
         switch key {
         case "visualizer": self = .visualizer
-        case "whatsNew": self = .whatsNew
-        case "find": self = .find
+        // What's New and Find were pages of their own until 2026-10-07: one page now.
+        case "whatsNew", "find", "musicExplore": self = .musicExplore
+        case "channels": self = .channels
+        case "movies": self = .movies
+        case "videoFinder": self = .videoFinder
+        case "videoExplore": self = .videoExplore
+        case "movieFinder": self = .movieFinder
         case "import": self = .importPlaylists
         // Discover → Artist was a page of its own for a few hours; it's the Artists page now.
         case "artistInfo": self = .artists
@@ -146,17 +157,20 @@ enum SidebarItem: Hashable {
         case .songs: "Songs"
         case .albums: "Albums"
         case .artists: "Artists"
-        case .videos: "Videos"
+        case .videos: "Music Videos"
         case .favourites: "Favourites"
         case .recentlyAdded: "Recently Added"
         case .mostPlayed: "Most Played"
         case .unconfirmed: "Not Identified Yet"
-        case .whatsNew: "What's New"
-        case .find: "Find"
+        case .musicExplore, .videoExplore: "Explore"
+        case .channels: "Channel"
+        case .movies: "Movies"
+        case .videoFinder: "Video Finder"
+        case .movieFinder: "Movie Finder"
         case .importPlaylists: "Import Playlists"
-        case .youtube: "YouTube Music"
-        case .youtubeQueue: "YouTube Queue"
-        case .visualizer: "Local Visualizer"
+        case .youtube: "Music Finder"
+        case .youtubeQueue: "Queue"
+        case .visualizer: "Visualizer"
         case .downloads: "Downloads"
         case .playlist: "Playlist"
         }
@@ -172,10 +186,13 @@ enum SidebarItem: Hashable {
         case .recentlyAdded: "clock"
         case .mostPlayed: "chart.bar"
         case .unconfirmed: "questionmark.circle"
-        case .whatsNew: "sparkles"
-        case .find: "wand.and.stars"
+        case .musicExplore, .videoExplore: "sparkles"
+        case .channels: "play.tv"
+        case .movies: "popcorn"
+        case .videoFinder: "play.rectangle.on.rectangle"
+        case .movieFinder: "movieclapper"
         case .importPlaylists: "square.and.arrow.down.on.square"
-        case .youtube: "play.rectangle"
+        case .youtube: "magnifyingglass"
         case .youtubeQueue: "text.append"
         case .visualizer: "waveform"
         case .downloads: "arrow.down.circle"
@@ -368,8 +385,10 @@ struct MainView: View {
         let waiting = model.library.unconfirmed.count
         // The rows are SidebarItems themselves, so a click selects one. (Looping over
         // their saved names instead made every Library row unclickable.)
+        // Music Videos is one of these entries too, but its row is under Videos.
         let entries = shown.compactMap(SidebarItem.init(libraryEntry:))
             .filter { $0 != .unconfirmed || waiting > 0 }  // nothing waiting: nothing to show
+            .filter { $0 != .videos }
         return List(selection: $item) {
             Section(isExpanded: $openLibrary) {
                 ForEach(entries, id: \.self) { entry in
@@ -386,9 +405,9 @@ struct MainView: View {
                         }
                 }
             } header: {
-                header("Library") {
+                header("Music") {
                     Menu {
-                        ForEach(hidden, id: \.self) { name in
+                        ForEach(hidden.filter { $0 != "videos" }, id: \.self) { name in
                             if let entry = SidebarItem(libraryEntry: name) {
                                 Button(entry.title) {
                                     savedEntries = SidebarChoice.write(
@@ -402,25 +421,59 @@ struct MainView: View {
                     .menuStyle(.borderlessButton)
                     .menuIndicator(.hidden)
                     .fixedSize()
-                    .disabled(hidden.isEmpty)
-                    .help(hidden.isEmpty ? "Everything is already shown" : "Add an entry to the sidebar")
+                    .disabled(hidden.allSatisfy { $0 == "videos" })
+                    .help(
+                        hidden.allSatisfy { $0 == "videos" }
+                            ? "Everything is already shown" : "Add an entry to the sidebar")
                 }
             }
-            Section("Media", isExpanded: $openMedia) {
-                ForEach([SidebarItem.visualizer, .youtube], id: \.self) { entry in
+            Section(isExpanded: $openMedia) {
+                ForEach([SidebarItem.channels, .movies], id: \.self) { entry in
                     Label(entry.title, systemImage: entry.symbol)
                 }
-                if !model.youtubeQueue.isEmpty {
-                    // Shown while anything is queued with Up Next.
-                    Label(SidebarItem.youtubeQueue.title, systemImage: SidebarItem.youtubeQueue.symbol)
-                        .badge(model.youtubeQueue.count)
-                        .tag(SidebarItem.youtubeQueue)
+                if shown.contains("videos") {
+                    Label(SidebarItem.videos.title, systemImage: SidebarItem.videos.symbol)
+                        .tag(SidebarItem.videos)
+                        .contextMenu {
+                            Button("Remove from Sidebar") { remove(.videos, from: shown) }
+                        }
+                }
+            } header: {
+                header("Videos") {
+                    Button {
+                        savedEntries = SidebarChoice.write(SidebarChoice.adding("videos", to: shown))
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                    .buttonStyle(.borderless)
+                    .disabled(shown.contains("videos"))
+                    .help(
+                        shown.contains("videos")
+                            ? "Everything is already shown" : "Add Music Videos to the sidebar")
                 }
             }
-            Section("Discover", isExpanded: $openDiscover) {
-                ForEach([SidebarItem.whatsNew, .find, .downloads, .importPlaylists], id: \.self) {
+            Section("Media Discovery", isExpanded: $openDiscover) {
+                // In the owner's order; each Explore sits under its Finder, set in a little.
+                ForEach(
+                    [
+                        SidebarItem.visualizer, .youtube, .musicExplore, .videoFinder, .videoExplore,
+                        .movieFinder, .downloads,
+                    ], id: \.self
+                ) {
                     entry in
-                    if entry == .downloads {
+                    if entry == .musicExplore || entry == .videoExplore {
+                        Label(entry.title, systemImage: entry.symbol).padding(.leading, 18)
+                        if entry == .musicExplore, !model.youtubeQueue.isEmpty {
+                            // Shown while anything is queued with Up Next.
+                            Label(
+                                SidebarItem.youtubeQueue.title,
+                                systemImage: SidebarItem.youtubeQueue.symbol
+                            )
+                            .padding(.leading, 18)
+                            .badge(model.youtubeQueue.count)
+                            .tag(SidebarItem.youtubeQueue)
+                        }
+                    } else if entry == .downloads {
                         Label(entry.title, systemImage: entry.symbol)
                             .badge(model.downloaded.count + model.pending.filter(\.isActive).count)
                             // Dragged back here, a download leaves the main library's lists.
@@ -461,6 +514,8 @@ struct MainView: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
+                Label(SidebarItem.importPlaylists.title, systemImage: SidebarItem.importPlaylists.symbol)
+                    .tag(SidebarItem.importPlaylists)
             } header: {
                 header("Playlists") {
                     Button { model.newPlaylist() } label: { Image(systemName: "plus") }
@@ -639,10 +694,27 @@ struct MainView: View {
                 PendingDownloads()
                 DownloadsByGenre()
             }
-        case .whatsNew:
-            WhatsNewView()
-        case .find:
-            FindView()
+        case .musicExplore:
+            MusicExploreView()
+        case .videoExplore:
+            VideoExploreView()
+        case .movieFinder:
+            MovieFinderView()
+        case .videoFinder:
+            ComingPage(
+                title: "Video Finder",
+                text: "Searching for any video isn't built yet. Explore, under it, has channels "
+                    + "to watch by section.")
+        case .channels:
+            ComingPage(
+                title: "Channel",
+                text: "The channels you follow will be listed here. Following a channel isn't "
+                    + "built yet: for now they're under Video Finder → Explore.")
+        case .movies:
+            ComingPage(
+                title: "Movies",
+                text: "Movies you download will be listed here, from your Movies folder. "
+                    + "Downloading a movie isn't built yet: Movie Finder has films to look through.")
         case .importPlaylists:
             ImportView()
         case .playlist(let id):

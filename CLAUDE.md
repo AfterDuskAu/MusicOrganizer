@@ -6,7 +6,7 @@ Standing rules for every Claude Code session in this project. Read this file, `d
 
 A personal music app that replaces Spotify, Apple Music and YouTube Music for a home library. Music comes from YouTube Music, and the app turns it into a clean, permanent, tagged library of files. This repo's `engine/` is the part with no UI. It scans, matches, downloads, tags and protects the library. From v0.2 a Mac app (SwiftUI) sits on top, and later a Windows app. Both talk to the engine over JSON-RPC.
 
-**v0.2 (from 2026-10-01): the Mac app** lives in `app/`, a Swift package: `MusicOrganizerKit` (the engine connection, the library's shape, the play queue, the lyrics parser, all tested without a window) and `MusicOrganizer` (the SwiftUI screens). `scripts/build_app.sh` builds `app/build/Music Organizer.app`. **The app never writes inside the library:** it reads audio and cover files to play and show them, and every change goes through the engine over JSON-RPC. What the app needs from the library, it asks the engine for (`library.tracks`, `library.lyrics`, `lyrics.for_video`, `listening.*`, `playlist.*`, `youtube.stream`, `youtube.video`, `discover.suggest`, `import.*`, `artist.*`, `account.*`, `sharing.*`); it doesn't parse tags or the index itself.
+**v0.2 (from 2026-10-01): the Mac app** lives in `app/`, a Swift package: `MusicOrganizerKit` (the engine connection, the library's shape, the play queue, the lyrics parser, all tested without a window) and `MusicOrganizer` (the SwiftUI screens). `scripts/build_app.sh` builds `app/build/Music Organizer.app`. **The app never writes inside the library:** it reads audio and cover files to play and show them, and every change goes through the engine over JSON-RPC. What the app needs from the library, it asks the engine for (`library.tracks`, `library.lyrics`, `lyrics.for_video`, `listening.*`, `playlist.*`, `addon.*`, `youtube.stream`, `youtube.video`, `discover.suggest`, `import.*`, `artist.*`, `account.*`, `sharing.*`); it doesn't parse tags or the index itself.
 
 **Looks (2026-10-03):** Settings → App Layout chooses how the app is dressed: "Apple Native Build" (macOS's own colours and type) or "Warm Look" (`AppLook` and `WarmPalette` in the Kit, `Theme` in the app). A screen takes its surfaces, the colour of its words and its headings' type from `Theme` (`dressed()`, `heading()`, `Theme.current.panel`), never a colour of its own, so it works in every look; and in the native look every one of those is macOS's own, so that look stays exactly as macOS draws it. A look is put on when the app opens.
 
@@ -21,12 +21,12 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
    - External folders (the owner's existing rips, friends' iTunes folders) are **read-only sources**: never renamed, retagged, moved or deleted. Only-copy tracks are *copied* into the library, and only the copy is tagged.
    - A playlist file the owner chooses to import (`playlistfile`) is read-only in the same way, and nothing of where it was is kept.
    - **Engine-owned exceptions:**
-     - the app's own config, log and cache folders (platformdirs): `config.json`, `accounts.json`, `downloads.json`, `devices.json`, logs, and yt-dlp's cache via its `cachedir` option
+     - the app's own config, log and cache folders (platformdirs): `config.json`, `accounts.json`, `downloads.json`, `devices.json`, `addons.json`, logs, and yt-dlp's cache via its `cachedir` option
      - exports the user asked for (`report`, `review export`, `auto-sample`), written only through `fileops.write_export()`, which never overwrites and refuses any path inside the library's managed folders or a registered source
 3. **All filesystem writes go through `musicorg.fileops`.** Other modules may not create, write, move, copy, rename, replace or delete files or folders. The only exceptions, enforced by an AST-based test (step 03a):
    - `state.py`: `state.json`, written atomically
    - `index.py`: owns the SQLite files (`index.sqlite`, `queue.sqlite`)
-   - `config.py`: `config.json`, and beside it `accounts.json` (sign-ins), `downloads.json` (the computer's count of the day's downloads) and `devices.json` (the devices paired for sharing), written atomically
+   - `config.py`: `config.json`, and beside it `accounts.json` (sign-ins), `downloads.json` (the computer's count of the day's downloads), `devices.json` (the devices paired for sharing) and `addons.json` (the owner's add-ons), written atomically
    - `tags.py`: its single mutagen save call, which only `fileops` ever calls, on staged copies
    - yt-dlp itself, writing **only** into the `_Staging/<batch_id>/` folder `fileops` hands it
    - a single line marked `# fileops-ok: in-memory`, for writes to in-memory buffers (e.g. Pillow saving into `BytesIO`)
@@ -67,6 +67,7 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
   - `discover`: songs the owner doesn't have, found from the ones they do (read-only; lookups through `youtube`)
   - `imports`: a playlist from elsewhere, each song found on YouTube Music (read-only; lookups through `youtube`)
   - `artist`: the Artist page: an artist's YouTube Music page, with which of their songs the owner has (read-only; lookups through `youtube`)
+  - `addons`: movies and channels: add-ons (the Stremio add-on protocol) read for their lists, details and streams (read-only; the only module that talks to add-ons; the owner's list of them is kept by `config`, in `addons.json`)
   - `kids`: a child's profile: only clean songs come back from a lookup (read-only; a filter over what `youtube` found, by its explicit mark)
   - `spotify`: signing in to Spotify in the browser (PKCE) and reading the owner's playlists; the only module that talks to Spotify, and it only reads
   - `deezer`: a public Deezer playlist or album, read by its link with no sign-in; the only module that talks to Deezer, and it only reads
@@ -139,5 +140,15 @@ Weekly mix, a Subsonic-compatible server (but see sharing, below), packaging, si
 - Read-only for the music files: the server never writes inside the library.
 - A device is paired once, with a six-digit code shown on the Mac.
 - The home network only, and only while Music Organizer is open: only callers with a private (RFC 1918), link-local or loopback address are answered, no port is ever opened on the router (no UPnP), and nothing is sent to the internet.
+
+**Videos and movies beside the music were started on 2026-10-07, at the owner's request** ("from now on it won't be a music organizer, but a media organiser"; the app keeps its name until the owner chooses a new one). The owner's decisions:
+
+- **Python, in this engine** (not a second runtime), and **a Mac app today**; a web page and Windows and Linux come later, over the same engine.
+- **The sidebar is the owner's drawing:** Music; Videos (Channel, Movies); Media Discovery (Visualizer, Music Finder with its Explore, Video Finder with its Explore, Movie Finder, Downloads); Playlists (with Import Playlists). What's New and Find are one page, Music Finder → Explore. **Ask for a drawing before changing how a screen looks.**
+- **The word "YouTube" is not shown anywhere in the app** (owner): sections are Music, Gaming, News, Sports, Learning, Podcasts, Movies. Not done yet for the pages that already say it.
+- **Where things will be kept:** songs and music videos in the library (the Music folder), as now; downloads of gaming, news, sports, learning and podcasts in `Downloads/Media`; movies in the `Movies` folder. **This changes rules 2 and 10 (more than one managed folder) and isn't built or written into the contract yet:** do that, with the owner, before the first download of either kind.
+- **Add-ons** are tested against the three the app starts with (film details, a list of channels, films in the public domain). **No add-on for pirated films is ever built in, tuned for or tested against.**
+
+Built: `addons` and `addon.*` (lists, details and streams, read-only), the new sidebar, Video Finder → Explore (channels by section, a channel's videos, playing one), and Movie Finder (lists, search, a film's page and where it can be played from). Still not yet: playing or downloading a film (a torrent needs a new dependency: ask first), the player for every kind of video file, following a channel, Video Finder's search, Learning and Podcasts, the Videos section's Channel and Movies pages, downloads of videos that aren't music, and movies on the phone.
 
 **The phone player is a separate project. It is never named, described or linked to here:** in code, docs, the changelog and commit messages it is "a phone player". Still not yet: favourites and play counts coming back from the phone, carrying on a file that was cut off, lyrics timed to a video, and a Subsonic-compatible server.

@@ -722,6 +722,26 @@
 - **Checked:** `pytest` (1,974 passed, eight new), `ruff check`, `swift build`, `swift test` (three new).
 - **Not checked:** in the running app with a real search: the ⋯ menu's switch, and the note on the search page. The artist page and import page don't show the note yet (the songs are left out there without a word); that waits for the owner's drawing of the new layout.
 
+2026-10-07, about 4:50pm. **Videos and movies beside the music: add-ons in the engine, the owner's new sidebar, Explore and Movie Finder.** The owner: "from now on it won't be a music organizer, but a media organiser", with a drawing of the sidebar and a plan for movies. Their decisions: build it in Python, a Mac app today (a web page, Windows and Linux later), and test against the channels add-on and Public Domain Movies.
+
+- **Engine: `addons`, a new read-only module** that speaks the Stremio add-on protocol: it reads an add-on's manifest (a word or an object for each resource; `stremio://` read as `https://`; only the last `/manifest.json` cut), builds every address one way, checks the manifest before asking so nothing pointless is sent, gives up after 8 seconds, and names an add-on that fails while the rest still answer. `addon.list`, `addon.add`, `addon.remove`, `addon.catalog`, `addon.details` and `addon.streams` (`docs/ENGINE_API.md`, with two new enums: stream kind and stream quality). The owner's list is kept in `addons.json` in the app's settings folder, written by `config`. It starts with three: Cinemeta (film details), the channels add-on, and Public Domain Movies.
+- **A stream's quality** is read from its name: "cam" for one filmed off a screen (cam, telesync, telecine), said before any size, or else 4k, 1080p, 720p and so on.
+- **`youtube.video` takes a `video_id`:** a channel's video or a trailer is shown as itself, with nothing looked for by name.
+- **The sidebar, as drawn:** Music (the library's entries, with "+" as before); Videos (Channel, Movies, and Music Videos, which "+" brings back if removed); Media Discovery (Visualizer, Music Finder with Explore under it, Video Finder with Explore under it, Movie Finder, Downloads); Playlists, with Import Playlists at its foot. "YouTube Music" is Music Finder, "Local Visualizer" is Visualizer, and What's New and Find are one page (Music Finder → Explore) with a switch between them. The last page open is still remembered: an old "What's New" or "Find" opens Explore.
+- **Video Finder → Explore:** channels in a grid, by section (Channels, Gaming, News, Sports, then the rest of the list's own genres), with Show More. A click opens a channel: its videos newest first; a double click plays one and carries on down the list, through the app's own player.
+- **Movie Finder:** the film lists of every add-on (Popular, By Year, Best Rated, Public Domain Movies), a genre where the list has them, a search where it has one, Show More. A click opens the film over its own picture: length, year, rating, genres, cast, directors, summary, a Trailer button, and under them where it can be played from, add-on by add-on, each with its quality.
+- **Deviations from the owner's plan, and why:**
+  - Python inside the engine instead of Node and Express, by the owner's choice today; and no web page or proxy, since the Mac app asks the engine directly.
+  - No torrent playing yet (the plan's 4c). It needs a new dependency, which `CLAUDE.md` says to ask about first; and the cross-platform player isn't chosen. Streams are listed, not played.
+  - The plan's own test add-on (Phase 5) wasn't made: the owner named two real ones to test against instead.
+- **Found while checking, for the owner:**
+  - **The channels add-on is a snapshot from 2023.** It answers quickly and its list of channels suits the grid, but a channel's newest video there is from October 2023, and its search answers with an error. For today's videos, and for following a channel, the app should read the channel itself through `youtube`; the add-on is the catalogue of who to look at.
+  - It has no Learning or Podcasts genre; the page says so. Those need another source.
+  - Films still in cinemas appear in Cinemeta's lists with their details; none of the three add-ons has a stream for them, and the page says "None of your lists has this film to play."
+- **Checked:** `pytest` (1,995 passed, 21 new for add-ons, replaying real answers recorded today), `ruff check`, `swift build`, `swift test` (86, four new). Live, once: the three manifests, channels by genre and a second page, a channel's videos, a film search, a film's details and streams. In the unseen test copy: the sidebar, Explore's grid, Movie Finder's grid, and a film's page.
+- **Not checked:** clicked or played in the running app: opening a channel, playing one of its videos (it plays as sound until the player page is switched to Video), the Trailer button, and the search box. The pages that already say "YouTube" in their words (the search page, some messages) still do.
+- **Not built, with a page that says so:** Video Finder (searching for any video), Videos → Channel (the channels you follow) and Videos → Movies (downloaded films).
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

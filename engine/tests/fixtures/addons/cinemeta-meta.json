@@ -1,0 +1,61 @@
+{
+ "meta": {
+  "awards": "2 wins total",
+  "cast": [
+   "Charles Chaplin",
+   "Edna Purviance",
+   "Jackie Coogan"
+  ],
+  "country": "United States",
+  "description": "The Tramp cares for an abandoned child, but events put their relationship in jeopardy.",
+  "director": [
+   "Charles Chaplin"
+  ],
+  "dvdRelease": "2016-09-02T00:00:00.000Z",
+  "genre": [
+   "Comedy",
+   "Drama",
+   "Family"
+  ],
+  "imdbRating": "8.2",
+  "imdb_id": "tt0012349",
+  "moviedb_id": 10098,
+  "name": "The Kid",
+  "popularity": 0.0719,
+  "poster": "https://images.metahub.space/poster/small/tt0012349/img",
+  "released": "1921-02-06T00:00:00.000Z",
+  "runtime": "68 min",
+  "trailers": [
+   {
+    "source": "O5WXokyub-4",
+    "type": "Trailer"
+   }
+  ],
+  "type": "movie",
+  "writer": [
+   "Charles Chaplin"
+  ],
+  "year": "1921",
+  "background": "https://images.metahub.space/background/medium/tt0012349/img",
+  "logo": "https://images.metahub.space/logo/medium/tt0012349/img",
+  "slug": "movie/the-kid-0012349",
+  "id": "tt0012349",
+  "genres": [
+   "Comedy",
+   "Drama",
+   "Family"
+  ],
+  "releaseInfo": "1921",
+  "videos": [],
+  "trailerStreams": [
+   {
+    "title": "The Kid",
+    "ytId": "O5WXokyub-4"
+   }
+  ],
+  "behaviorHints": {
+   "defaultVideoId": "tt0012349",
+   "hasScheduledVideos": false
+  }
+ }
+}

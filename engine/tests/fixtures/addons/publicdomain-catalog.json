@@ -1,0 +1,110 @@
+{
+ "metas": [
+  {
+   "name": "The Kid",
+   "type": "movie",
+   "id": "tt0012349",
+   "imdbRating": "8.3",
+   "poster": "https://m.media-amazon.com/images/M/MV5BZjhhMThhNDItNTY2MC00MmU1LTliNDEtNDdhZjdlNTY5ZDQ1XkEyXkFqcGdeQXVyNjc1NTYyMjg@._V1_SX300.jpg",
+   "releaseInfo": "1921",
+   "runtime": "68 min",
+   "description": "Rotten Tomatoes: 100% / The Tramp cares for an abandoned child, but events put their relationship in jeopardy.",
+   "cast": [
+    "Charles Chaplin",
+    "Edna Purviance",
+    "Jackie Coogan"
+   ],
+   "director": [
+    "Charles Chaplin"
+   ],
+   "writer": [
+    "Charles Chaplin"
+   ],
+   "genres": [
+    "Comedy",
+    "Drama",
+    "Family"
+   ]
+  },
+  {
+   "name": "Night of the Living Dead",
+   "type": "movie",
+   "id": "tt0063350",
+   "imdbRating": "7.8",
+   "poster": "https://m.media-amazon.com/images/M/MV5BMzRmN2E1ZDUtZDc2ZC00ZmI3LTkwOTctNzE2ZDIzMGJiMTYzXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_SX300.jpg",
+   "releaseInfo": "1968",
+   "runtime": "96 min",
+   "description": "Rotten Tomatoes: 96% / A ragtag group of Pennsylvanians barricade themselves in an old farmhouse to remain safe from a horde of flesh-eating ghouls that are ravaging the East Coast of the United States.",
+   "cast": [
+    "Duane Jones",
+    "Judith O'Dea",
+    "Karl Hardman"
+   ],
+   "director": [
+    "George A. Romero"
+   ],
+   "writer": [
+    "John A. Russo",
+    "George A. Romero"
+   ],
+   "genres": [
+    "Horror",
+    "Thriller"
+   ]
+  },
+  {
+   "name": "Häxan",
+   "type": "movie",
+   "id": "tt0013257",
+   "imdbRating": "7.6",
+   "poster": "https://m.media-amazon.com/images/M/MV5BNGJjOWY1NDUtZGEyZC00Y2VmLWIzZWUtZDRmODYwYmQzN2VmXkEyXkFqcGdeQXVyNDE5MTU2MDE@._V1_SX300.jpg",
+   "releaseInfo": "1922",
+   "runtime": "91 min",
+   "description": "Rotten Tomatoes: 91% / Fictionalized documentary showing the evolution of witchcraft, from its pagan roots to its confusion with hysteria in Eastern Europe.",
+   "cast": [
+    "Benjamin Christensen",
+    "Elisabeth Christensen",
+    "Maren Pedersen"
+   ],
+   "director": [
+    "Benjamin Christensen"
+   ],
+   "writer": [
+    "Benjamin Christensen"
+   ],
+   "genres": [
+    "Documentary",
+    "Fantasy",
+    "Horror"
+   ]
+  },
+  {
+   "name": "The Killer Shrews",
+   "type": "movie",
+   "id": "tt0052969",
+   "imdbRating": "4.1",
+   "poster": "https://m.media-amazon.com/images/M/MV5BZTg0ZjEzOTEtZjkwYy00ZDI2LTgwM2ItYWY3N2EyZDE3MGI2XkEyXkFqcGdeQXVyNjE5MjUyOTM@._V1_SX300.jpg",
+   "releaseInfo": "1959",
+   "runtime": "69 min",
+   "description": "Rotten Tomatoes: 44% / On an isolated island, a small group of people are terrorized by giant voracious shrews in the midst of a hurricane.",
+   "cast": [
+    "James Best",
+    "Ingrid Goude",
+    "Ken Curtis"
+   ],
+   "director": [
+    "Ray Kellogg"
+   ],
+   "writer": [
+    "Jay Simms"
+   ],
+   "genres": [
+    "Horror",
+    "Sci-Fi"
+   ]
+  }
+ ],
+ "cacheMaxAge": 604800,
+ "staleRevalidate": 7776000,
+ "staleError": 31104000
+}

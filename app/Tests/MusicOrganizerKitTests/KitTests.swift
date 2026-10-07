@@ -1672,3 +1672,67 @@ final class ChildProfileTests: XCTestCase {
         XCTAssertNil(try decoder.decode(SearchAnswer.self, from: plain).kidsNote)
     }
 }
+
+final class AddonTests: XCTestCase {
+    private let decoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return decoder
+    }()
+
+    func testTheExplorePageOffersTheOwnersSectionsThatTheAddonCanFill() {
+        let genres = ["Animation", "Gaming", "News & Politics", "Sports"]
+        let sections = VideoExplore.sections(for: genres)
+        XCTAssertEqual(sections.map(\.name), ["Channels", "Gaming", "News", "Sports", "Animation"])
+        XCTAssertEqual(sections.map(\.genre), [nil, "Gaming", "News & Politics", "Sports", "Animation"])
+        XCTAssertEqual(VideoExplore.missing(from: genres), ["Learning", "Podcasts"])
+        XCTAssertEqual(VideoExplore.sections(for: []).map(\.name), ["Channels"])
+    }
+
+    func testAnAddonAndItsListsAreRead() throws {
+        let said = Data(
+            #"""
+            {"addons":[{"id":"a","name":"A","version":"1","description":null,"address":"https://a.example/manifest.json",
+            "base":"https://a.example","types":["channel"],"resources":[],
+            "catalogs":[{"type":"channel","id":"top","name":null,"extra":[
+              {"name":"genre","required":false,"options":["Gaming"]},{"name":"skip","required":false,"options":[]}]},
+             {"type":"channel","id":"videos","name":null,"extra":[{"name":"search","required":true,"options":[]}]}]}]}
+            """#.utf8)
+        let addon = try XCTUnwrap(decoder.decode(AddonsAnswer.self, from: said).addons.first)
+        XCTAssertEqual(addon.catalogs[0].genres, ["Gaming"])
+        XCTAssertTrue(addon.catalogs[0].takes("skip"))
+        XCTAssertFalse(addon.catalogs[0].takes("search"))
+        XCTAssertTrue(addon.catalogs[1].needsSearch)
+    }
+
+    func testAStreamSaysWhatItIsInPlainWords() throws {
+        let said = Data(
+            #"""
+            {"sources":[{"addon_id":"a","addon":"A","streams":[
+              {"kind":"torrent","name":"1080p","title":"1.5 GB","quality":"1080p","url":null,"video_id":null,
+               "info_hash":"ab","file_index":0,"trackers":[]},
+              {"kind":"url","name":null,"title":null,"quality":"cam","url":"https://v.example/a.mp4","video_id":null,
+               "info_hash":null,"file_index":null,"trackers":[]}]}],
+             "problems":[{"addon":"B","message":"b.example took too long to answer."}]}
+            """#.utf8)
+        let answer = try decoder.decode(StreamsAnswer.self, from: said)
+        let streams = answer.sources[0].streams
+        XCTAssertEqual(streams.map(\.qualityLabel), ["1080p", "Cam"])
+        XCTAssertEqual(streams.map(\.kindLabel), ["Torrent", "Direct"])
+        XCTAssertEqual(answer.problems.first?.addon, "B")
+    }
+
+    func testAChannelsVideoIsReadWithItsDay() throws {
+        let said = Data(
+            #"""
+            {"id":"yt_id:C","type":"channel","name":"C","poster":null,"poster_shape":"square","year":null,
+             "rating":null,"genres":[],"description":null,"background":null,"logo":null,"runtime_min":null,
+             "cast":[],"directors":[],"trailer_video_id":null,
+             "videos":[{"id":"yt_id:C:abcdefghijk","title":"T","thumbnail":null,
+               "released":"2023-10-25T21:00:15.000Z","season":null,"episode":null,"video_id":"abcdefghijk"}]}
+            """#.utf8)
+        let details = try decoder.decode(MediaDetails.self, from: said)
+        XCTAssertEqual(details.videos.first?.day, "2023-10-25")
+        XCTAssertEqual(details.videos.first?.videoId, "abcdefghijk")
+    }
+}

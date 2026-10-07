@@ -127,6 +127,11 @@ final class AppModel {
     let lyrics = LyricsModel()
     /// Discover → What's New and Discover → Find: each keeps its own picks.
     let whatsNew = DiscoverPage(named: "whatsNew")
+    /// Movies and channels: the add-ons' lists, and what's open from them.
+    let media = MediaBrowser()
+    /// Videos played as themselves (a channel's video, a trailer): the picture shown is
+    /// that very video, not the official video of a song with its name.
+    @ObservationIgnored private var exactVideos = Set<String>()
     let find = DiscoverPage(named: "find")
     /// Discover → Import Playlists: a playlist from elsewhere, and what was found of it.
     let importing = ImportPage()
@@ -268,8 +273,15 @@ final class AppModel {
                 throw RPCError(code: RPCError.closed, message: "The engine isn't running.")
             }
             // A song with no artist to its name can't be told from others of its title.
-            guard let artist = track.artist ?? track.albumArtist else { return nil }
+            // (A video played as itself needs none: it's known by its id.)
+            let exact = track.videoId.map { self?.exactVideos.contains($0) == true } ?? false
+            guard let artist = track.artist ?? track.albumArtist ?? (exact ? "" : nil) else {
+                return nil
+            }
             var asked: [String: Any] = ["title": track.title, "artist": artist]
+            if let id = track.videoId, self?.exactVideos.contains(id) == true {
+                asked["video_id"] = id
+            }
             // A library song's file says which version it is (a rip named "Song R" is a
             // remix, whatever its title says), so a remix never gets the original's video.
             if track.videoId == nil { asked["path"] = track.path }
@@ -462,6 +474,20 @@ final class AppModel {
         } else if let data = try? JSONEncoder().encode(results) {
             UserDefaults.standard.set(data, forKey: key)
         }
+    }
+
+    /// Ask the engine something for a page that keeps its own answers.
+    func ask<T: Decodable>(_ method: String, _ params: [String: Any], as type: T.Type) async throws -> T {
+        guard let connection = engine?.connection else {
+            throw RPCError(code: RPCError.closed, message: "The engine isn't running.")
+        }
+        return try await connection.call(method, params, as: type)
+    }
+
+    /// Play videos as themselves (a channel's videos, a trailer), from one of them.
+    func playVideos(_ videos: [SearchResult], startAt index: Int) {
+        exactVideos.formUnion(videos.map(\.videoId))
+        player.play(videos.map(\.track), startAt: index)
     }
 
     /// Play the YouTube Queue from one of its songs.

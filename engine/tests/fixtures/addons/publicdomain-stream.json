@@ -1,0 +1,13 @@
+{
+ "streams": [
+  {
+   "infoHash": "5d640678eae57c72c0d096904fd7d7405ece6653",
+   "title": "💾 859.37 MB",
+   "fileIdx": 1,
+   "name": "1080p"
+  }
+ ],
+ "cacheMaxAge": 604800,
+ "staleRevalidate": 7776000,
+ "staleError": 31104000
+}

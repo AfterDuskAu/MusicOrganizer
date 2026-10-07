@@ -378,6 +378,43 @@ def save_devices(devices: list[dict[str, Any]]) -> None:
         ) from exc
 
 
+# ---- add-ons: where movies and channels are listed -----------------------------------------
+
+ADDONS_FILE_NAME = "addons.json"
+
+
+def addons_path() -> Path:
+    """Where the owner's add-ons are kept: beside config.json, in the app's own settings
+    folder. Each is an add-on's address and what its manifest said, nothing private."""
+    return app_dirs().config / ADDONS_FILE_NAME
+
+
+def load_addons() -> list[dict[str, Any]] | None:
+    """The add-ons the owner has, in their order. None when none were ever saved (the
+    app then starts with its own few); a damaged file reads the same way."""
+    try:
+        loaded = json.loads(addons_path().read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    listed = loaded.get("addons") if isinstance(loaded, dict) else None
+    if not isinstance(listed, list):
+        return None
+    return [dict(one) for one in listed if isinstance(one, dict)]
+
+
+def save_addons(addons: list[dict[str, Any]]) -> None:
+    """Replace the list of add-ons. Written atomically."""
+    path = addons_path()
+    ensure_app_dir(path.parent)
+    text = json.dumps({"addons": addons}, indent=2, ensure_ascii=False) + "\n"
+    try:
+        _write_atomic(path, text)
+    except OSError as exc:
+        raise ConfigError(
+            f"Couldn't save the list of add-ons on this computer: {exc.strerror or exc}."
+        ) from exc
+
+
 # ---- the day's downloads, for the whole computer ------------------------------------------
 
 DOWNLOAD_TIMES_FILE_NAME = "downloads.json"
