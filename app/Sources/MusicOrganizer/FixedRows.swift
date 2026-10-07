@@ -33,7 +33,34 @@ struct FixedRows: NSViewRepresentable {
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
+            apply()
             DispatchQueue.main.async { [weak self] in self?.apply() }
+            lookAgain(after: 0.05, tries: 8)
+        }
+
+        // The table is known by filling the same space as this view, which is only true
+        // once the page has been laid out. Asked just once, straight after the page was
+        // made, the answer was often "not yet", and nothing asked again until something
+        // else changed about a second later: until then the rows were the table's own,
+        // taller, height, and then shrank (the owner, 2026-10-07). So it's asked again
+        // whenever this view is given its place, and a few times shortly after.
+        override func setFrameSize(_ newSize: NSSize) {
+            super.setFrameSize(newSize)
+            if watched == nil { apply() }
+        }
+
+        override func setFrameOrigin(_ newOrigin: NSPoint) {
+            super.setFrameOrigin(newOrigin)
+            if watched == nil { apply() }
+        }
+
+        private func lookAgain(after seconds: TimeInterval, tries: Int) {
+            guard tries > 0 else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + seconds) { [weak self] in
+                guard let self, self.watched == nil else { return }
+                self.apply()
+                self.lookAgain(after: seconds, tries: tries - 1)
+            }
         }
 
         /// Find the table this view sits behind and fix its row height. It must be that

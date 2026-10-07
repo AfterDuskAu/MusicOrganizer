@@ -19,6 +19,20 @@ public struct Addon: Decodable, Identifiable, Hashable, Sendable {
         /// A list that can only be searched: it has nothing to show until something is typed.
         public var needsSearch: Bool { extra.contains { $0.name == "search" && $0.required } }
         public var genres: [String] { extra.first { $0.name == "genre" }?.options ?? [] }
+        /// A list that has to be asked with one of its genres (a list by year, whose
+        /// "genres" are the years): there's no "every" to show.
+        public var needsGenre: Bool { extra.contains { $0.name == "genre" && $0.required } }
+
+        /// The genre a list is asked with: the one chosen if the list has it; or else
+        /// none, unless the list needs one, when it's the first (the latest year).
+        public func genre(chosen: String) -> String? {
+            if genres.contains(chosen) { return chosen }
+            return needsGenre || id == "year" ? genres.first : nil
+        }
+
+        /// Whether "every genre" is on offer: not for a list that needs one, nor a list
+        /// by year (the owner: "remove every genre, and start it at the latest year").
+        public var offersEveryGenre: Bool { !(needsGenre || id == "year") }
     }
 
     public let id: String

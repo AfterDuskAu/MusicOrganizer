@@ -1703,6 +1703,24 @@ final class AddonTests: XCTestCase {
         XCTAssertTrue(addon.catalogs[0].takes("skip"))
         XCTAssertFalse(addon.catalogs[0].takes("search"))
         XCTAssertTrue(addon.catalogs[1].needsSearch)
+        // A list with genres offers "every genre" and asks with none until one is chosen.
+        XCTAssertTrue(addon.catalogs[0].offersEveryGenre)
+        XCTAssertNil(addon.catalogs[0].genre(chosen: ""))
+        XCTAssertEqual(addon.catalogs[0].genre(chosen: "Gaming"), "Gaming")
+        XCTAssertNil(addon.catalogs[0].genre(chosen: "Left over from another list"))
+    }
+
+    func testAListByYearStartsAtTheLatestYearAndHasNoEveryGenre() throws {
+        let said = Data(
+            #"""
+            {"type":"movie","id":"year","name":null,"extra":[
+              {"name":"genre","required":true,"options":["2026","2025","2024"]}]}
+            """#.utf8)
+        let byYear = try decoder.decode(Addon.Catalog.self, from: said)
+        XCTAssertFalse(byYear.offersEveryGenre)
+        XCTAssertEqual(byYear.genre(chosen: ""), "2026")
+        XCTAssertEqual(byYear.genre(chosen: "2024"), "2024")
+        XCTAssertEqual(byYear.genre(chosen: "Drama"), "2026")
     }
 
     func testAStreamSaysWhatItIsInPlainWords() throws {

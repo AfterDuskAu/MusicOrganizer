@@ -294,8 +294,13 @@ struct MovieFinderView: View {
                         .labelsHidden()
                         .fixedSize()
                         if !chosen.catalog.genres.isEmpty {
-                            Picker("Genre", selection: $genre) {
-                                Text("Every Genre").tag("")
+                            Picker(
+                                "Genre",
+                                selection: Binding(
+                                    get: { chosen.catalog.genre(chosen: genre) ?? "" },
+                                    set: { genre = $0 })
+                            ) {
+                                if chosen.catalog.offersEveryGenre { Text("Every Genre").tag("") }
                                 ForEach(chosen.catalog.genres, id: \.self) { Text($0).tag($0) }
                             }
                             .labelsHidden()
@@ -317,7 +322,7 @@ struct MovieFinderView: View {
                 .padding(.vertical, 12)
                 Divider()
                 if let chosen {
-                    let wanted = chosen.catalog.genres.contains(genre) ? genre : nil
+                    let wanted = chosen.catalog.genre(chosen: genre)
                     MediaGrid(list: media.films, width: 140, open: { opened = $0 }) {
                         Task {
                             await media.films.load(
@@ -336,9 +341,18 @@ struct MovieFinderView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
+            // The list stays as it was left (scrolled to the same place) while a film is
+            // open over it, but out of sight and out of reach: its search box showed
+            // through the film's page.
+            .opacity(opened == nil ? 1 : 0)
+            .allowsHitTesting(opened == nil)
             if let opened {
                 MovieView(film: opened) { self.opened = nil }
             }
+        }
+        .onChange(of: opened) { _, film in
+            // Let go of the search box, so its ring isn't drawn and typing goes nowhere.
+            if film != nil { NSApp.keyWindow?.makeFirstResponder(nil) }
         }
         .task(id: model.phase) { await media.load(model) }
     }
@@ -357,7 +371,7 @@ struct MovieFinderView: View {
         if let name = list.catalog.name, !name.isEmpty { return name }
         switch list.catalog.id {
         case "top": return "Popular"
-        case "year": return "By Year"
+        case "year": return "New"
         case "imdbRating": return "Best Rated"
         default: return list.addon.name
         }
