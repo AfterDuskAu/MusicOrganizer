@@ -315,7 +315,10 @@ struct MainView: View {
         // Over everything, the player bar included: the whole screen's own controls take
         // over.
         .overlay {
-            if model.pictureFullScreen {
+            if model.film.isOpen {
+                // A film has the whole window while it plays.
+                FilmPlayerView().environment(model)
+            } else if model.pictureFullScreen {
                 FullScreenPicture().environment(model)
             }
         }
@@ -711,10 +714,7 @@ struct MainView: View {
                 text: "The channels you follow will be listed here. Following a channel isn't "
                     + "built yet: for now they're under Video Finder → Explore.")
         case .movies:
-            ComingPage(
-                title: "Movies",
-                text: "Movies you download will be listed here, from your Movies folder. "
-                    + "Downloading a movie isn't built yet: Movie Finder has films to look through.")
+            MoviesView()
         case .importPlaylists:
             ImportView()
         case .playlist(let id):

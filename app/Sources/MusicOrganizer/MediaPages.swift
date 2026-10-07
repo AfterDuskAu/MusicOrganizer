@@ -1,5 +1,6 @@
 import MusicOrganizerKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Music Finder → Explore: What's New and Find together on one page (the owner's
 /// drawing, 2026-10-07). Each is the page it was; the switch at the top chooses.
@@ -447,6 +448,11 @@ struct MovieView: View {
                                 .lineLimit(1)
                             Spacer()
                             Text(stream.kindLabel).foregroundStyle(.secondary)
+                            Button("Play", systemImage: "play.fill") {
+                                model.play(stream, title: film.name)
+                            }
+                            .disabled(!stream.canPlay)
+                            .help(stream.canPlay ? "Play it now" : "This one can't be played in the app yet")
                         }
                         .padding(.vertical, 6)
                     }
@@ -454,9 +460,14 @@ struct MovieView: View {
                 ForEach(streams.problems, id: \.self) { problem in
                     Text("\(problem.addon): \(problem.message)").foregroundStyle(.secondary)
                 }
-                Text("Playing and downloading a film from here isn't built yet.")
+                if streams.sources.contains(where: { $0.streams.contains { $0.kind == "torrent" } }) {
+                    Text(
+                        "A torrent shares the parts it has fetched with others while it plays. "
+                            + "What's fetched is deleted when you close the film."
+                    )
                     .font(.callout)
                     .foregroundStyle(.secondary)
+                }
             }
             .frame(maxWidth: 760, alignment: .leading)
         }
@@ -482,6 +493,96 @@ struct MovieView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title.uppercased()).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
             content()
+        }
+    }
+}
+
+/// Videos → Movies: the video files in this Mac's Movies folder, and any other file the
+/// owner opens. Double-click plays one in the film player. Nothing here is changed.
+struct MoviesView: View {
+    @Environment(AppModel.self) private var model
+    @State private var files: [VideoFiles.File] = []
+    @State private var looked = false
+
+    private static var folder: URL? {
+        FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text("Movies").font(.title2.weight(.semibold)).heading()
+                        Text(files.count == 1 ? "1 file" : "\(files.count.formatted()) files")
+                            .foregroundStyle(.secondary)
+                    }
+                    Text("The video files in your Movies folder. Double-click one to play it.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button("Open File…", systemImage: "folder") { openFile() }
+                    .help("Play a video file from anywhere on this Mac")
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            Divider()
+            if files.isEmpty {
+                Text(looked ? "There are no video files in your Movies folder yet." : "Looking…")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List(files) { file in
+                    HStack(spacing: 12) {
+                        Image(systemName: "film").foregroundStyle(.secondary)
+                        Text(file.name).lineLimit(1)
+                        Spacer()
+                        Text(file.kind).foregroundStyle(.secondary)
+                        Text(ByteCountFormatter.string(fromByteCount: file.bytes, countStyle: .file))
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                            .frame(width: 90, alignment: .trailing)
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture(count: 2) { model.playFilm(file.url, title: file.name) }
+                }
+                .scrollContentBackground(Theme.current.listBackground)
+            }
+        }
+        .task {
+            guard let folder = Self.folder else { return }
+            // Off the main thread: a big folder takes a moment to walk.
+            files = await Task.detached { VideoFiles.inside(folder) }.value
+            looked = true
+            // For checking the player without a click: MUSICORG_FILM=<file> plays it once,
+            // silently; MUSICORG_FILM=torrent:<info-hash>:<file number> plays that torrent.
+            if let what = ProcessInfo.processInfo.environment["MUSICORG_FILM"], !model.film.isOpen {
+                model.film.volume = 0
+                let parts = what.split(separator: ":").map(String.init)
+                if parts.count == 3, parts[0] == "torrent" {
+                    let said = #"{"kind":"torrent","info_hash":"\#(parts[1])","file_index":\#(parts[2]),"trackers":[]}"#
+                    let decoder = JSONDecoder()
+                    decoder.keyDecodingStrategy = .convertFromSnakeCase
+                    if let stream = try? decoder.decode(MediaStream.self, from: Data(said.utf8)) {
+                        model.play(stream, title: "Check")
+                    }
+                } else {
+                    let url = URL(fileURLWithPath: what)
+                    model.playFilm(url, title: url.deletingPathExtension().lastPathComponent)
+                }
+            }
+        }
+    }
+
+    private func openFile() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.allowedContentTypes = [.movie, .video, .audiovisualContent]
+        panel.allowsOtherFileTypes = true
+        if panel.runModal() == .OK, let url = panel.url {
+            model.playFilm(url, title: url.deletingPathExtension().lastPathComponent)
         }
     }
 }

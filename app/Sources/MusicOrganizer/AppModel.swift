@@ -129,6 +129,11 @@ final class AppModel {
     let whatsNew = DiscoverPage(named: "whatsNew")
     /// Movies and channels: the add-ons' lists, and what's open from them.
     let media = MediaBrowser()
+    /// The player for films and video files (libmpv). One film at a time.
+    let film = FilmPlayer()
+    /// The torrent the film player is playing from, if it is, and how that's going.
+    private(set) var filmTorrent: String?
+    private(set) var filmStatus: TorrentStatus?
     /// Videos played as themselves (a channel's video, a trailer): the picture shown is
     /// that very video, not the official video of a song with its name.
     @ObservationIgnored private var exactVideos = Set<String>()
@@ -483,6 +488,61 @@ final class AppModel {
         }
         return try await connection.call(method, params, as: type)
     }
+
+    /// Play a film or a video file in the film player. The music stops for it.
+    func playFilm(_ address: URL, title: String) {
+        if player.isPlaying { player.toggle() }
+        film.open(address, title: title)
+    }
+
+    /// Play one of a film's streams: a web address or a torrent in the film player, a
+    /// video by its id in the app's own player.
+    func play(_ stream: MediaStream, title: String) {
+        switch stream.kind {
+        case "url":
+            if let url = stream.url.flatMap(URL.init(string:)) { playFilm(url, title: title) }
+        case "youtube":
+            if let id = stream.videoId {
+                playVideos([SearchResult(videoId: id, title: title, artists: [])], startAt: 0)
+            }
+        case "torrent":
+            guard let hash = stream.infoHash else { return }
+            Task { await playTorrent(hash, stream, title: title) }
+        default:
+            notice = "This one can't be played in the app yet."
+        }
+    }
+
+    /// Join a torrent through the engine and play its film as it arrives. The engine is
+    /// asked how it's going every two seconds, which also keeps the film open there.
+    private func playTorrent(_ hash: String, _ stream: MediaStream, title: String) async {
+        var asked: [String: Any] = ["info_hash": hash, "trackers": stream.trackers]
+        if let index = stream.fileIndex { asked["file_index"] = index }
+        do {
+            let playing = try await ask("torrent.play", asked, as: TorrentPlaying.self)
+            guard let url = URL(string: playing.url) else { return }
+            playFilm(url, title: title)
+            filmTorrent = playing.infoHash
+            while film.isOpen, filmTorrent == playing.infoHash {
+                filmStatus = try? await ask(
+                    "torrent.status", ["info_hash": playing.infoHash], as: TorrentStatus.self)
+                try? await Task.sleep(for: .seconds(2))
+            }
+        } catch {
+            notice = error.localizedDescription
+        }
+    }
+
+    /// Shut the film player. A film from a torrent is left, and what arrived is deleted.
+    func closeFilm() {
+        film.close()
+        if let hash = filmTorrent {
+            (filmTorrent, filmStatus) = (nil, nil)
+            Task { _ = try? await ask("torrent.stop", ["info_hash": hash], as: Empty.self) }
+        }
+    }
+
+    private struct Empty: Decodable {}
 
     /// Play videos as themselves (a channel's videos, a trailer), from one of them.
     func playVideos(_ videos: [SearchResult], startAt index: Int) {

@@ -2,8 +2,8 @@
 // The Mac app (v0.2). `MusicOrganizerKit` holds everything that can be tested without a
 // window: the engine connection, the library's shape, the play queue, the lyrics parser.
 // `MusicOrganizer` is the SwiftUI app. Build the double-clickable app with
-// scripts/build_app.sh. The app's one package from elsewhere is Particle Accelerator,
-// the owner's visuals project.
+// scripts/build_app.sh. The app's packages from elsewhere are Particle Accelerator, the
+// owner's visuals project, and MPVKit (libmpv), which plays films and video files.
 import PackageDescription
 
 let settings: [SwiftSetting] = [.swiftLanguageMode(.v5)]
@@ -18,6 +18,10 @@ let package = Package(
         .package(
             url: "https://github.com/AfterDuskAu/ParticleAccelerator",
             revision: "19474f060a24ffa917ad1ba544d763336fd2efe2"),
+        // libmpv, the player for films and for any video file (the owner's yes, 2026-10-07).
+        // MPVKit is mpv built as a Swift package; the `MPVKit` product is its LGPL build
+        // (never `MPVKit-GPL`). Pinned to one version, like the package above.
+        .package(url: "https://github.com/mpvkit/MPVKit.git", exact: "1.0.0"),
     ],
     targets: [
         .target(name: "MusicOrganizerKit", swiftSettings: settings),
@@ -26,6 +30,7 @@ let package = Package(
             dependencies: [
                 "MusicOrganizerKit",
                 .product(name: "ParticleAccelerator", package: "ParticleAccelerator"),
+                .product(name: "MPVKit", package: "MPVKit"),
             ],
             swiftSettings: settings),
         .testTarget(

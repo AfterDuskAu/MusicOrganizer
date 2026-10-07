@@ -67,10 +67,17 @@ from musicorg import (
     state,
     status,
     tags,
+    torrents,
     videolyrics,
     youtube,
 )
-from musicorg.config import MAX_DAILY_CAP, THROTTLE_DEFAULTS, Config, save_daily_cap
+from musicorg.config import (
+    MAX_DAILY_CAP,
+    THROTTLE_DEFAULTS,
+    Config,
+    app_dirs,
+    save_daily_cap,
+)
 from musicorg.errors import (
     LibraryLockedError,
     MusicOrgError,
@@ -262,6 +269,7 @@ class Server:
         # A child's profile: only clean songs are looked up. The app says so each time it
         # opens (`kids.set`); the engine keeps no "on" of its own.
         self._kids = {"on": False, "allow_explicit": False}
+        self._films: torrents.Player | None = None  # films playing from torrents, if any
         self.methods: dict[str, Callable[[dict[str, Any]], Any]] = {
             "engine.hello": self.engine_hello,
             "library.init": self.library_init,
@@ -321,6 +329,9 @@ class Server:
             "addon.catalog": self.addon_catalog,
             "addon.details": self.addon_details,
             "addon.streams": self.addon_streams,
+            "torrent.play": self.torrent_play,
+            "torrent.status": self.torrent_status,
+            "torrent.stop": self.torrent_stop,
             "sharing.status": self.sharing_status,
             "sharing.set": self.sharing_set,
             "sharing.pair": self.sharing_pair,
@@ -412,6 +423,7 @@ class Server:
         self.stopping.set()
         spotify.cancel_sign_in()  # stop listening for a sign-in nobody finished
         self._stop_sharing()  # first of all: nothing is shared once the app has gone
+        self._stop_films()  # and no torrent is left joined, nor its files kept
         deadline = time.monotonic() + SHUTDOWN_GRACE_S
         for thread in (self._queue_thread, self._job.thread if self._job else None):
             if thread is not None and thread.is_alive():
@@ -878,6 +890,39 @@ class Server:
 
     def addon_streams(self, params: dict[str, Any]) -> dict[str, Any]:
         return addons.streams(addons.listed(), need(params, "type", str), need(params, "id", str))
+
+    # -- methods: a film played from a torrent while it arrives (2026-10-07) --
+    # Only ever from the owner's click. What arrives is kept in the app's cache folder,
+    # never in the library, and is deleted when the film is closed.
+
+    def _stop_films(self) -> None:
+        films, self._films = self._films, None
+        if films is not None:
+            films.stop()
+
+    def torrent_play(self, params: dict[str, Any]) -> dict[str, Any]:
+        info_hash = need(params, "info_hash", str)
+        index = want(params, "file_index", int)
+        trackers = want(params, "trackers", list, []) or []
+        if not all(isinstance(t, str) for t in trackers):
+            raise RpcError(INVALID_PARAMS, "trackers should be a list of addresses.")
+        if self._films is None:
+            self._films = torrents.Player(app_dirs().cache)
+        return self._films.play(info_hash, index, trackers)
+
+    def torrent_status(self, params: dict[str, Any]) -> dict[str, Any]:
+        if self._films is None:
+            raise RpcError(USER_ERROR, "No film is being played from a torrent.")
+        return self._films.status(need(params, "info_hash", str))
+
+    def torrent_stop(self, params: dict[str, Any]) -> dict[str, Any]:
+        info_hash = want(params, "info_hash", str)
+        if self._films is not None:
+            if info_hash is None:
+                self._stop_films()
+            else:
+                self._films.close(info_hash)
+        return {}
 
     # -- methods: a child's profile (2026-10-07) --
 

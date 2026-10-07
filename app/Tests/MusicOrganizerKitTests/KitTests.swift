@@ -1710,7 +1710,7 @@ final class AddonTests: XCTestCase {
             #"""
             {"sources":[{"addon_id":"a","addon":"A","streams":[
               {"kind":"torrent","name":"1080p","title":"1.5 GB","quality":"1080p","url":null,"video_id":null,
-               "info_hash":"ab","file_index":0,"trackers":[]},
+               "info_hash":"ab","file_index":0,"trackers":["udp://t.example:80"]},
               {"kind":"url","name":null,"title":null,"quality":"cam","url":"https://v.example/a.mp4","video_id":null,
                "info_hash":null,"file_index":null,"trackers":[]}]}],
              "problems":[{"addon":"B","message":"b.example took too long to answer."}]}
@@ -1734,5 +1734,40 @@ final class AddonTests: XCTestCase {
         let details = try decoder.decode(MediaDetails.self, from: said)
         XCTAssertEqual(details.videos.first?.day, "2023-10-25")
         XCTAssertEqual(details.videos.first?.videoId, "abcdefghijk")
+    }
+}
+
+final class VideoFilesTests: XCTestCase {
+    func testOnlyVideoFilesAreListedByNameFromFoldersInsideToo() throws {
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("videofiles-\(UUID().uuidString)")
+        let inner = folder.appendingPathComponent("Old Films")
+        try FileManager.default.createDirectory(at: inner, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        for name in ["b film.MKV", "notes.txt", ".hidden.mp4", "Old Films/a film.avi"] {
+            try Data("x".utf8).write(to: folder.appendingPathComponent(name))
+        }
+        let found = VideoFiles.inside(folder)
+        XCTAssertEqual(found.map(\.name), ["a film", "b film"])
+        XCTAssertEqual(found.map(\.kind), ["AVI", "MKV"])
+        XCTAssertEqual(found.first?.bytes, 1)
+        XCTAssertEqual(VideoFiles.inside(folder.appendingPathComponent("missing")), [])
+    }
+}
+
+final class TorrentStatusTests: XCTestCase {
+    func testHowAFilmFromATorrentIsGettingOnInOneLine() {
+        XCTAssertEqual(
+            TorrentStatus(state: "finding", peers: 0, bytesPerSecond: 0, progress: 0).line,
+            "Finding the film…")
+        XCTAssertEqual(
+            TorrentStatus(state: "fetching", peers: 6, bytesPerSecond: 4_665_073, progress: 0.0948).line,
+            "6 sources · 4.7 MB/s · 9% here")
+        XCTAssertEqual(
+            TorrentStatus(state: "fetching", peers: 1, bytesPerSecond: 0, progress: 0).line,
+            "1 source · 0.0 MB/s · 0% here")
+        XCTAssertEqual(
+            TorrentStatus(state: "complete", peers: 3, bytesPerSecond: 0, progress: 1).line,
+            "All of the film is here")
     }
 }

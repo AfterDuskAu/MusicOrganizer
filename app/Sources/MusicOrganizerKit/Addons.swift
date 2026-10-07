@@ -89,6 +89,11 @@ public struct MediaStream: Decodable, Hashable, Sendable {
     public let url: String?
     public let videoId: String?
     public let infoHash: String?
+    public let fileIndex: Int?
+    public let trackers: [String]
+
+    /// Whether the app can play it: a plain web address, a video by its id, or a torrent.
+    public var canPlay: Bool { ["url", "youtube", "torrent"].contains(kind) }
 
     /// The picture's size as a label: "Cam" for one filmed off a screen.
     public var qualityLabel: String {
@@ -167,4 +172,36 @@ public enum VideoExplore {
     public static func missing(from genres: [String]) -> [String] {
         wanted.filter { !$0.genres.contains(where: genres.contains) }.map(\.name)
     }
+}
+
+/// How a film playing from a torrent is getting on (the engine's `torrent.status`).
+public struct TorrentStatus: Decodable, Equatable, Sendable {
+    public let state: String
+    public let peers: Int
+    public let bytesPerSecond: Int
+    public let progress: Double
+
+    public init(state: String, peers: Int, bytesPerSecond: Int, progress: Double) {
+        self.state = state
+        self.peers = peers
+        self.bytesPerSecond = bytesPerSecond
+        self.progress = progress
+    }
+
+    /// One line for the player: "Finding the film…", "6 sources · 4.6 MB/s · 9% here".
+    public var line: String {
+        switch state {
+        case "finding": return "Finding the film…"
+        case "complete": return "All of the film is here"
+        default:
+            let megabytes = String(format: "%.1f", Double(bytesPerSecond) / 1_000_000)
+            let sources = peers == 1 ? "1 source" : "\(peers) sources"
+            return "\(sources) · \(megabytes) MB/s · \(Int(progress * 100))% here"
+        }
+    }
+}
+
+public struct TorrentPlaying: Decodable, Sendable {
+    public let infoHash: String
+    public let url: String
 }

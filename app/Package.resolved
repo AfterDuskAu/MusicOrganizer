@@ -1,6 +1,15 @@
 {
-  "originHash" : "74333d3f40da38137472481a4a9a74088958b8307b4a4b94213116cfc98a060e",
+  "originHash" : "66ca479ceebb452d9d42c79fea1b5f4f58d5afdd47f4f9347116786d8fe6b9cd",
   "pins" : [
+    {
+      "identity" : "mpvkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/mpvkit/MPVKit.git",
+      "state" : {
+        "revision" : "288527dffbc6d3e63cce147fc7b520c64a791603",
+        "version" : "1.0.0"
+      }
+    },
     {
       "identity" : "particleaccelerator",
       "kind" : "remoteSourceControl",

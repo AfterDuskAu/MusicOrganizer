@@ -16,6 +16,7 @@ dependencies = [
     "platformdirs",
     "requests",
     "Pillow",
+    "libtorrent",
 ]
 
 [project.optional-dependencies]

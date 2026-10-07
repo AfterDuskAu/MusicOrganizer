@@ -1,0 +1,382 @@
+"""Playing a film from a torrent, while it arrives (the owner's yes to libtorrent, 2026-10-07).
+
+A stream from an add-on can be a torrent: an info-hash, and sometimes which file in it
+and some trackers. To play one, the engine joins the torrent, asks for the film's
+pieces in the order a player needs them, and hands the app an address on this
+computer (`http://127.0.0.1:<port>/…`) that the film player opens like any web video.
+The player asks for ranges of bytes, as players do; each range is answered as soon as
+its pieces are here, which is what makes seeking work.
+
+What the owner should know, and what this module holds to:
+
+- **A torrent shares as it fetches.** While a film plays, the pieces already here are
+  given to others in the same torrent. That is how BitTorrent works.
+- **No port is opened on the router** (no UPnP, no NAT-PMP), the same promise as
+  sharing with a phone.
+- **The address is for this computer only:** it listens on 127.0.0.1, and its path
+  carries a key made afresh each time the engine starts, so nothing else can ask.
+- **What arrives is kept in the app's cache folder**, never in the library, and is
+  deleted when the film is closed, after ten minutes unused, and when the engine
+  stops. libtorrent itself writes and deletes those files, in the one folder it is
+  given; this module opens them only to read.
+- Nothing starts by itself: only `torrent.play`, from the owner's click.
+
+In replay mode (`MUSICORG_REPLAY_DIR`, every test) no torrent is ever joined:
+`_new_session` refuses.
+"""
+
+from __future__ import annotations
+
+import logging
+import os
+import re
+import secrets
+import threading
+import time
+from dataclasses import dataclass, field
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from typing import Any, Protocol
+
+from musicorg.errors import ReplayMissError, UserError
+
+log = logging.getLogger(__name__)
+
+REPLAY_ENV = "MUSICORG_REPLAY_DIR"
+INFO_HASH = re.compile(r"[0-9a-f]{40}")
+VIDEO_ENDINGS = frozenset(
+    {"mkv", "mp4", "m4v", "mov", "avi", "webm", "wmv", "flv", "mpg", "mpeg", "ts", "m2ts"}
+)
+CONTENT_TYPES = {
+    "mp4": "video/mp4", "m4v": "video/mp4", "mov": "video/quicktime", "webm": "video/webm",
+    "mkv": "video/x-matroska", "avi": "video/x-msvideo",
+}  # fmt: skip
+METADATA_WAIT_S = 120  # how long a player's first question waits for the torrent's details
+PIECE_WAIT_S = 120  # how long a range waits for its next piece before giving up
+AHEAD_PIECES = 12  # asked for ahead of where the player is reading
+IDLE_S = 600  # a film nobody has asked about for this long is closed
+CHUNK = 256 * 1024
+
+
+class TorrentError(UserError):
+    """A torrent couldn't be joined or played. The message is for the owner."""
+
+
+# ---- the parts with no network in them ---------------------------------------------------
+
+
+def magnet(info_hash: str, trackers: list[str] | tuple[str, ...] = ()) -> str:
+    from urllib.parse import quote
+
+    if not INFO_HASH.fullmatch(info_hash):
+        raise TorrentError("That isn't a torrent's id.")
+    return f"magnet:?xt=urn:btih:{info_hash}" + "".join(
+        f"&tr={quote(tracker, safe='')}" for tracker in trackers
+    )
+
+
+def choose_file(files: list[tuple[str, int]], wanted: int | None) -> int:
+    """Which file in a torrent is the film: the one the add-on named, or else the
+    biggest video file (or the biggest file, if none looks like a video)."""
+    if not files:
+        raise TorrentError("That torrent has no files in it.")
+    if wanted is not None and 0 <= wanted < len(files):
+        return wanted
+    videos = [i for i, (name, _) in enumerate(files) if _ending(name) in VIDEO_ENDINGS]
+    return max(videos or range(len(files)), key=lambda i: files[i][1])
+
+
+def _ending(name: str) -> str:
+    return name.rsplit(".", 1)[-1].lower() if "." in name else ""
+
+
+def content_type(name: str) -> str:
+    return CONTENT_TYPES.get(_ending(name), "application/octet-stream")
+
+
+def parse_range(header: str | None, size: int) -> tuple[int, int] | None:
+    """The first and last byte a `Range` header asks for, in a file of `size` bytes:
+    all of it when there's no header, None when the range can't be met (HTTP 416)."""
+    if size <= 0:
+        return None
+    if not header:
+        return 0, size - 1
+    found = re.fullmatch(r"\s*bytes=(\d*)-(\d*)\s*", header)
+    if found is None or (not found.group(1) and not found.group(2)):
+        return None
+    if not found.group(1):  # "-500": the last 500 bytes
+        length = int(found.group(2))
+        return (max(size - length, 0), size - 1) if length else None
+    first = int(found.group(1))
+    last = min(int(found.group(2)), size - 1) if found.group(2) else size - 1
+    return (first, last) if first <= last and first < size else None
+
+
+class Film(Protocol):
+    """A film as the address serves it: its name and size, and its bytes once here."""
+
+    name: str
+    size: int
+
+    def read(self, offset: int, length: int) -> bytes | None:
+        """Bytes from `offset`, at most `length` of them and at least one, waiting for
+        them to arrive. None when they didn't come in time or the film was closed."""
+
+
+# ---- the address the film player opens ---------------------------------------------------
+
+
+def serve(handler: BaseHTTPRequestHandler, film: Film, *, head: bool = False) -> None:
+    """Answer one question about a film: the whole of it, or the range asked for."""
+    wanted = parse_range(handler.headers.get("Range"), film.size)
+    if wanted is None:
+        handler.send_response(416)
+        handler.send_header("Content-Range", f"bytes */{film.size}")
+        handler.end_headers()
+        return
+    first, last = wanted
+    partial = handler.headers.get("Range") is not None
+    handler.send_response(206 if partial else 200)
+    handler.send_header("Content-Type", content_type(film.name))
+    handler.send_header("Accept-Ranges", "bytes")
+    handler.send_header("Content-Length", str(last - first + 1))
+    if partial:
+        handler.send_header("Content-Range", f"bytes {first}-{last}/{film.size}")
+    handler.end_headers()
+    if head:
+        return
+    offset = first
+    while offset <= last:
+        data = film.read(offset, min(CHUNK, last - offset + 1))
+        if not data:
+            return  # it didn't arrive, or the film was closed: the player asks again
+        try:
+            handler.wfile.write(data)
+        except OSError:
+            return  # the player went elsewhere (a seek, or it was shut)
+        offset += len(data)
+
+
+# ---- libtorrent: the only place a torrent is joined --------------------------------------
+
+
+def _new_session() -> Any:
+    if os.environ.get(REPLAY_ENV):
+        raise ReplayMissError(
+            "Replay mode: no torrent is joined. Stand in for torrents._new_session."
+        )
+    import libtorrent as lt
+
+    return lt.session(
+        {
+            "listen_interfaces": "0.0.0.0:0",  # any free port, chosen by the system
+            "enable_upnp": False,  # no port is opened on the router
+            "enable_natpmp": False,
+            "enable_dht": True,
+            "enable_lsd": False,
+            "user_agent": "musicorg",
+            "alert_mask": 0,
+        }
+    )
+
+
+@dataclass
+class _Joined:
+    """One torrent that's been joined: libtorrent's handle, and the film in it."""
+
+    handle: Any
+    info_hash: str
+    file_index: int | None
+    folder: Path
+    last_asked: float = field(default_factory=time.monotonic)
+    closed: bool = False
+    # Filled in once the torrent's details have arrived:
+    name: str = ""
+    size: int = 0
+    path: Path | None = None
+    file_offset: int = 0
+    piece_length: int = 0
+
+    def asked_now(self) -> None:
+        self.last_asked = time.monotonic()
+
+    def ready(self, wait_s: float) -> bool:
+        """Wait for the torrent's details (its files), and choose the film in it."""
+        until = time.monotonic() + wait_s
+        while self.path is None:
+            if self.closed or time.monotonic() > until:
+                return False
+            info = self.handle.torrent_file() if self.handle.is_valid() else None
+            if info is None:
+                time.sleep(0.25)
+                continue
+            files = info.files()
+            listed = [(files.file_path(i), files.file_size(i)) for i in range(files.num_files())]
+            chosen = choose_file(listed, self.file_index)
+            # Only the film is fetched, in the order it's read.
+            self.handle.prioritize_files([4 if i == chosen else 0 for i in range(len(listed))])
+            self.name, self.size = Path(listed[chosen][0]).name, listed[chosen][1]
+            self.file_offset = files.file_offset(chosen)
+            self.piece_length = info.piece_length()
+            self.path = self.folder / listed[chosen][0]
+        return True
+
+    def read(self, offset: int, length: int) -> bytes | None:
+        self.asked_now()
+        if self.path is None or self.closed:
+            return None
+        place = self.file_offset + offset
+        piece = place // self.piece_length
+        # Up to the end of this piece: the next one may not be here yet.
+        length = min(length, (piece + 1) * self.piece_length - place)
+        last_piece = (self.file_offset + self.size - 1) // self.piece_length
+        for ahead, wanted in enumerate(range(piece, min(piece + AHEAD_PIECES, last_piece) + 1)):
+            self.handle.set_piece_deadline(wanted, 500 * (ahead + 1))
+        until = time.monotonic() + PIECE_WAIT_S
+        while not self.handle.have_piece(piece):
+            if self.closed or time.monotonic() > until:
+                return None
+            time.sleep(0.1)
+        try:
+            with self.path.open("rb") as file:
+                file.seek(offset)
+                return file.read(length) or None
+        except OSError:
+            return None
+
+    def status(self) -> dict[str, Any]:
+        self.asked_now()
+        told = self.handle.status()
+        if self.path is None:
+            state = "finding"
+        elif told.progress_ppm >= 1_000_000 or told.is_seeding:
+            state = "complete"
+        else:
+            state = "fetching"
+        return {
+            "info_hash": self.info_hash,
+            "state": state,
+            "name": self.name or None,
+            "bytes": self.size or None,
+            "peers": int(told.num_peers),
+            "bytes_per_second": int(told.download_rate),
+            "progress": round(told.progress_ppm / 1_000_000, 4),
+        }
+
+
+class Player:
+    """The films being played from torrents, and the address they're played at. One
+    for the engine, made the first time a film is asked for."""
+
+    def __init__(self, cache: Path) -> None:
+        self.folder = cache / "torrents"
+        self._key = secrets.token_urlsafe(24)
+        self._session: Any = None
+        self._server: ThreadingHTTPServer | None = None
+        self._joined: dict[str, _Joined] = {}
+        self._lock = threading.Lock()
+        self._stopping = threading.Event()
+
+    # -- what the app asks for --
+
+    def play(self, info_hash: str, file_index: int | None, trackers: list[str]) -> dict[str, Any]:
+        """Join a torrent (or carry on with one already joined) and give the address
+        its film plays at. Returns at once: the address waits for the film."""
+        info_hash = info_hash.lower()
+        link = magnet(info_hash, trackers)
+        with self._lock:
+            self._start()
+            joined = self._joined.get(info_hash)
+            if joined is None:
+                import libtorrent as lt
+
+                params = lt.parse_magnet_uri(link)
+                params.save_path = str(self.folder)
+                handle = self._session.add_torrent(params)
+                joined = _Joined(handle, info_hash, file_index, self.folder)
+                self._joined[info_hash] = joined
+            joined.asked_now()
+            port = self._server.server_address[1] if self._server else 0
+        return {"info_hash": info_hash, "url": f"http://127.0.0.1:{port}/{self._key}/{info_hash}"}
+
+    def status(self, info_hash: str) -> dict[str, Any]:
+        joined = self._joined.get(info_hash.lower())
+        if joined is None:
+            raise TorrentError("That film isn't being played any more.")
+        return joined.status()
+
+    def close(self, info_hash: str) -> None:
+        """Leave a torrent and delete what arrived of it."""
+        with self._lock:
+            joined = self._joined.pop(info_hash.lower(), None)
+        if joined is not None:
+            self._leave(joined)
+
+    def stop(self) -> None:
+        """Leave every torrent, delete what arrived, and stop listening."""
+        self._stopping.set()
+        with self._lock:
+            leaving, self._joined = list(self._joined.values()), {}
+            server, self._server = self._server, None
+        for joined in leaving:
+            self._leave(joined)
+        if server is not None:
+            server.shutdown()
+            server.server_close()
+        if leaving and self._session is not None:
+            time.sleep(1)  # libtorrent deletes the files on its own thread
+        self._session = None
+
+    # -- the workings --
+
+    def _leave(self, joined: _Joined) -> None:
+        joined.closed = True
+        if self._session is not None and joined.handle.is_valid():
+            import libtorrent as lt
+
+            # libtorrent deletes its own files: this module never does.
+            self._session.remove_torrent(joined.handle, lt.session.delete_files)
+
+    def _start(self) -> None:
+        if self._session is not None:
+            return
+        self._session = _new_session()
+        self._stopping.clear()
+        player = self
+
+        class Handler(BaseHTTPRequestHandler):
+            protocol_version = "HTTP/1.1"
+
+            def log_message(self, format: str, *args: Any) -> None:
+                pass  # nothing on stdout or stderr: stdout carries the protocol
+
+            def do_GET(self) -> None:
+                player._answer(self, head=False)
+
+            def do_HEAD(self) -> None:
+                player._answer(self, head=True)
+
+        self._server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self._server.daemon_threads = True
+        threading.Thread(target=self._server.serve_forever, daemon=True).start()
+        threading.Thread(target=self._close_idle, daemon=True).start()
+
+    def _answer(self, handler: BaseHTTPRequestHandler, *, head: bool) -> None:
+        parts = handler.path.split("?", 1)[0].strip("/").split("/")
+        joined = self._joined.get(parts[1]) if len(parts) == 2 else None
+        if len(parts) != 2 or not secrets.compare_digest(parts[0], self._key) or joined is None:
+            handler.send_error(404)
+            return
+        joined.asked_now()
+        if not joined.ready(METADATA_WAIT_S):
+            handler.send_error(504, "The torrent's details didn't arrive.")
+            return
+        serve(handler, joined, head=head)
+
+    def _close_idle(self) -> None:
+        while not self._stopping.wait(30):
+            now = time.monotonic()
+            for joined in list(self._joined.values()):
+                if now - joined.last_asked > IDLE_S:
+                    log.info("A film nobody asked about for ten minutes was closed.")
+                    self.close(joined.info_hash)
