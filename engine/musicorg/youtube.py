@@ -1199,6 +1199,10 @@ class VideoQuality:
     height: int  # 1080 for "1080p"
     fps: int
     url: str
+    # For a long video's segmented picture (see `video`): what a playlist says of it.
+    codec: str | None = None  # "avc1.64001F"
+    kbps: float | None = None
+    width: int | None = None
 
     @property
     def label(self) -> str:
@@ -1212,6 +1216,10 @@ class Video:
     video_id: str
     audio: Stream
     qualities: tuple[VideoQuality, ...]  # the sharpest first
+    # A long video: `audio` and every quality are HLS playlists of six-second segments,
+    # not whole files, and a picture needs a list written for it to be played (`relay`).
+    segmented: bool = False
+    sound_codec: str | None = None
 
 
 def stream(video_id: str) -> Stream:
@@ -1219,8 +1227,12 @@ def stream(video_id: str) -> Stream:
     downloaded or written. The address is YouTube's and stops working after a few
     hours, so it's asked for each time a song is played, through the shared rate limiter.
 
-    Raises the same errors as `download_audio`."""
-    return _audio_of(video_id, _look_up(video_id))
+    Raises the same errors as `download_audio`.
+
+    A long video's sound is given as its segmented (HLS) sound instead: see `video`."""
+    info = _look_up(video_id)
+    long = _segmented(video_id, info)
+    return long.audio if long is not None else _audio_of(video_id, info)
 
 
 def video(video_id: str) -> Video:
@@ -1233,6 +1245,9 @@ def video(video_id: str) -> Video:
     `formats` carries `vcodec` ("avc1.640028"), `acodec` ("none" for picture only),
     `ext`, `protocol` ("https" or "m3u8_native"), `height`, `fps`, `tbr` and `url`."""
     info = _look_up(video_id)
+    long = _segmented(video_id, info)
+    if long is not None and long.qualities:
+        return long
     best: dict[tuple[int, int], tuple[float, str]] = {}
     for found in info.get("formats") or []:
         if not isinstance(found, dict) or not _is_playable_picture(found):
@@ -1480,6 +1495,76 @@ def _square_picture(thumbnails: Any) -> str | None:
         return max(square, key=lambda t: t["width"])["url"]
     named = [t for t in _pictures(thumbnails) if t.get("id") == "avatar_uncropped"]
     return named[0]["url"] if named else None
+
+
+# A video this long is played from YouTube's segmented formats (found 2026-10-07, checked
+# against yt-dlp 2026.08.19). Apple's player has to read the whole of an ordinary file
+# before it starts, and YouTube sends a large one slowly when asked for it whole (an hour
+# of format 140 at about 32 KB/s), so a long video never started. Its HLS formats are
+# six-second segments that start in a second or two: `protocol` is "m3u8_native", `url`
+# a playlist; sound is format 234 (AAC-LC, about 128 kbps; 233 is the smaller HE-AAC),
+# one for each language of a dubbed video ("234-20") with `language_preference` 10 on
+# the original; pictures are 269, 229-232 and 270 (H.264, 144p to 1080p), with no sound
+# in them. Ten minutes of format 140 is under 10 MB and still arrives at once.
+LONG_S = 600
+_SEGMENTED_SOUND = {"234": "mp4a.40.2", "233": "mp4a.40.5"}  # the better one first
+
+
+def _segmented(video_id: str, info: dict[str, Any]) -> Video | None:
+    """A long video's segmented sound and pictures, or None: it isn't long, or YouTube
+    offers no segmented sound for it (it's then played the ordinary way, as before)."""
+    length = info.get("duration")
+    if not isinstance(length, int | float) or isinstance(length, bool) or length < LONG_S:
+        return None
+    formats = [
+        f
+        for f in info.get("formats") or []
+        if isinstance(f, dict)
+        and f.get("protocol") == "m3u8_native"
+        and isinstance(f.get("url"), str)
+        and f["url"].startswith("https://")
+    ]
+    sound: dict[str, Any] | None = None
+    for number in _SEGMENTED_SOUND:
+        offered = [f for f in formats if str(f.get("format_id") or "").split("-")[0] == number]
+        if offered:
+            sound = max(offered, key=lambda f: f.get("language_preference") or 0)
+            break
+    if sound is None:
+        return None
+    best: dict[tuple[int, int], dict[str, Any]] = {}
+    for found in formats:
+        codec = str(found.get("vcodec") or "")
+        if not codec.startswith("avc1") or not isinstance(found.get("height"), int):
+            continue
+        key = (int(found["height"]), round(float(found.get("fps") or 0)))
+        if key not in best or float(found.get("tbr") or 0) > float(best[key].get("tbr") or 0):
+            best[key] = found
+    qualities = tuple(
+        VideoQuality(
+            height,
+            fps,
+            best[height, fps]["url"],
+            codec=str(best[height, fps]["vcodec"]),
+            kbps=float(best[height, fps].get("tbr") or 0) or None,
+            width=best[height, fps].get("width")
+            if isinstance(best[height, fps].get("width"), int)
+            else None,
+        )
+        for height, fps in sorted(best, reverse=True)
+    )
+    headers = info.get("http_headers")
+    likes = info.get("like_count")
+    audio = Stream(
+        url=sound["url"],
+        headers={str(k): str(v) for k, v in headers.items()} if isinstance(headers, dict) else {},
+        duration_s=float(length),
+        likes=likes
+        if isinstance(likes, int) and not isinstance(likes, bool) and likes >= 0
+        else None,
+    )
+    number = str(sound.get("format_id") or "").split("-")[0]
+    return Video(video_id, audio, qualities, segmented=True, sound_codec=_SEGMENTED_SOUND[number])
 
 
 def _is_playable_picture(found: dict[str, Any]) -> bool:

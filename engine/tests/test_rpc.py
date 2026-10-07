@@ -556,11 +556,35 @@ def test_stream_jobs_and_the_new_plan_kinds(
         "found": True, "video_id": "W5hSdGt2M8w", "title": "Work Out", "duration_s": 245.0,
         "http_headers": {"User-Agent": "x"}, "audio_url": "https://example.invalid/a",
         "likes": None,  # YouTube hid the count
+        "segmented": False,
         "qualities": [
             {"label": "1080p60", "height": 1080, "fps": 60, "url": "https://example.invalid/v1"},
             {"label": "720p", "height": 720, "fps": 24, "url": "https://example.invalid/v2"},
         ],
     }  # fmt: skip
+
+    # A long video: each picture's address is a playlist on this computer, written here,
+    # naming that picture and the sound.
+    def long_video(video_id: str) -> youtube.Video:
+        sound = youtube.Stream("https://example.invalid/s.m3u8", {}, 3479.0)
+        size = youtube.VideoQuality(
+            720, 30, "https://example.invalid/p.m3u8", codec="avc1.64001F", kbps=2600.0
+        )
+        return youtube.Video(video_id, sound, (size,), segmented=True, sound_codec="mp4a.40.2")
+
+    monkeypatch.setattr(youtube, "video", long_video)
+    long = result(opened, "youtube.video", title="T", artist="", video_id="W5hSdGt2M8w")
+    assert long["segmented"] is True and long["audio_url"] == "https://example.invalid/s.m3u8"
+    (size,) = long["qualities"]
+    assert size["url"].startswith("http://127.0.0.1:") and size["url"].endswith(".m3u8")
+    from urllib.request import urlopen
+
+    with urlopen(size["url"], timeout=5) as answer:  # noqa: S310
+        text = answer.read().decode()
+    assert (
+        "https://example.invalid/p.m3u8" in text and 'URI="https://example.invalid/s.m3u8"' in text
+    )
+    monkeypatch.setattr(youtube, "video", video)
     assert result(opened, "youtube.video", title="cLOUDs", artist="J. Cole") == {"found": False}
     # A library song's path tells its version: the rip was "Work Out R", a remix, so the
     # original's video isn't its video.

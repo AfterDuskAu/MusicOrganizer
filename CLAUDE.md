@@ -71,6 +71,7 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
   - `artist`: the Artist page: an artist's YouTube Music page, with which of their songs the owner has (read-only; lookups through `youtube`)
   - `addons`: movies and channels: add-ons (the Stremio add-on protocol) read for their lists, details and streams (read-only; the only module that talks to add-ons; the owner's list of them is kept by `config`, in `addons.json`)
   - `torrents`: a film played from a torrent while it arrives, at an address on this computer only (libtorrent; no port opened on the router; what arrives stays in the app's cache folder and is deleted when the film is closed)
+  - `relay`: a long video's playlist (one picture size and its sound, as YouTube's own segments), written for the app's player and read by it from an address on this computer only (no sound or picture passes through it, and it writes nothing)
   - `kids`: a child's profile: only clean songs come back from a lookup (read-only; a filter over what `youtube` found, by its explicit mark)
   - `spotify`: signing in to Spotify in the browser (PKCE) and reading the owner's playlists; the only module that talks to Spotify, and it only reads
   - `deezer`: a public Deezer playlist or album, read by its link with no sign-in; the only module that talks to Deezer, and it only reads

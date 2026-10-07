@@ -25,12 +25,16 @@ public struct VideoAnswer: Decodable, Sendable {
     public let qualities: [Quality]?
     /// The video's own thumbs-up count on YouTube, when YouTube shows one.
     public let likes: Int?
+    /// A long video: each picture's address is a playlist of short segments with the
+    /// sound already in it, played as it is, not a file to be joined to the sound.
+    public let segmented: Bool?
 
     public init(
         found: Bool, videoId: String? = nil, title: String? = nil, durationS: Double? = nil,
         httpHeaders: [String: String]? = nil, audioUrl: String? = nil, qualities: [Quality]? = nil,
-        likes: Int? = nil
+        likes: Int? = nil, segmented: Bool? = nil
     ) {
+        self.segmented = segmented
         self.found = found
         self.videoId = videoId
         self.title = title
@@ -73,6 +77,9 @@ public struct SongVideo: Equatable, Sendable {
     public let qualities: [Quality]
     /// The video's thumbs-up count on YouTube, when YouTube shows one.
     public let likes: Int?
+    /// A long video: each picture comes as a playlist with the sound in it (see
+    /// `VideoAnswer.segmented`), so there's nothing to join.
+    public let segmented: Bool
 
     /// Nil unless the engine found a video with everything needed to play it.
     public init?(_ answer: VideoAnswer) {
@@ -91,6 +98,7 @@ public struct SongVideo: Equatable, Sendable {
         self.headers = answer.httpHeaders ?? [:]
         self.qualities = qualities
         self.likes = answer.likes
+        self.segmented = answer.segmented ?? false
     }
 
     /// The picture to show. With nothing chosen, the sharpest. Otherwise the very size

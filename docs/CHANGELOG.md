@@ -870,6 +870,18 @@
 - **Checked:** `pytest` (2,042 passed), `ruff`, `swift build`, `swift test` (97). By eye in the owner's app: the two Settings changes, Video Finder's ages and menu, the close button's place, no outline, likes on the player page.
 - **Not checked:** the new play setting switched on; each order of the sort menu (tested in the Kit); Explore's sections after the change; a short dubbed video playing.
 
+2026-10-08, just after midnight. **Long videos play.** The owner: "fix".
+
+- **Why they didn't,** measured: Apple's player has to read the whole of one of YouTube's ordinary files before it plays any of it, and YouTube sends a large file slowly when asked for it whole. Fetching it in pieces and passing it on (tried first) got an hour of sound going in six seconds, but an hour of picture is 750 MB and never would.
+- **What's done instead:** a video of ten minutes or more is played from YouTube's segmented (HLS) formats, which start in a second or two (`youtube._segmented`, `LONG_S`). Sound: format 234, in the original language of a dubbed video (233 if that's all there is). Pictures: the H.264 ones, 144p to 1080p. Checked against yt-dlp 2026.08.19.
+- **Two things Apple's player wouldn't do with those,** each tried: YouTube's own list of them includes VP9 pictures, and the player stopped on one after a second; and a picture's segments alone, with no list saying what they are, never started. A list naming one H.264 picture and the sound plays at once.
+- **`relay` (new module)** writes that list and gives the app an address to read it from: 127.0.0.1 only, with a key made afresh each run, like the film player's. Only the few lines of the list pass through it; the player fetches sound and picture from YouTube itself, as before. It writes no file and is stopped with the engine.
+- **`youtube.video` answers `segmented: true`** for such a video, and the app plays the picture's address as it is (sound and picture are one stream there) rather than joining two files. `youtube.stream` gives the HLS sound. A shorter video, and a long one YouTube offers no segmented sound for, play as before.
+- **The app's Info.plist** allows addresses on this computer (`NSAllowsLocalNetworking`), for that list.
+- **Checked:** `pytest` (2,046 passed; five new), `ruff`, `swift build`, `swift test` (97). In the owner's app: the 58-minute video from the owner's screenshot started within seconds, its picture came up on Video, and the clock ran (0:34 of 57:59).
+- **Not checked:** moving about in a long video, its picture-size menu, full screen, the next video following on, and the lyrics-timing code with a long video.
+- **Deviation:** the docs said the app plays format 140. For a long video it now plays format 234, the same kind of sound (AAC, about 128 kbps) cut into segments. Nothing about downloads or the library changes.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

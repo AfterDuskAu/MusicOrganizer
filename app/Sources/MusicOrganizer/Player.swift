@@ -557,7 +557,12 @@ final class Player {
     private static func joined(
         _ video: SongVideo, _ quality: SongVideo.Quality
     ) async throws -> AVPlayerItem {
-        AVPlayerItem(
+        if video.segmented {
+            // A long video: the engine's playlist has this picture and the sound in
+            // it already, in short segments, and plays as it is.
+            return AVPlayerItem(asset: AVURLAsset(url: Spoil.address(quality.url)))
+        }
+        return AVPlayerItem(
             asset: try await join(
                 picture: Spoil.address(quality.url), sound: video.sound, headers: video.headers,
                 length: video.length))

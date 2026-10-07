@@ -60,6 +60,7 @@ from musicorg import (
     match,
     pipeline,
     queue,
+    relay,
     review,
     scan,
     sharing,
@@ -276,6 +277,7 @@ class Server:
         # opens (`kids.set`); the engine keeps no "on" of its own.
         self._kids = {"on": False, "allow_explicit": False}
         self._films: torrents.Player | None = None  # films playing from torrents, if any
+        self._relay: relay.Relay | None = None  # long videos' playlists, if any were asked for
         self.methods: dict[str, Callable[[dict[str, Any]], Any]] = {
             "engine.hello": self.engine_hello,
             "library.init": self.library_init,
@@ -436,6 +438,9 @@ class Server:
         spotify.cancel_sign_in()  # stop listening for a sign-in nobody finished
         self._stop_sharing()  # first of all: nothing is shared once the app has gone
         self._stop_films()  # and no torrent is left joined, nor its files kept
+        if self._relay is not None:
+            self._relay.stop()  # nor any long video's playlist left to be read
+            self._relay = None
         deadline = time.monotonic() + SHUTDOWN_GRACE_S
         for thread in (self._queue_thread, self._job.thread if self._job else None):
             if thread is not None and thread.is_alive():
@@ -1092,10 +1097,30 @@ class Server:
             return {"found": False}
         return self._video_answer(youtube.video(match.video_id), match.title, match.duration_s)
 
-    @staticmethod
-    def _video_answer(found: Any, title: str, duration_s: float | None) -> dict[str, Any]:
+    def _video_answer(self, found: Any, title: str, duration_s: float | None) -> dict[str, Any]:
         if not found.qualities:
             return {"found": False}
+
+        def address(quality: Any) -> str:
+            if not found.segmented:
+                return quality.url
+            # A long video: a list written here of this picture size with the sound,
+            # read by the app's player from an address on this computer (`relay`).
+            if self._relay is None:
+                self._relay = relay.Relay()
+            return self._relay.address_of(
+                relay.master_playlist(
+                    quality.url,
+                    found.audio.url,
+                    picture_codec=quality.codec,
+                    sound_codec=found.sound_codec,
+                    kbps=quality.kbps,
+                    width=quality.width,
+                    height=quality.height,
+                    fps=quality.fps,
+                )  # fmt: skip
+            )
+
         return {
             "found": True,
             "video_id": found.video_id,
@@ -1104,7 +1129,8 @@ class Server:
             "http_headers": found.audio.headers,
             "audio_url": found.audio.url,
             "likes": found.audio.likes,
-            "qualities": [{"label": q.label, "height": q.height, "fps": q.fps, "url": q.url}
+            "segmented": found.segmented,
+            "qualities": [{"label": q.label, "height": q.height, "fps": q.fps, "url": address(q)}
                           for q in found.qualities],
         }  # fmt: skip
 

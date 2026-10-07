@@ -478,6 +478,14 @@ final class SongVideoTests: XCTestCase {
 
     func testAnAnswerThatCantBePlayedIsNoVideo() {
         XCTAssertNil(SongVideo(answer([])))  // no picture
+        // A long video says its pictures are playlists with the sound in them.
+        XCTAssertEqual(SongVideo(answer())?.segmented, false)
+        let long = VideoAnswer(
+            found: true, videoId: "abcdefghijk", durationS: 3479,
+            audioUrl: "https://example.invalid/sound.m3u8",
+            qualities: [.init(label: "720p", height: 720, fps: 30, url: "http://127.0.0.1:1/k/n.m3u8")],
+            segmented: true)
+        XCTAssertEqual(SongVideo(long)?.segmented, true)
         XCTAssertNil(SongVideo(VideoAnswer(found: true, videoId: "abcdefghijk", durationS: 245)))
         let noLength = VideoAnswer(
             found: true, videoId: "abcdefghijk", audioUrl: "https://example.invalid/a",
