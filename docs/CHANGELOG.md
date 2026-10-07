@@ -779,6 +779,13 @@
 - **Checked:** `swift build` (no warnings), `swift test` (88). In the unseen test copy, by mpv's own log: the test film decoded by VideoToolbox; with the window changed from 3,400 to 2,600 pixels wide while it played, mpv laid the film out again for the new size, centred (2702×1520 at 349,0, then 2600×1462 at 0,29); no frames dropped and sound and picture in time over 14 seconds. A picture of the Explore page with the new top bar.
 - **Not checked:** by eye, in the owner's app: the film in a window, resized, full screen, with the sidebar open and shut; and the top bar with the sidebar shut. mpv logs one OpenGL error as the first frame is set up ("invalid framebuffer operation") and none after; the film plays, and it's left as found.
 
+2026-10-07, about 7:15pm. **Two search buttons, and a strip across the top of a film in full screen.** The owner sent a picture of each: "errors".
+
+- **Two search buttons with the sidebar shut.** The search button put at the top of the sidebar stays in the top bar when the sidebar is shut (macOS moves it there with the sidebar's own button), so the second one added for that case was one too many. It's gone; there is one button, in either state.
+- **A strip across the top of a film.** With the app already in full screen, opening a film took the top bar's buttons away but left the bar's empty strip over the film. In a window the bar goes cleanly (pictured in the unseen copy: no strip). So a film opened in a window that's already full screen now leaves the top bar alone and asks macOS to keep it out of sight with the menu bar; it comes down only when the mouse goes to the top of the screen. A film opened in a window, and then made full screen, hides the bar as before. Leaving full screen in the middle of a film puts it back to the window's way.
+- **Checked:** `swift build` (no warnings) and `swift test`.
+- **Not checked, and a guess as to the cause:** the unseen copy can't go full screen, so the strip was never reproduced here; the fix follows from what the two pictures show (the strip only over the page's part of the bar, in full screen) and from the bar going cleanly in a window. The owner's eyes decide whether it's gone.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

@@ -133,6 +133,8 @@ final class AppModel {
     let film = FilmPlayer()
     /// The torrent the film player is playing from, if it is, and how that's going.
     private(set) var filmTorrent: String?
+    /// The film was opened in a window that was already full screen (see `filmHidesTopBar`).
+    private(set) var filmInFullScreen = false
     private(set) var filmStatus: TorrentStatus?
     /// Videos played as themselves (a channel's video, a trailer): the picture shown is
     /// that very video, not the official video of a song with its name.
@@ -312,6 +314,9 @@ final class AppModel {
             MainActor.assumeIsolated {
                 self?.tookTheScreen = false
                 self?.pictureFullScreen = false
+                // A film that was full screen is in a window now, where its top bar is
+                // simply taken away.
+                self?.filmInFullScreen = false
             }
         }
         await connect()
@@ -492,7 +497,26 @@ final class AppModel {
     /// Play a film or a video file in the film player. The music stops for it.
     func playFilm(_ address: URL, title: String) {
         if player.isPlaying { player.toggle() }
+        setFilmTopBar(open: true)
         film.open(address, title: title)
+    }
+
+    /// A film has the top of the window too. In a window, the top bar is taken away for
+    /// it. A window that's already full screen is different: taking its top bar away
+    /// there leaves an empty strip across the film (seen by the owner, 2026-10-07), so
+    /// instead the bar is left alone and told to stay out of sight with the menu bar,
+    /// coming down only when the mouse goes to the top of the screen.
+    var filmHidesTopBar: Bool { film.isOpen && !filmInFullScreen }
+
+    private func setFilmTopBar(open: Bool) {
+        let full = mainWindow?.styleMask.contains(.fullScreen) ?? false
+        if open, full {
+            filmInFullScreen = true
+            NSApp.presentationOptions.insert(.autoHideToolbar)
+        } else if filmInFullScreen {
+            filmInFullScreen = false
+            if full { NSApp.presentationOptions.remove(.autoHideToolbar) }
+        }
     }
 
     /// Play one of a film's streams: a web address or a torrent in the film player, a
@@ -536,6 +560,7 @@ final class AppModel {
     /// Shut the film player. A film from a torrent is left, and what arrived is deleted.
     func closeFilm() {
         film.close()
+        setFilmTopBar(open: false)
         if let hash = filmTorrent {
             (filmTorrent, filmStatus) = (nil, nil)
             Task { _ = try? await ask("torrent.stop", ["info_hash": hash], as: Empty.self) }
