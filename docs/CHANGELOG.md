@@ -882,6 +882,14 @@
 - **Not checked:** moving about in a long video, its picture-size menu, full screen, the next video following on, and the lyrics-timing code with a long video.
 - **Deviation:** the docs said the app plays format 140. For a long video it now plays format 234, the same kind of sound (AAC, about 128 kbps) cut into segments. Nothing about downloads or the library changes.
 
+2026-10-08, about 9am. **Downloaded videos are listed in the app.** The owner: "move onto the next step".
+
+- **Videos → Movies** now lists two folders under their own headings: Movies, and Downloaded Videos (Media, in Downloads). Double-click plays one in the film player; the right-click menu has Play and Show in Finder. The page looks at the folders again when a film or a video has just been kept. The app only reads the folders.
+- **Placed there without a drawing** (the owner's rule is to ask first): it's the page that already lists video files, with the same rows. To be moved if the owner draws somewhere else for it.
+- **Fixed on the way:** a video arriving in Downloads put up the app's alert, whose title is "That didn't work". Nothing is said in a box now; the video is on the list.
+- **Checked:** `swift build`, `swift test` (97). In the owner's app: Download Video on the player page for a 19-second video played from Video Finder put it in Downloads/Media (that file is the owner's to keep or bin), and it shows on the page.
+- **Not checked:** playing it from the list; the page refreshing by itself as a download lands (it was looked at after a reopen).
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

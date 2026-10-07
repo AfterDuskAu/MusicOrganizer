@@ -138,6 +138,9 @@ final class AppModel {
     private(set) var followedChannels: [ChannelRef] = []
     /// Films being kept, or kept since the app opened, by their torrent's id.
     private(set) var filmKeeps: [String: TorrentStatus] = [:]
+    /// Goes up each time a film or a video has been kept, so Videos → Movies looks at
+    /// its folders again.
+    private(set) var keptArrived = 0
     /// The torrent the film player is playing from, if it is, and how that's going.
     private(set) var filmTorrent: String?
     private(set) var filmStatus: TorrentStatus?
@@ -583,6 +586,7 @@ final class AppModel {
                     filmKeeps[hash] = try await ask(
                         "torrent.status", ["info_hash": hash], as: TorrentStatus.self)
                 }
+                keptArrived += 1  // it's in the Movies folder now (or couldn't be put there)
             } catch {
                 notice = error.localizedDescription
             }
@@ -1822,9 +1826,11 @@ final class AppModel {
         else { return }
         let onTheirWay = Set(pending.filter(\.isActive).map(\.jobId))
         let here = Set(found.downloads.map(\.jobId))
-        // A video on its way to Downloads that's off the list has arrived there.
-        if let kept = pending.first(where: { $0.isActive && $0.isKept && !here.contains($0.jobId) }) {
-            notice = "\(kept.name) is in Media, in your Downloads folder."
+        // A video on its way to Downloads that's off the list has arrived there: Videos →
+        // Movies lists it. (Nothing is said in a box: `notice` is the app's "That didn't
+        // work" alert, and this did.)
+        if pending.contains(where: { $0.isActive && $0.isKept && !here.contains($0.jobId) }) {
+            keptArrived += 1
         }
         // A download counts towards the daily limit as it starts: the counter is asked
         // for again whenever a different one is downloading, or the list got shorter.

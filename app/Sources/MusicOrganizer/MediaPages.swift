@@ -782,22 +782,32 @@ struct MovieView: View {
 struct MoviesView: View {
     @Environment(AppModel.self) private var model
     @State private var files: [VideoFiles.File] = []
+    /// The videos kept from Video Finder and channels: Media, in the Downloads folder.
+    @State private var kept: [VideoFiles.File] = []
     @State private var looked = false
 
     private static var folder: URL? {
         FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first
     }
 
+    private static var keptFolder: URL? {
+        FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("Media", isDirectory: true)
+    }
+
     var body: some View {
+        let count = files.count + kept.count
         VStack(spacing: 0) {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Text("Movies").font(.title2.weight(.semibold)).heading()
-                        Text(files.count == 1 ? "1 file" : "\(files.count.formatted()) files")
+                        Text(count == 1 ? "1 file" : "\(count.formatted()) files")
                             .foregroundStyle(.secondary)
                     }
-                    Text("The video files in your Movies folder. Double-click one to play it.")
+                    Text(
+                        "The video files in your Movies folder, and the videos you've "
+                            + "downloaded. Double-click one to play it.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }
@@ -808,33 +818,28 @@ struct MoviesView: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
             Divider()
-            if files.isEmpty {
-                Text(looked ? "There are no video files in your Movies folder yet." : "Looking…")
+            if count == 0 {
+                Text(
+                    looked
+                        ? "There are no video files in your Movies folder yet, and no downloaded videos."
+                        : "Looking…")
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                List(files) { file in
-                    HStack(spacing: 12) {
-                        Image(systemName: "film").foregroundStyle(.secondary)
-                        Text(file.name).lineLimit(1)
-                        Spacer()
-                        Text(file.kind).foregroundStyle(.secondary)
-                        Text(ByteCountFormatter.string(fromByteCount: file.bytes, countStyle: .file))
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
-                            .frame(width: 90, alignment: .trailing)
+                List {
+                    if !files.isEmpty {
+                        Section("Movies") { ForEach(files) { row($0) } }
                     }
-                    .contentShape(Rectangle())
-                    .onTapGesture(count: 2) { model.playFilm(file.url, title: file.name) }
+                    if !kept.isEmpty {
+                        Section("Downloaded Videos") { ForEach(kept) { row($0) } }
+                    }
                 }
                 .scrollContentBackground(Theme.current.listBackground)
             }
         }
+        // Looked at again whenever a film or a video has just been kept.
+        .task(id: model.keptArrived) { await look() }
         .task {
-            guard let folder = Self.folder else { return }
-            // Off the main thread: a big folder takes a moment to walk.
-            files = await Task.detached { VideoFiles.inside(folder) }.value
-            looked = true
             // For checking the player without a click: MUSICORG_FILM=<file> plays it once,
             // silently; MUSICORG_FILM=torrent:<info-hash>:<file number> plays that torrent.
             if let what = ProcessInfo.processInfo.environment["MUSICORG_FILM"], !model.film.isOpen {
@@ -853,6 +858,34 @@ struct MoviesView: View {
                 }
             }
         }
+    }
+
+    private func row(_ file: VideoFiles.File) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "film").foregroundStyle(.secondary)
+            Text(file.name).lineLimit(1)
+            Spacer()
+            Text(file.kind).foregroundStyle(.secondary)
+            Text(ByteCountFormatter.string(fromByteCount: file.bytes, countStyle: .file))
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+                .frame(width: 90, alignment: .trailing)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture(count: 2) { model.playFilm(file.url, title: file.name) }
+        .contextMenu {
+            Button("Play") { model.playFilm(file.url, title: file.name) }
+            Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([file.url]) }
+        }
+    }
+
+    /// Off the main thread: a big folder takes a moment to walk.
+    private func look() async {
+        let (movies, media) = (Self.folder, Self.keptFolder)
+        (files, kept) = await Task.detached {
+            (movies.map(VideoFiles.inside) ?? [], media.map(VideoFiles.inside) ?? [])
+        }.value
+        looked = true
     }
 
     private func openFile() {
