@@ -1950,3 +1950,43 @@ final class WordingTests: XCTestCase {
         XCTAssertEqual(pick["why"] as? String, "Like a song on the music service")
     }
 }
+
+final class FilmExtrasTests: XCTestCase {
+    func testATracksNameInAMenu() {
+        XCTAssertEqual(FilmTrack.label(number: 2, title: nil, language: nil), "Track 2")
+        XCTAssertEqual(FilmTrack.label(number: 1, title: "Commentary", language: "und"), "Commentary")
+        XCTAssertEqual(FilmTrack.label(number: 1, title: " ", language: "zz-nothing"), "zz-nothing")
+        let english = FilmTrack(id: 3, kind: .subtitles, title: "SDH", language: "en", selected: true)
+        XCTAssertTrue(english.label.hasSuffix(" · SDH") && english.label.count > 6)
+        XCTAssertEqual(FilmTrack.Kind(rawValue: "audio"), .sound)
+        XCTAssertNil(FilmTrack.Kind(rawValue: "video"))
+    }
+
+    func testAFilmOpensWhereItWasLeft() {
+        var places = FilmPositions()
+        let start = Date(timeIntervalSince1970: 1_000_000)
+        places.watched("a", to: 32, of: 6000, now: start)
+        XCTAssertEqual(places.place(of: "a"), 32)
+        XCTAssertNil(places.place(of: "b"))
+        // Hardly begun, in its credits, or of no known length: it starts again.
+        places.watched("b", to: 5, of: 6000)
+        places.watched("c", to: 5950, of: 6000)
+        places.watched("d", to: 300, of: 0)
+        XCTAssertEqual(places.places.keys.sorted(), ["a"])
+        places.watched("a", to: 5990, of: 6000)
+        XCTAssertNil(places.place(of: "a"))
+        // The film watched longest ago is forgotten first.
+        for number in 0...FilmPositions.most {
+            places.watched("f\(number)", to: 100, of: 6000, now: start.addingTimeInterval(Double(number)))
+        }
+        XCTAssertEqual(places.places.count, FilmPositions.most)
+        XCTAssertNil(places.place(of: "f0"))
+        XCTAssertEqual(places.place(of: "f1"), 100)
+        // It survives being put away and read back.
+        let defaults = UserDefaults(suiteName: "film-positions-test")!
+        defaults.removePersistentDomain(forName: "film-positions-test")
+        places.save(in: defaults)
+        XCTAssertEqual(FilmPositions.saved(in: defaults), places)
+        defaults.removePersistentDomain(forName: "film-positions-test")
+    }
+}

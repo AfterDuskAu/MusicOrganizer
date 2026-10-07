@@ -890,6 +890,17 @@
 - **Checked:** `swift build`, `swift test` (97). In the owner's app: Download Video on the player page for a 19-second video played from Video Finder put it in Downloads/Media (that file is the owner's to keep or bin), and it shows on the page.
 - **Not checked:** playing it from the list; the page refreshing by itself as a download lands (it was looked at after a reopen).
 
+2026-10-08, about 9:35am. **The film player: sound tracks, subtitles, opening where it was left; and a film's day in the cache.** The owner said yes to the menus, and set the rule for the rest: a film closed at 0:32 opens at 0:32 a week later, and "the app only holds the downloaded torrent information for 24 hours and then deletes itself", so it plays at once within the day and is fetched again after it.
+
+- **Menus in the film's controls,** beside the volume: Sound Track (shown when a film has more than one) and Subtitles (shown when it has any, with Off). Tracks are named by their language and what the film says of them ("French · Commentary"), or "Track 2".
+- **A film opens where it was left** (`FilmPositions`, in the Kit): noted every ten seconds and when the film is closed, by the file's path or the torrent's id and file. Hardly begun (under 20 seconds) or in its last minute and a half, it starts again. Kept in the app's own settings on this Mac, for 300 films at most; nothing of it is in the library, and it isn't deleted with the day-old cache, which is what makes "a week later" work.
+- **A torrent's promise changed, at the owner's word.** It was "nothing kept after the film is closed". Now: closing the film (or ten minutes unused, or the engine stopping) leaves the torrent, as before, but what arrived stays in `torrents/` in the app's cache for a day after the film was last played. Played again within the day, the torrent is joined again from the owner's click and libtorrent finds what's there. After a day it's deleted. Still true: nothing is joined, fetched or shared except from a click, and only while the film is open or being kept.
+- **`fileops.sweep_cached` and `touch_cached`** (new): the sweep deletes what has sat unused for over a day in one folder strictly inside the app's cache folder, and refuses any folder that isn't; links are removed, never followed; a film that's open is skipped. It runs when the engine starts and every ten minutes while films are in use. Deleted outright, not to the Trash: it's cache. `CLAUDE.md` rule 3 says so.
+- **A film saved to the Movies folder** has its cache copy deleted at once, as before.
+- **Checked:** `pytest` (2,049 passed; three new), `ruff`, `swift build`, `swift test` (99; two new). **Real runs:** 15% of the public-domain film fetched, the player stopped, the torrent joined again: 15.3% was there after 5.8 seconds with nothing fetched; made a day old, the sweep cleared it. In the app, with a made-up film of two sound tracks and a subtitle track: the subtitles showed, and after a quit part way through it reopened at about the same place.
+- **Not checked:** the two menus by eye (the controls only come up under the mouse, which the checking tools can't move without taking the screen), and choosing a track.
+- **For the owner to know:** a film from a torrent now takes its size on disk for up to a day after it was watched (a 1080p film is one to several GB).
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

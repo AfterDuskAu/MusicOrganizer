@@ -227,3 +227,111 @@ def test_a_films_details_are_read_even_with_no_time_to_wait(places: dict[str, Pa
     assert joined.ready(0) is True  # arrived: read at once, with no waiting allowed
     assert joined.path == places["cache"] / "Film" / "film.MKV" and joined.index == 1
     assert handle.priorities == [0, 4]  # only the film is fetched
+
+
+# ---- a film's day in the cache (the owner, 2026-10-08) -----------------------------------
+
+DAY = torrents.KEEP_S
+
+
+def aged(path: Path, seconds: float) -> None:
+    import os
+    import time
+
+    then = time.time() - seconds
+    os.utime(path, (then, then))
+
+
+def test_what_was_played_over_a_day_ago_is_cleared_and_nothing_else(
+    places: dict[str, Path],
+) -> None:
+    cache, app_cache = places["cache"], places["cache"].parent
+    recent = cache / "Recent"
+    recent.mkdir()
+    (recent / "film.mp4").write_bytes(b"new")
+    lone = cache / "single.mkv"
+    lone.write_bytes(b"old")
+    (cache / "Film" / "Subs").mkdir()
+    (cache / "Film" / "Subs" / "en.srt").write_bytes(b"1")
+    beside = app_cache / "yt-dlp"
+    beside.mkdir()
+    for old in (places["film"], cache / "Film" / "Subs" / "en.srt", cache / "Film" / "Subs",
+                cache / "Film", lone, beside):  # fmt: skip
+        aged(old, DAY + 60)
+    # A folder is as new as the newest thing in it.
+    aged(recent, DAY + 60)
+
+    assert torrents.sweep(app_cache) == 2
+    assert sorted(p.name for p in cache.iterdir()) == ["Recent"]
+    assert beside.is_dir()  # only the films' folder is swept
+
+    # One that's open now stays whatever its age.
+    aged(recent / "film.mp4", DAY * 3)
+    aged(recent, DAY * 3)
+    assert torrents.sweep(app_cache, skip=["Recent"]) == 0
+    assert torrents.sweep(app_cache) == 1 and list(cache.iterdir()) == []
+
+
+def test_the_sweep_never_leaves_the_apps_cache(places: dict[str, Path], tmp_path: Path) -> None:
+    outside = tmp_path / "Music"
+    outside.mkdir()
+    (outside / "song.m4a").write_bytes(b"x")
+    aged(outside / "song.m4a", DAY * 9)
+    app_cache = places["cache"].parent
+    for wrong in (outside, app_cache, tmp_path):
+        with pytest.raises(OutsideLibraryError):
+            fileops.sweep_cached(wrong, cache=app_cache, older_than_s=1)
+    with pytest.raises(OutsideLibraryError):
+        fileops.touch_cached(outside / "song.m4a", cache=app_cache)
+    # A link out of the cache is removed, not followed.
+    link = places["cache"] / "link"
+    try:
+        link.symlink_to(outside, target_is_directory=True)
+    except OSError:
+        pytest.skip("links can't be made here")
+    import os
+
+    os.utime(
+        link, (1, 1), follow_symlinks=False
+    ) if os.utime in os.supports_follow_symlinks else None
+    fileops.sweep_cached(places["cache"], cache=app_cache, older_than_s=0, now=4_000_000_000)
+    assert not link.is_symlink() and (outside / "song.m4a").exists()
+    assert fileops.sweep_cached(app_cache / "nothing", cache=app_cache, older_than_s=0) == 0
+
+
+class Session:
+    def __init__(self) -> None:
+        self.removed: list[tuple[Any, ...]] = []
+
+    def remove_torrent(self, *given: Any) -> None:
+        self.removed.append(given)
+
+
+def test_a_film_thats_closed_stays_a_day_and_one_saved_to_movies_goes_at_once(
+    places: dict[str, Path],
+) -> None:
+    import libtorrent as lt
+
+    player = torrents.Player(places["cache"].parent, movies=places["movies"])
+    player._session = session = Session()
+    joined = joined_film(places, player)
+    joined.top = "Film"
+    aged(places["cache"] / "Film", DAY * 2)
+    aged(places["film"], DAY * 2)
+
+    player.close(joined.info_hash)
+    # The torrent is left, its files are not deleted, and its day starts now.
+    assert session.removed == [(joined.handle,)]
+    assert places["film"].exists() and player.sweep() == 0
+
+    # Played again and saved to the Movies folder: the cache's copy isn't needed.
+    again = joined_film(places, player)
+    again.top, again.keep_name, again.playing = "Film", "Sintel", False
+    player._save_kept(again)
+    assert session.removed[-1] == (again.handle, lt.session.delete_files)
+
+    # The engine stopping leaves a film without deleting it either.
+    last = joined_film(places, player)
+    last.top = "Film"
+    player.stop()
+    assert session.removed[-1] == (last.handle,)

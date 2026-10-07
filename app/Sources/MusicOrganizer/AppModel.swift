@@ -511,9 +511,9 @@ final class AppModel {
     }
 
     /// Play a film or a video file in the film player. The music stops for it.
-    func playFilm(_ address: URL, title: String) {
+    func playFilm(_ address: URL, title: String, key: String? = nil) {
         if player.isPlaying { player.toggle() }
-        film.open(address, title: title)
+        film.open(address, title: title, key: key)
         tidyFullScreenTopBar()
     }
 
@@ -559,7 +559,10 @@ final class AppModel {
         do {
             let playing = try await ask("torrent.play", asked, as: TorrentPlaying.self)
             guard let url = URL(string: playing.url) else { return }
-            playFilm(url, title: title)
+            // Remembered by the torrent and the file in it: its address here is new each time.
+            playFilm(
+                url, title: title,
+                key: "torrent:\(playing.infoHash):\(stream.fileIndex.map(String.init) ?? "")")
             filmTorrent = playing.infoHash
             while film.isOpen, filmTorrent == playing.infoHash {
                 filmStatus = try? await ask(
@@ -593,7 +596,8 @@ final class AppModel {
         }
     }
 
-    /// Shut the film player. A film from a torrent is left, and what arrived is deleted.
+    /// Shut the film player. A film from a torrent is left; what arrived of it stays in
+    /// the app's cache for a day, so it starts at once if it's played again by then.
     func closeFilm() {
         film.close()
         tidyFullScreenTopBar()

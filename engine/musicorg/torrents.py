@@ -15,10 +15,16 @@ What the owner should know, and what this module holds to:
   sharing with a phone.
 - **The address is for this computer only:** it listens on 127.0.0.1, and its path
   carries a key made afresh each time the engine starts, so nothing else can ask.
-- **What arrives is kept in the app's cache folder**, never in the library, and is
-  deleted when the film is closed, after ten minutes unused, and when the engine
-  stops. libtorrent itself writes and deletes those files, in the one folder it is
-  given; this module opens them only to read.
+- **What arrives is kept in the app's cache folder**, never in the library, **for a day
+  after the film was last played** (the owner, 2026-10-08; until then it was deleted
+  the moment the film was closed). Played again within the day, the torrent is joined
+  again from the owner's click and finds what's already there, so the film starts
+  without being fetched twice. After a day unused it's deleted (`fileops.sweep_cached`,
+  when the engine starts and while it runs). libtorrent itself writes those files, in
+  the one folder it is given; this module opens them only to read.
+- **A torrent is joined only while its film is open** (or being kept): closing the film,
+  ten minutes unused, or the engine stopping leaves the torrent. Nothing is fetched or
+  shared for a film that's merely remembered.
 - Nothing starts by itself: only `torrent.play`, from the owner's click.
 
 In replay mode (`MUSICORG_REPLAY_DIR`, every test) no torrent is ever joined:
@@ -55,6 +61,8 @@ METADATA_WAIT_S = 120  # how long a player's first question waits for the torren
 PIECE_WAIT_S = 120  # how long a range waits for its next piece before giving up
 AHEAD_PIECES = 12  # asked for ahead of where the player is reading
 IDLE_S = 600  # a film nobody has asked about for this long is closed
+KEEP_S = 24 * 3600  # what arrived of a film stays in the cache this long after it was played
+SWEEP_EVERY_S = 600
 CHUNK = 256 * 1024
 
 
@@ -157,6 +165,19 @@ def serve(handler: BaseHTTPRequestHandler, film: Film, *, head: bool = False) ->
         offset += len(data)
 
 
+def sweep(cache: Path, skip: list[str] | tuple[str, ...] = ()) -> int:
+    """Delete what has sat in the films' cache folder unused for over a day
+    (`fileops` does it, and only inside the app's cache). Returns how many went."""
+    from musicorg import fileops
+    from musicorg.errors import MusicOrgError
+
+    try:
+        return fileops.sweep_cached(cache / "torrents", cache=cache, older_than_s=KEEP_S, skip=skip)
+    except (MusicOrgError, OSError) as exc:
+        log.warning("The films' cache couldn't be cleared: %s", exc)
+        return 0
+
+
 # ---- libtorrent: the only place a torrent is joined --------------------------------------
 
 
@@ -203,6 +224,7 @@ class _Joined:
     path: Path | None = None
     file_offset: int = 0
     piece_length: int = 0
+    top: str = ""  # the file or folder in the cache folder that the film is in
 
     def asked_now(self) -> None:
         self.last_asked = time.monotonic()
@@ -230,6 +252,7 @@ class _Joined:
             self.file_offset = files.file_offset(chosen)
             self.piece_length = info.piece_length()
             self.path = self.folder / listed[chosen][0]
+            self.top = Path(listed[chosen][0]).parts[0]
         return True
 
     def read(self, offset: int, length: int) -> bytes | None:
@@ -348,8 +371,10 @@ class Player:
         return joined.status()
 
     def close(self, info_hash: str) -> None:
-        """Leave a torrent and delete what arrived of it. One that's being kept isn't
-        left: the player has only let go of it, and it's left when it has been saved."""
+        """Leave a torrent. What arrived of it stays in the cache for a day, unless the
+        film has been saved to the Movies folder, when the cache's copy goes at once.
+        One that's being kept isn't left: the player has only let go of it, and it's
+        left when it has been saved."""
         with self._lock:
             joined = self._joined.get(info_hash.lower())
             if joined is not None and joined.wanted:
@@ -357,32 +382,44 @@ class Player:
                 return
             joined = self._joined.pop(info_hash.lower(), None)
         if joined is not None:
-            self._leave(joined)
+            self._leave(joined, delete=joined.kept_path is not None)
 
     def stop(self) -> None:
-        """Leave every torrent, delete what arrived, and stop listening."""
+        """Leave every torrent and stop listening. What arrived stays its day."""
         self._stopping.set()
         with self._lock:
             leaving, self._joined = list(self._joined.values()), {}
             server, self._server = self._server, None
         for joined in leaving:
-            self._leave(joined)
+            self._leave(joined, delete=False)
         if server is not None:
             server.shutdown()
             server.server_close()
         if leaving and self._session is not None:
-            time.sleep(1)  # libtorrent deletes the files on its own thread
+            time.sleep(1)  # libtorrent closes its files on its own thread
         self._session = None
+
+    def sweep(self) -> int:
+        """Delete what has been in the cache unused for over a day. Films open now stay."""
+        return sweep(self.folder.parent, skip=[j.top for j in self._joined.values() if j.top])
 
     # -- the workings --
 
-    def _leave(self, joined: _Joined) -> None:
+    def _leave(self, joined: _Joined, *, delete: bool) -> None:
         joined.closed = True
         if self._session is not None and joined.handle.is_valid():
             import libtorrent as lt
 
-            # libtorrent deletes its own files: this module never does.
-            self._session.remove_torrent(joined.handle, lt.session.delete_files)
+            if delete:
+                # libtorrent deletes its own files.
+                self._session.remove_torrent(joined.handle, lt.session.delete_files)
+                return
+            self._session.remove_torrent(joined.handle)
+        if joined.top:
+            from musicorg import fileops
+
+            # Its day in the cache is counted from now, when it was last played.
+            fileops.touch_cached(self.folder / joined.top, cache=self.folder.parent)
 
     def _start(self) -> None:
         if self._session is not None:
@@ -444,8 +481,12 @@ class Player:
             self.close(joined.info_hash)  # nobody is watching it: its cache goes
 
     def _close_idle(self) -> None:
+        swept = time.monotonic()
         while not self._stopping.wait(2):
             now = time.monotonic()
+            if now - swept > SWEEP_EVERY_S:
+                swept = now
+                self.sweep()
             for joined in list(self._joined.values()):
                 if joined.wanted:
                     # Being kept: its details are waited for here if nothing is playing

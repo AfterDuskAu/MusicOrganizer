@@ -28,13 +28,24 @@ final class FilmPlayer {
     @ObservationIgnored let surface = FilmGLView()
     @ObservationIgnored private var mpv: OpaquePointer?
     @ObservationIgnored private var clock: Timer?
+    /// The film's sound and subtitle tracks, for the two menus. Read once a second.
+    private(set) var tracks: [FilmTrack] = []
+    /// What this film is remembered by, for opening where it was left.
+    @ObservationIgnored private var remembered: String?
+    @ObservationIgnored private var looks = 0
 
     var isOpen: Bool { title != nil }
+    var soundTracks: [FilmTrack] { tracks.filter { $0.kind == .sound } }
+    var subtitleTracks: [FilmTrack] { tracks.filter { $0.kind == .subtitles } }
 
-    /// Open a film and start it. `address` is a file's or a web address.
-    func open(_ address: URL, title: String) {
+    /// Open a film and start it, where it was left the last time if it was left part
+    /// way. `address` is a file's or a web address; `key` is what the film is
+    /// remembered by when its address isn't the same each time (a torrent's).
+    func open(_ address: URL, title: String, key: String? = nil) {
         close()
         self.title = title
+        remembered = key ?? (address.isFileURL ? address.path : address.absoluteString)
+        (tracks, looks) = ([], 0)
         (paused, time, duration, buffering, problem) = (false, 0, 0, true, nil)
         guard let made = mpv_create() else {
             problem = "The film player couldn't start."
@@ -69,6 +80,9 @@ final class FilmPlayer {
             return
         }
         set("volume", volume)
+        if let key = remembered, let place = FilmPositions.saved().place(of: key) {
+            mpv_set_property_string(made, "start", String(Int(place)))
+        }
         let location = address.isFileURL ? address.path : address.absoluteString
         command(["loadfile", location])
         clock = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
@@ -77,8 +91,53 @@ final class FilmPlayer {
     }
 
     func close() {
+        remember()
         title = nil
+        remembered = nil
+        tracks = []
         shut()
+    }
+
+    /// Play this sound track.
+    func chooseSound(_ track: FilmTrack) {
+        if let mpv { mpv_set_property_string(mpv, "aid", String(track.id)) }
+        readTracks()
+    }
+
+    /// Show these subtitles, or none.
+    func chooseSubtitles(_ track: FilmTrack?) {
+        if let mpv { mpv_set_property_string(mpv, "sid", track.map { String($0.id) } ?? "no") }
+        readTracks()
+    }
+
+    /// Note where the film has got to, for the next time it's opened.
+    private func remember() {
+        guard let remembered, duration > 0 else { return }
+        var places = FilmPositions.saved()
+        places.watched(remembered, to: time, of: duration)
+        places.save()
+    }
+
+    private func text(_ name: String) -> String? {
+        guard let mpv, let found = mpv_get_property_string(mpv, name) else { return nil }
+        defer { mpv_free(found) }
+        return String(cString: found)
+    }
+
+    private func readTracks() {
+        guard mpv != nil, let count = text("track-list/count").flatMap(Int.init) else { return }
+        var found: [FilmTrack] = []
+        for index in 0..<count {
+            let at = "track-list/\(index)"
+            guard let kind = text("\(at)/type").flatMap(FilmTrack.Kind.init(rawValue:)),
+                let id = text("\(at)/id").flatMap(Int.init)
+            else { continue }
+            found.append(
+                FilmTrack(
+                    id: id, kind: kind, title: text("\(at)/title"), language: text("\(at)/lang"),
+                    selected: text("\(at)/selected") == "yes"))
+        }
+        if found != tracks { tracks = found }
     }
 
     func togglePause() {
@@ -129,6 +188,10 @@ final class FilmPlayer {
             problem = "This film couldn't be opened."
             buffering = false
         }
+        // Once a second: its tracks (they arrive with the film). Every ten: where it is.
+        looks += 1
+        if looks % 4 == 0 { readTracks() }
+        if looks % 40 == 0 { remember() }
     }
 
     private func set(_ name: String, _ value: Double) {
@@ -225,6 +288,38 @@ struct FilmPlayerView: View {
                 .keyboardShortcut(.space, modifiers: [])
                 Button("Forward 30 Seconds", systemImage: "goforward.30") { film.skip(30) }
                 Spacer()
+                if film.soundTracks.count > 1 {
+                    Menu {
+                        ForEach(film.soundTracks) { track in
+                            Toggle(track.label, isOn: Binding(
+                                get: { track.selected }, set: { _ in film.chooseSound(track) }))
+                        }
+                    } label: {
+                        Label("Sound Track", systemImage: "waveform")
+                    }
+                    .menuStyle(.borderlessButton)
+                    .menuIndicator(.hidden)
+                    .fixedSize()
+                    .help("Which sound track plays")
+                }
+                if !film.subtitleTracks.isEmpty {
+                    Menu {
+                        Toggle("Off", isOn: Binding(
+                            get: { !film.subtitleTracks.contains(where: \.selected) },
+                            set: { _ in film.chooseSubtitles(nil) }))
+                        Divider()
+                        ForEach(film.subtitleTracks) { track in
+                            Toggle(track.label, isOn: Binding(
+                                get: { track.selected }, set: { _ in film.chooseSubtitles(track) }))
+                        }
+                    } label: {
+                        Label("Subtitles", systemImage: "captions.bubble")
+                    }
+                    .menuStyle(.borderlessButton)
+                    .menuIndicator(.hidden)
+                    .fixedSize()
+                    .help("Subtitles")
+                }
                 Image(systemName: "speaker.wave.2.fill")
                 Slider(value: Bindable(film).volume, in: 0...100).frame(width: 110)
                 Button("Full Screen", systemImage: "arrow.up.left.and.arrow.down.right") {

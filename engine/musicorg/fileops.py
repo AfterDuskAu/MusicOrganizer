@@ -2422,6 +2422,80 @@ def keep_media(
     return folder / placeholder.name
 
 
+def _cache_folder(folder: Path, cache: Path) -> Path:
+    """`folder`, checked: a real folder strictly inside the app's own cache folder."""
+    folder, cache = Path(folder).absolute(), Path(cache).absolute()
+    if _key(folder) == _key(cache) or not _within(folder.resolve(), cache.resolve()):
+        raise OutsideLibraryError(f"{folder} isn't a folder in the app's cache.")
+    return folder
+
+
+def touch_cached(path: Path, *, cache: Path) -> None:
+    """Mark something in the app's cache as used just now (its modified time), so
+    `sweep_cached` counts its day from here. Nothing of its contents changes. A path
+    that isn't there is left alone."""
+    _cache_folder(Path(path).parent, cache)
+    try:
+        os.utime(path)
+    except OSError:
+        pass
+
+
+def sweep_cached(
+    folder: Path,
+    *,
+    cache: Path,
+    older_than_s: float,
+    skip: Iterable[str] = (),
+    now: float | None = None,
+) -> int:
+    """Delete what has sat unused in one folder of the app's own cache for longer than
+    `older_than_s` (a film fetched from a torrent is kept a day: the owner, 2026-10-08).
+    Returns how many things went.
+
+    - `folder` must be strictly inside `cache`, the app's cache folder: nothing anywhere
+      else is ever deleted by this, and never anything of a library's.
+    - Each file or folder directly in `folder` is one thing. It goes when the newest
+      modified time of it and of everything in it is older than that; `skip` names the
+      ones in use right now, which stay whatever their age.
+    - Deleted outright, not sent to the Trash: it's the app's own cache, which can be
+      fetched again. Links are removed, never followed.
+    """
+    folder = _cache_folder(folder, cache)
+    if not folder.is_dir() or folder.is_symlink():
+        return 0
+    moment = time.time() if now is None else now
+    kept = {_key(PurePath(name)) for name in skip}
+    gone = 0
+    for entry in sorted(folder.iterdir()):
+        if _key(PurePath(entry.name)) in kept:
+            continue
+        try:
+            newest = entry.lstat().st_mtime
+            if entry.is_dir() and not entry.is_symlink():
+                for parent, _, names in os.walk(entry):
+                    for name in names:
+                        newest = max(newest, os.lstat(os.path.join(parent, name)).st_mtime)
+            if moment - newest <= older_than_s:
+                continue
+            if entry.is_dir() and not entry.is_symlink():
+                for parent, folders, names in os.walk(entry, topdown=False):
+                    for name in names:
+                        os.unlink(os.path.join(parent, name))
+                    for name in folders:
+                        inner = os.path.join(parent, name)
+                        os.unlink(inner) if os.path.islink(inner) else os.rmdir(inner)
+                entry.rmdir()
+            else:
+                entry.unlink()
+            gone += 1
+            log.info("Cleared %s from the cache: unused for over %d hours.", entry.name,
+                     older_than_s // 3600)  # fmt: skip
+        except OSError as exc:
+            log.warning("Couldn't clear %s from the cache: %s", entry.name, exc.strerror or exc)
+    return gone
+
+
 def _write_new(target: Path, data: bytes, remove_placeholder: Callable[[Path], object]) -> Path:
     """Write `data` as a new file at `target`, or ` (2)` etc. if that's taken. It appears
     complete or not at all: a temp file, fsynced, is renamed onto the reserved name."""

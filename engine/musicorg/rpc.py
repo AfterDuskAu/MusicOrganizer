@@ -356,6 +356,11 @@ class Server:
     # -- the loop --
 
     def run(self) -> int:
+        # What arrived of a film last played over a day ago goes, each time the engine
+        # starts (and every ten minutes while a film player is running).
+        threading.Thread(
+            target=torrents.sweep, args=(app_dirs().cache,), daemon=True, name="film-cache"
+        ).start()
         try:
             for raw in iter(self.reader.readline, b""):
                 if self.stopping.is_set():
@@ -437,7 +442,7 @@ class Server:
         self.stopping.set()
         spotify.cancel_sign_in()  # stop listening for a sign-in nobody finished
         self._stop_sharing()  # first of all: nothing is shared once the app has gone
-        self._stop_films()  # and no torrent is left joined, nor its files kept
+        self._stop_films()  # and no torrent is left joined (what arrived stays its day)
         if self._relay is not None:
             self._relay.stop()  # nor any long video's playlist left to be read
             self._relay = None
