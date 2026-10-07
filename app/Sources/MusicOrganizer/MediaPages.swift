@@ -64,21 +64,30 @@ struct WebPicture: View {
 
 /// One film or channel in a grid: its picture, and its name under it.
 struct MediaCard: View {
-    let item: MediaItem
+    let name: String
+    let poster: String?
+    let square: Bool
     @State private var hovering = false
 
+    init(item: MediaItem) {
+        (name, poster, square) = (item.name, item.poster, item.posterShape == "square")
+    }
+
+    init(channel: ChannelRef) {
+        (name, poster, square) = (channel.name, channel.thumbnail, true)
+    }
+
     var body: some View {
-        let square = item.posterShape == "square"
         VStack(spacing: 8) {
             Color.clear
                 .aspectRatio(square ? 1 : 2.0 / 3.0, contentMode: .fit)
-                .overlay { WebPicture(address: item.poster, symbol: square ? "play.tv" : "film") }
+                .overlay { WebPicture(address: poster, symbol: square ? "play.tv" : "film") }
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
                         .strokeBorder(hovering ? AnyShapeStyle(.primary) : AnyShapeStyle(.quaternary))
                 )
-            Text(item.name)
+            Text(name)
                 .font(.callout.weight(.medium))
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
@@ -129,7 +138,7 @@ struct MediaGrid: View {
 struct VideoExploreView: View {
     @Environment(AppModel.self) private var model
     @AppStorage("videoExploreSection") private var sectionName = "Channels"
-    @State private var opened: MediaItem?
+    @State private var opened: ChannelRef?
 
     var body: some View {
         let media = model.media
@@ -159,7 +168,7 @@ struct VideoExploreView: View {
                 .padding(.vertical, 12)
                 Divider()
                 if let source {
-                    MediaGrid(list: media.channels, width: 150, open: { opened = $0 }) {
+                    MediaGrid(list: media.channels, width: 150, open: { opened = ChannelRef(item: $0) }) {
                         Task {
                             await media.channels.load(
                                 model, addon: source.addon, catalog: source.catalog,
@@ -181,32 +190,95 @@ struct VideoExploreView: View {
     }
 }
 
-/// One channel: who they are, and their videos, newest first. Double-click plays one.
+/// One video in a list: its picture, its name, whose it is, and how long, how watched
+/// and how new it is. Double-click plays it; a click on the channel's name opens the channel.
+struct VideoRow: View {
+    let video: VideoHit
+    var openChannel: ((ChannelRef) -> Void)?
+    let play: () -> Void
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Color.clear
+                .frame(width: 128, height: 72)
+                .overlay { WebPicture(address: video.thumbnail) }
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .overlay(alignment: .bottomTrailing) {
+                    if !video.length.isEmpty {
+                        Text(video.length)
+                            .font(.caption.weight(.medium))
+                            .monospacedDigit()
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(.black.opacity(0.75), in: RoundedRectangle(cornerRadius: 4))
+                            .padding(4)
+                    }
+                }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(video.title).font(.body.weight(.medium)).lineLimit(2)
+                HStack(spacing: 8) {
+                    if let name = video.channel {
+                        if let openChannel, let id = video.channelId {
+                            Button(name) { openChannel(ChannelRef(channelId: id, name: name)) }
+                                .buttonStyle(.link)
+                                .help("Open this channel")
+                        } else {
+                            Text(name)
+                        }
+                    }
+                    Text([video.viewsLabel, video.published ?? ""].filter { !$0.isEmpty }.joined(separator: " · "))
+                }
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.vertical, 4)
+        .contentShape(Rectangle())
+        .onTapGesture(count: 2, perform: play)
+        .contextMenu { Button("Play", action: play) }
+    }
+}
+
+/// One channel: who they are, and the videos they've put up most lately, newest first,
+/// read afresh each time. Follow keeps the channel under Videos → Channel.
 struct ChannelView: View {
-    let channel: MediaItem
+    let channel: ChannelRef
     let back: () -> Void
     @Environment(AppModel.self) private var model
-    @State private var details: MediaDetails?
+    @State private var page: ChannelPage?
     @State private var problem: String?
 
     var body: some View {
+        let followed = model.followedChannels.contains { $0.channelId == channel.channelId }
         VStack(spacing: 0) {
             HStack(spacing: 14) {
                 Button("Back", systemImage: "chevron.left", action: back)
                     .labelStyle(.iconOnly)
-                    .help("Back to the channels")
-                WebPicture(address: channel.poster, symbol: "play.tv")
+                    .help("Back")
+                WebPicture(address: page?.thumbnail ?? channel.thumbnail, symbol: "play.tv")
                     .frame(width: 56, height: 56)
                     .clipShape(Circle())
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(channel.name).font(.title2.weight(.semibold)).heading()
-                    if let details {
-                        Text(details.videos.count == 1 ? "1 video" : "\(details.videos.count) videos")
-                            .foregroundStyle(.secondary)
+                    Text(page?.name ?? channel.name).font(.title2.weight(.semibold)).heading()
+                    if let followers = page?.followers {
+                        Text("\(VideoHit.round(followers)) followers").foregroundStyle(.secondary)
                     }
                 }
                 Spacer()
-                if let videos = details?.videos, !videos.isEmpty {
+                Button(followed ? "Following" : "Follow", systemImage: followed ? "checkmark" : "plus") {
+                    model.follow(
+                        ChannelRef(
+                            channelId: channel.channelId, name: page?.name ?? channel.name,
+                            thumbnail: page?.thumbnail ?? channel.thumbnail),
+                        on: !followed)
+                }
+                .help(
+                    followed
+                        ? "Stop following: it leaves Videos → Channel"
+                        : "Keep this channel under Videos → Channel")
+                if let videos = page?.videos, !videos.isEmpty {
                     Button("Play", systemImage: "play.fill") { play(videos, from: videos[0]) }
                         .mainButton()
                         .help("Play this channel's videos, newest first")
@@ -215,23 +287,14 @@ struct ChannelView: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
             Divider()
-            if let details {
-                if details.videos.isEmpty {
-                    Text("This list has no videos for this channel.")
+            if let page {
+                if page.videos.isEmpty {
+                    Text("This channel has no videos to list.")
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    List(details.videos) { video in
-                        HStack(spacing: 12) {
-                            WebPicture(address: video.thumbnail)
-                                .frame(width: 96, height: 54)
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
-                            Text(video.title).lineLimit(2)
-                            Spacer()
-                            Text(video.day).foregroundStyle(.secondary).monospacedDigit()
-                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture(count: 2) { play(details.videos, from: video) }
+                    List(page.videos) { video in
+                        VideoRow(video: video) { play(page.videos, from: video) }
                     }
                     .scrollContentBackground(Theme.current.listBackground)
                 }
@@ -246,10 +309,11 @@ struct ChannelView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .task(id: channel.id) {
+        .task(id: channel.channelId) {
+            (page, problem) = (nil, nil)
             do {
-                details = try await model.ask(
-                    "addon.details", ["type": channel.type, "id": channel.id], as: MediaDetails.self)
+                page = try await model.ask(
+                    "channel.videos", ["channel_id": channel.channelId], as: ChannelPage.self)
             } catch {
                 problem = error.localizedDescription
             }
@@ -257,15 +321,139 @@ struct ChannelView: View {
     }
 
     /// Play the channel's videos from one of them, carrying on down the list.
-    private func play(_ videos: [MediaDetails.Video], from first: MediaDetails.Video) {
-        let playable = videos.filter { $0.videoId != nil }
-        guard let start = playable.firstIndex(of: first) else { return }
-        model.playVideos(
-            playable.map {
-                SearchResult(
-                    videoId: $0.videoId ?? "", title: $0.title, artists: [channel.name],
-                    thumbnail: $0.thumbnail)
-            }, startAt: start)
+    private func play(_ videos: [VideoHit], from first: VideoHit) {
+        guard let start = videos.firstIndex(of: first) else { return }
+        model.playVideos(videos.map(\.result), startAt: start)
+    }
+}
+
+/// Video Finder: a search of every kind of video. Double-click plays one; a click on a
+/// channel's name opens the channel.
+struct VideoFinderView: View {
+    @Environment(AppModel.self) private var model
+    @State private var typed = ""
+    @State private var asked = ""
+    @State private var videos: [VideoHit] = []
+    @State private var working = false
+    @State private var problem: String?
+    @State private var opened: ChannelRef?
+
+    var body: some View {
+        ZStack {
+            VStack(spacing: 0) {
+                HStack(spacing: 12) {
+                    Text("Video Finder").font(.title2.weight(.semibold)).heading()
+                    TextField("Search for a video", text: $typed)
+                        .textFieldStyle(.roundedBorder)
+                        .onSubmit { search() }
+                    if working {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Button("Search") { search() }
+                            .disabled(typed.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+                Divider()
+                if let problem {
+                    Text(problem)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if videos.isEmpty {
+                    Text(
+                        working
+                            ? "Searching…"
+                            : "Search, then double-click a video to play it. Nothing is saved.")
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    List(videos) { video in
+                        VideoRow(video: video, openChannel: { opened = $0 }) {
+                            if let start = videos.firstIndex(of: video) {
+                                model.playVideos(videos.map(\.result), startAt: start)
+                            }
+                        }
+                    }
+                    .scrollContentBackground(Theme.current.listBackground)
+                }
+            }
+            // Out of sight and out of reach while a channel is open over it.
+            .opacity(opened == nil ? 1 : 0)
+            .allowsHitTesting(opened == nil)
+            if let opened {
+                ChannelView(channel: opened) { self.opened = nil }
+                    .dressed()
+            }
+        }
+        .onChange(of: opened) { _, channel in
+            if channel != nil { NSApp.keyWindow?.makeFirstResponder(nil) }
+        }
+    }
+
+    private func search() {
+        let words = typed.trimmingCharacters(in: .whitespaces)
+        guard !words.isEmpty, !working else { return }
+        (working, problem, asked) = (true, nil, words)
+        Task {
+            do {
+                let found = try await model.ask(
+                    "video.search", ["query": words, "limit": 30], as: VideosAnswer.self)
+                videos = found.videos
+                if videos.isEmpty { problem = "Nothing found for “\(words)”." }
+            } catch {
+                problem = error.localizedDescription
+            }
+            working = false
+        }
+    }
+}
+
+/// Videos → Channel: the channels the owner follows. A click opens one, with its
+/// newest videos.
+struct ChannelsView: View {
+    @Environment(AppModel.self) private var model
+    @State private var opened: ChannelRef?
+
+    var body: some View {
+        let channels = model.followedChannels
+        VStack(spacing: 0) {
+            if let opened {
+                ChannelView(channel: opened) { self.opened = nil }
+            } else {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text("Channels").font(.title2.weight(.semibold)).heading()
+                    Text(channels.count == 1 ? "1 channel" : "\(channels.count) channels")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+                Divider()
+                if channels.isEmpty {
+                    Text(
+                        "Channels you follow show up here. Find one under Video Finder, or its "
+                            + "Explore, open it, and click Follow.")
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: 460)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    ScrollView {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 22)], spacing: 22) {
+                            ForEach(channels) { channel in
+                                Button { opened = channel } label: { MediaCard(channel: channel) }
+                                    .buttonStyle(.plain)
+                                    .contextMenu {
+                                        Button("Stop Following") { model.follow(channel, on: false) }
+                                    }
+                            }
+                        }
+                        .padding(20)
+                    }
+                }
+            }
+        }
     }
 }
 

@@ -24,6 +24,7 @@ returns plain data in the shapes docs/ENGINE_API.md gives.
 
 from __future__ import annotations
 
+import re
 import secrets
 from datetime import UTC, datetime
 from typing import Any
@@ -34,6 +35,7 @@ from musicorg.library import Library
 
 KEY = "listening"
 MAX_NAME = 200
+CHANNEL_ID = re.compile(r"UC[A-Za-z0-9_-]{22}")
 
 
 def get(lib: Library) -> dict[str, Any]:
@@ -112,6 +114,41 @@ def heard(lib: Library, video_id: str) -> dict[str, Any]:
         entry["last_heard"] = _now()
         st.data[KEY] = data
     return dict(entry)
+
+
+def followed(lib: Library) -> list[dict[str, Any]]:
+    """The channels the owner follows, by name: `[{channel_id, name, thumbnail}]`."""
+    return _channels(_read(lib.load_state().data))
+
+
+def follow(
+    lib: Library, channel_id: str, on: bool, *, name: str = "", thumbnail: str | None = None
+) -> list[dict[str, Any]]:
+    """Follow a channel, or stop. Kept with the library, like favourites: it's a note
+    of whose videos to list, nothing more. Returns the channels followed."""
+    if not isinstance(channel_id, str) or not CHANNEL_ID.fullmatch(channel_id):
+        raise UserError("That isn't a channel's id.")
+    with state.edit(lib.paths.state_file) as st:
+        data = _read(st.data)
+        if on:
+            kept = data["channels"].get(channel_id, {})
+            data["channels"][channel_id] = {
+                "name": _name(name) if name.strip() else kept.get("name") or channel_id,
+                "thumbnail": thumbnail or kept.get("thumbnail"),
+                "since": kept.get("since") or _now(),
+            }
+        else:
+            data["channels"].pop(channel_id, None)
+        st.data[KEY] = data
+    return _channels(data)
+
+
+def _channels(data: dict[str, Any]) -> list[dict[str, Any]]:
+    listed = [
+        {"channel_id": channel_id, "name": kept["name"], "thumbnail": kept["thumbnail"]}
+        for channel_id, kept in data["channels"].items()
+    ]
+    return sorted(listed, key=lambda channel: channel["name"].casefold())
 
 
 def youtube_id(text: str) -> bool:
@@ -209,7 +246,17 @@ def _read(data: dict[str, Any]) -> dict[str, Any]:
     playlists = raw.get("playlists")
     moved = raw.get("library")
     heard_ = raw.get("heard")
+    channels = raw.get("channels")
     return {
+        "channels": {
+            k: {
+                "name": v["name"],
+                "thumbnail": v.get("thumbnail") if isinstance(v.get("thumbnail"), str) else None,
+                "since": v.get("since"),
+            }
+            for k, v in (channels.items() if isinstance(channels, dict) else [])
+            if isinstance(k, str) and isinstance(v, dict) and isinstance(v.get("name"), str)
+        },
         "heard": {
             k: {"count": v["count"], "last_heard": v.get("last_heard")}
             for k, v in (heard_.items() if isinstance(heard_, dict) else [])

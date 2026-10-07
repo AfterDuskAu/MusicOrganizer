@@ -715,15 +715,9 @@ struct MainView: View {
         case .movieFinder:
             MovieFinderView()
         case .videoFinder:
-            ComingPage(
-                title: "Video Finder",
-                text: "Searching for any video isn't built yet. Explore, under it, has channels "
-                    + "to watch by section.")
+            VideoFinderView()
         case .channels:
-            ComingPage(
-                title: "Channel",
-                text: "The channels you follow will be listed here. Following a channel isn't "
-                    + "built yet: for now they're under Video Finder → Explore.")
+            ChannelsView()
         case .movies:
             MoviesView()
         case .importPlaylists:

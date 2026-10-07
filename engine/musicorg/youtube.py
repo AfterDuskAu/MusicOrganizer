@@ -50,7 +50,7 @@ import re
 import threading
 import time
 from collections.abc import Callable
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Protocol, TypeVar
@@ -1219,6 +1219,178 @@ def video(video_id: str) -> Video:
         for height, fps in sorted(best, reverse=True)
     )
     return Video(video_id, _audio_of(video_id, info), qualities)
+
+
+# ---- videos of any kind, and channels (2026-10-07) --------------------------------------
+#
+# Video Finder searches all of YouTube, not only its music, and a channel's page lists
+# what the channel has put up lately. Both are yt-dlp's "flat" listings: one request,
+# nothing fetched for each video. Checked against yt-dlp 2026.08.19:
+#
+# - `ytsearch<N>:<words>` gives `entries`, each with `id`, `title`, `duration` (seconds),
+#   `view_count`, `channel`, `channel_id` and `thumbnails` (`url`, `width`, `height`). A
+#   search gives no date.
+# - `https://www.youtube.com/channel/<id>/videos` gives the channel's `channel`,
+#   `channel_follower_count`, `description` and `thumbnails` (its picture, and banners),
+#   and `entries` newest first with `id`, `title`, `duration`, `view_count` and, when
+#   asked with the extractor argument `youtubetab: approximate_date`, a `timestamp`
+#   worked out from YouTube's "3 days ago" (so it's a day, not a minute).
+
+CHANNEL_ID = re.compile(r"UC[A-Za-z0-9_-]{22}")
+VIDEOS_MOST = 100
+
+
+@dataclass(frozen=True)
+class VideoResult:
+    """A video as a list shows it."""
+
+    video_id: str
+    title: str
+    channel: str | None
+    channel_id: str | None
+    duration_s: int | None
+    views: int | None
+    published: str | None  # the day it came out ("2026-10-01"), when YouTube said
+    thumbnail: str | None
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class Channel:
+    channel_id: str
+    name: str
+    followers: int | None
+    description: str | None
+    thumbnail: str | None
+    videos: tuple[VideoResult, ...]
+
+
+def search_videos(query: str, limit: int = 25) -> list[VideoResult]:
+    """Videos of any kind that YouTube finds for these words, best first."""
+    words = " ".join(query.split())
+    if not words:
+        raise YouTubeError("Type something to search for first.")
+    limit = max(1, min(limit, VIDEOS_MOST))
+    raw = _flat("video-search", f"{limit} {words}", f"ytsearch{limit}:{words}", limit)
+    return [v for v in (_video_result(e) for e in _entries(raw)) if v is not None]
+
+
+def channel_videos(channel_id: str, limit: int = 50) -> Channel:
+    """A channel, and the videos it has put up most lately, newest first."""
+    if not CHANNEL_ID.fullmatch(channel_id):
+        raise YouTubeError("That isn't a channel's id.")
+    limit = max(1, min(limit, VIDEOS_MOST))
+    raw = _flat(
+        "channel-videos",
+        f"{limit} {channel_id}",
+        f"https://www.youtube.com/channel/{channel_id}/videos",
+        limit,
+        {"youtubetab": {"approximate_date": [""]}},
+    )
+    if not isinstance(raw, dict):
+        raise YouTubeError("YouTube gave an answer for that channel that can't be read.")
+    name = raw.get("channel") or raw.get("uploader")
+    videos = tuple(
+        replace(v, channel=v.channel or name, channel_id=v.channel_id or channel_id)
+        for v in (_video_result(e) for e in _entries(raw))
+        if v is not None
+    )
+    followers = raw.get("channel_follower_count")
+    description = raw.get("description")
+    return Channel(
+        channel_id=channel_id,
+        name=name if isinstance(name, str) and name else channel_id,
+        followers=followers if isinstance(followers, int) else None,
+        description=description if isinstance(description, str) and description else None,
+        thumbnail=_square_picture(raw.get("thumbnails")),
+        videos=videos,
+    )
+
+
+def _flat(
+    kind: str, key: str, url: str, most: int, extractor_args: dict[str, Any] | None = None
+) -> Any:
+    """One flat listing from yt-dlp, through the shared limiter; in replay mode, the
+    answer recorded for it."""
+    replay = os.environ.get(REPLAY_ENV)
+    if replay:
+        return read_recording(Path(replay), kind, key)
+    opts = _base_options()
+    del opts["format"]  # nothing is going to be played or fetched from this
+    opts.update(extract_flat="in_playlist", playlistend=most, noplaylist=False, skip_download=True)
+    if extractor_args:
+        opts["extractor_args"] = extractor_args
+
+    def run() -> Any:
+        with _make_ydl(opts) as ydl:
+            return ydl.sanitize_info(ydl.extract_info(url, download=False))
+
+    try:
+        return limiter().call(run)
+    except (YouTubePausedError, ReplayMissError):
+        raise
+    except Exception as exc:
+        log.info("A listing from YouTube failed: %s", exc)
+        raise YouTubeError(
+            "YouTube couldn't be asked just now. Check the internet connection and try again."
+        ) from exc
+
+
+def _entries(raw: Any) -> list[Any]:
+    entries = raw.get("entries") if isinstance(raw, dict) else None
+    return entries if isinstance(entries, list) else []
+
+
+def _video_result(entry: Any) -> VideoResult | None:
+    if not isinstance(entry, dict):
+        return None
+    video_id, title = entry.get("id"), entry.get("title")
+    if not isinstance(video_id, str) or not VIDEO_ID.fullmatch(video_id):
+        return None  # a channel or a playlist among a search's results
+    if not isinstance(title, str) or not title:
+        return None
+    stamp = entry.get("timestamp") or entry.get("release_timestamp")
+    published = (
+        datetime.fromtimestamp(stamp, UTC).strftime("%Y-%m-%d")
+        if isinstance(stamp, (int, float)) and not isinstance(stamp, bool)
+        else None
+    )
+    duration, views = entry.get("duration"), entry.get("view_count")
+    channel, channel_id = entry.get("channel") or entry.get("uploader"), entry.get("channel_id")
+    return VideoResult(
+        video_id=video_id,
+        title=title,
+        channel=channel if isinstance(channel, str) and channel else None,
+        channel_id=channel_id if isinstance(channel_id, str) and channel_id else None,
+        duration_s=round(duration) if isinstance(duration, (int, float)) else None,
+        views=views if isinstance(views, int) and not isinstance(views, bool) else None,
+        published=published,
+        thumbnail=_widest_picture(entry.get("thumbnails")),
+    )
+
+
+def _pictures(thumbnails: Any) -> list[dict[str, Any]]:
+    return [
+        t
+        for t in (thumbnails if isinstance(thumbnails, list) else [])
+        if isinstance(t, dict) and isinstance(t.get("url"), str)
+    ]
+
+
+def _widest_picture(thumbnails: Any) -> str | None:
+    found = _pictures(thumbnails)
+    return max(found, key=lambda t: t.get("width") or 0)["url"] if found else None
+
+
+def _square_picture(thumbnails: Any) -> str | None:
+    """A channel's own picture: the biggest square one (the others are its banners)."""
+    square = [t for t in _pictures(thumbnails) if t.get("width") and t["width"] == t.get("height")]
+    if square:
+        return max(square, key=lambda t: t["width"])["url"]
+    named = [t for t in _pictures(thumbnails) if t.get("id") == "avatar_uncropped"]
+    return named[0]["url"] if named else None
 
 
 def _is_playable_picture(found: dict[str, Any]) -> bool:

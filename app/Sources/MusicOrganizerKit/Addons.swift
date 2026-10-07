@@ -219,3 +219,98 @@ public struct TorrentPlaying: Decodable, Sendable {
     public let infoHash: String
     public let url: String
 }
+
+/// A video as a list shows it (the engine's Video): a search result, or one of a
+/// channel's.
+public struct VideoHit: Decodable, Identifiable, Hashable, Sendable {
+    public let videoId: String
+    public let title: String
+    public let channel: String?
+    public let channelId: String?
+    public let durationS: Double?
+    public let views: Int?
+    /// The day it came out ("2026-10-01"). A search gives none.
+    public let published: String?
+    public let thumbnail: String?
+
+    public var id: String { videoId }
+
+    /// The video as something the app's player can play.
+    public var result: SearchResult {
+        SearchResult(
+            videoId: videoId, title: title, artists: channel.map { [$0] } ?? [],
+            durationS: durationS, thumbnail: thumbnail)
+    }
+
+    /// How long it is, as a clock: "2:24", "1:02:03". Empty when unknown.
+    public var length: String {
+        guard let durationS, durationS > 0 else { return "" }
+        let whole = Int(durationS)
+        let (hours, minutes, seconds) = (whole / 3600, whole % 3600 / 60, whole % 60)
+        return hours > 0
+            ? String(format: "%d:%02d:%02d", hours, minutes, seconds)
+            : String(format: "%d:%02d", minutes, seconds)
+    }
+
+    /// How often it's been watched, in round numbers: "1.6M views". Empty when unknown.
+    public var viewsLabel: String {
+        guard let views else { return "" }
+        return views == 1 ? "1 view" : "\(Self.round(views)) views"
+    }
+
+    /// 950 → "950", 12,400 → "12K", 1,643,948 → "1.6M", 2,100,000,000 → "2.1B".
+    public static func round(_ number: Int) -> String {
+        func short(_ value: Double, _ letter: String) -> String {
+            let text = value < 10 ? String(format: "%.1f", value) : String(Int(value))
+            return (text.hasSuffix(".0") ? String(text.dropLast(2)) : text) + letter
+        }
+        switch number {
+        case ..<1000: return String(number)
+        case ..<1_000_000: return short(Double(number) / 1000, "K")
+        case ..<1_000_000_000: return short(Double(number) / 1_000_000, "M")
+        default: return short(Double(number) / 1_000_000_000, "B")
+        }
+    }
+}
+
+public struct VideosAnswer: Decodable, Sendable {
+    public let videos: [VideoHit]
+}
+
+/// A channel by what's needed to open its page: its id, and its name and picture to
+/// show until the page has loaded. Also how a followed channel is kept.
+public struct ChannelRef: Decodable, Identifiable, Hashable, Sendable {
+    public let channelId: String
+    public let name: String
+    public let thumbnail: String?
+
+    public var id: String { channelId }
+
+    public init(channelId: String, name: String, thumbnail: String? = nil) {
+        self.channelId = channelId
+        self.name = name
+        self.thumbnail = thumbnail
+    }
+
+    /// A channel from a channels add-on, whose ids read "yt_id:<the channel's id>".
+    public init?(item: MediaItem) {
+        let id = item.id.hasPrefix("yt_id:") ? String(item.id.dropFirst(6)) : item.id
+        guard id.hasPrefix("UC"), id.count == 24 else { return nil }
+        self.init(channelId: id, name: item.name, thumbnail: item.poster)
+    }
+}
+
+public struct ChannelsAnswer: Decodable, Sendable {
+    public let channels: [ChannelRef]
+}
+
+/// A channel's page (the engine's `channel.videos`).
+public struct ChannelPage: Decodable, Sendable {
+    public let channelId: String
+    public let name: String
+    public let followers: Int?
+    public let description: String?
+    public let thumbnail: String?
+    public let followed: Bool
+    public let videos: [VideoHit]
+}

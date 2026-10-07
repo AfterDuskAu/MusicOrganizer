@@ -131,6 +131,8 @@ final class AppModel {
     let media = MediaBrowser()
     /// The player for films and video files (libmpv). One film at a time.
     let film = FilmPlayer()
+    /// The channels the owner follows (Videos → Channel), by name.
+    private(set) var followedChannels: [ChannelRef] = []
     /// The torrent the film player is playing from, if it is, and how that's going.
     private(set) var filmTorrent: String?
     private(set) var filmStatus: TorrentStatus?
@@ -320,6 +322,10 @@ final class AppModel {
             forName: NSWindow.didEnterFullScreenNotification, object: nil, queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.tidyFullScreenTopBar() }
+            // The strip's window is made as full screen begins; once more when it has settled.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                MainActor.assumeIsolated { self?.tidyFullScreenTopBar() }
+            }
         }
         await connect()
     }
@@ -503,18 +509,19 @@ final class AppModel {
         tidyFullScreenTopBar()
     }
 
-    /// In macOS's full screen, a window's top bar lives in a strip of its own, above
-    /// the window. Taking the bar's buttons away (as is done for a film, and for a video
-    /// or visualizer given the whole screen) leaves that strip there, empty, across the
-    /// top of the picture: the owner saw it from the first full-screen video on. So
-    /// while a picture has the whole screen, macOS is asked to keep the strip out of
-    /// sight with the menu bar; it comes down when the mouse goes to the top.
+    /// In macOS's full screen, a window's top bar is drawn by a small window of its own
+    /// that sits across the top of the screen, under the menu bar. Taking the bar's
+    /// buttons away (as is done for a film, and for a video or visualizer given the
+    /// whole screen) leaves that window there, an empty strip across the picture: the
+    /// owner saw it from the first full-screen video on. Asking macOS to hide it with
+    /// the menu bar (`presentationOptions`) is ignored when asked from here (tried and
+    /// seen on screen, 2026-10-07). So while a picture has the screen, that window is
+    /// simply made see-through, and put back afterwards.
     func tidyFullScreenTopBar() {
-        guard mainWindow?.styleMask.contains(.fullScreen) == true else { return }
-        if film.isOpen || pictureFullScreen {
-            NSApp.presentationOptions.insert(.autoHideToolbar)
-        } else {
-            NSApp.presentationOptions.remove(.autoHideToolbar)
+        let hide = film.isOpen || pictureFullScreen
+        for window in NSApp.windows
+        where String(describing: type(of: window)).contains("ToolbarFullScreenWindow") {
+            window.alphaValue = hide ? 0 : 1
         }
     }
 
@@ -567,6 +574,24 @@ final class AppModel {
     }
 
     private struct Empty: Decodable {}
+
+    /// Follow a channel, or stop. It's a note kept with the library, nothing more.
+    func follow(_ channel: ChannelRef, on: Bool) {
+        var asked: [String: Any] = ["channel_id": channel.channelId, "on": on, "name": channel.name]
+        if let thumbnail = channel.thumbnail { asked["thumbnail"] = thumbnail }
+        Task {
+            do {
+                followedChannels = try await ask("channel.follow", asked, as: ChannelsAnswer.self).channels
+            } catch {
+                notice = error.localizedDescription
+            }
+        }
+    }
+
+    private func loadFollowedChannels() async {
+        followedChannels =
+            (try? await ask("channel.followed", [:], as: ChannelsAnswer.self).channels) ?? []
+    }
 
     /// Play videos as themselves (a channel's videos, a trailer), from one of them.
     func playVideos(_ videos: [SearchResult], startAt index: Int) {
@@ -835,6 +860,7 @@ final class AppModel {
             _ = try await connection.call("library.open", ["root": folder.path])
             // Before anything is looked up: a child's profile finds only clean songs.
             await applyKids()
+            await loadFollowedChannels()
             try await load()
             phase = .ready
             // Downloads asked for before the app was last closed carry on in the engine.

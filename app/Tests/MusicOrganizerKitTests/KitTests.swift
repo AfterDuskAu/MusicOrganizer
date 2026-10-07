@@ -1789,3 +1789,38 @@ final class TorrentStatusTests: XCTestCase {
             "All of the film is here")
     }
 }
+
+final class VideoHitTests: XCTestCase {
+    func testAVideosLengthAndViewsInRoundNumbers() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let said = Data(
+            #"""
+            {"videos":[{"video_id":"abcdefghijk","title":"T","channel":"NASA","channel_id":"UCx",
+              "duration_s":144,"views":1643948,"published":null,"thumbnail":null},
+             {"video_id":"abcdefghijl","title":"Long","channel":null,"channel_id":null,
+              "duration_s":3723,"views":null,"published":"2026-10-01","thumbnail":null}]}
+            """#.utf8)
+        let videos = try decoder.decode(VideosAnswer.self, from: said).videos
+        XCTAssertEqual(videos.map(\.length), ["2:24", "1:02:03"])
+        XCTAssertEqual(videos.map(\.viewsLabel), ["1.6M views", ""])
+        XCTAssertEqual(videos[0].result.artists, ["NASA"])
+        XCTAssertEqual(videos[1].result.artists, [])
+        XCTAssertEqual(
+            [950, 1000, 12_400, 999_999, 2_000_000, 2_100_000_000].map(VideoHit.round),
+            ["950", "1K", "12K", "999K", "2M", "2.1B"])
+    }
+
+    func testAChannelFromAnAddonIsKnownByItsOwnId() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        func item(_ id: String) throws -> MediaItem {
+            let said = #"{"id":"\#(id)","type":"channel","name":"N","poster":"https://p.example/a.jpg","poster_shape":"square","year":null,"rating":null,"genres":[]}"#
+            return try decoder.decode(MediaItem.self, from: Data(said.utf8))
+        }
+        let channel = try XCTUnwrap(ChannelRef(item: item("yt_id:UCLA_DiR1FfKNvjuUpBHmylQ")))
+        XCTAssertEqual(channel.channelId, "UCLA_DiR1FfKNvjuUpBHmylQ")
+        XCTAssertEqual(channel.thumbnail, "https://p.example/a.jpg")
+        XCTAssertNil(ChannelRef(item: try item("tt0012349")))
+    }
+}

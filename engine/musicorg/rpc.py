@@ -329,6 +329,10 @@ class Server:
             "addon.catalog": self.addon_catalog,
             "addon.details": self.addon_details,
             "addon.streams": self.addon_streams,
+            "video.search": self.video_search,
+            "channel.videos": self.channel_videos,
+            "channel.follow": self.channel_follow,
+            "channel.followed": self.channel_followed,
             "torrent.play": self.torrent_play,
             "torrent.status": self.torrent_status,
             "torrent.stop": self.torrent_stop,
@@ -890,6 +894,47 @@ class Server:
 
     def addon_streams(self, params: dict[str, Any]) -> dict[str, Any]:
         return addons.streams(addons.listed(), need(params, "type", str), need(params, "id", str))
+
+    # -- methods: videos of any kind, and the channels the owner follows (2026-10-07) --
+
+    def video_search(self, params: dict[str, Any]) -> dict[str, Any]:
+        query = need(params, "query", str).strip()
+        limit = want(params, "limit", int, 25) or 25
+        if not query:
+            raise RpcError(INVALID_PARAMS, "query is empty.")
+        if not 1 <= limit <= youtube.VIDEOS_MOST:
+            raise RpcError(INVALID_PARAMS, f"limit must be 1 to {youtube.VIDEOS_MOST}.")
+        return {"videos": [v.to_dict() for v in youtube.search_videos(query, limit)]}
+
+    def channel_videos(self, params: dict[str, Any]) -> dict[str, Any]:
+        channel_id = need(params, "channel_id", str)
+        limit = want(params, "limit", int, 50) or 50
+        if not 1 <= limit <= youtube.VIDEOS_MOST:
+            raise RpcError(INVALID_PARAMS, f"limit must be 1 to {youtube.VIDEOS_MOST}.")
+        lib = self._library()
+        found = youtube.channel_videos(channel_id, limit)
+        return {
+            "channel_id": found.channel_id,
+            "name": found.name,
+            "followers": found.followers,
+            "description": found.description,
+            "thumbnail": found.thumbnail,
+            "followed": any(c["channel_id"] == channel_id for c in listening.followed(lib)),
+            "videos": [v.to_dict() for v in found.videos],
+        }
+
+    def channel_follow(self, params: dict[str, Any]) -> dict[str, Any]:
+        channels = listening.follow(
+            self._library(),
+            need(params, "channel_id", str),
+            need(params, "on", bool),
+            name=want(params, "name", str, "") or "",
+            thumbnail=want(params, "thumbnail", str),
+        )
+        return {"channels": channels}
+
+    def channel_followed(self, params: dict[str, Any]) -> dict[str, Any]:
+        return {"channels": listening.followed(self._library())}
 
     # -- methods: a film played from a torrent while it arrives (2026-10-07) --
     # Only ever from the owner's click. What arrives is kept in the app's cache folder,
