@@ -51,7 +51,8 @@ final class FilmPlayer {
         }
         mpv = made
         layer.backgroundColor = NSColor.black.cgColor
-        var surface = layer
+        // mpv is told where to draw by the layer's address, as a number.
+        var surface = Int64(Int(bitPattern: Unmanaged.passUnretained(layer).toOpaque()))
         mpv_set_option(made, "wid", MPV_FORMAT_INT64, &surface)
         for (name, value) in [
             ("vo", "gpu-next"), ("gpu-api", "vulkan"), ("gpu-context", "moltenvk"),
@@ -111,7 +112,8 @@ final class FilmPlayer {
         if let mpv {
             self.mpv = nil
             // Off the main thread: stopping waits for the picture's last frame.
-            DispatchQueue.global().async { mpv_terminate_destroy(mpv) }
+            let address = Int(bitPattern: mpv)
+            DispatchQueue.global().async { mpv_terminate_destroy(OpaquePointer(bitPattern: address)) }
         }
     }
 
