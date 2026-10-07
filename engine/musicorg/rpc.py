@@ -76,6 +76,7 @@ from musicorg.config import (
     THROTTLE_DEFAULTS,
     Config,
     app_dirs,
+    media_folders,
     save_daily_cap,
 )
 from musicorg.errors import (
@@ -341,6 +342,7 @@ class Server:
             "channel.followed": self.channel_followed,
             "torrent.play": self.torrent_play,
             "torrent.status": self.torrent_status,
+            "torrent.keep": self.torrent_keep,
             "torrent.stop": self.torrent_stop,
             "sharing.status": self.sharing_status,
             "sharing.set": self.sharing_set,
@@ -966,9 +968,27 @@ class Server:
         trackers = want(params, "trackers", list, []) or []
         if not all(isinstance(t, str) for t in trackers):
             raise RpcError(INVALID_PARAMS, "trackers should be a list of addresses.")
+        return self._film_player().play(info_hash, index, trackers)
+
+    def _film_player(self) -> torrents.Player:
         if self._films is None:
-            self._films = torrents.Player(app_dirs().cache)
-        return self._films.play(info_hash, index, trackers)
+            self._films = torrents.Player(app_dirs().cache, movies=media_folders()["movies"])
+        return self._films
+
+    def torrent_keep(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Keep a film in the Movies folder once all of it has arrived. Only ever from
+        the owner's click."""
+        title = need(params, "title", str).strip()
+        year = (want(params, "year", str) or "").strip()
+        trackers = want(params, "trackers", list, []) or []
+        if not title:
+            raise RpcError(INVALID_PARAMS, "title is empty.")
+        if not all(isinstance(t, str) for t in trackers):
+            raise RpcError(INVALID_PARAMS, "trackers should be a list of addresses.")
+        name = f"{title} ({year})" if year.isdigit() and len(year) == 4 else title
+        return self._film_player().keep(
+            need(params, "info_hash", str), want(params, "file_index", int), trackers, name
+        )
 
     def torrent_status(self, params: dict[str, Any]) -> dict[str, Any]:
         if self._films is None:

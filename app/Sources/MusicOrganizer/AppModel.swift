@@ -136,6 +136,8 @@ final class AppModel {
     var channelSearches: [String: [ChannelRef]] = [:]
     /// The channels the owner follows (Videos → Channel), by name.
     private(set) var followedChannels: [ChannelRef] = []
+    /// Films being kept, or kept since the app opened, by their torrent's id.
+    private(set) var filmKeeps: [String: TorrentStatus] = [:]
     /// The torrent the film player is playing from, if it is, and how that's going.
     private(set) var filmTorrent: String?
     private(set) var filmStatus: TorrentStatus?
@@ -563,6 +565,27 @@ final class AppModel {
             }
         } catch {
             notice = error.localizedDescription
+        }
+    }
+
+    /// Keep a film in the Movies folder: the engine fetches all of it, then saves it.
+    /// How it's going is asked every two seconds until it's saved or has failed.
+    func keepFilm(_ stream: MediaStream, title: String, year: String?) {
+        guard let hash = stream.infoHash, filmKeeps[hash]?.isKeeping != true else { return }
+        var asked: [String: Any] = ["info_hash": hash, "trackers": stream.trackers, "title": title]
+        if let index = stream.fileIndex { asked["file_index"] = index }
+        if let year { asked["year"] = String(year.prefix(4)) }
+        Task {
+            do {
+                filmKeeps[hash] = try await ask("torrent.keep", asked, as: TorrentStatus.self)
+                while filmKeeps[hash]?.isKeeping == true {
+                    try? await Task.sleep(for: .seconds(2))
+                    filmKeeps[hash] = try await ask(
+                        "torrent.status", ["info_hash": hash], as: TorrentStatus.self)
+                }
+            } catch {
+                notice = error.localizedDescription
+            }
         }
     }
 

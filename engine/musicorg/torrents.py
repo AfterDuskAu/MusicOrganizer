@@ -190,7 +190,14 @@ class _Joined:
     folder: Path
     last_asked: float = field(default_factory=time.monotonic)
     closed: bool = False
+    # Keeping the film (the owner clicked Keep): the name to save it under, without its
+    # ending; then where it was saved, or why it couldn't be.
+    keep_name: str | None = None
+    kept_path: str | None = None
+    keep_error: str | None = None
+    playing: bool = True  # False once the player has let go but the film is still wanted
     # Filled in once the torrent's details have arrived:
+    index: int = 0
     name: str = ""
     size: int = 0
     path: Path | None = None
@@ -204,10 +211,13 @@ class _Joined:
         """Wait for the torrent's details (its files), and choose the film in it."""
         until = time.monotonic() + wait_s
         while self.path is None:
-            if self.closed or time.monotonic() > until:
-                return False
+            # Looked for before the clock is: with no time to wait (a film that's only
+            # being kept, looked in on every two seconds) details that have arrived
+            # must still be read. (They weren't: found by a real run, 2026-10-07.)
             info = self.handle.torrent_file() if self.handle.is_valid() else None
             if info is None:
+                if self.closed or time.monotonic() >= until:
+                    return False
                 time.sleep(0.25)
                 continue
             files = info.files()
@@ -215,6 +225,7 @@ class _Joined:
             chosen = choose_file(listed, self.file_index)
             # Only the film is fetched, in the order it's read.
             self.handle.prioritize_files([4 if i == chosen else 0 for i in range(len(listed))])
+            self.index = chosen
             self.name, self.size = Path(listed[chosen][0]).name, listed[chosen][1]
             self.file_offset = files.file_offset(chosen)
             self.piece_length = info.piece_length()
@@ -244,6 +255,17 @@ class _Joined:
         except OSError:
             return None
 
+    @property
+    def wanted(self) -> bool:
+        """Being kept, and not there yet: it isn't closed for being left alone."""
+        return self.keep_name is not None and self.kept_path is None and self.keep_error is None
+
+    def all_here(self) -> bool:
+        """Every byte of the film's file has arrived."""
+        if self.path is None or not self.handle.is_valid():
+            return False
+        return bool(self.size) and self.handle.file_progress()[self.index] >= self.size
+
     def status(self) -> dict[str, Any]:
         self.asked_now()
         told = self.handle.status()
@@ -255,6 +277,9 @@ class _Joined:
             state = "fetching"
         return {
             "info_hash": self.info_hash,
+            "keeping": self.keep_name is not None and self.kept_path is None,
+            "kept_path": self.kept_path,
+            "keep_error": self.keep_error,
             "state": state,
             "name": self.name or None,
             "bytes": self.size or None,
@@ -268,8 +293,9 @@ class Player:
     """The films being played from torrents, and the address they're played at. One
     for the engine, made the first time a film is asked for."""
 
-    def __init__(self, cache: Path) -> None:
+    def __init__(self, cache: Path, movies: Path | None = None) -> None:
         self.folder = cache / "torrents"
+        self.movies = movies  # where a kept film goes; None: films can't be kept
         self._key = secrets.token_urlsafe(24)
         self._session: Any = None
         self._server: ThreadingHTTPServer | None = None
@@ -305,9 +331,30 @@ class Player:
             raise TorrentError("That film isn't being played any more.")
         return joined.status()
 
+    def keep(
+        self, info_hash: str, file_index: int | None, trackers: list[str], name: str
+    ) -> dict[str, Any]:
+        """Keep a film: fetch all of it, then copy it into the Movies folder under
+        `name` (its own ending is added). It carries on after the player is shut, for
+        as long as the engine runs; a film that's already playing is kept from where
+        it has got to. Returns its status, as `status` does."""
+        if self.movies is None:
+            raise TorrentError("There's nowhere set to keep films on this computer.")
+        if not name.strip():
+            raise TorrentError("A film needs a name to be kept under.")
+        self.play(info_hash, file_index, trackers)
+        joined = self._joined[info_hash.lower()]
+        joined.keep_name, joined.keep_error = name.strip(), None
+        return joined.status()
+
     def close(self, info_hash: str) -> None:
-        """Leave a torrent and delete what arrived of it."""
+        """Leave a torrent and delete what arrived of it. One that's being kept isn't
+        left: the player has only let go of it, and it's left when it has been saved."""
         with self._lock:
+            joined = self._joined.get(info_hash.lower())
+            if joined is not None and joined.wanted:
+                joined.playing = False
+                return
             joined = self._joined.pop(info_hash.lower(), None)
         if joined is not None:
             self._leave(joined)
@@ -373,10 +420,39 @@ class Player:
             return
         serve(handler, joined, head=head)
 
+    def _save_kept(self, joined: _Joined) -> None:
+        """A film that's being kept and has all arrived: copy it into the Movies
+        folder. `fileops` does the writing; it never overwrites."""
+        from musicorg import fileops
+        from musicorg.errors import MusicOrgError
+
+        assert joined.path is not None and self.movies is not None
+        ending = joined.path.suffix or ".mp4"
+        try:
+            saved = fileops.keep_media(
+                joined.path,
+                self.movies,
+                f"{joined.keep_name}{ending}",
+                cache=self.folder,
+                allowed=[self.movies],
+            )
+            joined.kept_path = str(saved)
+        except (MusicOrgError, ValueError) as exc:
+            joined.keep_error = getattr(exc, "message", None) or str(exc)
+            log.warning("A film couldn't be kept: %s", joined.keep_error)
+        if not joined.playing:
+            self.close(joined.info_hash)  # nobody is watching it: its cache goes
+
     def _close_idle(self) -> None:
-        while not self._stopping.wait(30):
+        while not self._stopping.wait(2):
             now = time.monotonic()
             for joined in list(self._joined.values()):
+                if joined.wanted:
+                    # Being kept: its details are waited for here if nothing is playing
+                    # it, and it's saved once it has all arrived.
+                    if joined.ready(0) and joined.all_here():
+                        self._save_kept(joined)
+                    continue
                 if now - joined.last_asked > IDLE_S:
                     log.info("A film nobody asked about for ten minutes was closed.")
                     self.close(joined.info_hash)

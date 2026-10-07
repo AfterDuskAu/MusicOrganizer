@@ -830,6 +830,19 @@
 - **Checked:** `swift build`, `swift test` (94, two new). By eye in the owner's app: the Import Playlists page with its YouTube tab; Songs with all its columns after the warm-up, and the saved column widths unchanged by it.
 - **Not checked:** an engine message arriving reworded in the app (tested in the Kit only); the sliver, which wasn't looked for.
 
+2026-10-07, about 9:45pm. **Keeping a film: the contract's new rule, and the Keep button.** The owner: "proceed with the next step" (downloads for the new sections; the folders were decided earlier in the day: films in Movies, other videos in Downloads/Media).
+
+- **The contract (section 1) and `CLAUDE.md` (rule 2) gained "kept media".** Films and videos that aren't music are not part of the library and don't go in it. They're written only by a new `fileops.keep_media`, beside `write_export` as the second writer outside the library: it copies only a file the app fetched itself, out of the app's cache; only into the Movies folder or `Media` in Downloads (or a folder inside one), never into a library or a source; it never overwrites; the file appears whole or not at all; it makes a missing folder inside those two but never Movies or Downloads themselves. It isn't journaled: nothing of the library's is touched. `config.media_folders()` says where the two are (the computer's own Movies, or Videos on Windows; inside the test's own folder in every test).
+- **`torrent.keep`.** The engine fetches all of the film's file, then copies it to Movies as `<Title> (<Year>).<its own ending>`, exactly as it arrived. A film that's playing is kept from where it has got to; one that's only being kept carries on after the player is shut, for as long as the engine runs, and its cache is cleared once it's saved and nobody is watching it. `torrent.status` says `keeping`, `kept_path` or `keep_error`.
+- **The app:** a Keep button beside Play on a film's torrent streams, and a line under it: "Keeping: 34% here · 5.2 MB/s", then "Kept in your Movies folder as …", or why it couldn't be. The kept film then shows under Videos → Movies, which lists that folder.
+- **A fault the real run found, that the tests hadn't:** a film that was only being kept (never played) arrived in full and was never saved: its details were read only when a player asked for it. Fixed, with a test that fails without the fix.
+- **Checked:** `pytest` (2,032 passed; thirteen new: the copy, never overwriting, a safe name, each refusal, a failed copy leaving nothing, and the torrent player's part with a stand-in torrent), `ruff check`, `swift build`, `swift test` (95, one new). **For real:** The Kid (1921) from Public Domain Movies, kept with no player open: all 901 MB in under three minutes, saved as "The Kid (1921).mp4" at exactly its size, read by ffprobe as a 53-minute MP4, and the cache empty afterwards (in a scratch Movies folder, not the owner's).
+- **Not checked:** the Keep button and its line in the app.
+- **Limits, for the owner:**
+  - **A film still arriving when the app is closed is not kept,** and has to be asked for again from the start. Carrying on across a restart isn't built.
+  - **Videos that aren't music can't be kept yet** (gaming, news, sports, learning, podcasts into Downloads/Media). The rule and the writer are ready for them; what's missing is the download itself, which has to go through the same paced queue as every song (rule 8), and that's the next piece.
+  - A kept film is a plain file: no tags, no cover, not in the index, and not shared with a phone yet.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

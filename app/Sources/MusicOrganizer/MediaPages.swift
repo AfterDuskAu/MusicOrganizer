@@ -708,8 +708,19 @@ struct MovieView: View {
                             }
                             .disabled(!stream.canPlay)
                             .help(stream.canPlay ? "Play it now" : "This one can't be played in the app yet")
+                            if stream.kind == "torrent" {
+                                Button("Keep", systemImage: "arrow.down.circle") {
+                                    model.keepFilm(
+                                        stream, title: film.name, year: details?.year ?? film.year)
+                                }
+                                .disabled(stream.infoHash.flatMap { model.filmKeeps[$0] } != nil)
+                                .help("Fetch the whole film and save it in your Movies folder")
+                            }
                         }
                         .padding(.vertical, 6)
+                        if let line = stream.infoHash.flatMap({ model.filmKeeps[$0]?.keepLine }) {
+                            Text(line).font(.callout).foregroundStyle(.secondary)
+                        }
                     }
                 }
                 ForEach(streams.problems, id: \.self) { problem in

@@ -31,6 +31,16 @@ The engine guarantees everything in this document. It's written so that if the a
 
 - **Managed folders:** `Music/`, `_Replaced/`, `_Staging/` and `.musicorg/`. The engine writes user data only there.
 - **Other places the engine writes:** the app's own config, log and cache folders, and exports the user explicitly asked for (via `fileops.write_export`, which never overwrites).
+- **Kept media, outside the library (the owner, 2026-10-07).** Films and videos that aren't music are not part of the library and don't go in it:
+  - a film the owner keeps goes in the computer's own **Movies** folder (Videos on Windows): `<Title> (<Year>).<ending>`, the file exactly as it arrived (never converted);
+  - a video that isn't music (gaming, news, sports, learning, a podcast) will go in **`Media` inside Downloads** (not built yet).
+
+  Both are written only by `fileops.keep_media`, under these guarantees:
+  - it copies only a file the app fetched itself, out of the app's own cache folder, and leaves that file where it is;
+  - it writes only inside those two folders, and never inside a library's managed folders or a source;
+  - **it never overwrites** (` (2)`, ` (3)` if the name is taken), and a file appears complete or not at all;
+  - it makes a missing folder inside those two, and the `Media` folder itself, but never the Movies or Downloads folder;
+  - it's not journaled and can't be undone from the journal: nothing of the library's is touched, and the file is the owner's to keep or bin, like an export. No tags are written to it and it isn't indexed.
 - **Recommended root:** `~/Music Organizer Library` or a folder on an external drive, **not** inside `~/Music` if `~/Music` holds the rips you'll register as a source. The engine refuses a root inside a source, and a source that contains the root.
 - `Mix/` (the weekly mix, v1.1) will sit beside `Music/` and is not part of the library.
 

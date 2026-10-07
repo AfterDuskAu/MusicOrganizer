@@ -1792,6 +1792,25 @@ final class TorrentStatusTests: XCTestCase {
             TorrentStatus(state: "complete", peers: 3, bytesPerSecond: 0, progress: 1).line,
             "All of the film is here")
     }
+
+    func testAFilmBeingKeptSaysHowFarItIsAndWhereItWent() {
+        let playing = TorrentStatus(state: "fetching", peers: 6, bytesPerSecond: 0, progress: 0.3)
+        XCTAssertNil(playing.keepLine)
+        XCTAssertFalse(playing.isKeeping)
+        let keeping = TorrentStatus(
+            state: "fetching", peers: 6, bytesPerSecond: 5_200_000, progress: 0.34, keeping: true)
+        XCTAssertTrue(keeping.isKeeping)
+        XCTAssertEqual(
+            keeping.keepLine, "Keeping: 34% here · 5.2 MB/s. It carries on while the app is open.")
+        let kept = TorrentStatus(
+            state: "complete", peers: 0, bytesPerSecond: 0, progress: 1, keeping: false,
+            keptPath: "/Users/someone/Movies/The Kid (1921).mp4")
+        XCTAssertFalse(kept.isKeeping)
+        XCTAssertEqual(kept.keepLine, "Kept in your Movies folder as “The Kid (1921).mp4”")
+        let failed = TorrentStatus(
+            state: "complete", peers: 0, bytesPerSecond: 0, progress: 1, keepError: "No room.")
+        XCTAssertEqual(failed.keepLine, "Couldn't keep it: No room.")
+    }
 }
 
 final class VideoHitTests: XCTestCase {

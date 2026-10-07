@@ -2349,6 +2349,79 @@ def write_export(
 # ---- small helpers ---------------------------------------------------------------------
 
 
+def keep_media(
+    source: Path,
+    folder: Path,
+    name: str,
+    *,
+    cache: Path,
+    allowed: Iterable[Path],
+    forbidden: Iterable[Path] = (),
+) -> Path:
+    """Copy a finished film or video the owner asked to keep out of the app's cache and
+    into one of the places kept media goes (contract section 1: the Movies folder, and
+    Media in Downloads), and return where it is. The other writer, with `write_export`,
+    that puts a file outside the library.
+
+    - `source` must be a file inside `cache` (the app's own cache folder): nothing else
+      is ever copied from. It's opened read-only and left where it is.
+    - `folder` must be one of `allowed`, or a folder inside one. It's made if missing
+      (its parents too, up to the allowed folder; the allowed folder itself only when
+      the folder it sits in exists).
+    - Never inside `forbidden` (a library's folders, a source folder).
+    - Never overwrites: ` (2)`, ` (3)` ... if the name is taken. The file appears
+      complete or not at all: it's copied to a temp file beside it, flushed, and
+      renamed onto the reserved name.
+    - Not journaled, and needs no library lock: no library file is touched.
+    """
+    source, cache = Path(source), Path(cache)
+    if not _within(source.resolve(), cache.resolve()) or not source.is_file():
+        raise OutsideLibraryError(
+            f"Only a file the app fetched itself can be kept, and {source.name} isn't one."
+        )
+    stem, ext = os.path.splitext(name)
+    clean = naming.safe_component(stem) + ext.lower()
+    if not stem.strip() or stem.strip().startswith(".") or naming.is_junk(clean):
+        raise ValueError(f"not a file name: {name!r}")  # nothing, junk, or a hidden file
+    folder = Path(folder).expanduser().absolute()
+    roots = [Path(root).expanduser().absolute() for root in allowed]
+    root = next((r for r in roots if _key(folder) == _key(r) or _within(folder, r)), None)
+    if root is None:
+        raise OutsideLibraryError(
+            f"Kept films and videos go in {' or '.join(str(r) for r in roots)}, not {folder}."
+        )
+    banned = [Path(f) for f in forbidden]
+    banned += [f.resolve() for f in banned]
+    if any(_within(folder, f) or _within(folder.resolve(), f) for f in banned):
+        raise OutsideLibraryError(f"{folder} is inside a library or a source folder.")
+    try:
+        if not root.is_dir():
+            root.mkdir()  # its own parent must exist: Movies, or Downloads
+        folder.mkdir(parents=True, exist_ok=True)
+        target = folder.resolve() / clean
+        placeholder = _reserve(target)
+        fd, tmp_name = tempfile.mkstemp(dir=target.parent, prefix=".musicorg-", suffix=".tmp")
+        tmp = Path(tmp_name)
+        try:
+            with os.fdopen(fd, "wb") as out, source.open("rb") as film:
+                while chunk := film.read(4 * 1024 * 1024):
+                    out.write(chunk)
+                out.flush()
+                _sync_file(out.fileno())
+            _replace(tmp, placeholder)
+        except BaseException:
+            tmp.unlink(missing_ok=True)
+            _unlink_if_empty(placeholder)
+            raise
+    except OSError as exc:
+        raise FileOperationError(
+            f"Couldn't keep {clean} in {folder}: {exc.strerror or exc}."
+        ) from exc
+    _sync_folder(target.parent)
+    log.info("Kept %s", placeholder)
+    return folder / placeholder.name
+
+
 def _write_new(target: Path, data: bytes, remove_placeholder: Callable[[Path], object]) -> Path:
     """Write `data` as a new file at `target`, or ` (2)` etc. if that's taken. It appears
     complete or not at all: a temp file, fsynced, is renamed onto the reserved name."""

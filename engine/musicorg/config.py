@@ -79,6 +79,23 @@ def app_dirs() -> AppDirs:
     )
 
 
+def media_folders() -> dict[str, Path]:
+    """Where films and videos the owner keeps are put, outside the library (the owner,
+    2026-10-07): films in the computer's own Movies folder (Videos on Windows), and
+    videos that aren't music in `Media` inside Downloads. With `MUSICORG_HOME` set (every
+    test), both are inside that folder, so the real ones are never touched.
+
+    Nothing is created here: `fileops.keep_media` makes a folder when it first saves."""
+    home = os.environ.get(HOME_ENV)
+    if home:
+        base = Path(home).expanduser()
+        return {"movies": base / "Movies", "media": base / "Downloads" / "Media"}
+    return {
+        "movies": Path(platformdirs.user_videos_dir()),
+        "media": Path(platformdirs.user_downloads_dir()) / "Media",
+    }
+
+
 def config_path() -> Path:
     return app_dirs().config / CONFIG_FILE_NAME
 

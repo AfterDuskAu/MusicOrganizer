@@ -201,13 +201,41 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
     public let peers: Int
     public let bytesPerSecond: Int
     public let progress: Double
+    /// The film is being kept and hasn't all arrived yet.
+    public let keeping: Bool?
+    /// Where a kept film was saved.
+    public let keptPath: String?
+    /// Why a film couldn't be kept.
+    public let keepError: String?
 
-    public init(state: String, peers: Int, bytesPerSecond: Int, progress: Double) {
+    public init(
+        state: String, peers: Int, bytesPerSecond: Int, progress: Double, keeping: Bool? = nil,
+        keptPath: String? = nil, keepError: String? = nil
+    ) {
         self.state = state
         self.peers = peers
         self.bytesPerSecond = bytesPerSecond
         self.progress = progress
+        self.keeping = keeping
+        self.keptPath = keptPath
+        self.keepError = keepError
     }
+
+    /// One line about a film being kept, or nil when it isn't: "Keeping: 34% here ·
+    /// 5.2 MB/s", "Kept in your Movies folder", or why it couldn't be.
+    public var keepLine: String? {
+        if let keepError { return "Couldn't keep it: \(keepError)" }
+        if let keptPath {
+            return "Kept in your Movies folder as “\((keptPath as NSString).lastPathComponent)”"
+        }
+        guard keeping == true else { return nil }
+        if state == "finding" { return "Keeping: finding the film…" }
+        let megabytes = String(format: "%.1f", Double(bytesPerSecond) / 1_000_000)
+        return "Keeping: \(Int(progress * 100))% here · \(megabytes) MB/s. It carries on while the app is open."
+    }
+
+    /// Still on its way: worth asking about again.
+    public var isKeeping: Bool { keeping == true && keptPath == nil && keepError == nil }
 
     /// One line for the player: "Finding the film…", "6 sources · 4.6 MB/s · 9% here".
     public var line: String {
