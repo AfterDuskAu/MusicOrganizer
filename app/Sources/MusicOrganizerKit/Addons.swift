@@ -40,6 +40,31 @@ public struct Addon: Decodable, Identifiable, Hashable, Sendable {
     public let address: String
     public let types: [String]
     public let catalogs: [Catalog]
+    public let version: String?
+    public let description: String?
+
+    /// The add-on's name as Settings shows it. The channels add-on calls itself by the
+    /// service's name, which the app doesn't show (the owner's rule).
+    public var shownName: String {
+        name.localizedCaseInsensitiveContains("youtube") ? "Video Channels" : name
+    }
+
+    /// What it has, in words: "Movies, Series".
+    public var offers: String {
+        let words = ["movie": "Movies", "series": "Series", "channel": "Channels", "tv": "TV"]
+        return types.map { words[$0] ?? $0.capitalized }.joined(separator: ", ")
+    }
+
+    /// The list with the add-on at `index` moved one place up (-1) or down (1), as the
+    /// ids to ask the engine for; nil when it's already at that end.
+    public static func order(_ addons: [Addon], moving index: Int, by step: Int) -> [String]? {
+        let target = index + step
+        guard addons.indices.contains(index), addons.indices.contains(target), step != 0
+        else { return nil }
+        var ids = addons.map(\.id)
+        ids.swapAt(index, target)
+        return ids
+    }
 }
 
 public struct AddonsAnswer: Decodable, Sendable {

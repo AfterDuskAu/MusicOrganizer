@@ -1721,6 +1721,13 @@ final class AddonTests: XCTestCase {
              {"type":"channel","id":"videos","name":null,"extra":[{"name":"search","required":true,"options":[]}]}]}]}
             """#.utf8)
         let addon = try XCTUnwrap(decoder.decode(AddonsAnswer.self, from: said).addons.first)
+        // As Settings shows it, and moved about in the list.
+        XCTAssertEqual(addon.version, "1")
+        XCTAssertEqual(addon.offers, "Channels")
+        XCTAssertEqual(addon.shownName, "A")
+        XCTAssertEqual(Addon.order([addon, addon], moving: 0, by: 1), ["a", "a"])
+        XCTAssertNil(Addon.order([addon], moving: 0, by: 1))
+        XCTAssertNil(Addon.order([addon, addon], moving: 0, by: -1))
         XCTAssertEqual(addon.catalogs[0].genres, ["Gaming"])
         XCTAssertTrue(addon.catalogs[0].takes("skip"))
         XCTAssertFalse(addon.catalogs[0].takes("search"))

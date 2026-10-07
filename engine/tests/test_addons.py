@@ -67,9 +67,12 @@ def test_an_address_is_built_the_same_way_every_time() -> None:
     assert addons.build_url("https://a.example/", "catalog", "movie", "top") == (
         "https://a.example/catalog/movie/top.json"
     )
-    assert addons.build_url(
-        "https://a.example", "catalog", "movie", "top", {"search": "tom & jerry", "skip": "20"}
-    ) == "https://a.example/catalog/movie/top/search=tom%20%26%20jerry&skip=20.json"
+    assert (
+        addons.build_url(
+            "https://a.example", "catalog", "movie", "top", {"search": "tom & jerry", "skip": "20"}
+        )
+        == "https://a.example/catalog/movie/top/search=tom%20%26%20jerry&skip=20.json"
+    )
     assert addons.build_url("https://a.example", "meta", "channel", "yt_id:AB/c") == (
         "https://a.example/meta/channel/yt_id:AB%2Fc.json"
     )
@@ -229,6 +232,19 @@ def test_the_owners_list_starts_with_the_apps_own_and_is_kept(asked: list[str]) 
     assert len(addons.add(f"{CINEMETA}/manifest.json")) == 3  # the same one isn't listed twice
     with pytest.raises(addons.AddonError):
         addons.named("gone")
+
+    # Put in another order, and the order is kept.
+    order = ["org.stremio.pubdomainmovies", "com.linvo.cinemeta", "com.linvo.stremiochannels"]
+    assert [one["id"] for one in addons.reorder(order)] == order
+    assert [one["id"] for one in addons.listed()] == order
+    for wrong in (order[:2], [*order, "another"], [order[0], order[0], order[1]]):
+        with pytest.raises(addons.AddonError):
+            addons.reorder(wrong)
+    # One of the app's own that was removed is put back, after the others.
+    addons.remove("com.linvo.cinemeta")
+    assert [one["id"] for one in addons.restore()] == [order[0], order[2], order[1]]
+    before = len(asked)
+    assert len(addons.restore()) == 3 and len(asked) == before  # nothing missing: nothing asked
 
     # Details come from the first add-on in the list that has them for that id.
     assert addons.details("movie", "tt0012349")["name"] == "The Kid"

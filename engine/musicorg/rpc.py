@@ -109,7 +109,7 @@ SLOW_METHODS = frozenset(
      # Add-ons and video lookups wait on the network too (an add-on for up to 8 seconds).
      # Answered on the main line they held up every other request the app made
      # meanwhile, a favourite or a list of songs included (found 2026-10-07).
-     "addon.list", "addon.add", "addon.catalog", "addon.details", "addon.streams",
+     "addon.list", "addon.add", "addon.restore", "addon.catalog", "addon.details", "addon.streams",
      "video.search", "channel.videos", "channel.search", "torrent.stop"}
 )  # fmt: skip
 MAX_EXCLUDE = 5000  # songs already on screen that Show More leaves out
@@ -334,6 +334,8 @@ class Server:
             "addon.list": self.addon_list,
             "addon.add": self.addon_add,
             "addon.remove": self.addon_remove,
+            "addon.order": self.addon_order,
+            "addon.restore": self.addon_restore,
             "addon.catalog": self.addon_catalog,
             "addon.details": self.addon_details,
             "addon.streams": self.addon_streams,
@@ -892,6 +894,15 @@ class Server:
 
     def addon_remove(self, params: dict[str, Any]) -> dict[str, Any]:
         return {"addons": addons.remove(need(params, "addon_id", str))}
+
+    def addon_order(self, params: dict[str, Any]) -> dict[str, Any]:
+        ids = need(params, "addon_ids", list)
+        if not all(isinstance(one, str) for one in ids):
+            raise RpcError(INVALID_PARAMS, "addon_ids should be a list of add-on ids.")
+        return {"addons": addons.reorder(ids)}
+
+    def addon_restore(self, params: dict[str, Any]) -> dict[str, Any]:
+        return {"addons": addons.restore()}
 
     def addon_catalog(self, params: dict[str, Any]) -> dict[str, Any]:
         skip = want(params, "skip", int, 0) or 0

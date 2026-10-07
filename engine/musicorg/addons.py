@@ -510,6 +510,34 @@ def remove(addon_id: str) -> list[dict[str, Any]]:
     return current
 
 
+def reorder(addon_ids: list[str]) -> list[dict[str, Any]]:
+    """Put the owner's add-ons in this order (the first one that has a film's details
+    is the one asked for them). The ids must be exactly the ones in the list."""
+    from musicorg import config
+
+    current = {one["id"]: one for one in listed()}
+    if sorted(addon_ids) != sorted(current):
+        raise AddonError("The list of add-ons has changed. Look at it again and try once more.")
+    ordered = [current[addon_id] for addon_id in addon_ids]
+    config.save_addons(ordered)
+    return ordered
+
+
+def restore() -> list[dict[str, Any]]:
+    """Put back whichever of the app's own starting add-ons isn't in the owner's list,
+    after the ones that are. One that can't be reached says so."""
+    from musicorg import config
+
+    current = listed()
+    have = {base_of(one["address"]) for one in current}
+    missing = [address for address in STARTING if base_of(manifest_address(address)) not in have]
+    if not missing:
+        return current
+    current = current + [load(address) for address in missing]
+    config.save_addons(current)
+    return current
+
+
 def named(addon_id: str) -> dict[str, Any]:
     for addon in listed():
         if addon["id"] == addon_id:

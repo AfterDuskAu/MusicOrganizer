@@ -15,7 +15,7 @@ struct SettingsView: View {
     static let openAccountKey = "settingsOpenAccount"
     private static let sections: [(key: String, title: String)] = [
         ("profile", "Profile"), ("play", "Play Options"), ("downloads", "Downloads"),
-        ("lyrics", "Lyrics"), ("sharing", "Sync"),
+        ("lyrics", "Lyrics"), ("addons", "Add-ons"), ("sharing", "Sync"),
     ]
 
     /// The section showing. One remembered from before Settings was regrouped opens Profile.
@@ -71,6 +71,7 @@ struct SettingsView: View {
                     case "downloads": DownloadSettings()
                     case "lyrics": LyricsSettings()
                     case "sharing": SharingSettings()
+                    case "addons": AddonSettings()
                     default: ProfileSettingsTab()
                     }
                 }
@@ -890,5 +891,124 @@ private struct LyricsSettings: View {
         }
         .formStyle(.grouped)
         .scrollContentBackground(Theme.current.listBackground)
+    }
+}
+
+/// Settings → Add-ons (2026-10-08): where Movie Finder and Explore get their lists
+/// from. Each is an address that answers with lists, details and where something can
+/// be played; the engine keeps the owner's list of them and does all the asking.
+private struct AddonSettings: View {
+    @Environment(AppModel.self) private var model
+    @State private var address = ""
+    @State private var working = false
+    @State private var problem: String?
+    @State private var removing: Addon?
+
+    var body: some View {
+        let addons = model.media.addons
+        Form {
+            Section("Your Add-ons") {
+                if addons.isEmpty {
+                    Text(model.media.problem ?? "Looking…").foregroundStyle(.secondary)
+                }
+                ForEach(Array(addons.enumerated()), id: \.element.id) { index, addon in
+                    row(addon, at: index, of: addons)
+                }
+                SideNote(
+                    "The order matters when two add-ons know the same film: its details "
+                        + "come from the one nearer the top.")
+            }
+            Section("Add an Add-on") {
+                HStack {
+                    TextField("Address", text: $address, prompt: Text("https://…/manifest.json"))
+                        .labelsHidden()
+                        .onSubmit { add() }
+                    if working {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Button("Add") { add() }
+                            .disabled(address.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
+                }
+                if let problem {
+                    Text(problem)
+                        .foregroundStyle(.orange)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                SideNote(
+                    "Paste the address an add-on gives for itself. It ends in /manifest.json. "
+                        + "An add-on is made by someone else: what it lists and where it "
+                        + "sends you are its maker's doing, so add only ones you trust.")
+                Button("Put Back the App's Own Add-ons") { change("addon.restore") }
+                    .disabled(working)
+                    .help("Adds back any of the three the app started with that you've removed")
+            }
+        }
+        .formStyle(.grouped)
+        .scrollContentBackground(Theme.current.listBackground)
+        .task(id: model.phase) { await model.media.load(model) }
+        .confirmationDialog(
+            "Remove “\(removing?.shownName ?? "")”?", isPresented: removingShown, presenting: removing
+        ) { addon in
+            Button("Remove", role: .destructive) { change("addon.remove", ["addon_id": addon.id]) }
+        } message: { _ in
+            Text("Its lists go from Movie Finder and Explore. It can be added again by its address.")
+        }
+    }
+
+    private var removingShown: Binding<Bool> {
+        Binding(get: { removing != nil }, set: { if !$0 { removing = nil } })
+    }
+
+    private func row(_ addon: Addon, at index: Int, of addons: [Addon]) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(addon.shownName).fontWeight(.medium)
+                    if let version = addon.version {
+                        Text(version).font(.callout).foregroundStyle(.secondary)
+                    }
+                }
+                if !addon.offers.isEmpty {
+                    Text(addon.offers).font(.callout).foregroundStyle(.secondary)
+                }
+                Text(addon.address)
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .textSelection(.enabled)
+            }
+            Spacer()
+            Button("Move Up", systemImage: "chevron.up") { move(addons, index, -1) }
+                .disabled(index == 0 || working)
+            Button("Move Down", systemImage: "chevron.down") { move(addons, index, 1) }
+                .disabled(index == addons.count - 1 || working)
+            Button("Remove", systemImage: "trash") { removing = addon }
+                .disabled(working)
+        }
+        .labelStyle(.iconOnly)
+        .buttonStyle(.borderless)
+    }
+
+    private func add() {
+        let typed = address.trimmingCharacters(in: .whitespaces)
+        guard !typed.isEmpty, !working else { return }
+        change("addon.add", ["address": typed]) { address = "" }
+    }
+
+    private func move(_ addons: [Addon], _ index: Int, _ step: Int) {
+        guard let ids = Addon.order(addons, moving: index, by: step) else { return }
+        change("addon.order", ["addon_ids": ids])
+    }
+
+    private func change(_ method: String, _ asked: [String: Any] = [:], then done: @escaping () -> Void = {}) {
+        working = true
+        problem = nil
+        Task {
+            problem = await model.media.change(model, method, asked)
+            if problem == nil { done() }
+            working = false
+        }
     }
 }

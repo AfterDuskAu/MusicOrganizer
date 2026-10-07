@@ -66,6 +66,19 @@ final class MediaBrowser {
         }
     }
 
+    /// Change the owner's list of add-ons (add one, take one away, put them in another
+    /// order, put the app's own back): the engine answers with the list as it now is.
+    /// Returns what went wrong, in the engine's words, or nil.
+    func change(_ model: AppModel, _ method: String, _ asked: [String: Any] = [:]) async -> String? {
+        do {
+            addons = try await model.ask(method, asked, as: AddonsAnswer.self).addons
+            (loaded, problem) = (true, nil)
+            return nil
+        } catch {
+            return error.localizedDescription
+        }
+    }
+
     /// Every list of one kind ("movie", "channel") that can be opened without typing,
     /// with the add-on it's from.
     func catalogs(of type: String) -> [(addon: Addon, catalog: Addon.Catalog)] {

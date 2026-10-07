@@ -901,6 +901,16 @@
 - **Not checked:** the two menus by eye (the controls only come up under the mouse, which the checking tools can't move without taking the screen), and choosing a track.
 - **For the owner to know:** a film from a torrent now takes its size on disk for up to a day after it was watched (a 1080p film is one to several GB).
 
+2026-10-08, about 9:50am. **Settings → Add-ons.** The owner: "move onto the next step"; the step was my pick (the engine could add and remove an add-on, and the app had no screen for it).
+
+- **The section:** the owner's add-ons in their order, each with its version, what it has (Movies, Series, Channels) and its address; arrows to move one up or down; Remove, which asks first; a box to add one by its address; and Put Back the App's Own Add-ons.
+- **Engine:** `addon.order` (the ids in the order wanted; the order decides whose details a film gets) and `addon.restore` (fetches whichever of the starting three isn't listed, after the others). `addon.add` and `addon.remove` were there already.
+- **The channels add-on is shown as "Video Channels"**: it calls itself by the service's name, which the app doesn't show.
+- **Placed without a drawing,** as a section of the Settings page like the others, between Lyrics and Sync.
+- **Unchanged:** only the three starting add-ons are built in or tested against. The box takes any address that answers as an add-on; a note under it says an add-on is its maker's doing.
+- **Checked:** `pytest` (2,049 passed), `ruff`, `swift build`, `swift test` (99). In the owner's app: the list; moving one down and back up; removing the last (after its question) and putting it back with the button. The list ended as it began.
+- **Not checked:** adding one by a pasted address in the app (tested in the engine).
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)
