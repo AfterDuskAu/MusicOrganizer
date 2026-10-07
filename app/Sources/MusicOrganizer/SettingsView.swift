@@ -418,6 +418,13 @@ private struct ProfileSettingsTab: View {
                         "A Child's Profile",
                         isOn: Binding(
                             get: { profile.isChild }, set: { model.setChild(profile.id, $0) }))
+                    if profile.isChild {
+                        Toggle(
+                            "Allow Explicit Songs When No Clean Version Is Found",
+                            isOn: Binding(
+                                get: { profile.allowsExplicit },
+                                set: { model.setAllowsExplicit(profile.id, $0) }))
+                    }
                     Button("Remove from the List…") { removing = profile }
                         .disabled(inUse || model.profiles.profiles.count < 2)
                 } label: {
@@ -511,8 +518,10 @@ private struct NewProfileSheet: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             Toggle("This is a child's profile", isOn: $isChild)
             Text(
-                "For now this only marks the profile. What it will do is still to be decided: "
-                    + "most likely no explicit songs and nothing age-restricted."
+                "A child's profile looks up only clean songs. When a song has a clean and an "
+                    + "explicit version, only the clean one is shown; a song with no clean version "
+                    + "is left out, and the search says so. You can allow those from the profile's "
+                    + "⋯ menu."
             )
             .font(.callout)
             .foregroundStyle(.secondary)

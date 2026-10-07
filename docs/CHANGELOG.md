@@ -706,6 +706,22 @@
 - **Checked:** `swift build` and `swift test` (79 tests, six new).
 - **Not checked:** clicked in the running app. The unseen test copy can't click, so the tint, the Shift-click run and the drag of several are for the owner to try. Dragging the mouse across lines to pick them isn't built: a drag there carries the song to the sidebar.
 
+2026-10-07, about 3:45pm. **A child's profile looks up only clean songs.** The owner: "If both a clean/explicit version show up, show only the clean. If there is no clean version, say that there is no clean version in the search. In settings if kids version is selected then offer a toggle, to allow explicit/original songs if a clean version is not found." Family mode was on the "Not yet" list; this part was started early at the owner's request.
+
+- **What a child's profile finds.** In a profile marked as a child's, every lookup of songs gives only clean ones: the search, What's New and Find, an artist's page with their songs and albums, and imported playlists. A song found both clean and explicit shows only the clean one. A song with no clean version is left out, and the search says which: "No clean version was found for: …".
+- **The switch.** Settings → Profiles → a child's profile's ⋯ menu → Allow Explicit Songs When No Clean Version Is Found. Off unless switched on; with it on, a song with no clean version is shown as it is. A song that does have a clean version still shows only that one.
+- **Never assumed clean.** A song is clean only when YouTube Music marks it not explicit. One with no mark either way is treated like one with no clean version, and the note says "left out because it isn't marked clean or explicit", not that it's explicit.
+- **Engine:** a new read-only module, `kids` (a filter over what a lookup found; it asks YouTube nothing), and `kids.set` (`docs/ENGINE_API.md`). The engine keeps no mark of its own: the app tells it when the library opens, before anything is looked up, and whenever the mark or the switch changes. Answers gain `kids_note` (in `discover.suggest` it joins `note`), and a song let through by the switch is marked `only_explicit`.
+- **App:** the switch is saved with the profile (`allowsExplicit`), the search page shows the note above its results, and the words under "This is a child's profile" now say what it does.
+- **Deviations and limits, for the owner:**
+  - **Discover will be nearly empty in a child's profile with the switch off.** The radios Discover reads don't say whether a song is explicit (checked in the recorded answers: none carry the mark), so every pick is "not marked" and is left out, with the note saying so. Finding out would cost one more request to YouTube for each pick. To decide: pay that, or treat unmarked picks another way.
+  - "Clean" means "not marked explicit". That's YouTube Music's own mark; nothing here reads lyrics.
+  - Two results are the same song when the title (without its version words) and the first artist agree. Only what one lookup returned is compared: a clean version that the search didn't return isn't looked for.
+  - For imports the matcher still prefers the explicit version first (the owner's own rule), and a song found only that way then counts as not found. Clean-first matching for a child's profile isn't built.
+  - It's a filter, not a lock: there's no PIN, so the mark can be taken off, and explicit songs already in the child's library aren't hidden.
+- **Checked:** `pytest` (1,974 passed, eight new), `ruff check`, `swift build`, `swift test` (three new).
+- **Not checked:** in the running app with a real search: the ⋯ menu's switch, and the note on the search page. The artist page and import page don't show the note yet (the songs are left out there without a word); that waits for the owner's drawing of the new layout.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

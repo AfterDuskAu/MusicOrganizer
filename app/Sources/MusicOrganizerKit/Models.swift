@@ -164,6 +164,9 @@ public struct SearchResult: Codable, Identifiable, Hashable, Sendable {
 
 public struct SearchAnswer: Decodable, Sendable {
     public let results: [SearchResult]
+    /// In a child's profile: what was left out of the results, in the engine's words
+    /// ("No clean version was found for: …"). Nil when nothing was, and for anyone else.
+    public let kidsNote: String?
 }
 
 public struct StreamAnswer: Decodable, Sendable {

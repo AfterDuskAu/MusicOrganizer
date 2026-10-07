@@ -14,22 +14,28 @@ public struct Profile: Codable, Identifiable, Equatable, Sendable {
     public var libraryRoot: String?
     /// A library that hasn't been made yet: the engine makes it when it's first opened.
     public var isNew: Bool
-    /// A child's profile (owner, 2026-10-03). For now it's only a mark: what it will do
-    /// (most likely no explicit songs and nothing age-restricted) is still to be decided.
+    /// A child's profile (owner, 2026-10-03). Since 2026-10-07 it looks up only clean
+    /// songs: of a clean and an explicit version only the clean one is shown, and a song
+    /// with no clean version is left out and named.
     public var isChild: Bool
+    /// In a child's profile: a song with no clean version may be shown as it is.
+    public var allowsExplicit: Bool
 
     public init(
         id: String, name: String, libraryRoot: String? = nil, isNew: Bool = false,
-        isChild: Bool = false
+        isChild: Bool = false, allowsExplicit: Bool = false
     ) {
         self.id = id
         self.name = name
         self.libraryRoot = libraryRoot
         self.isNew = isNew
         self.isChild = isChild
+        self.allowsExplicit = allowsExplicit
     }
 
-    private enum Keys: String, CodingKey { case id, name, libraryRoot, isNew, isChild }
+    private enum Keys: String, CodingKey {
+        case id, name, libraryRoot, isNew, isChild, allowsExplicit
+    }
 
     /// A list saved before there was a child's mark reads as nobody's being a child's.
     public init(from decoder: Decoder) throws {
@@ -39,6 +45,7 @@ public struct Profile: Codable, Identifiable, Equatable, Sendable {
         libraryRoot = try saved.decodeIfPresent(String.self, forKey: .libraryRoot)
         isNew = try saved.decodeIfPresent(Bool.self, forKey: .isNew) ?? false
         isChild = try saved.decodeIfPresent(Bool.self, forKey: .isChild) ?? false
+        allowsExplicit = try saved.decodeIfPresent(Bool.self, forKey: .allowsExplicit) ?? false
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -48,6 +55,7 @@ public struct Profile: Codable, Identifiable, Equatable, Sendable {
         try saved.encodeIfPresent(libraryRoot, forKey: .libraryRoot)
         try saved.encode(isNew, forKey: .isNew)
         try saved.encode(isChild, forKey: .isChild)
+        try saved.encode(allowsExplicit, forKey: .allowsExplicit)
     }
 }
 
@@ -141,6 +149,12 @@ public struct ProfileList: Codable, Equatable, Sendable {
     public mutating func setChild(_ id: String, _ isChild: Bool) {
         guard let index = profiles.firstIndex(where: { $0.id == id }) else { return }
         profiles[index].isChild = isChild
+    }
+
+    /// In a child's profile, let a song with no clean version be shown as it is, or not.
+    public mutating func setAllowsExplicit(_ id: String, _ allows: Bool) {
+        guard let index = profiles.firstIndex(where: { $0.id == id }) else { return }
+        profiles[index].allowsExplicit = allows
     }
 
     public mutating func switchTo(_ id: String) {

@@ -24,6 +24,16 @@ struct YouTubeSearchView: View {
             }
             .padding(12)
             Divider()
+            // A child's profile: the songs left out for having no clean version.
+            if let note = model.youtubeKidsNote, model.youtubeProblem == nil {
+                Text(note)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                Divider()
+            }
             if let problem = model.youtubeProblem {
                 Text(problem)
                     .foregroundStyle(.secondary)

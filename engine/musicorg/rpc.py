@@ -50,6 +50,7 @@ from musicorg import (
     discover,
     fileops,
     imports,
+    kids,
     lastfm,
     library,
     listening,
@@ -257,6 +258,9 @@ class Server:
         self._queue_lock = threading.Lock()
         self._resume_wait = 0  # counts the waits to start the queue again; the newest wins
         self._share: sharing.Share | None = None  # the library shared at home, while it's on
+        # A child's profile: only clean songs are looked up. The app says so each time it
+        # opens (`kids.set`); the engine keeps no "on" of its own.
+        self._kids = {"on": False, "allow_explicit": False}
         self.methods: dict[str, Callable[[dict[str, Any]], Any]] = {
             "engine.hello": self.engine_hello,
             "library.init": self.library_init,
@@ -309,6 +313,7 @@ class Server:
             "queue.dismiss": self.queue_dismiss,
             "settings.get": self.settings_get,
             "settings.set": self.settings_set,
+            "kids.set": self.kids_set,
             "sharing.status": self.sharing_status,
             "sharing.set": self.sharing_set,
             "sharing.pair": self.sharing_pair,
@@ -834,6 +839,25 @@ class Server:
             return _settings(save_daily_cap(cap))  # config.py does its own writing (rule 3)
         return _settings(Config.load())
 
+    # -- methods: a child's profile (2026-10-07) --
+
+    def kids_set(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Whether this engine is running for a child's profile, where only clean songs
+        are looked up, and whether a song with no clean version may be shown as it is."""
+        on = need(params, "on", bool)
+        allow = on and bool(want(params, "allow_explicit", bool, False))
+        self._kids = {"on": on, "allow_explicit": allow}
+        return dict(self._kids)
+
+    def _clean(self, answer: dict[str, Any], key: str, note: str = "kids_note") -> dict[str, Any]:
+        """A lookup's answer as a child's profile gets it: `answer[key]` with only clean
+        songs, and a sentence about what was left out. Anyone else's is untouched."""
+        if not self._kids["on"] or not isinstance(answer.get(key), list):
+            return answer
+        shown, said = kids.clean_only(answer[key], allow_explicit=self._kids["allow_explicit"])
+        notes = " ".join(part for part in (answer.get(note), said) if part) or None
+        return {**answer, key: shown, note: notes}
+
     # -- methods: sharing the library with a phone player at home (2026-10-04) --
 
     def _stop_sharing(self) -> None:
@@ -980,10 +1004,11 @@ class Server:
             self.writer.notify("discover.progress", {"token": token, "done": done, "of": total})
 
         with self._index(write=True) as index:  # the index keeps YouTube Music's answers
-            return discover.suggest(
+            found = discover.suggest(
                 self._library(), index, seeds, count, shuffle=shuffle, exclude=exclude,
                 progress=progress,
             )  # fmt: skip
+        return self._clean(found, "picks", note="note")
 
     def import_playlist(self, params: dict[str, Any]) -> dict[str, Any]:
         """A playlist from elsewhere, as its name and its songs (imports, v0.3). Only
@@ -1056,7 +1081,11 @@ class Server:
             self.writer.notify("import.progress", {"token": token, "done": done, "of": total})
 
         with self._index(write=True) as index:  # the index keeps YouTube Music's answers
-            return {"found": imports.find(self._library(), index, tracks, progress=progress)}
+            found = imports.find(self._library(), index, tracks, progress=progress)
+        if self._kids["on"]:
+            allow = self._kids["allow_explicit"]
+            found = [kids.clean_found(one, allow_explicit=allow) for one in found]
+        return {"found": found}
 
     # -- methods: the Artist page --
 
@@ -1074,17 +1103,18 @@ class Server:
         if (name is None) == (artist_id is None):
             raise RpcError(INVALID_PARAMS, "Give a name or an artist_id (one of them).")
         with self._index(write=True) as index:  # the index keeps YouTube Music's answers
-            return artist.info(self._library(), index, name=name, artist_id=artist_id)
+            found = artist.info(self._library(), index, name=name, artist_id=artist_id)
+        return self._clean(found, "songs")
 
     def artist_songs(self, params: dict[str, Any]) -> dict[str, Any]:
         playlist_id = need(params, "playlist_id", str)
         with self._index(write=True) as index:
-            return artist.songs(self._library(), index, playlist_id)
+            return self._clean(artist.songs(self._library(), index, playlist_id), "songs")
 
     def artist_album(self, params: dict[str, Any]) -> dict[str, Any]:
         browse_id = need(params, "browse_id", str)
         with self._index(write=True) as index:
-            return artist.album(self._library(), index, browse_id)
+            return self._clean(artist.album(self._library(), index, browse_id), "songs")
 
     def search_ytmusic(self, params: dict[str, Any]) -> dict[str, Any]:
         query = need(params, "query", str).strip()
@@ -1100,7 +1130,7 @@ class Server:
             data.update(candidate_id=match.candidate_id("search", c.video_id), version_tokens=[],
                         score=None, reasons=[])  # fmt: skip
             results.append(data)
-        return {"results": results}
+        return self._clean({"results": results}, "results")
 
 
 def review_item(

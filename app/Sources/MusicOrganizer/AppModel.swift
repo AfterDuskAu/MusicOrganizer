@@ -90,6 +90,8 @@ final class AppModel {
     static let youtubeStep = 25
     static let youtubeMost = 100
     private(set) var youtubeProblem: String?
+    /// In a child's profile: the songs the last search left out for having no clean version.
+    private(set) var youtubeKidsNote: String?
     /// The owner's downloads that haven't arrived: waiting, downloading, or ended without
     /// the song. The engine's own list, so it's still right after the app restarts.
     private(set) var pending: [PendingDownload] = []
@@ -610,10 +612,32 @@ final class AppModel {
         switchProfile(to: made.id)
     }
 
-    /// Mark a profile as a child's, or take the mark off. Only a mark for now.
+    /// Mark a profile as a child's, or take the mark off. A child's profile looks up
+    /// only clean songs.
     func setChild(_ id: String, _ isChild: Bool) {
         profiles.setChild(id, isChild)
         saveProfiles()
+        Task { await applyKids() }
+    }
+
+    /// In a child's profile: let a song with no clean version be shown as it is, or not.
+    func setAllowsExplicit(_ id: String, _ allows: Bool) {
+        profiles.setAllowsExplicit(id, allows)
+        saveProfiles()
+        Task { await applyKids() }
+    }
+
+    /// Tell the engine whether the profile in use is a child's. The engine keeps no
+    /// mark of its own: it's told each time it opens, and whenever the mark changes.
+    private func applyKids() async {
+        guard let connection = engine?.connection else { return }
+        let profile = profiles.current
+        do {
+            _ = try await connection.call(
+                "kids.set", ["on": profile.isChild, "allow_explicit": profile.allowsExplicit])
+        } catch {
+            notice = error.localizedDescription
+        }
     }
 
     /// The Mac's own Music folder, where a new profile's library goes.
@@ -699,6 +723,8 @@ final class AppModel {
                 saveProfiles()
             }
             _ = try await connection.call("library.open", ["root": folder.path])
+            // Before anything is looked up: a child's profile finds only clean songs.
+            await applyKids()
             try await load()
             phase = .ready
             // Downloads asked for before the app was last closed carry on in the engine.
@@ -950,15 +976,20 @@ final class AppModel {
         guard !query.isEmpty, !youtubeSearching, let connection = engine?.connection else { return }
         youtubeSearching = true
         youtubeProblem = nil
+        youtubeKidsNote = nil
         Task {
             do {
                 let found = try await connection.call(
                     "search.ytmusic", ["query": query, "limit": limit], as: SearchAnswer.self)
                 youtubeResults = found.results
+                youtubeKidsNote = found.kidsNote
                 youtubeLimit = limit
                 // A full page means there may be more; YouTube Music is asked for at most 100.
                 youtubeHasMore = found.results.count >= limit && limit < Self.youtubeMost
-                if found.results.isEmpty { youtubeProblem = "Nothing found for “\(query)”." }
+                if found.results.isEmpty {
+                    // In a child's profile the engine says what it left out, and why.
+                    youtubeProblem = found.kidsNote ?? "Nothing found for “\(query)”."
+                }
             } catch {
                 youtubeProblem = error.localizedDescription
             }

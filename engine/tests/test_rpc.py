@@ -23,7 +23,7 @@ import pytest
 from conftest import require_tool
 from index_support import add_candidates, add_item, add_source, candidate
 
-from musicorg import library, queue, rpc
+from musicorg import library, queue, rpc, youtube
 from musicorg.index import open_index
 
 ENGINE = Path(__file__).resolve().parents[1]
@@ -383,6 +383,33 @@ def test_search(opened: rpc.Server) -> None:
     assert 1 <= len(found) <= 3
     assert {"candidate_id", "video_id", "title", "artists", "duration_s"} <= set(found[0])
     assert code(opened, "search.ytmusic", query="  ") == rpc.INVALID_PARAMS
+
+
+def test_a_childs_profile_only_finds_clean_songs(
+    opened: rpc.Server, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    band = ("Band",)
+    loud = youtube.Candidate(video_id="loud0000001", title="Loud", artists=band, is_explicit=True)
+    sunny = youtube.Candidate(video_id="sunny000001", title="Sun", artists=band, is_explicit=False)
+    monkeypatch.setattr(youtube, "search_songs", lambda query, limit: [loud, sunny])
+    # Anyone else's search is as it was, with nothing added.
+    assert set(result(opened, "search.ytmusic", query="band")) == {"results"}
+
+    assert result(opened, "kids.set", on=True) == {"on": True, "allow_explicit": False}
+    found = result(opened, "search.ytmusic", query="band")
+    assert [r["title"] for r in found["results"]] == ["Sun"]
+    assert found["kids_note"] == "No clean version was found for: Loud (Band)."
+
+    assert result(opened, "kids.set", on=True, allow_explicit=True)["allow_explicit"] is True
+    found = result(opened, "search.ytmusic", query="band")
+    assert [(r["title"], r.get("only_explicit")) for r in found["results"]] == [
+        ("Loud", True), ("Sun", None)]  # fmt: skip
+    assert found["kids_note"] is None
+
+    # Off again: the switch doesn't outlive the mark.
+    assert result(opened, "kids.set", on=False, allow_explicit=True) == {
+        "on": False, "allow_explicit": False}  # fmt: skip
+    assert code(opened, "kids.set") == rpc.INVALID_PARAMS
 
 
 # ---- `musicorg serve` as a real process -------------------------------------------------

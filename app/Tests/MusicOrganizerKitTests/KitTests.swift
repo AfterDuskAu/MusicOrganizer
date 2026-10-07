@@ -1640,3 +1640,35 @@ final class RowSelectionTests: XCTestCase {
         XCTAssertEqual(DraggedSongs.ids(in: ["only"]), ["only"])
     }
 }
+
+final class ChildProfileTests: XCTestCase {
+    func testAllowingExplicitIsSavedWithTheProfileAndOffUntilSwitchedOn() throws {
+        var list = ProfileList(firstNamed: "Me", libraryRoot: nil)
+        let id = list.current.id
+        XCTAssertFalse(list.current.allowsExplicit)
+        list.setChild(id, true)
+        list.setAllowsExplicit(id, true)
+        let saved = try JSONEncoder().encode(list)
+        let read = try JSONDecoder().decode(ProfileList.self, from: saved)
+        XCTAssertTrue(read.current.isChild)
+        XCTAssertTrue(read.current.allowsExplicit)
+    }
+
+    func testAProfileSavedBeforeTheSwitchReadsAsNotAllowing() throws {
+        let old = Data(#"{"id":"default","name":"Me","isChild":true}"#.utf8)
+        let profile = try JSONDecoder().decode(Profile.self, from: old)
+        XCTAssertTrue(profile.isChild)
+        XCTAssertFalse(profile.allowsExplicit)
+    }
+
+    func testASearchAnswerCarriesWhatWasLeftOut() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let said = Data(#"{"results":[],"kids_note":"No clean version was found for: Loud (Band)."}"#.utf8)
+        XCTAssertEqual(
+            try decoder.decode(SearchAnswer.self, from: said).kidsNote,
+            "No clean version was found for: Loud (Band).")
+        let plain = Data(#"{"results":[]}"#.utf8)
+        XCTAssertNil(try decoder.decode(SearchAnswer.self, from: plain).kidsNote)
+    }
+}
