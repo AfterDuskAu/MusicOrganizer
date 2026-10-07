@@ -821,6 +821,15 @@
 - **Not checked:** the Learning and Podcasts sections and the reworded sentences in the app; how much faster the picture pages are (not measured after the change).
 - **Still slow, for next time:** first opening a song list (the table builds some 300 small views for 40 rows; the real fix is fewer, cheaper cells, or a list of our own); What's New, which asks one radio every 1.5 seconds by design.
 
+2026-10-07, about 9pm. **Song lists ready before the first click; "YouTube" only on the import link.** The owner: "keep optimising. But the only thing that should say youtube, is the playlist link in import playlists."
+
+- **The library's pages are built ahead.** First opening a song list stopped the app for about 1.3 seconds while its table built its rows. Now, once the library has loaded, the library's own pages (Songs, Artists, Favourites, Most Played, Recently Added, Music Videos, Downloads) are built one at a time, a little over a second apart, out of sight. Measured in the owner's app: the first click on Songs after that costs about 0.3 seconds, not 1.3.
+- **What it took to make a page build out of sight,** for whoever touches this next: a table builds rows only for what's in view, so a page parked far off, or just beside the visible area under the sidebar, builds nothing (both tried). The page being built sits almost a page-width to the right with two points of its edge in view for a second and a half, and is told it's the page showing, since a song list works out its rows only then. Pages that ask the web for something when they open (Explore, the Finders) are never built ahead.
+- **What it costs:** the same second of work per list, moved to the half minute after the app opens; a click during one of those seconds waits for it. A two-point sliver of the page being built may show at the right edge for a moment.
+- **"YouTube" is on the import link again, and nowhere else.** Import Playlists' first tab is "YouTube" and its box says "A YouTube or YouTube Music playlist's link", as before today. The engine's own messages (a refusal, a pause, a note about what was found) are put into the app's words as they arrive (`Wording`, in the Kit: only an answer's sentences, the fields `message`, `note`, `why`, `kids_note` and `reason`, and an error's message; a song's or a channel's name is never touched). An answer that doesn't contain the name isn't walked through at all.
+- **Checked:** `swift build`, `swift test` (94, two new). By eye in the owner's app: the Import Playlists page with its YouTube tab; Songs with all its columns after the warm-up, and the saved column widths unchanged by it.
+- **Not checked:** an engine message arriving reworded in the app (tested in the Kit only); the sliver, which wasn't looked for.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

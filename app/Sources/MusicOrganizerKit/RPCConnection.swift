@@ -120,12 +120,18 @@ public final class RPCConnection: @unchecked Sendable {
         onClose?()
     }
 
+    private static let theName = Data("YouTube".utf8)
+
     private func handle(_ line: Data) {
         guard let message = try? JSONSerialization.jsonObject(with: line) as? [String: Any]
         else { return }
+        // Nearly every answer has nothing to reword: those aren't walked through at all.
+        let named = line.range(of: Self.theName) != nil
         guard let id = message["id"] as? Int else {
             if let method = message["method"] as? String {
-                onNotification?(method, message["params"] as? [String: Any] ?? [:])
+                let given = message["params"] ?? [:]
+                let params = (named ? Wording.plain(answer: given) : given) as? [String: Any]
+                onNotification?(method, params ?? [:])
             }
             return
         }
@@ -133,10 +139,13 @@ public final class RPCConnection: @unchecked Sendable {
         if let error = message["error"] as? [String: Any] {
             waiter.resume(throwing: RPCError(
                 code: error["code"] as? Int ?? 0,
-                message: error["message"] as? String ?? "The engine reported a problem."))
+                message: Wording.plain(
+                    error["message"] as? String ?? "The engine reported a problem.")))
             return
         }
-        let result = message["result"] ?? NSNull()
+        // The engine's sentences are put into the app's words on the way in.
+        let given = message["result"] ?? NSNull()
+        let result = named ? Wording.plain(answer: given) : given
         do {
             waiter.resume(returning: try JSONSerialization.data(
                 withJSONObject: result, options: [.fragmentsAllowed]))

@@ -1845,3 +1845,29 @@ final class WebPicturesTests: XCTestCase {
         XCTAssertNil(WebPictures.sized(nil, points: 200))
     }
 }
+
+final class WordingTests: XCTestCase {
+    func testTheEnginesSentencesArePutIntoTheAppsWords() {
+        XCTAssertEqual(
+            Wording.plain("YouTube is slowing us down; try again after 3:10am."),
+            "The service is slowing us down; try again after 3:10am.")
+        XCTAssertEqual(
+            Wording.plain("Not found. YouTube Music has no such song on YouTube."),
+            "Not found. The music service has no such song on the service.")
+        XCTAssertEqual(Wording.plain("Nothing about it"), "Nothing about it")
+    }
+
+    func testOnlySentencesAreChangedNeverANameOrAnId() throws {
+        let answer: [String: Any] = [
+            "note": "YouTube Music gave 3 radios.",
+            "picks": [["title": "YouTube Poop", "why": "Like a song on YouTube Music"]],
+            "channel": "YouTube Movies",
+        ]
+        let plain = try XCTUnwrap(Wording.plain(answer: answer) as? [String: Any])
+        XCTAssertEqual(plain["note"] as? String, "The music service gave 3 radios.")
+        XCTAssertEqual(plain["channel"] as? String, "YouTube Movies")
+        let pick = try XCTUnwrap((plain["picks"] as? [[String: Any]])?.first)
+        XCTAssertEqual(pick["title"] as? String, "YouTube Poop")
+        XCTAssertEqual(pick["why"] as? String, "Like a song on the music service")
+    }
+}

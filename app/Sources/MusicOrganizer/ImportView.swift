@@ -29,7 +29,7 @@ struct ImportView: View {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .youtube: "Playlist Link"
+            case .youtube: "YouTube"  // the one place the app says the name (owner, 2026-10-07)
             case .spotify: "Spotify"
             case .deezer: "Deezer"
             case .amazon: "Amazon Music"
@@ -86,7 +86,7 @@ struct ImportView: View {
     @ViewBuilder
     private func youtube(_ page: ImportPage) -> some View {
         HStack(spacing: 10) {
-            TextField("A playlist's link (Share → Copy link)", text: $link)
+            TextField("A YouTube or YouTube Music playlist's link (Share → Copy link)", text: $link)
                 .textFieldStyle(.roundedBorder)
                 .onSubmit { page.open(.youtube(link: link)) }
             Button("Read Playlist", systemImage: "list.bullet.rectangle") {

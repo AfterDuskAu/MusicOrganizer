@@ -218,6 +218,8 @@ struct MainView: View {
     /// What's been opened inside each page (an album, an artist), page by page.
     @State private var paths: [SidebarItem: NavigationPath] = [:]
     @State private var showNowPlaying = false
+    /// The page being made ready ahead of its first click, if one is (`warmUp`).
+    @State private var warming: SidebarItem?
     @State private var deleting: Playlist?
     @AppStorage("showLyrics") private var showLyrics = false
     /// Lyrics beside the cover or video on the player page (Settings → Play Options).
@@ -265,6 +267,9 @@ struct MainView: View {
                 // The Warm Look's glow shows through the title bar.
                 .toolbarBackground(Theme.current.isWarm ? .hidden : .automatic, for: .windowToolbar)
                 .onChange(of: item, initial: true) { opened(current) }
+                // The library's own pages are made ready just after the app opens, one at
+                // a time, so the first click on each finds it built (see `warmUp`).
+                .task(id: model.phase) { await warmUp() }
                 .onAppear {
                     let caughtUp = SidebarChoice.catchUp(saved: savedEntries, seen: seenEntries)
                     if caughtUp.seen != seenEntries {
@@ -596,6 +601,29 @@ struct MainView: View {
         .help(model.searching ? "Close search" : "Search your library (⌘F)")
     }
 
+    /// Building a song list for the first time stops the app for about a second (its
+    /// table makes a few hundred small views). Left to the first click, that's a second's
+    /// wait on every list the owner opens. So once the library has loaded, the lists are
+    /// built ahead, out of sight like any page that's been visited, one every second or
+    /// so, so no two builds run together and a click in between is still answered.
+    /// Only the library's own pages: a page that asks the web for something when it
+    /// opens (Explore, the Finders) is never opened ahead.
+    private func warmUp() async {
+        guard model.phase == .ready, !Snapshot.isOn else { return }
+        let shown = SidebarChoice.read(savedEntries).compactMap(SidebarItem.init(libraryEntry:))
+        for entry in shown + [.downloads] where entry != .unconfirmed {
+            try? await Task.sleep(for: .seconds(1.2))
+            if Task.isCancelled { return }
+            guard !visited.contains(entry) else { continue }
+            visited.append(entry)
+            warming = entry
+            // Long enough for the page to be laid out and its rows built, then it's
+            // parked far off with the other pages that aren't showing.
+            try? await Task.sleep(for: .seconds(1.5))
+            if warming == entry { warming = nil }
+        }
+    }
+
     private func opened(_ entry: SidebarItem) {
         if !visited.contains(entry) { visited.append(entry) }
         UserDefaults.standard.set(entry.key, forKey: "lastSection")
@@ -620,15 +648,29 @@ struct MainView: View {
     }
 
     private var stackedPages: some View {
+        GeometryReader { room in
+            stack(pageWidth: room.size.width)
+        }
+    }
+
+    private func stack(pageWidth: CGFloat) -> some View {
         ZStack {
             ForEach(visited, id: \.self) { entry in
                 let active = entry == current
-                page(entry, active: active)
+                // A song list works its rows out only when it's the page showing, so one
+                // being made ready ahead is told it is, for that moment.
+                page(entry, active: active || entry == warming)
                     // A page that isn't showing is moved far out of sight, not made
                     // invisible: for an invisible view SwiftUI takes its AppKit views
                     // (a whole song table) out of the window and puts them all back
                     // when it shows again, which froze the app on every switch.
-                    .offset(x: active ? 0 : 30_000)
+                    // (A page being made ready ahead sits almost a whole page-width to
+                    // the right for a moment, with two points of its left edge still in
+                    // view: a table builds its rows only for what's in view, and a
+                    // sliver its full height is enough for every row on the first
+                    // screen. Wholly out of view, far off or just beside, it builds
+                    // nothing until it's shown: tried both, 2026-10-07.)
+                    .offset(x: active ? 0 : entry == warming ? max(pageWidth - 2, 0) : 30_000)
                     .allowsHitTesting(active)
                     .accessibilityHidden(!active)
                 // No zIndex either: changing which page is on top also made AppKit take
