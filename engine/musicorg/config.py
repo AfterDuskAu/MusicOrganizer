@@ -435,11 +435,30 @@ def load_addons() -> list[dict[str, Any]] | None:
     return [dict(one) for one in listed if isinstance(one, dict)]
 
 
-def save_addons(addons: list[dict[str, Any]]) -> None:
-    """Replace the list of add-ons. Written atomically."""
+def addons_offered() -> list[str] | None:
+    """The addresses of the app's own add-ons that have been put in the owner's list at
+    some time (so one they removed isn't put back by itself). None: not kept yet."""
+    try:
+        loaded = json.loads(addons_path().read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    offered = loaded.get("offered") if isinstance(loaded, dict) else None
+    if not isinstance(offered, list):
+        return None
+    return [one for one in offered if isinstance(one, str)]
+
+
+def save_addons(addons: list[dict[str, Any]], *, offered: list[str] | None = None) -> None:
+    """Replace the list of add-ons. Written atomically. `offered`: the app's own add-ons
+    put in the list so far; left as it was when not given."""
     path = addons_path()
     ensure_app_dir(path.parent)
-    text = json.dumps({"addons": addons}, indent=2, ensure_ascii=False) + "\n"
+    if offered is None:
+        offered = addons_offered()
+    kept: dict[str, Any] = {"addons": addons}
+    if offered is not None:
+        kept["offered"] = offered
+    text = json.dumps(kept, indent=2, ensure_ascii=False) + "\n"
     try:
         _write_atomic(path, text)
     except OSError as exc:

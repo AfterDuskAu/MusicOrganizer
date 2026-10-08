@@ -16,6 +16,7 @@ FIXTURES = Path(__file__).parent / "fixtures" / "addons"
 CHANNELS = "https://v3-channels.strem.io"
 FILMS = "https://caching.stremio.net/publicdomainmovies.now.sh"
 CINEMETA = "https://v3-cinemeta.strem.io"
+KITSU = "https://anime-kitsu.strem.fun"
 
 ANSWERS = {
     f"{CHANNELS}/manifest.json": "channels-manifest.json",
@@ -26,6 +27,10 @@ ANSWERS = {
     f"{CHANNELS}/meta/channel/yt_id:UCX6OQ3DkcsbYNE6H8uQQuVA.json": "channels-meta.json",
     f"{FILMS}/stream/movie/tt0012349.json": "publicdomain-stream.json",
     f"{CINEMETA}/meta/movie/tt0012349.json": "cinemeta-meta.json",
+    # Anime Kitsu, recorded 2026-10-08 and trimmed.
+    f"{KITSU}/manifest.json": "kitsu-manifest.json",
+    f"{KITSU}/catalog/anime/kitsu-anime-popular.json": "kitsu-popular.json",
+    f"{KITSU}/meta/series/kitsu:1.json": "kitsu-meta.json",
 }
 
 
@@ -221,20 +226,24 @@ def test_what_a_stream_says_its_picture_is() -> None:
 def test_the_owners_list_starts_with_the_apps_own_and_is_kept(asked: list[str]) -> None:
     assert config.load_addons() is None
     first = addons.listed()
-    assert [one["name"] for one in first] == ["Cinemeta", "YouTube", "Public Domain Movies"]
+    assert [one["name"] for one in first] == [
+        "Cinemeta", "YouTube", "Public Domain Movies", "Anime Kitsu"]  # fmt: skip
     before = len(asked)
     assert addons.listed() == first and len(asked) == before  # kept: not fetched again
 
     assert [one["id"] for one in addons.remove("com.linvo.cinemeta")] == [
-        "com.linvo.stremiochannels", "org.stremio.pubdomainmovies"]  # fmt: skip
+        "com.linvo.stremiochannels", "org.stremio.pubdomainmovies",
+        "community.anime.kitsu"]  # fmt: skip
     again = addons.add(f"stremio://{CINEMETA.removeprefix('https://')}/manifest.json")
-    assert [one["name"] for one in again] == ["YouTube", "Public Domain Movies", "Cinemeta"]
-    assert len(addons.add(f"{CINEMETA}/manifest.json")) == 3  # the same one isn't listed twice
+    assert [one["name"] for one in again] == [
+        "YouTube", "Public Domain Movies", "Anime Kitsu", "Cinemeta"]  # fmt: skip
+    assert len(addons.add(f"{CINEMETA}/manifest.json")) == 4  # the same one isn't listed twice
     with pytest.raises(addons.AddonError):
         addons.named("gone")
 
     # Put in another order, and the order is kept.
-    order = ["org.stremio.pubdomainmovies", "com.linvo.cinemeta", "com.linvo.stremiochannels"]
+    order = ["org.stremio.pubdomainmovies", "com.linvo.cinemeta", "com.linvo.stremiochannels",
+             "community.anime.kitsu"]  # fmt: skip
     assert [one["id"] for one in addons.reorder(order)] == order
     assert [one["id"] for one in addons.listed()] == order
     for wrong in (order[:2], [*order, "another"], [order[0], order[0], order[1]]):
@@ -242,9 +251,9 @@ def test_the_owners_list_starts_with_the_apps_own_and_is_kept(asked: list[str]) 
             addons.reorder(wrong)
     # One of the app's own that was removed is put back, after the others.
     addons.remove("com.linvo.cinemeta")
-    assert [one["id"] for one in addons.restore()] == [order[0], order[2], order[1]]
+    assert [one["id"] for one in addons.restore()] == [order[0], order[2], order[3], order[1]]
     before = len(asked)
-    assert len(addons.restore()) == 3 and len(asked) == before  # nothing missing: nothing asked
+    assert len(addons.restore()) == 4 and len(asked) == before  # nothing missing: nothing asked
 
     # Details come from the first add-on in the list that has them for that id.
     assert addons.details("movie", "tt0012349")["name"] == "The Kid"
@@ -256,7 +265,8 @@ def test_a_starting_add_on_that_cant_be_reached_is_tried_again_next_time(
     monkeypatch: pytest.MonkeyPatch, asked: list[str]
 ) -> None:
     monkeypatch.delitem(ANSWERS, f"{CHANNELS}/manifest.json")
-    assert [one["name"] for one in addons.listed()] == ["Cinemeta", "Public Domain Movies"]
+    assert [one["name"] for one in addons.listed()] == [
+        "Cinemeta", "Public Domain Movies", "Anime Kitsu"]  # fmt: skip
     assert config.load_addons() is None  # not kept short: the next time asks again
 
 
@@ -301,3 +311,58 @@ def test_a_list_by_two_genres_keeps_only_what_has_both(
     monkeypatch.setattr(addons, "_http", lambda url: {"metas": [film(9, "Documentary")]})
     long = addons.catalog(addon, "movie", "top", genre="Documentary", also=["Crime"])
     assert long == {"items": [], "more": True, "next_skip": addons.ALSO_PAGES}
+
+
+# ---- anime (the owner, 2026-10-08) ---------------------------------------------------------
+
+
+def test_anime_lists_and_details(asked: list[str]) -> None:
+    kitsu = addons.named("community.anime.kitsu")
+    lists = [c for c in kitsu["catalogs"] if c["type"] == "anime"]
+    assert "kitsu-anime-popular" in [c["id"] for c in lists]
+    # Its lists are by genre, without the adults-only ones (this is a family's app).
+    genres = {g for c in lists for e in c["extra"] if e["name"] == "genre" for g in e["options"]}
+    assert {"Action", "Comedy", "Drama"} <= genres
+    assert not {g.lower() for g in genres} & addons.ADULT_GENRES
+    # Nothing to play comes from it: lists and details only.
+    assert not addons.supports(kitsu, "stream", "series", "kitsu:1")
+
+    found = addons.catalog(kitsu, "anime", "kitsu-anime-popular")
+    assert len(found["items"]) == 3
+    first = found["items"][0]
+    assert first["id"].startswith("kitsu:") and first["type"] == "series" and first["name"]
+    # What's in the list is a series like any other: its details, with episodes, come
+    # from this add-on (the film-details one doesn't know these ids).
+    about = addons.details("series", "kitsu:1")
+    assert about["name"] == "Cowboy Bebop"
+    assert [(v["season"], v["episode"]) for v in about["videos"]] == [(1, 1), (1, 2)]
+
+
+def test_a_list_kept_before_gets_the_new_starting_add_on_once(asked: list[str]) -> None:
+    # A list from before Anime Kitsu was one of the app's own, with one of the first
+    # three taken out by the owner.
+    kept = [addons.load(f"{CHANNELS}/manifest.json"), addons.load(f"{FILMS}/manifest.json")]
+    config.save_addons(kept)
+    assert config.addons_offered() is None
+    names = [one["name"] for one in addons.listed()]
+    assert names == ["YouTube", "Public Domain Movies", "Anime Kitsu"]  # Cinemeta stays out
+    assert config.addons_offered() == list(addons.STARTING)
+    before = len(asked)
+    assert [one["name"] for one in addons.listed()] == names and len(asked) == before
+    # Taken out by the owner, it isn't put back by itself; other changes keep the note.
+    addons.remove("community.anime.kitsu")
+    addons.reorder(["org.stremio.pubdomainmovies", "com.linvo.stremiochannels"])
+    assert [one["name"] for one in addons.listed()] == ["Public Domain Movies", "YouTube"]
+    assert config.addons_offered() == list(addons.STARTING)
+
+
+def test_a_new_starting_add_on_that_cant_be_reached_is_tried_next_time(
+    monkeypatch: pytest.MonkeyPatch, asked: list[str]
+) -> None:
+    config.save_addons([addons.load(f"{CINEMETA}/manifest.json")])
+    answer = ANSWERS[f"{KITSU}/manifest.json"]
+    monkeypatch.delitem(ANSWERS, f"{KITSU}/manifest.json")
+    assert [one["name"] for one in addons.listed()] == ["Cinemeta"]
+    assert config.addons_offered() == list(addons.FIRST_STARTING)
+    monkeypatch.setitem(ANSWERS, f"{KITSU}/manifest.json", answer)
+    assert [one["name"] for one in addons.listed()] == ["Cinemeta", "Anime Kitsu"]

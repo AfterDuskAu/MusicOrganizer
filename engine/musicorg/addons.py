@@ -32,6 +32,11 @@ Checked live on 2026-10-07 against the three add-ons the app starts with:
   and `search`; its search answered HTTP 500 that day. A channel's meta has `videos`,
   each `{id: "yt_id:<channel>:<video>", title, thumbnail, released}`: the video's own
   id is the last part. No streams: a video is played by its id.
+- Anime Kitsu (`anime-kitsu.strem.fun`, 2026-10-08): catalog and meta, no streams. Its
+  catalogs are type `anime` (trending, top airing, most popular, highest rated, …, by
+  `genre` and `skip`); what's in them is `series` or `movie` with ids `kitsu:<n>`, and a
+  series' meta has `videos` with `season` and `episode` like any other. It answers 403
+  to a request that doesn't name the program asking.
 - Public Domain Movies (`caching.stremio.net/publicdomainmovies.now.sh`): catalog
   (with `skip` and `search`) and stream for `movie`. A stream there is a torrent:
   `{infoHash, fileIdx, name: "1080p", title: "💾 859.37 MB"}`.
@@ -57,16 +62,24 @@ REPLAY_ENV = "MUSICORG_REPLAY_DIR"
 MANIFEST = "/manifest.json"
 RESOURCES = ("catalog", "meta", "stream")
 INFO_HASH = re.compile(r"[0-9a-fA-F]{40}")
+USER_AGENT = "musicorg"
 YOUTUBE_ID = re.compile(r"[A-Za-z0-9_-]{11}")
 
 # The add-ons the app starts with: the film details Stremio itself publishes, its
-# channels list, and films whose copyright has run out. The owner adds others by
-# their address.
+# channels list, films whose copyright has run out and, at the owner's word on
+# 2026-10-08, Anime Kitsu: lists and details of anime (type `anime`, ids `kitsu:…`), with
+# nothing to play. The owner adds others by their address.
 STARTING = (
     "https://v3-cinemeta.strem.io/manifest.json",
     "https://v3-channels.strem.io/manifest.json",
     "https://caching.stremio.net/publicdomainmovies.now.sh/manifest.json",
+    "https://anime-kitsu.strem.fun/manifest.json",
 )
+# The ones every list kept before "offered" was written down had already been given.
+FIRST_STARTING = STARTING[:3]
+# Genres an add-on may offer that the app's lists don't: this is a family's app, with
+# children's profiles, and these are for adults only.
+ADULT_GENRES = frozenset({"hentai", "ecchi", "yaoi", "yuri", "doujinshi"})
 
 
 class AddonError(UserError):
@@ -85,7 +98,9 @@ def _http(url: str) -> Any:
 
     host = urlsplit(url).hostname or "the add-on"
     try:
-        response = requests.get(url, timeout=TIMEOUT_S)
+        # Named for what it is: some add-ons turn away a program that doesn't say
+        # (Anime Kitsu answered 403 to the library's own name, 2026-10-08).
+        response = requests.get(url, timeout=TIMEOUT_S, headers={"User-Agent": USER_AGENT})
     except requests.exceptions.Timeout:
         raise AddonError(f"{host} took too long to answer.") from None
     except requests.exceptions.RequestException:
@@ -147,6 +162,11 @@ def _resources(raw: dict[str, Any]) -> list[dict[str, Any]]:
     return found
 
 
+def _genres(value: Any) -> list[str]:
+    """A list's choices as the app offers them: without the adults-only ones."""
+    return [name for name in _texts(value) if name.strip().lower() not in ADULT_GENRES]
+
+
 def _catalogs(raw: dict[str, Any]) -> list[dict[str, Any]]:
     found = []
     for entry in raw.get("catalogs") or []:
@@ -162,7 +182,7 @@ def _catalogs(raw: dict[str, Any]) -> list[dict[str, Any]]:
                     {
                         "name": one["name"],
                         "required": one.get("isRequired") is True,
-                        "options": _texts(one.get("options")),
+                        "options": _genres(one.get("options")),
                     }
                 )
         # Older manifests name what a catalog takes in other fields.
@@ -172,7 +192,7 @@ def _catalogs(raw: dict[str, Any]) -> list[dict[str, Any]]:
                 required = name in _texts(entry.get("extraRequired"))
                 extra.append({"name": name, "required": required, "options": []})
         if "genre" not in {one["name"] for one in extra} and _texts(entry.get("genres")):
-            extra.append({"name": "genre", "required": False, "options": _texts(entry["genres"])})
+            extra.append({"name": "genre", "required": False, "options": _genres(entry["genres"])})
         found.append(
             {
                 "type": kind,
@@ -505,7 +525,7 @@ def listed() -> list[dict[str, Any]]:
 
     saved = config.load_addons()
     if saved is not None:
-        return saved
+        return _with_new_ones(saved)
     found = []
     for address in STARTING:
         try:
@@ -513,8 +533,33 @@ def listed() -> list[dict[str, Any]]:
         except AddonError as exc:
             log.warning("A starting add-on couldn't be read: %s", exc.message)
     if len(found) == len(STARTING):
-        config.save_addons(found)
+        config.save_addons(found, offered=list(STARTING))
     return found
+
+
+def _with_new_ones(saved: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The owner's kept list, with any starting add-on this version brings that their
+    list has never been given put at the end, once. One they removed stays removed; one
+    that can't be reached now is tried again next time."""
+    from musicorg import config
+
+    offered = config.addons_offered()
+    if offered is None:
+        offered = list(FIRST_STARTING)
+    new = [address for address in STARTING if address not in offered]
+    if not new:
+        return saved
+    have = {base_of(one["address"]) for one in saved if isinstance(one.get("address"), str)}
+    for address in new:
+        if base_of(address) not in have:
+            try:
+                saved = [*saved, load(address)]
+            except AddonError as exc:
+                log.warning("A new starting add-on couldn't be read: %s", exc.message)
+                continue
+        offered = [*offered, address]
+    config.save_addons(saved, offered=offered)
+    return saved
 
 
 def add(text: str) -> list[dict[str, Any]]:

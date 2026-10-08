@@ -1,0 +1,102 @@
+{
+ "meta": {
+  "id": "kitsu:1",
+  "kitsu_id": "1",
+  "type": "series",
+  "animeType": "TV",
+  "name": "Cowboy Bebop",
+  "slug": "cowboy-bebop",
+  "aliases": [
+   "Cowboy Bebop"
+  ],
+  "genres": [
+   "Comedy",
+   "Sci-Fi",
+   "Space",
+   "Drama",
+   "Action",
+   "Adventure"
+  ],
+  "logo": "https://assets.fanart.tv/fanart/cowboy-bebop-51b09fc19c28b.png",
+  "poster": "https://media.kitsu.app/anime/poster_images/1/medium.jpg",
+  "background": "https://assets.fanart.tv/fanart/cowboy-bebop-51322407067f9.jpg",
+  "description": "In the year 2071, humanity has colonized several of the planets and moons of the solar system leaving the now uninhabitable surface of planet Earth behind. The ",
+  "releaseInfo": "1998-1999",
+  "year": "1998-1999",
+  "imdbRating": "8.2",
+  "userCount": 162402,
+  "status": "finished",
+  "runtime": "25 min",
+  "trailers": [
+   {
+    "source": "qig4KOK2R2g",
+    "type": "Trailer"
+   }
+  ],
+  "videos": [
+   {
+    "id": "kitsu:1:1",
+    "title": "Asteroid Blues",
+    "released": "1998-10-25T01:00:00.000Z",
+    "season": 1,
+    "episode": 1,
+    "thumbnail": "https://media.kitsu.app/episodes/thumbnails/229115/original.jpeg",
+    "overview": "Spike and Jet head to Tijuana to track down an outlaw smuggling a dangerous drug",
+    "imdb_id": "tt0213338",
+    "imdbSeason": 1,
+    "imdbEpisode": 1
+   },
+   {
+    "id": "kitsu:1:2",
+    "title": "Stray Dog Strut",
+    "released": "1998-10-25T01:00:00.000Z",
+    "season": 1,
+    "episode": 2,
+    "thumbnail": "https://media.kitsu.app/episodes/thumbnails/229114/original.jpeg",
+    "overview": "Spike and Jet's next case takes them to Mars, where they'll to try apprehend a p",
+    "imdb_id": "tt0213338",
+    "imdbSeason": 1,
+    "imdbEpisode": 2
+   }
+  ],
+  "links": [
+   {
+    "name": "8.2",
+    "category": "imdb",
+    "url": "https://kitsu.io/anime/cowboy-bebop"
+   },
+   {
+    "name": "Comedy",
+    "category": "Genres",
+    "url": "stremio:///discover/https%3A%2F%2Fanime-kitsu.strem.fun%2Fmanifest.json/anime/kitsu-anime-popular?genre=Comedy"
+   },
+   {
+    "name": "Sci-Fi",
+    "category": "Genres",
+    "url": "stremio:///discover/https%3A%2F%2Fanime-kitsu.strem.fun%2Fmanifest.json/anime/kitsu-anime-popular?genre=Sci-Fi"
+   },
+   {
+    "name": "Space",
+    "category": "Genres",
+    "url": "stremio:///discover/https%3A%2F%2Fanime-kitsu.strem.fun%2Fmanifest.json/anime/kitsu-anime-popular?genre=Space"
+   },
+   {
+    "name": "Drama",
+    "category": "Genres",
+    "url": "stremio:///discover/https%3A%2F%2Fanime-kitsu.strem.fun%2Fmanifest.json/anime/kitsu-anime-popular?genre=Drama"
+   },
+   {
+    "name": "Action",
+    "category": "Genres",
+    "url": "stremio:///discover/https%3A%2F%2Fanime-kitsu.strem.fun%2Fmanifest.json/anime/kitsu-anime-popular?genre=Action"
+   },
+   {
+    "name": "Adventure",
+    "category": "Genres",
+    "url": "stremio:///discover/https%3A%2F%2Fanime-kitsu.strem.fun%2Fmanifest.json/anime/kitsu-anime-popular?genre=Adventure"
+   }
+  ],
+  "imdb_id": "tt0213338"
+ },
+ "cacheMaxAge": 43200
+}

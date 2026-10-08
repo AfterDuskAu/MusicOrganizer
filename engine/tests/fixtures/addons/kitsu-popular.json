@@ -1,0 +1,192 @@
+{
+ "metas": [
+  {
+   "id": "kitsu:7442",
+   "kitsu_id": "7442",
+   "imdb_id": "tt2560140",
+   "type": "series",
+   "animeType": "TV",
+   "name": "Attack on Titan",
+   "aliases": [
+    "Attack on Titan",
+    "Shingeki no Kyojin",
+    "AoT"
+   ],
+   "description": "Centuries ago, mankind was slaughtered to near extinction by monstrous humanoid creatures called titans, forcing humans ",
+   "releaseInfo": "2013",
+   "runtime": "24 min",
+   "imdbRating": "8.4",
+   "genres": [
+    "Mystery",
+    "Super Power",
+    "Military",
+    "Fantasy",
+    "Drama",
+    "Action"
+   ],
+   "logo": "https://assets.fanart.tv/fanart/attack-on-titan-5355731a3ebe5.png",
+   "poster": "https://media.kitsu.app/anime/poster_images/7442/medium.jpg",
+   "background": "https://assets.fanart.tv/fanart/attack-on-titan-551eb271053e8.jpg",
+   "trailers": [
+    {
+     "source": "LHtdKWJdif4",
+     "type": "Trailer"
+    }
+   ],
+   "links": [
+    {
+     "name": "8.4",
+     "category": "imdb",
+     "url": "https://kitsu.io/anime/attack-on-titan"
+    },
+    {
+     "name": "Mystery",
+     "category": "Genres",
+     "url": "stremio:///discover/https%3A%2F%2Fanime-kitsu.strem.fun%2Fmanifest.json/anime/kitsu-anime-popular?genre=Mystery"
+    },
+    {
+     "name": "Super Power",
+     "category": "Genres",
+     "url": "stremio:///discover/https%3A%2F%2Fanime-kitsu.strem.fun%2Fmanifest.json/anime/kitsu-anime-popular?genre=Super Power"
+    },
+    {
+     "name": "Military",
+     "category": "Genres",
+     "url": "stremio:///discover/https%3A%2F%2Fanime-kitsu.strem.fun%2Fmanifest.json/anime/kitsu-anime-popular?genre=Military"
+    },
+    {
+     "name": "Fantasy",
+     "category": "Genres",
+     "url": "stremio:///discover/https%3A%2F%2Fanime-kitsu.strem.fun%2Fmanifest.json/anime/kitsu-anime-popular?genre=Fantasy"
+    },
+    {
+     "name": "Drama",
+     "category": "Genres",
+     "url": "stremio:///discover/https%3A%2F%2Fanime-kitsu.strem.fun%2Fmanifest.json/anime/kitsu-anime-popular?genre=Drama"
+    },
+    {
+     "name": "Action",
+     "category": "Genres",
+     "url": "stremio:///discover/https%3A%2F%2Fanime-kitsu.strem.fun%2Fmanifest.json/anime/kitsu-anime-popular?genre=Action"
+    }
+   ]
+  },
+  {
+   "id": "kitsu:11469",
+   "kitsu_id": "11469",
+   "imdb_id": "tt5626028",
+   "type": "series",
+   "animeType": "TV",
+   "name": "Boku no Hero Academia",
+   "aliases": [
+    "My Hero Academia",
+    "Boku no Hero Academia"
+   ],
+   "description": "What would the world be like if 80 percent of the population manifested extraordinary superpowers called “Quirks” at age",
+   "releaseInfo": "2016",
+   "runtime": "23 min",
+   "imdbRating": "8.3",
+   "genres": [
+    "Comedy",
+    "Super Power",
+    "School",
+    "Action"
+   ],
+   "logo": "https://assets.fanart.tv/fanart/my-hero-academia-58ab2e4282d2a.png",
+   "poster": "https://media.kitsu.app/anime/poster_images/11469/medium.jpg",
+   "background": "https://assets.fanart.tv/fanart/my-hero-academia-5ca8d43cd466f.jpg",
+   "trailers": [
+    {
+     "source": "D5fYOnwYkj4",
+     "type": "Trailer"
+    }
+   ],
+   "links": [
+    {
+     "name": "8.3",
+     "category": "imdb",
+     "url": "https://kitsu.io/anime/boku-no-hero-academia"
+    },
+    {
+     "name": "Comedy",
+     "category": "Genres",
+     "url": "stremio:///discover/https%3A%2F%2Fanime-kitsu.strem.fun%2Fmanifest.json/anime/kitsu-anime-popular?genre=Comedy"
+    },
+    {
+     "name": "Super Power",
+     "category": "Genres",
+     "url": "stremio:///discover/https%3A%2F%2Fanime-kitsu.strem.fun%2Fmanifest.json/anime/kitsu-anime-popular?genre=Super Power"
+    },
+    {
+     "name": "School",
+     "category": "Genres",
+     "url": "stremio:///discover/https%3A%2F%2Fanime-kitsu.strem.fun%2Fmanifest.json/anime/kitsu-anime-popular?genre=School"
+    },
+    {
+     "name": "Action",
+     "category": "Genres",
+     "url": "stremio:///discover/https%3A%2F%2Fanime-kitsu.strem.fun%2Fmanifest.json/anime/kitsu-anime-popular?genre=Action"
+    }
+   ]
+  },
+  {
+   "id": "kitsu:12268",
+   "kitsu_id": "12268",
+   "imdb_id": "tt5626028",
+   "type": "series",
+   "animeType": "TV",
+   "name": "Boku no Hero Academia 2",
+   "aliases": [
+    "My Hero Academia Season 2",
+    "Boku no Hero Academia 2"
+   ],
+   "description": "Taking off right after the last episode of the first season. The school is temporarily closed due to security. When U.A.",
+   "releaseInfo": "2017",
+   "runtime": "24 min",
+   "imdbRating": "8.3",
+   "genres": [
+    "Comedy",
+    "Super Power",
+    "School",
+    "Action"
+   ],
+   "logo": "https://assets.fanart.tv/fanart/my-hero-academia-58ab2e4282d2a.png",
+   "poster": "https://media.kitsu.app/anime/poster_images/12268/medium.jpg",
+   "background": "https://assets.fanart.tv/fanart/my-hero-academia-5ca8d43cd466f.jpg",
+   "trailers": [
+    {
+     "source": "9ZIgCYSn3e8",
+     "type": "Trailer"
+    }
+   ],
+   "links": [
+    {
+     "name": "8.3",
+     "category": "imdb",
+     "url": "https://kitsu.io/anime/boku-no-hero-academia-2nd-season"
+    },
+    {
+     "name": "Comedy",
+     "category": "Genres",
+     "url": "stremio:///discover/https%3A%2F%2Fanime-kitsu.strem.fun%2Fmanifest.json/anime/kitsu-anime-popular?genre=Comedy"
+    },
+    {
+     "name": "Super Power",
+     "category": "Genres",
+     "url": "stremio:///discover/https%3A%2F%2Fanime-kitsu.strem.fun%2Fmanifest.json/anime/kitsu-anime-popular?genre=Super Power"
+    },
+    {
+     "name": "School",
+     "category": "Genres",
+     "url": "stremio:///discover/https%3A%2F%2Fanime-kitsu.strem.fun%2Fmanifest.json/anime/kitsu-anime-popular?genre=School"
+    },
+    {
+     "name": "Action",
+     "category": "Genres",
+     "url": "stremio:///discover/https%3A%2F%2Fanime-kitsu.strem.fun%2Fmanifest.json/anime/kitsu-anime-popular?genre=Action"
+    }
+   ]
+  }
+ ],
+ "cacheMaxAge": 43200
+}
