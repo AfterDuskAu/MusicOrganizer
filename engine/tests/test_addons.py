@@ -440,3 +440,34 @@ def test_the_owner_can_mark_an_add_on_as_adults_only(grown: list[str]) -> None:
     assert not any(o["adult"] for o in addons.mark_adult("org.stremio.pubdomainmovies", False))
     with pytest.raises(addons.AddonError):
         addons.mark_adult("gone", True)
+
+
+def test_each_side_of_the_fence_answers_only_its_own_pages(
+    grown: list[str], monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    addons.add(f"{GROWN}/manifest.json")
+    for name, answer in (
+        ("stream/movie/tt0012349.json", {"streams": [{"url": "https://adults.example.invalid/v.mp4"}]}),
+        ("meta/movie/tt0012349.json",
+         {"meta": {"id": "tt0012349", "type": "movie", "name": "Not The Kid"}}),
+    ):  # fmt: skip
+        path = tmp_path / name.replace("/", "-")
+        path.write_text(json.dumps(answer), encoding="utf-8")
+        monkeypatch.setitem(ANSWERS, f"{GROWN}/{name}", str(path))
+    # An ordinary film's page: never anything from the add-on for adults, though it
+    # says it has ways to play that film.
+    usual = addons.streams(addons.kept_to(False), "movie", "tt0012349")
+    assert [s["addon"] for s in usual["sources"]] == ["Public Domain Movies"]
+    assert addons.details("movie", "tt0012349")["name"] == "The Kid"
+    # The Finder for adults: only from it.
+    theirs = addons.streams(addons.kept_to(True), "movie", "tt0012349")
+    assert [s["addon"] for s in theirs["sources"]] == ["Grown-ups"]
+    assert addons.details("movie", "tt0012349", adult=True)["name"] == "Not The Kid"
+    # An add-on named from the wrong side isn't asked.
+    with pytest.raises(addons.AddonError):
+        addons.details("movie", "tt0012349", "invalid.example.grown")
+    with pytest.raises(addons.AddonError):
+        addons.details("movie", "tt0012349", "com.linvo.cinemeta", adult=True)
+    # In a child's profile that side is empty.
+    addons.set_for_child(True)
+    assert addons.kept_to(True) == []

@@ -677,13 +677,25 @@ def named(addon_id: str) -> dict[str, Any]:
     raise AddonError("That add-on isn't in your list any more.")
 
 
-def details(kind: str, item_id: str, addon_id: str | None = None) -> dict[str, Any]:
+def kept_to(adult: bool) -> list[dict[str, Any]]:
+    """The add-ons on one side of the fence: the ones for adults only, or all the
+    others. A page asks one side or the other, never both: an ordinary film's page is
+    never answered by an add-on for adults, and the other way about."""
+    return [addon for addon in listed() if is_adult(addon) == adult]
+
+
+def details(
+    kind: str, item_id: str, addon_id: str | None = None, *, adult: bool = False
+) -> dict[str, Any]:
     """One film's or channel's details, from the add-on named or else the first in the
-    list that has details for it."""
+    list that has details for it. Only from the side of the fence asked (`kept_to`)."""
     if addon_id is not None:
-        return meta(named(addon_id), kind, item_id)
+        addon = named(addon_id)
+        if is_adult(addon) != adult:
+            raise AddonError("That add-on isn't one this page asks.")
+        return meta(addon, kind, item_id)
     problem: AddonError | None = None
-    for addon in listed():
+    for addon in kept_to(adult):
         if supports(addon, "meta", kind, item_id):
             try:
                 return meta(addon, kind, item_id)

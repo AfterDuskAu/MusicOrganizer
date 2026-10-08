@@ -876,7 +876,9 @@ struct MovieView: View {
         .foregroundStyle(.white)
         .environment(\.colorScheme, .dark)
         .task(id: film.id) {
-            let asked: [String: Any] = ["type": film.type, "id": film.id]
+            // `adult`: which side of the fence answers. A title from the Finder for
+            // adults is asked of those add-ons only, and any other title never of them.
+            let asked: [String: Any] = ["type": film.type, "id": film.id, "adult": apart]
             do {
                 details = try await model.ask("addon.details", asked, as: MediaDetails.self)
             } catch {
@@ -943,7 +945,8 @@ struct MovieView: View {
         (episode, streams) = (one, nil)
         Task {
             let found = try? await model.ask(
-                "addon.streams", ["type": film.type, "id": one.id], as: StreamsAnswer.self)
+                "addon.streams", ["type": film.type, "id": one.id, "adult": apart],
+                as: StreamsAnswer.self)
             if episode == one { streams = found ?? StreamsAnswer(sources: [], problems: []) }
         }
     }

@@ -979,11 +979,15 @@ class Server:
 
     def addon_details(self, params: dict[str, Any]) -> dict[str, Any]:
         return addons.details(
-            need(params, "type", str), need(params, "id", str), want(params, "addon_id", str)
-        )
+            need(params, "type", str), need(params, "id", str), want(params, "addon_id", str),
+            adult=want(params, "adult", bool) is True,
+        )  # fmt: skip
 
     def addon_streams(self, params: dict[str, Any]) -> dict[str, Any]:
-        return addons.streams(addons.listed(), need(params, "type", str), need(params, "id", str))
+        # One side of the fence or the other: an ordinary film's ways to play never
+        # come from an add-on for adults only.
+        asked = addons.kept_to(want(params, "adult", bool) is True)
+        return addons.streams(asked, need(params, "type", str), need(params, "id", str))
 
     # -- methods: videos of any kind, and the channels the owner follows (2026-10-07) --
 
