@@ -990,7 +990,8 @@ struct MovieView: View {
                                     Button("Keep", systemImage: "arrow.down.circle") {
                                         model.keepFilm(
                                             stream, title: playName,
-                                            year: isSeries ? nil : details?.year ?? film.year)
+                                            year: isSeries ? nil : details?.year ?? film.year,
+                                            apart: apart)
                                     }
                                     .disabled(keeping != nil)
                                     .help("Fetch the whole film and save it in your Movies folder")

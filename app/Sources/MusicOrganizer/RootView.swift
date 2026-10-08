@@ -521,7 +521,7 @@ struct MainView: View {
                     entry in
                     if entry == .downloads {
                         Label(entry.title, systemImage: entry.symbol)
-                            .badge(model.downloaded.count + model.pending.filter(\.isActive).count)
+                            .badge(model.downloadsBadge)
                             // Dragged back here, a download leaves the main library's lists.
                             .dropDestination(for: String.self) { ids, _ in
                                 model.moveDownloads(DraggedSongs.ids(in: ids), toLibrary: false)
@@ -835,6 +835,7 @@ struct MainView: View {
             NowPlayingView(isShown: .constant(true), closable: false, isActive: active)
         case .downloads:
             VStack(spacing: 0) {
+                FilmKeeps()
                 PendingDownloads()
                 DownloadsByGenre()
             }

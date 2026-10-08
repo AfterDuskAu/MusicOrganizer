@@ -139,6 +139,9 @@ final class AppModel {
     /// Films being kept, or kept since the app opened, by their torrent's id.
     private(set) var filmKeeps: [String: TorrentStatus] = [:]
     private var filmKeepTasks: [String: Task<Void, Never>] = [:]
+    /// The films being kept, or just kept, that Downloads lists: what each was asked
+    /// for as, in the order asked. Not the ones kept from the Finder for adults.
+    private(set) var listedKeeps: [PendingKeeps.Keep] = []
     /// Goes up each time a film or a video has been kept, so Videos → Movies looks at
     /// its folders again.
     private(set) var keptArrived = 0
@@ -749,14 +752,15 @@ final class AppModel {
         }
     }
 
-    func keepFilm(_ stream: MediaStream, title: String, year: String?) {
+    func keepFilm(_ stream: MediaStream, title: String, year: String?, apart: Bool = false) {
         guard let hash = stream.infoHash?.lowercased(), filmKeeps[hash]?.isKeeping != true
         else { return }
         // Settings → Downloads: made into a file phones and tablets play, unless switched off.
         let convert = UserDefaults.standard.object(forKey: TorrentStatus.convertKey) as? Bool ?? true
         let keep = PendingKeeps.Keep(
             infoHash: hash, trackers: stream.trackers, title: title,
-            year: year.map { String($0.prefix(4)) }, fileIndex: stream.fileIndex, convert: convert)
+            year: year.map { String($0.prefix(4)) }, fileIndex: stream.fileIndex, convert: convert,
+            apart: apart)
         // Remembered until it's in the Movies folder, so it carries on if the app is
         // closed first.
         var pending = PendingKeeps.load()
@@ -771,6 +775,9 @@ final class AppModel {
     private func follow(_ keep: PendingKeeps.Keep, quietly: Bool) {
         let hash = keep.infoHash
         guard filmKeepTasks[hash] == nil else { return }
+        if !keep.isApart, !listedKeeps.contains(where: { $0.infoHash == hash }) {
+            listedKeeps.append(keep)
+        }
         filmKeepTasks[hash] = Task {
             defer { filmKeepTasks[hash] = nil }
             do {
@@ -801,12 +808,26 @@ final class AppModel {
         filmKeepTasks[hash]?.cancel()
         filmKeepTasks[hash] = nil
         filmKeeps[hash] = nil
+        listedKeeps.removeAll { $0.infoHash == hash }
         // Left at once, unless it's the film in the player: that one plays on.
         let playing = filmTorrent?.lowercased() == hash
         Task {
             _ = try? await ask(
                 "torrent.stop_keeping", ["info_hash": hash, "playing": playing], as: Empty.self)
         }
+    }
+
+    /// The number on Downloads' row in the sidebar: what's arrived, and what's on its
+    /// way (songs, videos, and movies being kept).
+    var downloadsBadge: Int {
+        let keeping = listedKeeps.filter { filmKeeps[$0.infoHash]?.isKeeping ?? true }.count
+        return downloaded.count + pending.filter(\.isActive).count + keeping
+    }
+
+    /// Downloads' ✕ on a film that's been kept, or couldn't be: off the list. (One still
+    /// on its way is stopped with `stopKeepingFilm`.)
+    func dismissKeep(_ infoHash: String) {
+        listedKeeps.removeAll { $0.infoHash == infoHash.lowercased() }
     }
 
     /// When the app opens: the films that were still being kept when it closed carry on.

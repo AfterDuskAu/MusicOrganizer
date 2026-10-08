@@ -325,6 +325,13 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
     /// Still on its way: worth asking about again.
     public var isKeeping: Bool { keeping == true && keptPath == nil && keepError == nil }
 
+    /// How far along a keep is, 0 to 1, for a bar: the converting if that's begun (the
+    /// last stretch), else how much has arrived. Nil while the film is still being found.
+    public var keepProgress: Double? {
+        if let converting { return min(max(converting, 0), 1) }
+        return state == "finding" ? nil : min(max(progress, 0), 1)
+    }
+
     /// One line for the player: "Finding the film…", "6 sources · 4.6 MB/s · 9% here".
     public var line: String {
         switch state {

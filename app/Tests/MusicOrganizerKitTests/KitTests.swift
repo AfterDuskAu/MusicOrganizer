@@ -1882,6 +1882,22 @@ final class PendingKeepsTests: XCTestCase {
         XCTAssertNil(asked["file_index"])
         XCTAssertEqual(found.keeps[1].asked["year"] as? String, "1921")
 
+        // One kept from the Finder for adults says so, and isn't listed with the downloads;
+        // one remembered before that was noted isn't such a one.
+        XCTAssertFalse(found.keeps[0].isApart)
+        XCTAssertTrue(PendingKeeps.Keep(infoHash: "ef", trackers: [], title: "X", apart: true).isApart)
+        let old = try JSONDecoder().decode(
+            PendingKeeps.Keep.self,
+            from: Data(#"{"infoHash": "ab", "trackers": [], "title": "Old", "convert": true}"#.utf8))
+        XCTAssertFalse(old.isApart)
+        // How far along a keep is, for the bar on Downloads.
+        XCTAssertNil(TorrentStatus(state: "finding", peers: 0, bytesPerSecond: 0, progress: 0, keeping: true).keepProgress)
+        XCTAssertEqual(
+            TorrentStatus(state: "fetching", peers: 3, bytesPerSecond: 1, progress: 0.34, keeping: true).keepProgress, 0.34)
+        XCTAssertEqual(
+            TorrentStatus(state: "complete", peers: 0, bytesPerSecond: 0, progress: 1, keeping: true, converting: 0.5)
+                .keepProgress, 0.5)
+
         var after = found
         after.remove(hash)  // kept, or stopped: forgotten, whatever case its id was given in
         XCTAssertEqual(after.keeps.map(\.title), ["Other"])

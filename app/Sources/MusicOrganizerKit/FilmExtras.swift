@@ -95,12 +95,17 @@ public struct PendingKeeps: Codable, Equatable, Sendable {
         public let year: String?
         public let fileIndex: Int?
         public let convert: Bool
+        /// Kept from the Finder for adults: it isn't listed with the other downloads.
+        /// (Nil in a keep remembered before this was noted.)
+        public let apart: Bool?
         public var id: String { infoHash }
+        public var isApart: Bool { apart == true }
 
         public init(
             infoHash: String, trackers: [String], title: String, year: String? = nil,
-            fileIndex: Int? = nil, convert: Bool = true
+            fileIndex: Int? = nil, convert: Bool = true, apart: Bool = false
         ) {
+            self.apart = apart ? true : nil
             self.infoHash = infoHash.lowercased()
             self.trackers = trackers
             self.title = title
