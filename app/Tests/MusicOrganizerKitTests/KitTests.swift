@@ -2046,3 +2046,93 @@ final class SeriesTests: XCTestCase {
         XCTAssertEqual(lists.map(\.canBeBrowsed), [true, true, false, false])
     }
 }
+
+final class HomeTests: XCTestCase {
+    private func item(_ id: String, _ type: String, _ genres: [String]) -> MediaItem {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let list = genres.map { "\"\($0)\"" }.joined(separator: ",")
+        let said = #"{"id":"\#(id)","type":"\#(type)","name":"N \#(id)","poster":null,"poster_shape":"poster","year":null,"rating":null,"genres":[\#(list)]}"#
+        return try! decoder.decode(MediaItem.self, from: Data(said.utf8))
+    }
+
+    func testTheRowsOnOfferAndTheOwnersChoiceOfThem() {
+        let all = HomeSection.all(movieGenres: ["Action", "Comedy"], seriesGenres: ["Crime"])
+        XCTAssertEqual(Set(all.map(\.id)).count, all.count)  // no two the same
+        XCTAssertTrue(all.contains { $0.id == "movies.genre.Action" && $0.title == "Action Movies" })
+        XCTAssertTrue(all.contains { $0.id == "series.genre.Crime" && $0.genre == "Crime" })
+        XCTAssertEqual(all.first { $0.id == "series.continue" }?.kind, "continue")
+        XCTAssertEqual(all.first { $0.id == "movies.genre.Action" }?.kind, "genre")
+        // The page starts as the owner drew it, and every row of that is on offer.
+        var layout = HomeLayout()
+        XCTAssertEqual(layout.sections(from: all).map(\.id), HomeSection.standard)
+        layout.set("movies.genre.Action", shown: true)
+        layout.set("movies.genre.Action", shown: true)  // once is once
+        layout.set("songs.favourites", shown: false)
+        layout.move("movies.genre.Action", by: -1)
+        layout.move("songs.recommended", by: -1)  // already first: stays
+        XCTAssertEqual(layout.shown.first, "songs.recommended")
+        XCTAssertEqual(layout.shown.suffix(2), ["movies.genre.Action", "series.popular"])
+        // A row that's no longer on offer (its genre went from the add-on) isn't drawn.
+        XCTAssertFalse(
+            layout.sections(from: HomeSection.all(movieGenres: [], seriesGenres: []))
+                .contains { $0.id == "movies.genre.Action" })
+        let defaults = UserDefaults(suiteName: "home-test")!
+        defaults.removePersistentDomain(forName: "home-test")
+        XCTAssertEqual(HomeLayout.saved(in: defaults), HomeLayout())
+        layout.save(in: defaults)
+        XCTAssertEqual(HomeLayout.saved(in: defaults), layout)
+        defaults.removePersistentDomain(forName: "home-test")
+    }
+
+    func testWhatsBeenWatched() {
+        var history = WatchHistory()
+        let start = Date(timeIntervalSince1970: 2_000_000)
+        history.watched(.init(id: "v1", kind: .video, name: "One", detail: "Channel", at: start))
+        history.watched(.init(id: "m1", kind: .movie, name: "Film", item: item("m1", "movie", ["Drama"])))
+        history.place("v1", seconds: 300, length: 3000)
+        XCTAssertEqual(history.recent(.video).map(\.id), ["v1"])
+        XCTAssertEqual(history.unfinished(.video).first?.progress, 0.1)
+        XCTAssertTrue(history.unfinished(.movie).isEmpty)  // not begun
+        // Started again from a list, it keeps its place and comes to the front.
+        history.watched(.init(id: "v1", kind: .video, name: "One"))
+        XCTAssertEqual(history.entries.map(\.id), ["v1", "m1"])
+        XCTAssertEqual(history.entries[0].seconds, 300)
+        // Hardly begun, or nearly over: not something to carry on with.
+        history.place("v1", seconds: 5, length: 3000)
+        XCTAssertTrue(history.unfinished(.video).isEmpty)
+        history.place("v1", seconds: 2990, length: 3000)
+        XCTAssertTrue(history.unfinished(.video).isEmpty)
+        // A short video's last stretch is a share of it, not a minute and a half.
+        history.place("v1", seconds: 60, length: 100)
+        XCTAssertEqual(history.unfinished(.video).count, 1)
+        history.forget("v1")
+        XCTAssertEqual(history.entries.map(\.id), ["m1"])
+        for number in 0...WatchHistory.most { history.watched(.init(id: "x\(number)", kind: .video, name: "X")) }
+        XCTAssertEqual(history.entries.count, WatchHistory.most)
+        let defaults = UserDefaults(suiteName: "history-test")!
+        defaults.removePersistentDomain(forName: "history-test")
+        history.save(in: defaults)
+        XCTAssertEqual(WatchHistory.saved(in: defaults).entries.count, WatchHistory.most)
+        defaults.removePersistentDomain(forName: "history-test")
+    }
+
+    func testFavouriteFilmsAndWhatTheySuggest() {
+        var favourites = MediaFavourites()
+        let (film, show) = (item("m1", "movie", ["Crime", "Drama"]), item("s1", "series", ["Crime"]))
+        favourites.toggle(film)
+        favourites.toggle(show)
+        XCTAssertTrue(favourites.contains(film))
+        XCTAssertEqual(favourites.of(type: "movie").map(\.id), ["m1"])
+        XCTAssertEqual(MediaFavourites.leadingGenre(favourites.items), "Crime")
+        XCTAssertEqual(MediaFavourites.leadingGenre([film]), "Crime")  // a tie: first in the alphabet
+        XCTAssertNil(MediaFavourites.leadingGenre([]))
+        let defaults = UserDefaults(suiteName: "media-favourites-test")!
+        defaults.removePersistentDomain(forName: "media-favourites-test")
+        favourites.save(in: defaults)
+        XCTAssertEqual(MediaFavourites.saved(in: defaults), favourites)
+        favourites.toggle(film)
+        XCTAssertFalse(favourites.contains(film))
+        defaults.removePersistentDomain(forName: "media-favourites-test")
+    }
+}

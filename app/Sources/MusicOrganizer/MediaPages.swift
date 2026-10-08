@@ -374,7 +374,7 @@ struct ChannelView: View {
     /// Play the channel's videos from one of them, carrying on down the list.
     private func play(_ videos: [VideoHit], from first: VideoHit) {
         guard let start = videos.firstIndex(of: first) else { return }
-        model.playVideos(videos.map(\.result), startAt: start)
+        model.playVideos(videos.map(\.result), startAt: start, channels: VideoHit.channels(of: videos))
     }
 }
 
@@ -431,7 +431,9 @@ struct VideoFinderView: View {
                     List(shown) { video in
                         VideoRow(video: video, openChannel: { opened = $0 }) {
                             if let start = shown.firstIndex(of: video) {
-                                model.playVideos(shown.map(\.result), startAt: start)
+                                model.playVideos(
+                                    shown.map(\.result), startAt: start,
+                                    channels: VideoHit.channels(of: shown))
                             }
                         }
                     }
@@ -550,6 +552,13 @@ struct ChannelsView: View {
                 }
             }
         }
+        // A channel clicked on Home opens here.
+        .onChange(of: model.channelToOpen, initial: true) { _, wanted in
+            if let wanted {
+                opened = wanted
+                model.channelToOpen = nil
+            }
+        }
         // Looked at again whenever a video has just arrived.
         .task(id: model.keptArrived) {
             let folder = Self.keptFolder
@@ -589,12 +598,23 @@ struct VideoFileRow: View {
 /// A click opens a film: what it is, and where it can be played from.
 struct MovieFinderView: View {
     @Environment(AppModel.self) private var model
-    /// Movies or series: "movie" or "series", as add-ons call them.
-    @AppStorage("movieFinderKind") private var kind = "movie"
-    @AppStorage("movieFinderList") private var listKey = ""
-    @AppStorage("movieFinderGenre") private var genre = ""
+    /// Movies or series: "movie" or "series", as add-ons call them. Each has a Finder
+    /// of its own in the sidebar, and its own list, genre and second genre.
+    let kind: String
+    @AppStorage private var listKey: String
+    @AppStorage private var genre: String
     /// A second genre: only films tagged with both are listed.
-    @AppStorage("movieFinderAlso") private var also = ""
+    @AppStorage private var also: String
+
+    init(kind: String) {
+        self.kind = kind
+        let name = kind == "series" ? "seriesFinder" : "movieFinder"
+        _listKey = AppStorage(wrappedValue: "", "\(name)List")
+        _genre = AppStorage(wrappedValue: "", "\(name)Genre")
+        _also = AppStorage(wrappedValue: "", "\(name)Also")
+    }
+
+    private var isSeries: Bool { kind == "series" }
     @State private var typed = ""
     @State private var search = ""
     @State private var opened: MediaItem?
@@ -606,14 +626,8 @@ struct MovieFinderView: View {
         ZStack {
             VStack(spacing: 0) {
                 HStack(spacing: 12) {
-                    Text("Movie Finder").font(.title2.weight(.semibold)).heading()
-                    Picker("Kind", selection: $kind) {
-                        Text("Movies").tag("movie")
-                        Text("Series").tag("series")
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    .fixedSize()
+                    Text(isSeries ? "Series Finder" : "Movie Finder")
+                        .font(.title2.weight(.semibold)).heading()
                     if let chosen {
                         Picker("List", selection: Binding(get: { Self.key(chosen) }, set: { pick($0) })) {
                             ForEach(lists, id: \.catalog) { Text(Self.name($0)).tag(Self.key($0)) }
@@ -666,15 +680,16 @@ struct MovieFinderView: View {
                     let second =
                         wanted != nil && also != wanted && chosen.catalog.id != "year"
                             && chosen.catalog.genres.contains(also) ? also : ""
-                    MediaGrid(list: media.films, width: 140, open: { opened = $0 }) {
+                    let list = isSeries ? media.series : media.films
+                    MediaGrid(list: list, width: 140, open: { opened = $0 }) {
                         Task {
-                            await media.films.load(
+                            await list.load(
                                 model, addon: chosen.addon, catalog: chosen.catalog, genre: wanted,
                                 search: search, also: second, adding: true)
                         }
                     }
                     .task(id: "\(Self.key(chosen))|\(wanted ?? "")|\(search)|\(second)") {
-                        await media.films.load(
+                        await list.load(
                             model, addon: chosen.addon, catalog: chosen.catalog, genre: wanted,
                             search: search, also: second)
                     }
@@ -696,6 +711,13 @@ struct MovieFinderView: View {
         .onChange(of: opened) { _, film in
             // Let go of the search box, so its ring isn't drawn and typing goes nowhere.
             if film != nil { NSApp.keyWindow?.makeFirstResponder(nil) }
+        }
+        // A film or series clicked on Home opens here.
+        .onChange(of: model.filmToOpen, initial: true) { _, wanted in
+            if let wanted, (wanted.type == "series") == isSeries {
+                opened = wanted
+                model.filmToOpen = nil
+            }
         }
         .task(id: model.phase) { await media.load(model) }
     }
@@ -737,6 +759,14 @@ struct MovieView: View {
     private var isSeries: Bool { film.type == "series" }
     /// What's played or kept: the film, or the episode chosen ("East of Eden S01E02").
     private var playName: String { episode?.name(in: film.name) ?? film.name }
+    /// What Home remembers of it once it's played: the film, or the series with the
+    /// episode it has got to.
+    private var watched: WatchHistory.Entry {
+        let about = episode.map { [$0.number, $0.title].compactMap { $0 }.joined(separator: " · ") }
+        return WatchHistory.Entry(
+            id: film.id, kind: isSeries ? .series : .movie, name: film.name, detail: about,
+            picture: film.poster, item: film)
+    }
 
     var body: some View {
         // The page is the size of the room it's given. The film's picture is laid over a
@@ -750,7 +780,20 @@ struct MovieView: View {
                         .buttonStyle(.plain)
                         .font(.title2)
                         .help("Back to the films")
-                    Text(film.name).font(.system(size: 40, weight: .bold)).heading()
+                    HStack(alignment: .firstTextBaseline, spacing: 16) {
+                        Text(film.name).font(.system(size: 40, weight: .bold)).heading()
+                        let loved = model.mediaFavourites.contains(film)
+                        Button(
+                            loved ? "Remove From Favourites" : "Add to Favourites",
+                            systemImage: loved ? "heart.fill" : "heart"
+                        ) {
+                            model.toggleFavourite(film)
+                        }
+                        .labelStyle(.iconOnly)
+                        .buttonStyle(.plain)
+                        .font(.title)
+                        .help(loved ? "Take it out of your favourites" : "A favourite: it shows on Home")
+                    }
                     HStack(spacing: 28) {
                         if let minutes = details?.runtimeMin { Text("\(minutes) min") }
                         if let year = details?.year ?? film.year { Text(year) }
@@ -769,7 +812,7 @@ struct MovieView: View {
                         Button("Trailer", systemImage: "movieclapper") {
                             model.playVideos(
                                 [SearchResult(videoId: trailer, title: "\(film.name) (Trailer)", artists: [])],
-                                startAt: 0)
+                                startAt: 0, remember: false)
                         }
                         .help("Play the trailer. Switch the player page to Video to see it.")
                     }
@@ -888,7 +931,7 @@ struct MovieView: View {
                             Spacer()
                             Text(stream.kindLabel).foregroundStyle(.secondary)
                             Button("Play", systemImage: "play.fill") {
-                                model.play(stream, title: playName)
+                                model.play(stream, title: playName, watching: watched)
                             }
                             .disabled(!stream.canPlay)
                             .help(stream.canPlay ? "Play it now" : "This one can't be played in the app yet")

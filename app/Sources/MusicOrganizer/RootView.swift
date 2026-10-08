@@ -87,6 +87,9 @@ enum SidebarItem: Hashable {
     case visualizer, musicExplore, importPlaylists, youtube, youtubeQueue, downloads
     /// The owner's drawing of 2026-10-07: videos and movies beside the music.
     case channels, movies, videoFinder, videoExplore, movieFinder
+    /// The owner's drawing of 2026-10-08: Home at the top of Media Discovery, and series
+    /// in a Finder of their own.
+    case home, seriesFinder
     /// Settings: a page like the others, opened by the cog wheel or ⌘, (no row of its own).
     case settings
     case playlist(String)
@@ -103,6 +106,8 @@ enum SidebarItem: Hashable {
         case .videoFinder: "videoFinder"
         case .videoExplore: "videoExplore"
         case .movieFinder: "movieFinder"
+        case .home: "home"
+        case .seriesFinder: "seriesFinder"
         case .importPlaylists: "import"
         case .youtube: "youtube"
         case .youtubeQueue: "youtubeQueue"
@@ -126,6 +131,8 @@ enum SidebarItem: Hashable {
         case "videoFinder": self = .videoFinder
         case "videoExplore": self = .videoExplore
         case "movieFinder": self = .movieFinder
+        case "home": self = .home
+        case "seriesFinder": self = .seriesFinder
         case "import": self = .importPlaylists
         // Discover → Artist was a page of its own for a few hours; it's the Artists page now.
         case "artistInfo": self = .artists
@@ -172,6 +179,8 @@ enum SidebarItem: Hashable {
         case .movies: "Movies"
         case .videoFinder: "Video Finder"
         case .movieFinder: "Movie Finder"
+        case .home: "Home"
+        case .seriesFinder: "Series Finder"
         case .importPlaylists: "Import Playlists"
         case .youtube: "Music Finder"
         case .youtubeQueue: "Queue"
@@ -197,6 +206,8 @@ enum SidebarItem: Hashable {
         case .movies: "popcorn"
         case .videoFinder: "play.rectangle.on.rectangle"
         case .movieFinder: "movieclapper"
+        case .home: "house"
+        case .seriesFinder: "tv"
         case .importPlaylists: "square.and.arrow.down.on.square"
         case .youtube: "magnifyingglass"
         case .youtubeQueue: "text.append"
@@ -466,8 +477,11 @@ struct MainView: View {
                 // In the owner's order; each Explore sits under its Finder, set in a little.
                 ForEach(
                     [
-                        SidebarItem.visualizer, .youtube, .musicExplore, .videoFinder, .videoExplore,
-                        .movieFinder, .downloads,
+                        // (The Visualizer's row was taken out on 2026-10-08, until the
+                        // owner has a place for it: the page is still a click on the
+                        // cover in the player bar away.)
+                        SidebarItem.home, .youtube, .musicExplore, .videoFinder, .videoExplore,
+                        .movieFinder, .seriesFinder, .downloads,
                     ], id: \.self
                 ) {
                     entry in
@@ -756,7 +770,11 @@ struct MainView: View {
         case .videoExplore:
             VideoExploreView()
         case .movieFinder:
-            MovieFinderView()
+            MovieFinderView(kind: "movie")
+        case .seriesFinder:
+            MovieFinderView(kind: "series")
+        case .home:
+            HomeView()
         case .videoFinder:
             VideoFinderView()
         case .channels:

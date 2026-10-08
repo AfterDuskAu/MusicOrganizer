@@ -78,7 +78,7 @@ public struct AddonsAnswer: Decodable, Sendable {
 }
 
 /// A film or a channel as a list shows it (the engine's Item).
-public struct MediaItem: Decodable, Identifiable, Hashable, Sendable {
+public struct MediaItem: Codable, Identifiable, Hashable, Sendable {
     public let id: String
     public let type: String
     public let name: String
@@ -353,6 +353,13 @@ public struct VideoHit: Decodable, Identifiable, Hashable, Sendable {
     public let thumbnail: String?
 
     public var id: String { videoId }
+
+    /// Which channel each of these videos is from (video id → channel id), where known.
+    public static func channels(of videos: [VideoHit]) -> [String: String] {
+        Dictionary(
+            videos.compactMap { video in video.channelId.map { (video.videoId, $0) } },
+            uniquingKeysWith: { first, _ in first })
+    }
 
     /// The video as something the app's player can play.
     public var result: SearchResult {

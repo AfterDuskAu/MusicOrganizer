@@ -147,6 +147,10 @@ final class AppModel {
     /// Videos played as themselves (a channel's video, a trailer): the picture shown is
     /// that very video, not the official video of a song with its name.
     @ObservationIgnored private var exactVideos = Set<String>()
+    /// The channel each of those videos is from, where it's known (video id → channel id).
+    @ObservationIgnored private var videoChannels: [String: String] = [:]
+    /// Videos played in passing (a film's trailer): not noted as watched.
+    @ObservationIgnored private var passing = Set<String>()
     let find = DiscoverPage(named: "find")
     /// Discover → Import Playlists: a playlist from elsewhere, and what was found of it.
     let importing = ImportPage()
@@ -155,6 +159,81 @@ final class AppModel {
     /// A page to open in the sidebar, asked for from somewhere else in the app (Artist
     /// Info on a song). The main view opens it and clears this.
     var goTo: SidebarItem?
+
+    // MARK: Home (the owner's drawing, 2026-10-08)
+
+    /// Which rows the Home page shows, in order. Its Overview changes it.
+    var homeLayout = HomeLayout.saved() {
+        didSet { homeLayout.save() }
+    }
+    /// What's been watched: Home's Continue Watching and Recently Watched.
+    private(set) var history = WatchHistory.saved()
+    /// The movies and series marked with the heart.
+    private(set) var mediaFavourites = MediaFavourites.saved()
+    /// A channel for Videos → Channel to open, and a film or series for its Finder to
+    /// open: set by a click on Home, taken by the page when it shows.
+    var channelToOpen: ChannelRef?
+    var filmToOpen: MediaItem?
+    /// The film or episode in the film player, as the history knows it.
+    @ObservationIgnored private var watchingFilm: String?
+
+    func toggleFavourite(_ item: MediaItem) {
+        mediaFavourites.toggle(item)
+        mediaFavourites.save()
+    }
+
+    /// Something has started playing: it goes to the front of what's been watched.
+    func watching(_ entry: WatchHistory.Entry) {
+        history.watched(entry)
+        history.save()
+    }
+
+    func forgetWatched(_ entry: WatchHistory.Entry) {
+        history.forget(entry.id)
+        history.save()
+    }
+
+    /// Open a channel's page under Videos → Channel.
+    func open(_ channel: ChannelRef) {
+        channelToOpen = channel
+        goTo = .channels
+    }
+
+    /// Open a film's or a series' page in its Finder.
+    func open(_ item: MediaItem) {
+        filmToOpen = item
+        goTo = item.type == "series" ? .seriesFinder : .movieFinder
+    }
+
+    /// Play a video from Home's history, from where it was left.
+    func resume(_ entry: WatchHistory.Entry) {
+        let video = SearchResult(
+            videoId: entry.id, title: entry.name, artists: entry.detail.map { [$0] } ?? [],
+            durationS: entry.length > 0 ? entry.length : nil, thumbnail: entry.picture)
+        playVideos([video], startAt: 0)
+        guard entry.isUnfinished else { return }
+        Task {
+            // The player says where it is once the video has begun: then it's moved on.
+            for _ in 0..<60 {
+                try? await Task.sleep(for: .milliseconds(500))
+                guard player.current?.videoId == entry.id else { continue }
+                if player.isPlaying, player.clock.duration > 0 {
+                    if player.clock.time < entry.seconds - 5 { player.seek(to: entry.seconds) }
+                    return
+                }
+            }
+        }
+    }
+
+    /// Every ten seconds: where the video that's playing has got to (a video played as
+    /// itself, from a channel or Video Finder; never a song).
+    private func notePlace() {
+        guard let track = player.current, let id = track.videoId, exactVideos.contains(id),
+            !passing.contains(id), player.isPlaying, player.clock.duration > 0
+        else { return }
+        history.place(id, seconds: player.clock.time, length: player.clock.duration)
+        history.save()
+    }
     /// Play Options switched on a page, for now (by their settings' keys). The settings
     /// themselves are the owner's standing choice and aren't touched: a page goes back
     /// to them after a while, and when the app is next opened (owner, 2026-10-03).
@@ -253,8 +332,26 @@ final class AppModel {
                 return try await self.suggest(seeds, count, shuffle, name, exclude: exclude)
             }
         }
+        film.onPlace = { [weak self] seconds, length in
+            guard let self, let id = self.watchingFilm else { return }
+            self.history.place(id, seconds: seconds, length: length)
+            self.history.save()
+        }
+        Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.notePlace() }
+        }
         player.onTrackChange = { [weak self] track in
             guard let self else { return }
+            // A video played as itself (a channel's, or one found) has been watched.
+            if let track, let id = track.videoId, self.exactVideos.contains(id),
+                !self.passing.contains(id)
+            {
+                self.watching(
+                    WatchHistory.Entry(
+                        id: id, kind: .video, name: track.title, detail: track.artist,
+                        picture: track.artUrl, channelId: self.videoChannels[id],
+                        length: track.durationS ?? 0))
+            }
             // The song before has been played: from the YouTube Queue, it's Played Already.
             if let before = self.lastTrack, before != track { self.playedFromQueue(before) }
             self.lastTrack = track
@@ -535,7 +632,12 @@ final class AppModel {
 
     /// Play one of a film's streams: a web address or a torrent in the film player, a
     /// video by its id in the app's own player.
-    func play(_ stream: MediaStream, title: String) {
+    func play(_ stream: MediaStream, title: String, watching entry: WatchHistory.Entry? = nil) {
+        // Remembered as watched, when it's a film or an episode from its page.
+        if let entry, stream.kind == "url" || stream.kind == "torrent" {
+            watching(entry)
+            watchingFilm = entry.id
+        }
         switch stream.kind {
         case "url":
             if let url = stream.url.flatMap(URL.init(string:)) { playFilm(url, title: title) }
@@ -602,6 +704,7 @@ final class AppModel {
     /// the app's cache for a day, so it starts at once if it's played again by then.
     func closeFilm() {
         film.close()
+        watchingFilm = nil
         tidyFullScreenTopBar()
         if let hash = filmTorrent {
             (filmTorrent, filmStatus) = (nil, nil)
@@ -651,8 +754,18 @@ final class AppModel {
     }
 
     /// Play videos as themselves (a channel's videos, a trailer), from one of them.
-    func playVideos(_ videos: [SearchResult], startAt index: Int) {
+    func playVideos(
+        _ videos: [SearchResult], startAt index: Int, channels: [String: String] = [:],
+        remember: Bool = true
+    ) {
         exactVideos.formUnion(videos.map(\.videoId))
+        videoChannels.merge(channels) { _, new in new }
+        // A trailer isn't something watched: it stays out of Home's history.
+        if remember {
+            passing.subtract(videos.map(\.videoId))
+        } else {
+            passing.formUnion(videos.map(\.videoId))
+        }
         player.play(videos.map(\.track), startAt: index)
     }
 

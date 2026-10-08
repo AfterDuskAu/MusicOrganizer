@@ -33,6 +33,8 @@ final class FilmPlayer {
     /// What this film is remembered by, for opening where it was left.
     @ObservationIgnored private var remembered: String?
     @ObservationIgnored private var looks = 0
+    /// Hears where the film is (seconds, of how many) whenever that's noted.
+    @ObservationIgnored var onPlace: ((Double, Double) -> Void)?
 
     var isOpen: Bool { title != nil }
     var soundTracks: [FilmTrack] { tracks.filter { $0.kind == .sound } }
@@ -113,6 +115,7 @@ final class FilmPlayer {
     /// Note where the film has got to, for the next time it's opened.
     private func remember() {
         guard let remembered, duration > 0 else { return }
+        onPlace?(time, duration)
         var places = FilmPositions.saved()
         places.watched(remembered, to: time, of: duration)
         places.save()

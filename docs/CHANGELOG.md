@@ -938,6 +938,17 @@
 - **Checked:** `pytest` for add-ons and RPC, `ruff`, `swift build`, `swift test` (101; two new). In the owner's app: the Channel page; Series' Popular list; a series' page with its eight episodes; an episode chosen, its summary, and the line saying nothing has it to play.
 - **Not checked:** playing an episode (no add-on here offers one), a series with several seasons' menu, and the two-genre menu by eye.
 
+2026-10-08, about 11:15am. **Home, from the owner's drawing.** Home is at the top of Media Discovery; the Visualizer's row is out of the sidebar until the owner has a place for it (its page is still a click on the cover in the player bar); Series Finder is a row of its own under Movie Finder, so the Movies | Series switch made earlier today is gone.
+
+- **The page:** rows, each sliding sideways, with More at its end, which opens the page the row is a taste of (a genre row opens its Finder at that genre). A click on a song plays it; on a channel, a film or a series, opens its page; on a watched video, carries on from where it was left.
+- **Overview** (top right) chooses the rows and their order: what's on the page top to bottom, with arrows and a take-off button, then every row on offer under Songs, Channels, Movies and Series, each with a tick. Start Again puts the drawing's page back. Kept in the app's settings (`HomeLayout`).
+- **Rows on offer.** Songs: Your Favourite, Recommended (What's New's picks, with Download), Most Played, Recently Added, Latest Downloads. Channels: Continue Watching, Recently Watched, Your Favourite Channels (the ones followed), New From Your Channels, Recommended Channels, Your Downloaded Videos. Movies and Series, each: Continue Watching, Recently Watched, Your Favourites, Recommended, Popular Now, New, Best Rated, and a row for every genre the film add-on's list has.
+- **New things kept to make them work,** all by the app on this Mac, none in the library: what's been watched and how far (`WatchHistory`: channel videos as they play, a film or an episode when it's played from its page; 200 at most; a trailer isn't counted), and favourite movies and series (`MediaFavourites`: a heart beside the name on a film's page).
+- **What the names mean, said plainly:** Recommended Movies/Series is the Popular list in the genre met most among the owner's favourites and what they've watched (nothing to go on: the row says so). Recommended Channels is the channels add-on's list without the ones already followed. New From Your Channels asks the first six followed channels for their latest four videos, one paced request each, once while the app is open. **"Most Watched Worldwide" isn't offered:** no add-on here has such a list apart from Popular, and one list under two names would be a pretence.
+- **A row with nothing in it yet** is one line saying how it fills, not a row's worth of space.
+- **Checked:** `swift build`, `swift test` (104; three new for the rows and layout, the history, and favourites). In the owner's app: Home with the drawing's rows filled (songs, channels, movies, series), the Overview, and a series clicked on Home opening in Series Finder with its heart.
+- **Not checked:** the Continue and Recently Watched rows with anything in them (nothing has been watched since they were made), carrying on a video from Home, the heart being clicked, More on each row, the genre rows, and the Overview's arrows and ticks being used.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)
