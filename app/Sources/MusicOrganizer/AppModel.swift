@@ -1405,6 +1405,18 @@ final class AppModel {
             already: sorted.already.count)
     }
 
+    /// A playlist's menu: each song stays once, where it first comes. Only the list
+    /// changes; no song leaves the library.
+    func removeDuplicates(from playlist: Playlist) {
+        let removed = playlist.duplicates
+        guard removed > 0 else { return }
+        setTracks(playlist.withoutDuplicates, of: playlist)
+        info = Info(
+            title: "\(removed) \(removed == 1 ? "duplicate" : "duplicates") removed",
+            text: "Each song is in “\(playlist.name)” once now, where it first came. "
+                + "The songs themselves are all still in your library.")
+    }
+
     /// Songs waiting on that answer.
     struct AddingAgain {
         let playlistId: String

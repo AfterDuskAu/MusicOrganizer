@@ -552,6 +552,13 @@ struct MainView: View {
                         Label(playlist.name, systemImage: entry.symbol)
                             .contextMenu {
                                 Button("Rename…") { model.rename(playlist) }
+                                Button(
+                                    playlist.duplicates > 0
+                                        ? "Remove \(playlist.duplicates) "
+                                            + (playlist.duplicates == 1 ? "Duplicate" : "Duplicates")
+                                        : "Remove Duplicates"
+                                ) { model.removeDuplicates(from: playlist) }
+                                .disabled(playlist.duplicates == 0)
                                 let others = model.profiles.profiles.filter {
                                     $0.id != model.profiles.currentId
                                 }

@@ -1793,6 +1793,13 @@ final class PlaylistAddingTests: XCTestCase {
         XCTAssertEqual(playlist.sorting(adding: ["z"]).already, [])
         XCTAssertEqual(Playlist(id: "e", name: "Empty").sorting(adding: ["a", "a"]).new, ["a"])
 
+        // Remove Duplicates: each song once, where it first came.
+        let doubled = Playlist(id: "d", name: "Doubled", trackIds: ["a", "b", "a", "c", "b", "a"])
+        XCTAssertEqual(doubled.duplicates, 3)
+        XCTAssertEqual(doubled.withoutDuplicates, ["a", "b", "c"])
+        XCTAssertEqual(playlist.duplicates, 0)
+        XCTAssertEqual(playlist.withoutDuplicates, playlist.trackIds)
+
         XCTAssertNil(Playlist.alreadyQuestion(already: 0, of: 5, in: "Road Trip"))
         XCTAssertEqual(
             Playlist.alreadyQuestion(already: 1, of: 1, in: "Road Trip"),

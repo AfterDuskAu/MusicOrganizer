@@ -1727,3 +1727,5 @@ CLAUDE.md's add-on rule says four starting add-ons now.
 
 Not seen in the running app.
 
+2026-10-08, about 8:30pm. **Remove Duplicates, in a playlist's right-click menu.** For the playlists doubled before the app asked: the item says how many there are ("Remove 4 Duplicates"), keeps each song once where it first comes, and says what it did. Only the list changes. It's greyed out when a playlist has none. App only (`Playlist.withoutDuplicates`); the engine's `playlist.set_tracks` does the saving, as for any change to a playlist.
+

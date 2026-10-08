@@ -440,6 +440,16 @@ public struct Playlist: Decodable, Identifiable, Hashable, Sendable {
         return (new, already)
     }
 
+    /// The playlist's songs with each one kept once, where it first comes: what Remove
+    /// Duplicates leaves.
+    public var withoutDuplicates: [String] {
+        var seen = Set<String>()
+        return trackIds.filter { seen.insert($0).inserted }
+    }
+
+    /// How many entries are a song's second (or third) time in the playlist.
+    public var duplicates: Int { trackIds.count - Set(trackIds).count }
+
     /// What's asked before a song is put in a playlist a second time: "3 of these 10
     /// songs are already in “Road Trip”." Nil when none of them is.
     public static func alreadyQuestion(already: Int, of total: Int, in name: String) -> String? {
