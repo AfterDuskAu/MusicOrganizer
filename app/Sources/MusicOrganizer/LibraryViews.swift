@@ -142,6 +142,8 @@ struct SongList: View {
     @State private var madeAtWidth: CGFloat?
     /// Which columns show, and in what order: the owner's choice, kept for every list.
     @AppStorage("songColumns") private var columns = TableColumnCustomization<TrackRow>()
+    /// View → Old Song Table: SwiftUI's table, as the lists were until 2026-10-09.
+    @AppStorage(SongColumns.oldTableKey) private var oldTable = false
 
     private var playlist: Playlist? {
         if case .playlist(let id) = source { model.playlist(id) } else { nil }
@@ -175,8 +177,10 @@ struct SongList: View {
                     // It fills the page: left at its own height, the whole page (its heading too)
                     // sat in the middle of the window, under a gap.
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
+            } else if oldTable {
                 table
+            } else {
+                fastTable
             }
         }
         .task(id: key) { await workOutRows() }
@@ -246,6 +250,19 @@ struct SongList: View {
         .disabled(rows.isEmpty)
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
+    }
+
+    /// The list as a table of AppKit's own (`SongTable`): the rows on screen are all
+    /// it ever makes.
+    private var fastTable: some View {
+        SongTable(
+            rows: rows, selection: $selection, sortOrder: $sortOrder,
+            shown: Set(SongColumns.optional.map(\.id).filter { SongColumns.isShown($0, in: columns) }),
+            playing: model.player.current?.id, isPlaying: model.player.isPlaying,
+            favourites: model.favourites, model: model,
+            setShown: { columns[visibility: $0] = $1 ? .visible : .hidden },
+            primary: { place in model.player.play(rows.map(\.track), startAt: place) },
+            menu: { ids in AnyView(menu(for: ids)) })
     }
 
     private var table: some View {

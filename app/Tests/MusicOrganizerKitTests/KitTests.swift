@@ -1657,6 +1657,23 @@ final class RowSelectionTests: XCTestCase {
         XCTAssertEqual(DraggedSongs.ids(in: [text, "three"]), ["one", "two", "three"])
         XCTAssertEqual(DraggedSongs.ids(in: ["only"]), ["only"])
     }
+
+    func testATablesColumnsKeepTheOrderTheyWereDraggedInto() {
+        let all = ["title", "artist", "album", "year", "time"]
+        // Nothing dragged yet: the usual order, the heart first.
+        XCTAssertEqual(
+            ColumnOrder.arranged(kept: [], all: all, first: "favourite"),
+            ["favourite", "title", "artist", "album", "year", "time"])
+        // Dragged: that order, and a column added since goes on the end.
+        XCTAssertEqual(
+            ColumnOrder.arranged(kept: ["time", "title", "artist", "album"], all: all, first: "favourite"),
+            ["favourite", "time", "title", "artist", "album", "year"])
+        // A column that's gone, the heart saved by mistake, and a name twice: left out.
+        XCTAssertEqual(
+            ColumnOrder.arranged(
+                kept: ["favourite", "gone", "year", "year", "title"], all: all, first: "favourite"),
+            ["favourite", "year", "title", "artist", "album", "time"])
+    }
 }
 
 final class ChildProfileTests: XCTestCase {

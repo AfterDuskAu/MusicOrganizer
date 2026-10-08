@@ -11,6 +11,13 @@ import AppKit
 ///
 /// - `search=<words>`: the library search with these words in it (`search=` shuts it)
 /// - `finder=<words>`: these words in Music Finder's search box, as if typed (not searched for)
+/// - `sort=<column>`: the song table showing, sorted by this column (`sort=-year`: backwards)
+/// - `select=<row>+<row>`: these rows of it selected
+/// - `column=<name>`: this column of it shown, or hidden if it's showing
+/// - `menu=<row>`: this row right-clicked; the menu's items are written out, and it isn't opened
+/// - `scroll=<row>`: the table scrolled to this row
+/// - `heart=<row>`: this row's heart clicked
+/// - `drag=rows`: how many rows can be dragged, and what the first carries, written out
 /// - `hide`, `show`: the app hidden, and brought back
 /// - `shrink`, `grow`: the window put in the Dock, and brought back
 /// - `wait`: nothing, to see what the app does by itself
@@ -58,8 +65,80 @@ enum Bench {
         FileHandle.standardError.write(Data((line + "\n").utf8))
     }
 
+    /// The song table on the page that's showing.
+    private static func songTable() -> NSTableView? {
+        func find(in view: NSView) -> NSTableView? {
+            if let table = view as? NSTableView, table.numberOfColumns > 1, !table.isHiddenOrHasHiddenAncestor {
+                return table
+            }
+            for child in view.subviews {
+                if let found = find(in: child) { return found }
+            }
+            return nil
+        }
+        return NSApp.windows.first { $0.canBecomeMain }?.contentView.flatMap(find(in:))
+    }
+
+    /// The steps that work the song table as a click would.
+    private static func tookTable(_ name: String) -> Bool {
+        let parts = name.split(separator: "=", maxSplits: 1).map(String.init)
+        let steps = ["sort", "select", "column", "menu", "scroll", "heart", "drag"]
+        guard parts.count == 2, steps.contains(parts[0]) else {
+            return false
+        }
+        guard let table = songTable() else {
+            say("BENCH \(name): no song table is showing")
+            return true
+        }
+        // SwiftUI's own table (View → Old Song Table) can be scrolled this way, and
+        // nothing else: it keeps its sort and its columns to itself.
+        guard table.delegate is SongTable.Coordinator || parts[0] == "scroll" else {
+            say("BENCH \(name): not for the old song table")
+            return true
+        }
+        let value = parts[1]
+        switch parts[0] {
+        case "sort":
+            let backwards = value.hasPrefix("-")
+            table.sortDescriptors = [
+                NSSortDescriptor(key: backwards ? String(value.dropFirst()) : value, ascending: !backwards)
+            ]
+        case "select":
+            table.selectRowIndexes(
+                IndexSet(value.split(separator: "+").compactMap { Int($0) }), byExtendingSelection: false)
+        case "column":
+            guard let menu = table.headerView?.menu else { break }
+            menu.delegate?.menuNeedsUpdate?(menu)
+            if let place = menu.items.firstIndex(where: { $0.representedObject as? String == value }) {
+                menu.performActionForItem(at: place)
+            }
+        case "menu":
+            guard let row = Int(value), row < table.numberOfRows, let window = table.window else { break }
+            let spot = table.convert(table.rect(ofRow: row).insetBy(dx: 60, dy: 4).origin, to: nil)
+            let click = NSEvent.mouseEvent(
+                with: .rightMouseDown, location: spot, modifierFlags: [], timestamp: 0,
+                windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1)
+            let menu = click.flatMap { table.menu(for: $0) }
+            menu?.update()
+            say("BENCH menu: " + (menu?.items.map { $0.isSeparatorItem ? "---" : $0.title } ?? ["none"]).joined(separator: " | "))
+        case "heart":
+            guard let row = Int(value), row < table.numberOfRows else { break }
+            let cell = table.view(atColumn: 0, row: row, makeIfNecessary: true)
+            (cell?.subviews.first { $0 is NSButton } as? NSButton)?.performClick(nil)
+        case "drag":
+            let carried = (0..<table.numberOfRows).compactMap {
+                table.dataSource?.tableView?(table, pasteboardWriterForRow: $0) as? String
+            }
+            say("BENCH drag: \(carried.count) of \(table.numberOfRows) rows can be dragged; the first carries \(carried.first ?? "nothing")")
+        default:
+            if let row = Int(value) { table.scrollRowToVisible(min(row, table.numberOfRows - 1)) }
+        }
+        return true
+    }
+
     /// The steps that aren't a page: true if this was one.
     static func took(_ name: String) -> Bool {
+        if tookTable(name) { return true }
         // A window in the Dock can't become the main one, so it's looked for first.
         let window = NSApp.windows.first { $0.isMiniaturized }
             ?? NSApp.windows.first { $0.canBecomeMain }

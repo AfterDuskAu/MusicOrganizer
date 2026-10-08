@@ -21,6 +21,8 @@ enum Snapshot {
             Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { _ in
                 MainActor.assumeIsolated { hide() }
             })
+        // `MUSICORG_SNAPSHOT_QUIET=1`: unseen, but no pictures (they'd count in a timing).
+        guard ProcessInfo.processInfo.environment["MUSICORG_SNAPSHOT_QUIET"] != "1" else { return }
         timers.append(
             Timer.scheduledTimer(withTimeInterval: 4, repeats: true) { _ in
                 MainActor.assumeIsolated { take(into: folder) }
