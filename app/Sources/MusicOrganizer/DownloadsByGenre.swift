@@ -27,6 +27,9 @@ struct DownloadsByGenre: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if shown.isEmpty {
                 ContentUnavailableView.search(text: model.searchText)
+                    // It fills the page: left at its own height, the whole page (its heading too)
+                    // sat in the middle of the window, under a gap.
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 let groups = DownloadGroups.byKind(shown, videosFirst: videosFirst)
                 // Top to bottom as the page shows them: what a Shift-click measures along.

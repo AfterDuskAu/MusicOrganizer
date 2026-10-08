@@ -758,6 +758,10 @@ struct MainView: View {
                 // A song list works its rows out only when it's the page showing, so one
                 // being made ready ahead is told it is, for that moment.
                 page(entry, active: active || entry == warming)
+                    // A page shorter than the window starts at the top, under the search
+                    // bar, never in the middle of the window (the owner, 2026-10-08:
+                    // Downloads with a search that found nothing).
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     // A page that isn't showing is moved far out of sight, not made
                     // invisible: for an invisible view SwiftUI takes its AppKit views
                     // (a whole song table) out of the window and puts them all back

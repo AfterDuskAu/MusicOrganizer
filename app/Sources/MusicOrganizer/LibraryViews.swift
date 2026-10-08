@@ -157,6 +157,9 @@ struct SongList: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if rows.isEmpty {
                 ContentUnavailableView.search(text: model.searchText)
+                    // It fills the page: left at its own height, the whole page (its heading too)
+                    // sat in the middle of the window, under a gap.
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 table
             }
@@ -505,6 +508,9 @@ struct AlbumsView: View {
         let albums = model.albums
         if albums.isEmpty {
             ContentUnavailableView.search(text: model.searchText)
+                // It fills the page: left at its own height, the whole page (its heading too)
+                // sat in the middle of the window, under a gap.
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             ScrollView {
                 AlbumGrid(albums: albums)
