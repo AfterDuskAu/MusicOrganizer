@@ -355,6 +355,23 @@ private struct DownloadSettings: View {
                         + "plays on this Mac, but may not on a phone or tablet, and Sync "
                         + "leaves it out. Videos always arrive as MP4, so they play "
                         + "everywhere either way.")
+                Picker(
+                    "Upload speed for torrents",
+                    selection: Binding(
+                        get: { settings?.torrentUpload ?? "max" },
+                        set: { model.setTorrentUpload($0) })
+                ) {
+                    ForEach(EngineSettings.torrentUploads, id: \.value) { choice in
+                        Text(choice.name).tag(choice.value)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .disabled(settings == nil)
+                SideNote(
+                    "A movie played or kept from a torrent sends the parts it has fetched "
+                        + "on to others while it's open. This is the most it may send, over "
+                        + "all movies together. None: nothing is sent, which can make a "
+                        + "movie arrive more slowly. A change applies at once.")
             }
             Section {
                 LabeledContent("Library folder") {

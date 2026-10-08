@@ -76,12 +76,15 @@ from musicorg import (
 from musicorg.config import (
     MAX_DAILY_CAP,
     THROTTLE_DEFAULTS,
+    TORRENT_UPLOADS,
     Config,
     app_dirs,
     default_media_folders,
     media_folders,
     save_daily_cap,
     save_media_folder,
+    save_torrent_upload,
+    torrent_upload,
 )
 from musicorg.errors import (
     LibraryLockedError,
@@ -136,6 +139,8 @@ def _settings(config: Config) -> dict[str, Any]:
         "daily_cap_default": THROTTLE_DEFAULTS["daily_cap"],
         "daily_cap_max": MAX_DAILY_CAP,
         # Where kept films and videos go (outside the library), and the usual places.
+        # How fast a torrent sends on what it has fetched: one of **Torrent upload**.
+        "torrent_upload": torrent_upload(),
         "movies_folder": str(media_folders()["movies"]),
         "videos_folder": str(media_folders()["media"]),
         "movies_folder_default": str(default_media_folders()["movies"]),
@@ -896,6 +901,11 @@ class Server:
         cap = want(params, "daily_cap", int)
         if cap is not None:
             save_daily_cap(cap)  # config.py does its own writing (rule 3)
+        upload = want(params, "torrent_upload", str)
+        if upload is not None:
+            save_torrent_upload(upload)
+            if self._films is not None:
+                self._films.set_upload(TORRENT_UPLOADS[upload])  # for films joined now, too
         for name, kind in (("movies_folder", "movies"), ("videos_folder", "media")):
             chosen = want(params, name, str)
             if chosen is None:
@@ -1034,7 +1044,11 @@ class Server:
 
     def _film_player(self) -> torrents.Player:
         if self._films is None:
-            self._films = torrents.Player(app_dirs().cache, movies=media_folders()["movies"])
+            self._films = torrents.Player(
+                app_dirs().cache,
+                movies=media_folders()["movies"],
+                upload=TORRENT_UPLOADS[torrent_upload()],
+            )
         return self._films
 
     # -- methods: a film that's already kept, made one phones and tablets play --

@@ -651,6 +651,7 @@ def test_settings(opened: rpc.Server) -> None:
     }
     assert result(opened, "settings.get") == {
         "daily_cap": 250, "daily_cap_default": 250, "daily_cap_max": 500, **usual,
+        "torrent_upload": "max",
         "movies_folder_default": usual["movies_folder"],
         "videos_folder_default": usual["videos_folder"],
     }  # fmt: skip
@@ -777,3 +778,39 @@ def test_converting_a_kept_film_is_asked_for_by_its_path(
     stray.write_bytes(b"not in a kept folder")
     assert code(opened, "media.convert", path=str(stray)) == rpc.USER_ERROR
     assert result(opened, "media.converting") == {"converting": None, "last": None}
+
+
+def test_how_fast_torrents_send_on_can_be_limited(opened: rpc.Server) -> None:
+    from musicorg import torrents
+
+    assert result(opened, "settings.get")["torrent_upload"] == "max"
+    for limit in ("5", "3", "1", "none", "max"):
+        assert result(opened, "settings.set", torrent_upload=limit)["torrent_upload"] == limit
+    assert code(opened, "settings.set", torrent_upload="2") == rpc.USER_ERROR
+    assert result(opened, "settings.get")["torrent_upload"] == "max"
+
+    # What libtorrent is told: a rate, or for "none" no turn for anyone.
+    assert torrents.upload_settings(None)["upload_rate_limit"] == 0  # its word for no limit
+    assert torrents.upload_settings(3_000_000)["upload_rate_limit"] == 3_000_000
+    assert torrents.upload_settings(0)["unchoke_slots_limit"] == 0
+    assert torrents.upload_settings(None)["unchoke_slots_limit"] > 0
+
+    # A player that's already running is told at once, and a new one starts with it.
+    class Session:
+        said: dict[str, int] = {}
+
+        def apply_settings(self, settings: dict[str, int]) -> None:
+            self.said = settings
+
+    player = torrents.Player(config.app_dirs().cache)
+    player._session = Session()
+    opened._films = player
+    result(opened, "settings.set", torrent_upload="1")
+    assert player.upload == 1_000_000 and player._session.said["upload_rate_limit"] == 1_000_000
+    result(opened, "settings.set", torrent_upload="none")
+    assert player._session.said["unchoke_slots_limit"] == 0
+    player._session = None
+    opened._films = None
+    result(opened, "settings.set", torrent_upload="5")
+    assert opened._film_player().upload == 5_000_000
+    opened._films = None

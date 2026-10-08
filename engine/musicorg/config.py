@@ -537,6 +537,34 @@ def save_media_folder(kind: str, folder: Path | None) -> Config:
     return config
 
 
+# How fast a torrent may send what it has fetched on to others (the owner, 2026-10-08):
+# no limit, 5, 3 or 1 megabyte a second, or nothing at all. Bytes a second; None: no limit.
+TORRENT_UPLOADS: dict[str, int | None] = {
+    "max": None, "5": 5_000_000, "3": 3_000_000, "1": 1_000_000, "none": 0,
+}  # fmt: skip
+TORRENT_UPLOAD_DEFAULT = "max"
+
+
+def torrent_upload() -> str:
+    """The owner's choice of `TORRENT_UPLOADS`, from config.json."""
+    try:
+        chosen = Config.load().data.get("torrent_upload")
+    except ConfigError:
+        chosen = None
+    return (
+        chosen if isinstance(chosen, str) and chosen in TORRENT_UPLOADS else TORRENT_UPLOAD_DEFAULT
+    )
+
+
+def save_torrent_upload(limit: str) -> Config:
+    if limit not in TORRENT_UPLOADS:
+        raise ConfigError("The upload speed should be one of: " + ", ".join(TORRENT_UPLOADS) + ".")
+    config = Config.load()
+    config.data["torrent_upload"] = limit
+    config.save()
+    return config
+
+
 def save_daily_cap(downloads: int) -> Config:
     """Set the owner's downloads-per-day limit in config.json and save it."""
     config = Config.load()

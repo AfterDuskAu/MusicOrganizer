@@ -2329,6 +2329,19 @@ final class AppModel {
         }
     }
 
+    /// Settings → Downloads: how fast torrents send on what they've fetched.
+    func setTorrentUpload(_ limit: String) {
+        guard let connection = engine?.connection else { return }
+        Task {
+            do {
+                engineSettings = try await connection.call(
+                    "settings.set", ["torrent_upload": limit], as: EngineSettings.self)
+            } catch {
+                notice = error.localizedDescription
+            }
+        }
+    }
+
     func setDailyCap(_ downloads: Int) {
         guard let connection = engine?.connection else { return }
         Task {

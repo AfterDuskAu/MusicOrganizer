@@ -201,6 +201,18 @@ def _new_session() -> Any:
     )
 
 
+def upload_settings(limit: int | None) -> dict[str, int]:
+    """libtorrent's settings for how fast films are sent on to others. None: no limit.
+    A number: that many bytes a second at most, over every torrent together. 0: nothing
+    is sent at all: no other computer is ever given a turn (which can make a film
+    arrive more slowly, since others give more to those who give)."""
+    if limit is None:
+        return {"upload_rate_limit": 0, "unchoke_slots_limit": 8}  # libtorrent's own
+    if limit <= 0:
+        return {"upload_rate_limit": 1024, "unchoke_slots_limit": 0}
+    return {"upload_rate_limit": int(limit), "unchoke_slots_limit": 8}
+
+
 @dataclass
 class _Joined:
     """One torrent that's been joined: libtorrent's handle, and the film in it."""
@@ -324,9 +336,12 @@ class Player:
     """The films being played from torrents, and the address they're played at. One
     for the engine, made the first time a film is asked for."""
 
-    def __init__(self, cache: Path, movies: Path | None = None) -> None:
+    def __init__(
+        self, cache: Path, movies: Path | None = None, *, upload: int | None = None
+    ) -> None:
         self.folder = cache / "torrents"
         self.movies = movies  # where a kept film goes; None: films can't be kept
+        self.upload = upload  # bytes a second sent on to others at most; None: no limit
         self._key = secrets.token_urlsafe(24)
         self._session: Any = None
         self._server: ThreadingHTTPServer | None = None
@@ -385,6 +400,16 @@ class Player:
         joined = self._joined[info_hash.lower()]
         joined.keep_name, joined.keep_error, joined.convert = name.strip(), None, convert
         return joined.status()
+
+    def set_upload(self, limit: int | None) -> None:
+        """Settings changed: how fast films are sent on to others, from now."""
+        self.upload = limit
+        self._apply_upload()
+
+    def _apply_upload(self) -> None:
+        apply = getattr(self._session, "apply_settings", None)  # a test's stand-in has none
+        if apply is not None:
+            apply(upload_settings(self.upload))
 
     def stop_keeping(self, info_hash: str, *, playing: bool = False) -> None:
         """The owner has changed their mind about keeping a film. It's left at once,
@@ -457,6 +482,7 @@ class Player:
         if self._session is not None:
             return
         self._session = _new_session()
+        self._apply_upload()
         self._stopping.clear()
         player = self
 

@@ -356,6 +356,14 @@ public struct EngineSettings: Decodable, Equatable, Sendable {
     public let videosFolder: String?
     public let moviesFolderDefault: String?
     public let videosFolderDefault: String?
+    /// How fast a torrent sends on what it has fetched: "max", "5", "3", "1" (megabytes
+    /// a second) or "none". Nil from an engine that doesn't say.
+    public let torrentUpload: String?
+
+    /// The choices, in Settings' order, with what each is called there.
+    public static let torrentUploads: [(value: String, name: String)] = [
+        ("max", "Max"), ("5", "5 MB/s"), ("3", "3 MB/s"), ("1", "1 MB/s"), ("none", "None"),
+    ]
 }
 
 public struct PlanAnswer: Decodable, Sendable {
