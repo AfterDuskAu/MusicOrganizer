@@ -217,6 +217,12 @@ class _Joined:
     kept_path: str | None = None
     keep_error: str | None = None
     playing: bool = True  # False once the player has let go but the film is still wanted
+    # Kept as a file phones and tablets play (Settings → Downloads): converted first if
+    # it isn't one. While that's being done, how far along it is, 0 to 1.
+    convert: bool = False
+    converting: float | None = None
+    saving: bool = False  # it has all arrived and is being converted or copied now
+    keep_note: str | None = None  # something the owner should know about how it was kept
     # Filled in once the torrent's details have arrived:
     index: int = 0
     name: str = ""
@@ -303,6 +309,8 @@ class _Joined:
             "keeping": self.keep_name is not None and self.kept_path is None,
             "kept_path": self.kept_path,
             "keep_error": self.keep_error,
+            "keep_note": self.keep_note,
+            "converting": self.converting,
             "state": state,
             "name": self.name or None,
             "bytes": self.size or None,
@@ -355,19 +363,27 @@ class Player:
         return joined.status()
 
     def keep(
-        self, info_hash: str, file_index: int | None, trackers: list[str], name: str
+        self,
+        info_hash: str,
+        file_index: int | None,
+        trackers: list[str],
+        name: str,
+        *,
+        convert: bool = False,
     ) -> dict[str, Any]:
         """Keep a film: fetch all of it, then copy it into the Movies folder under
         `name` (its own ending is added). It carries on after the player is shut, for
         as long as the engine runs; a film that's already playing is kept from where
-        it has got to. Returns its status, as `status` does."""
+        it has got to. With `convert`, a film that phones and tablets can't play is
+        made into an MP4 they can first (`convert`). Returns its status, as `status`
+        does."""
         if self.movies is None:
             raise TorrentError("There's nowhere set to keep films on this computer.")
         if not name.strip():
             raise TorrentError("A film needs a name to be kept under.")
         self.play(info_hash, file_index, trackers)
         joined = self._joined[info_hash.lower()]
-        joined.keep_name, joined.keep_error = name.strip(), None
+        joined.keep_name, joined.keep_error, joined.convert = name.strip(), None, convert
         return joined.status()
 
     def close(self, info_hash: str) -> None:
@@ -459,15 +475,44 @@ class Player:
 
     def _save_kept(self, joined: _Joined) -> None:
         """A film that's being kept and has all arrived: copy it into the Movies
-        folder. `fileops` does the writing; it never overwrites."""
-        from musicorg import fileops
+        folder, converted first if that was asked for and it needs it. `fileops` does
+        the writing; it never overwrites."""
+        from musicorg import convert, fileops
         from musicorg.errors import MusicOrgError
 
         assert joined.path is not None and self.movies is not None
-        ending = joined.path.suffix or ".mp4"
+        joined.saving = True
+        source, made = joined.path, None
+        if joined.convert:
+            try:
+                wanted = convert.plan(joined.path.name, convert.streams_of(joined.path))
+                if wanted is not None:
+                    # ffmpeg writes this one file, in the films' cache folder.
+                    made = self.folder / f".converting-{joined.info_hash}{convert.ENDING}"
+                    joined.converting = 0.0
+                    log.info("Converting a kept film (%s).", wanted.about)
+
+                    def heard(done: float) -> None:
+                        joined.converting = done
+
+                    convert.run(
+                        joined.path, made, wanted, progress=heard,
+                        should_stop=lambda: self._stopping.is_set() or joined.closed,
+                    )  # fmt: skip
+                    source = made
+            except MusicOrgError as exc:
+                if self._stopping.is_set() or joined.closed:
+                    joined.saving = False
+                    return  # the engine is stopping: nothing is kept half-made
+                # It's kept as it arrived instead, and the owner is told.
+                joined.keep_note = f"It was kept as it arrived: {exc.message}"
+                log.warning("A kept film wasn't converted: %s", exc.message)
+                source = joined.path
+            joined.converting = None
+        ending = source.suffix or ".mp4"
         try:
             saved = fileops.keep_media(
-                joined.path,
+                source,
                 self.movies,
                 f"{joined.keep_name}{ending}",
                 cache=self.folder,
@@ -477,6 +522,9 @@ class Player:
         except (MusicOrgError, ValueError) as exc:
             joined.keep_error = getattr(exc, "message", None) or str(exc)
             log.warning("A film couldn't be kept: %s", joined.keep_error)
+        if made is not None:
+            fileops.forget_cached(made, cache=self.folder.parent)
+        joined.saving = False
         if not joined.playing:
             self.close(joined.info_hash)  # nobody is watching it: its cache goes
 
@@ -491,8 +539,13 @@ class Player:
                 if joined.wanted:
                     # Being kept: its details are waited for here if nothing is playing
                     # it, and it's saved once it has all arrived.
-                    if joined.ready(0) and joined.all_here():
-                        self._save_kept(joined)
+                    # (On its own thread: converting a film can take a long while, and the
+                    # other films mustn't wait for it.)
+                    if not joined.saving and joined.ready(0) and joined.all_here():
+                        joined.saving = True
+                        threading.Thread(
+                            target=self._save_kept, args=(joined,), daemon=True
+                        ).start()
                     continue
                 if now - joined.last_asked > IDLE_S:
                     log.info("A film nobody asked about for ten minutes was closed.")

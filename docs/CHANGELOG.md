@@ -911,6 +911,15 @@
 - **Checked:** `pytest` (2,049 passed), `ruff`, `swift build`, `swift test` (99). In the owner's app: the list; moving one down and back up; removing the last (after its question) and putting it back with the button. The list ended as it began.
 - **Not checked:** adding one by a pasted address in the app (tested in the engine).
 
+2026-10-08, about 10:35am. **Kept films are converted for phones and tablets.** The owner: a downloaded MKV won't play on a phone it's synced to, so Settings → Downloads should offer converting to whatever plays on iPhone, iPad and Android phones and tablets. (Pushed first, at the owner's yes: everything up to the Add-ons section.)
+
+- **What they all play:** MP4 with H.264 or H.265 picture and AAC sound. `convert` (new module) makes a kept film into that, changing as little as it can: nothing if it's already one; the picture copied untouched into an MP4 when it's already H.264 or H.265 (most MKVs), with only sound that isn't AAC made again; the picture made again as H.264 (libx264, CRF 20) only when devices can't play it (Xvid, VP9, AV1, 10-bit H.264), which is slow and loses a little. Text subtitles come along; picture subtitles can't go in an MP4 and are left out. H.265 is marked `hvc1`, the name Apple's players know it by.
+- **Settings → Downloads → "Convert kept movies for phones and tablets"**, on as standard. The app sends it with `torrent.keep` (`convert`); the status says how far converting has got, and the film's line shows it.
+- **If converting fails,** the film is kept as it arrived and the line says so. If the engine stops part way, nothing half-made is kept.
+- **The contract changed** (section 1): a kept film was "exactly as it arrived (never converted)". Rule 6 isn't touched: this is the Movies folder, not the library. ffmpeg writes its one file in the films' cache folder (`CLAUDE.md`, rule 3), and it's deleted once the film is saved.
+- **Checked:** `pytest`, `ruff`, `swift build`, `swift test` (99). Real conversions of small films made by the tests: an MKV with MP3 sound and subtitles repacked with its picture bit for bit the same; an AVI made again as H.264; a kept film saved as `.mp4` with the converted copy gone from the cache.
+- **Not checked:** a real film from a torrent being converted (the public-domain test film is already an MP4 these devices play), and how long a full-length remake takes on this Mac.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

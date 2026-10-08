@@ -2441,6 +2441,18 @@ def touch_cached(path: Path, *, cache: Path) -> None:
         pass
 
 
+def forget_cached(path: Path, *, cache: Path) -> None:
+    """Delete one file in the app's own cache folder that's finished with (a film's
+    converted copy, once it's in the Movies folder). Only a file, only inside `cache`."""
+    path = Path(path)
+    _cache_folder(path.parent, cache)
+    try:
+        if path.is_file() or path.is_symlink():
+            path.unlink()
+    except OSError as exc:
+        log.warning("Couldn't clear %s from the cache: %s", path.name, exc.strerror or exc)
+
+
 def sweep_cached(
     folder: Path,
     *,

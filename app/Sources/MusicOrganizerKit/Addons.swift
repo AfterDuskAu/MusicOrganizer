@@ -230,11 +230,21 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
     public let keptPath: String?
     /// Why a film couldn't be kept.
     public let keepError: String?
+    /// Something to know about how it was kept ("It was kept as it arrived: …").
+    public let keepNote: String?
+    /// While a kept film is being made into one phones and tablets play: how far, 0 to 1.
+    public let converting: Double?
+
+    /// Settings → Downloads: a kept film is converted for phones and tablets (on as standard).
+    public static let convertKey = "convertKeptFilms"
 
     public init(
         state: String, peers: Int, bytesPerSecond: Int, progress: Double, keeping: Bool? = nil,
-        keptPath: String? = nil, keepError: String? = nil
+        keptPath: String? = nil, keepError: String? = nil, keepNote: String? = nil,
+        converting: Double? = nil
     ) {
+        self.keepNote = keepNote
+        self.converting = converting
         self.state = state
         self.peers = peers
         self.bytesPerSecond = bytesPerSecond
@@ -249,9 +259,14 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
     public var keepLine: String? {
         if let keepError { return "Couldn't keep it: \(keepError)" }
         if let keptPath {
-            return "Kept in your Movies folder as “\((keptPath as NSString).lastPathComponent)”"
+            let kept = "Kept in your Movies folder as “\((keptPath as NSString).lastPathComponent)”"
+            return keepNote.map { "\(kept). \($0)" } ?? kept
         }
         guard keeping == true else { return nil }
+        if let converting {
+            return "Converting it for phones and tablets: \(Int(converting * 100))%. "
+                + "It carries on while the app is open."
+        }
         if state == "finding" { return "Keeping: finding the film…" }
         let megabytes = String(format: "%.1f", Double(bytesPerSecond) / 1_000_000)
         return "Keeping: \(Int(progress * 100))% here · \(megabytes) MB/s. It carries on while the app is open."

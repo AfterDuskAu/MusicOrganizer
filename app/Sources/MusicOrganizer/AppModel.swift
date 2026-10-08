@@ -581,6 +581,8 @@ final class AppModel {
         var asked: [String: Any] = ["info_hash": hash, "trackers": stream.trackers, "title": title]
         if let index = stream.fileIndex { asked["file_index"] = index }
         if let year { asked["year"] = String(year.prefix(4)) }
+        // Settings → Downloads: made into a file phones and tablets play, unless switched off.
+        asked["convert"] = UserDefaults.standard.object(forKey: TorrentStatus.convertKey) as? Bool ?? true
         Task {
             do {
                 filmKeeps[hash] = try await ask("torrent.keep", asked, as: TorrentStatus.self)

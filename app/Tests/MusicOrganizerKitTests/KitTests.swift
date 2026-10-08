@@ -1835,6 +1835,17 @@ final class TorrentStatusTests: XCTestCase {
         let failed = TorrentStatus(
             state: "complete", peers: 0, bytesPerSecond: 0, progress: 1, keepError: "No room.")
         XCTAssertEqual(failed.keepLine, "Couldn't keep it: No room.")
+        let converting = TorrentStatus(
+            state: "complete", peers: 0, bytesPerSecond: 0, progress: 1, keeping: true, converting: 0.42)
+        XCTAssertEqual(
+            converting.keepLine,
+            "Converting it for phones and tablets: 42%. It carries on while the app is open.")
+        XCTAssertTrue(converting.isKeeping)
+        let noted = TorrentStatus(
+            state: "complete", peers: 0, bytesPerSecond: 0, progress: 1, keeping: false,
+            keptPath: "/Users/someone/Movies/Old.avi", keepNote: "It was kept as it arrived: no.")
+        XCTAssertEqual(
+            noted.keepLine, "Kept in your Movies folder as “Old.avi”. It was kept as it arrived: no.")
     }
 }
 

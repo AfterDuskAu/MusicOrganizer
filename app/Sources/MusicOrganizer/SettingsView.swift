@@ -297,6 +297,7 @@ private struct DownloadSettings: View {
     /// used to cover downloading too (`Player.alwaysBestDownload`).
     @AppStorage(Player.alwaysBestDownloadKey) private var alwaysBestDownload: Bool?
     @AppStorage(Player.alwaysBestVideoKey) private var alwaysBestVideo = false
+    @AppStorage(TorrentStatus.convertKey) private var convertFilms = true
     /// The limit moves in steps of this many.
     private static let step = 50
 
@@ -316,6 +317,17 @@ private struct DownloadSettings: View {
                         + "the songs in Songs, Artists, Recently Added and the rest, and the videos "
                         + "under Library → Videos. You can switch at any time; no file is moved "
                         + "either way.")
+            }
+            Section("Movies") {
+                Toggle("Convert kept movies for phones and tablets", isOn: $convertFilms)
+                SideNote(
+                    "A movie you keep is saved as an MP4 with H.264 or H.265 picture and AAC "
+                        + "sound, which an iPhone, an iPad and Android phones and tablets all "
+                        + "play. Most need only repacking: a minute or two, and the picture "
+                        + "is untouched. An old kind of picture (an AVI, say) has to be made "
+                        + "again, which can take as long as the movie and loses a little "
+                        + "quality. Off: a movie is kept exactly as it arrived, which may not "
+                        + "play on a phone. Videos you download are already MP4.")
             }
             Section {
                 LabeledContent("Library folder") {

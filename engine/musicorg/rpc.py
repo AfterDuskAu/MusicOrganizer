@@ -1009,8 +1009,9 @@ class Server:
             raise RpcError(INVALID_PARAMS, "trackers should be a list of addresses.")
         name = f"{title} ({year})" if year.isdigit() and len(year) == 4 else title
         return self._film_player().keep(
-            need(params, "info_hash", str), want(params, "file_index", int), trackers, name
-        )
+            need(params, "info_hash", str), want(params, "file_index", int), trackers, name,
+            convert=bool(want(params, "convert", bool, False)),
+        )  # fmt: skip
 
     def torrent_status(self, params: dict[str, Any]) -> dict[str, Any]:
         if self._films is None:
