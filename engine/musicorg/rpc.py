@@ -114,7 +114,7 @@ SLOW_METHODS = frozenset(
      # meanwhile, a favourite or a list of songs included (found 2026-10-07).
      "addon.list", "addon.add", "addon.restore", "addon.catalog", "addon.details", "addon.streams",
      "video.search", "channel.videos", "channel.search", "torrent.stop",
-     "media.convert"}  # reads the film with ffprobe first
+     "media.convert", "torrent.stop_keeping"}  # reads the film with ffprobe first
 )  # fmt: skip
 MAX_EXCLUDE = 5000  # songs already on screen that Show More leaves out
 RPC_DECISIONS = ("accept", "candidate", "url", "only_copy", "skip", "reject")
@@ -357,6 +357,7 @@ class Server:
             "torrent.play": self.torrent_play,
             "torrent.status": self.torrent_status,
             "torrent.keep": self.torrent_keep,
+            "torrent.stop_keeping": self.torrent_stop_keeping,
             "media.convert": self.media_convert,
             "media.converting": self.media_converting,
             "torrent.stop": self.torrent_stop,
@@ -1077,6 +1078,14 @@ class Server:
         if self._films is None:
             raise RpcError(USER_ERROR, "No film is being played from a torrent.")
         return self._films.status(need(params, "info_hash", str))
+
+    def torrent_stop_keeping(self, params: dict[str, Any]) -> dict[str, Any]:
+        """A film that was being kept isn't any more. Nothing in the Movies folder is
+        touched: nothing of it was there yet."""
+        info_hash = need(params, "info_hash", str)
+        if self._films is not None:
+            self._films.stop_keeping(info_hash, playing=want(params, "playing", bool) is True)
+        return {}
 
     def torrent_stop(self, params: dict[str, Any]) -> dict[str, Any]:
         info_hash = want(params, "info_hash", str)

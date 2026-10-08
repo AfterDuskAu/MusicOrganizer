@@ -82,3 +82,66 @@ public struct FilmPositions: Equatable, Sendable {
         if let data = try? JSONEncoder().encode(places) { defaults.set(data, forKey: Self.key) }
     }
 }
+
+/// The films the owner asked to keep that aren't in the Movies folder yet, remembered
+/// by the app on this Mac (not in the library), so a keep that was cut off when the app
+/// closed carries on when it's opened again. One is forgotten when its film has been
+/// kept, couldn't be, or the owner stops it.
+public struct PendingKeeps: Codable, Equatable, Sendable {
+    public struct Keep: Codable, Equatable, Sendable, Identifiable {
+        public let infoHash: String
+        public let trackers: [String]
+        public let title: String
+        public let year: String?
+        public let fileIndex: Int?
+        public let convert: Bool
+        public var id: String { infoHash }
+
+        public init(
+            infoHash: String, trackers: [String], title: String, year: String? = nil,
+            fileIndex: Int? = nil, convert: Bool = true
+        ) {
+            self.infoHash = infoHash.lowercased()
+            self.trackers = trackers
+            self.title = title
+            self.year = year
+            self.fileIndex = fileIndex
+            self.convert = convert
+        }
+
+        /// What the engine is asked (`torrent.keep`).
+        public var asked: [String: Any] {
+            var asked: [String: Any] = [
+                "info_hash": infoHash, "trackers": trackers, "title": title, "convert": convert,
+            ]
+            if let fileIndex { asked["file_index"] = fileIndex }
+            if let year { asked["year"] = year }
+            return asked
+        }
+    }
+
+    public private(set) var keeps: [Keep] = []
+    public static let key = "filmsBeingKept"
+
+    public init() {}
+
+    public mutating func add(_ keep: Keep) {
+        keeps.removeAll { $0.infoHash == keep.infoHash }
+        keeps.append(keep)
+    }
+
+    public mutating func remove(_ infoHash: String) {
+        keeps.removeAll { $0.infoHash == infoHash.lowercased() }
+    }
+
+    public static func load(from defaults: UserDefaults = .standard) -> PendingKeeps {
+        guard let data = defaults.data(forKey: key),
+            let found = try? JSONDecoder().decode(PendingKeeps.self, from: data)
+        else { return PendingKeeps() }
+        return found
+    }
+
+    public func save(to defaults: UserDefaults = .standard) {
+        if let data = try? JSONEncoder().encode(self) { defaults.set(data, forKey: Self.key) }
+    }
+}

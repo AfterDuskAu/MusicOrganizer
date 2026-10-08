@@ -138,6 +138,7 @@ final class AppModel {
     private(set) var followedChannels: [ChannelRef] = []
     /// Films being kept, or kept since the app opened, by their torrent's id.
     private(set) var filmKeeps: [String: TorrentStatus] = [:]
+    private var filmKeepTasks: [String: Task<Void, Never>] = [:]
     /// Goes up each time a film or a video has been kept, so Videos → Movies looks at
     /// its folders again.
     private(set) var keptArrived = 0
@@ -728,25 +729,69 @@ final class AppModel {
     }
 
     func keepFilm(_ stream: MediaStream, title: String, year: String?) {
-        guard let hash = stream.infoHash, filmKeeps[hash]?.isKeeping != true else { return }
-        var asked: [String: Any] = ["info_hash": hash, "trackers": stream.trackers, "title": title]
-        if let index = stream.fileIndex { asked["file_index"] = index }
-        if let year { asked["year"] = String(year.prefix(4)) }
+        guard let hash = stream.infoHash?.lowercased(), filmKeeps[hash]?.isKeeping != true
+        else { return }
         // Settings → Downloads: made into a file phones and tablets play, unless switched off.
-        asked["convert"] = UserDefaults.standard.object(forKey: TorrentStatus.convertKey) as? Bool ?? true
-        Task {
+        let convert = UserDefaults.standard.object(forKey: TorrentStatus.convertKey) as? Bool ?? true
+        let keep = PendingKeeps.Keep(
+            infoHash: hash, trackers: stream.trackers, title: title,
+            year: year.map { String($0.prefix(4)) }, fileIndex: stream.fileIndex, convert: convert)
+        // Remembered until it's in the Movies folder, so it carries on if the app is
+        // closed first.
+        var pending = PendingKeeps.load()
+        pending.add(keep)
+        pending.save()
+        follow(keep, quietly: false)
+    }
+
+    /// Ask the engine to keep a film, and follow it until it's kept, can't be, or is
+    /// stopped. `quietly`: one carried on when the app opened, where a failure (no
+    /// network yet, say) isn't put in front of the owner; it's tried again next time.
+    private func follow(_ keep: PendingKeeps.Keep, quietly: Bool) {
+        let hash = keep.infoHash
+        guard filmKeepTasks[hash] == nil else { return }
+        filmKeepTasks[hash] = Task {
+            defer { filmKeepTasks[hash] = nil }
             do {
-                filmKeeps[hash] = try await ask("torrent.keep", asked, as: TorrentStatus.self)
+                filmKeeps[hash] = try await ask("torrent.keep", keep.asked, as: TorrentStatus.self)
                 while filmKeeps[hash]?.isKeeping == true {
                     try? await Task.sleep(for: .seconds(2))
+                    if Task.isCancelled { return }
                     filmKeeps[hash] = try await ask(
                         "torrent.status", ["info_hash": hash], as: TorrentStatus.self)
                 }
-                keptArrived += 1  // it's in the Movies folder now (or couldn't be put there)
+                // It's in the Movies folder now (or couldn't be put there): done with.
+                var pending = PendingKeeps.load()
+                pending.remove(hash)
+                pending.save()
+                keptArrived += 1
             } catch {
-                notice = error.localizedDescription
+                if !quietly, !Task.isCancelled { notice = error.localizedDescription }
             }
         }
+    }
+
+    /// The owner has changed their mind about a film being kept.
+    func stopKeepingFilm(_ infoHash: String) {
+        let hash = infoHash.lowercased()
+        var pending = PendingKeeps.load()
+        pending.remove(hash)
+        pending.save()
+        filmKeepTasks[hash]?.cancel()
+        filmKeepTasks[hash] = nil
+        filmKeeps[hash] = nil
+        // Left at once, unless it's the film in the player: that one plays on.
+        let playing = filmTorrent?.lowercased() == hash
+        Task {
+            _ = try? await ask(
+                "torrent.stop_keeping", ["info_hash": hash, "playing": playing], as: Empty.self)
+        }
+    }
+
+    /// When the app opens: the films that were still being kept when it closed carry on.
+    /// Each came from the owner's own click on Keep, and Stop Keeping ends it.
+    private func carryOnKeeps() {
+        for keep in PendingKeeps.load().keeps { follow(keep, quietly: true) }
     }
 
     /// Shut the film player. A film from a torrent is left; what arrived of it stays in
@@ -1088,6 +1133,7 @@ final class AppModel {
             watchDailyLimit()
             loadAccounts()
             loadSettings()  // where kept movies and videos go, for the pages that list them
+            carryOnKeeps()
             // Sharing is this profile's own switch in Settings, off until it's switched
             // on there. The engine never shares by itself: it's told each time.
             if sharingWanted, let connection = engine?.connection {

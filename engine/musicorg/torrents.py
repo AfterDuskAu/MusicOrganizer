@@ -386,6 +386,22 @@ class Player:
         joined.keep_name, joined.keep_error, joined.convert = name.strip(), None, convert
         return joined.status()
 
+    def stop_keeping(self, info_hash: str, *, playing: bool = False) -> None:
+        """The owner has changed their mind about keeping a film. It's left at once,
+        unless the app says it's `playing` (then it plays on, and is left when the
+        player is shut). What arrived stays in the cache its day, like any film's. One
+        that's already being written into the Movies folder is finished: that takes a
+        moment."""
+        with self._lock:
+            joined = self._joined.get(info_hash.lower())
+            if joined is None or not joined.wanted or joined.saving:
+                return
+            joined.keep_name = None
+            if playing:
+                return
+            self._joined.pop(info_hash.lower(), None)
+        self._leave(joined, delete=False)
+
     def close(self, info_hash: str) -> None:
         """Leave a torrent. What arrived of it stays in the cache for a day, unless the
         film has been saved to the Movies folder, when the cache's copy goes at once.

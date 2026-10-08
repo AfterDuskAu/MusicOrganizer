@@ -952,17 +952,27 @@ struct MovieView: View {
                             .disabled(!stream.canPlay)
                             .help(stream.canPlay ? "Play it now" : "This one can't be played in the app yet")
                             if stream.kind == "torrent" {
-                                Button("Keep", systemImage: "arrow.down.circle") {
-                                    model.keepFilm(
-                                        stream, title: playName,
-                                        year: isSeries ? nil : details?.year ?? film.year)
+                                let keeping = stream.infoHash.flatMap {
+                                    model.filmKeeps[$0.lowercased()]
                                 }
-                                .disabled(stream.infoHash.flatMap { model.filmKeeps[$0] } != nil)
-                                .help("Fetch the whole film and save it in your Movies folder")
+                                if let hash = stream.infoHash, keeping?.isKeeping == true {
+                                    Button("Stop Keeping", systemImage: "xmark.circle") {
+                                        model.stopKeepingFilm(hash)
+                                    }
+                                    .help("Stop fetching it. Nothing has been put in your Movies folder yet")
+                                } else {
+                                    Button("Keep", systemImage: "arrow.down.circle") {
+                                        model.keepFilm(
+                                            stream, title: playName,
+                                            year: isSeries ? nil : details?.year ?? film.year)
+                                    }
+                                    .disabled(keeping != nil)
+                                    .help("Fetch the whole film and save it in your Movies folder")
+                                }
                             }
                         }
                         .padding(.vertical, 6)
-                        if let line = stream.infoHash.flatMap({ model.filmKeeps[$0]?.keepLine }) {
+                        if let line = stream.infoHash.flatMap({ model.filmKeeps[$0.lowercased()]?.keepLine }) {
                             Text(line).font(.callout).foregroundStyle(.secondary)
                         }
                     }

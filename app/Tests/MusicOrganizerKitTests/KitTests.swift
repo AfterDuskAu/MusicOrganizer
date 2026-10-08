@@ -1784,6 +1784,36 @@ final class AddonTests: XCTestCase {
     }
 }
 
+final class PendingKeepsTests: XCTestCase {
+    func testFilmsStillBeingKeptAreRememberedUntilTheyreDone() throws {
+        let name = "pendingkeeps-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: name))
+        defer { defaults.removePersistentDomain(forName: name) }
+        XCTAssertEqual(PendingKeeps.load(from: defaults).keeps, [])
+
+        var pending = PendingKeeps()
+        let hash = String(repeating: "AB", count: 20)
+        pending.add(.init(infoHash: hash, trackers: ["udp://tracker.invalid:1"], title: "The Kid", year: "1921", fileIndex: 2))
+        pending.add(.init(infoHash: "cd", trackers: [], title: "Other", convert: false))
+        pending.add(.init(infoHash: hash.lowercased(), trackers: [], title: "The Kid", year: "1921"))  // again: once
+        pending.save(to: defaults)
+
+        let found = PendingKeeps.load(from: defaults)
+        XCTAssertEqual(found.keeps.map(\.title), ["Other", "The Kid"])
+        XCTAssertEqual(found.keeps[1].infoHash, hash.lowercased())
+        let asked = found.keeps[0].asked
+        XCTAssertEqual(asked["info_hash"] as? String, "cd")
+        XCTAssertEqual(asked["convert"] as? Bool, false)
+        XCTAssertNil(asked["year"])
+        XCTAssertNil(asked["file_index"])
+        XCTAssertEqual(found.keeps[1].asked["year"] as? String, "1921")
+
+        var after = found
+        after.remove(hash)  // kept, or stopped: forgotten, whatever case its id was given in
+        XCTAssertEqual(after.keeps.map(\.title), ["Other"])
+    }
+}
+
 final class VideoFilesTests: XCTestCase {
     func testAConversionsProgressAndEndAreRead() throws {
         let decoder = JSONDecoder()
@@ -1851,7 +1881,7 @@ final class TorrentStatusTests: XCTestCase {
             state: "fetching", peers: 6, bytesPerSecond: 5_200_000, progress: 0.34, keeping: true)
         XCTAssertTrue(keeping.isKeeping)
         XCTAssertEqual(
-            keeping.keepLine, "Keeping: 34% here · 5.2 MB/s. It carries on while the app is open.")
+            keeping.keepLine, "Keeping: 34% here · 5.2 MB/s. It carries on while the app is open, and picks up again when it's reopened.")
         let kept = TorrentStatus(
             state: "complete", peers: 0, bytesPerSecond: 0, progress: 1, keeping: false,
             keptPath: "/Users/someone/Movies/The Kid (1921).mp4")
@@ -1864,7 +1894,7 @@ final class TorrentStatusTests: XCTestCase {
             state: "complete", peers: 0, bytesPerSecond: 0, progress: 1, keeping: true, converting: 0.42)
         XCTAssertEqual(
             converting.keepLine,
-            "Converting it for phones and tablets: 42%. It carries on while the app is open.")
+            "Converting it for phones and tablets: 42%. It carries on while the app is open, and picks up again when it's reopened.")
         XCTAssertTrue(converting.isKeeping)
         let noted = TorrentStatus(
             state: "complete", peers: 0, bytesPerSecond: 0, progress: 1, keeping: false,

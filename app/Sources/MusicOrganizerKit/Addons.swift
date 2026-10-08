@@ -311,11 +311,11 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
         guard keeping == true else { return nil }
         if let converting {
             return "Converting it for phones and tablets: \(Int(converting * 100))%. "
-                + "It carries on while the app is open."
+                + "It carries on while the app is open, and picks up again when it's reopened."
         }
         if state == "finding" { return "Keeping: finding the film…" }
         let megabytes = String(format: "%.1f", Double(bytesPerSecond) / 1_000_000)
-        return "Keeping: \(Int(progress * 100))% here · \(megabytes) MB/s. It carries on while the app is open."
+        return "Keeping: \(Int(progress * 100))% here · \(megabytes) MB/s. It carries on while the app is open, and picks up again when it's reopened."
     }
 
     /// Still on its way: worth asking about again.

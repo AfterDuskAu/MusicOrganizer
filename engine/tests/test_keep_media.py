@@ -335,3 +335,25 @@ def test_a_film_thats_closed_stays_a_day_and_one_saved_to_movies_goes_at_once(
     last.top = "Film"
     player.stop()
     assert session.removed[-1] == (last.handle,)
+
+
+def test_keeping_can_be_stopped(places: dict[str, Path]) -> None:
+    player = torrents.Player(places["cache"].parent, movies=places["movies"])
+    joined = joined_film(places, player, here=False)
+    joined.keep_name = "The Kid (1921)"
+    # While it plays, stopping the keep leaves it playing.
+    player.stop_keeping(joined.info_hash, playing=True)
+    assert joined.info_hash in player._joined and not joined.wanted
+    assert joined.status()["keeping"] is False
+    # Nobody watching: it's left at once (found with a real torrent, which stayed joined
+    # ten minutes more), and what arrived stays in the cache its day.
+    joined.keep_name = "The Kid (1921)"
+    assert joined.playing  # as a film that's only being kept is marked, too
+    player.stop_keeping(joined.info_hash.upper())
+    assert joined.info_hash not in player._joined
+    assert places["film"].is_file() and list(places["movies"].iterdir()) == []
+    # One that isn't joined, or isn't being kept: nothing happens.
+    player.stop_keeping(joined.info_hash)
+    other = joined_film(places, player, here=False)
+    player.stop_keeping(other.info_hash)
+    assert other.info_hash in player._joined
