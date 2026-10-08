@@ -965,6 +965,7 @@
 - In it, the rows on the page are **dragged into order**; the up and down arrows are gone ("arnt user friendly"). Each row has a grip at its left and its take-off button at its right (`HomeLayout.arrange`).
 - **Checked:** `swift test` (104). In the owner's app: the new names, and the list with its grips.
 - **Not checked:** a drag itself. The checking tools' drag is over in a blink and the list didn't take it as one; whether a real drag reorders is for the owner to try.
+- **Later, the owner tried it:** the drag works, but the line showing where the row will land was drawn in the wrong place, down among the ticks. The rows on the page were one section of a longer list, and macOS places that line wrongly in a list with several sections. They're a list of their own now, above the ticks. Not seen being dragged since: the owner had Customise Home open, so the app wasn't restarted.
 
 ## 0.1.1 — in progress
 

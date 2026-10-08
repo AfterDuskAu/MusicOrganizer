@@ -545,10 +545,21 @@ private struct HomeOverview: View {
             }
             .padding(16)
             Divider()
-            List {
-                Section("On Your Home Page, Top to Bottom (Drag to Reorder)") {
-                    if shown.isEmpty { Text("Nothing yet: switch rows on below.").foregroundStyle(.secondary) }
-                    // Dragged into order (the owner, 2026-10-08: arrows weren't friendly).
+            // The rows on the page are a list of their own. As one section of a longer
+            // list, macOS drew the line that shows where a dragged row will land in the
+            // wrong place, down among the ticks (the owner saw it, 2026-10-08).
+            Text("On Your Home Page, Top to Bottom (Drag to Reorder)")
+                .font(.subheadline.weight(.semibold))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+            if shown.isEmpty {
+                Text("Nothing yet: switch rows on below.")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+            } else {
+                List {
                     ForEach(shown) { section in
                         HStack {
                             Image(systemName: "line.3.horizontal").foregroundStyle(.tertiary)
@@ -573,6 +584,11 @@ private struct HomeOverview: View {
                         model.homeLayout.arrange(ids)
                     }
                 }
+                // As tall as its rows, up to about ten; past that it scrolls.
+                .frame(height: min(CGFloat(shown.count) * 28 + 16, 300))
+            }
+            Divider()
+            List {
                 ForEach(HomeSection.Group.allCases, id: \.self) { group in
                     Section(group.title) {
                         ForEach(all.filter { $0.group == group }) { section in
