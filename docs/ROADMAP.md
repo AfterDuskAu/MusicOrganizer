@@ -142,6 +142,19 @@ A signed and notarised DMG with Python, ffmpeg, fpcalc and deno bundled, automat
 - An Inbox for Bandcamp, CD rips and iTunes purchases.
 - **Family mode:** [`docs/roadmap/1.1-family-mode.md`](roadmap/1.1-family-mode.md). A kids profile with clean music and a parent PIN.
 
+## Videos, movies and series beside the music (started 2026-10-07, at the owner's request)
+
+Not on this roadmap when it was written: the owner's "from now on it won't be a music organizer, but a media organiser". What's built, and the rules it keeps, are in `CLAUDE.md` ("Videos and movies beside the music"); day by day in `docs/CHANGELOG.md`. In short, by 2026-10-08:
+
+- **Built:** add-ons (lists, details, ways to play; four the app starts with, the owner's own by address); Home; one Finder each for music, videos, movies, series and anime, and one for add-ons the owner marks as for adults only (fenced off from every other page and from a child's profile); the film player; playing a film from a torrent, keeping one in the Movies folder (converted for phones and tablets, carried on after the app is reopened, listed on Downloads); keeping a video that isn't music; the share offering kept movies and videos to a phone player, and carrying on a file that was cut off.
+- **Waiting on the owner:** drawings for the Finders' home pages; megabytes or megabits for the torrent upload limit; whether listeners' uploads belong in Covers & Remixes as play-only.
+- **Not built:**
+  - the phone player's own side of movies (its own project);
+  - a filter for films, series and anime in a child's profile (only songs are filtered; adults-only add-ons and genres are hidden);
+  - a parent PIN (family mode, below);
+  - checking that a playlist found for a song really holds it;
+  - the app's new name.
+
 ## 2.0: the Windows app, on the same engine
 
 The engine already runs its tests on Windows.
