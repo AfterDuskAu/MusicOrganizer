@@ -1785,6 +1785,36 @@ final class AddonTests: XCTestCase {
 }
 
 final class MusicFinderTests: XCTestCase {
+    func testPlaylistsShownLatelyAreRememberedOldestForgottenFirst() throws {
+        let name = "playlistsseen-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: name))
+        defer { defaults.removePersistentDomain(forName: name) }
+        var seen = PlaylistsSeen.load(from: defaults)
+        XCTAssertEqual(seen.ids, [])
+        seen.add(["a", "b"])
+        seen.add(["b", "c"])  // shown again: counted as shown now
+        XCTAssertEqual(seen.ids, ["a", "b", "c"])
+        seen.add((0..<PlaylistsSeen.most).map { "p\($0)" })
+        XCTAssertEqual(seen.ids.count, PlaylistsSeen.most)
+        XCTAssertFalse(seen.ids.contains("a"))  // the oldest can come round again
+        seen.save(to: defaults)
+        XCTAssertEqual(PlaylistsSeen.load(from: defaults), seen)
+        seen.forget()
+        XCTAssertEqual(seen.ids, [])
+    }
+
+    func testThePlayedStampChangesWhenASongIsPlayed() {
+        var listening = Listening(favourites: [], plays: [:], playlists: [])
+        XCTAssertEqual(listening.playedStamp, "")
+        listening.plays["t1"] = PlayCount(count: 1, lastPlayed: "2026-10-08T01:00:00Z")
+        listening.plays["t2"] = PlayCount(count: 9)  // counted, but never dated
+        let first = listening.playedStamp
+        XCTAssertTrue(first.hasPrefix("t1 "))
+        listening.plays["t3"] = PlayCount(count: 1, lastPlayed: "2026-10-08T02:00:00Z")
+        XCTAssertNotEqual(listening.playedStamp, first)
+        XCTAssertTrue(listening.playedStamp.hasPrefix("t3 "))
+    }
+
     func testAnAddOnSaysWhetherItsForAdultsOnly() throws {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase

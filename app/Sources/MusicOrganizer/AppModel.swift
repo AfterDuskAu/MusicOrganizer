@@ -166,6 +166,8 @@ final class AppModel {
     private(set) var playlistsNote: String?
     private(set) var playlistsAsked = false
     private var playlistsRound = 0
+    /// What had been played when the playlists on the page were found (`Listening.playedStamp`).
+    private(set) var playlistsStamp = ""
     /// Discover → Import Playlists: a playlist from elsewhere, and what was found of it.
     let importing = ImportPage()
     /// Library → Artists: the Discover side's artists, and the artist being looked at.
@@ -1432,15 +1434,30 @@ final class AppModel {
         guard !findingPlaylists, let connection = engine?.connection else { return }
         if different { playlistsRound += 1 }
         (findingPlaylists, playlistsProblem, playlistsAsked) = (true, nil, true)
+        let stamp = listening.playedStamp
+        playlistsStamp = stamp
         let day = Date.now.formatted(.iso8601.year().month().day())
-        var asked: [String: Any] = ["count": 24, "shuffle": "\(day) \(playlistsRound)"]
-        if different { asked["exclude"] = foundPlaylists.map(\.playlistId) }
+        // What's been played is part of the word, so the page moves on as the owner
+        // listens; and the playlists shown lately are left out, so it isn't the same
+        // ones again. (Until there's nothing else: then they come round again.)
+        var seen = PlaylistsSeen.load()
+        if different { seen.add(foundPlaylists.map(\.playlistId)) }
+        var asked: [String: Any] = ["count": 24, "shuffle": "\(day) \(playlistsRound) \(stamp)"]
         Task {
             defer { findingPlaylists = false }
             do {
-                let found = try await connection.call(
+                if !seen.ids.isEmpty { asked["exclude"] = seen.ids }
+                var found = try await connection.call(
                     "discover.playlists", asked, as: FoundPlaylistsAnswer.self)
+                if found.playlists.isEmpty, !seen.ids.isEmpty {
+                    seen.forget()
+                    asked["exclude"] = nil
+                    found = try await connection.call(
+                        "discover.playlists", asked, as: FoundPlaylistsAnswer.self)
+                }
                 (foundPlaylists, playlistsNote) = (found.playlists, found.note)
+                seen.add(found.playlists.map(\.playlistId))
+                seen.save()
             } catch {
                 playlistsProblem = error.localizedDescription
             }
