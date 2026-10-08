@@ -23,7 +23,8 @@ import AppKit
 /// - `wait`: nothing, to see what the app does by itself
 ///
 /// `/<seconds>` after a step waits that long before the next (4 otherwise):
-/// `youtube/10`.
+/// `youtube/10`. The first line written is `launch`: everything from the app's start to
+/// its first step.
 @MainActor
 enum Bench {
     struct Step {
@@ -39,12 +40,6 @@ enum Bench {
             return Step(name: String(parts.first ?? ""), wait: wait)
         }
     static var isOn: Bool { !steps.isEmpty }
-    /// `MUSICORG_PAGES=<way>`: how the pages that aren't showing are kept, to compare
-    /// (`PageHost`). "stacked" is the way it was until 2026-10-08 (all in the window,
-    /// moved aside); "hidden" leaves each in the window, hidden; "detached" takes them
-    /// out of every window. Anything else is the way the app works: parked in a window
-    /// nobody sees.
-    static let pages = ProcessInfo.processInfo.environment["MUSICORG_PAGES"] ?? ""
     private static let meter = BusyMeter()
 
     static func startIfAsked() {
@@ -90,10 +85,10 @@ enum Bench {
             say("BENCH \(name): no song table is showing")
             return true
         }
-        // SwiftUI's own table (View → Old Song Table) can be scrolled this way, and
-        // nothing else: it keeps its sort and its columns to itself.
+        // Only the song lists' own table: a table of SwiftUI's keeps its sort and its
+        // columns to itself, and stops the app if they're set from outside.
         guard table.delegate is SongTable.Coordinator || parts[0] == "scroll" else {
-            say("BENCH \(name): not for the old song table")
+            say("BENCH \(name): that isn't a song list's table")
             return true
         }
         let value = parts[1]

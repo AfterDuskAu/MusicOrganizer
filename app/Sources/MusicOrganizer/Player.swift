@@ -414,7 +414,7 @@ final class Player {
         ticket += 1
         isFetching = false
         guard let root else { return }
-        let url = root.appendingPathComponent(track.path)
+        let url = root.appendingPathComponent(track.path, isDirectory: false)
         guard FileManager.default.isReadableFile(atPath: url.path) else {
             problem = "“\(track.title)” isn't where the library says it is. Try File → Reload Library."
             return

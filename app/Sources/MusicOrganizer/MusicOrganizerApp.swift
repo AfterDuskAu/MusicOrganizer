@@ -49,8 +49,6 @@ struct MusicOrganizerApp: App {
             // View → Columns: what's shown beside each song, for every list at once.
             CommandGroup(after: .sidebar) {
                 ColumnsMenu()
-                // The song lists as they were before 2026-10-09, to look at beside the new.
-                OldSongTableSwitch()
             }
             CommandMenu("Controls") {
                 Button(model.player.isPlaying ? "Pause" : "Play") { model.player.toggle() }

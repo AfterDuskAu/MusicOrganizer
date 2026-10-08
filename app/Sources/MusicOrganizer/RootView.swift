@@ -244,8 +244,6 @@ struct MainView: View {
     /// What's been opened inside each page (an album, an artist), page by page.
     @State private var paths: [SidebarItem: NavigationPath] = [:]
     @State private var showNowPlaying = false
-    /// The page being made ready ahead of its first click, if one is (`warmUp`).
-    @State private var warming: SidebarItem?
     @State private var deleting: Playlist?
     @AppStorage("showLyrics") private var showLyrics = false
     /// Lyrics beside the cover or video on the player page (Settings → Play Options).
@@ -308,12 +306,12 @@ struct MainView: View {
                 // The Warm Look's glow shows through the title bar.
                 .toolbarBackground(Theme.current.isWarm ? .hidden : .automatic, for: .windowToolbar)
                 .onChange(of: item, initial: true) { opened(current) }
-                // The library's own pages are made ready just after the app opens, one at
-                // a time, so the first click on each finds it built (see `warmUp`).
-                .task(id: model.phase) {
-                    await warmUp()
-                    await bench()
-                }
+                // (The library's lists were built ahead here, one by one, just after the
+                // app opened, when a list took a second to build. With AppKit's table a
+                // long list opens in under half a second, and building six pages ahead
+                // kept the app busy for three seconds of its first half minute, when the
+                // first clicks are made: taken out 2026-10-09.)
+                .task(id: model.phase) { await bench() }
                 .onAppear {
                     let caughtUp = SidebarChoice.catchUp(saved: savedEntries, seen: seenEntries)
                     if caughtUp.seen != seenEntries {
@@ -710,33 +708,11 @@ struct MainView: View {
         .help(model.searching ? "Close search" : "Search your library (⌘F)")
     }
 
-    /// Building a song list for the first time stops the app for about a second (its
-    /// table makes a few hundred small views). Left to the first click, that's a second's
-    /// wait on every list the owner opens. So once the library has loaded, the lists are
-    /// built ahead, out of sight like any page that's been visited, one every second or
-    /// so, so no two builds run together and a click in between is still answered.
-    /// Only the library's own pages: a page that asks the web for something when it
-    /// opens (Explore, the Finders) is never opened ahead.
-    private func warmUp() async {
-        guard model.phase == .ready, !Snapshot.isOn else { return }
-        let shown = SidebarChoice.read(savedEntries).compactMap(SidebarItem.init(libraryEntry:))
-        for entry in shown + [.downloads] where entry != .unconfirmed {
-            try? await Task.sleep(for: .seconds(1.2))
-            if Task.isCancelled { return }
-            guard !visited.contains(entry) else { continue }
-            visited.append(entry)
-            warming = entry
-            // Long enough for the page to be laid out and its rows built, then it's
-            // parked far off with the other pages that aren't showing.
-            try? await Task.sleep(for: .seconds(1.5))
-            if warming == entry { warming = nil }
-        }
-    }
-
     /// A developer's check (`Bench`): the steps asked for, one after the other.
     private func bench() async {
         guard Bench.isOn, model.phase == .ready else { return }
         try? await Task.sleep(for: .seconds(3))
+        Bench.report("launch")  // everything since the app started
         for step in Bench.steps {
             if Task.isCancelled { return }
             Bench.begin()
@@ -767,71 +743,33 @@ struct MainView: View {
         }
     }
 
-    /// Every page opened so far, one on top of the other, with only the chosen one
-    /// showing. A hidden page keeps its place but does no work.
+    /// The page that's chosen, under the library's search bar when that's open. Every
+    /// page opened so far is kept exactly as it was left, out of the window (`PageHost`).
     private var pages: some View {
         VStack(spacing: 0) {
             if model.searching, current != .youtube, current != .visualizer, current != .settings {
                 SearchBar()
                 Divider()
             }
-            stackedPages
+            openPages
         }
     }
 
-    @ViewBuilder
-    private var stackedPages: some View {
-        if Bench.pages == "stacked" {
-            // The way it was until 2026-10-08, kept to measure against (`PageHost`).
-            GeometryReader { room in
-                stack(pageWidth: room.size.width)
-            }
-        } else {
-            let model = model
-            PageHost(
-                current: current, warming: warming, visited: visited, store: store
-            ) { entry, showing in
-                // A page in a view of its own is told what the window's pages are told:
-                // the model, and the look's colour for words.
-                AnyView(
-                    PageView(entry: entry, active: showing)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                        .environment(model)
-                        .lookText()
-                        .onAppear { if Bench.isOn { Bench.say("appear \(entry.key)") } })
-            }
-        }
-    }
-
-    private func stack(pageWidth: CGFloat) -> some View {
-        ZStack {
-            ForEach(visited, id: \.self) { entry in
-                let active = entry == current
-                // A song list works its rows out only when it's the page showing, so one
-                // being made ready ahead is told it is, for that moment.
-                PageView(entry: entry, active: active || entry == warming)
+    private var openPages: some View {
+        let model = model
+        return PageHost(current: current, visited: visited, store: store) { entry, showing in
+            // A page in a view of its own is told what the window's pages are told: the
+            // model, and the look's colour for words.
+            AnyView(
+                PageView(entry: entry, active: showing)
                     // A page shorter than the window starts at the top, under the search
                     // bar, never in the middle of the window (the owner, 2026-10-08:
                     // Downloads with a search that found nothing).
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                    // A page that isn't showing is moved far out of sight, not made
-                    // invisible: for an invisible view SwiftUI takes its AppKit views
-                    // (a whole song table) out of the window and puts them all back
-                    // when it shows again, which froze the app on every switch.
-                    // (A page being made ready ahead sits almost a whole page-width to
-                    // the right for a moment, with two points of its left edge still in
-                    // view: a table builds its rows only for what's in view, and a
-                    // sliver its full height is enough for every row on the first
-                    // screen. Wholly out of view, far off or just beside, it builds
-                    // nothing until it's shown: tried both, 2026-10-07.)
-                    .offset(x: active ? 0 : entry == warming ? max(pageWidth - 2, 0) : 30_000)
-                    .allowsHitTesting(active)
-                    .accessibilityHidden(!active)
-                // No zIndex either: changing which page is on top also made AppKit take
-                // every page's views out and put them back (profiled 2026-10-01).
-            }
+                    .environment(model)
+                    .lookText()
+                    .onAppear { if Bench.isOn { Bench.say("appear \(entry.key)") } })
         }
-        .clipped()
     }
 
     private static func deleteQuestion(_ tracks: [Track]) -> String {

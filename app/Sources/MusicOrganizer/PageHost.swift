@@ -12,19 +12,6 @@ final class PageStore {
     /// A page taken out of every window would count as closed, and be opened afresh
     /// each time it was shown (asking the add-ons and the music service all over again);
     /// in a window of its own it stays open, with nothing laying it out or drawing it.
-    /// Where a page is built ahead of its first click (`MainView.warmUp`): in the window,
-    /// so it's laid out and its first rows are made, but neither seen nor clicked. It
-    /// used to be put under the page that was showing, and in the Warm Look, where a
-    /// page has no background of its own, it showed through for a second or two, and a
-    /// click on an empty part of the page above could land on it (found 2026-10-09).
-    fileprivate let backstage: NSView = {
-        let view = Backstage()
-        view.alphaValue = 0
-        view.autoresizingMask = [.width, .height]
-        view.setAccessibilityHidden(true)
-        return view
-    }()
-
     fileprivate lazy var parked: NSView = {
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 900, height: 600), styleMask: [.borderless],
@@ -35,11 +22,6 @@ final class PageStore {
         return window.contentView ?? NSView()
     }()
     private var waitingRoom: NSWindow?
-}
-
-/// Never seen, and never clicked: what's in it is only being made ready.
-private final class Backstage: NSView {
-    override func hitTest(_ point: NSPoint) -> NSView? { nil }
 }
 
 /// Shows the page that's chosen, and keeps every other page opened so far exactly as it
@@ -57,8 +39,6 @@ private final class Backstage: NSView {
 /// changed until it's put back, which is one step however much is on it.
 struct PageHost: NSViewRepresentable {
     let current: SidebarItem
-    /// A page being made ready ahead of its first click: built out of sight (`backstage`).
-    let warming: SidebarItem?
     let visited: [SidebarItem]
     let store: PageStore
     /// A page, told whether it's the one showing.
@@ -72,18 +52,13 @@ struct PageHost: NSViewRepresentable {
             store.hosts[entry] = nil
             store.showing.remove(entry)
         }
-        for (entry, host) in store.hosts where entry != current && entry != warming {
+        for (entry, host) in store.hosts where entry != current {
             // Told once that it isn't showing any more, so it stops working things out
             // (a search typed on another page isn't run on this one too).
             if store.showing.remove(entry) != nil { host.rootView = make(entry, false) }
-            put(away: host)
+            if host.superview !== store.parked { store.parked.addSubview(host) }
         }
-        if store.backstage.superview !== room {
-            store.backstage.frame = room.bounds
-            room.addSubview(store.backstage, positioned: .below, relativeTo: nil)
-        }
-        if let warming, warming != current { show(warming, in: store.backstage, under: true) }
-        show(current, in: room, under: false)
+        show(current, in: room)
     }
 
     /// Taken apart with the window, or while an album's page covers the pages: they're
@@ -96,12 +71,12 @@ struct PageHost: NSViewRepresentable {
 
     func makeCoordinator() -> PageStore { store }
 
-    private func show(_ entry: SidebarItem, in room: NSView, under: Bool) {
+    private func show(_ entry: SidebarItem, in room: NSView) {
         let host: NSHostingView<AnyView>
         if let made = store.hosts[entry] {
             host = made
             // What the page is told from outside (a playlist's name) may have changed.
-            if !under || !store.showing.contains(entry) { host.rootView = make(entry, true) }
+            host.rootView = make(entry, true)
         } else {
             host = NSHostingView(rootView: make(entry, true))
             // The page takes the room it's given: it never tells the window how big to be.
@@ -113,18 +88,6 @@ struct PageHost: NSViewRepresentable {
             host.frame = room.bounds
             room.addSubview(host, positioned: .above, relativeTo: nil)
         }
-        if host.isHidden { host.isHidden = false }
         store.showing.insert(entry)
-    }
-
-    private func put(away host: NSHostingView<AnyView>) {
-        switch Bench.pages {
-        case "hidden":  // left in the window, hidden: to compare
-            if !host.isHidden { host.isHidden = true }
-        case "detached":  // in no window at all: to compare
-            if host.superview != nil { host.removeFromSuperview() }
-        default:
-            if host.superview !== store.parked { store.parked.addSubview(host) }
-        }
     }
 }

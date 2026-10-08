@@ -46,32 +46,15 @@ enum SongColumns {
     ]
     /// Hidden until the owner asks for them.
     static let hiddenAtFirst: Set<String> = ["genre", "quality", "added"]
-    /// Each column's width. They're all set, not left to the table: a table that
-    /// shares the room out itself starts every column at its "ideal" width whatever
-    /// the window's (cutting the last one off, or leaving a gap), and only puts that
-    /// right when something next changes size, so the columns were in different
-    /// places from one opening of a list to the next.
+    /// Each column's width. They're all set but the title's, which takes what the others
+    /// leave, so the columns are in the same places in every list, however long the
+    /// names are and whenever the list is opened (owner, 2026-10-02).
     static let widths: [String: CGFloat] = [
         "artist": 190, "album": 210, "year": 46, "genre": 110, "quality": 70, "added": 90,
         "plays": 40, "time": 52,
     ]
     static let favouriteWidth: CGFloat = 20
     static let titleLeast: CGFloat = 200
-    /// What the table puts around each column, and at its two ends (measured).
-    static let between: CGFloat = 17
-    static let ends: CGFloat = 44
-
-    /// The title's width: whatever the columns that are showing leave of the table's.
-    /// In a window too narrow for them all, the title keeps its least width and the
-    /// table scrolls sideways.
-    static func titleWidth(
-        in tableWidth: CGFloat, _ columns: TableColumnCustomization<TrackRow>
-    ) -> CGFloat {
-        let showing = optional.filter { isShown($0.id, in: columns) }
-        let taken = showing.reduce(favouriteWidth) { $0 + (widths[$1.id] ?? 0) }
-        let gaps = between * CGFloat(showing.count + 2) + ends
-        return max(titleLeast, (tableWidth - taken - gaps).rounded(.down))
-    }
 
     static func isShown(_ id: String, in columns: TableColumnCustomization<TrackRow>) -> Bool {
         switch columns[visibility: id] {
@@ -138,12 +121,8 @@ struct SongList: View {
     @State private var ready = false
     @State private var selection = Set<Int>()
     @State private var sortOrder: [KeyPathComparator<TrackRow>] = []
-    /// How wide the table's room was when it was made (see `table`).
-    @State private var madeAtWidth: CGFloat?
     /// Which columns show, and in what order: the owner's choice, kept for every list.
     @AppStorage("songColumns") private var columns = TableColumnCustomization<TrackRow>()
-    /// View → Old Song Table: SwiftUI's table, as the lists were until 2026-10-09.
-    @AppStorage(SongColumns.oldTableKey) private var oldTable = false
 
     private var playlist: Playlist? {
         if case .playlist(let id) = source { model.playlist(id) } else { nil }
@@ -177,10 +156,8 @@ struct SongList: View {
                     // It fills the page: left at its own height, the whole page (its heading too)
                     // sat in the middle of the window, under a gap.
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if oldTable {
-                table
             } else {
-                fastTable
+                table
             }
         }
         .task(id: key) { await workOutRows() }
@@ -254,7 +231,7 @@ struct SongList: View {
 
     /// The list as a table of AppKit's own (`SongTable`): the rows on screen are all
     /// it ever makes.
-    private var fastTable: some View {
+    private var table: some View {
         SongTable(
             rows: rows, selection: $selection, sortOrder: $sortOrder,
             shown: Set(SongColumns.optional.map(\.id).filter { SongColumns.isShown($0, in: columns) }),
@@ -263,118 +240,6 @@ struct SongList: View {
             setShown: { columns[visibility: $0] = $1 ? .visible : .hidden },
             primary: { place in model.player.play(rows.map(\.track), startAt: place) },
             menu: { ids in AnyView(menu(for: ids)) })
-    }
-
-    private var table: some View {
-        // A table starts every column at its "ideal" width whatever room it has, so
-        // the title's is worked out from the room there is when the table is made.
-        // After that it's left alone: the title is the one column that can stretch,
-        // and the table itself gives it or takes from it as the window changes.
-        // (Changing a column's width on a table that's already up moved its headings
-        // and not its rows.)
-        GeometryReader { space in
-            table(titleWidth: SongColumns.titleWidth(in: madeAtWidth ?? space.size.width, columns))
-                .onAppear { if madeAtWidth == nil { madeAtWidth = space.size.width } }
-        }
-    }
-
-    private func table(titleWidth: CGFloat) -> some View {
-        Table(
-            of: TrackRow.self, selection: $selection, sortOrder: $sortOrder,
-            columnCustomization: $columns
-        ) {
-            TableColumn("") { row in
-                // Table cells don't inherit the window's environment on macOS.
-                FavouriteButton(track: row.track).environment(model).lookText()
-            }
-            .width(20)
-            .customizationID("favourite")
-            .disabledCustomizationBehavior(.all)
-            TableColumn("Title", value: \.track.title) { row in
-                SongTitle(track: row.track).environment(model).lookText()
-            }
-            // Every other column has a set width, so the columns are in the same places
-            // in every list, however long the names are and whenever the list is opened
-            // (owner, 2026-10-02): the title takes what they leave.
-            .width(min: SongColumns.titleLeast, ideal: titleWidth)
-            .customizationID("title")
-            .disabledCustomizationBehavior(.visibility)
-            TableColumn("Artist", value: \.track.artistName) { row in
-                Text(row.track.artistName).lookText()
-            }
-            .width(SongColumns.widths["artist"]!)
-            .customizationID("artist")
-            TableColumn("Album", value: \.track.albumName) { row in
-                Text(row.track.albumName).lookText()
-            }
-            .width(SongColumns.widths["album"]!)
-            .customizationID("album")
-            TableColumn("Year", value: \.track.sortYear) { row in
-                Text(row.track.year.map(String.init) ?? "").foregroundStyle(.secondary)
-                    .lookText()
-            }
-            .width(SongColumns.widths["year"]!)
-            .customizationID("year")
-            TableColumn("Genre", value: \.track.sortGenre) { row in
-                Text(row.track.sortGenre).foregroundStyle(.secondary)
-                    .lookText()
-            }
-            .width(SongColumns.widths["genre"]!)
-            .defaultVisibility(.hidden)
-            .customizationID("genre")
-            TableColumn("Quality", value: \.track.quality) { row in
-                Text(row.track.quality).foregroundStyle(.secondary)
-                    .lookText()
-            }
-            .width(SongColumns.widths["quality"]!)
-            .defaultVisibility(.hidden)
-            .customizationID("quality")
-            TableColumn("Added", value: \.track.sortAdded) { row in
-                Text(row.track.addedDay).foregroundStyle(.secondary)
-                    .lookText()
-            }
-            .width(SongColumns.widths["added"]!)
-            .defaultVisibility(.hidden)
-            .customizationID("added")
-            TableColumn("Plays", value: \.plays) { row in
-                Text(row.plays > 0 ? String(row.plays) : "")
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
-                    .lookText()
-            }
-            .width(SongColumns.widths["plays"]!)
-            .customizationID("plays")
-            TableColumn("Time", value: \.track.sortDuration) { row in
-                Text(clockTime(row.track.durationS))
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
-                    .lookText()
-            }
-            .width(SongColumns.widths["time"]!)
-            .customizationID("time")
-        } rows: {
-            ForEach(rows) { row in
-                // A download can be dragged onto the sidebar: onto the Library to move it
-                // there, or back onto Downloads. What's carried is the song's id. Other
-                // rows stay plain, as they were.
-                if row.track.isDownload, let id = row.track.trackId {
-                    TableRow(row).draggable(id)
-                } else {
-                    TableRow(row)
-                }
-            }
-        }
-        .background(FixedRows(height: 34))
-        .scrollContentBackground(Theme.current.listBackground)
-        // macOS stripes a table with greys of its own, which don't sit on a warm page.
-        .alternatingRowBackgrounds(Theme.current.isWarm ? .disabled : .automatic)
-        .contextMenu(forSelectionType: Int.self) { ids in
-            menu(for: ids)
-        } primaryAction: { ids in
-            if let first = ids.first, let index = rows.firstIndex(where: { $0.id == first }) {
-                model.player.play(rows.map(\.track), startAt: index)
-            }
-        }
     }
 
     @ViewBuilder

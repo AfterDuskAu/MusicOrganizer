@@ -72,7 +72,8 @@ struct SongTable: NSViewRepresentable {
         let headings = NSMenu()
         headings.delegate = keeper
         table.headerView?.menu = headings
-        // A list that was sorted before this table was made (the other table was showing).
+        // A list that was sorted before this table was made (a search that found nothing
+        // took the table away, and it's made afresh when the search is cleared).
         if let sorted = sortOrder.first.flatMap(SongColumns.sorted(by:)) {
             keeper.settingUp = true
             table.sortDescriptors = [NSSortDescriptor(key: sorted.id, ascending: sorted.ascending)]
@@ -338,9 +339,6 @@ struct SongTable: NSViewRepresentable {
 // MARK: the columns, for both tables
 
 extension SongColumns {
-    /// View → Old Song Table: the song lists drawn by SwiftUI's table, as they were until
-    /// 2026-10-09, kept to look at beside the new one.
-    static let oldTableKey = "oldSongTable"
     static let favourite = "favourite"
     static let title = "title"
     static let rowHeight: CGFloat = 34
@@ -410,15 +408,6 @@ extension SongColumns {
             Self.comparator(for: $0, ascending: true)?.keyPath == comparator.keyPath
         }
         return id.map { ($0, comparator.order == .forward) }
-    }
-}
-
-/// View → Old Song Table, in the menu bar.
-struct OldSongTableSwitch: View {
-    @AppStorage(SongColumns.oldTableKey) private var old = false
-
-    var body: some View {
-        Toggle("Old Song Table", isOn: $old)
     }
 }
 

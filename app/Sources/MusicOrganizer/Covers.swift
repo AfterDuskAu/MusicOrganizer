@@ -39,8 +39,13 @@ final class Covers {
         guard track.hasCover else { return nil }
         let pixels = size.rawValue
         let remote = track.artUrl.flatMap(URL.init(string:))
-        let sidecar = root.flatMap { root in track.cover.map { root.appendingPathComponent($0) } }
-        let audio = track.videoId == nil ? root?.appendingPathComponent(track.path) : nil
+        // Said to be files, not folders: left to find that out for itself, each of these
+        // looked on the disk, on the main thread, for every cover not yet in memory
+        // (seventy looks for a screenful of songs; profiled 2026-10-09).
+        let sidecar = root.flatMap { root in
+            track.cover.map { root.appendingPathComponent($0, isDirectory: false) }
+        }
+        let audio = track.videoId == nil ? root?.appendingPathComponent(track.path, isDirectory: false) : nil
         // A few at a time: a fast scroll asks for dozens of covers at once, and decoding
         // them all together is what made scrolling stutter (Fix A-1). A row that has
         // scrolled away gives up its turn.
@@ -100,7 +105,7 @@ final class Covers {
         let name = "\(original.path)|\(values.fileSize ?? 0)|\(changed.timeIntervalSince1970)|\(pixels)"
         var hash: UInt64 = 14_695_981_039_346_656_037  // FNV-1a: a short, stable name
         for byte in name.utf8 { hash = (hash ^ UInt64(byte)) &* 1_099_511_628_211 }
-        return folder.appendingPathComponent(String(hash, radix: 16) + ".jpg")
+        return folder.appendingPathComponent(String(hash, radix: 16) + ".jpg", isDirectory: false)
     }
 
     private nonisolated static let thumbnailFolder: URL? = {
