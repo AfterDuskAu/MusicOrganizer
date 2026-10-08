@@ -474,6 +474,14 @@ struct VideoFinderView: View {
 struct ChannelsView: View {
     @Environment(AppModel.self) private var model
     @State private var opened: ChannelRef?
+    /// The videos downloaded from channels and Video Finder: Media, in the Downloads folder.
+    @State private var kept: [VideoFiles.File] = []
+    @State private var looked = false
+
+    static var keptFolder: URL? {
+        FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("Media", isDirectory: true)
+    }
 
     var body: some View {
         let channels = model.followedChannels
@@ -490,29 +498,89 @@ struct ChannelsView: View {
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
                 Divider()
+                // The channels followed: one row, which slides sideways when there are
+                // more than fit (the owner, 2026-10-08).
                 if channels.isEmpty {
                     Text(
                         "Channels you follow show up here. Find one under Video Finder, or its "
                             + "Explore, open it, and click Follow.")
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
-                        .frame(maxWidth: 460)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 28)
+                        .padding(.horizontal, 20)
                 } else {
-                    ScrollView {
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 22)], spacing: 22) {
+                    ScrollView(.horizontal) {
+                        LazyHStack(alignment: .top, spacing: 18) {
                             ForEach(channels) { channel in
-                                Button { opened = channel } label: { MediaCard(channel: channel) }
-                                    .buttonStyle(.plain)
-                                    .contextMenu {
-                                        Button("Stop Following") { model.follow(channel, on: false) }
-                                    }
+                                Button { opened = channel } label: {
+                                    MediaCard(channel: channel).frame(width: 120)
+                                }
+                                .buttonStyle(.plain)
+                                .contextMenu {
+                                    Button("Stop Following") { model.follow(channel, on: false) }
+                                }
                             }
                         }
-                        .padding(20)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 14)
                     }
+                    .frame(height: 196)
+                }
+                Divider()
+                // Under them: only the videos that have been downloaded.
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text("Downloaded Videos").font(.headline)
+                    Text(kept.count == 1 ? "1 video" : "\(kept.count) videos")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+                if kept.isEmpty {
+                    Text(
+                        looked
+                            ? "Videos you download show up here. Right-click a video and choose Download."
+                            : "Looking…")
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    List(kept) { VideoFileRow(file: $0) }
+                        .scrollContentBackground(Theme.current.listBackground)
                 }
             }
+        }
+        // Looked at again whenever a video has just arrived.
+        .task(id: model.keptArrived) {
+            let folder = Self.keptFolder
+            kept = await Task.detached { folder.map(VideoFiles.inside) ?? [] }.value
+            looked = true
+        }
+    }
+}
+
+/// One video file in a list (Videos → Movies, and the downloaded videos under Videos →
+/// Channel): double-click plays it in the film player.
+struct VideoFileRow: View {
+    let file: VideoFiles.File
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "film").foregroundStyle(.secondary)
+            Text(file.name).lineLimit(1)
+            Spacer()
+            Text(file.kind).foregroundStyle(.secondary)
+            Text(ByteCountFormatter.string(fromByteCount: file.bytes, countStyle: .file))
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+                .frame(width: 90, alignment: .trailing)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture(count: 2) { model.playFilm(file.url, title: file.name) }
+        .contextMenu {
+            Button("Play") { model.playFilm(file.url, title: file.name) }
+            Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([file.url]) }
         }
     }
 }
@@ -800,21 +868,14 @@ struct MovieView: View {
 struct MoviesView: View {
     @Environment(AppModel.self) private var model
     @State private var files: [VideoFiles.File] = []
-    /// The videos kept from Video Finder and channels: Media, in the Downloads folder.
-    @State private var kept: [VideoFiles.File] = []
     @State private var looked = false
 
     private static var folder: URL? {
         FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first
     }
 
-    private static var keptFolder: URL? {
-        FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first?
-            .appendingPathComponent("Media", isDirectory: true)
-    }
-
     var body: some View {
-        let count = files.count + kept.count
+        let count = files.count
         VStack(spacing: 0) {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -823,9 +884,7 @@ struct MoviesView: View {
                         Text(count == 1 ? "1 file" : "\(count.formatted()) files")
                             .foregroundStyle(.secondary)
                     }
-                    Text(
-                        "The video files in your Movies folder, and the videos you've "
-                            + "downloaded. Double-click one to play it.")
+                    Text("The video files in your Movies folder. Double-click one to play it.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }
@@ -837,22 +896,12 @@ struct MoviesView: View {
             .padding(.vertical, 12)
             Divider()
             if count == 0 {
-                Text(
-                    looked
-                        ? "There are no video files in your Movies folder yet, and no downloaded videos."
-                        : "Looking…")
+                Text(looked ? "There are no video files in your Movies folder yet." : "Looking…")
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                List {
-                    if !files.isEmpty {
-                        Section("Movies") { ForEach(files) { row($0) } }
-                    }
-                    if !kept.isEmpty {
-                        Section("Downloaded Videos") { ForEach(kept) { row($0) } }
-                    }
-                }
-                .scrollContentBackground(Theme.current.listBackground)
+                List(files) { VideoFileRow(file: $0) }
+                    .scrollContentBackground(Theme.current.listBackground)
             }
         }
         // Looked at again whenever a film or a video has just been kept.
@@ -878,31 +927,10 @@ struct MoviesView: View {
         }
     }
 
-    private func row(_ file: VideoFiles.File) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: "film").foregroundStyle(.secondary)
-            Text(file.name).lineLimit(1)
-            Spacer()
-            Text(file.kind).foregroundStyle(.secondary)
-            Text(ByteCountFormatter.string(fromByteCount: file.bytes, countStyle: .file))
-                .foregroundStyle(.secondary)
-                .monospacedDigit()
-                .frame(width: 90, alignment: .trailing)
-        }
-        .contentShape(Rectangle())
-        .onTapGesture(count: 2) { model.playFilm(file.url, title: file.name) }
-        .contextMenu {
-            Button("Play") { model.playFilm(file.url, title: file.name) }
-            Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([file.url]) }
-        }
-    }
-
     /// Off the main thread: a big folder takes a moment to walk.
     private func look() async {
-        let (movies, media) = (Self.folder, Self.keptFolder)
-        (files, kept) = await Task.detached {
-            (movies.map(VideoFiles.inside) ?? [], media.map(VideoFiles.inside) ?? [])
-        }.value
+        let movies = Self.folder
+        files = await Task.detached { movies.map(VideoFiles.inside) ?? [] }.value
         looked = true
     }
 
