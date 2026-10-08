@@ -50,6 +50,14 @@ struct FoundPlaylistsView: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
+        if let opened = model.openedPlaylist {
+            FoundPlaylistPage(playlist: opened)
+        } else {
+            list
+        }
+    }
+
+    private var list: some View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -92,7 +100,7 @@ struct FoundPlaylistsView: View {
                         ForEach(model.foundPlaylists) { playlist in
                             Button { model.open(playlist) } label: { card(playlist) }
                                 .buttonStyle(.plain)
-                                .help("Open this playlist: play its songs, or download them")
+                                .help("Open this playlist: see its songs, and play them")
                         }
                     }
                     .padding(20)
@@ -125,5 +133,79 @@ struct FoundPlaylistsView: View {
             Text(playlist.why).font(.caption).foregroundStyle(.tertiary).lineLimit(1)
         }
         .contentShape(Rectangle())
+    }
+}
+
+/// One found playlist, opened (the owner, 2026-10-08): its songs, with Play All, and on
+/// each song the same Queue and Download as any song found. Opening it downloads nothing.
+struct FoundPlaylistPage: View {
+    let playlist: FoundPlaylist
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let songs = model.playlistSongs
+        let results = songs.map(\.result)
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                Button("Back", systemImage: "chevron.left") { model.closePlaylist() }
+                    .labelStyle(.iconOnly)
+                    .buttonStyle(.plain)
+                    .font(.title3)
+                    .help("Back to the playlists")
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(playlist.title).font(.title2.weight(.semibold)).heading().lineLimit(1)
+                    Text(about(songs.count)).foregroundStyle(.secondary).lineLimit(1)
+                }
+                Spacer()
+                Button("Play All", systemImage: "play.fill") {
+                    model.player.play(results.map(\.track), startAt: 0)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(songs.isEmpty)
+                Button("Import as a Playlist…", systemImage: "square.and.arrow.down.on.square") {
+                    model.importOpenedPlaylist()
+                }
+                .disabled(songs.isEmpty)
+                .help(
+                    "Make this one of your own playlists, on Import Playlists. Its songs are "
+                        + "downloaded only when you say so there.")
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            Divider()
+            if model.readingPlaylist {
+                VStack(spacing: 12) {
+                    ProgressView()
+                    Text("Reading the playlist…")
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if let problem = model.playlistProblem2 {
+                Message(symbol: "exclamationmark.triangle", title: "That didn't work", text: problem) {
+                    Button("Try Again") { model.open(playlist) }
+                    Button("Back") { model.closePlaylist() }
+                }
+            } else {
+                List {
+                    ForEach(Array(songs.enumerated()), id: \.offset) { index, song in
+                        ResultRow(
+                            result: results[index],
+                            owned: model.everything.videoIDs.contains(song.videoId),
+                            download: { model.download(song) }
+                        ) {
+                            model.player.play(results.map(\.track), startAt: index)
+                        }
+                    }
+                }
+                .scrollContentBackground(Theme.current.listBackground)
+            }
+        }
+    }
+
+    private func about(_ count: Int) -> String {
+        var parts: [String] = []
+        if let author = playlist.author { parts.append("By \(author)") }
+        if count > 0 { parts.append(count == 1 ? "1 song" : "\(count) songs") }
+        parts.append("Nothing is saved unless you click Download")
+        return parts.joined(separator: " · ")
     }
 }

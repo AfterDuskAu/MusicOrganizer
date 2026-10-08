@@ -169,6 +169,11 @@ final class AppModel {
     private(set) var playlistsNote: String?
     private(set) var playlistsAsked = false
     private var playlistsRound = 0
+    /// The found playlist that's open, its songs, and how reading it went.
+    private(set) var openedPlaylist: FoundPlaylist?
+    private(set) var playlistSongs: [ImportCandidate] = []
+    private(set) var readingPlaylist = false
+    private(set) var playlistProblem2: String?
     /// What had been played when the playlists on the page were found (`Listening.playedStamp`).
     private(set) var playlistsStamp = ""
     /// Discover → Import Playlists: a playlist from elsewhere, and what was found of it.
@@ -1150,6 +1155,7 @@ final class AppModel {
         libraryVersion += 1
         for page in [whatsNew, find, remixes] { page.reset() }
         (foundPlaylists, playlistsProblem, playlistsNote, playlistsAsked) = ([], nil, nil, false)
+        closePlaylist()
         importing.reset()
         artistBrowser.reset()
         for key in Array(pageChanges.keys) { forgetPageChange(key) }
@@ -1490,9 +1496,35 @@ final class AppModel {
         }
     }
 
-    /// A playlist found for the owner is read on the Import Playlists page, where its
-    /// songs can be played, picked over and downloaded.
+    /// A playlist found for the owner is opened where it was found: its songs, to play
+    /// (one, or all of them) and to queue or download one at a time. Nothing is
+    /// downloaded for opening it (the owner, 2026-10-08).
     func open(_ playlist: FoundPlaylist) {
+        (openedPlaylist, playlistSongs, playlistProblem2) = (playlist, [], nil)
+        readingPlaylist = true
+        Task {
+            defer { if openedPlaylist == playlist { readingPlaylist = false } }
+            do {
+                let read = try await readImport(.youtube(link: playlist.link))
+                guard openedPlaylist == playlist else { return }
+                // A playlist's entries are the tracks themselves: none needs finding.
+                playlistSongs = read.tracks.compactMap(\.candidate)
+                if playlistSongs.isEmpty { playlistProblem2 = "This playlist has no songs that can be played." }
+            } catch {
+                if openedPlaylist == playlist { playlistProblem2 = error.localizedDescription }
+            }
+        }
+    }
+
+    /// Back to the playlists.
+    func closePlaylist() {
+        (openedPlaylist, playlistSongs, playlistProblem2, readingPlaylist) = (nil, [], nil, false)
+    }
+
+    /// The whole playlist brought across as one of the owner's own, on Import
+    /// Playlists: that page finds and downloads its songs when they say so.
+    func importOpenedPlaylist() {
+        guard let playlist = openedPlaylist else { return }
         importing.open(.youtube(link: playlist.link))
         goTo = .importPlaylists
     }
