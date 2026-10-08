@@ -265,21 +265,27 @@ def library_info(lib: Library) -> dict[str, str]:
 def kept_media(folders: dict[str, Path]) -> list[tuple[dict[str, Any], SharedFile]]:
     """The films and videos the owner keeps outside the library (`config.media_folders`),
     as the list names them: `movie` for what's in the Movies folder, `video` for what's
-    in Downloads/Media. Only looked at, never changed.
+    in the videos folder. Only looked at, never changed.
 
     Only real files of a kind a phone plays are listed. A link to somewhere else isn't
     followed, so nothing outside these two folders can be given out; hidden files and
     other programs' own folders (a Final Cut or TV library) are left alone."""
     found: list[tuple[dict[str, Any], SharedFile]] = []
-    for kind, name in (("movie", "movies"), ("video", "media")):
-        top = folders.get(name)
+    tops = {kind: folders.get(name) for kind, name in (("movie", "movies"), ("video", "media"))}
+    for kind, top in tops.items():
         if top is None:
             continue
+        # One kind's folder may be inside the other's (Videos, in Movies): what's in it
+        # is listed once, as its own kind.
+        others = {_folder_key(t) for k, t in tops.items() if k != kind and t is not None}
+        if _folder_key(top) in others and kind == "video":
+            continue  # the same folder for both: everything in it is a movie
         for folder, inside, names in os.walk(top, followlinks=False):
             inside[:] = sorted(
                 d for d in inside
                 if not d.startswith(".") and Path(d).suffix.lower() not in NOT_OURS
                 and not (Path(folder) / d).is_symlink()
+                and _folder_key(Path(folder) / d) not in others
             )  # fmt: skip
             for file_name in sorted(names):
                 path = Path(folder) / file_name
@@ -299,6 +305,10 @@ def kept_media(folders: dict[str, Path]) -> list[tuple[dict[str, Any], SharedFil
                          "added": added, "video": main.listed()}  # fmt: skip
                 found.append((entry, main))
     return found
+
+
+def _folder_key(folder: Path) -> str:
+    return os.path.normcase(os.path.abspath(folder))
 
 
 def the_list(

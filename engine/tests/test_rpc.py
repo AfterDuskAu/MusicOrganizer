@@ -23,7 +23,7 @@ import pytest
 from conftest import require_tool
 from index_support import add_candidates, add_item, add_source, candidate
 
-from musicorg import library, queue, rpc, youtube
+from musicorg import config, library, queue, rpc, youtube
 from musicorg.index import open_index
 
 ENGINE = Path(__file__).resolve().parents[1]
@@ -644,8 +644,15 @@ def test_stream_jobs_and_the_new_plan_kinds(
 
 
 def test_settings(opened: rpc.Server) -> None:
+    home = config.app_dirs().config.parent
+    usual = {
+        "movies_folder": str(home / "Movies"),
+        "videos_folder": str(home / "Movies" / "Videos"),
+    }
     assert result(opened, "settings.get") == {
-        "daily_cap": 250, "daily_cap_default": 250, "daily_cap_max": 500,
+        "daily_cap": 250, "daily_cap_default": 250, "daily_cap_max": 500, **usual,
+        "movies_folder_default": usual["movies_folder"],
+        "videos_folder_default": usual["videos_folder"],
     }  # fmt: skip
     assert result(opened, "settings.set", daily_cap=120)["daily_cap"] == 120
     assert result(opened, "settings.get")["daily_cap"] == 120
@@ -727,3 +734,34 @@ def test_the_daily_limit_ends_the_run_with_a_time_to_start_again(
     opened.start_queue()
     wait_queue(opened)
     assert asked == [later]
+
+
+def test_where_kept_movies_and_videos_go_can_be_chosen(
+    opened: rpc.Server, root: Path, tmp_path: Path
+) -> None:
+    usual = result(opened, "settings.get")
+    films, clips = tmp_path / "Big Disk" / "Films", tmp_path / "Big Disk" / "Clips"
+    films.mkdir(parents=True)
+    clips.mkdir()
+    said = result(opened, "settings.set", movies_folder=str(films))
+    assert (said["movies_folder"], said["videos_folder"]) == (str(films), usual["videos_folder"])
+    assert said["movies_folder_default"] == usual["movies_folder"]
+    said = result(opened, "settings.set", videos_folder=str(clips))
+    assert (said["movies_folder"], said["videos_folder"]) == (str(films), str(clips))
+    assert config.media_folders() == {"movies": films, "media": clips}
+    assert said["daily_cap"] == usual["daily_cap"]  # nothing else is touched
+
+    # Not a folder that isn't there, and never one inside the library.
+    assert code(opened, "settings.set", movies_folder=str(tmp_path / "nowhere")) == rpc.USER_ERROR
+    inside = root / "Music"
+    inside.mkdir(exist_ok=True)
+    assert code(opened, "settings.set", videos_folder=str(inside)) == rpc.USER_ERROR
+    assert code(opened, "settings.set", videos_folder=str(root)) == rpc.USER_ERROR
+    assert config.media_folders() == {"movies": films, "media": clips}
+
+    # "": the usual folder again, each by itself.
+    said = result(opened, "settings.set", movies_folder="")
+    assert (said["movies_folder"], said["videos_folder"]) == (usual["movies_folder"], str(clips))
+    assert (
+        result(opened, "settings.set", videos_folder="")["videos_folder"] == usual["videos_folder"]
+    )

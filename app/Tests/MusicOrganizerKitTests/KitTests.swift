@@ -191,13 +191,13 @@ final class LibraryTests: XCTestCase {
         XCTAssertEqual(found[1].problem, "duration mismatch")
         XCTAssertEqual(PendingDownload(jobId: 1, state: "queued").progressNote, "Waiting its turn…")
         XCTAssertEqual(PendingDownload(jobId: 1, state: "failed", message: "No.").problem, "No.")
-        // What kind of download the list says it is; one kept in Downloads says so.
+        // What kind of download the list says it is; one kept outside the library says so.
         XCTAssertEqual(PendingDownload(jobId: 1, state: "queued").kind, "Song")
         XCTAssertEqual(
             PendingDownload(jobId: 1, state: "queued", video: true, height: 720).kind, "Video, 720p")
         XCTAssertEqual(
             PendingDownload(jobId: 1, state: "queued", video: true, height: 1080, kept: true).kind,
-            "Video, up to 1080p · to Downloads")
+            "Video, up to 1080p · to Videos")
         XCTAssertEqual(PendingDownload.keptHeight(upTo: 2160), 1080)
         XCTAssertEqual(PendingDownload.keptHeight(upTo: 700), 480)
         XCTAssertEqual(PendingDownload.keptHeight(upTo: 100), 144)
@@ -1799,6 +1799,9 @@ final class VideoFilesTests: XCTestCase {
         XCTAssertEqual(found.map(\.kind), ["AVI", "MKV"])
         XCTAssertEqual(found.first?.bytes, 1)
         XCTAssertEqual(VideoFiles.inside(folder.appendingPathComponent("missing")), [])
+        // One folder inside can be left out (Videos, in Movies: it has a page of its own).
+        XCTAssertEqual(VideoFiles.inside(folder, leavingOut: inner).map(\.name), ["b film"])
+        XCTAssertEqual(VideoFiles.inside(inner, leavingOut: inner).map(\.name), ["a film"])
     }
 }
 

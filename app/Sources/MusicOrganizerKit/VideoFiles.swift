@@ -24,7 +24,13 @@ public enum VideoFiles {
 
     /// The video files in a folder and the folders inside it, by name. Hidden files,
     /// and what's inside a package (a Final Cut library, say), are left alone.
-    public static func inside(_ folder: URL) -> [File] {
+    public static func inside(_ folder: URL) -> [File] { inside(folder, leavingOut: nil) }
+
+    /// The same, without what's in one folder inside it (Videos, in Movies, which has a
+    /// page of its own).
+    public static func inside(_ folder: URL, leavingOut other: URL?) -> [File] {
+        let skipped = other.map { $0.standardizedFileURL.path }
+        let top = folder.standardizedFileURL.path
         let keys: [URLResourceKey] = [.isRegularFileKey, .fileSizeKey]
         guard
             let walker = FileManager.default.enumerator(
@@ -32,7 +38,12 @@ public enum VideoFiles {
                 options: [.skipsHiddenFiles, .skipsPackageDescendants])
         else { return [] }
         var found: [File] = []
-        for case let url as URL in walker where isVideo(url) {
+        for case let url as URL in walker {
+            if let skipped, skipped != top, url.standardizedFileURL.path == skipped {
+                walker.skipDescendants()
+                continue
+            }
+            guard isVideo(url) else { continue }
             let values = try? url.resourceValues(forKeys: Set(keys))
             guard values?.isRegularFile == true else { continue }
             found.append(File(url: url, bytes: Int64(values?.fileSize ?? 0)))

@@ -79,21 +79,37 @@ def app_dirs() -> AppDirs:
     )
 
 
+MEDIA_KINDS = ("movies", "media")
+
+
+def default_media_folders() -> dict[str, Path]:
+    """Where kept films and videos go until the owner chooses somewhere else: films in
+    the computer's own Movies folder (Videos on Windows), and videos that aren't music
+    in `Videos` inside it (the owner, 2026-10-08; before that, `Media` in Downloads).
+    With `MUSICORG_HOME` set (every test), both are inside that folder, so the real
+    ones are never touched."""
+    home = os.environ.get(HOME_ENV)
+    movies = Path(home).expanduser() / "Movies" if home else Path(platformdirs.user_videos_dir())
+    return {"movies": movies, "media": movies / "Videos"}
+
+
 def media_folders() -> dict[str, Path]:
-    """Where films and videos the owner keeps are put, outside the library (the owner,
-    2026-10-07): films in the computer's own Movies folder (Videos on Windows), and
-    videos that aren't music in `Media` inside Downloads. With `MUSICORG_HOME` set (every
-    test), both are inside that folder, so the real ones are never touched.
+    """Where films (`movies`) and videos that aren't music (`media`) the owner keeps are
+    put, outside the library: the folders chosen in the app's Settings → Downloads
+    (config.json), or else the usual ones (`default_media_folders`).
 
     Nothing is created here: `fileops.keep_media` makes a folder when it first saves."""
-    home = os.environ.get(HOME_ENV)
-    if home:
-        base = Path(home).expanduser()
-        return {"movies": base / "Movies", "media": base / "Downloads" / "Media"}
-    return {
-        "movies": Path(platformdirs.user_videos_dir()),
-        "media": Path(platformdirs.user_downloads_dir()) / "Media",
-    }
+    folders = default_media_folders()
+    try:
+        chosen = Config.load().data.get("media_folders")
+    except ConfigError:
+        chosen = None
+    if isinstance(chosen, dict):
+        for kind in MEDIA_KINDS:
+            value = chosen.get(kind)
+            if isinstance(value, str) and value and Path(value).expanduser().is_absolute():
+                folders[kind] = Path(value).expanduser()
+    return folders
 
 
 def config_path() -> Path:
@@ -499,6 +515,26 @@ def _fsync_dir(folder: Path) -> None:
         pass
     finally:
         os.close(fd)
+
+
+def save_media_folder(kind: str, folder: Path | None) -> Config:
+    """Set where kept films (`movies`) or kept videos (`media`) go, in config.json.
+    None: the usual folder again. Only the choice is written; no folder is made."""
+    if kind not in MEDIA_KINDS:
+        raise ValueError(f"not a kind of kept media: {kind!r}")
+    config = Config.load()
+    chosen = config.data.get("media_folders")
+    if not isinstance(chosen, dict):
+        chosen = config.data["media_folders"] = {}
+    if folder is None:
+        chosen.pop(kind, None)
+    else:
+        folder = folder.expanduser()
+        if not folder.is_absolute() or not folder.is_dir():
+            raise ConfigError(f"{folder} isn't a folder on this computer.")
+        chosen[kind] = str(folder)
+    config.save()
+    return config
 
 
 def save_daily_cap(downloads: int) -> Config:

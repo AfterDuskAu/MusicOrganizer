@@ -350,6 +350,12 @@ public struct EngineSettings: Decodable, Equatable, Sendable {
     public let dailyCap: Int
     public let dailyCapDefault: Int
     public let dailyCapMax: Int
+    /// Where kept movies and kept videos go (outside the library), and the usual places.
+    /// Nil from an engine that doesn't say.
+    public let moviesFolder: String?
+    public let videosFolder: String?
+    public let moviesFolderDefault: String?
+    public let videosFolderDefault: String?
 }
 
 public struct PlanAnswer: Decodable, Sendable {
@@ -455,7 +461,7 @@ public struct PendingDownload: Decodable, Identifiable, Equatable, Sendable {
     public let title: String?
     public let artists: [String]
     public let video: Bool
-    /// A video that isn't music, on its way to Media in Downloads, not into the library.
+    /// A video that isn't music, on its way to the Videos folder, not into the library.
     public let kept: Bool?
     public let height: Int?
     public let fps: Int?
@@ -491,11 +497,11 @@ public struct PendingDownload: Decodable, Identifiable, Equatable, Sendable {
     public var isKept: Bool { kept == true }
     public var name: String { title ?? videoId ?? "Download" }
     /// What kind of download it is, for the list: "Song", "Video, 720p", and for one
-    /// going to Media in Downloads, "Video, up to 1080p · to Downloads".
+    /// kept outside the library, "Video, up to 1080p · to Videos".
     public var kind: String {
         guard video else { return "Song" }
-        guard let height else { return isKept ? "Video · to Downloads" : "Video" }
-        return isKept ? "Video, up to \(height)p · to Downloads" : "Video, \(height)p"
+        guard let height else { return isKept ? "Video · to Videos" : "Video" }
+        return isKept ? "Video, up to \(height)p · to Videos" : "Video, \(height)p"
     }
     /// The sizes a kept video's picture may be asked for at most (the engine's list).
     public static let keptHeights = [144, 240, 360, 480, 720, 1080]

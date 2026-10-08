@@ -33,8 +33,8 @@ struct SharingSettings: View {
                         + "read: nothing in the library is changed. Off: nothing is listening.")
                 if wanted {
                     SideNote(
-                        "Movies and videos: the MP4, M4V and MOV files in this Mac's Movies "
-                            + "folder and in Media in Downloads, whoever put them there. "
+                        "Movies and videos: the MP4, M4V and MOV files in your Movies "
+                            + "folder and your Videos folder, whoever put them there. "
                             + "Other kinds (MKV, AVI) are left out, because a phone can't "
                             + "play them: Settings → Downloads converts a movie as it's kept.")
                 }

@@ -1038,6 +1038,7 @@ final class AppModel {
             watchDownloads()
             watchDailyLimit()
             loadAccounts()
+            loadSettings()  // where kept movies and videos go, for the pages that list them
             // Sharing is this profile's own switch in Settings, off until it's switched
             // on there. The engine never shares by itself: it's told each time.
             if sharingWanted, let connection = engine?.connection {
@@ -2189,6 +2190,47 @@ final class AppModel {
         guard let connection = engine?.connection else { return }
         Task {
             engineSettings = try? await connection.call("settings.get", as: EngineSettings.self)
+        }
+    }
+
+    /// Where kept movies go: the folder chosen in Settings → Downloads, or the Mac's own
+    /// Movies folder.
+    var moviesFolder: URL? {
+        if let chosen = engineSettings?.moviesFolder { return URL(fileURLWithPath: chosen) }
+        return FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first
+    }
+
+    /// Where videos that aren't music go: the folder chosen, or Videos in the Movies folder.
+    var videosFolder: URL? {
+        if let chosen = engineSettings?.videosFolder { return URL(fileURLWithPath: chosen) }
+        return moviesFolder?.appendingPathComponent("Videos", isDirectory: true)
+    }
+
+    /// Settings → Downloads: choose where kept movies ("movies_folder") or kept videos
+    /// ("videos_folder") go. The engine keeps the choice; nothing already kept is moved.
+    func chooseMediaFolder(_ setting: String, named name: String) {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.canCreateDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.message = "Choose the folder your \(name) are kept in."
+        panel.prompt = "Choose"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        setMediaFolder(setting, url.path)
+    }
+
+    /// "": the usual folder again.
+    func setMediaFolder(_ setting: String, _ path: String) {
+        guard let connection = engine?.connection else { return }
+        Task {
+            do {
+                engineSettings = try await connection.call(
+                    "settings.set", [setting: path], as: EngineSettings.self)
+                keptArrived += 1  // the pages that list these folders look again
+            } catch {
+                notice = error.localizedDescription
+            }
         }
     }
 

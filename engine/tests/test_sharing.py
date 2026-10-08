@@ -811,3 +811,16 @@ def test_the_app_switches_kept_films(opened: rpc.Server) -> None:  # noqa: F811
     assert result(opened, "sharing.set", on=False)["films"] is False
     assert result(opened, "sharing.set", on=True, films=True)["films"] is True
     result(opened, "sharing.set", on=False)
+
+
+def test_videos_kept_inside_the_movies_folder_are_listed_once(filled: Library) -> None:
+    folders = config.media_folders()
+    assert folders["media"].parent == folders["movies"]  # Videos, in Movies: the usual places
+    keep(folders["movies"], "A Film.mp4")
+    keep(folders["media"], "A Clip.mp4")
+    keep(folders["media"], "Channel/Another Clip.mp4")
+    found = {entry["title"]: entry["kind"] for entry, _ in sharing.kept_media(folders)}
+    assert found == {"A Film": "movie", "A Clip": "video", "Another Clip": "video"}
+    # One folder chosen for both: everything in it is a movie, once.
+    same = sharing.kept_media({"movies": folders["media"], "media": folders["media"]})
+    assert sorted(entry["kind"] for entry, _ in same) == ["movie", "movie"]

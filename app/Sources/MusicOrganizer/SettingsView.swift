@@ -301,6 +301,27 @@ private struct DownloadSettings: View {
     /// The limit moves in steps of this many.
     private static let step = 50
 
+    /// One of the two folders outside the library, with Select… and, once it's been
+    /// changed, a way back to the usual one.
+    private func mediaFolder(
+        _ title: String, _ path: String?, usual: String?, setting: String, named name: String
+    ) -> some View {
+        LabeledContent(title) {
+            VStack(alignment: .trailing, spacing: 4) {
+                Text(path ?? "Not known yet")
+                    .lineLimit(2)
+                    .truncationMode(.middle)
+                    .textSelection(.enabled)
+                HStack {
+                    if let path, let usual, path != usual {
+                        Button("Use the Usual Folder") { model.setMediaFolder(setting, "") }
+                    }
+                    Button("Select…") { model.chooseMediaFolder(setting, named: name) }
+                }
+            }
+        }
+    }
+
     var body: some View {
         @Bindable var model = model
         let settings = model.engineSettings
@@ -347,7 +368,19 @@ private struct DownloadSettings: View {
                 }
                 SideNote(
                     "This profile's library. Songs are kept in its Music folder by artist and "
-                        + "album, and videos in Music/Videos.")
+                        + "album, and music videos in Music/Videos.")
+                mediaFolder(
+                    "Videos folder", settings?.videosFolder, usual: settings?.videosFolderDefault,
+                    setting: "videos_folder", named: "videos")
+                SideNote(
+                    "Videos you download that aren't music (from a channel or Video Finder) "
+                        + "go here. Videos → Channel lists them.")
+                mediaFolder(
+                    "Movies folder", settings?.moviesFolder, usual: settings?.moviesFolderDefault,
+                    setting: "movies_folder", named: "movies")
+                SideNote(
+                    "Movies you keep go here. Videos → Movies lists them. Choosing another "
+                        + "folder moves nothing: what's already kept stays where it is.")
             }
             Section {
                 Toggle(
@@ -371,8 +404,8 @@ private struct DownloadSettings: View {
                 .pickerStyle(.radioGroup)
                 .disabled(true)
                 SideNote(
-                    "Standard is 128 kbps AAC. The service Premium offers 256. Signing in to your "
-                        + "account with the service will turn this on; that isn't built yet.")
+                    "Standard is 128 kbps AAC. A Premium account offers 256. Signing in to your "
+                        + "YouTube account will turn this on; that isn't built yet.")
             }
             Section {
                 if let settings {

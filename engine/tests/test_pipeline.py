@@ -4498,7 +4498,7 @@ def test_edits_that_are_refused(lib: Library, index: Index, adopted: Path) -> No
         pipeline.plan_edit(lib, index, "../elsewhere.mp3", changes={"title": "X"})
 
 
-# ---- a video that isn't music, kept in Downloads (2026-10-07) ----------------------------
+# ---- a video that isn't music, kept outside the library (2026-10-07) ----------------------------
 
 KEPT = {"video_id": VIDEO_V, "title": "Speedrun: World  Record", "channel": "Some Channel",
         "duration_s": SECONDS, "thumbnail": "https://example.invalid/frame.jpg",
@@ -4506,22 +4506,22 @@ KEPT = {"video_id": VIDEO_V, "title": "Speedrun: World  Record", "channel": "Som
 
 
 def media_files(home: Path) -> list[str]:
-    folder = home / "Downloads" / "Media"
+    folder = home / "Movies" / "Videos"
     return sorted(p.name for p in folder.iterdir()) if folder.is_dir() else []
 
 
 @pytest.fixture
 def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """A stand-in for the owner's home folder, with a Downloads folder in it."""
+    """A stand-in for the owner's home folder, with a Movies folder in it."""
     from musicorg import config
 
     found = tmp_path / "home"
-    (found / "Downloads").mkdir(parents=True)
+    (found / "Movies").mkdir(parents=True)
     monkeypatch.setenv(config.HOME_ENV, str(found))
     return found
 
 
-def test_a_video_that_isnt_music_is_kept_in_downloads_not_the_library(
+def test_a_video_that_isnt_music_is_kept_outside_the_library(
     lib: Library, index: Index, videos: FakeVideoDownloads, home: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:  # fmt: skip
@@ -4543,10 +4543,10 @@ def test_a_video_that_isnt_music_is_kept_in_downloads_not_the_library(
     # The largest picture up to the size asked for, through the paced queue, counted.
     assert videos.calls == [(VIDEO_V, 1080, None)] and videos.at_most is True
     assert queue.status(lib.paths)["daily_count"] == 1
-    # In Downloads/Media under its title (made a safe file name), exactly as delivered.
+    # In Movies/Videos under its title (made a safe file name), exactly as delivered.
     (name,) = media_files(home)
     assert name.startswith("Speedrun") and name.endswith("World Record.mp4")
-    kept = home / "Downloads" / "Media" / name
+    kept = home / "Movies" / "Videos" / name
     assert kept.read_bytes() == videos.source.read_bytes()
     # Nothing went into the library, the index, or stayed behind in staging.
     assert music_files(lib) == [] and index.library_tracks() == []

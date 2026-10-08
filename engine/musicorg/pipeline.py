@@ -2215,7 +2215,7 @@ def _keep_video_op(wanted: object) -> fileops.PlanOp:
 
 def _keep_video(ctx: JobContext, op: fileops.PlanOp) -> Outcome:
     """Keep a video that isn't music: downloaded like any other, then copied out of this
-    job's staging folder into Media in Downloads by `fileops.keep_media` (contract,
+    job's staging folder into the videos folder by `fileops.keep_media` (contract,
     section 1). Nothing goes into the library, and the index isn't told."""
     video_id = str(op.params["video_id"])
     wanted = op.params["candidate"]

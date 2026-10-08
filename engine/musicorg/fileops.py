@@ -2360,7 +2360,7 @@ def keep_media(
 ) -> Path:
     """Copy a finished film or video the owner asked to keep out of the app's cache and
     into one of the places kept media goes (contract section 1: the Movies folder, and
-    Media in Downloads), and return where it is. The other writer, with `write_export`,
+    the videos folder), and return where it is. The other writer, with `write_export`,
     that puts a file outside the library.
 
     - `source` must be a file inside `cache` (the app's own cache folder): nothing else

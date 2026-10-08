@@ -77,8 +77,10 @@ from musicorg.config import (
     THROTTLE_DEFAULTS,
     Config,
     app_dirs,
+    default_media_folders,
     media_folders,
     save_daily_cap,
+    save_media_folder,
 )
 from musicorg.errors import (
     LibraryLockedError,
@@ -131,6 +133,11 @@ def _settings(config: Config) -> dict[str, Any]:
         "daily_cap": config.throttle()["daily_cap"],
         "daily_cap_default": THROTTLE_DEFAULTS["daily_cap"],
         "daily_cap_max": MAX_DAILY_CAP,
+        # Where kept films and videos go (outside the library), and the usual places.
+        "movies_folder": str(media_folders()["movies"]),
+        "videos_folder": str(media_folders()["media"]),
+        "movies_folder_default": str(default_media_folders()["movies"]),
+        "videos_folder_default": str(default_media_folders()["media"]),
     }
 
 
@@ -880,8 +887,32 @@ class Server:
     def settings_set(self, params: dict[str, Any]) -> dict[str, Any]:
         cap = want(params, "daily_cap", int)
         if cap is not None:
-            return _settings(save_daily_cap(cap))  # config.py does its own writing (rule 3)
+            save_daily_cap(cap)  # config.py does its own writing (rule 3)
+        for name, kind in (("movies_folder", "movies"), ("videos_folder", "media")):
+            chosen = want(params, name, str)
+            if chosen is None:
+                continue
+            folder = Path(chosen) if chosen else None  # "": the usual folder again
+            if folder is not None:
+                self._check_media_folder(folder)
+            save_media_folder(kind, folder)
+            if kind == "movies" and self._films is not None:
+                self._films.movies = media_folders()["movies"]  # the next film kept
         return _settings(Config.load())
+
+    def _check_media_folder(self, folder: Path) -> None:
+        """A folder for kept films or videos is never inside a library: nothing but the
+        library's own files goes there (`fileops.keep_media` refuses it too)."""
+        lib = self.lib
+        if lib is None:
+            return
+        root, wanted = lib.root.resolve(), folder.expanduser().resolve()
+        if wanted == root or root in wanted.parents:
+            raise RpcError(
+                USER_ERROR,
+                "That folder is inside your music library. Movies and videos are kept "
+                "outside it: choose another folder.",
+            )
 
     # -- methods: add-ons, where movies and channels are listed (2026-10-07) --
     # Lookups only: nothing is played, downloaded or written in the library.

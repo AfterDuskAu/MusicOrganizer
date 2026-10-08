@@ -605,7 +605,7 @@ private struct VideoCard: View {
     }
 }
 
-/// The videos downloaded from channels (Media, in Downloads), as cards.
+/// The videos downloaded from channels (the Videos folder), as cards.
 private struct DownloadedVideoCards: View {
     @Environment(AppModel.self) private var model
     @State private var files: [VideoFiles.File] = []
@@ -627,8 +627,8 @@ private struct DownloadedVideoCards: View {
                 }
             }
         }
-        .task(id: model.keptArrived) {
-            let folder = ChannelsView.keptFolder
+        .task(id: "\(model.keptArrived) \(model.videosFolder?.path ?? "")") {
+            let folder = model.videosFolder
             files = await Task.detached { folder.map(VideoFiles.inside) ?? [] }.value
             looked = true
         }

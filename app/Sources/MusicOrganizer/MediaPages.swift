@@ -476,14 +476,10 @@ struct VideoFinderView: View {
 struct ChannelsView: View {
     @Environment(AppModel.self) private var model
     @State private var opened: ChannelRef?
-    /// The videos downloaded from channels and Video Finder: Media, in the Downloads folder.
+    /// The videos downloaded from channels and Video Finder: the Videos folder
+    /// (`AppModel.videosFolder`).
     @State private var kept: [VideoFiles.File] = []
     @State private var looked = false
-
-    static var keptFolder: URL? {
-        FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first?
-            .appendingPathComponent("Media", isDirectory: true)
-    }
 
     var body: some View {
         let channels = model.followedChannels
@@ -560,8 +556,8 @@ struct ChannelsView: View {
             }
         }
         // Looked at again whenever a video has just arrived.
-        .task(id: model.keptArrived) {
-            let folder = Self.keptFolder
+        .task(id: "\(model.keptArrived) \(model.videosFolder?.path ?? "")") {
+            let folder = model.videosFolder
             kept = await Task.detached { folder.map(VideoFiles.inside) ?? [] }.value
             looked = true
         }
@@ -1013,10 +1009,6 @@ struct MoviesView: View {
     @State private var files: [VideoFiles.File] = []
     @State private var looked = false
 
-    private static var folder: URL? {
-        FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first
-    }
-
     var body: some View {
         let count = files.count
         VStack(spacing: 0) {
@@ -1048,7 +1040,7 @@ struct MoviesView: View {
             }
         }
         // Looked at again whenever a film or a video has just been kept.
-        .task(id: model.keptArrived) { await look() }
+        .task(id: "\(model.keptArrived) \(model.moviesFolder?.path ?? "")") { await look() }
         .task {
             // For checking the player without a click: MUSICORG_FILM=<file> plays it once,
             // silently; MUSICORG_FILM=torrent:<info-hash>:<file number> plays that torrent.
@@ -1072,8 +1064,12 @@ struct MoviesView: View {
 
     /// Off the main thread: a big folder takes a moment to walk.
     private func look() async {
-        let movies = Self.folder
-        files = await Task.detached { movies.map(VideoFiles.inside) ?? [] }.value
+        // Videos has a page of its own (Videos → Channel), so what's in it isn't listed here.
+        let movies = model.moviesFolder
+        let videos = model.videosFolder
+        files = await Task.detached {
+            movies.map { VideoFiles.inside($0, leavingOut: videos) } ?? []
+        }.value
         looked = true
     }
 

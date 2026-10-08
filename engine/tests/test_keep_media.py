@@ -109,7 +109,7 @@ def test_a_copy_that_fails_leaves_nothing_behind(
 def test_the_places_are_inside_the_tests_own_folder() -> None:
     home = config.app_dirs().config.parent
     assert config.media_folders() == {
-        "movies": home / "Movies", "media": home / "Downloads" / "Media"}  # fmt: skip
+        "movies": home / "Movies", "media": home / "Movies" / "Videos"}  # fmt: skip
 
 
 class Handle:
