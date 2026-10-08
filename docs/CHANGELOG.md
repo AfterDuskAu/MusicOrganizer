@@ -949,6 +949,15 @@
 - **Checked:** `swift build`, `swift test` (104; three new for the rows and layout, the history, and favourites). In the owner's app: Home with the drawing's rows filled (songs, channels, movies, series), the Overview, and a series clicked on Home opening in Series Finder with its heart.
 - **Not checked:** the Continue and Recently Watched rows with anything in them (nothing has been watched since they were made), carrying on a video from Home, the heart being clicked, More on each row, the genre rows, and the Overview's arrows and ticks being used.
 
+2026-10-08, about 11:25am. **Home, after the owner tried it.**
+
+- **View More** (was More) is a button like Overview, on the row's title line. At the end of the sliding row a click on it went to the card underneath (the owner: "it only selected the movie/song/series that is behind it"); on its own line nothing is under it. View More on Recommended Songs opens Explore on What's New, whichever tab was left showing.
+- **Song cards have the artist button,** beside the artist's name, as on Explore.
+- **A search by two genres can be a row on Home.** In Movie Finder and Series Finder, a + beside the second genre adds it (a tick, once it's there; click again to take it off). On Home it's "Custom Search Documentary + Crime" (`HomeSection.custom`), and it's in the Overview's list of what's on the page, where it can be moved or taken off. Its View More opens the Finder at those two genres.
+- **Also:** the Finder's title no longer wraps when its menus need the room.
+- **Checked:** `swift test` (104). In the owner's app: the View More buttons, one clicked (it opened Explore); the artist buttons on the song cards; the + clicked for Documentary and Crime in Movie Finder, and the row on Home with its films. (That row was left on the owner's Home.)
+- **Not checked:** View More with a real mouse click (the checking tools press a button by its name, which never showed the fault the owner found), and taking a custom row off again.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

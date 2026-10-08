@@ -98,23 +98,20 @@ private struct HomeRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(section.title).font(.title3.weight(.semibold)).heading()
-                .padding(.horizontal, 20)
-            HStack(alignment: .center, spacing: 6) {
-                ScrollView(.horizontal) {
-                    LazyHStack(alignment: .top, spacing: 16) { cards }
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 4)
-                }
-                Button {
-                    more()
-                } label: {
-                    Label("More", systemImage: "arrow.right")
-                        .labelStyle(.titleAndIcon)
-                }
-                .buttonStyle(.borderless)
-                .padding(.trailing, 16)
-                .help("Open the page this row is from")
+            // View More sits on the row's own line, clear of the cards: at the end of
+            // the sliding row a click on it went to the card underneath (the owner,
+            // 2026-10-08).
+            HStack(alignment: .firstTextBaseline) {
+                Text(section.title).font(.title3.weight(.semibold)).heading()
+                Spacer()
+                Button("View More", systemImage: "arrow.right") { more() }
+                    .help("Open the page this row is from")
+            }
+            .padding(.horizontal, 20)
+            ScrollView(.horizontal) {
+                LazyHStack(alignment: .top, spacing: 16) { cards }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 4)
             }
             .frame(height: height)
         }
@@ -172,7 +169,7 @@ private struct HomeRow: View {
                     }
             }
             ForEach(Array(picks.enumerated()), id: \.element.id) { index, pick in
-                SongCard(track: pick.result.track, under: pick.artistName) {
+                SongCard(track: pick.result.track, under: pick.artistName, artist: pick.artists.first) {
                     model.player.play(picks.map(\.result.track), startAt: index)
                 } extra: {
                     if model.canDownload(pick) {
@@ -185,7 +182,7 @@ private struct HomeRow: View {
             let tracks = Array(tracks.prefix(Self.most))
             if tracks.isEmpty { note(emptySongs) }
             ForEach(Array(tracks.enumerated()), id: \.element.id) { index, track in
-                SongCard(track: track, under: track.artist ?? "") {
+                SongCard(track: track, under: track.artist ?? "", artist: track.albumArtist ?? track.artist) {
                     model.player.play(tracks, startAt: index)
                 } extra: {
                     EmptyView()
@@ -359,7 +356,7 @@ private struct HomeRow: View {
                     let genre = recommended ? taste : section.genre
                     await list.load(
                         model, addon: source.addon, catalog: source.catalog,
-                        genre: source.catalog.genre(chosen: genre ?? ""))
+                        genre: source.catalog.genre(chosen: genre ?? ""), also: section.also ?? "")
                 }
         }
     }
@@ -382,7 +379,10 @@ private struct HomeRow: View {
     private func more() {
         switch (section.group, section.kind) {
         case (.songs, "favourites"): model.goTo = .favourites
-        case (.songs, "recommended"): model.goTo = .musicExplore
+        case (.songs, "recommended"):
+            // Explore's What's New is where these are from, whichever tab was left showing.
+            UserDefaults.standard.set(false, forKey: "musicExploreFind")
+            model.goTo = .musicExplore
         case (.songs, "mostPlayed"): model.goTo = .mostPlayed
         case (.songs, "recentlyAdded"): model.goTo = .recentlyAdded
         case (.songs, _): model.goTo = .downloads
@@ -391,13 +391,15 @@ private struct HomeRow: View {
         case (.movies, _), (.series, _):
             // A list's row opens that list in its Finder, at the row's genre.
             let name = section.group == .series ? "seriesFinder" : "movieFinder"
-            let wanted = ["new": "year", "best": "imdbRating", "popular": "top", "genre": "top"][section.kind]
+            let wanted = [
+                "new": "year", "best": "imdbRating", "popular": "top", "genre": "top", "custom": "top",
+            ][section.kind]
             if let wanted,
                 let source = model.media.catalogs(of: type).first(where: { $0.catalog.id == wanted })
             {
                 UserDefaults.standard.set("\(source.addon.id)|\(source.catalog.id)", forKey: "\(name)List")
                 UserDefaults.standard.set(section.genre ?? "", forKey: "\(name)Genre")
-                UserDefaults.standard.set("", forKey: "\(name)Also")
+                UserDefaults.standard.set(section.also ?? "", forKey: "\(name)Also")
             }
             model.goTo = section.group == .series ? .seriesFinder : .movieFinder
         }
@@ -411,6 +413,8 @@ private struct HomeRow: View {
 private struct SongCard<Extra: View>: View {
     let track: Track
     let under: String
+    /// Whose page the button beside the name opens.
+    let artist: String?
     let play: () -> Void
     @ViewBuilder let extra: () -> Extra
     @Environment(AppModel.self) private var model
@@ -432,7 +436,19 @@ private struct SongCard<Extra: View>: View {
             }
             .buttonStyle(.plain)
             Text(track.title).font(.callout.weight(playing ? .semibold : .medium)).lineLimit(1)
-            Text(under).font(.callout).foregroundStyle(.secondary).lineLimit(1)
+            // The artist's name, with the button for their page beside it, as on Explore.
+            HStack(spacing: 5) {
+                Text(under).font(.callout).foregroundStyle(.secondary).lineLimit(1)
+                if let artist, !artist.isEmpty {
+                    Button {
+                        model.showArtist(artist)
+                    } label: {
+                        Image(systemName: "person.crop.circle").foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Artist: about \(artist), their songs and albums")
+                }
+            }
             extra()
         }
         .frame(width: 130, alignment: .leading)
@@ -536,6 +552,9 @@ private struct HomeOverview: View {
                         HStack {
                             Text(section.title)
                             Text(section.group.title).foregroundStyle(.secondary)
+                            if section.kind == "custom" {
+                                Text("made in its Finder").foregroundStyle(.tertiary)
+                            }
                             Spacer()
                             Button("Move Up", systemImage: "chevron.up") {
                                 model.homeLayout.move(section.id, by: -1)

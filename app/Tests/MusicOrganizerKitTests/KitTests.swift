@@ -2073,6 +2073,20 @@ final class HomeTests: XCTestCase {
         layout.move("songs.recommended", by: -1)  // already first: stays
         XCTAssertEqual(layout.shown.first, "songs.recommended")
         XCTAssertEqual(layout.shown.suffix(2), ["movies.genre.Action", "series.popular"])
+        // A search by two genres, added from its Finder, is a row too.
+        let custom = HomeSection.custom(.series, "Documentary", "Crime")
+        XCTAssertEqual(custom.title, "Custom Search Documentary + Crime")
+        XCTAssertEqual(custom.kind, "custom")
+        XCTAssertEqual([custom.genre, custom.also], ["Documentary", "Crime"])
+        XCTAssertEqual(HomeSection(customID: custom.id), custom)
+        XCTAssertEqual(
+            HomeSection(customID: HomeSection.custom(.movies, "Sci-Fi", "Film & TV").id)?.also, "Film & TV")
+        for wrong in ["movies.genre.Action", "songs.custom.A|and|B", "movies.custom.A", "movies.custom.|and|B"] {
+            XCTAssertNil(HomeSection(customID: wrong))
+        }
+        layout.set(custom.id, shown: true)
+        XCTAssertEqual(layout.sections(from: all).last, custom)
+        layout.set(custom.id, shown: false)
         // A row that's no longer on offer (its genre went from the add-on) isn't drawn.
         XCTAssertFalse(
             layout.sections(from: HomeSection.all(movieGenres: [], seriesGenres: []))

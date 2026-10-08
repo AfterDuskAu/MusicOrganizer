@@ -628,6 +628,8 @@ struct MovieFinderView: View {
                 HStack(spacing: 12) {
                     Text(isSeries ? "Series Finder" : "Movie Finder")
                         .font(.title2.weight(.semibold)).heading()
+                        .lineLimit(1)
+                        .fixedSize()
                     if let chosen {
                         Picker("List", selection: Binding(get: { Self.key(chosen) }, set: { pick($0) })) {
                             ForEach(lists, id: \.catalog) { Text(Self.name($0)).tag(Self.key($0)) }
@@ -656,6 +658,22 @@ struct MovieFinderView: View {
                                 .labelsHidden()
                                 .fixedSize()
                                 .help("Only movies tagged with both genres")
+                                // Two genres chosen: the search can be a row on Home.
+                                if !also.isEmpty, also != first, chosen.catalog.genres.contains(also) {
+                                    let row = HomeSection.custom(isSeries ? .series : .movies, first, also)
+                                    let there = model.homeLayout.shows(row.id)
+                                    Button(
+                                        there ? "On Home" : "Add to Home",
+                                        systemImage: there ? "checkmark" : "plus"
+                                    ) {
+                                        model.homeLayout.set(row.id, shown: !there)
+                                    }
+                                    .labelStyle(.iconOnly)
+                                    .help(
+                                        there
+                                            ? "“\(row.title)” is a row on Home. Click to take it off."
+                                            : "Add this search to Home, as “\(row.title)”")
+                                }
                             }
                         }
                         Spacer()

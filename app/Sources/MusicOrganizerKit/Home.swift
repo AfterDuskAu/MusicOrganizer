@@ -30,10 +30,35 @@ public struct HomeSection: Identifiable, Hashable, Sendable {
     public let title: String
     /// A row of one genre ("movies.genre.Action"): the genre.
     public let genre: String?
+    /// A row the owner made from a search by two genres: the second genre.
+    public let also: String?
 
-    public init(id: String, group: Group, title: String, genre: String? = nil) {
-        (self.id, self.group, self.title, self.genre) = (id, group, title, genre)
+    public init(id: String, group: Group, title: String, genre: String? = nil, also: String? = nil) {
+        (self.id, self.group, self.title, self.genre, self.also) = (id, group, title, genre, also)
     }
+
+    /// A row made in Movie Finder or Series Finder from a search by two genres (the
+    /// owner, 2026-10-08): "Custom Search Documentary + Crime".
+    public static func custom(_ group: Group, _ genre: String, _ also: String) -> HomeSection {
+        HomeSection(
+            id: "\(group.rawValue).custom.\(genre)\(Self.joint)\(also)", group: group,
+            title: "Custom Search \(genre) + \(also)", genre: genre, also: also)
+    }
+
+    /// A custom row read back from its id (they aren't in the list of rows on offer:
+    /// the owner makes them). Nil for any other id.
+    public init?(customID id: String) {
+        let parts = id.split(separator: ".", maxSplits: 2).map(String.init)
+        guard parts.count == 3, parts[1] == "custom", let group = Group(rawValue: parts[0]),
+            group.mediaType != nil
+        else { return nil }
+        let genres = parts[2].components(separatedBy: Self.joint)
+        guard genres.count == 2, !genres[0].isEmpty, !genres[1].isEmpty else { return nil }
+        self = .custom(group, genres[0], genres[1])
+    }
+
+    /// Between a custom row's two genres in its id. (Not "+" or "&": genres have those.)
+    static let joint = "|and|"
 
     /// What kind of row it is, without its group or genre: "favourites", "continue",
     /// "genre" …
@@ -110,7 +135,7 @@ public struct HomeLayout: Equatable, Sendable {
     /// The rows to draw: the chosen ones that are still on offer, in order.
     public func sections(from all: [HomeSection]) -> [HomeSection] {
         let known = Dictionary(all.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        return shown.compactMap { known[$0] }
+        return shown.compactMap { known[$0] ?? HomeSection(customID: $0) }
     }
 
     public static let key = "homeLayout"
