@@ -744,6 +744,8 @@ struct MainView: View {
                 let words = String(step.name.dropFirst(7))
                 model.searching = !words.isEmpty
                 model.searchText = words
+            } else if step.name.hasPrefix("finder=") {
+                model.youtubeQuery = String(step.name.dropFirst(7))
             } else if !Bench.took(step.name) {
                 showNowPlaying = false
                 item = SidebarItem(key: step.name)

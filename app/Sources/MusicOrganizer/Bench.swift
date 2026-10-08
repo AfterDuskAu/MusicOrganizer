@@ -10,6 +10,7 @@ import AppKit
 /// "songs", "favourites", "youtube", "home", "settings"…), or one of:
 ///
 /// - `search=<words>`: the library search with these words in it (`search=` shuts it)
+/// - `finder=<words>`: these words in Music Finder's search box, as if typed (not searched for)
 /// - `hide`, `show`: the app hidden, and brought back
 /// - `shrink`, `grow`: the window put in the Dock, and brought back
 /// - `wait`: nothing, to see what the app does by itself

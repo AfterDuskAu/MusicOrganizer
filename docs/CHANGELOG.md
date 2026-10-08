@@ -1740,11 +1740,14 @@ Not seen in the running app.
 
 - **What it was.** Every page opened since the app started was kept inside the one window, the ones not showing moved far off to the side, so each came back exactly as it was left. Out of sight they were still part of the window: every click, every letter typed and every change of the window made macOS lay out all of them. A profile of the owner's copy after an hour's use: five clicks on the sidebar kept the app busy for 22 of 25 seconds, nearly all of it in SwiftUI's and AppKit's own layout, under 2% in the app's code. One click between two song lists cost about half a second in an app just opened, and many times that after an hour; one change to the search box, a second and a half and up. The Media Discovery pages (a grid of fifty cards, rows of posters) are the heaviest, which is why it got worse there.
 - **Each page is now a view of its own** (`PageHost`, `PageStore`). The page showing is in the window; every other page waits in a window that's never put on the screen, exactly as it was left (scroll place, selection, sort, what was typed), where nothing lays it out, draws it or tells it the window changed. Putting it back is one step however much is on it. A page told it isn't showing stops working things out, so a search typed on one list isn't run on five. Taken out of every window instead (tried, and a little faster), a page counted as closed and asked the add-ons and the music service again each time it was shown: not acceptable, so they're parked.
-- **Measured, same steps, same library** (the app's stall detector on real clicks, and the new `MUSICORG_BENCH`):
-  - A click between two song lists: about 0.5 s before in an app just opened, climbing with every page visited; 0.43 to 0.55 s now with eleven pages open, the same as with two.
-  - Music Finder the first time: 2.6 s before, 1.4 s now. Coming back to it: 0.6 s. Home: 0.3 s. A section of Settings: about 0.26 s.
-  - The window hidden and shown again: 0.9 s each before, 0.4 s now. Put in the Dock: 1.3 s before, 0.76 s now.
-  - A change to the library search: 1.4 s before, 0.75 s now.
+- **Measured, same steps, same library**, with the new `MUSICORG_BENCH` (the app choosing the pages itself, so nothing else is in the timing), the old arrangement against the new:
+  - A song list to another song list: 0.38 s, climbing to 0.55 s over six more pages opened (and to seconds over an hour). Now 0.30 to 0.45 s, the same with eleven pages open as with two.
+  - Back to a page already opened: Home 0.44 s then, 0.13 s now; Music Finder 0.44 s then, 0.16 to 0.31 s now; Settings 0.12 s now.
+  - A page for the first time: Music Finder 1.55 s then, 0.97 s now; Home 0.80 then, 0.47 now; Movie Finder 0.85 then, 0.48 now; Series Finder 0.96 then, 0.41 now.
+  - The window hidden: 0.92 s then, 0.41 s now. Shown again: 0.87 then, 0.40 now. Put in the Dock: 1.32 then, 0.76 now.
+  - A change to the library search: 1.44 s then, 0.78 s now.
+  - A letter typed in Music Finder's search box: 0.01 s (it was never slow by itself: it was every page behind it being laid out).
+  - Clicks made through the screen-control tools read 0.1 to 0.25 s higher than these, old and new alike: the tools ask the app about its window before each one.
 - **Typing in the library search** shows each letter at once; the lists are searched when the typing has paused for a quarter of a second (or at Return), not at every letter.
 - **A song list shown again** doesn't hand its table the same rows a second time.
 - **An album** is opened by the window when it's clicked on the Albums page (`AppModel.openedAlbum`): a page that's a view of its own can't put another page over itself.
