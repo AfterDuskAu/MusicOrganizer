@@ -318,16 +318,22 @@ private struct DownloadSettings: View {
                         + "under Library → Videos. You can switch at any time; no file is moved "
                         + "either way.")
             }
-            Section("Movies") {
-                Toggle("Convert kept movies for phones and tablets", isOn: $convertFilms)
+            Section("Movies and Videos") {
+                Toggle(
+                    "When downloading movies and videos, convert them to be used with Sync",
+                    isOn: $convertFilms)
                 SideNote(
-                    "A movie you keep is saved as an MP4 with H.264 or H.265 picture and AAC "
-                        + "sound, which an iPhone, an iPad and Android phones and tablets all "
-                        + "play. Most need only repacking: a minute or two, and the picture "
-                        + "is untouched. An old kind of picture (an AVI, say) has to be made "
-                        + "again, which can take as long as the movie and loses a little "
-                        + "quality. Off: a movie is kept exactly as it arrived, which may not "
-                        + "play on a phone. Videos you download are already MP4.")
+                    "On: what you download plays on this Mac, an iPhone or iPad, and Android "
+                        + "and Google phones and tablets. It's saved as an MP4 (H.264 or "
+                        + "H.265 picture, AAC sound). Most movies need only repacking: a "
+                        + "minute or two, and the picture is untouched. An old kind of "
+                        + "picture (an AVI, say) has to be made again, which can take as long "
+                        + "as the movie and loses a little quality.")
+                SideNote(
+                    "Off: a movie is downloaded as the original, exactly as it arrived. It "
+                        + "plays on this Mac, but may not on a phone or tablet, and Sync "
+                        + "leaves it out. Videos always arrive as MP4, so they play "
+                        + "everywhere either way.")
             }
             Section {
                 LabeledContent("Library folder") {

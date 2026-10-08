@@ -659,7 +659,7 @@ def test_sharing_is_off_until_its_switched_on(
     status = result(opened, "sharing.status")
     assert status == {"on": False, "port": None, "address": None, "name": "Library",
                       "service": "_homemusicsync._tcp", "devices": [], "pairing": False,
-                      "pairing_seconds_left": 0}  # fmt: skip
+                      "pairing_seconds_left": 0, "films": False}  # fmt: skip
     assert code(opened, "sharing.pair") == rpc.USER_ERROR  # no code while it's off
     assert code(opened, "sharing.set") == rpc.INVALID_PARAMS
     assert code(opened, "sharing.forget", device_id="d_nobody") == rpc.NOT_FOUND
@@ -716,3 +716,98 @@ def test_an_engine_nobody_asked_never_listens(opened: rpc.Server) -> None:  # no
     assert opened._share is None
     assert "sharing.set" in result(opened, "engine.hello", client="pytest")["capabilities"]
     assert opened._share is None
+
+
+# ---- kept films and videos (2026-10-08) ----------------------------------------------------
+
+
+def keep(folder: Path, name: str, data: bytes = b"a made-up film") -> Path:
+    path = folder / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(data)
+    return path
+
+
+def test_kept_films_are_not_shared_until_switched_on(share: sharing.Share, filled: Library) -> None:
+    keep(config.media_folders()["movies"], "A Film.mp4")
+    key = paired(share)
+    assert the_list(share, key)["movies"] == []
+    before = the_list(share, key)["revision"]
+
+    share.films = True
+    found = the_list(share, key)
+    assert [m["title"] for m in found["movies"]] == ["A Film"]
+    assert found["revision"] != before
+    assert found["tracks"] and found["videos"]  # the library is there as before
+
+    share.films = False
+    assert the_list(share, key)["movies"] == []
+    # What the list no longer names isn't given out, even by the id it had.
+    share._built_at = None
+    status, _ = ask(share, "/sync/v1/files/" + quote(found["movies"][0]["video"]["id"], safe=""),
+                    key=key)  # fmt: skip
+    assert status == 404
+
+
+def test_only_films_a_phone_plays_are_listed(filled: Library) -> None:
+    folders = config.media_folders()
+    film = keep(folders["movies"], "A Film.mp4", b"film bytes")
+    keep(folders["movies"], "Season 1/Episode 1.m4v")
+    keep(folders["movies"], "Old Film.mkv")  # a phone can't play it
+    keep(folders["movies"], ".hidden.mp4")
+    keep(folders["movies"], "Empty.mp4", b"")
+    keep(folders["movies"], "Project.fcpbundle/Clip.mov")  # another program's own
+    keep(folders["movies"], ".cache/Clip.mp4")
+    clip = keep(folders["media"], "A Clip.MOV", b"clip bytes")
+    outside = keep(filled.root.parent / "elsewhere", "Private.mp4")
+    try:
+        (folders["movies"] / "Link.mp4").symlink_to(outside)
+        (folders["movies"] / "Linked").symlink_to(outside.parent, target_is_directory=True)
+    except OSError:
+        pass  # Windows without the right to make links: there's nothing to follow
+
+    share = sharing.Share(filled, films=True)
+    share.start()
+    try:
+        key = paired(share)
+        found = the_list(share, key)
+        movies = {m["title"]: m for m in found["movies"]}
+        assert set(movies) == {"A Film", "Episode 1", "A Clip"}
+        assert (movies["A Film"]["kind"], movies["A Film"]["video"]["type"]) == ("movie", "mp4")
+        assert movies["Episode 1"]["video"]["type"] == "m4v"
+        assert (movies["A Clip"]["kind"], movies["A Clip"]["video"]["type"]) == ("video", "mov")
+        assert movies["A Film"]["video"]["size"] == film.stat().st_size
+        assert fetch(share, key, movies["A Film"]["video"]) == b"film bytes"
+        assert fetch(share, key, movies["A Clip"]["video"]) == clip.read_bytes()
+        # Nothing says where a film is kept: ids are names only.
+        sent = json.dumps(found["movies"])
+        assert "Movies" not in sent and "Downloads" not in sent and "Season" not in sent
+
+        # A film written again is a new version, and the old one's bytes aren't sent.
+        old = movies["A Film"]["video"]
+        film.write_bytes(b"a longer film now")
+        share._built_at = None
+        status, _ = ask(share, "/sync/v1/files/" + quote(old["id"], safe=""), key=key)
+        assert status == 404
+        again = {m["title"]: m for m in the_list(share, key)["movies"]}["A Film"]
+        assert again["id"] == movies["A Film"]["id"]
+        assert again["video"]["version"] != old["version"]
+    finally:
+        share.stop()
+
+
+def test_no_kept_folders_is_an_empty_list(filled: Library) -> None:
+    assert sharing.kept_media(config.media_folders()) == []
+
+
+def test_the_app_switches_kept_films(opened: rpc.Server) -> None:  # noqa: F811
+    assert result(opened, "sharing.status")["films"] is False
+    assert code(opened, "sharing.set", on=True, films="yes") == rpc.INVALID_PARAMS
+    assert opened._share is None
+    assert result(opened, "sharing.set", on=True)["films"] is False
+    assert result(opened, "sharing.set", on=True, films=True)["films"] is True
+    assert result(opened, "sharing.set", on=True)["films"] is True  # unsaid: left as it is
+    assert result(opened, "sharing.set", on=True, films=False)["films"] is False
+    assert result(opened, "sharing.set", on=False)["films"] is False
+    assert result(opened, "sharing.set", on=True, films=True)["films"] is True
+    result(opened, "sharing.set", on=False)

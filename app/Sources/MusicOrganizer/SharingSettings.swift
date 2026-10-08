@@ -8,6 +8,7 @@ import SwiftUI
 struct SharingSettings: View {
     @Environment(AppModel.self) private var model
     @AppStorage(AppModel.sharingKey) private var wanted = false
+    @AppStorage(AppModel.sharingFilmsKey) private var films = false
     @State private var removing: SharingStatus.Device?
 
     var body: some View {
@@ -18,6 +19,8 @@ struct SharingSettings: View {
                     .onChange(of: wanted) { model.setSharing(wanted) }
                 if wanted {
                     LabeledContent("This Mac's address") { address(status) }
+                    Toggle("Share your movies and downloaded videos too", isOn: $films)
+                        .onChange(of: films) { model.setSharing(wanted) }
                 }
                 if let note = model.sharingNote {
                     Text(note)
@@ -28,6 +31,13 @@ struct SharingSettings: View {
                     "On: a phone player on the same Wi-Fi can copy this profile's songs, videos, "
                         + "covers, lyrics and playlists, and play its own copies. It can only "
                         + "read: nothing in the library is changed. Off: nothing is listening.")
+                if wanted {
+                    SideNote(
+                        "Movies and videos: the MP4, M4V and MOV files in this Mac's Movies "
+                            + "folder and in Media in Downloads, whoever put them there. "
+                            + "Other kinds (MKV, AVI) are left out, because a phone can't "
+                            + "play them: Settings → Downloads converts a movie as it's kept.")
+                }
                 SideNote(
                     "This Mac shares only on the home network, only with devices paired below, "
                         + "and only while Music Organizer is open. Nothing goes to the internet. "

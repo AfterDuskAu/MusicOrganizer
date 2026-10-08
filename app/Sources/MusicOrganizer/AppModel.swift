@@ -1639,6 +1639,10 @@ final class AppModel {
 
     private var sharingWanted: Bool { UserDefaults.standard.bool(forKey: Self.sharingKey) }
 
+    /// Where Settings keeps "movies and videos too". Off until the owner turns it on:
+    /// the Movies folder may hold more than what this app put there.
+    static let sharingFilmsKey = "shareFilmsWithDevices"
+
     /// Ask the engine whether it's sharing, where, and which devices are paired.
     func loadSharing() {
         guard let connection = engine?.connection else { return }
@@ -1659,7 +1663,10 @@ final class AppModel {
     private func applySharing(_ on: Bool, _ connection: RPCConnection) async {
         sharingNote = nil
         do {
-            sharingSaid(try await connection.call("sharing.set", ["on": on], as: SharingStatus.self))
+            sharingSaid(try await connection.call(
+                    "sharing.set",
+                    ["on": on, "films": UserDefaults.standard.bool(forKey: Self.sharingFilmsKey)],
+                    as: SharingStatus.self))
         } catch {
             announcer.stop()
             sharingNote = error.localizedDescription

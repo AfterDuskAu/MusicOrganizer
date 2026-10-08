@@ -54,11 +54,14 @@ public struct SharingStatus: Decodable, Equatable, Sendable {
     /// Whether a pairing code is showing and still works.
     public let pairing: Bool
     public let pairingSecondsLeft: Int
+    /// Whether kept movies and downloaded videos are shared too. Nil from an engine
+    /// that doesn't say.
+    public let films: Bool?
 
     public init(
         on: Bool, port: Int? = nil, address: String? = nil, name: String = "",
         service: String = "", devices: [Device] = [], pairing: Bool = false,
-        pairingSecondsLeft: Int = 0
+        pairingSecondsLeft: Int = 0, films: Bool? = nil
     ) {
         self.on = on
         self.port = port
@@ -68,6 +71,7 @@ public struct SharingStatus: Decodable, Equatable, Sendable {
         self.devices = devices
         self.pairing = pairing
         self.pairingSecondsLeft = pairingSecondsLeft
+        self.films = films
     }
 
     /// What to type into a phone that can't find this Mac by itself: the address and the

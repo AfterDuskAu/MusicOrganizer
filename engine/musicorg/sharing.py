@@ -85,6 +85,12 @@ MAX_BODY = 4096  # a pairing request is a few dozen bytes
 # left out of the list: a phone can't play it.
 SOUND_TYPES = {".m4a": "m4a", ".mp3": "mp3", ".flac": "flac"}
 VIDEO_TYPE = "mp4"
+# Kept films and videos (outside the library) that a phone can play, by their ending.
+# Anything else in those folders (an MKV, an AVI) isn't listed.
+MOVIE_TYPES = {".mp4": "mp4", ".m4v": "m4v", ".mov": "mov"}
+# Folders inside the Movies folder that are another program's own, never looked into.
+NOT_OURS = frozenset({".fcpbundle", ".imovielibrary", ".tvlibrary", ".photoslibrary",
+                      ".theater", ".localized", ".app"})  # fmt: skip
 KEY_FIELD = "key_sha256"
 _WHEN = "%Y-%m-%dT%H:%M:%SZ"
 _DEVICE_KIND = re.compile(r"[A-Za-z0-9 ]{1,20}")
@@ -256,10 +262,54 @@ def library_info(lib: Library) -> dict[str, str]:
     return {"id": _name("lib", key), "name": lib.root.name}
 
 
+def kept_media(folders: dict[str, Path]) -> list[tuple[dict[str, Any], SharedFile]]:
+    """The films and videos the owner keeps outside the library (`config.media_folders`),
+    as the list names them: `movie` for what's in the Movies folder, `video` for what's
+    in Downloads/Media. Only looked at, never changed.
+
+    Only real files of a kind a phone plays are listed. A link to somewhere else isn't
+    followed, so nothing outside these two folders can be given out; hidden files and
+    other programs' own folders (a Final Cut or TV library) are left alone."""
+    found: list[tuple[dict[str, Any], SharedFile]] = []
+    for kind, name in (("movie", "movies"), ("video", "media")):
+        top = folders.get(name)
+        if top is None:
+            continue
+        for folder, inside, names in os.walk(top, followlinks=False):
+            inside[:] = sorted(
+                d for d in inside
+                if not d.startswith(".") and Path(d).suffix.lower() not in NOT_OURS
+                and not (Path(folder) / d).is_symlink()
+            )  # fmt: skip
+            for file_name in sorted(names):
+                path = Path(folder) / file_name
+                ending = MOVIE_TYPES.get(path.suffix.lower())
+                if ending is None or file_name.startswith("."):
+                    continue
+                try:
+                    about = path.lstat()
+                except OSError:
+                    continue
+                if not stat.S_ISREG(about.st_mode) or about.st_size == 0:
+                    continue
+                key = f"{kind}:{path.relative_to(top).as_posix()}"
+                main = SharedFile(_name("f", key), about.st_size, _stamp(about), ending, path)
+                added = datetime.fromtimestamp(about.st_mtime, UTC).strftime(_WHEN)
+                entry = {"id": _name("m", key), "title": path.stem, "kind": kind,
+                         "added": added, "video": main.listed()}  # fmt: skip
+                found.append((entry, main))
+    return found
+
+
 def the_list(
-    lib: Library, info: dict[str, str], remembered: dict[tuple[str, int, int], dict[str, Any]]
+    lib: Library,
+    info: dict[str, str],
+    remembered: dict[tuple[str, int, int], dict[str, Any]],
+    *,
+    films: dict[str, Path] | None = None,
 ) -> tuple[dict[str, Any], dict[str, SharedFile]]:
-    """The list of everything (format 1), and every file it names, by id.
+    """The list of everything (format 1), and every file it names, by id. `films`: the
+    folders of kept films and videos to list too, when the owner has switched that on.
 
     Songs and videos are the library's files as the index has them; favourites, play
     counts and playlists come from `listening`. A file's details come from the index
@@ -373,7 +423,11 @@ def the_list(
          "tracks": [ids[t] for t in p["track_ids"] if t in ids]}
         for p in heard["playlists"]
     ]  # fmt: skip
-    body = json.dumps([tracks, shown_videos, playlists], sort_keys=True, ensure_ascii=False)
+    movies: list[dict[str, Any]] = []
+    for entry, main in kept_media(films) if films else []:
+        files[main.id] = main
+        movies.append(entry)
+    body = json.dumps([tracks, shown_videos, playlists, movies], sort_keys=True, ensure_ascii=False)
     return {
         "format": FORMAT,
         "library": dict(info),
@@ -381,6 +435,7 @@ def the_list(
         "tracks": tracks,
         "videos": shown_videos,
         "playlists": playlists,
+        "movies": movies,
     }, files
 
 
@@ -443,7 +498,7 @@ def status_off(lib: Library) -> dict[str, Any]:
     """What the app's Settings shows while sharing is off."""
     return {"on": False, "port": None, "address": None, "name": lib.root.name,
             "service": SERVICE_TYPE, "devices": devices(), "pairing": False,
-            "pairing_seconds_left": 0}  # fmt: skip
+            "pairing_seconds_left": 0, "films": False}  # fmt: skip
 
 
 class Share:
@@ -454,6 +509,7 @@ class Share:
         lib: Library,
         *,
         changed: Callable[[], None] | None = None,
+        films: bool = False,
         host: str | None = None,
         port: int | None = None,
         clock: Callable[[], float] = time.monotonic,
@@ -461,6 +517,9 @@ class Share:
         self.lib = lib
         self.info = library_info(lib)
         self._changed = changed
+        # Whether kept films and videos (outside the library) are in the list too. Off
+        # until the owner switches it on, apart from sharing itself.
+        self.films = films
         self._host = HOST if host is None else host
         self._port = PORT if port is None else port
         self._clock = clock
@@ -521,6 +580,7 @@ class Share:
             "devices": devices(),
             "pairing": left > 0,
             "pairing_seconds_left": max(0, round(left)),
+            "films": self.films,
         }
 
     # -- pairing --
@@ -576,7 +636,10 @@ class Share:
     def make_list(self) -> dict[str, Any]:
         """The list of everything, made now. The files it names are remembered, to be
         given out when they're asked for."""
-        found, files = the_list(self.lib, self.info, self._remembered)
+        found, files = the_list(
+            self.lib, self.info, self._remembered,
+            films=config.media_folders() if self.films else None,
+        )  # fmt: skip
         with self._lock:
             self._files = files
             self._built_at = self._clock()
@@ -702,8 +765,8 @@ class _Handler(BaseHTTPRequestHandler):
                 ))  # fmt: skip
                 return
             share.synced(device)
-            log.info("sharing: a device was given the list (%d songs, %d videos)",
-                     len(found["tracks"]), len(found["videos"]))  # fmt: skip
+            log.info("sharing: a device was given the list (%d songs, %d videos, %d films)",
+                     len(found["tracks"]), len(found["videos"]), len(found["movies"]))  # fmt: skip
             self._answer(200, found)
             return
         if path.startswith(PREFIX + "files/"):
