@@ -461,6 +461,16 @@ private final class SongTableView: NSTableView {
 private final class LinedRow: NSTableRowView {
     private static let inset: CGFloat = 16
 
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        // A row's cells are drawn into the row's one picture, not each into its own:
+        // ten small pictures a row was most of what scrolling cost.
+        canDrawSubviewsIntoLayer = true
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("not used") }
+
     override func drawSeparator(in dirtyRect: NSRect) {
         guard !isSelected, !isNextRowSelected else { return }
         NSColor.separatorColor.setFill()
@@ -513,14 +523,13 @@ private enum Ink {
     /// half its size.)
     static func room(for mark: NSImageView) -> NSSize { mark.image?.size ?? .zero }
 
-    /// The room a line of words takes, all of it showing. (What a label says it wants
-    /// leaves out its own edges, and the last letters were cut off.)
-    static func room(for line: NSTextField) -> NSSize {
-        guard let size = line.cell?.cellSize else { return line.intrinsicContentSize }
-        return NSSize(width: size.width.rounded(.up), height: size.height.rounded(.up))
-    }
-
     static let labelEdge: CGFloat = 2
+    /// How tall a line of words is: the same for every row, so it's measured once.
+    static let lineHeight: CGFloat = {
+        let sample = line()
+        sample.stringValue = "Song"
+        return (sample.cell?.cellSize.height ?? 16).rounded(.up)
+    }()
     static let plain = NSFont.systemFont(ofSize: NSFont.systemFontSize)
     static let strong = NSFont.systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
     static let digits = NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
@@ -559,7 +568,7 @@ private final class WordsCell: NSTableCellView {
 
     override func layout() {
         super.layout()
-        let height = Ink.room(for: line).height
+        let height = Ink.lineHeight
         // A label keeps two points clear at each end of its words: the words themselves
         // start at the cell's edge, as SwiftUI's did.
         line.frame = backingAlignedRect(
@@ -584,9 +593,13 @@ private final class HeartCell: NSTableCellView {
         addSubview(heart)
     }
 
+    /// The heart's own size: the same in every row, so it's asked for once.
+    private static var size: NSSize?
+
     override func layout() {
         super.layout()
-        let size = heart.fittingSize
+        let size = Self.size ?? heart.fittingSize
+        if Self.size == nil, size.width > 0 { Self.size = size }
         heart.frame = NSRect(
             x: 0, y: ((bounds.height - size.height) / 2).rounded(), width: size.width, height: size.height)
     }
@@ -622,14 +635,22 @@ private final class TitleCell: NSTableCellView {
     private let lyrics = Ink.mark("quote.bubble", Ink.faint)
     private var showing: String?
     private var loading: Task<Void, Never>?
+    /// The room the title's words take, all of them showing.
+    private var wanted = NSSize.zero
 
     override init(frame: NSRect) {
         super.init(frame: frame)
         for view in [cover, line, explicit, video, unknown, speaker, lyrics] { addSubview(view) }
         textField = line
-        explicit.toolTip = "Explicit"
-        unknown.toolTip = "Not identified yet: shown under its own name"
-        lyrics.toolTip = "Has timed lyrics"
+    }
+
+    /// A badge shown or hidden, with what it says when the pointer rests on it. A badge
+    /// that isn't showing says nothing: macOS keeps watch over every tip there is, row
+    /// by row, as the list scrolls.
+    private func set(_ badge: NSImageView, shown: Bool, saying tip: String) {
+        if badge.isHidden == shown { badge.isHidden = !shown }
+        let wanted = shown ? tip : nil
+        if badge.toolTip != wanted { badge.toolTip = wanted }
     }
 
     @available(*, unavailable)
@@ -639,13 +660,14 @@ private final class TitleCell: NSTableCellView {
         line.stringValue = track.title
         line.textColor = Ink.words
         line.font = playing ? Ink.strong : Ink.plain
-        explicit.isHidden = !track.explicit
-        video.isHidden = !track.isVideo
-        video.toolTip = "A saved video" + (track.height.map { " (\($0)p)" } ?? "")
-        unknown.isHidden = !track.isUnconfirmed
+        set(explicit, shown: track.explicit, saying: "Explicit")
+        set(video, shown: track.isVideo, saying: "A saved video" + (track.height.map { " (\($0)p)" } ?? ""))
+        set(unknown, shown: track.isUnconfirmed, saying: "Not identified yet: shown under its own name")
         speaker.isHidden = !playing
         speaker.image = Ink.symbol(sounding ? "speaker.wave.2.fill" : "speaker.fill", saying: "Playing")
-        lyrics.isHidden = track.lyrics != .synced
+        set(lyrics, shown: track.lyrics == .synced, saying: "Has timed lyrics")
+        // Measured once here, not each time the row is laid out.
+        wanted = line.cell?.cellSize ?? line.intrinsicContentSize
         needsLayout = true
 
         // The cover: at once if it's in memory, and otherwise when it has been read, if
@@ -693,7 +715,6 @@ private final class TitleCell: NSTableCellView {
         var x = Self.coverSide + Self.gap - Ink.labelEdge
         // The badges follow the words exactly; the label itself is given a whole point
         // more than its words need, so the last letter is never cut.
-        let wanted = line.cell?.cellSize ?? line.intrinsicContentSize
         let width = max(0, min(wanted.width, right - x - badgesWidth))
         line.frame = centred(NSSize(width: width.rounded(.up), height: wanted.height.rounded(.up)), at: x)
         x += width - Ink.labelEdge
@@ -742,8 +763,7 @@ private final class CoverBox: NSView {
         picture.draw(
             in: NSRect(
                 x: (bounds.width - width) / 2, y: (bounds.height - height) / 2, width: width, height: height),
-            from: .zero, operation: .sourceOver, fraction: 1, respectFlipped: true,
-            hints: [.interpolation: NSImageInterpolation.high.rawValue])
+            from: .zero, operation: .sourceOver, fraction: 1, respectFlipped: true, hints: nil)
     }
 
     override func layout() {

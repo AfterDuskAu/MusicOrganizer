@@ -12,6 +12,19 @@ final class PageStore {
     /// A page taken out of every window would count as closed, and be opened afresh
     /// each time it was shown (asking the add-ons and the music service all over again);
     /// in a window of its own it stays open, with nothing laying it out or drawing it.
+    /// Where a page is built ahead of its first click (`MainView.warmUp`): in the window,
+    /// so it's laid out and its first rows are made, but neither seen nor clicked. It
+    /// used to be put under the page that was showing, and in the Warm Look, where a
+    /// page has no background of its own, it showed through for a second or two, and a
+    /// click on an empty part of the page above could land on it (found 2026-10-09).
+    fileprivate let backstage: NSView = {
+        let view = Backstage()
+        view.alphaValue = 0
+        view.autoresizingMask = [.width, .height]
+        view.setAccessibilityHidden(true)
+        return view
+    }()
+
     fileprivate lazy var parked: NSView = {
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 900, height: 600), styleMask: [.borderless],
@@ -22,6 +35,11 @@ final class PageStore {
         return window.contentView ?? NSView()
     }()
     private var waitingRoom: NSWindow?
+}
+
+/// Never seen, and never clicked: what's in it is only being made ready.
+private final class Backstage: NSView {
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
 }
 
 /// Shows the page that's chosen, and keeps every other page opened so far exactly as it
@@ -39,7 +57,7 @@ final class PageStore {
 /// changed until it's put back, which is one step however much is on it.
 struct PageHost: NSViewRepresentable {
     let current: SidebarItem
-    /// A page being made ready ahead of its first click: built under the one showing.
+    /// A page being made ready ahead of its first click: built out of sight (`backstage`).
     let warming: SidebarItem?
     let visited: [SidebarItem]
     let store: PageStore
@@ -60,14 +78,20 @@ struct PageHost: NSViewRepresentable {
             if store.showing.remove(entry) != nil { host.rootView = make(entry, false) }
             put(away: host)
         }
-        if let warming, warming != current { show(warming, in: room, under: true) }
+        if store.backstage.superview !== room {
+            store.backstage.frame = room.bounds
+            room.addSubview(store.backstage, positioned: .below, relativeTo: nil)
+        }
+        if let warming, warming != current { show(warming, in: store.backstage, under: true) }
         show(current, in: room, under: false)
     }
 
     /// Taken apart with the window, or while an album's page covers the pages: they're
     /// kept by the store either way.
     static func dismantleNSView(_ room: NSView, coordinator: PageStore) {
-        for view in room.subviews { coordinator.parked.addSubview(view) }
+        for host in coordinator.hosts.values where host.superview != nil && host.superview !== coordinator.parked {
+            coordinator.parked.addSubview(host)
+        }
     }
 
     func makeCoordinator() -> PageStore { store }
@@ -87,8 +111,6 @@ struct PageHost: NSViewRepresentable {
         }
         if host.superview !== room {
             host.frame = room.bounds
-            room.addSubview(host, positioned: under ? .below : .above, relativeTo: nil)
-        } else if !under, room.subviews.last !== host {
             room.addSubview(host, positioned: .above, relativeTo: nil)
         }
         if host.isHidden { host.isHidden = false }

@@ -60,8 +60,12 @@ final class Covers {
             // a cover is only cut down from its full size once.
             let original = sidecar ?? audio
             let saved = size == .large ? nil : original.flatMap { Self.savedThumbnail(for: $0, pixels) }
+            // Read into memory here, off the main thread: left for later, the picture
+            // was unpacked on the main thread each time it was first drawn, which was
+            // most of what a screenful of new rows cost (profiled 2026-10-09).
+            let unpacked = [kCGImageSourceShouldCacheImmediately: true] as CFDictionary
             if let saved, let source = CGImageSourceCreateWithURL(saved as CFURL, nil),
-                let image = CGImageSourceCreateImageAtIndex(source, 0, nil)
+                let image = CGImageSourceCreateImageAtIndex(source, 0, unpacked)
             {
                 return image
             }
