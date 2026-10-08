@@ -1751,4 +1751,6 @@ Not seen in the running app.
 - **`MUSICORG_BENCH`** (a developer's check, like `MUSICORG_STALLS`): the app takes a list of steps by itself (pages, a search, hide and show) and writes how long it couldn't answer after each. `MUSICORG_PAGES=stacked` runs the old arrangement, to measure against.
 - **One look-up for a video** (engine, `youtube._looked_up`; `fresh` on `youtube.stream` and `youtube.video`). A video played as itself (from a channel, Video Finder, a trailer) was asked about twice, once for its sound and once for its picture, one request after the other behind the rate limiter: the picture waited for both, five to ten seconds each. A video YouTube was asked about in the last five minutes is now answered from that, and a look-up already under way is waited for instead of made again; the app says `fresh` when an address has stopped working. Fewer requests reach YouTube, never more. Not timed against YouTube: it had this Mac paused that evening, so nothing was asked of it.
 
+- **A song's "added" day is worked out once**, not at every showing of its row: reading the time afresh each time was a fifth of a second in every eight showings of a song list.
+
 What's still slow, and why, is in `docs/KNOWN-ISSUES.md` ("The speed audit"): the song table itself.

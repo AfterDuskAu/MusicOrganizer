@@ -13,9 +13,24 @@ extension Track {
         return [kind, bitrateKbps.map(String.init) ?? ""].filter { !$0.isEmpty }.joined(separator: " ")
     }
     /// "1 Oct 2026": the day the song came into the library.
-    var addedDay: String {
-        guard let acquired, let date = ISO8601DateFormatter().date(from: acquired) else { return "" }
-        return date.formatted(date: .abbreviated, time: .omitted)
+    @MainActor
+    var addedDay: String { acquired.map(AddedDays.day(of:)) ?? "" }
+}
+
+/// The day each "added" time falls on, worked out once. A table asks for it whenever a
+/// row comes into view, and reading the time afresh each time (with a reader made for
+/// the purpose) was the dearest thing in a row: a fifth of a second in every eight
+/// showings of a song list (profiled 2026-10-08).
+@MainActor
+private enum AddedDays {
+    private static var known: [String: String] = [:]
+    private static let reader = ISO8601DateFormatter()
+
+    static func day(of time: String) -> String {
+        if let day = known[time] { return day }
+        let day = reader.date(from: time)?.formatted(date: .abbreviated, time: .omitted) ?? ""
+        known[time] = day
+        return day
     }
 }
 
