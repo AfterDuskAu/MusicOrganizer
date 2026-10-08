@@ -116,6 +116,8 @@ final class AppModel {
         case failed(String)
     }
     var searchText = ""
+    /// An album clicked on a page, for the window to open over that page.
+    var openedAlbum: Album?
     /// The search field is tucked away behind a magnifying glass until it's wanted.
     var searching = false {
         didSet { if !searching { searchText = "" } }
@@ -403,18 +405,18 @@ final class AppModel {
         }
         player.onVideoChange = { [weak self] showing in self?.showLyrics(forVideo: showing) }
         player.onFinished = { [weak self] track in self?.countPlay(of: track) }
-        player.findStream = { [weak self] videoId in
+        player.findStream = { [weak self] videoId, again in
             guard let connection = self?.engine?.connection else {
                 throw RPCError(code: RPCError.closed, message: "The engine isn't running.")
             }
             let found = try await connection.call(
-                "youtube.stream", ["video_id": videoId], as: StreamAnswer.self)
+                "youtube.stream", ["video_id": videoId, "fresh": again], as: StreamAnswer.self)
             guard let url = URL(string: found.url) else {
                 throw RPCError(code: 0, message: "The service's answer couldn't be read.")
             }
             return (url, found.httpHeaders, found.durationS, found.likes)
         }
-        player.findVideo = { [weak self] track in
+        player.findVideo = { [weak self] track, again in
             guard let connection = self?.engine?.connection else {
                 throw RPCError(code: RPCError.closed, message: "The engine isn't running.")
             }
@@ -424,7 +426,7 @@ final class AppModel {
             guard let artist = track.artist ?? track.albumArtist ?? (exact ? "" : nil) else {
                 return nil
             }
-            var asked: [String: Any] = ["title": track.title, "artist": artist]
+            var asked: [String: Any] = ["title": track.title, "artist": artist, "fresh": again]
             if let id = track.videoId, self?.exactVideos.contains(id) == true {
                 asked["video_id"] = id
             }
@@ -2367,7 +2369,7 @@ final class AppModel {
         Task {
             defer { findingVideoFor.remove(track.id) }
             do {
-                guard let found = try await findVideo(track) else {
+                guard let found = try await findVideo(track, false) else {
                     noVideoFor[track.id] = "The music service has no official video for this song."
                     return
                 }

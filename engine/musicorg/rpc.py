@@ -1214,7 +1214,11 @@ class Server:
         return self.sharing_status({})
 
     def youtube_stream(self, params: dict[str, Any]) -> dict[str, Any]:
-        found = youtube.stream(need(params, "video_id", str))
+        # `fresh`: the address given before has stopped working, so YouTube is asked
+        # again; otherwise a video asked about moments ago isn't asked about twice.
+        found = youtube.stream(
+            need(params, "video_id", str), fresh=want(params, "fresh", bool) or False
+        )
         return {"url": found.url, "http_headers": found.headers, "duration_s": found.duration_s,
                 "likes": found.likes}  # fmt: skip
 
@@ -1224,12 +1228,13 @@ class Server:
         title, artist = need(params, "title", str), need(params, "artist", str)
         path = want(params, "path", str)
         video_id = want(params, "video_id", str)
+        fresh = want(params, "fresh", bool) or False  # as for `youtube.stream`
         if video_id is not None:
             # A video played as itself (a channel's video, a trailer): that very one,
             # with nothing looked for by name.
             if not youtube.VIDEO_ID.fullmatch(video_id):
                 raise RpcError(INVALID_PARAMS, "That isn't a video's id.")
-            return self._video_answer(youtube.video(video_id), title, None)
+            return self._video_answer(youtube.video(video_id, fresh=fresh), title, None)
         # A library song's file says which version it is: its version tag, and its title
         # as the owner writes a remix ("Song R"). Without it a remix would get the
         # original's video.
@@ -1238,7 +1243,9 @@ class Server:
             match = youtube.find_video(title, artist, versions=versions, cache=index)
         if match is None:
             return {"found": False}
-        return self._video_answer(youtube.video(match.video_id), match.title, match.duration_s)
+        return self._video_answer(
+            youtube.video(match.video_id, fresh=fresh), match.title, match.duration_s
+        )
 
     def _video_answer(self, found: Any, title: str, duration_s: float | None) -> dict[str, Any]:
         if not found.qualities:

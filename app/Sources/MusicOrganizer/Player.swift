@@ -76,10 +76,13 @@ final class Player {
     @ObservationIgnored var onFinished: ((Track) -> Void)?
     /// Where a YouTube video's audio can be played from (the engine asks YouTube).
     /// With it come the song's length and its thumbs-up count, when YouTube gives them.
+    /// `again` says the address given before stopped working: without it the engine
+    /// answers from what YouTube said moments ago, when it was asked (a video's sound
+    /// and its picture are then one look-up, not two).
     @ObservationIgnored var findStream:
-        ((String) async throws -> (URL, [String: String], Double?, Int?))?
+        ((_ videoId: String, _ again: Bool) async throws -> (URL, [String: String], Double?, Int?))?
     /// A song's official video, or nil if it has none (the engine asks YouTube Music).
-    @ObservationIgnored var findVideo: ((Track) async throws -> SongVideo?)?
+    @ObservationIgnored var findVideo: ((_ track: Track, _ again: Bool) async throws -> SongVideo?)?
     @ObservationIgnored private let audio = AVPlayer()
     /// Makes Pause stop the sound at once on an AirPlay device.
     @ObservationIgnored private let pauseSilence = PauseSilence()
@@ -443,10 +446,11 @@ final class Player {
     ) {
         guard let findStream else { return }
         let mine = nextTicket()
+        let again = retries > 0
         wait(for: track, at: position)
         Task {
             do {
-                let (url, headers, length, likes) = try await findStream(videoId)
+                let (url, headers, length, likes) = try await findStream(videoId, again)
                 guard ticket == mine else { return }  // something else was chosen meanwhile
                 songLikes = likes
                 let asset = AVURLAsset(
@@ -485,9 +489,10 @@ final class Player {
             waitingForVideo = true
         }
         videoNote = "Looking for this song's video…"
+        let again = retries > 0
         Task {
             do {
-                guard let found = try await lookUpVideo(of: track) else {
+                guard let found = try await lookUpVideo(of: track, again: again) else {
                     guard videoTicket == mine, current == track else { return }
                     videoNote = "The music service has no official video for this song."
                     if interrupt {
@@ -531,13 +536,13 @@ final class Player {
         }
     }
 
-    private func lookUpVideo(of track: Track) async throws -> SongVideo? {
+    private func lookUpVideo(of track: Track, again: Bool = false) async throws -> SongVideo? {
         if let kept = videos[track.id], Date().timeIntervalSince(kept.at) < 30 * 60 {
             return kept.found
         }
         if let running = lookUps[track.id] { return try await running.value }
         guard let findVideo else { return nil }
-        let asking = Task { try await findVideo(track) }
+        let asking = Task { try await findVideo(track, again) }
         lookUps[track.id] = asking
         defer { lookUps[track.id] = nil }
         let found = try await asking.value

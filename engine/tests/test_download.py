@@ -238,27 +238,91 @@ def test_stream_gives_an_address_and_downloads_nothing(
     StreamYDL.info = {"url": "https://example.invalid/audio", "format_id": "140",
                       "duration": 187, "http_headers": {"User-Agent": "x"}}  # fmt: skip
     monkeypatch.setattr(youtube, "_make_ydl", StreamYDL)
+    monkeypatch.setattr(youtube, "_recent", {})
     found = youtube.stream("abcdefghijk")
     assert found == youtube.Stream("https://example.invalid/audio", {"User-Agent": "x"}, 187.0)
     assert StreamYDL.calls == [("https://www.youtube.com/watch?v=abcdefghijk", False)]
     # The thumbs-up count comes with the same answer; one that isn't a count is left out.
     StreamYDL.info = {**StreamYDL.info, "like_count": 899796}
-    assert youtube.stream("abcdefghijk").likes == 899796
+    assert youtube.stream("abcdefghijk", fresh=True).likes == 899796
     for hidden in (None, "many", -1, True):
         StreamYDL.info = {**StreamYDL.info, "like_count": hidden}
-        assert youtube.stream("abcdefghijk").likes is None
+        assert youtube.stream("abcdefghijk", fresh=True).likes is None
 
     with pytest.raises(YouTubeError):
         youtube.stream("not an id")
     StreamYDL.info = {"url": "https://example.invalid/audio", "format_id": "251"}
     with pytest.raises(FormatUnavailableError):
-        youtube.stream("abcdefghijk")
+        youtube.stream("abcdefghijk", fresh=True)
     StreamYDL.info = {"format_id": "140"}
     with pytest.raises(DownloadError):
-        youtube.stream("abcdefghijk")
+        youtube.stream("abcdefghijk", fresh=True)
     StreamYDL.info = yt_dlp.utils.DownloadError("Video unavailable")
     with pytest.raises(VideoUnavailableError):
-        youtube.stream("abcdefghijk")
+        youtube.stream("abcdefghijk", fresh=True)
+
+
+def test_a_video_is_asked_about_once_for_its_sound_and_its_picture(
+    fake_ydl: Callable[[str | None], None], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The app wants a video's sound and its picture at the same moment: one request."""
+    import threading
+
+    StreamYDL.calls = []
+    StreamYDL.info = {
+        "url": "https://example.invalid/audio", "format_id": "140", "duration": 187,
+        "formats": [{"vcodec": "avc1.640028", "acodec": "none", "ext": "mp4",
+                     "protocol": "https", "height": 720, "fps": 30, "tbr": 900,
+                     "url": "https://example.invalid/720"}],
+    }  # fmt: skip
+    monkeypatch.setattr(youtube, "_make_ydl", StreamYDL)
+    monkeypatch.setattr(youtube, "_recent", {})
+    # One after the other: the second is answered from the first's look-up.
+    assert youtube.stream("abcdefghijk").url == "https://example.invalid/audio"
+    assert [q.height for q in youtube.video("abcdefghijk").qualities] == [720]
+    assert len(StreamYDL.calls) == 1
+    # An address that stopped working is asked for again.
+    youtube.video("abcdefghijk", fresh=True)
+    assert len(StreamYDL.calls) == 2
+    # Another video is another request.
+    youtube.stream("lmnopqrstuv")
+    assert len(StreamYDL.calls) == 3
+
+    # Both at once: the one that comes second waits for the first's answer.
+    monkeypatch.setattr(youtube, "_recent", {})
+    StreamYDL.calls = []
+    started, go_on = threading.Event(), threading.Event()
+    asked: list[str] = []
+
+    def slow(video_id: str) -> dict[str, Any]:
+        asked.append(video_id)
+        started.set()
+        assert go_on.wait(10)
+        return dict(StreamYDL.info)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(youtube, "_look_up", slow)
+    answers: list[Any] = []
+    first = threading.Thread(target=lambda: answers.append(youtube.stream("abcdefghijk")))
+    first.start()
+    assert started.wait(10)
+    second = threading.Thread(target=lambda: answers.append(youtube.video("abcdefghijk")))
+    second.start()
+    go_on.set()
+    first.join(10)
+    second.join(10)
+    assert asked == ["abcdefghijk"] and len(answers) == 2
+
+    # A look-up that fails, fails for both, and the next one asks again.
+    def refused(video_id: str) -> dict[str, Any]:
+        asked.append(video_id)
+        raise DownloadError("no")
+
+    monkeypatch.setattr(youtube, "_look_up", refused)
+    with pytest.raises(DownloadError):
+        youtube.stream("lmnopqrstuv")
+    with pytest.raises(DownloadError):
+        youtube.stream("lmnopqrstuv")
+    assert asked == ["abcdefghijk", "lmnopqrstuv", "lmnopqrstuv"]
 
 
 def test_video_lists_the_pictures_the_app_can_show(
@@ -290,6 +354,7 @@ def test_video_lists_the_pictures_the_app_can_show(
         ],
     }  # fmt: skip
     monkeypatch.setattr(youtube, "_make_ydl", StreamYDL)
+    monkeypatch.setattr(youtube, "_recent", {})
     found = youtube.video("abcdefghijk")
     assert found.video_id == "abcdefghijk"
     assert found.audio == youtube.Stream(
@@ -301,12 +366,12 @@ def test_video_lists_the_pictures_the_app_can_show(
     assert StreamYDL.calls == [("https://www.youtube.com/watch?v=abcdefghijk", False)]
 
     StreamYDL.info = {"url": "https://example.invalid/audio", "format_id": "140"}
-    assert youtube.video("abcdefghijk").qualities == ()
+    assert youtube.video("abcdefghijk", fresh=True).qualities == ()
     with pytest.raises(YouTubeError):
         youtube.video("not an id")
     StreamYDL.info = None
     with pytest.raises(DownloadError):
-        youtube.video("abcdefghijk")
+        youtube.video("abcdefghijk", fresh=True)
 
 
 # ---- download_video: a video saved whole (v0.2) ----------------------------------------
@@ -422,8 +487,10 @@ def test_sources_lists_the_sound_and_the_captions_worth_trying(
     assert found.captions[0].url == "https://example.invalid/en.json3"
     # Asked about a moment ago (the app is playing it): YouTube isn't asked again…
     assert youtube.sources("abcdefghijk") == found and len(StreamYDL.calls) == 1
-    # … but an address to play from is always asked for afresh.
+    # … nor for an address to play from, unless the one given has stopped working.
     youtube.stream("abcdefghijk")
+    assert len(StreamYDL.calls) == 1
+    youtube.stream("abcdefghijk", fresh=True)
     assert len(StreamYDL.calls) == 2
 
     StreamYDL.info = {"format_id": "251", "url": "https://example.invalid/opus"}

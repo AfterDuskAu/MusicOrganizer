@@ -532,7 +532,7 @@ def test_stream_jobs_and_the_new_plan_kinds(
     monkeypatch.setattr(
         youtube,
         "stream",
-        lambda video_id: youtube.Stream("https://example.invalid/a", {}, 9.0, 5200),
+        lambda video_id, fresh=False: youtube.Stream("https://example.invalid/a", {}, 9.0, 5200),
     )
     assert result(opened, "youtube.stream", video_id="abcdefghijk") == {
         "url": "https://example.invalid/a", "http_headers": {}, "duration_s": 9.0, "likes": 5200,
@@ -546,7 +546,7 @@ def test_stream_jobs_and_the_new_plan_kinds(
         youtube.VideoQuality(720, 24, "https://example.invalid/v2"),
     )
 
-    def video(video_id: str) -> youtube.Video:
+    def video(video_id: str, fresh: bool = False) -> youtube.Video:
         asked.append(video_id)
         sound = youtube.Stream("https://example.invalid/a", {"User-Agent": "x"}, 245.0)
         return youtube.Video(video_id, sound, sizes)
@@ -565,7 +565,7 @@ def test_stream_jobs_and_the_new_plan_kinds(
 
     # A long video: each picture's address is a playlist on this computer, written here,
     # naming that picture and the sound.
-    def long_video(video_id: str) -> youtube.Video:
+    def long_video(video_id: str, fresh: bool = False) -> youtube.Video:
         sound = youtube.Stream("https://example.invalid/s.m3u8", {}, 3479.0)
         size = youtube.VideoQuality(
             720, 30, "https://example.invalid/p.m3u8", codec="avc1.64001F", kbps=2600.0

@@ -1274,29 +1274,33 @@ class Video:
     sound_codec: str | None = None
 
 
-def stream(video_id: str) -> Stream:
+def stream(video_id: str, *, fresh: bool = False) -> Stream:
     """The address of a video's format-140 audio, for the app to play (v0.2). Nothing is
     downloaded or written. The address is YouTube's and stops working after a few
-    hours, so it's asked for each time a song is played, through the shared rate limiter.
+    hours, so it's asked for when a song is played, through the shared rate limiter.
+
+    A video asked about in the last five minutes isn't asked about again (see
+    `_looked_up`): `fresh` says its address has stopped working, and asks anyway.
 
     Raises the same errors as `download_audio`.
 
     A long video's sound is given as its segmented (HLS) sound instead: see `video`."""
-    info = _look_up(video_id)
+    info = _looked_up(video_id, fresh=fresh)
     long = _segmented(video_id, info)
     return long.audio if long is not None else _audio_of(video_id, info)
 
 
-def video(video_id: str) -> Video:
+def video(video_id: str, *, fresh: bool = False) -> Video:
     """A video's sound and its picture sizes, for the app to play together (v0.2).
-    Nothing is downloaded or written, and it's one request to YouTube, like `stream`.
+    Nothing is downloaded or written, and it's one request to YouTube, like `stream`
+    (none, when `stream` has just asked about the same video: `fresh` as there).
 
     Only pictures Apple's player can show are listed: H.264 in MP4, served whole over
     https, which YouTube offers from 144p up to 1080p. Its 1440p and 4K pictures are
     VP9 or AV1 only, and aren't listed. Checked against yt-dlp 2026.08.19: each entry of
     `formats` carries `vcodec` ("avc1.640028"), `acodec` ("none" for picture only),
     `ext`, `protocol` ("https" or "m3u8_native"), `height`, `fps`, `tbr` and `url`."""
-    info = _look_up(video_id)
+    info = _looked_up(video_id, fresh=fresh)
     long = _segmented(video_id, info)
     if long is not None and long.qualities:
         return long
@@ -1663,14 +1667,63 @@ _recent_lock = threading.Lock()
 
 
 def _looked_up_lately(video_id: str) -> dict[str, Any] | None:
-    """What YouTube said about a video in the last five minutes, if it was asked. The
-    app asks about a video to play it and, a moment later, the engine wants the same
-    video's sound and captions to time the lyrics: that needn't be a second request.
-    Only `sources` uses it. `stream` and `video` always ask afresh: they're called again
-    exactly when an address has stopped working."""
+    """What YouTube said about a video in the last five minutes, if it was asked."""
     with _recent_lock:
         found = _recent.get(video_id)
     return found[1] if found is not None and time.monotonic() - found[0] <= RECENT_S else None
+
+
+class _Asking:
+    """A look-up that's under way, for anyone else who wants the same video."""
+
+    def __init__(self) -> None:
+        self.done = threading.Event()
+        self.info: dict[str, Any] | None = None
+        self.error: BaseException | None = None
+
+
+_under_way: dict[str, _Asking] = {}
+
+
+def _looked_up(video_id: str, *, fresh: bool = False) -> dict[str, Any]:
+    """What YouTube says about a video, asked once for everyone who wants it.
+
+    One video is asked about from several places within moments: the app wants its sound
+    (`stream`) and its picture (`video`) to play it, and the engine then wants its sound
+    and captions to time the lyrics (`sources`). Each used to be a request of its own,
+    one after the other behind the rate limiter, so a video played as itself waited for
+    two look-ups before its picture showed. Now:
+
+    - an answer of the last five minutes is used again (YouTube's addresses last hours),
+      unless `fresh` says one of them has stopped working;
+    - a look-up that's already under way is waited for, not made a second time.
+
+    Fewer requests reach YouTube, never more."""
+    if not fresh:
+        lately = _looked_up_lately(video_id)
+        if lately is not None:
+            return lately
+    with _recent_lock:
+        asking = _under_way.get(video_id)
+        mine = asking is None
+        if asking is None:
+            asking = _under_way[video_id] = _Asking()
+    if not mine:
+        asking.done.wait()
+        if asking.error is not None:
+            raise asking.error
+        assert asking.info is not None
+        return asking.info
+    try:
+        asking.info = _look_up(video_id)
+        return asking.info
+    except BaseException as exc:
+        asking.error = exc
+        raise
+    finally:
+        with _recent_lock:
+            _under_way.pop(video_id, None)
+        asking.done.set()
 
 
 def _audio_of(video_id: str, info: dict[str, Any]) -> Stream:
@@ -1731,7 +1784,7 @@ def sources(video_id: str) -> VideoSources:
     trusted (an "English" track holding the Spanish words that are sung), so the
     caller tries the tracks against the words it has. Manual tracks come first, English
     ones before the rest, three at most."""
-    info = _looked_up_lately(video_id) or _look_up(video_id)
+    info = _looked_up(video_id)
     try:
         audio: Stream | None = _audio_of(video_id, info)
     except DownloadError:
