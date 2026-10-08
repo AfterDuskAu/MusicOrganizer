@@ -289,8 +289,10 @@ struct MainView: View {
                     }
                 }
                 .onChange(of: model.searchText) { paths[current] = NavigationPath() }
-                // A page asked for from elsewhere (Artist Info on a song).
-                .onChange(of: model.goTo) {
+                // A page asked for from elsewhere (Artist Info on a song). `initial`: one
+                // asked for while the library was still being read (Settings, from the
+                // menu) is opened now; left waiting, it made every later ask do nothing.
+                .onChange(of: model.goTo, initial: true) {
                     guard let wanted = model.goTo else { return }
                     model.goTo = nil
                     showNowPlaying = false
