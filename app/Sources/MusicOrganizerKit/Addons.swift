@@ -48,6 +48,10 @@ public struct Addon: Decodable, Identifiable, Hashable, Sendable {
     public let catalogs: [Catalog]
     public let version: String?
     public let description: String?
+    /// For adults only, by its own word or the owner's mark. Its lists are shown in one
+    /// Finder of their own and nowhere else; a child's profile is never given one.
+    public let adult: Bool?
+    public var isAdult: Bool { adult == true }
 
     /// The add-on's name as Settings shows it. The channels add-on calls itself by the
     /// service's name, which the app doesn't show (the owner's rule).
@@ -337,6 +341,13 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
 
     /// Still on its way: worth asking about again.
     public var isKeeping: Bool { keeping == true && keptPath == nil && keepError == nil }
+
+    /// How far along a keep is, 0 to 1, for a bar: the converting if that's begun (the
+    /// last stretch), else how much has arrived. Nil while the film is still being found.
+    public var keepProgress: Double? {
+        if let converting { return min(max(converting, 0), 1) }
+        return state == "finding" ? nil : min(max(progress, 0), 1)
+    }
 
     /// One line for the player: "Finding the film…", "6 sources · 4.6 MB/s · 9% here".
     public var line: String {

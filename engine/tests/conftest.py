@@ -87,6 +87,15 @@ def share_on_this_computer_only(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(autouse=True)
+def nobodys_a_child(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Each test starts as a grown-up's profile: one that marks the engine as a child's
+    (`kids.set`) doesn't leave the next test without its adults-only add-ons."""
+    from musicorg import addons
+
+    monkeypatch.setattr(addons, "_for_child", False)
+
+
+@pytest.fixture(autouse=True)
 def no_time_machine_probe(monkeypatch: pytest.MonkeyPatch) -> None:
     """Tests never run `tmutil`. The Time Machine warning tests supply its output."""
     monkeypatch.setattr(library, "_tmutil_destinationinfo", lambda: None)

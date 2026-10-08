@@ -139,6 +139,9 @@ final class AppModel {
     /// Films being kept, or kept since the app opened, by their torrent's id.
     private(set) var filmKeeps: [String: TorrentStatus] = [:]
     private var filmKeepTasks: [String: Task<Void, Never>] = [:]
+    /// The films being kept, or just kept, that Downloads lists: what each was asked
+    /// for as, in the order asked. Not the ones kept from the Finder for adults.
+    private(set) var listedKeeps: [PendingKeeps.Keep] = []
     /// Goes up each time a film or a video has been kept, so Videos → Movies looks at
     /// its folders again.
     private(set) var keptArrived = 0
@@ -166,6 +169,8 @@ final class AppModel {
     private(set) var playlistsNote: String?
     private(set) var playlistsAsked = false
     private var playlistsRound = 0
+    /// What had been played when the playlists on the page were found (`Listening.playedStamp`).
+    private(set) var playlistsStamp = ""
     /// Discover → Import Playlists: a playlist from elsewhere, and what was found of it.
     let importing = ImportPage()
     /// Library → Artists: the Discover side's artists, and the artist being looked at.
@@ -749,9 +754,10 @@ final class AppModel {
 
     /// Keep a film from its page, or the episode chosen there. The engine files it by
     /// what it is: a movie loose in the Movies folder, a series' or an anime's episode
-    /// in its show's folder there.
+    /// in its show's folder there. `apart`: kept from the Finder for adults.
     func keepFilm(
-        _ stream: MediaStream, of film: MediaItem, episode: MediaDetails.Video?, year: String?
+        _ stream: MediaStream, of film: MediaItem, episode: MediaDetails.Video?, year: String?,
+        apart: Bool = false
     ) {
         guard let hash = stream.infoHash?.lowercased(), filmKeeps[hash]?.isKeeping != true
         else { return }
@@ -759,7 +765,7 @@ final class AppModel {
         let convert = UserDefaults.standard.object(forKey: TorrentStatus.convertKey) as? Bool ?? true
         let keep = PendingKeeps.Keep(
             infoHash: hash, trackers: stream.trackers, fileIndex: stream.fileIndex,
-            convert: convert, of: film, part: episode, year: year)
+            convert: convert, apart: apart, of: film, part: episode, year: year)
         // Remembered until it's in the Movies folder, so it carries on if the app is
         // closed first.
         var pending = PendingKeeps.load()
@@ -774,6 +780,9 @@ final class AppModel {
     private func follow(_ keep: PendingKeeps.Keep, quietly: Bool) {
         let hash = keep.infoHash
         guard filmKeepTasks[hash] == nil else { return }
+        if !keep.isApart, !listedKeeps.contains(where: { $0.infoHash == hash }) {
+            listedKeeps.append(keep)
+        }
         filmKeepTasks[hash] = Task {
             defer { filmKeepTasks[hash] = nil }
             do {
@@ -804,12 +813,26 @@ final class AppModel {
         filmKeepTasks[hash]?.cancel()
         filmKeepTasks[hash] = nil
         filmKeeps[hash] = nil
+        listedKeeps.removeAll { $0.infoHash == hash }
         // Left at once, unless it's the film in the player: that one plays on.
         let playing = filmTorrent?.lowercased() == hash
         Task {
             _ = try? await ask(
                 "torrent.stop_keeping", ["info_hash": hash, "playing": playing], as: Empty.self)
         }
+    }
+
+    /// The number on Downloads' row in the sidebar: what's arrived, and what's on its
+    /// way (songs, videos, and movies being kept).
+    var downloadsBadge: Int {
+        let keeping = listedKeeps.filter { filmKeeps[$0.infoHash]?.isKeeping ?? true }.count
+        return downloaded.count + pending.filter(\.isActive).count + keeping
+    }
+
+    /// Downloads' ✕ on a film that's been kept, or couldn't be: off the list. (One still
+    /// on its way is stopped with `stopKeepingFilm`.)
+    func dismissKeep(_ infoHash: String) {
+        listedKeeps.removeAll { $0.infoHash == infoHash.lowercased() }
     }
 
     /// When the app opens: the films that were still being kept when it closed carry on.
@@ -1115,6 +1138,7 @@ final class AppModel {
 
     /// Nothing of the last profile's stays on screen while the next one's is read.
     private func clearForAnotherLibrary() {
+        media.forget()
         (library, everything, downloaded, videos) = (.empty, .empty, [], [])
         (listening, favourites, heard, status, root) = (.empty, [], [], nil, nil)
         (pending, starting, startProblems) = ([], [], [:])
@@ -1436,15 +1460,30 @@ final class AppModel {
         guard !findingPlaylists, let connection = engine?.connection else { return }
         if different { playlistsRound += 1 }
         (findingPlaylists, playlistsProblem, playlistsAsked) = (true, nil, true)
+        let stamp = listening.playedStamp
+        playlistsStamp = stamp
         let day = Date.now.formatted(.iso8601.year().month().day())
-        var asked: [String: Any] = ["count": 24, "shuffle": "\(day) \(playlistsRound)"]
-        if different { asked["exclude"] = foundPlaylists.map(\.playlistId) }
+        // What's been played is part of the word, so the page moves on as the owner
+        // listens; and the playlists shown lately are left out, so it isn't the same
+        // ones again. (Until there's nothing else: then they come round again.)
+        var seen = PlaylistsSeen.load()
+        if different { seen.add(foundPlaylists.map(\.playlistId)) }
+        var asked: [String: Any] = ["count": 24, "shuffle": "\(day) \(playlistsRound) \(stamp)"]
         Task {
             defer { findingPlaylists = false }
             do {
-                let found = try await connection.call(
+                if !seen.ids.isEmpty { asked["exclude"] = seen.ids }
+                var found = try await connection.call(
                     "discover.playlists", asked, as: FoundPlaylistsAnswer.self)
+                if found.playlists.isEmpty, !seen.ids.isEmpty {
+                    seen.forget()
+                    asked["exclude"] = nil
+                    found = try await connection.call(
+                        "discover.playlists", asked, as: FoundPlaylistsAnswer.self)
+                }
                 (foundPlaylists, playlistsNote) = (found.playlists, found.note)
+                seen.add(found.playlists.map(\.playlistId))
+                seen.save()
             } catch {
                 playlistsProblem = error.localizedDescription
             }

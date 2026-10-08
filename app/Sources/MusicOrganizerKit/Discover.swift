@@ -399,6 +399,43 @@ public struct FoundPlaylist: Decodable, Identifiable, Hashable, Sendable {
     }
 }
 
+/// The playlists Music Finder has shown lately, so the page doesn't keep showing the
+/// same ones (the owner, 2026-10-08). Kept by the app on this Mac. The oldest are
+/// forgotten first, and can then come round again.
+public struct PlaylistsSeen: Codable, Equatable, Sendable {
+    public static let key = "playlistsSeen"
+    public static let most = 120
+    public private(set) var ids: [String] = []
+
+    public init() {}
+
+    public mutating func add(_ shown: [String]) {
+        ids.removeAll(where: shown.contains)
+        ids += shown
+        if ids.count > Self.most { ids.removeFirst(ids.count - Self.most) }
+    }
+
+    public mutating func forget() { ids = [] }
+
+    public static func load(from defaults: UserDefaults = .standard) -> PlaylistsSeen {
+        var seen = PlaylistsSeen()
+        seen.ids = defaults.stringArray(forKey: key) ?? []
+        return seen
+    }
+
+    public func save(to defaults: UserDefaults = .standard) { defaults.set(ids, forKey: Self.key) }
+}
+
+extension Listening {
+    /// Changes whenever a song has been played through: the song played last, and when.
+    /// The Playlists page looks again when this does.
+    public var playedStamp: String {
+        let last = plays.compactMap { id, play in play.lastPlayed.map { (when: $0, id: id) } }
+            .max { $0.when < $1.when }
+        return last.map { "\($0.id) \($0.when)" } ?? ""
+    }
+}
+
 public struct FoundPlaylistsAnswer: Decodable, Sendable {
     public let playlists: [FoundPlaylist]
     public let note: String?
@@ -414,7 +451,8 @@ public enum SidebarRows {
         ("home", "Media Discovery"), ("youtube", "Media Discovery"),
         ("videoFinder", "Media Discovery"), ("movieFinder", "Media Discovery"),
         ("seriesFinder", "Media Discovery"), ("animeFinder", "Media Discovery"),
-        ("downloads", "Media Discovery"), ("import", "Playlists"),
+        ("adultFinder", "Media Discovery"), ("downloads", "Media Discovery"),
+        ("import", "Playlists"),
     ]
     public static let key = "sidebarHidden"
 

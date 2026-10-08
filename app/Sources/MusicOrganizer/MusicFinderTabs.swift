@@ -54,7 +54,7 @@ struct FoundPlaylistsView: View {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Playlists").font(.title2.weight(.semibold)).heading()
-                    Text("Playlists around the songs you've played lately and play most.")
+                    Text("Playlists around the songs you've played lately and play most. It moves on as you listen.")
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -99,8 +99,13 @@ struct FoundPlaylistsView: View {
                 }
             }
         }
-        .task(id: model.phase) {
-            if !model.playlistsAsked, model.phase == .ready { model.findPlaylists() }
+        // Asked the first time the tab is opened, and again whenever a song has been
+        // played through since the page was found: it follows what's being listened to.
+        .task(id: "\(model.phase == .ready) \(model.listening.playedStamp)") {
+            guard model.phase == .ready else { return }
+            if !model.playlistsAsked || model.playlistsStamp != model.listening.playedStamp {
+                model.findPlaylists()
+            }
         }
     }
 

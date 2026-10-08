@@ -1785,6 +1785,47 @@ final class AddonTests: XCTestCase {
 }
 
 final class MusicFinderTests: XCTestCase {
+    func testPlaylistsShownLatelyAreRememberedOldestForgottenFirst() throws {
+        let name = "playlistsseen-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: name))
+        defer { defaults.removePersistentDomain(forName: name) }
+        var seen = PlaylistsSeen.load(from: defaults)
+        XCTAssertEqual(seen.ids, [])
+        seen.add(["a", "b"])
+        seen.add(["b", "c"])  // shown again: counted as shown now
+        XCTAssertEqual(seen.ids, ["a", "b", "c"])
+        seen.add((0..<PlaylistsSeen.most).map { "p\($0)" })
+        XCTAssertEqual(seen.ids.count, PlaylistsSeen.most)
+        XCTAssertFalse(seen.ids.contains("a"))  // the oldest can come round again
+        seen.save(to: defaults)
+        XCTAssertEqual(PlaylistsSeen.load(from: defaults), seen)
+        seen.forget()
+        XCTAssertEqual(seen.ids, [])
+    }
+
+    func testThePlayedStampChangesWhenASongIsPlayed() {
+        var listening = Listening(favourites: [], plays: [:], playlists: [])
+        XCTAssertEqual(listening.playedStamp, "")
+        listening.plays["t1"] = PlayCount(count: 1, lastPlayed: "2026-10-08T01:00:00Z")
+        listening.plays["t2"] = PlayCount(count: 9)  // counted, but never dated
+        let first = listening.playedStamp
+        XCTAssertTrue(first.hasPrefix("t1 "))
+        listening.plays["t3"] = PlayCount(count: 1, lastPlayed: "2026-10-08T02:00:00Z")
+        XCTAssertNotEqual(listening.playedStamp, first)
+        XCTAssertTrue(listening.playedStamp.hasPrefix("t3 "))
+    }
+
+    func testAnAddOnSaysWhetherItsForAdultsOnly() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let said = Data(
+            #"[{"id": "a", "name": "Films", "address": "https://x.invalid/manifest.json", "types": [], "catalogs": []}, {"id": "b", "name": "Grown", "address": "https://y.invalid/manifest.json", "types": [], "catalogs": [], "adult": true}]"#
+                .utf8)
+        let addons = try decoder.decode([Addon].self, from: said)
+        XCTAssertEqual(addons.map(\.isAdult), [false, true])  // one kept before the mark isn't
+        XCTAssertTrue(SidebarRows.all.contains { $0.key == "adultFinder" })
+    }
+
     func testTheTabIsRememberedAndTheOldPagesChoiceIsRead() {
         XCTAssertEqual(MusicFinderTab(saved: "remixes"), .remixes)
         XCTAssertEqual(MusicFinderTab(saved: nil), .whatsNew)
@@ -1840,6 +1881,22 @@ final class PendingKeepsTests: XCTestCase {
         XCTAssertNil(asked["year"])
         XCTAssertNil(asked["file_index"])
         XCTAssertEqual(found.keeps[1].asked["year"] as? String, "1921")
+
+        // One kept from the Finder for adults says so, and isn't listed with the downloads;
+        // one remembered before that was noted isn't such a one.
+        XCTAssertFalse(found.keeps[0].isApart)
+        XCTAssertTrue(PendingKeeps.Keep(infoHash: "ef", trackers: [], title: "X", apart: true).isApart)
+        let old = try JSONDecoder().decode(
+            PendingKeeps.Keep.self,
+            from: Data(#"{"infoHash": "ab", "trackers": [], "title": "Old", "convert": true}"#.utf8))
+        XCTAssertFalse(old.isApart)
+        // How far along a keep is, for the bar on Downloads.
+        XCTAssertNil(TorrentStatus(state: "finding", peers: 0, bytesPerSecond: 0, progress: 0, keeping: true).keepProgress)
+        XCTAssertEqual(
+            TorrentStatus(state: "fetching", peers: 3, bytesPerSecond: 1, progress: 0.34, keeping: true).keepProgress, 0.34)
+        XCTAssertEqual(
+            TorrentStatus(state: "complete", peers: 0, bytesPerSecond: 0, progress: 1, keeping: true, converting: 0.5)
+                .keepProgress, 0.5)
 
         var after = found
         after.remove(hash)  // kept, or stopped: forgotten, whatever case its id was given in
@@ -1906,6 +1963,19 @@ final class PendingKeepsTests: XCTestCase {
         defaults.set(Data(old.utf8), forKey: PendingKeeps.key)
         let carried = try XCTUnwrap(PendingKeeps.load(from: defaults).keeps.first)
         XCTAssertEqual(said(carried.asked), ["-", "title=East of Eden S01E02", "-", "-", "-", "-"])
+        // Where keeps are listed (Downloads), an episode goes by its show and number, and
+        // one kept from the Finder for adults is still marked as apart.
+        XCTAssertEqual([carried.name, carried.kindName], ["East of Eden S01E02", "Movie"])
+        let listed = PendingKeeps.Keep(
+            infoHash: "ab", trackers: [], apart: true, of: anime, part: try part("Asteroid Blues", "1", "1"))
+        XCTAssertEqual([listed.name, listed.kindName], ["Cowboy Bebop S01E01", "Anime"])
+        XCTAssertTrue(listed.isApart)
+        let plain = PendingKeeps.Keep(infoHash: "ab", trackers: [], of: film, year: "1921")
+        XCTAssertEqual([plain.name, plain.kindName], ["The Kid", "Movie"])
+        XCTAssertFalse(plain.isApart)
+        XCTAssertEqual(
+            PendingKeeps.Keep(infoHash: "ab", trackers: [], of: series, part: try part("Late", "null", "5")).name,
+            "East of Eden E05")
         // And one with a show comes back as it was saved.
         var pending = PendingKeeps()
         pending.add(.init(infoHash: "ef", trackers: [], of: anime, part: try part("Asteroid Blues", "1", "1")))

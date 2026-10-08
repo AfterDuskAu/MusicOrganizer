@@ -373,14 +373,17 @@ MAX_REMIX_SEARCHES = 16  # two a song: its remixes, then its covers
 MAX_PLAYLIST_SEARCHES = 6
 PLAYLISTS_A_SONG = 4  # so one song's playlists don't fill the page
 MAX_PLAYLISTS = 48
+NEWEST_FIRST = 2  # of the songs played last, always among the ones playlists start from
 
 
 def _listened(
-    rows: list[dict[str, Any]], heard: dict[str, Any], rng: random.Random
+    rows: list[dict[str, Any]], heard: dict[str, Any], rng: random.Random, *, newest: int = 0
 ) -> list[dict[str, Any]]:
     """The owner's songs to start from, in a shuffled order that leans towards what
     they've been playing: the last few played most of all, then the most played and
-    favourites. One song from each artist before a second from any."""
+    favourites. One song from each artist before a second from any. `newest`: this many
+    of the songs played last come first whatever the shuffle says, so what was just
+    listened to always counts."""
     songs = [r for r in rows if not naming.is_video_path(r["rel_path"]) and r.get("title")]
     plays = heard["plays"]
     favourites = set(heard["favourites"])
@@ -399,7 +402,14 @@ def _listened(
             + min(plays.get(track_id, {}).get("count", 0), 5)
         )
 
-    return _shuffled(songs, weight, rng)
+    shuffled = _shuffled(songs, weight, rng)
+    first = [
+        row
+        for track_id in lately[:newest]
+        for row in shuffled
+        if row.get("musicorg_id") == track_id
+    ]
+    return first + [row for row in shuffled if row not in first]
 
 
 def remixes(
@@ -514,13 +524,16 @@ def playlists(
     YouTube Music has no way to ask "which playlists hold this song", so each starting
     song's artist and title are searched for among playlists: what comes back is about
     them, and usually has the song, but that isn't checked (reading every playlist would
-    be a request each). A few from each song, in turn, so the page is a mix. `shuffle`
-    decides the starting songs, leaning to the ones played lately, so the page moves on
-    as the owner listens; `exclude` leaves out playlists already shown."""
+    be a request each). A few from each song, in turn, so the page is a mix. The two
+    songs played last are always among the starting songs; `shuffle` decides the rest,
+    leaning to what's been played lately, so the page moves on as the owner listens;
+    `exclude` leaves out playlists already shown."""
     if isinstance(count, bool) or not isinstance(count, int) or not 1 <= count <= MAX_PLAYLISTS:
         raise UserError(f"How many playlists should be 1 to {MAX_PLAYLISTS}.")
     rows = [row for row in index.library_tracks() if is_there(lib, row)]
-    starts = _listened(rows, listening.get(lib), random.Random(f"playlists {shuffle}"))
+    starts = _listened(
+        rows, listening.get(lib), random.Random(f"playlists {shuffle}"), newest=NEWEST_FIRST
+    )
     if not starts:
         raise UserError("The library has no songs yet, so there's nothing to find playlists for.")
     shown = {p for p in exclude if isinstance(p, str)}

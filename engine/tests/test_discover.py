@@ -821,3 +821,25 @@ def test_a_playlist_search_is_read_as_youtube_music_gives_it(
          "thumbnail": "https://example.invalid/l.jpg"}
     ]  # fmt: skip
     assert youtube.search_playlists("  ") == []
+
+
+def test_playlists_always_start_from_what_was_played_last(
+    lib: Library, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    made = own(lib, *[(f"Tune {n}", f"Band {n}", None) for n in range(30)])
+    asked: list[str] = []
+
+    def search(query: str, limit: int = 20, cache: Any = None) -> list[dict[str, Any]]:
+        asked.append(query)
+        return []
+
+    monkeypatch.setattr(youtube, "search_playlists", search)
+    listening.played(lib, made[17])
+    listening.played(lib, made[4])
+    with open_index(lib.paths, write=True) as index:
+        for word in ("a", "b", "c"):
+            asked.clear()
+            discover.playlists(lib, index, shuffle=word)
+            # (Both were played within the same second here, so either may be first.)
+            assert sorted(asked[:2]) == ["Band 17 Tune 17", "Band 4 Tune 4"], word
+            assert len(asked) == discover.MAX_PLAYLIST_SEARCHES == len(set(asked))

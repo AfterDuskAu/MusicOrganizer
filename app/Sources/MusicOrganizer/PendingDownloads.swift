@@ -133,3 +133,60 @@ struct PendingDownloads: View {
         return download.artists.isEmpty ? what : "\(download.artistName) · \(what)"
     }
 }
+
+/// Above them on Downloads: the movies being kept from torrents (2026-10-08), each with
+/// how far along it is and a way to stop it; and the ones just kept, until they're taken
+/// off the list. The same rows as a song on its way. Until now a keep showed only on
+/// its movie's own page.
+struct FilmKeeps: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let keeps = model.listedKeeps
+        if !keeps.isEmpty {
+            VStack(spacing: 0) {
+                ForEach(keeps) { keep in
+                    row(keep, model.filmKeeps[keep.infoHash])
+                    Divider()
+                }
+            }
+            .background(Theme.current.panel)
+        }
+    }
+
+    private func row(_ keep: PendingKeeps.Keep, _ status: TorrentStatus?) -> some View {
+        let keeping = status?.isKeeping ?? true  // not heard from yet: it's being asked for
+        return HStack(spacing: 12) {
+            Image(systemName: "popcorn").foregroundStyle(.secondary).frame(width: 20)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(keep.name).fontWeight(.medium).lineLimit(1)
+                Text("\(keep.kindName) · to Movies").font(.callout).foregroundStyle(.secondary).lineLimit(1)
+            }
+            .frame(minWidth: 160, maxWidth: 320, alignment: .leading)
+            VStack(alignment: .leading, spacing: 3) {
+                if keeping {
+                    if let progress = status?.keepProgress {
+                        ProgressView(value: progress).progressViewStyle(.linear)
+                    } else {
+                        ProgressView().progressViewStyle(.linear)
+                    }
+                }
+                Text(status?.keepLine ?? "Finding the movie…")
+                    .font(keeping ? .caption : .callout)
+                    .monospacedDigit()
+                    .foregroundStyle(status?.keepError != nil ? .red : .secondary)
+                    .lineLimit(2)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Button {
+                if keeping { model.stopKeepingFilm(keep.infoHash) } else { model.dismissKeep(keep.infoHash) }
+            } label: {
+                Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .help(keeping ? "Stop keeping this movie" : "Take this off the list")
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+    }
+}

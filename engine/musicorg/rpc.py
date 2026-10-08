@@ -354,6 +354,7 @@ class Server:
             "addon.add": self.addon_add,
             "addon.remove": self.addon_remove,
             "addon.order": self.addon_order,
+            "addon.mark": self.addon_mark,
             "addon.restore": self.addon_restore,
             "addon.catalog": self.addon_catalog,
             "addon.details": self.addon_details,
@@ -948,6 +949,12 @@ class Server:
     def addon_remove(self, params: dict[str, Any]) -> dict[str, Any]:
         return {"addons": addons.remove(need(params, "addon_id", str))}
 
+    def addon_mark(self, params: dict[str, Any]) -> dict[str, Any]:
+        """The owner's mark on an add-on: for adults only, or not."""
+        return {
+            "addons": addons.mark_adult(need(params, "addon_id", str), need(params, "adult", bool))
+        }
+
     def addon_order(self, params: dict[str, Any]) -> dict[str, Any]:
         ids = need(params, "addon_ids", list)
         if not all(isinstance(one, str) for one in ids):
@@ -973,11 +980,15 @@ class Server:
 
     def addon_details(self, params: dict[str, Any]) -> dict[str, Any]:
         return addons.details(
-            need(params, "type", str), need(params, "id", str), want(params, "addon_id", str)
-        )
+            need(params, "type", str), need(params, "id", str), want(params, "addon_id", str),
+            adult=want(params, "adult", bool) is True,
+        )  # fmt: skip
 
     def addon_streams(self, params: dict[str, Any]) -> dict[str, Any]:
-        return addons.streams(addons.listed(), need(params, "type", str), need(params, "id", str))
+        # One side of the fence or the other: an ordinary film's ways to play never
+        # come from an add-on for adults only.
+        asked = addons.kept_to(want(params, "adult", bool) is True)
+        return addons.streams(asked, need(params, "type", str), need(params, "id", str))
 
     # -- methods: videos of any kind, and the channels the owner follows (2026-10-07) --
 
@@ -1140,6 +1151,7 @@ class Server:
         on = need(params, "on", bool)
         allow = on and bool(want(params, "allow_explicit", bool, False))
         self._kids = {"on": on, "allow_explicit": allow}
+        addons.set_for_child(on)  # and no add-on for adults only is in this profile's list
         return dict(self._kids)
 
     def _clean(self, answer: dict[str, Any], key: str, note: str = "kids_note") -> dict[str, Any]:

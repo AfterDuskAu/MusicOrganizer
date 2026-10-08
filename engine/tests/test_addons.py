@@ -43,6 +43,7 @@ def asked(monkeypatch: pytest.MonkeyPatch) -> list[str]:
         seen.append(url)
         if url not in ANSWERS:
             raise addons.AddonError(f"Not recorded: {url}")
+        # (A path that's already whole, a test's own made-up answer, is read as it is.)
         return json.loads((FIXTURES / ANSWERS[url]).read_text(encoding="utf-8"))
 
     monkeypatch.setattr(addons, "_http", answer)
@@ -366,3 +367,107 @@ def test_a_new_starting_add_on_that_cant_be_reached_is_tried_next_time(
     assert config.addons_offered() == list(addons.FIRST_STARTING)
     monkeypatch.setitem(ANSWERS, f"{KITSU}/manifest.json", answer)
     assert [one["name"] for one in addons.listed()] == ["Cinemeta", "Anime Kitsu"]
+
+
+# ---- add-ons for adults only (the owner, 2026-10-08) ---------------------------------------
+
+GROWN = "https://adults.example.invalid/x"
+
+
+def grown_manifest(**more: Any) -> dict[str, Any]:
+    """A made-up add-on that says it's for adults only. No real one is tested against."""
+    return {
+        "id": "invalid.example.grown", "name": "Grown-ups", "version": "1.0.0",
+        "resources": ["catalog", "meta", "stream"], "types": ["movie"],
+        "catalogs": [{"type": "movie", "id": "new", "name": "New",
+                      "extra": [{"name": "genre", "options": ["Ecchi", "Other"]}]}],
+        "behaviorHints": {"adult": True}, **more,
+    }  # fmt: skip
+
+
+@pytest.fixture
+def grown(asked: list[str], monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> list[str]:
+    path = tmp_path / "grown-manifest.json"
+    path.write_text(json.dumps(grown_manifest()), encoding="utf-8")
+    monkeypatch.setitem(ANSWERS, f"{GROWN}/manifest.json", str(path))
+    return asked
+
+
+def test_an_adults_only_add_on_says_so_and_keeps_its_own_genres(grown: list[str]) -> None:
+    added = addons.add(f"{GROWN}/manifest.json")[-1]
+    assert added["adult"] is True
+    # Its lists are its own business: the genres taken off other add-ons' lists stay.
+    assert added["catalogs"][0]["extra"][0]["options"] == ["Ecchi", "Other"]
+    # The app's own aren't, and nor is an add-on kept before the flag existed.
+    assert [one["adult"] for one in addons.listed()[:4]] == [False] * 4
+    assert addons.is_adult({"id": "old"}) is False
+
+
+def test_a_childs_profile_never_sees_an_adults_only_add_on(grown: list[str]) -> None:
+    addons.add(f"{GROWN}/manifest.json")
+    addons.set_for_child(True)
+    names = [one["name"] for one in addons.listed()]
+    assert "Grown-ups" not in names and len(names) == 4
+    # Nothing can be asked of it there: it isn't in the list at all.
+    with pytest.raises(addons.AddonError):
+        addons.named("invalid.example.grown")
+    assert all(
+        s["addon"] != "Grown-ups" for s in addons.streams(addons.listed(), "movie", "x1")["sources"]
+    )
+    # Nor added, nor its mark changed.
+    with pytest.raises(addons.AddonError, match="adults only"):
+        addons.add(f"{GROWN}/manifest.json")
+    with pytest.raises(addons.AddonError):
+        addons.mark_adult("com.linvo.cinemeta", True)
+
+    # Changes made in the child's profile leave it where it was, unseen.
+    addons.remove("invalid.example.grown")  # can't be seen, so can't be removed
+    order = [one["id"] for one in addons.listed()][::-1]
+    assert [one["id"] for one in addons.reorder(order)] == order
+    addons.remove("com.linvo.cinemeta")
+    assert len(addons.restore()) == 4
+    addons.set_for_child(False)
+    assert [one["id"] for one in addons.listed()][:3] == order[:3]
+    assert "invalid.example.grown" in [one["id"] for one in addons.listed()]
+
+
+def test_the_owner_can_mark_an_add_on_as_adults_only(grown: list[str]) -> None:
+    marked = addons.mark_adult("org.stremio.pubdomainmovies", True)
+    assert [one["adult"] for one in marked] == [False, False, True, False]
+    # Read afresh, it keeps the owner's mark, though it doesn't say so itself.
+    again = addons.add(f"{FILMS}/manifest.json")
+    assert next(o for o in again if o["id"] == "org.stremio.pubdomainmovies")["adult"] is True
+    assert not any(o["adult"] for o in addons.mark_adult("org.stremio.pubdomainmovies", False))
+    with pytest.raises(addons.AddonError):
+        addons.mark_adult("gone", True)
+
+
+def test_each_side_of_the_fence_answers_only_its_own_pages(
+    grown: list[str], monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    addons.add(f"{GROWN}/manifest.json")
+    for name, answer in (
+        ("stream/movie/tt0012349.json", {"streams": [{"url": "https://adults.example.invalid/v.mp4"}]}),
+        ("meta/movie/tt0012349.json",
+         {"meta": {"id": "tt0012349", "type": "movie", "name": "Not The Kid"}}),
+    ):  # fmt: skip
+        path = tmp_path / name.replace("/", "-")
+        path.write_text(json.dumps(answer), encoding="utf-8")
+        monkeypatch.setitem(ANSWERS, f"{GROWN}/{name}", str(path))
+    # An ordinary film's page: never anything from the add-on for adults, though it
+    # says it has ways to play that film.
+    usual = addons.streams(addons.kept_to(False), "movie", "tt0012349")
+    assert [s["addon"] for s in usual["sources"]] == ["Public Domain Movies"]
+    assert addons.details("movie", "tt0012349")["name"] == "The Kid"
+    # The Finder for adults: only from it.
+    theirs = addons.streams(addons.kept_to(True), "movie", "tt0012349")
+    assert [s["addon"] for s in theirs["sources"]] == ["Grown-ups"]
+    assert addons.details("movie", "tt0012349", adult=True)["name"] == "Not The Kid"
+    # An add-on named from the wrong side isn't asked.
+    with pytest.raises(addons.AddonError):
+        addons.details("movie", "tt0012349", "invalid.example.grown")
+    with pytest.raises(addons.AddonError):
+        addons.details("movie", "tt0012349", "com.linvo.cinemeta", adult=True)
+    # In a child's profile that side is empty.
+    addons.set_for_child(True)
+    assert addons.kept_to(True) == []

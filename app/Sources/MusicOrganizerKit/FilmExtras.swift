@@ -95,6 +95,9 @@ public struct PendingKeeps: Codable, Equatable, Sendable {
         public let year: String?
         public let fileIndex: Int?
         public let convert: Bool
+        /// Kept from the Finder for adults: it isn't listed with the other downloads.
+        /// (Nil in a keep remembered before this was noted.)
+        public let apart: Bool?
         /// What it is, which decides its folder in the Movies folder: "movie", "series"
         /// or "anime". Nil (a keep remembered before there were folders): a movie.
         public let kind: String?
@@ -104,12 +107,28 @@ public struct PendingKeeps: Codable, Equatable, Sendable {
         public let season: Int?
         public let episode: Int?
         public var id: String { infoHash }
+        public var isApart: Bool { apart == true }
+
+        /// What it's called where keeps are listed (Downloads): a film's title, or for
+        /// an episode its show's name and number, "East of Eden S01E02".
+        public var name: String {
+            guard let show else { return title }
+            if let season, let episode { return String(format: "%@ S%02dE%02d", show, season, episode) }
+            if let episode { return String(format: "%@ E%02d", show, episode) }
+            return title.isEmpty ? show : "\(show) - \(title)"
+        }
+
+        /// What it is, in a word, where keeps are listed: "Movie", "Series" or "Anime".
+        public var kindName: String {
+            kind == "series" ? "Series" : kind == "anime" ? "Anime" : "Movie"
+        }
 
         public init(
             infoHash: String, trackers: [String], title: String, year: String? = nil,
-            fileIndex: Int? = nil, convert: Bool = true, kind: String? = nil,
-            show: String? = nil, season: Int? = nil, episode: Int? = nil
+            fileIndex: Int? = nil, convert: Bool = true, apart: Bool = false,
+            kind: String? = nil, show: String? = nil, season: Int? = nil, episode: Int? = nil
         ) {
+            self.apart = apart ? true : nil
             self.infoHash = infoHash.lowercased()
             self.trackers = trackers
             self.title = title
@@ -127,7 +146,8 @@ public struct PendingKeeps: Codable, Equatable, Sendable {
         /// season and episode. Anime is what was found in a list of anime.
         public init(
             infoHash: String, trackers: [String], fileIndex: Int? = nil, convert: Bool = true,
-            of item: MediaItem, part: MediaDetails.Video? = nil, year: String? = nil
+            apart: Bool = false, of item: MediaItem, part: MediaDetails.Video? = nil,
+            year: String? = nil
         ) {
             let kind = item.keptKind
             guard let part, kind != "movie" else {
@@ -135,13 +155,13 @@ public struct PendingKeeps: Codable, Equatable, Sendable {
                     infoHash: infoHash, trackers: trackers,
                     title: part?.name(in: item.name) ?? item.name,
                     year: part == nil ? year.map { String($0.prefix(4)) } : nil,
-                    fileIndex: fileIndex, convert: convert, kind: kind)
+                    fileIndex: fileIndex, convert: convert, apart: apart, kind: kind)
                 return
             }
             self.init(
                 infoHash: infoHash, trackers: trackers, title: part.title, fileIndex: fileIndex,
-                convert: convert, kind: kind, show: item.name, season: part.season,
-                episode: part.episode)
+                convert: convert, apart: apart, kind: kind, show: item.name,
+                season: part.season, episode: part.episode)
         }
 
         /// What the engine is asked (`torrent.keep`).
