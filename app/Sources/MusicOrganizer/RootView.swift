@@ -90,6 +90,8 @@ enum SidebarItem: Hashable {
     /// The owner's drawing of 2026-10-08: Home at the top of Media Discovery, and series
     /// in a Finder of their own.
     case home, seriesFinder
+    /// Anime in a Finder of its own, beside series (owner, 2026-10-08).
+    case animeFinder
     /// Settings: a page like the others, opened by the cog wheel or ⌘, (no row of its own).
     case settings
     case playlist(String)
@@ -108,6 +110,7 @@ enum SidebarItem: Hashable {
         case .movieFinder: "movieFinder"
         case .home: "home"
         case .seriesFinder: "seriesFinder"
+        case .animeFinder: "animeFinder"
         case .importPlaylists: "import"
         case .youtube: "youtube"
         case .youtubeQueue: "youtubeQueue"
@@ -124,12 +127,14 @@ enum SidebarItem: Hashable {
         switch key {
         case "visualizer": self = .visualizer
         // What's New and Find were pages of their own until 2026-10-07: one page now.
-        case "whatsNew", "find", "musicExplore": self = .musicExplore
+        // … and since 2026-10-08 that page is Music Finder itself.
+        case "whatsNew", "find", "musicExplore": self = .youtube
         case "settings": self = .settings
         case "channels": self = .channels
         case "movies": self = .movies
         case "videoFinder": self = .videoFinder
-        case "videoExplore": self = .videoExplore
+        case "videoExplore": self = .videoFinder  // Explore is Video Finder itself now
+        case "animeFinder": self = .animeFinder
         case "movieFinder": self = .movieFinder
         case "home": self = .home
         case "seriesFinder": self = .seriesFinder
@@ -181,6 +186,7 @@ enum SidebarItem: Hashable {
         case .movieFinder: "Movie Finder"
         case .home: "Home"
         case .seriesFinder: "Series Finder"
+        case .animeFinder: "Anime Finder"
         case .importPlaylists: "Import Playlists"
         case .youtube: "Music Finder"
         case .youtubeQueue: "Queue"
@@ -208,6 +214,7 @@ enum SidebarItem: Hashable {
         case .movieFinder: "movieclapper"
         case .home: "house"
         case .seriesFinder: "tv"
+        case .animeFinder: "sparkles.tv"
         case .importPlaylists: "square.and.arrow.down.on.square"
         case .youtube: "magnifyingglass"
         case .youtubeQueue: "text.append"
@@ -239,6 +246,9 @@ struct MainView: View {
     @AppStorage("sidebarLibrary") private var savedEntries = SidebarChoice.write(SidebarChoice.all)
     /// The Library entries the owner has been offered so far: a new one is shown once.
     @AppStorage("sidebarSeen") private var seenEntries: String?
+    /// The rows outside Music the owner has taken out of the sidebar.
+    @AppStorage(SidebarRows.key) private var savedHidden = ""
+    @State private var customising = false
     // Each group of the sidebar folds away, and stays as it was left.
     @AppStorage("openLibrary") private var openLibrary = true
     @AppStorage("openMedia") private var openMedia = true
@@ -258,8 +268,20 @@ struct MainView: View {
                     // Search sits beside the sidebar button (the owner's drawing,
                     // 2026-10-07). It stays there when the sidebar is shut: macOS moves
                     // both to the left of the top bar together.
+                    // Before it (the owner, 2026-10-08): Customise Sidebar, and the
+                    // Visualizer, which had a row in the sidebar until then.
                     .toolbar {
-                        ToolbarItem { searchButton }
+                        // One item, set close: three separate ones don't fit beside
+                        // the sidebar's button, and macOS folds the last away.
+                        ToolbarItem {
+                            HStack(spacing: 10) {
+                                customiseButton
+                                visualizerButton
+                                searchButton
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.horizontal, 4)
+                        }
                     }
                     // Its width is its own: a page that wants more room never squeezes it
                     // (owner, 2026-10-03). Only the sidebar button hides it.
@@ -451,8 +473,10 @@ struct MainView: View {
                 }
             }
             Section(isExpanded: $openMedia) {
-                ForEach([SidebarItem.channels, .movies], id: \.self) { entry in
+                ForEach([SidebarItem.channels, .movies].filter { !hiddenRows.contains($0.key) }, id: \.self) {
+                    entry in
                     Label(entry.title, systemImage: entry.symbol)
+                        .contextMenu { Button("Remove from Sidebar") { hide(entry) } }
                 }
                 if shown.contains("videos") {
                     Label(SidebarItem.videos.title, systemImage: SidebarItem.videos.symbol)
@@ -476,20 +500,29 @@ struct MainView: View {
                 }
             }
             Section("Media Discovery", isExpanded: $openDiscover) {
-                // In the owner's order; each Explore sits under its Finder, set in a little.
+                // In the owner's order. Each Explore was a row under its Finder until
+                // 2026-10-08: it's what the Finder shows now when nothing is searched for.
+                // (The Visualizer has a button in the top bar instead of a row.)
                 ForEach(
                     [
-                        // (The Visualizer's row was taken out on 2026-10-08, until the
-                        // owner has a place for it: the page is still a click on the
-                        // cover in the player bar away.)
-                        SidebarItem.home, .youtube, .musicExplore, .videoFinder, .videoExplore,
-                        .movieFinder, .seriesFinder, .downloads,
-                    ], id: \.self
+                        SidebarItem.home, .youtube, .videoFinder, .movieFinder, .seriesFinder,
+                        .animeFinder, .downloads,
+                    ].filter { !hiddenRows.contains($0.key) }, id: \.self
                 ) {
                     entry in
-                    if entry == .musicExplore || entry == .videoExplore {
-                        Label(entry.title, systemImage: entry.symbol).padding(.leading, 18)
-                        if entry == .musicExplore, !model.youtubeQueue.isEmpty {
+                    if entry == .downloads {
+                        Label(entry.title, systemImage: entry.symbol)
+                            .badge(model.downloaded.count + model.pending.filter(\.isActive).count)
+                            // Dragged back here, a download leaves the main library's lists.
+                            .dropDestination(for: String.self) { ids, _ in
+                                model.moveDownloads(DraggedSongs.ids(in: ids), toLibrary: false)
+                                return true
+                            }
+                            .contextMenu { Button("Remove from Sidebar") { hide(entry) } }
+                    } else {
+                        Label(entry.title, systemImage: entry.symbol)
+                            .contextMenu { Button("Remove from Sidebar") { hide(entry) } }
+                        if entry == .youtube, !model.youtubeQueue.isEmpty {
                             // Shown while anything is queued with Up Next.
                             Label(
                                 SidebarItem.youtubeQueue.title,
@@ -499,16 +532,6 @@ struct MainView: View {
                             .badge(model.youtubeQueue.count)
                             .tag(SidebarItem.youtubeQueue)
                         }
-                    } else if entry == .downloads {
-                        Label(entry.title, systemImage: entry.symbol)
-                            .badge(model.downloaded.count + model.pending.filter(\.isActive).count)
-                            // Dragged back here, a download leaves the main library's lists.
-                            .dropDestination(for: String.self) { ids, _ in
-                                model.moveDownloads(DraggedSongs.ids(in: ids), toLibrary: false)
-                                return true
-                            }
-                    } else {
-                        Label(entry.title, systemImage: entry.symbol)
                     }
                 }
             }
@@ -540,8 +563,14 @@ struct MainView: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
-                Label(SidebarItem.importPlaylists.title, systemImage: SidebarItem.importPlaylists.symbol)
+                if !hiddenRows.contains(SidebarItem.importPlaylists.key) {
+                    Label(
+                        SidebarItem.importPlaylists.title,
+                        systemImage: SidebarItem.importPlaylists.symbol
+                    )
                     .tag(SidebarItem.importPlaylists)
+                    .contextMenu { Button("Remove from Sidebar") { hide(.importPlaylists) } }
+                }
             } header: {
                 header("Playlists") {
                     Button { model.newPlaylist() } label: { Image(systemName: "plus") }
@@ -561,6 +590,15 @@ struct MainView: View {
             button()
         }
         .padding(.trailing, 6)
+    }
+
+    /// The rows outside Music that the owner has taken out (Customise Sidebar).
+    private var hiddenRows: Set<String> { SidebarRows.hidden(savedHidden) }
+
+    /// Take a row out of the sidebar. It comes back from Customise Sidebar.
+    private func hide(_ entry: SidebarItem) {
+        savedHidden = SidebarRows.write(savedHidden, entry.key, shown: false)
+        if item == entry { item = .songs }
     }
 
     private func remove(_ entry: SidebarItem, from shown: [String]) {
@@ -604,6 +642,32 @@ struct MainView: View {
         Binding(
             get: { paths[current] ?? NavigationPath() },
             set: { paths[current] = $0 })
+    }
+
+    private var customiseButton: some View {
+        Button {
+            customising = true
+        } label: {
+            Image(systemName: "slider.horizontal.3")
+        }
+        .help("Customise Sidebar: choose what the sidebar shows")
+        .sheet(isPresented: $customising) {
+            CustomiseSidebar(savedEntries: $savedEntries, savedHidden: $savedHidden)
+                .environment(model)
+                .dressed()
+                .frame(width: 420, height: 640)  // tall enough for every row without scrolling
+        }
+    }
+
+    private var visualizerButton: some View {
+        Button {
+            showNowPlaying = false
+            item = .visualizer
+        } label: {
+            Image(systemName: "waveform")
+                .foregroundStyle(current == .visualizer ? Color.accentColor : .primary)
+        }
+        .help("Visualizer: the song that's playing, with its picture and lyrics")
     }
 
     /// Search lives behind this button, so no page carries a search field it isn't using.
@@ -753,7 +817,7 @@ struct MainView: View {
                         + "switch to Video, and click Save Video.",
                 isActive: active)
         case .youtube:
-            YouTubeSearchView()
+            MusicFinderView()
         case .youtubeQueue:
             YouTubeQueueView()
         case .visualizer:
@@ -768,9 +832,11 @@ struct MainView: View {
         case .settings:
             SettingsView()
         case .musicExplore:
-            MusicExploreView()
+            MusicFinderView()  // no row leads here any more: the same page as Music Finder
         case .videoExplore:
-            VideoExploreView()
+            VideoFinderView()
+        case .animeFinder:
+            MovieFinderView(kind: "anime")
         case .movieFinder:
             MovieFinderView(kind: "movie")
         case .seriesFinder:
@@ -960,5 +1026,72 @@ private struct PlayerPageOpening: ViewModifier {
                     model.searching = false
                 }
             }
+    }
+}
+
+/// Customise Sidebar (the owner, 2026-10-08): which rows the sidebar shows. A row taken
+/// out is only out of the sidebar: nothing of its page is lost, and it comes back here.
+private struct CustomiseSidebar: View {
+    @Binding var savedEntries: String
+    @Binding var savedHidden: String
+    @Environment(\.dismiss) private var dismiss
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let shown = SidebarChoice.read(savedEntries)
+        VStack(spacing: 0) {
+            HStack {
+                Text("Customise Sidebar").font(.title2.weight(.semibold)).heading()
+                Spacer()
+                Button("Done") { dismiss() }.keyboardShortcut(.defaultAction)
+            }
+            .padding(16)
+            Divider()
+            List {
+                Section("Music") {
+                    ForEach(SidebarChoice.all.filter { $0 != "videos" }, id: \.self) { name in
+                        if let entry = SidebarItem(libraryEntry: name) {
+                            Toggle(
+                                isOn: Binding(
+                                    get: { shown.contains(name) },
+                                    set: { library(name, $0, shown) })
+                            ) { Label(entry.title, systemImage: entry.symbol) }
+                            // The sidebar keeps at least one of Music's rows.
+                            .disabled(shown == [name])
+                        }
+                    }
+                }
+                ForEach(["Videos", "Media Discovery", "Playlists"], id: \.self) { group in
+                    Section(group) {
+                        ForEach(SidebarRows.all.filter { $0.group == group }, id: \.key) { row in
+                            let entry = SidebarItem(key: row.key)
+                            Toggle(
+                                isOn: Binding(
+                                    get: { !SidebarRows.hidden(savedHidden).contains(row.key) },
+                                    set: { savedHidden = SidebarRows.write(savedHidden, row.key, shown: $0) })
+                            ) { Label(entry.title, systemImage: entry.symbol) }
+                        }
+                        if group == "Videos" {
+                            Toggle(
+                                isOn: Binding(
+                                    get: { shown.contains("videos") },
+                                    set: { library("videos", $0, shown) })
+                            ) { Label(SidebarItem.videos.title, systemImage: SidebarItem.videos.symbol) }
+                        }
+                    }
+                }
+            }
+            .scrollContentBackground(Theme.current.listBackground)
+            Text("Your own playlists are always listed. Settings and the Visualizer are in the top bar and beside your name.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(12)
+        }
+    }
+
+    private func library(_ name: String, _ on: Bool, _ shown: [String]) {
+        savedEntries = SidebarChoice.write(
+            on ? SidebarChoice.adding(name, to: shown) : shown.filter { $0 != name })
     }
 }

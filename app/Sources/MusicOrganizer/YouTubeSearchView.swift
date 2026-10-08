@@ -1,14 +1,38 @@
 import MusicOrganizerKit
 import SwiftUI
 
-/// Search YouTube Music: play anything straight away, and download a song into the
-/// library only when its Download button is clicked.
-struct YouTubeSearchView: View {
+/// Music Finder (the owner's drawing, 2026-10-08): one page. Typing a name searches for
+/// exactly that, as it always has; with nothing searched for, the page is What's New,
+/// Find, Playlists, or Covers & Remixes (what was Music Finder → Explore).
+struct MusicFinderView: View {
     @Environment(AppModel.self) private var model
+    @AppStorage(MusicFinderTab.key) private var tabName = ""
+    @AppStorage("musicExploreFind") private var showedFind = false
+
+    private var tab: MusicFinderTab { MusicFinderTab(saved: tabName, showedFind: showedFind) }
+    /// A search is on the page: its results, its problem, or the wait for them.
+    private var searching: Bool {
+        model.youtubeSearching || !model.youtubeResults.isEmpty || model.youtubeProblem != nil
+    }
 
     var body: some View {
         @Bindable var model = model
         VStack(spacing: 0) {
+            Picker(
+                "Show",
+                selection: Binding(
+                    get: { tab },
+                    set: {
+                        tabName = $0.rawValue
+                        model.clearYouTubeSearch()  // a tab chosen puts the search away
+                    })
+            ) {
+                ForEach(MusicFinderTab.allCases) { Text($0.title).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .fixedSize()
+            .padding(.top, 10)
             HStack {
                 Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
                 TextField("Search for a song, artist or album", text: $model.youtubeQuery)
@@ -21,9 +45,37 @@ struct YouTubeSearchView: View {
                     Button("Search") { model.searchYouTube() }
                         .disabled(model.youtubeQuery.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
+                if searching {
+                    Button("Back to \(tab.title)", systemImage: "xmark") {
+                        model.clearYouTubeSearch()
+                    }
+                    .help("Put the search away")
+                }
             }
-            .padding(12)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 10)
             Divider()
+            if searching {
+                MusicSearchResults()
+            } else {
+                switch tab {
+                case .whatsNew: WhatsNewView()
+                case .find: FindView()
+                case .playlists: FoundPlaylistsView()
+                case .remixes: RemixesView()
+                }
+            }
+        }
+    }
+}
+
+/// What a search of the music service found: play anything straight away, and download
+/// a song into the library only when its Download button is clicked.
+struct MusicSearchResults: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        VStack(spacing: 0) {
             // A child's profile: the songs left out for having no clean version.
             if let note = model.youtubeKidsNote, model.youtubeProblem == nil {
                 Text(note)
@@ -39,7 +91,7 @@ struct YouTubeSearchView: View {
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if model.youtubeResults.isEmpty {
-                Text("Search, then press play to listen. Nothing is saved unless you click Download.")
+                Text("Searching…")
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(40)

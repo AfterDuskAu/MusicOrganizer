@@ -66,6 +66,7 @@ final class MediaBrowser {
     let channels = MediaList()
     let films = MediaList()
     let series = MediaList()
+    let anime = MediaList()
 
     func load(_ model: AppModel) async {
         guard !loaded else { return }

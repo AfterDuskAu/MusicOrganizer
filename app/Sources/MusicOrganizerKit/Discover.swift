@@ -351,3 +351,82 @@ public enum Genres {
         }
     }
 }
+
+/// What Music Finder shows while nothing is being searched for (the owner's drawing,
+/// 2026-10-08): the four ways of finding music without typing a name.
+public enum MusicFinderTab: String, CaseIterable, Identifiable, Sendable {
+    case whatsNew, find, playlists, remixes
+
+    public static let key = "musicFinderTab"
+    public var id: String { rawValue }
+
+    public var title: String {
+        switch self {
+        case .whatsNew: "What's New"
+        case .find: "Find"
+        case .playlists: "Playlists"
+        case .remixes: "Covers & Remixes"
+        }
+    }
+
+    /// The tab saved under this name; What's New for a name that isn't one. The page
+    /// before this one remembered only "Find or not" (`musicExploreFind`).
+    public init(saved: String?, showedFind: Bool = false) {
+        self = saved.flatMap(MusicFinderTab.init(rawValue:)) ?? (showedFind ? .find : .whatsNew)
+    }
+}
+
+/// A playlist on the music service found around what the owner plays
+/// (`discover.playlists`). Opening one reads it on the Import Playlists page.
+public struct FoundPlaylist: Decodable, Identifiable, Hashable, Sendable {
+    public let playlistId: String
+    public let title: String
+    public let author: String?
+    public let thumbnail: String?
+    /// One plain line: "For “Song” by Artist".
+    public let why: String
+
+    public var id: String { playlistId }
+    /// The playlist's link, as Import Playlists reads one.
+    public var link: String { "https://music.youtube.com/playlist?list=\(playlistId)" }
+
+    public init(playlistId: String, title: String, author: String? = nil, thumbnail: String? = nil, why: String = "") {
+        self.playlistId = playlistId
+        self.title = title
+        self.author = author
+        self.thumbnail = thumbnail
+        self.why = why
+    }
+}
+
+public struct FoundPlaylistsAnswer: Decodable, Sendable {
+    public let playlists: [FoundPlaylist]
+    public let note: String?
+}
+
+/// The rows of the sidebar that aren't Music's own entries (those are `SidebarChoice`),
+/// and which of them the owner has taken out (Customise Sidebar, 2026-10-08).
+public enum SidebarRows {
+    /// The rows that can be hidden, by the name each is saved under, in the sidebar's
+    /// order, with the group each is in.
+    public static let all: [(key: String, group: String)] = [
+        ("channels", "Videos"), ("movies", "Videos"),
+        ("home", "Media Discovery"), ("youtube", "Media Discovery"),
+        ("videoFinder", "Media Discovery"), ("movieFinder", "Media Discovery"),
+        ("seriesFinder", "Media Discovery"), ("animeFinder", "Media Discovery"),
+        ("downloads", "Media Discovery"), ("import", "Playlists"),
+    ]
+    public static let key = "sidebarHidden"
+
+    public static func hidden(_ saved: String?) -> Set<String> {
+        let known = Set(all.map(\.key))
+        return Set((saved ?? "").split(separator: ",").map(String.init)).intersection(known)
+    }
+
+    /// The saved form with one row shown or hidden.
+    public static func write(_ saved: String?, _ row: String, shown: Bool) -> String {
+        var now = hidden(saved)
+        if shown { now.remove(row) } else { now.insert(row) }
+        return all.map(\.key).filter(now.contains).joined(separator: ",")
+    }
+}

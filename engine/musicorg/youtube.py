@@ -781,6 +781,58 @@ def genre_playlist(name: str, *, cache: SearchCache | None = None) -> GenrePlayl
     )
 
 
+def search_playlists(
+    query: str, limit: int = 20, *, cache: SearchCache | None = None
+) -> list[dict[str, Any]]:
+    """Playlists YouTube Music finds for some words (a song and its artist, say), best
+    first: each `{playlist_id, title, author, thumbnail}`. Listeners' playlists and
+    YouTube Music's own alike. One request, kept for 30 days.
+
+    Checked against ytmusicapi 2026-10-08: a result has `title`, `author`, `browseId`
+    (the playlist's id after "VL") and `thumbnails`; `itemCount` comes back empty."""
+    key = query_key(query)
+    if not key:
+        return []
+    cache_key = f"playlists {key}"
+    raw = None if cache is None else cache.cached_search(cache_key, max_age_days=SEARCH_CACHE_DAYS)
+    if raw is None:
+        raw = _fetch(
+            "playlists", key, lambda client: client.search(query, filter="playlists", limit=limit)
+        )
+        raw = [
+            {
+                **{k: r.get(k) for k in ("title", "author", "browseId")},
+                "thumbnails": _largest_picture(r.get("thumbnails")),
+            }
+            for r in (raw if isinstance(raw, list) else [])
+            if isinstance(r, dict)
+        ]
+        if cache is not None:
+            cache.put_search(cache_key, raw)
+    found = []
+    for r in raw if isinstance(raw, list) else []:
+        if not isinstance(r, dict):
+            continue
+        title, browse_id = r.get("title"), r.get("browseId")
+        if not (isinstance(title, str) and title.strip() and isinstance(browse_id, str)):
+            continue
+        playlist_id = browse_id.removeprefix("VL")
+        if not PLAYLIST_ID.fullmatch(playlist_id):
+            continue
+        pictures = r.get("thumbnails")
+        picture = pictures[0].get("url") if isinstance(pictures, list) and pictures else None
+        author = r.get("author")
+        found.append(
+            {
+                "playlist_id": playlist_id,
+                "title": title.strip(),
+                "author": author if isinstance(author, str) and author else None,
+                "thumbnail": picture if isinstance(picture, str) else None,
+            }
+        )
+    return found[:limit]
+
+
 PLAYLIST_ID = re.compile(r"[A-Za-z0-9_-]{2,80}")
 PLAYLIST_MOST = 1000  # songs read from one playlist (ten requests' worth)
 

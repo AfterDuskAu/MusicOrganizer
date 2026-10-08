@@ -365,6 +365,194 @@ def suggest(
     }
 
 
+# ---- covers and remixes of the owner's songs, and playlists around them (2026-10-08) --------
+
+REMIX_KINDS = frozenset({"remix", "bootleg", "flip", "vip"})
+COVER_KINDS = frozenset({"cover"})
+MAX_REMIX_SEARCHES = 16  # two a song: its remixes, then its covers
+MAX_PLAYLIST_SEARCHES = 6
+PLAYLISTS_A_SONG = 4  # so one song's playlists don't fill the page
+MAX_PLAYLISTS = 48
+
+
+def _listened(
+    rows: list[dict[str, Any]], heard: dict[str, Any], rng: random.Random
+) -> list[dict[str, Any]]:
+    """The owner's songs to start from, in a shuffled order that leans towards what
+    they've been playing: the last few played most of all, then the most played and
+    favourites. One song from each artist before a second from any."""
+    songs = [r for r in rows if not naming.is_video_path(r["rel_path"]) and r.get("title")]
+    plays = heard["plays"]
+    favourites = set(heard["favourites"])
+    lately = sorted(
+        (t for t, p in plays.items() if isinstance(p.get("last_played"), str)),
+        key=lambda t: plays[t]["last_played"],
+        reverse=True,
+    )[:20]
+
+    def weight(row: dict[str, Any]) -> float:
+        track_id = row.get("musicorg_id")
+        return (
+            1.0
+            + (6.0 if track_id in lately else 0.0)
+            + (2.0 if track_id in favourites else 0.0)
+            + min(plays.get(track_id, {}).get("count", 0), 5)
+        )
+
+    return _shuffled(songs, weight, rng)
+
+
+def remixes(
+    lib: Library,
+    index: Index,
+    count: int,
+    *,
+    shuffle: str = "",
+    exclude: Iterable[str] = (),
+    progress: Progress | None = None,
+) -> dict[str, Any]:
+    """Remixes and covers of songs the owner has, that they don't have: the answer is
+    shaped as `suggest`'s (`{picks, wanted, radios, seeds, note}`; `radios` counts the
+    searches made).
+
+    For each starting song YouTube Music's song search is asked for "<title> <artist>
+    remix" and "<title> cover". A result is taken only if its title is the same song's
+    and names a remix (or bootleg, flip, VIP) or a cover: the same title by someone else
+    with no such word may be a different song altogether, and is left. Only official
+    audio, as with every pick. `shuffle` decides which songs are started from, leaning
+    to what's been played lately; the searches are kept in the index for 30 days."""
+    if isinstance(count, bool) or not isinstance(count, int) or not 1 <= count <= MAX_COUNT:
+        raise UserError(f"How many songs should be 1 to {MAX_COUNT}.")
+    rows = [row for row in index.library_tracks() if is_there(lib, row)]
+    owned = Owned(rows, lambda: browse.typed_titles(lib))
+    heard = listening.get(lib)
+    skip_ids = set().union(*state.rejected(lib.load_state().data).values())
+    skip_ids |= {
+        row["video_id"] for row in queue.downloads(lib.paths) if isinstance(row["video_id"], str)
+    }
+    skip_ids |= {video_id for video_id in exclude if isinstance(video_id, str)}
+    starts = _listened(rows, heard, random.Random(f"remixes {shuffle}"))
+    if not starts:
+        raise UserError("The library has no songs yet, so there's nothing to find remixes of.")
+
+    picks: list[dict[str, Any]] = []
+    seen: set[tuple[str, frozenset[str], str]] = set()
+    done: set[str] = set()
+    searches = 0
+    notes: list[str] = []
+    for row in starts:
+        if len(picks) >= count or searches >= MAX_REMIX_SEARCHES:
+            break
+        title = browse.read_title(row["title"], owner=False).title or row["title"]
+        key = compare_key(title)
+        artist = row.get("artist") or ""
+        if not key or key in done:
+            continue
+        done.add(key)
+        for words, kinds, said in (
+            (f"{title} {artist} remix".strip(), REMIX_KINDS, "A remix of"),
+            (f"{title} cover", COVER_KINDS, "A cover of"),
+        ):
+            if searches >= MAX_REMIX_SEARCHES:
+                break
+            try:
+                found = youtube.search_songs(words, limit=20, cache=index)
+            except _skippable() as exc:
+                log.info("remixes: the search for %r failed: %s", words, exc)
+                notes.append("Some searches didn't answer, so there may be more to find.")
+                continue
+            finally:
+                searches += 1
+                if progress is not None:
+                    progress(searches, MAX_REMIX_SEARCHES)
+            for candidate in found:
+                parsed = parse_title(candidate.title)
+                named = {t.partition(":")[0] for t in parsed.version_tokens}
+                if compare_key(parsed.title) != key or not named & kinds:
+                    continue
+                song = _song_key(candidate)
+                again = song in seen
+                seen.add(song)  # one already on the page counts: no second upload of it
+                if (
+                    again
+                    or not candidate.is_official_audio
+                    or candidate.video_id in skip_ids
+                    or owned.has(candidate)
+                ):
+                    continue
+                by = f" by {artist}" if artist else ""
+                picks.append(
+                    {
+                        **candidate.to_dict(),
+                        "why": f"{said} “{title}”{by}",
+                        "hits": 1,
+                        "genre": _genre_tag(row) or None,
+                    }
+                )
+    if searches and not picks:
+        notes.append("No remixes or covers were found for these songs. Try Different Songs.")
+    return {
+        "picks": picks[:count],
+        "wanted": count,
+        "radios": searches,
+        "seeds": [],
+        "note": " ".join(dict.fromkeys(notes)) or None,
+    }
+
+
+def playlists(
+    lib: Library,
+    index: Index,
+    count: int = 24,
+    *,
+    shuffle: str = "",
+    exclude: Iterable[str] = (),
+) -> dict[str, Any]:
+    """Playlists on YouTube Music around what the owner has been playing: `{playlists:
+    [{playlist_id, title, author, thumbnail, why}], note}`.
+
+    YouTube Music has no way to ask "which playlists hold this song", so each starting
+    song's artist and title are searched for among playlists: what comes back is about
+    them, and usually has the song, but that isn't checked (reading every playlist would
+    be a request each). A few from each song, in turn, so the page is a mix. `shuffle`
+    decides the starting songs, leaning to the ones played lately, so the page moves on
+    as the owner listens; `exclude` leaves out playlists already shown."""
+    if isinstance(count, bool) or not isinstance(count, int) or not 1 <= count <= MAX_PLAYLISTS:
+        raise UserError(f"How many playlists should be 1 to {MAX_PLAYLISTS}.")
+    rows = [row for row in index.library_tracks() if is_there(lib, row)]
+    starts = _listened(rows, listening.get(lib), random.Random(f"playlists {shuffle}"))
+    if not starts:
+        raise UserError("The library has no songs yet, so there's nothing to find playlists for.")
+    shown = {p for p in exclude if isinstance(p, str)}
+    per_song: list[list[dict[str, Any]]] = []
+    notes: list[str] = []
+    for row in starts[:MAX_PLAYLIST_SEARCHES]:
+        title = browse.read_title(row["title"], owner=False).title or row["title"]
+        artist = row.get("artist") or ""
+        try:
+            found = youtube.search_playlists(f"{artist} {title}".strip(), cache=index)
+        except _skippable() as exc:
+            log.info("playlists: the search for %r failed: %s", title, exc)
+            notes.append("Some searches didn't answer, so there may be more to find.")
+            continue
+        by = f" by {artist}" if artist else ""
+        mine = []
+        for entry in found:
+            if entry["playlist_id"] in shown or len(mine) >= PLAYLISTS_A_SONG:
+                continue
+            shown.add(entry["playlist_id"])
+            mine.append({**entry, "why": f"For “{title}”{by}"})
+        per_song.append(mine)
+    mixed = []
+    while any(per_song) and len(mixed) < count:  # one from each song in turn
+        for mine in per_song:
+            if mine and len(mixed) < count:
+                mixed.append(mine.pop(0))
+    if not mixed:
+        notes.append("No playlists were found for these songs. Try Different Playlists.")
+    return {"playlists": mixed, "note": " ".join(dict.fromkeys(notes)) or None}
+
+
 # ---- seeds → where the radios start ------------------------------------------------------
 
 

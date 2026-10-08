@@ -2,30 +2,6 @@ import MusicOrganizerKit
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Music Finder → Explore: What's New and Find together on one page (the owner's
-/// drawing, 2026-10-07). Each is the page it was; the switch at the top chooses.
-struct MusicExploreView: View {
-    @AppStorage("musicExploreFind") private var showFind = false
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Picker("Explore", selection: $showFind) {
-                Text("What's New").tag(false)
-                Text("Find").tag(true)
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .fixedSize()
-            .padding(.top, 10)
-            if showFind {
-                FindView()
-            } else {
-                WhatsNewView()
-            }
-        }
-    }
-}
-
 /// A page whose row is in the sidebar as the owner drew it, but which isn't built yet.
 struct ComingPage: View {
     let title: String
@@ -412,21 +388,30 @@ struct VideoFinderView: View {
                         Button("Search") { search() }
                             .disabled(typed.trimmingCharacters(in: .whitespaces).isEmpty)
                     }
+                    if !videos.isEmpty || problem != nil {
+                        Button("Back to Explore", systemImage: "xmark") { typed = "" }
+                            .help("Put the search away")
+                    }
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
+                // The search box emptied: the search is put away, and Explore is back.
+                .onChange(of: typed) { _, now in
+                    if now.isEmpty { (videos, problem, asked) = ([], nil, "") }
+                }
                 Divider()
                 if let problem {
                     Text(problem)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if videos.isEmpty {
-                    Text(
-                        working
-                            ? "Searching…"
-                            : "Search, then double-click a video to play it. Nothing is saved.")
+                } else if videos.isEmpty, working {
+                    Text("Searching…")
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if videos.isEmpty {
+                    // Nothing searched for: the page is Explore (channels by section),
+                    // which was a row of its own under Video Finder until 2026-10-08.
+                    VideoExploreView()
                 } else {
                     List(shown) { video in
                         VideoRow(video: video, openChannel: { opened = $0 }) {
@@ -609,13 +594,16 @@ struct MovieFinderView: View {
 
     init(kind: String) {
         self.kind = kind
-        let name = kind == "series" ? "seriesFinder" : "movieFinder"
+        let name = kind == "series" ? "seriesFinder" : kind == "anime" ? "animeFinder" : "movieFinder"
         _listKey = AppStorage(wrappedValue: "", "\(name)List")
         _genre = AppStorage(wrappedValue: "", "\(name)Genre")
         _also = AppStorage(wrappedValue: "", "\(name)Also")
     }
 
     private var isSeries: Bool { kind == "series" }
+    /// Anime: the lists add-ons give under that name (2026-10-08). What's in them are
+    /// series and films like any other, opened the same way.
+    private var isAnime: Bool { kind == "anime" }
     @State private var typed = ""
     @State private var search = ""
     @State private var opened: MediaItem?
@@ -627,7 +615,7 @@ struct MovieFinderView: View {
         ZStack {
             VStack(spacing: 0) {
                 HStack(spacing: 12) {
-                    Text(isSeries ? "Series Finder" : "Movie Finder")
+                    Text(isSeries ? "Series Finder" : isAnime ? "Anime Finder" : "Movie Finder")
                         .font(.title2.weight(.semibold)).heading()
                         .lineLimit(1)
                         .fixedSize()
@@ -660,7 +648,9 @@ struct MovieFinderView: View {
                                 .fixedSize()
                                 .help("Only movies tagged with both genres")
                                 // Two genres chosen: the search can be a row on Home.
-                                if !also.isEmpty, also != first, chosen.catalog.genres.contains(also) {
+                                if !isAnime, !also.isEmpty, also != first,
+                                    chosen.catalog.genres.contains(also)
+                                {
                                     let row = HomeSection.custom(isSeries ? .series : .movies, first, also)
                                     let there = model.homeLayout.shows(row.id)
                                     Button("Home", systemImage: there ? "checkmark" : "plus") {
@@ -696,7 +686,7 @@ struct MovieFinderView: View {
                     let second =
                         wanted != nil && also != wanted && chosen.catalog.id != "year"
                             && chosen.catalog.genres.contains(also) ? also : ""
-                    let list = isSeries ? media.series : media.films
+                    let list = isSeries ? media.series : isAnime ? media.anime : media.films
                     MediaGrid(list: list, width: 140, open: { opened = $0 }) {
                         Task {
                             await list.load(
@@ -708,6 +698,18 @@ struct MovieFinderView: View {
                         await list.load(
                             model, addon: chosen.addon, catalog: chosen.catalog, genre: wanted,
                             search: search, also: second)
+                    }
+                } else if isAnime, media.loaded {
+                    Message(
+                        symbol: "sparkles.tv", title: "No list of anime yet",
+                        text: "None of your add-ons lists anime. Add one that does in Settings → "
+                            + "Add-ons, and its lists show up here."
+                    ) {
+                        OpenSettings { Text("Open Settings…") }
+                            .simultaneousGesture(
+                                TapGesture().onEnded {
+                                    UserDefaults.standard.set("addons", forKey: SettingsView.tabKey)
+                                })
                     }
                 } else {
                     Text(media.problem ?? "Loading…")
@@ -730,7 +732,7 @@ struct MovieFinderView: View {
         }
         // A film or series clicked on Home opens here.
         .onChange(of: model.filmToOpen, initial: true) { _, wanted in
-            if let wanted, (wanted.type == "series") == isSeries {
+            if let wanted, !isAnime, (wanted.type == "series") == isSeries {
                 opened = wanted
                 model.filmToOpen = nil
             }

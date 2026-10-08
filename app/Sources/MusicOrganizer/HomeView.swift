@@ -397,12 +397,13 @@ private struct HomeRow: View {
         case (.songs, "favourites"): model.goTo = .favourites
         case (.songs, "recommended"):
             // Explore's What's New is where these are from, whichever tab was left showing.
-            UserDefaults.standard.set(false, forKey: "musicExploreFind")
-            model.goTo = .musicExplore
+            UserDefaults.standard.set(MusicFinderTab.whatsNew.rawValue, forKey: MusicFinderTab.key)
+            model.clearYouTubeSearch()
+            model.goTo = .youtube
         case (.songs, "mostPlayed"): model.goTo = .mostPlayed
         case (.songs, "recentlyAdded"): model.goTo = .recentlyAdded
         case (.songs, _): model.goTo = .downloads
-        case (.channels, "recommended"): model.goTo = .videoExplore
+        case (.channels, "recommended"): model.goTo = .videoFinder
         case (.channels, _): model.goTo = .channels
         case (.movies, _), (.series, _):
             // A list's row opens that list in its Finder, at the row's genre.

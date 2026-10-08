@@ -321,6 +321,8 @@ extension AppModel.AutoDownload {
 struct PicksView: View {
     let page: DiscoverPage
     let empty: String
+    /// What's said while the engine is asking.
+    var waiting = "Asking the music service for songs like yours…"
     @Environment(AppModel.self) private var model
     @State private var showingQueue = false
 
@@ -333,8 +335,8 @@ struct PicksView: View {
                 } else {
                     ProgressView()
                 }
-                Text("Asking the music service for songs like yours…")
-                Text("One radio at a time, so the service doesn't mind. It takes a few seconds a radio.")
+                Text(waiting)
+                Text("One question at a time, so the service doesn't mind. It takes a few seconds each.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }

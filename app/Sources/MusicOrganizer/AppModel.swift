@@ -157,6 +157,15 @@ final class AppModel {
     /// Videos played in passing (a film's trailer): not noted as watched.
     @ObservationIgnored private var passing = Set<String>()
     let find = DiscoverPage(named: "find")
+    /// Music Finder → Covers & Remixes: remixes and covers of the owner's songs.
+    let remixes = DiscoverPage(named: "remixes")
+    /// Music Finder → Playlists: playlists around what's been played.
+    private(set) var foundPlaylists: [FoundPlaylist] = []
+    private(set) var findingPlaylists = false
+    private(set) var playlistsProblem: String?
+    private(set) var playlistsNote: String?
+    private(set) var playlistsAsked = false
+    private var playlistsRound = 0
     /// Discover → Import Playlists: a playlist from elsewhere, and what was found of it.
     let importing = ImportPage()
     /// Library → Artists: the Discover side's artists, and the artist being looked at.
@@ -336,6 +345,16 @@ final class AppModel {
                 guard let self else { throw CancellationError() }
                 return try await self.suggest(seeds, count, shuffle, name, exclude: exclude)
             }
+        }
+        // The same kind of page, asked another way: the engine starts from the owner's
+        // songs itself, so the starting points aren't sent.
+        remixes.ask = { [weak self] _, count, shuffle, name, exclude in
+            guard let self, let connection = self.engine?.connection else {
+                throw RPCError(code: 0, message: "The engine isn't running.")
+            }
+            var params: [String: Any] = ["count": count, "shuffle": shuffle, "token": name]
+            if !exclude.isEmpty { params["exclude"] = exclude }
+            return try await connection.call("discover.remixes", params, as: DiscoverAnswer.self)
         }
         film.onPlace = { [weak self] seconds, length in
             guard let self, let id = self.watchingFilm else { return }
@@ -1100,7 +1119,8 @@ final class AppModel {
         (auto, batch, deletingDownloads, lastAuto) = (nil, nil, nil, nil)
         (youtubeQuery, youtubeResults, youtubeProblem, searchText) = ("", [], nil, "")
         libraryVersion += 1
-        for page in [whatsNew, find] { page.reset() }
+        for page in [whatsNew, find, remixes] { page.reset() }
+        (foundPlaylists, playlistsProblem, playlistsNote, playlistsAsked) = ([], nil, nil, false)
         importing.reset()
         artistBrowser.reset()
         for key in Array(pageChanges.keys) { forgetPageChange(key) }
@@ -1221,7 +1241,7 @@ final class AppModel {
     }
 
     private func discoverSaid(_ name: String?, done: Int, of: Int) {
-        for page in [whatsNew, find] where page.name == name {
+        for page in [whatsNew, find, remixes] where page.name == name {
             page.progress(done: done, of: of)
         }
     }
@@ -1397,6 +1417,40 @@ final class AppModel {
             }
             youtubeSearching = false
         }
+    }
+
+    /// Music Finder's search is put away: the page shows its tabs again.
+    func clearYouTubeSearch() {
+        (youtubeQuery, youtubeResults, youtubeProblem, youtubeKidsNote) = ("", [], nil, nil)
+        youtubeHasMore = false
+    }
+
+    /// Music Finder → Playlists: playlists around what's been played lately. `different`
+    /// starts from other songs, and leaves out the playlists already on the page.
+    func findPlaylists(different: Bool = false) {
+        guard !findingPlaylists, let connection = engine?.connection else { return }
+        if different { playlistsRound += 1 }
+        (findingPlaylists, playlistsProblem, playlistsAsked) = (true, nil, true)
+        let day = Date.now.formatted(.iso8601.year().month().day())
+        var asked: [String: Any] = ["count": 24, "shuffle": "\(day) \(playlistsRound)"]
+        if different { asked["exclude"] = foundPlaylists.map(\.playlistId) }
+        Task {
+            defer { findingPlaylists = false }
+            do {
+                let found = try await connection.call(
+                    "discover.playlists", asked, as: FoundPlaylistsAnswer.self)
+                (foundPlaylists, playlistsNote) = (found.playlists, found.note)
+            } catch {
+                playlistsProblem = error.localizedDescription
+            }
+        }
+    }
+
+    /// A playlist found for the owner is read on the Import Playlists page, where its
+    /// songs can be played, picked over and downloaded.
+    func open(_ playlist: FoundPlaylist) {
+        importing.open(.youtube(link: playlist.link))
+        goTo = .importPlaylists
     }
 
     /// Download one song into the library. Only ever called by the owner's click.

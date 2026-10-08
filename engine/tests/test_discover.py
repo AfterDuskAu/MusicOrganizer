@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -15,7 +16,7 @@ from test_rpc import Capture, code, opened, out, result, root, server  # noqa: F
 
 from musicorg import discover, lastfm, listening, pipeline, rpc, state, youtube
 from musicorg.discover import Seed
-from musicorg.errors import NotFoundError, UserError
+from musicorg.errors import NotFoundError, UserError, YouTubeError
 from musicorg.index import open_index
 from musicorg.library import Library
 from musicorg.youtube import OFFICIAL_AUDIO, Candidate
@@ -673,3 +674,150 @@ def test_a_title_the_owner_typed_is_not_read_past_to_the_rips_name() -> None:
     ]
     discover.Owned(rows, typed({}))
     assert asked == []
+
+
+# ---- covers and remixes, and playlists around the owner's songs (2026-10-08) --------------
+
+
+@pytest.fixture
+def searches(monkeypatch: pytest.MonkeyPatch) -> dict[str, list[Candidate]]:
+    """Made-up song searches by the words asked, in place of YouTube Music's."""
+    made: dict[str, list[Candidate]] = {}
+    asked: list[str] = []
+
+    def search(query: str, limit: int = 10, cache: Any = None, refresh: bool = False) -> Any:
+        asked.append(query)
+        return made.get(query, [])
+
+    monkeypatch.setattr(youtube, "search_songs", search)
+    made["asked"] = asked  # type: ignore[assignment]
+    return made
+
+
+def remixes(lib: Library, **more: Any) -> dict[str, Any]:
+    with open_index(lib.paths, write=True) as index:
+        return discover.remixes(lib, index, more.pop("count", 10), **more)
+
+
+def test_remixes_and_covers_of_the_owners_songs(
+    lib: Library, searches: dict[str, list[Candidate]]
+) -> None:
+    own(lib, ("Melody", "Band", None), ("Melody (Night Remix)", "Band", "vidOwned001"))
+    searches["Melody Band remix"] = [
+        song(1, "Melody (Sun Remix)", "Band"),
+        song(2, "Melody (Night Remix)", "Band"),  # the owner has this one
+        song(3, "Melody", "Band"),  # the song itself isn't a remix of it
+        song(4, "Other Tune (Sun Remix)", "Band"),  # another song's remix
+        song(5, "Melody (Sky Remix)", "Band", video_type="MUSIC_VIDEO_TYPE_UGC"),
+        song(6, "Melody (Sun Remix)", "Band"),  # the same remix again
+        song(7, "Melody (Moon Bootleg)", "Band"),
+    ]
+    searches["Melody cover"] = [
+        song(8, "Melody (Cover)", "Someone Else"),
+        song(9, "Melody", "Someone Else"),  # the same name, maybe another song: left
+    ]
+    found = remixes(lib)
+    assert ids(found) == ["vid00000001", "vid00000007", "vid00000008"]
+    assert [pick["why"] for pick in found["picks"]] == [
+        "A remix of “Melody” by Band", "A remix of “Melody” by Band",
+        "A cover of “Melody” by Band",
+    ]  # fmt: skip
+    # The owner's two copies are one song to start from: two searches, not four.
+    assert searches["asked"] == ["Melody Band remix", "Melody cover"]
+    assert (found["wanted"], found["radios"], found["note"]) == (10, 2, None)
+    # Show More leaves out what's on the page, and only as many as asked for come back.
+    assert ids(remixes(lib, exclude=["vid00000001"])) == ["vid00000007", "vid00000008"]
+    assert ids(remixes(lib, count=1)) == ["vid00000001"]
+
+
+def test_remixes_with_nothing_to_find(lib: Library, searches: dict[str, list[Candidate]]) -> None:
+    with pytest.raises(UserError):
+        remixes(lib)  # no songs at all
+    own(lib, ("Melody", "Band", None))
+    found = remixes(lib)
+    assert found["picks"] == [] and "No remixes or covers" in found["note"]
+    with pytest.raises(UserError):
+        remixes(lib, count=0)
+
+
+def test_remix_searches_are_limited_and_a_failure_is_left_out(
+    lib: Library, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    own(lib, *[(f"Tune {n}", f"Band {n}", None) for n in range(20)])
+    asked: list[str] = []
+
+    def search(query: str, limit: int = 10, cache: Any = None, refresh: bool = False) -> Any:
+        asked.append(query)
+        if len(asked) == 1:
+            raise YouTubeError("no answer")
+        return []
+
+    monkeypatch.setattr(youtube, "search_songs", search)
+    heard: list[tuple[int, int]] = []
+    found = remixes(lib, progress=lambda done, of: heard.append((done, of)))
+    assert len(asked) == discover.MAX_REMIX_SEARCHES == found["radios"]
+    assert heard[-1] == (discover.MAX_REMIX_SEARCHES, discover.MAX_REMIX_SEARCHES)
+    assert "didn't answer" in found["note"]
+
+
+def test_playlists_around_what_the_owner_plays(
+    lib: Library, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    made = own(lib, ("Melody", "Band", None), ("Anthem", "Group", None))
+    listening.played(lib, made[0])
+
+    def search(query: str, limit: int = 20, cache: Any = None) -> list[dict[str, Any]]:
+        name = query.split()[0]
+        return [
+            {"playlist_id": f"PL{name}{n}", "title": f"{name} list {n}", "author": "Someone",
+             "thumbnail": None}
+            for n in range(6)
+        ] + [
+            {"playlist_id": "PLshared", "title": "Both", "author": None, "thumbnail": None}
+        ]  # fmt: skip
+
+    monkeypatch.setattr(youtube, "search_playlists", search)
+    with open_index(lib.paths, write=True) as index:
+        found = discover.playlists(lib, index, 6, shuffle="a")
+        again = discover.playlists(lib, index, 6, shuffle="a")
+        more = discover.playlists(
+            lib, index, 6, shuffle="a", exclude=[p["playlist_id"] for p in found["playlists"]]
+        )
+        with pytest.raises(UserError):
+            discover.playlists(lib, index, 0)
+    shown = [p["playlist_id"] for p in found["playlists"]]
+    assert found == again and found["note"] is None  # the same word, the same page
+    # A few from each song, in turn: neither song fills the page.
+    assert len(shown) == 6 and len(set(shown)) == 6
+    assert sum(p.startswith("PLBand") for p in shown) == 3
+    assert {p["why"] for p in found["playlists"]} == {
+        "For “Melody” by Band",
+        "For “Anthem” by Group",
+    }
+    # More: none of what's already shown.
+    assert not set(shown) & {p["playlist_id"] for p in more["playlists"]}
+
+
+def test_a_playlist_search_is_read_as_youtube_music_gives_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The shape ytmusicapi gave on 2026-10-08, with made-up names.
+    response = [
+        {"category": "Community playlists", "resultType": "playlist", "title": " Band best songs ",
+         "itemCount": None, "author": "A Listener", "browseId": "VLPL" + "a1B2" * 4,
+         "thumbnails": [{"url": "https://example.invalid/s.jpg", "width": 192, "height": 192},
+                        {"url": "https://example.invalid/l.jpg", "width": 1200, "height": 1200}]},
+        {"resultType": "playlist", "title": "No id", "author": "x", "browseId": None},
+        {"resultType": "playlist", "title": "", "browseId": "VLPLempty"},
+        "not a result",
+    ]  # fmt: skip
+    path = youtube.recording_path(tmp_path, "playlists", youtube.query_key("Band Melody"))
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps({"kind": "playlists", "key": youtube.query_key("Band Melody"),
+                                "response": response}), encoding="utf-8")  # fmt: skip
+    monkeypatch.setenv(youtube.REPLAY_ENV, str(tmp_path))
+    assert youtube.search_playlists("Band Melody") == [
+        {"playlist_id": "PL" + "a1B2" * 4, "title": "Band best songs", "author": "A Listener",
+         "thumbnail": "https://example.invalid/l.jpg"}
+    ]  # fmt: skip
+    assert youtube.search_playlists("  ") == []

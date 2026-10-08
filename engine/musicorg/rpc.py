@@ -110,7 +110,8 @@ RESUME_LEAST_S = 60.0
 REVIEW_STATES = ("review", "not_found", "matched_auto")
 SLOW_METHODS = frozenset(
     {"youtube.stream", "youtube.video", "search.ytmusic", "lyrics.find", "lyrics.for_video",
-     "discover.suggest", "import.playlist", "import.playlists", "import.find",
+     "discover.suggest", "discover.remixes", "discover.playlists",
+     "import.playlist", "import.playlists", "import.find",
      "account.connect", "artist.info", "artist.songs", "artist.album", "artist.search",
      # Add-ons and video lookups wait on the network too (an add-on for up to 8 seconds).
      # Answered on the main line they held up every other request the app made
@@ -329,6 +330,8 @@ class Server:
             "lyrics.find": self.lyrics_find,
             "lyrics.for_video": self.lyrics_for_video,
             "discover.suggest": self.discover_suggest,
+            "discover.remixes": self.discover_remixes,
+            "discover.playlists": self.discover_playlists,
             "import.playlist": self.import_playlist,
             "import.playlists": self.import_playlists,
             "account.status": self.account_status,
@@ -1320,6 +1323,39 @@ class Server:
                 progress=progress,
             )  # fmt: skip
         return self._clean(found, "picks", note="note")
+
+    def discover_remixes(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Remixes and covers of the owner's songs that they don't have (Music Finder,
+        2026-10-08). Lookups only. The answer is `discover.suggest`'s shape."""
+        count = want(params, "count", int, 50)
+        shuffle = want(params, "shuffle", str, "") or ""
+        token = want(params, "token", str)
+        exclude = want(params, "exclude", list, [])
+        if len(exclude) > MAX_EXCLUDE or not all(isinstance(v, str) for v in exclude):
+            raise RpcError(INVALID_PARAMS, f"exclude should be at most {MAX_EXCLUDE} video ids.")
+
+        def progress(done: int, total: int) -> None:
+            self.writer.notify("discover.progress", {"token": token, "done": done, "of": total})
+
+        with self._index(write=True) as index:
+            found = discover.remixes(
+                self._library(), index, count, shuffle=shuffle, exclude=exclude,
+                progress=progress,
+            )  # fmt: skip
+        return self._clean(found, "picks", note="note")
+
+    def discover_playlists(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Playlists on YouTube Music around what the owner has been playing (Music
+        Finder, 2026-10-08). Lookups only; one is read with `import.playlist`."""
+        count = want(params, "count", int, 24)
+        shuffle = want(params, "shuffle", str, "") or ""
+        exclude = want(params, "exclude", list, [])
+        if len(exclude) > MAX_EXCLUDE or not all(isinstance(v, str) for v in exclude):
+            raise RpcError(INVALID_PARAMS, f"exclude should be at most {MAX_EXCLUDE} ids.")
+        with self._index(write=True) as index:
+            return discover.playlists(
+                self._library(), index, count, shuffle=shuffle, exclude=exclude
+            )
 
     def import_playlist(self, params: dict[str, Any]) -> dict[str, Any]:
         """A playlist from elsewhere, as its name and its songs (imports, v0.3). Only

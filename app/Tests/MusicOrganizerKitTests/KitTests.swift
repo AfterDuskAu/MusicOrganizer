@@ -1784,6 +1784,39 @@ final class AddonTests: XCTestCase {
     }
 }
 
+final class MusicFinderTests: XCTestCase {
+    func testTheTabIsRememberedAndTheOldPagesChoiceIsRead() {
+        XCTAssertEqual(MusicFinderTab(saved: "remixes"), .remixes)
+        XCTAssertEqual(MusicFinderTab(saved: nil), .whatsNew)
+        XCTAssertEqual(MusicFinderTab(saved: "", showedFind: true), .find)  // from before the tabs
+        XCTAssertEqual(MusicFinderTab(saved: "playlists", showedFind: true), .playlists)
+        XCTAssertEqual(
+            MusicFinderTab.allCases.map(\.title), ["What's New", "Find", "Playlists", "Covers & Remixes"])
+    }
+
+    func testAFoundPlaylistIsReadAndHasALinkToOpen() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let said = Data(
+            #"{"playlists": [{"playlist_id": "PLabc123", "title": "Band best songs", "author": null, "thumbnail": null, "why": "For “Melody” by Band"}], "note": null}"#
+                .utf8)
+        let found = try decoder.decode(FoundPlaylistsAnswer.self, from: said)
+        XCTAssertEqual(found.playlists.first?.link, "https://music.youtube.com/playlist?list=PLabc123")
+        XCTAssertNil(found.playlists.first?.author)
+        XCTAssertNil(found.note)
+    }
+
+    func testSidebarRowsCanBeTakenOutAndPutBack() {
+        XCTAssertEqual(SidebarRows.hidden(nil), [])
+        var saved = SidebarRows.write(nil, "animeFinder", shown: false)
+        saved = SidebarRows.write(saved, "home", shown: false)
+        XCTAssertEqual(saved, "home,animeFinder")  // in the sidebar's order
+        XCTAssertEqual(SidebarRows.hidden(saved + ",nonsense"), ["home", "animeFinder"])
+        XCTAssertEqual(SidebarRows.write(saved, "home", shown: true), "animeFinder")
+        XCTAssertEqual(SidebarRows.write("animeFinder", "animeFinder", shown: true), "")
+    }
+}
+
 final class PendingKeepsTests: XCTestCase {
     func testFilmsStillBeingKeptAreRememberedUntilTheyreDone() throws {
         let name = "pendingkeeps-\(UUID().uuidString)"
