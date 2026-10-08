@@ -1036,6 +1036,9 @@ private struct AddonSettings: View {
                     if let version = addon.version {
                         Text(version).font(.callout).foregroundStyle(.secondary)
                     }
+                    if addon.isAdult {
+                        Text("Adults only").font(.caption.weight(.semibold)).foregroundStyle(.orange)
+                    }
                 }
                 if !addon.offers.isEmpty {
                     Text(addon.offers).font(.callout).foregroundStyle(.secondary)
@@ -1057,6 +1060,15 @@ private struct AddonSettings: View {
         }
         .labelStyle(.iconOnly)
         .buttonStyle(.borderless)
+        // For one that doesn't say so itself. Not in a child's profile (the engine
+        // refuses it there, and gives that profile no adults-only add-on to see).
+        .contextMenu {
+            if !model.profiles.current.isChild {
+                Button(addon.isAdult ? "Not Adults Only" : "Mark as Adults Only") {
+                    change("addon.mark", ["addon_id": addon.id, "adult": !addon.isAdult])
+                }
+            }
+        }
     }
 
     private func add() {

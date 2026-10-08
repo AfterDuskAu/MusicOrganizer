@@ -1110,6 +1110,7 @@ final class AppModel {
 
     /// Nothing of the last profile's stays on screen while the next one's is read.
     private func clearForAnotherLibrary() {
+        media.forget()
         (library, everything, downloaded, videos) = (.empty, .empty, [], [])
         (listening, favourites, heard, status, root) = (.empty, [], [], nil, nil)
         (pending, starting, startProblems) = ([], [], [:])

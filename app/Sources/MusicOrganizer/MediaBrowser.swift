@@ -16,6 +16,11 @@ final class MediaList {
     /// Where the next page begins, as the engine said.
     private var cursor = 0
 
+    /// Back to nothing: another profile is in use now.
+    func reset() {
+        (items, more, working, problem, shownFor, cursor) = ([], false, false, nil, nil, 0)
+    }
+
     /// Ask for the first page, or with `adding` for the next one.
     func load(
         _ model: AppModel, addon: Addon, catalog: Addon.Catalog, genre: String? = nil,
@@ -67,6 +72,15 @@ final class MediaBrowser {
     let films = MediaList()
     let series = MediaList()
     let anime = MediaList()
+    /// The lists of add-ons for adults only: one Finder's, and nothing else's.
+    let adult = MediaList()
+
+    /// Another profile is in use now: its add-ons are read afresh (a child's profile
+    /// isn't given the ones for adults only), and nothing the last one had open stays.
+    func forget() {
+        (addons, problem, loaded) = ([], nil, false)
+        for list in [channels, films, series, anime, adult] { list.reset() }
+    }
 
     func load(_ model: AppModel) async {
         guard !loaded else { return }
@@ -94,9 +108,18 @@ final class MediaBrowser {
 
     /// Every list of one kind ("movie", "channel") that can be opened without typing,
     /// with the add-on it's from.
+    /// Never from an add-on for adults only: those lists are kept to their own Finder
+    /// (`adultCatalogs`), out of Home and every other page.
     func catalogs(of type: String) -> [(addon: Addon, catalog: Addon.Catalog)] {
-        addons.flatMap { addon in
+        addons.filter { !$0.isAdult }.flatMap { addon in
             addon.catalogs.filter { $0.type == type && $0.canBeBrowsed }.map { (addon, $0) }
+        }
+    }
+
+    /// Every list, of whatever kind, from the add-ons for adults only.
+    func adultCatalogs() -> [(addon: Addon, catalog: Addon.Catalog)] {
+        addons.filter(\.isAdult).flatMap { addon in
+            addon.catalogs.filter(\.canBeBrowsed).map { (addon, $0) }
         }
     }
 }

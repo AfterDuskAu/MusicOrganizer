@@ -1685,3 +1685,11 @@ The owner asked for ideas from the Photonizer project that would make the app ru
 - **Adults-only genres aren't offered** (`ADULT_GENRES`: five of that add-on's sixty genres). This is a family's app with children's profiles. It hides the choice in the genre list; it is not a filter on what a list holds, and a child's profile has no filter for films or anime yet (only for songs).
 
 CLAUDE.md's add-on rule says four starting add-ons now.
+
+2026-10-08, about 4:30pm. **Add-ons for adults only are fenced into a Finder of their own.** The owner asked for one, "subject to deletion if it doesn't work out", never in a child's profile, never on Home. No such add-on is built in or tested against (the tests use a made-up one); the owner adds one by its address, as any other.
+
+- **What counts:** an add-on whose manifest says `behaviorHints.adult`, or one the owner marks in Settings → Add-ons (right-click → Mark as Adults Only; `addon.mark`). An Addon carries `adult`.
+- **Where it shows:** every list of such an add-on, of whatever type, in the last Finder of the sidebar, and nowhere else. `MediaBrowser.catalogs(of:)`, which Home and every other Finder read their lists from, leaves those add-ons out. A title opened there has no favourite heart and isn't remembered as watched, so nothing of it reaches Home's rows. The row can be taken out in Customise Sidebar like any other.
+- **A child's profile:** the engine is told it's a child's (`kids.set`) and from then that profile's list has no adults-only add-on in it: nothing can be asked of one, one can't be added, a mark can't be changed. The list of add-ons is one for the whole computer, so changes made in a child's profile (remove, reorder, put back) are made to the whole kept list and leave the unseen ones where they were. The app also hides the row and the page there, and reads the add-ons afresh when the profile changes (it used to keep the last profile's).
+- An adults-only add-on keeps every genre it offers; the five taken off other add-ons' lists still are.
+- **Not fenced:** if such an add-on also offers ways to play an ordinary film (by its `tt` id), they'd be listed on that film's page with the others. A film kept from it goes to the Movies folder like any kept film, and from there into Videos → Movies and, with that switch on, the share.

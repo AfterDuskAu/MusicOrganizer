@@ -48,6 +48,10 @@ public struct Addon: Decodable, Identifiable, Hashable, Sendable {
     public let catalogs: [Catalog]
     public let version: String?
     public let description: String?
+    /// For adults only, by its own word or the owner's mark. Its lists are shown in one
+    /// Finder of their own and nowhere else; a child's profile is never given one.
+    public let adult: Bool?
+    public var isAdult: Bool { adult == true }
 
     /// The add-on's name as Settings shows it. The channels add-on calls itself by the
     /// service's name, which the app doesn't show (the owner's rule).

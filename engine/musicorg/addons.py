@@ -167,7 +167,10 @@ def _genres(value: Any) -> list[str]:
     return [name for name in _texts(value) if name.strip().lower() not in ADULT_GENRES]
 
 
-def _catalogs(raw: dict[str, Any]) -> list[dict[str, Any]]:
+def _catalogs(raw: dict[str, Any], *, adult: bool = False) -> list[dict[str, Any]]:
+    """`adult`: an add-on that's for adults only keeps every genre it offers; its lists
+    are shown in one place, and never in a child's profile."""
+    genres = _texts if adult else _genres
     found = []
     for entry in raw.get("catalogs") or []:
         if not isinstance(entry, dict):
@@ -182,7 +185,7 @@ def _catalogs(raw: dict[str, Any]) -> list[dict[str, Any]]:
                     {
                         "name": one["name"],
                         "required": one.get("isRequired") is True,
-                        "options": _genres(one.get("options")),
+                        "options": genres(one.get("options")),
                     }
                 )
         # Older manifests name what a catalog takes in other fields.
@@ -192,7 +195,7 @@ def _catalogs(raw: dict[str, Any]) -> list[dict[str, Any]]:
                 required = name in _texts(entry.get("extraRequired"))
                 extra.append({"name": name, "required": required, "options": []})
         if "genre" not in {one["name"] for one in extra} and _texts(entry.get("genres")):
-            extra.append({"name": "genre", "required": False, "options": _genres(entry["genres"])})
+            extra.append({"name": "genre", "required": False, "options": genres(entry["genres"])})
         found.append(
             {
                 "type": kind,
@@ -215,6 +218,8 @@ def read_manifest(address: str, raw: Any) -> dict[str, Any]:
     if not isinstance(raw.get("resources"), list) or not isinstance(raw.get("types"), list):
         raise AddonError("That isn't an add-on's manifest: it doesn't say what it offers.")
     description = raw.get("description")
+    hints = raw.get("behaviorHints")
+    adult = isinstance(hints, dict) and hints.get("adult") is True
     return {
         "id": raw["id"],
         "name": raw["name"],
@@ -224,7 +229,10 @@ def read_manifest(address: str, raw: Any) -> dict[str, Any]:
         "base": base_of(address),
         "types": _texts(raw["types"]),
         "resources": _resources(raw),
-        "catalogs": _catalogs(raw),
+        "catalogs": _catalogs(raw, adult=adult),
+        # For adults only, by its own word (`behaviorHints.adult`) or the owner's mark
+        # (`mark_adult`): its lists are kept to one page, and out of a child's profile.
+        "adult": adult,
     }
 
 
@@ -521,6 +529,31 @@ def listed() -> list[dict[str, Any]]:
     """The owner's add-ons, in their order. The first time, the app's own few are
     fetched and kept; one of those that can't be reached is left out for now and tried
     again next time, until a list has been saved."""
+
+    return _shown(_everything())
+
+
+_for_child = False
+
+
+def set_for_child(on: bool) -> None:
+    """This engine is running for a child's profile (or isn't any more): there, an
+    add-on for adults only isn't in the list at all, so nothing can be asked of it."""
+    global _for_child
+    _for_child = on
+
+
+def is_adult(addon: dict[str, Any]) -> bool:
+    return addon.get("adult") is True
+
+
+def _shown(addons: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [one for one in addons if not is_adult(one)] if _for_child else addons
+
+
+def _everything() -> list[dict[str, Any]]:
+    """The whole kept list, adults-only add-ons included: what a change is made to, so
+    that one made in a child's profile never drops what that profile can't see."""
     from musicorg import config
 
     saved = config.load_addons()
@@ -568,11 +601,31 @@ def add(text: str) -> list[dict[str, Any]]:
     from musicorg import config
 
     fresh = load(text)
-    current = listed()
+    if _for_child and is_adult(fresh):
+        raise AddonError("That add-on is for adults only, and this is a child's profile.")
+    current = _everything()
+    # Read afresh, an add-on the owner marked as adults-only keeps the mark.
+    marked = any(one["id"] == fresh["id"] and is_adult(one) for one in current)
+    fresh["adult"] = is_adult(fresh) or marked
     if any(one["id"] == fresh["id"] for one in current):
         current = [fresh if one["id"] == fresh["id"] else one for one in current]
     else:
         current.append(fresh)
+    config.save_addons(current)
+    return _shown(current)
+
+
+def mark_adult(addon_id: str, on: bool) -> list[dict[str, Any]]:
+    """The owner says an add-on is for adults only (or isn't): one that doesn't say so
+    itself. Not in a child's profile, where the mark can't be taken off."""
+    from musicorg import config
+
+    if _for_child:
+        raise AddonError("That can't be changed in a child's profile.")
+    current = _everything()
+    if not any(one["id"] == addon_id for one in current):
+        raise AddonError("That add-on isn't in your list any more.")
+    current = [{**one, "adult": on} if one["id"] == addon_id else one for one in current]
     config.save_addons(current)
     return current
 
@@ -580,9 +633,11 @@ def add(text: str) -> list[dict[str, Any]]:
 def remove(addon_id: str) -> list[dict[str, Any]]:
     from musicorg import config
 
-    current = [one for one in listed() if one["id"] != addon_id]
+    if not any(one["id"] == addon_id for one in listed()):
+        return listed()  # not there (or not this profile's to see): nothing changes
+    current = [one for one in _everything() if one["id"] != addon_id]
     config.save_addons(current)
-    return current
+    return _shown(current)
 
 
 def reorder(addon_ids: list[str]) -> list[dict[str, Any]]:
@@ -594,7 +649,9 @@ def reorder(addon_ids: list[str]) -> list[dict[str, Any]]:
     if sorted(addon_ids) != sorted(current):
         raise AddonError("The list of add-ons has changed. Look at it again and try once more.")
     ordered = [current[addon_id] for addon_id in addon_ids]
-    config.save_addons(ordered)
+    # The ones this profile can't see keep their places after the rest.
+    unseen = [one for one in _everything() if one["id"] not in current]
+    config.save_addons(ordered + unseen)
     return ordered
 
 
@@ -603,14 +660,14 @@ def restore() -> list[dict[str, Any]]:
     after the ones that are. One that can't be reached says so."""
     from musicorg import config
 
-    current = listed()
+    current = _everything()
     have = {base_of(one["address"]) for one in current}
     missing = [address for address in STARTING if base_of(manifest_address(address)) not in have]
     if not missing:
-        return current
+        return _shown(current)
     current = current + [load(address) for address in missing]
     config.save_addons(current)
-    return current
+    return _shown(current)
 
 
 def named(addon_id: str) -> dict[str, Any]:

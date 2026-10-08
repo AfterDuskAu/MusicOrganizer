@@ -1785,6 +1785,17 @@ final class AddonTests: XCTestCase {
 }
 
 final class MusicFinderTests: XCTestCase {
+    func testAnAddOnSaysWhetherItsForAdultsOnly() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let said = Data(
+            #"[{"id": "a", "name": "Films", "address": "https://x.invalid/manifest.json", "types": [], "catalogs": []}, {"id": "b", "name": "Grown", "address": "https://y.invalid/manifest.json", "types": [], "catalogs": [], "adult": true}]"#
+                .utf8)
+        let addons = try decoder.decode([Addon].self, from: said)
+        XCTAssertEqual(addons.map(\.isAdult), [false, true])  // one kept before the mark isn't
+        XCTAssertTrue(SidebarRows.all.contains { $0.key == "adultFinder" })
+    }
+
     func testTheTabIsRememberedAndTheOldPagesChoiceIsRead() {
         XCTAssertEqual(MusicFinderTab(saved: "remixes"), .remixes)
         XCTAssertEqual(MusicFinderTab(saved: nil), .whatsNew)

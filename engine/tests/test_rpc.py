@@ -814,3 +814,22 @@ def test_how_fast_torrents_send_on_can_be_limited(opened: rpc.Server) -> None:
     result(opened, "settings.set", torrent_upload="5")
     assert opened._film_player().upload == 5_000_000
     opened._films = None
+
+
+def test_a_childs_engine_hides_adults_only_add_ons(opened: rpc.Server) -> None:
+    from musicorg import addons
+
+    config.save_addons([
+        {"id": "a.b", "name": "Films", "version": "1", "address": "https://x.invalid/manifest.json",
+         "base": "https://x.invalid", "types": [], "resources": [], "catalogs": [], "adult": False},
+        {"id": "c.d", "name": "Grown", "version": "1", "address": "https://y.invalid/manifest.json",
+         "base": "https://y.invalid", "types": [], "resources": [], "catalogs": [], "adult": True},
+    ], offered=list(addons.STARTING))  # fmt: skip
+    assert [a["name"] for a in result(opened, "addon.list")["addons"]] == ["Films", "Grown"]
+    assert result(opened, "addon.mark", addon_id="a.b", adult=True)["addons"][0]["adult"] is True
+    result(opened, "addon.mark", addon_id="a.b", adult=False)
+    result(opened, "kids.set", on=True)
+    assert [a["name"] for a in result(opened, "addon.list")["addons"]] == ["Films"]
+    assert code(opened, "addon.mark", addon_id="a.b", adult=True) == rpc.USER_ERROR
+    result(opened, "kids.set", on=False)
+    assert len(result(opened, "addon.list")["addons"]) == 2

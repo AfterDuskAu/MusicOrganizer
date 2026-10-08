@@ -594,7 +594,9 @@ struct MovieFinderView: View {
 
     init(kind: String) {
         self.kind = kind
-        let name = kind == "series" ? "seriesFinder" : kind == "anime" ? "animeFinder" : "movieFinder"
+        let name =
+            ["series": "seriesFinder", "anime": "animeFinder", "adult": "adultFinder"][kind]
+            ?? "movieFinder"
         _listKey = AppStorage(wrappedValue: "", "\(name)List")
         _genre = AppStorage(wrappedValue: "", "\(name)Genre")
         _also = AppStorage(wrappedValue: "", "\(name)Also")
@@ -604,18 +606,25 @@ struct MovieFinderView: View {
     /// Anime: the lists add-ons give under that name (2026-10-08). What's in them are
     /// series and films like any other, opened the same way.
     private var isAnime: Bool { kind == "anime" }
+    /// The add-ons for adults only (the owner, 2026-10-08): every list of theirs, here
+    /// and nowhere else. Nothing opened here is remembered for Home.
+    private var isAdult: Bool { kind == "adult" }
+    /// A page whose rows can't be put on Home.
+    private var apart: Bool { isAnime || isAdult }
     @State private var typed = ""
     @State private var search = ""
     @State private var opened: MediaItem?
 
     var body: some View {
         let media = model.media
-        let lists = media.catalogs(of: kind)
+        let lists = isAdult ? media.adultCatalogs() : media.catalogs(of: kind)
         let chosen = lists.first { Self.key($0) == listKey } ?? lists.first
         ZStack {
             VStack(spacing: 0) {
                 HStack(spacing: 12) {
-                    Text(isSeries ? "Series Finder" : isAnime ? "Anime Finder" : "Movie Finder")
+                    Text(
+                        isSeries ? "Series Finder" : isAnime ? "Anime Finder"
+                            : isAdult ? "Porn Finder" : "Movie Finder")
                         .font(.title2.weight(.semibold)).heading()
                         .lineLimit(1)
                         .fixedSize()
@@ -648,7 +657,7 @@ struct MovieFinderView: View {
                                 .fixedSize()
                                 .help("Only movies tagged with both genres")
                                 // Two genres chosen: the search can be a row on Home.
-                                if !isAnime, !also.isEmpty, also != first,
+                                if !apart, !also.isEmpty, also != first,
                                     chosen.catalog.genres.contains(also)
                                 {
                                     let row = HomeSection.custom(isSeries ? .series : .movies, first, also)
@@ -686,7 +695,9 @@ struct MovieFinderView: View {
                     let second =
                         wanted != nil && also != wanted && chosen.catalog.id != "year"
                             && chosen.catalog.genres.contains(also) ? also : ""
-                    let list = isSeries ? media.series : isAnime ? media.anime : media.films
+                    let list =
+                        isSeries ? media.series : isAnime ? media.anime
+                        : isAdult ? media.adult : media.films
                     MediaGrid(list: list, width: 140, open: { opened = $0 }) {
                         Task {
                             await list.load(
@@ -699,11 +710,17 @@ struct MovieFinderView: View {
                             model, addon: chosen.addon, catalog: chosen.catalog, genre: wanted,
                             search: search, also: second)
                     }
-                } else if isAnime, media.loaded {
+                } else if apart, media.loaded {
                     Message(
-                        symbol: "sparkles.tv", title: "No list of anime yet",
-                        text: "None of your add-ons lists anime. Add one that does in Settings → "
-                            + "Add-ons, and its lists show up here."
+                        symbol: isAdult ? "eye.slash" : "sparkles.tv",
+                        title: isAdult ? "No add-on for adults yet" : "No list of anime yet",
+                        text: isAdult
+                            ? "The app doesn't come with one. Add one by its address in Settings → "
+                                + "Add-ons: if it doesn't say itself that it's for adults only, "
+                                + "mark it there. Its lists show up here and nowhere else: not on "
+                                + "Home, not in the other Finders, and never in a child's profile."
+                            : "None of your add-ons lists anime. Add one that does in Settings → "
+                                + "Add-ons, and its lists show up here."
                     ) {
                         OpenSettings { Text("Open Settings…") }
                             .simultaneousGesture(
@@ -723,7 +740,7 @@ struct MovieFinderView: View {
             .opacity(opened == nil ? 1 : 0)
             .allowsHitTesting(opened == nil)
             if let opened {
-                MovieView(film: opened) { self.opened = nil }
+                MovieView(film: opened, apart: isAdult) { self.opened = nil }
             }
         }
         .onChange(of: opened) { _, film in
@@ -732,7 +749,7 @@ struct MovieFinderView: View {
         }
         // A film or series clicked on Home opens here.
         .onChange(of: model.filmToOpen, initial: true) { _, wanted in
-            if let wanted, !isAnime, (wanted.type == "series") == isSeries {
+            if let wanted, !apart, (wanted.type == "series") == isSeries {
                 opened = wanted
                 model.filmToOpen = nil
             }
@@ -765,6 +782,9 @@ struct MovieFinderView: View {
 /// summary, and under them every place it can be played from, add-on by add-on.
 struct MovieView: View {
     let film: MediaItem
+    /// Opened from the Finder for adults: it has no heart, and playing it isn't
+    /// remembered, so nothing of it reaches Home.
+    var apart = false
     let back: () -> Void
     @Environment(AppModel.self) private var model
     @State private var details: MediaDetails?
@@ -801,7 +821,7 @@ struct MovieView: View {
                     HStack(alignment: .firstTextBaseline, spacing: 16) {
                         Text(film.name).font(.system(size: 40, weight: .bold)).heading()
                         let loved = model.mediaFavourites.contains(film)
-                        Button(
+                        if !apart { Button(
                             loved ? "Remove From Favourites" : "Add to Favourites",
                             systemImage: loved ? "heart.fill" : "heart"
                         ) {
@@ -811,6 +831,7 @@ struct MovieView: View {
                         .buttonStyle(.plain)
                         .font(.title)
                         .help(loved ? "Take it out of your favourites" : "A favourite: it shows on Home")
+                        }
                     }
                     HStack(spacing: 28) {
                         if let minutes = details?.runtimeMin { Text("\(minutes) min") }
@@ -949,7 +970,7 @@ struct MovieView: View {
                             Spacer()
                             Text(stream.kindLabel).foregroundStyle(.secondary)
                             Button("Play", systemImage: "play.fill") {
-                                model.play(stream, title: playName, watching: watched)
+                                model.play(stream, title: playName, watching: apart ? nil : watched)
                             }
                             .disabled(!stream.canPlay)
                             .help(stream.canPlay ? "Play it now" : "This one can't be played in the app yet")

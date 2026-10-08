@@ -414,7 +414,8 @@ public enum SidebarRows {
         ("home", "Media Discovery"), ("youtube", "Media Discovery"),
         ("videoFinder", "Media Discovery"), ("movieFinder", "Media Discovery"),
         ("seriesFinder", "Media Discovery"), ("animeFinder", "Media Discovery"),
-        ("downloads", "Media Discovery"), ("import", "Playlists"),
+        ("adultFinder", "Media Discovery"), ("downloads", "Media Discovery"),
+        ("import", "Playlists"),
     ]
     public static let key = "sidebarHidden"
 

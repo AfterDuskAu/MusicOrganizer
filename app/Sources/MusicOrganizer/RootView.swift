@@ -92,6 +92,8 @@ enum SidebarItem: Hashable {
     case home, seriesFinder
     /// Anime in a Finder of its own, beside series (owner, 2026-10-08).
     case animeFinder
+    /// The lists of add-ons for adults only, in a Finder of their own (owner, 2026-10-08).
+    case adultFinder
     /// Settings: a page like the others, opened by the cog wheel or ⌘, (no row of its own).
     case settings
     case playlist(String)
@@ -111,6 +113,7 @@ enum SidebarItem: Hashable {
         case .home: "home"
         case .seriesFinder: "seriesFinder"
         case .animeFinder: "animeFinder"
+        case .adultFinder: "adultFinder"
         case .importPlaylists: "import"
         case .youtube: "youtube"
         case .youtubeQueue: "youtubeQueue"
@@ -135,6 +138,7 @@ enum SidebarItem: Hashable {
         case "videoFinder": self = .videoFinder
         case "videoExplore": self = .videoFinder  // Explore is Video Finder itself now
         case "animeFinder": self = .animeFinder
+        case "adultFinder": self = .adultFinder
         case "movieFinder": self = .movieFinder
         case "home": self = .home
         case "seriesFinder": self = .seriesFinder
@@ -187,6 +191,7 @@ enum SidebarItem: Hashable {
         case .home: "Home"
         case .seriesFinder: "Series Finder"
         case .animeFinder: "Anime Finder"
+        case .adultFinder: "Porn Finder"
         case .importPlaylists: "Import Playlists"
         case .youtube: "Music Finder"
         case .youtubeQueue: "Queue"
@@ -215,6 +220,7 @@ enum SidebarItem: Hashable {
         case .home: "house"
         case .seriesFinder: "tv"
         case .animeFinder: "sparkles.tv"
+        case .adultFinder: "eye.slash"
         case .importPlaylists: "square.and.arrow.down.on.square"
         case .youtube: "magnifyingglass"
         case .youtubeQueue: "text.append"
@@ -506,8 +512,11 @@ struct MainView: View {
                 ForEach(
                     [
                         SidebarItem.home, .youtube, .videoFinder, .movieFinder, .seriesFinder,
-                        .animeFinder, .downloads,
-                    ].filter { !hiddenRows.contains($0.key) }, id: \.self
+                        .animeFinder, .adultFinder, .downloads,
+                    ].filter { !hiddenRows.contains($0.key) }
+                        // Never in a child's profile, whatever the sidebar's choices say.
+                        .filter { $0 != .adultFinder || !model.profiles.current.isChild },
+                    id: \.self
                 ) {
                     entry in
                     if entry == .downloads {
@@ -837,6 +846,12 @@ struct MainView: View {
             VideoFinderView()
         case .animeFinder:
             MovieFinderView(kind: "anime")
+        case .adultFinder:
+            if model.profiles.current.isChild {
+                Text("This page isn't part of this profile.").foregroundStyle(.secondary)
+            } else {
+                MovieFinderView(kind: "adult")
+            }
         case .movieFinder:
             MovieFinderView(kind: "movie")
         case .seriesFinder:
@@ -1063,7 +1078,11 @@ private struct CustomiseSidebar: View {
                 }
                 ForEach(["Videos", "Media Discovery", "Playlists"], id: \.self) { group in
                     Section(group) {
-                        ForEach(SidebarRows.all.filter { $0.group == group }, id: \.key) { row in
+                        ForEach(
+                            SidebarRows.all.filter { $0.group == group }
+                                .filter { $0.key != "adultFinder" || !model.profiles.current.isChild },
+                            id: \.key
+                        ) { row in
                             let entry = SidebarItem(key: row.key)
                             Toggle(
                                 isOn: Binding(
