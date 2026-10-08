@@ -375,6 +375,9 @@ public struct PlanAnswer: Decodable, Sendable {
         public let downloads: Int?
         public let estMinutes: Int?
         public let days: Int?
+        /// For a playlist copied in from another profile: how many of its songs this
+        /// library already had, so weren't copied again.
+        public let alreadyHere: Int?
     }
     public let planId: String
     public let summary: Summary
@@ -421,6 +424,32 @@ public struct Playlist: Decodable, Identifiable, Hashable, Sendable {
         self.id = id
         self.name = name
         self.trackIds = trackIds
+    }
+
+    /// Songs about to be added, sorted into the ones the playlist doesn't have and the
+    /// ones it has already (each counted once, in the order given). A song given twice
+    /// in one go is there once.
+    public func sorting(adding ids: [String]) -> (new: [String], already: [String]) {
+        let have = Set(trackIds)
+        var seen = Set<String>()
+        var new: [String] = []
+        var already: [String] = []
+        for id in ids where seen.insert(id).inserted {
+            if have.contains(id) { already.append(id) } else { new.append(id) }
+        }
+        return (new, already)
+    }
+
+    /// What's asked before a song is put in a playlist a second time: "3 of these 10
+    /// songs are already in “Road Trip”." Nil when none of them is.
+    public static func alreadyQuestion(already: Int, of total: Int, in name: String) -> String? {
+        guard already > 0 else { return nil }
+        if total == 1 { return "This song is already in “\(name)”." }
+        if already == total {
+            return already == 2
+                ? "Both songs are already in “\(name)”." : "All \(total) songs are already in “\(name)”."
+        }
+        return "\(already) of these \(total) songs \(already == 1 ? "is" : "are") already in “\(name)”."
     }
 }
 

@@ -2719,8 +2719,12 @@ def plan_share(
     `fileops.copy_in`, checked against what was read, with its `.lrc`, and its album's
     `cover.jpg` when this library has none there yet. It keeps its tags as they are, its
     `MUSICORG_ID` too, and lands at the same place under `Music/` (a name already taken
-    gets a " (2)"). A song this library already has, by that id or by its YouTube id, isn't
-    copied again: it just joins the playlist. Journaled; undo takes the copies back out."""
+    gets a " (2)"). A song this library already has isn't copied again: it just joins the
+    playlist, as this library's own copy. "Already has" is by that id, by its YouTube id,
+    or (2026-10-08: two people who each put the same song in their own library) by
+    title, version and artist together, when exactly one song here answers to them: a
+    remix is never taken for the original, nor a song for another artist's of the same
+    name. Journaled; undo takes the copies back out."""
     try:
         theirs = Path(source_root).expanduser().resolve(strict=True)
     except OSError:
@@ -2740,13 +2744,19 @@ def plan_share(
         raise NotFoundError("That playlist doesn't exist any more.")
     by_id: dict[str, str] = {}
     by_source: dict[str, str] = {}
+    by_name: dict[tuple[str, frozenset[str], str], set[str]] = {}
     for row in index.library_tracks():
         mine = row.get("musicorg_id")
         if isinstance(mine, str):
             by_id[mine] = mine
+            if naming.is_video_path(row["rel_path"]):
+                continue
             source = row.get("source_id")
-            if isinstance(source, str) and not naming.is_video_path(row["rel_path"]):
+            if isinstance(source, str):
                 by_source.setdefault(source, mine)
+            name = _song_name(row.get("title"), row.get("artist"))
+            if name is not None:
+                by_name.setdefault(name, set()).add(mine)
     ops: list[fileops.PlanOp] = []
     copies = 0
     for rel in dict.fromkeys(rel_paths):
@@ -2759,6 +2769,11 @@ def plan_share(
         here = by_id.get(their_id) or (
             by_source.get(source_id) if source_id and not naming.is_video_path(rel) else None
         )
+        if here is None and not naming.is_video_path(rel):
+            name = _song_name(found.title, found.artist)
+            same = by_name.get(name, set()) if name is not None else set()
+            if len(same) == 1:  # one song here is it; two, and it isn't clear which
+                (here,) = same
         params: dict[str, Any] = {"musicorg_id": here or their_id}
         if playlist_id is not None:
             params["playlist_id"] = playlist_id
@@ -2779,6 +2794,24 @@ def plan_share(
     plan = fileops.new_plan("share", ops, summary)
     fileops.save_plan(lib, plan)
     return plan
+
+
+def _song_name(title: object, artist: object) -> tuple[str, frozenset[str], str] | None:
+    """What two copies of one song have in common when nothing else ties them: the
+    title, the version it names (a remix isn't the original) and the first artist. None
+    when either the title or the artist isn't there to compare."""
+    if not isinstance(title, str) or not isinstance(artist, str):
+        return None
+    parsed = normalize.parse_title(title)
+    key = normalize.compare_key(parsed.title)
+    who = youtube.artist_key(artist)
+    if not key or not who:
+        return None
+    hard = frozenset(
+        t for t in parsed.version_tokens
+        if t.partition(":")[0] not in normalize.SOFT_VERSION_KINDS
+    )  # fmt: skip
+    return key, hard, who
 
 
 def _shared_file(music: Path, rel: object) -> Path:

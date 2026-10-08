@@ -1014,9 +1014,16 @@ final class AppModel {
                     ], as: PlanAnswer.self)
                 _ = try await connection.call(
                     "plan.apply", ["plan_id": plan.planId], as: BatchAnswer.self)
-                said.append(
-                    "“\(name)” from \(share.fromName): \(share.paths.count) "
-                        + (share.paths.count == 1 ? "song" : "songs"))
+                var line = "“\(name)” from \(share.fromName): \(share.paths.count) "
+                    + (share.paths.count == 1 ? "song" : "songs")
+                // The ones this library had already aren't copied a second time: the
+                // playlist is given this library's own copies of them.
+                if let here = plan.summary.alreadyHere, here > 0 {
+                    line += here == share.paths.count
+                        ? " (all here already, so nothing is copied)"
+                        : " (\(here) here already, so not copied again)"
+                }
+                said.append(line)
             } catch {
                 notice = "“\(share.playlistName)” from \(share.fromName) couldn't be copied: "
                     + error.localizedDescription
@@ -1383,8 +1390,45 @@ final class AppModel {
         playlistCall("playlist.delete", ["playlist_id": playlist.id])
     }
 
+    /// Add songs to a playlist. If it has some of them already, the owner is asked
+    /// first (the owner, 2026-10-08: adding every song doubled the four that were there):
+    /// skip those, or add them a second time.
     func add(_ tracks: [Track], to playlist: Playlist) {
-        setTracks(playlist.trackIds + tracks.compactMap(\.trackId), of: playlist)
+        let ids = tracks.compactMap(\.trackId)
+        let sorted = playlist.sorting(adding: ids)
+        guard !sorted.already.isEmpty else {
+            setTracks(playlist.trackIds + ids, of: playlist)
+            return
+        }
+        addingAgain = AddingAgain(
+            playlistId: playlist.id, name: playlist.name, all: ids, new: sorted.new,
+            already: sorted.already.count)
+    }
+
+    /// Songs waiting on that answer.
+    struct AddingAgain {
+        let playlistId: String
+        let name: String
+        /// Everything that was asked for, as it was asked.
+        let all: [String]
+        /// Only the songs the playlist doesn't have.
+        let new: [String]
+        let already: Int
+        var question: String {
+            Playlist.alreadyQuestion(
+                already: already, of: Set(all).count, in: name) ?? ""
+        }
+    }
+    var addingAgain: AddingAgain?
+
+    /// The answer: `again` adds every song asked for, the ones already there too;
+    /// without it only the new ones go in.
+    func finishAdding(again: Bool) {
+        guard let waiting = addingAgain else { return }
+        addingAgain = nil
+        guard let playlist = self.playlist(waiting.playlistId) else { return }
+        let ids = again ? waiting.all : waiting.new
+        if !ids.isEmpty { setTracks(playlist.trackIds + ids, of: playlist) }
     }
 
     func setTracks(_ ids: [String], of playlist: Playlist) {

@@ -1784,6 +1784,34 @@ final class AddonTests: XCTestCase {
     }
 }
 
+final class PlaylistAddingTests: XCTestCase {
+    func testSongsAlreadyInAPlaylistAreToldApartBeforeTheyreAddedAgain() {
+        let playlist = Playlist(id: "p", name: "Road Trip", trackIds: ["a", "b", "c", "d"])
+        let sorted = playlist.sorting(adding: ["x", "a", "y", "d", "x", "a"])
+        XCTAssertEqual(sorted.new, ["x", "y"])  // each once, in the order given
+        XCTAssertEqual(sorted.already, ["a", "d"])
+        XCTAssertEqual(playlist.sorting(adding: ["z"]).already, [])
+        XCTAssertEqual(Playlist(id: "e", name: "Empty").sorting(adding: ["a", "a"]).new, ["a"])
+
+        XCTAssertNil(Playlist.alreadyQuestion(already: 0, of: 5, in: "Road Trip"))
+        XCTAssertEqual(
+            Playlist.alreadyQuestion(already: 1, of: 1, in: "Road Trip"),
+            "This song is already in “Road Trip”.")
+        XCTAssertEqual(
+            Playlist.alreadyQuestion(already: 4, of: 4, in: "Road Trip"),
+            "All 4 songs are already in “Road Trip”.")
+        XCTAssertEqual(
+            Playlist.alreadyQuestion(already: 2, of: 2, in: "Road Trip"),
+            "Both songs are already in “Road Trip”.")
+        XCTAssertEqual(
+            Playlist.alreadyQuestion(already: 4, of: 1886, in: "Road Trip"),
+            "4 of these 1886 songs are already in “Road Trip”.")
+        XCTAssertEqual(
+            Playlist.alreadyQuestion(already: 1, of: 3, in: "Road Trip"),
+            "1 of these 3 songs is already in “Road Trip”.")
+    }
+}
+
 final class MusicFinderTests: XCTestCase {
     func testPlaylistsShownLatelyAreRememberedOldestForgottenFirst() throws {
         let name = "playlistsseen-\(UUID().uuidString)"

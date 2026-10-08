@@ -4182,6 +4182,64 @@ def test_a_playlist_is_copied_in_from_another_profiles_library(
     assert len(index.library_tracks()) == 2
     assert listening.get(lib)["playlists"][1]["track_ids"] == [r["musicorg_id"] for r in rows]
 
+
+def test_a_song_this_library_has_under_its_own_copy_isnt_copied_in_again(
+    lib: Library, index: Index, downloads: FakeDownloads, tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:  # fmt: skip
+    found = {
+        VIDEO_A: candidate(VIDEO_A, "Melody", ("Band",), SECONDS, album="Tunes"),
+        VIDEO_B: candidate(VIDEO_B, "Melody (Night Remix)", ("Band",), SECONDS, album="Tunes"),
+    }
+    monkeypatch.setattr(youtube, "get_track", lambda video_id: found.get(video_id))
+    theirs_root = tmp_path / "Their Library"
+    library.init(theirs_root)
+    theirs = library.open(theirs_root, write=True, command="pytest")
+    try:
+        with open_index(theirs.paths, write=True) as their_index:
+            plan = pipeline.plan_download(theirs, their_index, [VIDEO_A, VIDEO_B])
+            pipeline.apply(theirs, their_index, plan.plan_id)
+            run_queue(theirs)
+            their_songs = sorted(row["rel_path"] for row in their_index.library_tracks())
+    finally:
+        theirs.close()
+
+    # This library has "Melody" by Band already, as a copy of its own: another file,
+    # another id, nothing of where it came from. And a song of that name by someone else.
+    own_rows = []
+    for number, (title, artist) in enumerate((("melody", "BAND"), ("Melody", "Somebody Else"))):
+        rel = f"Music/{artist}/Mine/{title} {number}.m4a"
+        path = lib.root.joinpath(*rel.split("/"))
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"")
+        own_rows.append({
+            "rel_path": rel, "musicorg_id": f"mine_{number}", "size": 0, "mtime_ns": 0,
+            "title": title, "artist": artist, "album": None, "duration_s": 200.0,
+            "source": "rip_copy", "source_id": None, "only_copy": 0, "origin_path": None,
+            "details_json": "{}", "match": None,
+        })  # fmt: skip
+    index.put_library_tracks(own_rows)
+
+    (mix,) = listening.create_playlist(lib, "From Them")
+    plan = pipeline.plan_share(lib, index, theirs_root, their_songs, playlist_id=mix["id"])
+    # "Melody" is here already (by its name and artist): only the remix is copied.
+    assert (plan.summary["copies"], plan.summary["already_here"]) == (1, 1)
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    assert len(index.library_tracks()) == 3
+    in_list = listening.get(lib)["playlists"][0]["track_ids"]
+    assert "mine_0" in in_list and "mine_1" not in in_list and len(in_list) == 2
+
+    # Two songs here that answer to the name: it isn't clear which, so it's copied.
+    index.put_library_tracks([{**own_rows[0], "rel_path": "Music/BAND/Mine/melody again.m4a",
+                               "musicorg_id": "mine_2"}])  # fmt: skip
+    lib.root.joinpath("Music", "BAND", "Mine", "melody again.m4a").write_bytes(b"")
+    index.remove_library_tracks(
+        [r["rel_path"] for r in index.library_tracks() if r.get("source_id") == VIDEO_B]
+    )
+    plan = pipeline.plan_share(lib, index, theirs_root, their_songs)
+    assert (plan.summary["copies"], plan.summary["already_here"]) == (2, 0)
+
     # Only songs inside their Music folder, and not this library itself.
     for bad in ("state.json", "Music/../state.json", "../Their Library/Music/x.m4a", 3):
         with pytest.raises(UserError):

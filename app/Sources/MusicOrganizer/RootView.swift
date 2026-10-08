@@ -389,6 +389,7 @@ struct MainView: View {
         } message: {
             Text(model.info?.text ?? "")
         }
+        .modifier(AddingAgainQuestion())
         .confirmationDialog(
             Self.deleteQuestion(model.deletingDownloads ?? []),
             isPresented: Binding(
@@ -1113,5 +1114,43 @@ private struct CustomiseSidebar: View {
     private func library(_ name: String, _ on: Bool, _ shown: [String]) {
         savedEntries = SidebarChoice.write(
             on ? SidebarChoice.adding(name, to: shown) : shown.filter { $0 != name })
+    }
+}
+
+/// Asked before a song goes into a playlist that has it already: skip those, or add
+/// them again. (A modifier of its own: the main view's body is long enough as it is.)
+private struct AddingAgainQuestion: ViewModifier {
+    @Environment(AppModel.self) private var model
+
+    func body(content: Content) -> some View {
+        let waiting = model.addingAgain
+        content.alert(
+            waiting?.question ?? "",
+            isPresented: Binding(
+                get: { model.addingAgain != nil }, set: { if !$0 { model.addingAgain = nil } })
+        ) {
+            if let waiting {
+                if waiting.new.isEmpty {
+                    Button("Add Again") { model.finishAdding(again: true) }
+                    Button("Don't Add", role: .cancel) { model.addingAgain = nil }
+                } else {
+                    Button("Skip \(waiting.already == 1 ? "It" : "Them")") {
+                        model.finishAdding(again: false)
+                    }
+                    .keyboardShortcut(.defaultAction)
+                    Button("Add Again") { model.finishAdding(again: true) }
+                    Button("Cancel", role: .cancel) { model.addingAgain = nil }
+                }
+            }
+        } message: {
+            if let waiting {
+                Text(
+                    waiting.new.isEmpty
+                        ? "Add Again puts \(waiting.already == 1 ? "it" : "them") in a second time."
+                        : "Skip adds only the \(waiting.new.count) "
+                            + "\(waiting.new.count == 1 ? "song" : "songs") that \(waiting.new.count == 1 ? "isn't" : "aren't") there yet. "
+                            + "Add Again puts every one in, the ones already there a second time.")
+            }
+        }
     }
 }
