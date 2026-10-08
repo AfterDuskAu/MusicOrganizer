@@ -131,6 +131,21 @@ def test_round_trip(lib: Library, index: Index, items: dict[str, str], tmp_path:
     assert chosen["payload"]["album"] == "Album"
 
 
+def test_official_is_an_accept_with_the_owners_word_over_an_unsure_fingerprint(
+    lib: Library, index: Index, items: dict[str, str], tmp_path: Path
+) -> None:
+    rows = decide(export_rows(lib, index, tmp_path), Alpha="official", Bravo="Official: 3")
+    result = review.import_csv(lib, index, write_rows(tmp_path / "edited.csv", rows))
+    assert result.applied == {"accept": 1, "candidate": 1}
+    data = state_json(lib)
+    alpha, bravo = data["decisions"][items["Alpha"]], data["decisions"][items["Bravo"]]
+    assert (alpha["decision"], alpha["video_id"], alpha["override"]) == (
+        "accept", "Alp1xxxxxxx", True)  # fmt: skip
+    assert (bravo["decision"], bravo["video_id"], bravo["override"]) == (
+        "candidate", "Bra3xxxxxxx", True)  # fmt: skip
+    assert index.item(items["Alpha"])["state"] == "matched_user"  # type: ignore[index]
+
+
 def test_importing_twice_changes_nothing(
     lib: Library, index: Index, items: dict[str, str], tmp_path: Path
 ) -> None:

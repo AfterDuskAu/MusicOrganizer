@@ -253,6 +253,86 @@ def test_a_fingerprint_mismatch_goes_back_to_review(
         pipeline.apply(lib, index, again.plan_id)
 
 
+def unsure_gate(monkeypatch: pytest.MonkeyPatch, verdict: str = "uncertain") -> None:
+    """Make the fingerprint gate answer `verdict` for every rip."""
+    result = pipeline.GateResult(verdict, 0.2, "The audio is close but not clearly the same.")
+    monkeypatch.setattr(pipeline, "_gate", lambda *a, **k: result)
+
+
+def owners_word(lib: Library, iid: str, video_id: str = VIDEO_A) -> None:
+    """The `official` decision, as `review import` records it."""
+    with state.edit(lib.paths.state_file) as st:
+        st.data.setdefault("decisions", {})[iid] = {
+            "decision": "accept", "video_id": video_id, "override": True}  # fmt: skip
+
+
+def test_the_owners_official_replaces_over_an_unsure_fingerprint(
+    lib: Library,
+    index: Index,
+    rips: Path,
+    audio: AudioFixtures,
+    downloads: FakeDownloads,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The owner, 2026-10-08: nine rips longer than the official track, "use official"."""
+    unsure_gate(monkeypatch)
+    plain = rip(index, rips, audio.melody_a_mp3, "Band - Plain", state_="matched_user")
+    chosen = rip(index, rips, audio.melody_a_mp3, "Band - Chosen", state_="matched_user")
+    owners_word(lib, chosen)
+
+    plan, _ = plan_and_run(lib, index)
+
+    assert plan.summary["overrides"] == 1
+    # One download served both rips: only the one the owner spoke for is replaced.
+    assert item_state(index, chosen) == ("superseded", [])
+    assert item_state(index, plain) == ("review", ["fingerprint_uncertain"])
+    assert music_files(lib) == ["Band/Tunes (2020)/03 Melody.m4a"]
+    gate = state.gate(lib.load_state().data)
+    assert gate[chosen][VIDEO_A]["verdict"] == gate[plain][VIDEO_A]["verdict"] == "uncertain"
+    assert (rips / "Band - Chosen.mp3").is_file()  # the rip is never touched
+
+    # Recorded as unsure, it is planned again only with the owner's word.
+    index.set_state(plain, "matched_user", [])
+    index.set_state(chosen, "matched_user", [])
+    again = pipeline.plan_replace(lib, index)
+    assert [op.item_id for op in again.operations] == [chosen]
+    assert again.summary["skipped"] == {"fingerprint_uncertain_before": 1}
+
+
+def test_the_owners_official_never_covers_different_audio(
+    lib: Library,
+    index: Index,
+    rips: Path,
+    audio: AudioFixtures,
+    downloads: FakeDownloads,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    unsure_gate(monkeypatch, "different")
+    iid = rip(index, rips, audio.melody_a_mp3, state_="matched_user")
+    owners_word(lib, iid)
+
+    plan_and_run(lib, index)
+
+    assert item_state(index, iid) == ("review", ["fingerprint_mismatch"])
+    assert music_files(lib) == []
+    index.set_state(iid, "matched_user", [])
+    assert pipeline.plan_replace(lib, index).operations == []
+
+
+def test_the_owners_word_is_for_the_track_they_chose(lib: Library, index: Index) -> None:
+    iid = add_item(index, "Band - Melody", state="matched_user")
+    add_candidates(index, iid, [candidate(VIDEO_A, "Melody", ("Band",), 200)])
+    item = index.item(iid)
+    assert item is not None
+    (chosen,) = index.candidates(iid)
+    word = {"decision": "accept", "video_id": VIDEO_B, "override": True}
+    assert not pipeline._owner_override(item, chosen, {iid: word})
+    assert pipeline._owner_override(item, chosen, {iid: {**word, "video_id": VIDEO_A}})
+    assert not pipeline._owner_override(item, chosen, {iid: {"video_id": VIDEO_A}})
+    assert not pipeline._owner_override({**item, "state": "matched_auto"}, chosen,
+                                        {iid: {**word, "video_id": VIDEO_A}})  # fmt: skip
+
+
 def test_an_uncertain_verdict_never_goes_auto_again(lib: Library, index: Index) -> None:
     iid = add_item(index, "Band - Melody", state="review", reasons=["duration_mismatch"])
     add_candidates(index, iid, [candidate(VIDEO_A, "Melody", ("Band",), 200)])
