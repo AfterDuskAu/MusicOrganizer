@@ -7,8 +7,9 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from test_rpc import Capture, code, opened, out, result, root, server  # noqa: F401  (fixtures)
 
-from musicorg import config, fileops, torrents
+from musicorg import config, fileops, naming, rpc, torrents
 from musicorg.errors import FileOperationError, OutsideLibraryError
 
 
@@ -357,3 +358,80 @@ def test_keeping_can_be_stopped(places: dict[str, Path]) -> None:
     other = joined_film(places, player, here=False)
     player.stop_keeping(other.info_hash)
     assert other.info_hash in player._joined
+
+
+# ---- episodes of a series and anime, each in its show's folder (2026-10-08) --------------
+
+
+def test_an_episode_is_kept_in_its_shows_folder(places: dict[str, Path]) -> None:
+    player = torrents.Player(places["cache"].parent, movies=places["movies"])
+    folder, name = naming.kept_place("series", "Pilot", show="A Show", season=1, episode=2)
+    for count in ("", " (2)"):  # kept twice: the second never takes the first one's place
+        joined = joined_film(places, player)
+        joined.keep_name, joined.keep_folder = name, folder
+        player._save_kept(joined)
+        assert joined.keep_error is None
+        assert joined.kept_path == str(
+            places["movies"]
+            / "Series"
+            / "A Show"
+            / "Season 1"
+            / f"A Show S01E02 - Pilot{count}.mkv"
+        )
+        assert Path(joined.kept_path).read_bytes() == places["film"].read_bytes()
+    # A film goes where films always went: loose in the Movies folder.
+    joined = joined_film(places, player)
+    joined.keep_name = "The Kid (1921)"
+    player._save_kept(joined)
+    assert joined.kept_path == str(places["movies"] / "The Kid (1921).mkv")
+    assert sorted(p.name for p in places["movies"].iterdir()) == ["Series", "The Kid (1921).mkv"]
+
+
+class Keeper:
+    """Stands in for the torrent player: what it was asked to keep, and where."""
+
+    def __init__(self, movies: Path) -> None:
+        self.movies = movies
+        self.asked: list[tuple[str, tuple[str, ...]]] = []
+
+    def keep(
+        self, info_hash: str, file_index: Any, trackers: Any, name: str, **more: Any
+    ) -> dict[str, Any]:
+        self.asked.append((name, more["folder"]))
+        return {}
+
+    def stop(self) -> None:
+        pass
+
+
+def test_the_app_says_what_its_keeping(opened: rpc.Server, places: dict[str, Path]) -> None:  # noqa: F811
+    opened._films = keeper = Keeper(places["movies"])  # type: ignore[assignment]
+    film = {"info_hash": "ab" * 20}
+    result(opened, "torrent.keep", title="The Kid", year="1921", **film)
+    result(opened, "torrent.keep", title="The Kid", kind="movie", **film)
+    result(opened, "torrent.keep", title="Pilot", kind="series", show="A Show", season=1,
+           episode=2, **film)  # fmt: skip
+    result(
+        opened, "torrent.keep", title="", kind="anime", show="A Show", season=1, episode=2, **film
+    )
+    result(opened, "torrent.keep", title="A Film", year="2001", kind="anime", **film)
+    assert keeper.asked == [
+        ("The Kid (1921)", ()),
+        ("The Kid", ()),
+        ("A Show S01E02 - Pilot", ("Series", "A Show", "Season 1")),
+        ("A Show S01E02", ("Anime", "A Show", "Season 1")),
+        ("A Film (2001)", ("Anime",)),
+    ]
+    for wrong in (
+        {"title": "A Film", "kind": "cartoon"},  # not a kind
+        {"title": "Pilot", "show": "A Show"},  # a show, and not said which kind
+        {"title": "Pilot", "kind": "series", "season": 1, "episode": 2},  # of what?
+        {"title": "Pilot", "kind": "series", "show": "A Show", "season": -1},
+        {"title": "Pilot", "kind": "series", "show": "A Show", "episode": True},
+        {"title": "Pilot", "kind": "series", "show": "A Show", "season": "1"},
+        {"title": " ", "kind": "anime"},
+        {"title": " "},
+    ):
+        assert code(opened, "torrent.keep", **film, **wrong) == rpc.INVALID_PARAMS, wrong
+    assert len(keeper.asked) == 5
+    opened._films = None

@@ -568,3 +568,155 @@ def test_a_saved_video_goes_in_the_videos_folder() -> None:
 )
 def test_which_paths_are_saved_videos(rel: str, video: bool) -> None:
     assert naming.is_video_path(rel) is video
+
+
+# ---- kept films, series and anime (contract section 1) ---------------------------------
+
+
+def kept(**about: Any) -> str:
+    """Where it's kept inside the Movies folder, as a "/"-separated string."""
+    folders, stem = naming.kept_place(about.pop("kind", "series"), about.pop("title", ""), **about)
+    return "/".join((*folders, stem))
+
+
+def test_a_film_is_loose_and_an_episode_is_in_its_shows_folder() -> None:
+    assert kept(kind="movie", title="The Kid", year="1921") == "The Kid (1921)"
+    assert kept(kind="movie", title="The Kid") == "The Kid"
+    assert kept(title="Pilot", show="East of Eden", season=1, episode=2) == (
+        "Series/East of Eden/Season 1/East of Eden S01E02 - Pilot"
+    )
+    assert kept(kind="anime", title="Asteroid Blues", show="Cowboy Bebop", season=1, episode=1) == (
+        "Anime/Cowboy Bebop/Season 1/Cowboy Bebop S01E01 - Asteroid Blues"
+    )
+    # An anime that's a film is part of no show: it stands on its own.
+    assert kept(kind="anime", title="A Film", year=2001) == "Anime/A Film (2001)"
+    # A film isn't part of a show, whatever is said.
+    assert kept(kind="movie", title="A Film", show="A Show", season=1, episode=1) == "A Film"
+
+
+def test_only_whats_known_of_an_episode_is_written() -> None:
+    assert kept(show="A Show", season=1, episode=2) == "Series/A Show/Season 1/A Show S01E02"
+    assert kept(title="Recap", show="A Show", season=0, episode=3) == (
+        "Series/A Show/Specials/A Show S00E03 - Recap"
+    )
+    assert kept(title="Late", show="A Show", episode=5) == "Series/A Show/A Show E05 - Late"
+    assert kept(title="Extra", show="A Show", season=2) == "Series/A Show/Season 2/A Show - Extra"
+    assert kept(title="Extra", show="A Show") == "Series/A Show/A Show - Extra"
+    assert kept(show="A Show") == "Series/A Show/A Show"
+    assert kept(show="A Show", season=12, episode=345) == "Series/A Show/Season 12/A Show S12E345"
+    assert kept(kind="movie", title="  ", year="1921") == ""  # nothing to make a name from
+
+
+def test_kept_names_are_made_safe_and_the_numbers_are_never_cut_off() -> None:
+    assert kept(title="A/B: C?", show="What/If?", season=1, episode=1) == (
+        "Series/What_If_/Season 1/What_If_ S01E01 - A_B_ C_"
+    )
+    folders, stem = naming.kept_place("anime", "t" * 300, show="s" * 300, season=1, episode=2)
+    assert folders == ("Anime", "s" * naming.MAX_CHARS, "Season 1")
+    assert stem == "s" * (naming.MAX_CHARS - 7) + " S01E02"  # no room for the title: left out
+    _, stem = naming.kept_place("series", "t" * 300, show="A Show", season=1, episode=2)
+    assert stem.startswith("A Show S01E02 - ttt") and len(stem) == naming.MAX_CHARS
+    _, stem = naming.kept_place("movie", "t" * 300, year="1921")
+    assert stem.endswith("t (1921)") and len(stem) == naming.MAX_CHARS
+
+
+def test_on_windows_a_kept_path_fits_and_a_show_has_one_folder() -> None:
+    root = PureWindowsPath("C:/Users/someone/Videos")
+
+    def length(folders: tuple[str, ...], stem: str) -> int:
+        full = str(root.joinpath(*folders, stem + " (99).mpeg"))  # the longest it may become
+        return len(full.encode("utf-16-le")) // 2
+
+    shows = set()
+    for title, episode in (("", 2), ("t" * 300, 2), ("Short", 1234), ("😀" * 200, 7)):
+        folders, stem = naming.kept_place(
+            "anime", title, show="s" * 300, season=1, episode=episode, root=root, platform="win32"
+        )
+        assert length(folders, stem) <= naming.WINDOWS_MAX_PATH
+        assert f"E{episode:02d}" in stem
+        shows.add(folders[1])
+    assert len(shows) == 1  # whatever the episode, the show's folder is the same one
+    folders, stem = naming.kept_place("anime", "t", show="😀" * 300, root=root, platform="win32")
+    assert length(folders, stem) <= naming.WINDOWS_MAX_PATH
+    deep = PureWindowsPath("C:/" + "d" * 180)
+    folders, stem = naming.kept_place("movie", "t" * 300, year=1999, root=deep, platform="win32")
+    assert stem.endswith(" (1999)") and len(str(deep.joinpath(stem))) + 10 <= 259
+    # Anywhere else the usual length stands.
+    folders, _ = naming.kept_place("anime", "t", show="s" * 300, root=root, platform="darwin")
+    assert len(folders[1]) == naming.MAX_CHARS
+
+
+@pytest.mark.parametrize(
+    ("rel", "found"),
+    [
+        ("A Film (1921).mp4", {"kind": "movie"}),
+        ("Old Films/Silent/A Film.mp4", {"kind": "movie"}),
+        # Nothing is guessed from a name: only the folder says what a file is.
+        ("A Show S01E02.mp4", {"kind": "movie"}),
+        ("Season 1/A Show S01E02.mp4", {"kind": "movie"}),
+        ("Series.mp4", {"kind": "movie"}),
+        ("Series/A Film.mp4", {"kind": "series"}),
+        ("Anime/A Film (2001).mp4", {"kind": "anime"}),
+        (
+            "Series/A Show/Season 1/A Show S01E02 - Pilot.mp4",
+            {"kind": "series", "show": "A Show", "season": 1, "episode": 2, "title": "Pilot"},
+        ),
+        (
+            "Anime/A Show/Season 1/A Show S01E02.mp4",
+            {"kind": "anime", "show": "A Show", "season": 1, "episode": 2},
+        ),
+        (
+            "Anime/A Show/Specials/A Show S00E03 - Recap - Part 1.m4v",
+            {
+                "kind": "anime",
+                "show": "A Show",
+                "season": 0,
+                "episode": 3,
+                "title": "Recap - Part 1",
+            },
+        ),  # fmt: skip
+        (
+            "Series/A Show/A Show E05 - Late.mov",
+            {"kind": "series", "show": "A Show", "episode": 5, "title": "Late"},
+        ),
+        (
+            "Series/A Show/A Show - Extra.mp4",
+            {"kind": "series", "show": "A Show", "title": "Extra"},
+        ),
+        ("Series/A Show/A Show.mp4", {"kind": "series", "show": "A Show"}),
+        # Files the owner put there under other names: the folder and "S01E02" are read.
+        (
+            "series/a.show/a.show.s02e07.1080p.web.mp4",
+            {"kind": "series", "show": "a.show", "season": 2, "episode": 7},
+        ),
+        (
+            "Series\\A Show\\Season 2\\05 Title.mp4",
+            {"kind": "series", "show": "A Show", "season": 2},
+        ),
+        (
+            "Anime/A Show/Season 3/E12.mp4",
+            {"kind": "anime", "show": "A Show", "season": 3, "episode": 12},
+        ),
+        ("Anime/A Show/Specials/Recap.mp4", {"kind": "anime", "show": "A Show", "season": 0}),
+        (
+            "Series/A Show/Season 9/A Show S02E01.mp4",
+            {"kind": "series", "show": "A Show", "season": 2, "episode": 1},
+        ),
+    ],
+)
+def test_what_a_kept_file_is_is_read_from_where_it_is(rel: str, found: dict[str, Any]) -> None:
+    assert naming.kept_details(rel) == found
+
+
+def test_a_kept_place_reads_back_as_what_was_kept() -> None:
+    for about in (
+        {"kind": "series", "show": "A Show", "season": 1, "episode": 2, "title": "Pilot"},
+        {"kind": "anime", "show": "A Show", "season": 0, "episode": 10, "title": "A - B"},
+        {"kind": "anime", "show": "A Show", "episode": 5, "title": "Late"},
+        {"kind": "series", "show": "A Show", "season": 3},
+        {"kind": "series", "show": "A Show", "title": "Extra"},
+        {"kind": "anime", "show": "A Show", "season": 1, "episode": 2},
+    ):
+        asked = dict(about)
+        folders, stem = naming.kept_place(asked.pop("kind"), asked.pop("title", ""), **asked)
+        assert naming.kept_details("/".join((*folders, stem + ".mp4"))) == about

@@ -265,8 +265,13 @@ def library_info(lib: Library) -> dict[str, str]:
 
 def kept_media(folders: dict[str, Path]) -> list[tuple[dict[str, Any], SharedFile]]:
     """The films and videos the owner keeps outside the library (`config.media_folders`),
-    as the list names them: `movie` for what's in the Movies folder, `video` for what's
-    in the videos folder. Only looked at, never changed.
+    as the list names them: `video` for what's in the videos folder, and for what's in
+    the Movies folder `series` or `anime` inside its `Series` or `Anime` folder and
+    `movie` anywhere else. Only looked at, never changed.
+
+    An episode also says what it's part of and where it comes in it (`show`, `season`,
+    `episode`), read from its folder and its name (`naming.kept_details`): nothing
+    else records what a kept file is. Nothing more of where a file is kept is sent.
 
     Only real files of a kind a phone plays are listed. A link to somewhere else isn't
     followed, so nothing outside these two folders can be given out; hidden files and
@@ -299,11 +304,16 @@ def kept_media(folders: dict[str, Path]) -> list[tuple[dict[str, Any], SharedFil
                     continue
                 if not stat.S_ISREG(about.st_mode) or about.st_size == 0:
                     continue
-                key = f"{kind}:{path.relative_to(top).as_posix()}"
+                inside_top = path.relative_to(top).as_posix()
+                # Ids go by the folder the file was found under, as they always have: a
+                # film listed before episodes were told apart keeps the id it had.
+                key = f"{kind}:{inside_top}"
                 main = SharedFile(_name("f", key), about.st_size, _stamp(about), ending, path)
                 added = datetime.fromtimestamp(about.st_mtime, UTC).strftime(_WHEN)
                 entry = {"id": _name("m", key), "title": path.stem, "kind": kind,
                          "added": added, "video": main.listed()}  # fmt: skip
+                if kind == "movie":  # a film, or an episode of a series or an anime
+                    entry.update(naming.kept_details(inside_top))
                 found.append((entry, main))
     return found
 

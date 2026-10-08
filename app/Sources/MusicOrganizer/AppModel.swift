@@ -747,14 +747,19 @@ final class AppModel {
         }
     }
 
-    func keepFilm(_ stream: MediaStream, title: String, year: String?) {
+    /// Keep a film from its page, or the episode chosen there. The engine files it by
+    /// what it is: a movie loose in the Movies folder, a series' or an anime's episode
+    /// in its show's folder there.
+    func keepFilm(
+        _ stream: MediaStream, of film: MediaItem, episode: MediaDetails.Video?, year: String?
+    ) {
         guard let hash = stream.infoHash?.lowercased(), filmKeeps[hash]?.isKeeping != true
         else { return }
         // Settings → Downloads: made into a file phones and tablets play, unless switched off.
         let convert = UserDefaults.standard.object(forKey: TorrentStatus.convertKey) as? Bool ?? true
         let keep = PendingKeeps.Keep(
-            infoHash: hash, trackers: stream.trackers, title: title,
-            year: year.map { String($0.prefix(4)) }, fileIndex: stream.fileIndex, convert: convert)
+            infoHash: hash, trackers: stream.trackers, fileIndex: stream.fileIndex,
+            convert: convert, of: film, part: episode, year: year)
         // Remembered until it's in the Movies folder, so it carries on if the app is
         // closed first.
         var pending = PendingKeeps.load()

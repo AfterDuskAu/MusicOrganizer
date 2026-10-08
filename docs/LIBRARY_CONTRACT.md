@@ -33,6 +33,28 @@ The engine guarantees everything in this document. It's written so that if the a
 - **Other places the engine writes:** the app's own config, log and cache folders, and exports the user explicitly asked for (via `fileops.write_export`, which never overwrites).
 - **Kept media, outside the library (the owner, 2026-10-07).** Films and videos that aren't music are not part of the library and don't go in it:
   - a film the owner keeps goes in the computer's own **Movies** folder (Videos on Windows): `<Title> (<Year>).<ending>`. With Settings → Downloads → "When downloading movies and videos, convert them to be used with Sync" on (the owner, 2026-10-08; it's on as standard), a film that phones and tablets can't play is first made into an MP4 with H.264 or H.265 picture and AAC sound: its picture copied untouched wherever it's already one of those, and made again as H.264 only when it isn't. With it off, the file is kept exactly as it arrived. This is outside the library, so rule 6 (never transcode into the library) isn't touched;
+  - **an episode of a series, and anime, go in folders of their own inside the Movies folder, and the folder is what says which a file is** (the owner, 2026-10-08). Nothing else records it:
+
+    ```
+    Movies/
+      <Title> (<Year>).mp4                                    a film
+      Series/
+        <Show>/
+          Season 1/
+            <Show> S01E02 - <Episode Title>.mp4               an episode of a series
+      Anime/
+        <Show>/
+          Season 1/
+            <Show> S01E02 - <Episode Title>.mp4               an episode of an anime
+        <Title> (<Year>).mp4                                  an anime that's a film: part of no show
+      Videos/                                                 videos that aren't music (below)
+    ```
+
+    - **Only what's known is written.** An episode with no title of its own is `<Show> S01E02`. One whose season isn't known is `<Show>/<Show> E02`, with no season folder. Season 0 (specials) is the folder `Specials`. The numbers are as the add-on gave them: an anime's add-on may count every season as a show of its own, each with a season 1.
+    - **Names** are made safe and cut as in section 2, the episode's title first, so the numbers are never cut off. On Windows the whole path fits in 259 characters; a show's name is cut by a rule that goes only by the Movies folder, so a show never ends up with two folders.
+    - An episode is converted for phones and tablets as a film is.
+    - **What a file is, is read back from where it is** (`naming.kept_details`), which is all the home share goes by (`ENGINE_API.md`, section 3). Inside `Series` or `Anime` (in any case) it's a series or an anime; the folder under that is its show; "S01E02" in its name is its season and episode, and failing that a `Season 2` or `Specials` folder it's in, and an "E02" in its name. A file anywhere else in the Movies folder is a film: **nothing is guessed from a file's name alone.**
+    - So the rule holds for a file the owner puts there themselves. And an episode kept before these folders were made (loose in the Movies folder, as `<Show> S01E02`) stays a film until the owner moves it into its show's folder: **the engine never moves or renames a kept file.**
   - a video that isn't music (gaming, news, sports, learning, a podcast) goes in **`Videos` inside the Movies folder** (the owner, 2026-10-08; before that, `Media` inside Downloads): `<Title>.mp4`, downloaded through the throttled queue like every download and counted towards the day's limit. Its picture is H.264 at the largest size there is up to the one asked for (a channel's videos come in whatever sizes they were made, so "exactly this size" would refuse most of them), joined to format-140 sound without converting either. Anything else goes to review and nothing is kept.
 
   Those are the usual two folders. The owner can choose another folder for each in the app's Settings → Downloads (`settings.set`, 2026-10-08); it is never one inside a library. Changing a folder moves nothing: what was kept stays where it is.

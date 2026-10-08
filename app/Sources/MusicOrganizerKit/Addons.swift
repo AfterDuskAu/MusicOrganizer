@@ -87,6 +87,23 @@ public struct MediaItem: Codable, Identifiable, Hashable, Sendable {
     public let year: String?
     public let rating: Double?
     public let genres: [String]
+    /// Found in a list of anime (Anime Finder). The engine doesn't say this: what's in
+    /// such a list is a series or a movie like any other, so the app marks it when it's
+    /// opened there, and a favourite or what's been watched carries the mark with it.
+    public private(set) var anime: Bool?
+
+    /// The same film or series, marked as found in a list of anime.
+    public var asAnime: MediaItem {
+        var marked = self
+        marked.anime = true
+        return marked
+    }
+
+    /// What it's kept as (the engine's Kept kind), which decides its folder in the
+    /// Movies folder: "anime" from a list of anime, or else "series" or "movie".
+    public var keptKind: String {
+        anime == true ? "anime" : type == "series" ? "series" : "movie"
+    }
 }
 
 public struct CatalogAnswer: Decodable, Sendable {

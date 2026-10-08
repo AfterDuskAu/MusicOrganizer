@@ -1845,6 +1845,75 @@ final class PendingKeepsTests: XCTestCase {
         after.remove(hash)  // kept, or stopped: forgotten, whatever case its id was given in
         XCTAssertEqual(after.keeps.map(\.title), ["Other"])
     }
+
+    func testAKeepSaysWhatItIsSoItsFiledInItsOwnFolder() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        func item(_ type: String, _ name: String) throws -> MediaItem {
+            let said = #"{"id":"x:1","type":"\#(type)","name":"\#(name)","poster":null,"poster_shape":"poster","year":"1998-1999","rating":null,"genres":[]}"#
+            return try decoder.decode(MediaItem.self, from: Data(said.utf8))
+        }
+        func part(_ title: String, _ season: String, _ episode: String) throws -> MediaDetails.Video {
+            let said = #"{"id":"x:1:2","title":"\#(title)","thumbnail":null,"released":null,"season":\#(season),"episode":\#(episode),"overview":null,"video_id":null}"#
+            return try decoder.decode(MediaDetails.Video.self, from: Data(said.utf8))
+        }
+        func keep(_ item: MediaItem, _ part: MediaDetails.Video? = nil, year: String? = nil) -> [String: Any] {
+            PendingKeeps.Keep(infoHash: "ab", trackers: [], of: item, part: part, year: year).asked
+        }
+        func said(_ asked: [String: Any]) -> [String] {
+            ["kind", "title", "year", "show", "season", "episode"].map { key in
+                asked[key].map { "\(key)=\($0)" } ?? "-"
+            }
+        }
+
+        // A film: its own name and year, and nothing of a show.
+        let film = try item("movie", "The Kid")
+        XCTAssertEqual(said(keep(film, year: "1921-05-01")), ["kind=movie", "title=The Kid", "year=1921", "-", "-", "-"])
+        // An episode: its show, where it comes in it, and its own title. No year.
+        let series = try item("series", "East of Eden")
+        XCTAssertEqual(
+            said(keep(series, try part("Pilot", "1", "2"), year: "2026")),
+            ["kind=series", "title=Pilot", "-", "show=East of Eden", "season=1", "episode=2"])
+        // What the add-on didn't say isn't sent: here, no title and no season.
+        XCTAssertEqual(
+            said(keep(series, try part("", "null", "5"))),
+            ["kind=series", "title=", "-", "show=East of Eden", "-", "episode=5"])
+
+        // Anime is what was opened from a list of anime: the engine's item doesn't say.
+        XCTAssertNil(series.anime)
+        XCTAssertEqual(series.keptKind, "series")
+        let anime = try item("series", "Cowboy Bebop").asAnime
+        XCTAssertEqual(
+            said(keep(anime, try part("Asteroid Blues", "1", "1"))),
+            ["kind=anime", "title=Asteroid Blues", "-", "show=Cowboy Bebop", "season=1", "episode=1"])
+        // An anime that's a film stands on its own.
+        XCTAssertEqual(
+            said(keep(try item("movie", "A Film").asAnime, year: "2001")),
+            ["kind=anime", "title=A Film", "year=2001", "-", "-", "-"])
+
+        // A favourite, or what's been watched, carries the mark; one saved before doesn't have it.
+        let kept = try JSONDecoder().decode(MediaItem.self, from: JSONEncoder().encode(anime))
+        XCTAssertEqual(kept.keptKind, "anime")
+        XCTAssertEqual(kept.id, series.id)
+        let before = #"{"id":"x:1","type":"series","name":"N","posterShape":"poster","genres":[]}"#
+        XCTAssertEqual(try JSONDecoder().decode(MediaItem.self, from: Data(before.utf8)).keptKind, "series")
+
+        // A keep remembered before there were folders is asked for as it was: a movie.
+        let name = "pendingkeeps-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: name))
+        defer { defaults.removePersistentDomain(forName: name) }
+        let old = #"{"keeps":[{"infoHash":"cd","trackers":[],"title":"East of Eden S01E02","convert":true}]}"#
+        defaults.set(Data(old.utf8), forKey: PendingKeeps.key)
+        let carried = try XCTUnwrap(PendingKeeps.load(from: defaults).keeps.first)
+        XCTAssertEqual(said(carried.asked), ["-", "title=East of Eden S01E02", "-", "-", "-", "-"])
+        // And one with a show comes back as it was saved.
+        var pending = PendingKeeps()
+        pending.add(.init(infoHash: "ef", trackers: [], of: anime, part: try part("Asteroid Blues", "1", "1")))
+        pending.save(to: defaults)
+        XCTAssertEqual(
+            said(try XCTUnwrap(PendingKeeps.load(from: defaults).keeps.first).asked),
+            ["kind=anime", "title=Asteroid Blues", "-", "show=Cowboy Bebop", "season=1", "episode=1"])
+    }
 }
 
 final class VideoFilesTests: XCTestCase {

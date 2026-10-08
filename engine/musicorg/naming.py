@@ -295,6 +295,151 @@ def candidate_names(target: Path, limit: int = 1000) -> Iterator[Path]:
         yield target.with_name(f"{stem} ({n}){ext}")
 
 
+# ---- kept films, outside the library (contract section 1) ------------------------------
+
+# A film the owner keeps is loose in the Movies folder. A series' episodes and anime have
+# a folder each inside it, and that folder is what says which a file is (the owner,
+# 2026-10-08): nothing else records it, so it holds for a file the owner puts there too.
+KEPT_MOVIE = "movie"
+KEPT_FOLDERS = {"series": "Series", "anime": "Anime"}
+KEPT_KINDS = (KEPT_MOVIE, *KEPT_FOLDERS)
+SPECIALS_DIR = "Specials"  # season 0
+_EPISODE_TITLE_GAP = " - "
+_SEASON_DIR = re.compile(r"season\s*(\d{1,4})", re.IGNORECASE)
+# "S01E02", wherever it is in a name: "Show S01E02 - Title", "show.s1e2.1080p".
+_SEASON_EPISODE = re.compile(r"(?<![A-Za-z0-9])S(\d{1,4})\s?E(\d{1,4})(?!\d)", re.IGNORECASE)
+# "E02": an episode whose season isn't known.
+_EPISODE = re.compile(r"(?<![A-Za-z0-9])E(\d{1,4})(?![A-Za-z0-9])", re.IGNORECASE)
+# The Windows budget: room kept for a kept file's ending and a collision suffix, and for
+# what goes round a show's name twice over (its folder, and a file in it):
+# \Series\<Show>\Season 9999\<Show> S9999E9999
+_KEPT_TAIL_ROOM = len(".mpeg") + COLLISION_ROOM
+_KEPT_SHOW_ROOM = len("\\Series\\") + len("\\Season 9999\\") + len(" S9999E9999")
+
+
+def kept_place(
+    kind: str,
+    title: str,
+    *,
+    year: int | str | None = None,
+    show: str | None = None,
+    season: int | None = None,
+    episode: int | None = None,
+    root: PurePath | None = None,
+    platform: str | None = None,
+) -> tuple[tuple[str, ...], str]:
+    """Where a film or an episode the owner keeps goes inside the Movies folder: the
+    folders, from the Movies folder down, and the file's name without its ending.
+
+        a film                         <Title> (<Year>)
+        an episode of a series         Series/<Show>/Season 1/<Show> S01E02 - <Title>
+        an episode of an anime         Anime/<Show>/Season 1/<Show> S01E02 - <Title>
+        an anime that's a film         Anime/<Title> (<Year>)
+
+    Only what's known is written: an episode with no title of its own is `<Show> S01E02`,
+    one whose season isn't known is `<Show>/<Show> E02`, and season 0 is `Specials`.
+    Every name is made safe and cut to the usual length (the title first, so the
+    numbers stay). The name comes back empty when there's nothing to make one from.
+
+    On Windows (`platform` "win32", default: this computer) the whole path under `root`,
+    the Movies folder, must also fit in 259 characters, with room left for the file's
+    ending and a " (99)" collision suffix. A show's name is cut by a rule that goes only
+    by the Movies folder, so every episode of it lands in the same folder; an episode's
+    own title gets what's left.
+    """
+    spare: int | None = None  # on Windows: what the path has left for names
+    if root is not None and (platform or sys.platform) == "win32":
+        spare = WINDOWS_MAX_PATH - _utf16_len(str(root).rstrip("\\/")) - _KEPT_TAIL_ROOM
+    top = KEPT_FOLDERS.get(kind)
+    own = _clean(title)
+    part_of = ""
+    if top is not None and show:
+        most = MAX_CHARS if spare is None else (spare - _KEPT_SHOW_ROOM) // 2
+        part_of = safe_component(show, _chars(most, show))
+    if top is None or not part_of:
+        folders: tuple[str, ...] = (top,) if top else ()
+        made = _year(year)
+        dated = f" ({made})" if made else ""
+        most = _chars(_kept_name_room(spare, folders), own)
+        return folders, _finish(_fit(own, most, MAX_BYTES, fixed=dated) + dated) if own else ""
+    folders = (top, part_of)
+    if season is not None:
+        folders += (SPECIALS_DIR if season == 0 else f"Season {season}",)
+    if season is not None and episode is not None:
+        number = f" S{season:02d}E{episode:02d}"
+    elif episode is not None:
+        number = f" E{episode:02d}"
+    else:
+        number = ""
+    most = _kept_name_room(spare, folders)
+    head = _fit(part_of, _chars(most, part_of), MAX_BYTES, fixed=number) + number
+    own = _fit(own, _chars(most, own), MAX_BYTES, fixed=head + _EPISODE_TITLE_GAP)
+    return folders, _finish(head + (_EPISODE_TITLE_GAP + own if own else ""))
+
+
+def _kept_name_room(spare: int | None, folders: tuple[str, ...]) -> int:
+    """How long a kept file's name may be: the usual length, or on Windows what the
+    path has left after its folders."""
+    if spare is None:
+        return MAX_CHARS
+    return min(MAX_CHARS, spare - sum(1 + _utf16_len(folder) for folder in folders) - 1)
+
+
+def _chars(most: int, text: str) -> int:
+    """`most` as a count of `text`'s characters, at least a few. Windows counts an emoji
+    as two, so a name that has one is given half."""
+    if _utf16_len(text) > len(text):
+        most //= 2
+    return max(min(most, MAX_CHARS), MIN_FIELD_CHARS)
+
+
+def kept_details(rel: PurePath | str) -> dict[str, str | int]:
+    """What a file in the Movies folder is, read from where it is (`rel`: its path from
+    the Movies folder down). Always `kind`; for an episode also `show`, and `season`,
+    `episode` and `title` (the episode's own) where the path says.
+
+    - `kind` is `series` or `anime` for a file inside `Series/` or `Anime/`, and
+      `movie` for one anywhere else. Nothing is guessed from a film's name.
+    - A file straight inside `Series/` or `Anime/` is part of no show (an anime film).
+      Otherwise `show` is the name of the folder under it.
+    - `season` and `episode` are the "S01E02" in the file's name. Without one, the
+      season is a `Season 2` (or `Specials`: 0) folder it's in, and the episode an
+      "E02" in its name.
+    - `title` is what follows " - " after those numbers.
+    """
+    parts = PurePosixPath(unicodedata.normalize("NFC", str(rel)).replace("\\", "/")).parts
+    kind = KEPT_MOVIE
+    if len(parts) > 1:
+        top = parts[0].casefold()
+        kind = next((k for k, name in KEPT_FOLDERS.items() if name.casefold() == top), kind)
+    found: dict[str, str | int] = {"kind": kind}
+    if kind == KEPT_MOVIE or len(parts) < 3:
+        return found
+    show, stem = parts[1], PurePosixPath(parts[-1]).stem
+    found["show"] = show
+    numbered = _SEASON_EPISODE.search(stem)
+    if numbered:
+        found["season"], found["episode"] = int(numbered[1]), int(numbered[2])
+    else:
+        for folder in parts[2:-1]:
+            if folder.casefold() == SPECIALS_DIR.casefold():
+                found["season"] = 0
+            elif in_season := _SEASON_DIR.fullmatch(folder.strip()):
+                found["season"] = int(in_season[1])
+        numbered = _EPISODE.search(stem)
+        if numbered:
+            found["episode"] = int(numbered[1])
+    if numbered:
+        rest = stem[numbered.end() :]
+    elif stem.casefold().startswith(show.casefold() + _EPISODE_TITLE_GAP):
+        rest = stem[len(show) :]
+    else:
+        rest = ""
+    if rest.startswith(_EPISODE_TITLE_GAP) and (own := rest[len(_EPISODE_TITLE_GAP) :].strip()):
+        found["title"] = own
+    return found
+
+
 # ---- helpers ---------------------------------------------------------------------------
 
 

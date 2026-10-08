@@ -687,7 +687,9 @@ struct MovieFinderView: View {
                         wanted != nil && also != wanted && chosen.catalog.id != "year"
                             && chosen.catalog.genres.contains(also) ? also : ""
                     let list = isSeries ? media.series : isAnime ? media.anime : media.films
-                    MediaGrid(list: list, width: 140, open: { opened = $0 }) {
+                    // What's opened from a list of anime is marked as anime, so that what's
+                    // kept of it goes in the Movies folder's Anime folder.
+                    MediaGrid(list: list, width: 140, open: { opened = isAnime ? $0.asAnime : $0 }) {
                         Task {
                             await list.load(
                                 model, addon: chosen.addon, catalog: chosen.catalog, genre: wanted,
@@ -965,8 +967,8 @@ struct MovieView: View {
                                 } else {
                                     Button("Keep", systemImage: "arrow.down.circle") {
                                         model.keepFilm(
-                                            stream, title: playName,
-                                            year: isSeries ? nil : details?.year ?? film.year)
+                                            stream, of: film, episode: episode,
+                                            year: details?.year ?? film.year)
                                     }
                                     .disabled(keeping != nil)
                                     .help("Fetch the whole film and save it in your Movies folder")

@@ -23,7 +23,7 @@ import pytest
 from conftest import LOOPBACK
 from test_rpc import Capture, code, opened, out, result, root, server  # noqa: F401  (fixtures)
 
-from musicorg import browse, config, library, listening, rpc, scan, sharing, tags
+from musicorg import browse, config, library, listening, naming, rpc, scan, sharing, tags
 from musicorg.index import open_index
 from musicorg.library import Library
 
@@ -824,6 +824,96 @@ def test_videos_kept_inside_the_movies_folder_are_listed_once(filled: Library) -
     # One folder chosen for both: everything in it is a movie, once.
     same = sharing.kept_media({"movies": folders["media"], "media": folders["media"]})
     assert sorted(entry["kind"] for entry, _ in same) == ["movie", "movie"]
+
+
+def kept(kind: str, title: str, **about: Any) -> Path:
+    """A made-up film or episode, where the engine keeps one of its kind."""
+    inside, name = naming.kept_place(kind, title, **about)
+    return keep(config.media_folders()["movies"].joinpath(*inside), name + ".mp4")
+
+
+def test_series_and_anime_are_told_apart_by_their_folders(filled: Library) -> None:
+    folders = config.media_folders()
+    movies = folders["movies"]
+    kept("movie", "A Film", year="1921")
+    episode = kept("series", "Pilot", show="A Show", season=1, episode=2)
+    episode.write_bytes(b"the second episode")
+    kept("series", "", show="A Show", season=1, episode=1)
+    kept("series", "Recap", show="A Show", season=0, episode=1)
+    kept("anime", "Late", show="An Anime", episode=5)
+    kept("anime", "An Anime Film", year="2001")
+    keep(movies, "A Show S01E03.mp4")  # kept before there were folders: nothing is guessed
+    keep(movies / "series" / "the.owners.own", "the.owners.own.s02e07.web.m4v")
+    keep(folders["media"], "Series/A Clip.mp4")  # in the videos folder: a video, wherever
+
+    share = sharing.Share(filled, films=True)
+    share.start()
+    try:
+        key = paired(share)
+        found = the_list(share, key)["movies"]
+        always = ("id", "title", "added", "video")
+        said = {m["title"]: {k: v for k, v in m.items() if k not in always} for m in found}
+        assert said == {
+            "A Film (1921)": {"kind": "movie"},
+            "Pilot": {"kind": "series", "show": "A Show", "season": 1, "episode": 2},
+            "A Show S01E01": {"kind": "series", "show": "A Show", "season": 1, "episode": 1},
+            "Recap": {"kind": "series", "show": "A Show", "season": 0, "episode": 1},
+            # What isn't known isn't said: no season here, and no show for a film.
+            "Late": {"kind": "anime", "show": "An Anime", "episode": 5},
+            "An Anime Film (2001)": {"kind": "anime"},
+            "A Show S01E03": {"kind": "movie"},
+            "the.owners.own.s02e07.web": {"kind": "series", "show": "the.owners.own",
+                                          "season": 2, "episode": 7},
+            "A Clip": {"kind": "video"},
+        }  # fmt: skip
+        assert all(set(m) >= {"id", "title", "kind", "added", "video"} for m in found)
+        pilot = next(m for m in found if m["title"] == "Pilot")
+        assert fetch(share, key, pilot["video"]) == b"the second episode"
+        # Of where a file is kept, only its show's name is sent.
+        sent = json.dumps(found)
+        assert "Season" not in sent and "Specials" not in sent and "Movies" not in sent
+        assert "/" not in sent and "\\" not in sent
+    finally:
+        share.stop()
+
+
+def test_the_guards_hold_inside_a_shows_folder(filled: Library) -> None:
+    folders = config.media_folders()
+    show = kept("anime", "Real", show="A Show", season=1, episode=1).parent
+    keep(show, "A Show S01E02 - Not Playable.mkv")
+    keep(show, ".A Show S01E03 - Hidden.mp4")
+    keep(show, "A Show S01E04 - Empty.mp4", b"")
+    keep(show, "Project.fcpbundle/A Show S01E05.mov")  # another program's own
+    outside = keep(filled.root.parent / "elsewhere", "A Show S01E06 - Private.mp4")
+    try:
+        (show / "A Show S01E06 - Private.mp4").symlink_to(outside)
+        (folders["movies"] / "Series").symlink_to(outside.parent, target_is_directory=True)
+        (folders["movies"] / "Anime" / "Linked").symlink_to(
+            outside.parent, target_is_directory=True
+        )
+    except OSError:
+        pass  # Windows without the right to make links: there's nothing to follow
+
+    def everything() -> list[tuple[str, int, int]]:
+        return sorted(
+            (p.as_posix(), p.lstat().st_size, p.lstat().st_mtime_ns)
+            for p in folders["movies"].rglob("*")
+        )
+
+    before = everything()
+    found = sharing.kept_media(folders)
+    assert [(entry["title"], entry["kind"], entry["show"]) for entry, _ in found] == [
+        ("Real", "anime", "A Show")
+    ]
+    assert all(folders["movies"] in shared.path.parents for _, shared in found)
+    assert everything() == before  # looked at, and nothing written
+
+
+def test_a_films_id_is_the_one_it_had_before_episodes_were_told_apart(filled: Library) -> None:
+    kept("movie", "A Film", year="1921")
+    ((entry, shared),) = sharing.kept_media(config.media_folders())
+    assert entry["id"] == sharing._name("m", "movie:A Film (1921).mp4")
+    assert shared.id == sharing._name("f", "movie:A Film (1921).mp4")
 
 
 # ---- carrying on a file that was cut off (2026-10-08) ---------------------------------------

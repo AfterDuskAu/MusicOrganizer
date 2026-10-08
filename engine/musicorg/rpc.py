@@ -59,6 +59,7 @@ from musicorg import (
     logging_setup,
     lyrics,
     match,
+    naming,
     pipeline,
     queue,
     relay,
@@ -1076,19 +1077,37 @@ class Server:
         return self._converter.status()
 
     def torrent_keep(self, params: dict[str, Any]) -> dict[str, Any]:
-        """Keep a film in the Movies folder once all of it has arrived. Only ever from
-        the owner's click."""
+        """Keep a film in the Movies folder once all of it has arrived, or an episode
+        of a series or an anime in its show's folder there (`naming.kept_place`). Only
+        ever from the owner's click."""
         title = need(params, "title", str).strip()
         year = (want(params, "year", str) or "").strip()
         trackers = want(params, "trackers", list, []) or []
-        if not title:
+        kind = want(params, "kind", str) or naming.KEPT_MOVIE
+        show = (want(params, "show", str) or "").strip()
+        season, episode = want(params, "season", int), want(params, "episode", int)
+        if kind not in naming.KEPT_KINDS:
+            raise RpcError(INVALID_PARAMS, "kind should be movie, series or anime.")
+        if show and kind == naming.KEPT_MOVIE:
+            raise RpcError(INVALID_PARAMS, "show is for a series or an anime: say which in kind.")
+        if not show and (season is not None or episode is not None):
+            raise RpcError(INVALID_PARAMS, "season and episode need the show they're of.")
+        if any(n is not None and not 0 <= n <= 9999 for n in (season, episode)):
+            raise RpcError(INVALID_PARAMS, "season and episode should be whole numbers from 0.")
+        if not title and not show:
             raise RpcError(INVALID_PARAMS, "title is empty.")
         if not all(isinstance(t, str) for t in trackers):
             raise RpcError(INVALID_PARAMS, "trackers should be a list of addresses.")
-        name = f"{title} ({year})" if year.isdigit() and len(year) == 4 else title
-        return self._film_player().keep(
+        player = self._film_player()
+        folder, name = naming.kept_place(
+            kind, title, year=year if year.isdigit() and len(year) == 4 else None,
+            show=show, season=season, episode=episode, root=player.movies,
+        )  # fmt: skip
+        if not name:
+            raise RpcError(INVALID_PARAMS, "That title can't be made into a file's name.")
+        return player.keep(
             need(params, "info_hash", str), want(params, "file_index", int), trackers, name,
-            convert=bool(want(params, "convert", bool, False)),
+            folder=folder, convert=bool(want(params, "convert", bool, False)),
         )  # fmt: skip
 
     def torrent_status(self, params: dict[str, Any]) -> dict[str, Any]:

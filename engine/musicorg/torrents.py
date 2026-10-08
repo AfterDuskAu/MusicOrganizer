@@ -224,8 +224,10 @@ class _Joined:
     last_asked: float = field(default_factory=time.monotonic)
     closed: bool = False
     # Keeping the film (the owner clicked Keep): the name to save it under, without its
-    # ending; then where it was saved, or why it couldn't be.
+    # ending, and the folders inside the Movies folder it goes in (an episode's: its
+    # show's); then where it was saved, or why it couldn't be.
     keep_name: str | None = None
+    keep_folder: tuple[str, ...] = ()
     kept_path: str | None = None
     keep_error: str | None = None
     playing: bool = True  # False once the player has let go but the film is still wanted
@@ -384,14 +386,16 @@ class Player:
         trackers: list[str],
         name: str,
         *,
+        folder: tuple[str, ...] = (),
         convert: bool = False,
     ) -> dict[str, Any]:
         """Keep a film: fetch all of it, then copy it into the Movies folder under
-        `name` (its own ending is added). It carries on after the player is shut, for
-        as long as the engine runs; a film that's already playing is kept from where
-        it has got to. With `convert`, a film that phones and tablets can't play is
-        made into an MP4 they can first (`convert`). Returns its status, as `status`
-        does."""
+        `name` (its own ending is added), in `folder` inside it (an episode's: its
+        show's and season's, as `naming.kept_place` gives them; a film's: none). It
+        carries on after the player is shut, for as long as the engine runs; a film
+        that's already playing is kept from where it has got to. With `convert`, a
+        film that phones and tablets can't play is made into an MP4 they can first
+        (`convert`). Returns its status, as `status` does."""
         if self.movies is None:
             raise TorrentError("There's nowhere set to keep films on this computer.")
         if not name.strip():
@@ -399,6 +403,7 @@ class Player:
         self.play(info_hash, file_index, trackers)
         joined = self._joined[info_hash.lower()]
         joined.keep_name, joined.keep_error, joined.convert = name.strip(), None, convert
+        joined.keep_folder = tuple(folder)
         return joined.status()
 
     def set_upload(self, limit: int | None) -> None:
@@ -555,7 +560,7 @@ class Player:
         try:
             saved = fileops.keep_media(
                 source,
-                self.movies,
+                self.movies.joinpath(*joined.keep_folder),
                 f"{joined.keep_name}{ending}",
                 cache=self.folder,
                 allowed=[self.movies],
