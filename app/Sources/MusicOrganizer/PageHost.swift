@@ -62,9 +62,12 @@ struct PageHost: NSViewRepresentable {
     }
 
     /// Taken apart with the window, or while an album's page covers the pages: they're
-    /// kept by the store either way.
+    /// kept by the store either way. Only the pages still in this room are put away:
+    /// SwiftUI sometimes makes a new room before it takes the old one apart, and the
+    /// page showing has moved to the new one by then (put away from there, the app
+    /// opened on an empty page: 2026-10-09).
     static func dismantleNSView(_ room: NSView, coordinator: PageStore) {
-        for host in coordinator.hosts.values where host.superview != nil && host.superview !== coordinator.parked {
+        for host in coordinator.hosts.values where host.superview === room {
             coordinator.parked.addSubview(host)
         }
     }
