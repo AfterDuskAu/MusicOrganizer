@@ -1744,7 +1744,7 @@ Not seen in the running app.
   - A song list to another song list: 0.38 s, climbing to 0.55 s over six more pages opened (and to seconds over an hour). Now 0.30 to 0.45 s, the same with eleven pages open as with two.
   - Back to a page already opened: Home 0.44 s then, 0.13 s now; Music Finder 0.44 s then, 0.16 to 0.31 s now; Settings 0.12 s now.
   - A page for the first time: Music Finder 1.55 s then, 0.97 s now; Home 0.80 then, 0.47 now; Movie Finder 0.85 then, 0.48 now; Series Finder 0.96 then, 0.41 now.
-  - The window hidden: 0.92 s then, 0.41 s now. Shown again: 0.87 then, 0.40 now. Put in the Dock: 1.32 then, 0.76 now.
+  - The window hidden: 0.92 s then, 0.41 s now. Shown again: 0.87 then, 0.40 now. Put in the Dock: 1.28 then, 0.78 now, and the same again to bring it back (1.28 then, 0.74 now). These are with a song list showing, in an app just opened: a song table's three hundred cells are each told about the window, which is most of what's left.
   - A change to the library search: 1.44 s then, 0.78 s now.
   - A letter typed in Music Finder's search box: 0.01 s (it was never slow by itself: it was every page behind it being laid out).
   - Clicks made through the screen-control tools read 0.1 to 0.25 s higher than these, old and new alike: the tools ask the app about its window before each one.

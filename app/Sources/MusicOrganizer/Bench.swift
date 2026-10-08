@@ -60,7 +60,9 @@ enum Bench {
 
     /// The steps that aren't a page: true if this was one.
     static func took(_ name: String) -> Bool {
-        let window = NSApp.windows.first { $0.canBecomeMain }
+        // A window in the Dock can't become the main one, so it's looked for first.
+        let window = NSApp.windows.first { $0.isMiniaturized }
+            ?? NSApp.windows.first { $0.canBecomeMain }
         switch name {
         case "hide": NSApp.hide(nil)
         case "show":
