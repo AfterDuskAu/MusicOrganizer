@@ -13,29 +13,40 @@ final class MediaList {
     private(set) var problem: String?
     /// What the items on show were asked with, so the same thing isn't asked twice.
     private(set) var shownFor: String?
+    /// Where the next page begins, as the engine said.
+    private var cursor = 0
 
     /// Ask for the first page, or with `adding` for the next one.
     func load(
         _ model: AppModel, addon: Addon, catalog: Addon.Catalog, genre: String? = nil,
-        search: String = "", adding: Bool = false
+        search: String = "", also: String = "", adding: Bool = false
     ) async {
-        let wanted = "\(addon.id)|\(catalog.type)|\(catalog.id)|\(genre ?? "")|\(search)"
+        let wanted = "\(addon.id)|\(catalog.type)|\(catalog.id)|\(genre ?? "")|\(search)|\(also)"
         if working || (!adding && wanted == shownFor && problem == nil) { return }
         working = true
         problem = nil
-        if !adding { items = [] }
+        if !adding { (items, cursor) = ([], 0) }
         var asked: [String: Any] = ["addon_id": addon.id, "type": catalog.type, "id": catalog.id]
         if let genre { asked["genre"] = genre }
         if !search.isEmpty { asked["search"] = search }
-        if adding { asked["skip"] = items.count }
+        if adding { asked["skip"] = cursor }
+        // A second genre: only what's tagged with both (the engine does the sifting).
+        let both = genre != nil && !also.isEmpty
+        if both { asked["also"] = [also] }
         do {
             let found = try await model.ask("addon.catalog", asked, as: CatalogAnswer.self)
             let known = Set(items.map(\.id))
             let fresh = found.items.filter { !known.contains($0.id) }
             items += fresh
+            cursor = found.nextSkip ?? items.count
             // A page with nothing new on it means the list has run out, whatever it says.
-            more = found.more && !fresh.isEmpty && catalog.takes("skip")
-            if items.isEmpty { problem = "Nothing was found." }
+            // (Not with two genres: a stretch of the list can have nothing with both.)
+            more = found.more && (both || !fresh.isEmpty) && catalog.takes("skip")
+            if items.isEmpty {
+                problem = more
+                    ? "Nothing with both genres near the top of the list. Try another pair."
+                    : "Nothing was found."
+            }
         } catch {
             problem = error.localizedDescription
         }

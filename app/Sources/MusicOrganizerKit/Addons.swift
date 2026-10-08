@@ -86,6 +86,9 @@ public struct MediaItem: Decodable, Identifiable, Hashable, Sendable {
 public struct CatalogAnswer: Decodable, Sendable {
     public let items: [MediaItem]
     public let more: Bool
+    /// Where the page after this one begins. (With two genres asked for, the engine
+    /// reads past films it leaves out, so it isn't how many items came back.)
+    public let nextSkip: Int?
 }
 
 /// A film's or a channel's details (the engine's Details).

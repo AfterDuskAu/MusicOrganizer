@@ -251,6 +251,10 @@ def _catalog_named(addon: dict[str, Any], kind: str, catalog_id: str) -> dict[st
     raise AddonError(f"{addon.get('name', 'That add-on')} has no such list.")
 
 
+ALSO_PAGES = 8  # pages of a genre's list read at most for one page of two genres
+ALSO_ENOUGH = 24  # films with both genres that make a screenful
+
+
 def catalog(
     addon: dict[str, Any],
     kind: str,
@@ -259,10 +263,35 @@ def catalog(
     search: str | None = None,
     genre: str | None = None,
     skip: int = 0,
+    also: list[str] | None = None,
 ) -> dict[str, Any]:
-    """One page of a list: `{items: [Item], more}`. `search`, `genre` and `skip` are
-    sent only when the catalog says it takes them; asking for one it doesn't take is
-    the caller's mistake and is refused, not quietly dropped."""
+    """One page of a list: `{items: [Item], more, next_skip}`. `search`, `genre` and
+    `skip` are sent only when the catalog says it takes them; asking for one it doesn't
+    take is the caller's mistake and is refused, not quietly dropped. `next_skip` is the
+    `skip` that gives the page after this one.
+
+    `also` (the owner, 2026-10-08: "documentary and crime") keeps only what's tagged
+    with every one of those genres as well. An add-on can be asked for one genre at a
+    time, so the list for `genre` is read a page after a page (up to `ALSO_PAGES`) and
+    what doesn't have the others is left out, until there's a screenful."""
+    wanted_too = [g.strip().casefold() for g in also or [] if isinstance(g, str) and g.strip()]
+    if wanted_too:
+        if not genre:
+            raise AddonError("Choose a first genre before adding another.")
+        found: list[dict[str, Any]] = []
+        cursor, more = skip, True
+        for _ in range(ALSO_PAGES):
+            page = catalog(addon, kind, catalog_id, search=search, genre=genre, skip=cursor)
+            cursor = page["next_skip"]
+            found += [
+                item
+                for item in page["items"]
+                if all(g in {have.casefold() for have in item["genres"]} for g in wanted_too)
+            ]
+            more = page["more"] and bool(page["items"])
+            if not more or len(found) >= ALSO_ENOUGH:
+                break
+        return {"items": found, "more": more, "next_skip": cursor}
     if not supports(addon, "catalog", kind):
         raise AddonError(f"{addon.get('name', 'That add-on')} has no lists of that kind.")
     wanted = _catalog_named(addon, kind, catalog_id)
@@ -290,7 +319,7 @@ def catalog(
     # have another after it, if the list has pages at all.
     said = raw.get("hasMore")
     more = said if isinstance(said, bool) else bool(items) and "skip" in takes
-    return {"items": items, "more": more}
+    return {"items": items, "more": more, "next_skip": skip + len(metas)}
 
 
 def _text(value: Any) -> str | None:

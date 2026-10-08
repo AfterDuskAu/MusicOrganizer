@@ -523,6 +523,8 @@ struct MovieFinderView: View {
     @Environment(AppModel.self) private var model
     @AppStorage("movieFinderList") private var listKey = ""
     @AppStorage("movieFinderGenre") private var genre = ""
+    /// A second genre: only films tagged with both are listed.
+    @AppStorage("movieFinderAlso") private var also = ""
     @State private var typed = ""
     @State private var search = ""
     @State private var opened: MediaItem?
@@ -553,6 +555,17 @@ struct MovieFinderView: View {
                             }
                             .labelsHidden()
                             .fixedSize()
+                            if let first = chosen.catalog.genre(chosen: genre), chosen.catalog.id != "year" {
+                                Picker("Second Genre", selection: $also) {
+                                    Text("One Genre").tag("")
+                                    ForEach(chosen.catalog.genres.filter { $0 != first }, id: \.self) {
+                                        Text("and \($0)").tag($0)
+                                    }
+                                }
+                                .labelsHidden()
+                                .fixedSize()
+                                .help("Only movies tagged with both genres")
+                            }
                         }
                         Spacer()
                         if chosen.catalog.takes("search") {
@@ -571,17 +584,22 @@ struct MovieFinderView: View {
                 Divider()
                 if let chosen {
                     let wanted = chosen.catalog.genre(chosen: genre)
+                    // A second genre counts only with a first, and not the same one, on a
+                    // list by genre (a list by year's "genres" are its years).
+                    let second =
+                        wanted != nil && also != wanted && chosen.catalog.id != "year"
+                            && chosen.catalog.genres.contains(also) ? also : ""
                     MediaGrid(list: media.films, width: 140, open: { opened = $0 }) {
                         Task {
                             await media.films.load(
                                 model, addon: chosen.addon, catalog: chosen.catalog, genre: wanted,
-                                search: search, adding: true)
+                                search: search, also: second, adding: true)
                         }
                     }
-                    .task(id: "\(Self.key(chosen))|\(wanted ?? "")|\(search)") {
+                    .task(id: "\(Self.key(chosen))|\(wanted ?? "")|\(search)|\(second)") {
                         await media.films.load(
                             model, addon: chosen.addon, catalog: chosen.catalog, genre: wanted,
-                            search: search)
+                            search: search, also: second)
                     }
                 } else {
                     Text(media.problem ?? "Loading…")

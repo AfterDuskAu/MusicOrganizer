@@ -258,3 +258,46 @@ def test_a_starting_add_on_that_cant_be_reached_is_tried_again_next_time(
     monkeypatch.delitem(ANSWERS, f"{CHANNELS}/manifest.json")
     assert [one["name"] for one in addons.listed()] == ["Cinemeta", "Public Domain Movies"]
     assert config.load_addons() is None  # not kept short: the next time asks again
+
+
+def test_a_list_by_two_genres_keeps_only_what_has_both(
+    monkeypatch: pytest.MonkeyPatch, asked: list[str]
+) -> None:
+    def film(number: int, *genres: str) -> dict[str, object]:
+        return {"id": f"tt{number}", "name": f"Film {number}", "genres": list(genres)}
+
+    pages = {
+        0: [film(1, "Documentary"), film(2, "Documentary", "Crime"), film(3, "Documentary")],
+        3: [film(4, "Documentary", "crime", "History"), film(5, "Documentary", "War")],
+        5: [],
+    }
+    seen: list[int] = []
+
+    def http(url: str) -> dict[str, object]:
+        skip = int(url.split("skip=")[1].split(".")[0].split("&")[0]) if "skip=" in url else 0
+        assert "genre=Documentary" in url and "Crime" not in url  # asked for one genre only
+        seen.append(skip)
+        return {"metas": pages[skip]}
+
+    addon = {
+        "name": "Films", "base": "https://example.invalid", "types": ["movie"],
+        "resources": [{"name": "catalog", "types": ["movie"], "id_prefixes": []}],
+        "catalogs": [{"type": "movie", "id": "top", "name": None, "extra": [
+            {"name": "genre", "required": False, "options": []},
+            {"name": "skip", "required": False, "options": []}]}],
+    }  # fmt: skip
+    monkeypatch.setattr(addons, "_http", http)
+    page = addons.catalog(addon, "movie", "top", genre="Documentary", also=["Crime"])
+    assert [item["id"] for item in page["items"]] == ["tt2", "tt4"]
+    assert (page["more"], page["next_skip"], seen) == (False, 5, [0, 3, 5])
+
+    # One genre, as before: one page, and where the next begins.
+    plain = addons.catalog(addon, "movie", "top", genre="Documentary")
+    assert len(plain["items"]) == 3 and plain["next_skip"] == 3
+    # A second genre needs a first.
+    with pytest.raises(addons.AddonError):
+        addons.catalog(addon, "movie", "top", also=["Crime"])
+    # It stops reading after so many pages and says there's more.
+    monkeypatch.setattr(addons, "_http", lambda url: {"metas": [film(9, "Documentary")]})
+    long = addons.catalog(addon, "movie", "top", genre="Documentary", also=["Crime"])
+    assert long == {"items": [], "more": True, "next_skip": addons.ALSO_PAGES}

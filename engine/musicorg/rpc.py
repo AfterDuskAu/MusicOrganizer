@@ -915,6 +915,7 @@ class Server:
             search=want(params, "search", str),
             genre=want(params, "genre", str),
             skip=skip,
+            also=[g for g in want(params, "also", list, []) or [] if isinstance(g, str)][:4],
         )
 
     def addon_details(self, params: dict[str, Any]) -> dict[str, Any]:
