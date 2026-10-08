@@ -824,3 +824,54 @@ def test_videos_kept_inside_the_movies_folder_are_listed_once(filled: Library) -
     # One folder chosen for both: everything in it is a movie, once.
     same = sharing.kept_media({"movies": folders["media"], "media": folders["media"]})
     assert sorted(entry["kind"] for entry, _ in same) == ["movie", "movie"]
+
+
+# ---- carrying on a file that was cut off (2026-10-08) ---------------------------------------
+
+
+def part(
+    share: sharing.Share, key: str, file: dict[str, Any], asked: str, has: str | None = None
+) -> tuple[int, bytes, dict[str, str]]:
+    assert share.port is not None
+    conn = http.client.HTTPConnection(LOOPBACK, share.port, timeout=10)
+    sent = {"Authorization": "Bearer " + key, "Range": asked}
+    if has is not None:
+        sent["If-Range"] = has
+    conn.request("GET", "/sync/v1/files/" + quote(file["id"], safe=""), headers=sent)
+    response = conn.getresponse()
+    data = response.read()
+    headers = {name.lower(): value for name, value in response.getheaders()}
+    assert headers["content-length"] == str(len(data))
+    conn.close()
+    return response.status, data, headers
+
+
+def test_a_file_that_was_cut_off_is_carried_on(share: sharing.Share, filled: Library) -> None:
+    key = paired(share)
+    found = the_list(share, key)
+    song = {t["title"]: t for t in found["tracks"]}["Song"]
+    audio, whole = song["audio"], fetch(share, key, song["audio"])
+    size, version = audio["size"], audio["version"]
+
+    status, data, headers = part(share, key, audio, "bytes=100-", version)
+    assert (status, data) == (206, whole[100:])
+    assert headers["content-range"] == f"bytes 100-{size - 1}/{size}"
+    assert headers["etag"] == f'"{version}"' and headers["accept-ranges"] == "bytes"
+    assert part(share, key, audio, "bytes=10-19")[:2] == (206, whole[10:20])
+    assert part(share, key, audio, f"bytes={size - 1}-{size + 50}")[:2] == (206, whole[-1:])
+    assert part(share, key, audio, "bytes=0-")[:2] == (200, whole)  # all of it is all of it
+
+    # The start it has is of another version: the whole file, never new bytes on old.
+    assert part(share, key, audio, "bytes=100-", "an-older-version")[:2] == (200, whole)
+    # Kinds of part this doesn't do: the whole file.
+    assert part(share, key, audio, "bytes=-50")[:2] == (200, whole)
+    assert part(share, key, audio, "bytes=0-1,5-6")[:2] == (200, whole)
+    # A part that isn't in the file.
+    status, data, headers = part(share, key, audio, f"bytes={size}-")
+    assert (status, data, headers["content-range"]) == (416, b"", f"bytes */{size}")
+
+    # What's kept inside a file's tags (a cover, lyrics) is carried on the same way.
+    lyrics = {t["title"]: t for t in found["tracks"]}["Other"]["lyrics"]
+    assert part(share, key, lyrics, "bytes=5-")[:2] == (206, WORDS.encode()[5:])
+    # A part still needs a key.
+    assert part(share, "not-a-key", audio, "bytes=100-")[0] == 401

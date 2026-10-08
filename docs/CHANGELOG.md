@@ -1648,3 +1648,5 @@ The owner asked for ideas from the Photonizer project that would make the app ru
   - `plan.create`'s kinds and options, including 09c's `matched` and step 10's `missing`.
   - When `queue.state` and `library.changed` are sent.
 - `musicorg serve` replaced the last "not implemented yet" stub, and `NotImplementedYetError` is gone.
+
+2026-10-08, about 1:05pm. **A phone can carry on a file that was cut off.** With films in the share, fetching one from the start after a dropped connection costs minutes. `GET /sync/v1/files/<id>` now answers `Range: bytes=<from>-` (or `<from>-<to>`) with 206 and only those bytes, for a file on disk and for a cover or lyrics kept inside a song's tags alike. A phone sends `If-Range` with the version it has the start of; if the file has another version now it's sent whole, so new bytes are never joined to old. A part that isn't in the file is 416; any other kind of `Range` gets the whole file. Every file answer carries its version as `ETag`. Format 1 still: a phone that never sends `Range` sees no difference. It was on the "Not in format 1" list and in CLAUDE.md's "not yet"; both are updated. Nothing in the app changed.

@@ -93,6 +93,7 @@ NOT_OURS = frozenset({".fcpbundle", ".imovielibrary", ".tvlibrary", ".photoslibr
                       ".theater", ".localized", ".app"})  # fmt: skip
 KEY_FIELD = "key_sha256"
 _WHEN = "%Y-%m-%dT%H:%M:%SZ"
+_RANGE = re.compile(r"bytes=(?P<first>\d{1,18})-(?P<last>\d{1,18})?")
 _DEVICE_KIND = re.compile(r"[A-Za-z0-9 ]{1,20}")
 
 
@@ -849,8 +850,11 @@ class _Handler(BaseHTTPRequestHandler):
                 return False
             if hashlib.sha256(data).hexdigest()[:16] != shared.version:
                 return False
-            self._begin(shared.size)
-            self.wfile.write(data)
+            part = self._part(shared)
+            if part is None:
+                return True  # a part that isn't in the file: refused, and answered
+            self._begin(shared, part)
+            self.wfile.write(data[part[0] : part[1] + 1])
             return True
         try:
             f = open(shared.path, "rb")
@@ -860,8 +864,12 @@ class _Handler(BaseHTTPRequestHandler):
             about = os.fstat(f.fileno())
             if about.st_size != shared.size or _stamp(about) != shared.version:
                 return False
-            self._begin(shared.size)
-            left = shared.size
+            part = self._part(shared)
+            if part is None:
+                return True
+            self._begin(shared, part)
+            f.seek(part[0])
+            left = part[1] - part[0] + 1
             while left > 0 and self.server.share.listening:
                 chunk = f.read(min(CHUNK, left))
                 if not chunk:
@@ -870,9 +878,42 @@ class _Handler(BaseHTTPRequestHandler):
                 left -= len(chunk)
         return True
 
-    def _begin(self, size: int) -> None:
-        self.send_response(200)
+    def _part(self, shared: SharedFile) -> tuple[int, int] | None:
+        """Which bytes to send, first and last: all of the file, or the part a phone
+        asked for to carry on a file that was cut off (`Range: bytes=<from>-`, with
+        `If-Range` naming the version it has the start of; a different version gets
+        the whole file, never new bytes joined to old). None: it asked for a part that
+        isn't in the file, and has been told so (416)."""
+        whole = (0, shared.size - 1)
+        asked = (self.headers.get("Range") or "").strip()
+        if not asked:
+            return whole
+        has = (self.headers.get("If-Range") or "").strip().strip('"')
+        if has and has != shared.version:
+            return whole
+        found = _RANGE.fullmatch(asked)
+        if found is None:
+            return whole  # several parts, or the last so-many bytes: the whole file instead
+        first = int(found["first"])
+        last = min(int(found["last"]), shared.size - 1) if found["last"] else shared.size - 1
+        if first >= shared.size or first > last:
+            self.send_response(416)
+            self.send_header("Content-Range", f"bytes */{shared.size}")
+            self.send_header("Content-Length", "0")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            return None
+        return first, last
+
+    def _begin(self, shared: SharedFile, part: tuple[int, int]) -> None:
+        first, last = part
+        whole = (first, last) == (0, shared.size - 1)
+        self.send_response(200 if whole else 206)
         self.send_header("Content-Type", "application/octet-stream")
-        self.send_header("Content-Length", str(size))
+        self.send_header("Content-Length", str(last - first + 1))
+        if not whole:
+            self.send_header("Content-Range", f"bytes {first}-{last}/{shared.size}")
+        self.send_header("Accept-Ranges", "bytes")
+        self.send_header("ETag", f'"{shared.version}"')
         self.send_header("Cache-Control", "no-store")
         self.end_headers()

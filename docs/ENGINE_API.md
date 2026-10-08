@@ -301,7 +301,7 @@ When something goes wrong the status isn't 200, and the body is
 | `GET /sync/v1/hello` | no | `{ "format": 1, "library": { "id", "name" }, "paired" }`. `paired` says whether the key that was sent (if one was) is still known. `library.id` never changes for a library: it's made from when the library was created, so it stays the same when the folder is renamed or moved, or the computer's address or name changes. `library.name` is the library folder's name. |
 | `POST /sync/v1/pair` | no | Body `{ "code", "device" }`, as `application/json`: the code on the computer's screen, and what kind of device is asking (`iPhone`, `iPad`: up to 20 letters, digits and spaces, else it's listed as "Device"). Answer: `{ "key" }`, a long random string, given this once. A code works once and for five minutes. A wrong code, a code that has run out, or no code showing: 403 `wrong_code`. After five wrong codes every code is refused for a minute: 429 `too_many_tries`. |
 | `GET /sync/v1/library` | yes | The list of everything (below). |
-| `GET /sync/v1/files/<file id>` | yes | The file's bytes, with `Content-Length`. The id is percent-encoded in the path. Only a file the list names is ever given out: no path comes from a phone. A file that's gone, or has been written again since the list was made, is 404 `not_found` (never the old list's size with the new bytes); the next list has it under its new version. |
+| `GET /sync/v1/files/<file id>` | yes | The file's bytes, with `Content-Length`. The id is percent-encoded in the path. Only a file the list names is ever given out: no path comes from a phone. A file that's gone, or has been written again since the list was made, is 404 `not_found` (never the old list's size with the new bytes); the next list has it under its new version. **Carrying on a file that was cut off** (2026-10-08): `Range: bytes=<from>-` (or `<from>-<to>`) is answered 206 with `Content-Range` and only those bytes; a phone sends `If-Range: <the version it has the start of>` with it, and if that isn't the file's version now it's sent the whole file (200), never new bytes to join to old. A part that isn't in the file is 416 with no body. Any other kind of `Range` gets the whole file. Every answer carries the version as `ETag`. |
 
 Without a key, or with one the computer doesn't know: 401 `not_paired`.
 
@@ -345,6 +345,5 @@ Without a key, or with one the computer doesn't know: 401 `not_paired`.
 ### Not in format 1
 
 - Sending favourites and play counts back to the computer.
-- Carrying on a file from where it was cut off.
 - Lyrics timed to a video.
 - A film's length, cover or details, and its subtitles as files of their own.
