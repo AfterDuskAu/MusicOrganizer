@@ -1785,6 +1785,28 @@ final class AddonTests: XCTestCase {
 }
 
 final class VideoFilesTests: XCTestCase {
+    func testAConversionsProgressAndEndAreRead() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let going = try decoder.decode(
+            FilmConversion.self,
+            from: Data(
+                #"{"converting": {"path": "/m/a.mkv", "progress": 0.416, "remakes_picture": true}, "last": null}"#
+                    .utf8))
+        XCTAssertEqual(going.converting?.remakesPicture, true)
+        XCTAssertEqual(FilmConversion.note(progress: going.converting?.progress ?? 0), "Converting… 42%")
+        XCTAssertEqual(FilmConversion.note(progress: 7), "Converting… 100%")
+        let ended = try decoder.decode(
+            FilmConversion.self,
+            from: Data(#"{"converting": null, "last": {"path": "/m/a.mkv", "saved": "/m/a.mp4"}}"#.utf8))
+        XCTAssertNil(ended.converting)
+        XCTAssertEqual(ended.last?.saved, "/m/a.mp4")
+        XCTAssertNil(ended.last?.error)
+        let started = try decoder.decode(
+            FilmConversion.Started.self, from: Data(#"{"needed": false, "remakes_picture": false}"#.utf8))
+        XCTAssertFalse(started.needed)
+    }
+
     func testOnlyVideoFilesAreListedByNameFromFoldersInsideToo() throws {
         let folder = FileManager.default.temporaryDirectory
             .appendingPathComponent("videofiles-\(UUID().uuidString)")

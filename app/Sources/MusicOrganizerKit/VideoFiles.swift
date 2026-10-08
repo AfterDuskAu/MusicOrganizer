@@ -51,3 +51,35 @@ public enum VideoFiles {
         return found.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 }
+
+/// A film that's already kept, being made into one phones and tablets play
+/// (`media.convert`, `media.converting`). The copy goes beside it; the film is only read.
+public struct FilmConversion: Decodable, Equatable, Sendable {
+    public struct Started: Decodable, Equatable, Sendable {
+        /// False: phones and tablets play it as it is, and nothing was done.
+        public let needed: Bool
+        /// The slow kind: the picture is made again.
+        public let remakesPicture: Bool
+    }
+    public struct Now: Decodable, Equatable, Sendable {
+        public let path: String
+        public let progress: Double
+        public let remakesPicture: Bool
+    }
+    public struct Ended: Decodable, Equatable, Sendable {
+        public let path: String
+        public let saved: String?
+        public let error: String?
+    }
+    public let converting: Now?
+    public let last: Ended?
+
+    /// The endings of files phones and tablets may already play. Another kind always
+    /// needs converting; one of these may still (an MP4 can hold a picture they can't show).
+    public static let deviceEndings: Set<String> = ["mp4", "m4v", "mov"]
+
+    /// What a file's row says while it's being converted: "Converting… 42%".
+    public static func note(progress: Double) -> String {
+        "Converting… \(Int((min(max(progress, 0), 1) * 100).rounded()))%"
+    }
+}

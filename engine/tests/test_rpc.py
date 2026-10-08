@@ -765,3 +765,15 @@ def test_where_kept_movies_and_videos_go_can_be_chosen(
     assert (
         result(opened, "settings.set", videos_folder="")["videos_folder"] == usual["videos_folder"]
     )
+
+
+def test_converting_a_kept_film_is_asked_for_by_its_path(
+    opened: rpc.Server, tmp_path: Path
+) -> None:
+    assert result(opened, "media.converting") == {"converting": None, "last": None}
+    assert code(opened, "media.convert") == rpc.INVALID_PARAMS
+    # Not a film in the Movies or Videos folder: refused, in plain words.
+    stray = tmp_path / "stray.mkv"
+    stray.write_bytes(b"not in a kept folder")
+    assert code(opened, "media.convert", path=str(stray)) == rpc.USER_ERROR
+    assert result(opened, "media.converting") == {"converting": None, "last": None}

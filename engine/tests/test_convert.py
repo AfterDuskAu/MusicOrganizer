@@ -195,3 +195,75 @@ def test_a_film_that_cant_be_converted_is_kept_as_it_arrived(tmp_path: Path) -> 
     joined = kept(tmp_path, film, convert_it=True)
     assert joined.kept_path == str(tmp_path / "Movies" / "The Film (1921).mkv")
     assert joined.keep_error is None and "kept as it arrived" in (joined.keep_note or "")
+
+
+# ---- a film that's already kept (2026-10-08) ------------------------------------------------
+
+
+def converted(converter: convert.Converter, film: Path, folders: list[Path], **more: Any) -> Any:
+    """Start a conversion and wait for it to end: (what start said, how it ended)."""
+    ended: list[dict[str, Any]] = []
+    said = converter.start(
+        film, folders, forbidden=more.get("forbidden", []), finished=ended.append
+    )
+    if said["needed"]:
+        assert converter._thread is not None
+        converter._thread.join(120)
+        assert converter.status()["converting"] is None
+    return said, (ended[0] if ended else None)
+
+
+def test_a_film_already_kept_gets_a_copy_beside_it(tmp_path: Path) -> None:
+    movies, cache = tmp_path / "Movies", tmp_path / "cache"
+    (movies / "Old Films").mkdir(parents=True)
+    film = make(movies / "Old Films" / "The Film.mkv",
+                ["-c:v", "libx264", "-pix_fmt", "yuv420p"], ["-c:a", "ac3"])  # fmt: skip
+    before = film.read_bytes()
+    converter = convert.Converter(cache)
+
+    said, ended = converted(converter, film, [movies])
+    assert said == {"needed": True, "remakes_picture": False}
+    copy = movies / "Old Films" / "The Film.mp4"
+    assert ended == {"path": str(film), "saved": str(copy)}
+    assert converter.status()["last"] == ended
+    assert kinds(copy) == [("video", "h264"), ("audio", "aac")]
+    assert film.read_bytes() == before  # the film itself is only read
+    assert list((cache / "torrents").iterdir()) == []  # nothing left in the cache
+
+    # The copy plays everywhere: there's nothing to do to it, and nothing is done.
+    assert converted(converter, copy, [movies]) == ({"needed": False, "remakes_picture": False},
+                                                    None)  # fmt: skip
+    # Again: the name is taken, so the next copy gets a number. Nothing is overwritten.
+    _, again = converted(converter, film, [movies])
+    assert again["saved"] == str(movies / "Old Films" / "The Film (2).mp4")
+
+
+def test_only_a_film_in_the_kept_folders_is_converted(tmp_path: Path) -> None:
+    movies, elsewhere = tmp_path / "Movies", tmp_path / "Elsewhere"
+    movies.mkdir()
+    elsewhere.mkdir()
+    outside = make(elsewhere / "film.mkv", ["-c:v", "libx264", "-pix_fmt", "yuv420p"],
+                   ["-c:a", "ac3"])  # fmt: skip
+    converter = convert.Converter(tmp_path / "cache")
+    for film in (outside, movies / "missing.mkv", movies):
+        with pytest.raises(convert.ConvertError):
+            converter.start(film, [movies], forbidden=[])
+    try:
+        (movies / "link.mkv").symlink_to(outside)
+    except OSError:
+        return  # Windows without the right to make links
+    with pytest.raises(convert.ConvertError):
+        converter.start(movies / "link.mkv", [movies], forbidden=[])
+    assert sorted(p.name for p in elsewhere.iterdir()) == ["film.mkv"]
+
+
+def test_a_film_that_cant_be_converted_says_why_and_leaves_nothing(tmp_path: Path) -> None:
+    movies = tmp_path / "Movies"
+    movies.mkdir()
+    film = make(movies / "film.mkv", ["-c:v", "libx264", "-pix_fmt", "yuv420p"], ["-c:a", "ac3"])
+    converter = convert.Converter(tmp_path / "cache")
+    # Never inside a library, even if a folder there were chosen by mistake.
+    said, ended = converted(converter, film, [movies], forbidden=[movies])
+    assert said["needed"] and "saved" not in ended and ended["error"]
+    assert sorted(p.name for p in movies.iterdir()) == ["film.mkv"]
+    assert list((tmp_path / "cache" / "torrents").iterdir()) == []

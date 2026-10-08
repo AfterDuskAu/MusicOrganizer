@@ -2430,6 +2430,17 @@ def _cache_folder(folder: Path, cache: Path) -> Path:
     return folder
 
 
+def make_cached_folder(folder: Path, *, cache: Path) -> Path:
+    """Make a folder inside the app's own cache folder, if it isn't there (the films'
+    one, for a converted copy on its way to the Movies folder)."""
+    folder = _cache_folder(folder, cache)
+    try:
+        folder.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        raise FileOperationError(f"Couldn't make {folder}: {exc.strerror or exc}.") from exc
+    return folder
+
+
 def touch_cached(path: Path, *, cache: Path) -> None:
     """Mark something in the app's cache as used just now (its modified time), so
     `sweep_cached` counts its day from here. Nothing of its contents changes. A path

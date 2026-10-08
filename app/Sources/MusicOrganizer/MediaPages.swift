@@ -575,6 +575,9 @@ struct VideoFileRow: View {
             Image(systemName: "film").foregroundStyle(.secondary)
             Text(file.name).lineLimit(1)
             Spacer()
+            if let note = model.conversionNotes[file.url.path] {
+                Text(note).foregroundStyle(.secondary).lineLimit(1)
+            }
             Text(file.kind).foregroundStyle(.secondary)
             Text(ByteCountFormatter.string(fromByteCount: file.bytes, countStyle: .file))
                 .foregroundStyle(.secondary)
@@ -586,6 +589,8 @@ struct VideoFileRow: View {
         .contextMenu {
             Button("Play") { model.playFilm(file.url, title: file.name) }
             Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([file.url]) }
+            Divider()
+            Button("Convert for Phones and Tablets") { model.convertFilm(file.url) }
         }
     }
 }

@@ -48,6 +48,7 @@ from musicorg import (
     addons,
     artist,
     browse,
+    convert,
     discover,
     fileops,
     imports,
@@ -112,7 +113,8 @@ SLOW_METHODS = frozenset(
      # Answered on the main line they held up every other request the app made
      # meanwhile, a favourite or a list of songs included (found 2026-10-07).
      "addon.list", "addon.add", "addon.restore", "addon.catalog", "addon.details", "addon.streams",
-     "video.search", "channel.videos", "channel.search", "torrent.stop"}
+     "video.search", "channel.videos", "channel.search", "torrent.stop",
+     "media.convert"}  # reads the film with ffprobe first
 )  # fmt: skip
 MAX_EXCLUDE = 5000  # songs already on screen that Show More leaves out
 RPC_DECISIONS = ("accept", "candidate", "url", "only_copy", "skip", "reject")
@@ -284,6 +286,7 @@ class Server:
         # opens (`kids.set`); the engine keeps no "on" of its own.
         self._kids = {"on": False, "allow_explicit": False}
         self._films: torrents.Player | None = None  # films playing from torrents, if any
+        self._converter: convert.Converter | None = None  # a kept film being converted
         self._relay: relay.Relay | None = None  # long videos' playlists, if any were asked for
         self.methods: dict[str, Callable[[dict[str, Any]], Any]] = {
             "engine.hello": self.engine_hello,
@@ -354,6 +357,8 @@ class Server:
             "torrent.play": self.torrent_play,
             "torrent.status": self.torrent_status,
             "torrent.keep": self.torrent_keep,
+            "media.convert": self.media_convert,
+            "media.converting": self.media_converting,
             "torrent.stop": self.torrent_stop,
             "sharing.status": self.sharing_status,
             "sharing.set": self.sharing_set,
@@ -452,6 +457,8 @@ class Server:
         spotify.cancel_sign_in()  # stop listening for a sign-in nobody finished
         self._stop_sharing()  # first of all: nothing is shared once the app has gone
         self._stop_films()  # and no torrent is left joined (what arrived stays its day)
+        if self._converter is not None:
+            self._converter.stop()  # nor a film half converted
         if self._relay is not None:
             self._relay.stop()  # nor any long video's playlist left to be read
             self._relay = None
@@ -1028,6 +1035,27 @@ class Server:
         if self._films is None:
             self._films = torrents.Player(app_dirs().cache, movies=media_folders()["movies"])
         return self._films
+
+    # -- methods: a film that's already kept, made one phones and tablets play --
+
+    def media_convert(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Start converting one film or video in the Movies or the videos folder. The
+        copy goes beside it as an MP4; the film itself is only read."""
+        film = Path(need(params, "path", str))
+        if self._converter is None:
+            self._converter = convert.Converter(app_dirs().cache)
+        folders = media_folders()
+        return self._converter.start(
+            film,
+            [folders["movies"], folders["media"]],
+            forbidden=[self.lib.root] if self.lib is not None else [],
+            finished=lambda ended: self.writer.notify("media.converted", ended),
+        )
+
+    def media_converting(self, params: dict[str, Any]) -> dict[str, Any]:
+        if self._converter is None:
+            return {"converting": None, "last": None}
+        return self._converter.status()
 
     def torrent_keep(self, params: dict[str, Any]) -> dict[str, Any]:
         """Keep a film in the Movies folder once all of it has arrived. Only ever from

@@ -141,6 +141,10 @@ final class AppModel {
     /// Goes up each time a film or a video has been kept, so Videos → Movies looks at
     /// its folders again.
     private(set) var keptArrived = 0
+    /// What a video file's row says about being converted for phones and tablets, by the
+    /// file's path: "Converting… 42%", "Converted", or why it wasn't.
+    private(set) var conversionNotes: [String: String] = [:]
+    private var conversionWatch: Task<Void, Never>?
     /// The torrent the film player is playing from, if it is, and how that's going.
     private(set) var filmTorrent: String?
     private(set) var filmStatus: TorrentStatus?
@@ -678,6 +682,51 @@ final class AppModel {
 
     /// Keep a film in the Movies folder: the engine fetches all of it, then saves it.
     /// How it's going is asked every two seconds until it's saved or has failed.
+    /// A video file's menu: make a copy phones and tablets play, beside the file. The
+    /// engine does it, one at a time; the file itself is only read.
+    func convertFilm(_ file: URL) {
+        guard let connection = engine?.connection else { return }
+        let path = file.path
+        Task {
+            do {
+                let started = try await connection.call(
+                    "media.convert", ["path": path], as: FilmConversion.Started.self)
+                if started.needed {
+                    conversionNotes[path] = FilmConversion.note(progress: 0)
+                    watchConversion(connection)
+                } else {
+                    conversionNotes[path] = "Plays on phones and tablets already"
+                }
+            } catch {
+                conversionNotes[path] = error.localizedDescription
+            }
+        }
+    }
+
+    /// Asked every two seconds while a film is being converted, until it has ended.
+    private func watchConversion(_ connection: RPCConnection) {
+        conversionWatch?.cancel()
+        conversionWatch = Task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(2))
+                guard
+                    let said = try? await connection.call(
+                        "media.converting", as: FilmConversion.self)
+                else { return }
+                if let now = said.converting {
+                    conversionNotes[now.path] = FilmConversion.note(progress: now.progress)
+                    continue
+                }
+                if let last = said.last {
+                    conversionNotes[last.path] =
+                        last.saved != nil ? "Converted: the MP4 is beside it" : (last.error ?? "Not converted")
+                    keptArrived += 1  // the lists look again: the copy is there
+                }
+                return
+            }
+        }
+    }
+
     func keepFilm(_ stream: MediaStream, title: String, year: String?) {
         guard let hash = stream.infoHash, filmKeeps[hash]?.isKeeping != true else { return }
         var asked: [String: Any] = ["info_hash": hash, "trackers": stream.trackers, "title": title]

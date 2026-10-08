@@ -21,13 +21,21 @@ As little as possible is changed, because changing a picture costs time and qual
 ffmpeg does the work and writes one file, the one this module names, in the films'
 cache folder; `fileops.keep_media` then copies it to the Movies folder like any kept
 film. Nothing here touches a library.
+
+**A film that's already kept** (2026-10-08) can be converted too, from the app's lists
+(`Converter`): the copy is made the same way and put beside the film as an MP4, under a
+name that isn't taken. The film itself is only read, and is left where it is: the owner
+deletes it when they've seen the copy plays.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
+import os
 import subprocess
+import threading
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -184,3 +192,128 @@ def run(
         raise ConvertError(f"{source.name} couldn't be converted: {detail}")
     if progress is not None:
         progress(1.0)
+
+
+class Converter:
+    """One film already in the Movies folder or the videos folder, being made into a
+    copy phones and tablets play. One at a time: it can take as long as the film."""
+
+    def __init__(self, cache: Path) -> None:
+        self.cache = cache  # the app's own cache folder
+        self._lock = threading.Lock()
+        self._thread: threading.Thread | None = None
+        self._stopping = threading.Event()
+        self._now: dict[str, Any] | None = None  # the film being converted
+        self._last: dict[str, Any] | None = None  # how the one before it ended
+
+    def start(
+        self,
+        film: Path,
+        folders: list[Path],
+        *,
+        forbidden: list[Path],
+        finished: Callable[[dict[str, Any]], None] | None = None,
+    ) -> dict[str, Any]:
+        """Begin converting `film`, which must be a real file inside one of `folders`
+        (where kept films and videos go). Returns `{needed, remakes_picture}` at once;
+        `needed` false means phones and tablets play it as it is, and nothing is done.
+        `finished` hears how it ended."""
+        film = Path(film)
+        top = _folder_of(film, folders)
+        if top is None:
+            raise ConvertError(
+                "Only a movie or video in your Movies or Videos folder can be converted here."
+            )
+        with self._lock:
+            if self._thread is not None and self._thread.is_alive():
+                raise ConvertError(
+                    "Another movie is being converted. Try this one when it has finished."
+                )
+            wanted = plan(film.name, streams_of(film))
+            if wanted is None:
+                return {"needed": False, "remakes_picture": False}
+            self._stopping.clear()
+            self._now = {"path": str(film), "progress": 0.0,
+                         "remakes_picture": wanted.remakes_picture}  # fmt: skip
+            self._last = None
+            self._thread = threading.Thread(
+                target=self._work, args=(film, top, wanted, forbidden, finished),
+                name="convert", daemon=True,
+            )  # fmt: skip
+            self._thread.start()
+        return {"needed": True, "remakes_picture": wanted.remakes_picture}
+
+    def status(self) -> dict[str, Any]:
+        """`converting`: the film being converted (`path`, `progress` 0 to 1,
+        `remakes_picture`) or None. `last`: how the one before ended (`path`, and
+        `saved` or `error`) or None."""
+        with self._lock:
+            return {"converting": dict(self._now) if self._now else None,
+                    "last": dict(self._last) if self._last else None}  # fmt: skip
+
+    def stop(self) -> None:
+        """The engine is stopping: ffmpeg is stopped, and nothing half-made is kept."""
+        self._stopping.set()
+        thread = self._thread
+        if thread is not None and thread.is_alive():
+            thread.join(5)
+
+    def _work(
+        self,
+        film: Path,
+        top: Path,
+        wanted: Plan,
+        forbidden: list[Path],
+        finished: Callable[[dict[str, Any]], None] | None,
+    ) -> None:
+        from musicorg import fileops
+        from musicorg.errors import MusicOrgError
+
+        ended: dict[str, Any] = {"path": str(film)}
+        made: Path | None = None
+        folder = self.cache / "torrents"  # the films' cache folder
+        try:
+            fileops.make_cached_folder(folder, cache=self.cache)
+            name = hashlib.sha256(str(film).encode("utf-8", "surrogatepass")).hexdigest()[:16]
+            made = folder / f".converting-{name}{ENDING}"
+            log.info("Converting a kept film (%s).", wanted.about)
+
+            def heard(done: float) -> None:
+                with self._lock:
+                    if self._now is not None:
+                        self._now["progress"] = round(done, 3)
+
+            run(film, made, wanted, progress=heard, should_stop=self._stopping.is_set)
+            saved = fileops.keep_media(
+                made, film.parent, f"{film.stem}{ENDING}", cache=folder,
+                allowed=[top], forbidden=forbidden,
+            )  # fmt: skip
+            ended["saved"] = str(saved)
+        except (MusicOrgError, ValueError, OSError) as exc:
+            ended["error"] = getattr(exc, "message", None) or str(exc)
+            log.warning("A kept film wasn't converted: %s", ended["error"])
+        finally:
+            if made is not None:
+                fileops.forget_cached(made, cache=self.cache)
+        with self._lock:
+            self._now, self._last = None, ended
+        if finished is not None and not self._stopping.is_set():
+            finished(ended)
+
+
+def _folder_of(film: Path, folders: list[Path]) -> Path | None:
+    """The one of `folders` a film is really inside, or None. A link isn't a film here:
+    what it points at may be anywhere."""
+    try:
+        if film.is_symlink() or not film.is_file():
+            return None
+        real = Path(os.path.realpath(film))
+    except OSError:
+        return None
+    for folder in folders:
+        try:
+            if Path(os.path.realpath(folder)) in real.parents:
+                return folder
+        except OSError:
+            continue
+    return None
