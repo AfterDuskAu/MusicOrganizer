@@ -8,10 +8,14 @@ one queue, it survives quitting, and it goes slowly:
   in config.json under "throttle" (config.THROTTLE_DEFAULTS).
 - **Retries:** after 1 min, 5 min, 30 min and 2 h. When the retry after the 2 h wait
   fails too, the job ends `failed` with its last error.
-- **YouTube refusing us** ("confirm you're not a bot", HTTP 429), or 3 network-level
-  failures in a row (HTTP 403, timeouts, dropped connections), pauses the whole queue for
-  6 hours (`paused_by_youtube`). It's never retried in a tight loop and never worked
-  around. The next session starts with the quiet-start pace again.
+- **YouTube refusing us** ("confirm you're not a bot", HTTP 429), or network-level
+  failures (HTTP 403, timeouts, dropped connections) of 3 different downloads in a row,
+  pauses the whole queue for 6 hours (`paused_by_youtube`). **Different downloads**
+  (the owner's yes, 2026-10-08): one song YouTube won't hand over, tried again and again,
+  is that song's trouble and counts once, however often it's retried; it used to use up
+  all three by itself, and stopped everything for an evening over one song. A pause is
+  never retried in a tight loop and never worked around. The next session starts with
+  the quiet-start pace again.
 - **One video's problem is only that job's:** age-restricted, private, removed or
   region-blocked → `needs_review` with `video_unavailable`, and the queue carries on.
   ("Sign in to confirm your age" is one video; "confirm you're not a bot" is us.)
@@ -425,12 +429,12 @@ class _Runner:
                 self._retry(job, attempts, exc.message)
         except DownloadError as exc:
             if exc.network:
-                failures = self._network_failed()
+                failures = self._network_failed(job)
                 self._retry(job, attempts, exc.message)
                 if failures >= NETWORK_FAILURES_TO_PAUSE:
                     raise _YouTubePause(
                         self.pause_for_youtube(
-                            f"{failures} downloads in a row failed on the network."
+                            f"{failures} different downloads in a row failed on the network."
                         )
                     ) from exc
             else:
@@ -608,10 +612,21 @@ class _Runner:
         log.warning("Queue paused by YouTube until %s: %s", _iso(until), reason)
         return until
 
-    def _network_failed(self) -> int:
-        failures = int(self.store.meta(NETWORK_FAILURES) or 0) + 1
-        self.store.set_meta(NETWORK_FAILURES, str(failures))
-        return failures
+    def _network_failed(self, job: dict[str, Any]) -> int:
+        """Note a network-level failure, and say how many different downloads have had
+        one since the last thing that went right. The same download failing again (its
+        retry) is counted once."""
+        try:
+            failed = json.loads(self.store.meta(NETWORK_FAILURES) or "[]")
+        except ValueError:
+            failed = []
+        if not isinstance(failed, list):  # a bare count, from before this was a list
+            failed = []
+        who = _download_row(job)["video_id"] or f"job:{job['id']}"
+        if who not in failed:
+            failed.append(who)
+            self.store.set_meta(NETWORK_FAILURES, json.dumps(failed))
+        return len(failed)
 
     def _network_ok(self) -> None:
         if self.store.meta(NETWORK_FAILURES) is not None:

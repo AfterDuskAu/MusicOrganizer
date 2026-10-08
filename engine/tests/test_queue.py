@@ -118,12 +118,14 @@ def vid(n: int) -> str:
     return f"video{n:06d}"
 
 
-def enqueue(lib: Library, count: int, kind: str = "replace") -> tuple[str, list[int]]:
+def enqueue(
+    lib: Library, count: int, kind: str = "replace", first: int = 1
+) -> tuple[str, list[int]]:
     b = fileops.open_batch(lib, "replace")
     jobs = [
         {"batch_id": b.batch_id, "plan_id": "p_test", "kind": kind, "item_id": f"i_{n}",
          "payload": {"video_id": vid(n)}}
-        for n in range(1, count + 1)
+        for n in range(first, first + count)
     ]  # fmt: skip
     return b.batch_id, queue.add_jobs(lib, jobs)
 
@@ -364,11 +366,48 @@ def test_three_network_failures_in_a_row_pause_the_queue(
         yt.errors[vid(n)] = ["ERROR: unable to download video data: HTTP Error 403: Forbidden"]
     result = run(lib, clock)
     assert result.stopped == "paused_by_youtube"
-    assert "3 downloads in a row failed on the network" in result.message
+    assert "3 different downloads in a row failed on the network" in result.message
     state = jobs(lib)
     assert [state[n]["state"] for n in (1, 2, 3, 4)] == ["queued"] * 4
     assert [state[n]["attempts"] for n in (1, 2, 3, 4)] == [1, 1, 1, 0]
     assert state[1]["next_attempt_at"] is not None
+
+
+def test_one_song_refused_again_and_again_doesnt_pause_the_queue(
+    lib: Library, clock: FakeClock, yt: FakeYouTube
+) -> None:
+    # The owner's evening of 2026-10-08: one song refused, its retry refused, refused
+    # again in the next run, and every download stopped for six hours.
+    enqueue(lib, 1)
+    refused = "ERROR: unable to download video data: HTTP Error 403: Forbidden"
+    yt.errors[vid(1)] = [refused] * 10  # it's never handed over
+    for _ in range(3):
+        result = run(lib, clock)
+        assert result.stopped != "paused_by_youtube", result.message
+        clock.t += timedelta(hours=1)  # past its wait: the next run tries it again
+    assert jobs(lib)[1]["attempts"] >= 3  # tried at least three times, and counted once
+    assert queue.status(lib.paths, now=clock.t)["state"] != "paused_by_youtube"
+
+    # Two more songs refused as well: three different ones in a row, and that's YouTube
+    # refusing us, not one song's trouble.
+    enqueue(lib, 2, first=2)
+    yt.errors[vid(2)] = [refused]
+    yt.errors[vid(3)] = [refused]
+    clock.t += timedelta(hours=3)
+    result = run(lib, clock)
+    assert result.stopped == "paused_by_youtube"
+    assert "3 different downloads in a row" in result.message
+
+
+def test_a_download_that_works_starts_the_count_again(
+    lib: Library, clock: FakeClock, yt: FakeYouTube
+) -> None:
+    enqueue(lib, 5)
+    refused = "ERROR: unable to download video data: HTTP Error 403: Forbidden"
+    for n in (1, 2, 4, 5):  # two refused, one that works, two more refused
+        yt.errors[vid(n)] = [refused]
+    result = run(lib, clock)
+    assert result.stopped != "paused_by_youtube", result.message
 
 
 def test_a_success_resets_the_network_failure_count(
