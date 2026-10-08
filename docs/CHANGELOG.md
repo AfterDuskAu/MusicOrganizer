@@ -1733,3 +1733,5 @@ Not seen in the running app.
 
 2026-10-08, about 9:30pm. **No gap under the search bar when a search finds nothing.** The owner's picture: Downloads with a search that matched nothing showed its heading half-way down the window, under a wide empty space. The "no results" message kept its own small height, so the whole page was shorter than the window and was set in the middle of it. That message now fills the page (Downloads, the song lists, Albums), and every page is set at the top of its room, so a short page can't drift to the middle again whatever it holds.
 
+2026-10-08, about 9:45pm. **Known issues lists what was built today and not yet seen working.** Ten things, each tested but not watched in the running app, in a section of their own in `docs/KNOWN-ISSUES.md`, with the questions still waiting on the owner. Also for the record: at 9:26pm YouTube answered a download with its "confirm you're not a bot" check and the queue paused for six hours, as it's meant to. What set it off isn't known; that day had 34 downloads, a library clean-up run, and many look-ups, the new tabs' among them. Docs only.
+

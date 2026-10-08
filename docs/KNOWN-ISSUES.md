@@ -29,6 +29,23 @@ Most of these came from comparing the engine with the Photonizer project's lesso
   - Proposed: one read-only review session of fileops' guard, reserve-then-replace, recovery and undo; the pipeline's commit and undo; queue recovery; and state.json writes.
   - Run it after 09b's calibration run and before `plan replace` without `--stage-only`. Decide: yes or no.
 
+## Built on 2026-10-08 and not yet seen working in the app
+
+Each of these is covered by tests and builds, but nobody has watched it do its job in the running app (the owner was using the app, or it needs a right-click or a real film). Take an entry off when it has been seen, or mend it and say so in `CHANGELOG.md`.
+
+- **The Finder for adults-only add-ons**: the page itself, with a real add-on in it. Its row is switched off in the owner's sidebar. No such add-on is built in or tested against.
+- **Movies being kept, listed on Downloads**: the rows, their bars, ✕ to stop one, and a keep carrying on after the app is reopened. (The engine's side of stopping and carrying on was run against a real public-domain torrent.)
+- **Convert for Phones and Tablets**, in a video file's right-click menu, and the progress it shows.
+- **A found playlist opened in place** (Music Finder → Playlists): its songs, Play All, Queue and Download on a song.
+- **The question before a song is put in a playlist twice**, and **Remove Duplicates** in a playlist's menu.
+- **Copy to Profile using the songs the other profile already has**, and the line that says how many.
+- **Playlists moving on as the owner listens**: seen bringing a different page after a restart, not over a listening session.
+- **The torrent upload limit**: libtorrent takes each setting; the speed itself hasn't been measured on a film others are asking for.
+- **No gap under the search bar** when a search finds nothing (Downloads, the song lists, Albums).
+- **The pause rule counting different songs**: tested with the owner's own evening replayed; it takes effect when the engine next starts.
+
+Also open from that day, waiting on the owner (see `docs/ROADMAP.md`): megabytes or megabits for the upload limit; listeners' uploads in Covers & Remixes; whether Copy to Profile should ask before leaving out songs already there; and whether Music Finder's Playlists and Covers & Remixes should wait for a button instead of looking things up when opened (the owner: "come back to it later"; the service challenged this computer that evening, cause unknown).
+
 ## Versions in a copy's name (2026-10-04): what's left
 
 On 1 Oct, `plan adopt --unconfirmed` copied 1,062 rips in under their parsed titles, which leave the version out. 139 copies lost theirs: the rip "Come As You Are R" became "Come As You Are", and the real original became "Come As You Are (2)". The rule and the repair are in `CHANGELOG.md` (2026-10-04). These are still open.
