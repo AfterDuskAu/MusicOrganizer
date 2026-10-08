@@ -967,6 +967,14 @@
 - **Not checked:** a drag itself. The checking tools' drag is over in a blink and the list didn't take it as one; whether a real drag reorders is for the owner to try.
 - **Later, the owner tried it:** the drag works, but the line showing where the row will land was drawn in the wrong place, down among the ticks. The rows on the page were one section of a longer list, and macOS places that line wrongly in a list with several sections. They're a list of their own now, above the ticks. Not seen being dragged since: the owner had Customise Home open, so the app wasn't restarted.
 
+2026-10-08, about 12:10pm. **Home's rows show whole cards, a page at a time.** The owner (the drag's line now lands right): a row showed a sliver of the next card with no way to reach it short of widening the window. "If the window size fits only 5 full items, it shows 5, with the -> to show more in that row … and a <- to go back. This can click on endlessly."
+
+- **A row is as many whole cards as fit across,** never part of one (`HomePaging.fitting`); the cards keep their size and what's left over is shared out between them. An arrow at the row's end brings the next page, one at its start goes back.
+- **It reads further on as it's paged through:** a row from an add-on's list (Popular, New, Best Rated, a genre, a custom search, Recommended Channels) asks for its next stretch a page before the end, and Recommended Songs asks for more picks. A row of the owner's own things ends where they do.
+- **The arrows stand beside the cards, in room kept for them at each end, not over a card.** Laid over the last card (as the owner's picture has it) the arrow lost its clicks to the card underneath, the same fault View More had. The room is kept whether an arrow is showing or not, so nothing shifts sideways as one comes and goes (it did, in the first try).
+- **Checked:** `swift test` (105; one new, for how many fit). In the owner's app: nine whole cards across in the window as it was; forward three times through a custom search's 25 films, more fetched, and on into the next; the back arrow appearing.
+- **Not checked:** other window sizes by eye, the back arrow being clicked, and the fix for a short last page being topped up (made after the last look).
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

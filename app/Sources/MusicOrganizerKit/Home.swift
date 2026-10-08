@@ -280,3 +280,12 @@ public struct MediaFavourites: Equatable, Sendable {
         if let data = try? JSONEncoder().encode(items) { defaults.set(data, forKey: Self.key) }
     }
 }
+
+/// A Home row shows whole cards only, as many as fit, and pages through the rest.
+public enum HomePaging {
+    /// How many whole cards `card` wide, `gap` apart, fit across `room`: at least one.
+    public static func fitting(_ room: Double, card: Double, gap: Double) -> Int {
+        guard card > 0, room.isFinite else { return 1 }
+        return max(Int((room + gap) / (card + gap)), 1)
+    }
+}

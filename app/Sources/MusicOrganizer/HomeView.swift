@@ -90,7 +90,10 @@ struct HomeView: View {
     }
 }
 
-/// One row of Home: its name, its cards sliding sideways, and More.
+/// One row of Home: its name with View More, and its cards a page at a time. Only whole
+/// cards are shown, as many as the window has room for; an arrow at the row's end brings
+/// the next ones, and one at its start goes back (the owner, 2026-10-08). A row that
+/// comes from a list reads further on as it's paged through, for as long as there's more.
 private struct HomeRow: View {
     let section: HomeSection
     let lists: HomeLists
@@ -99,51 +102,22 @@ private struct HomeRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             // View More sits on the row's own line, clear of the cards: at the end of
-            // the sliding row a click on it went to the card underneath (the owner,
-            // 2026-10-08).
+            // the row a click on it went to the card underneath (the owner, 2026-10-08).
             HStack(alignment: .firstTextBaseline) {
                 Text(section.title).font(.title3.weight(.semibold)).heading()
                 Spacer()
                 Button("View More", systemImage: "arrow.right") { more() }
                     .help("Open the page this row is from")
             }
-            .padding(.horizontal, 20)
-            ScrollView(.horizontal) {
-                LazyHStack(alignment: .top, spacing: 16) { cards }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 4)
-            }
-            .frame(height: height)
+            .padding(.leading, 44)
+            .padding(.trailing, 20)
+            content
         }
-    }
-
-    private var height: CGFloat {
-        if hasNothingYet { return 44 }  // one line saying so, not a row's worth of space
-        return switch section.group {
-        case .songs: 212
-        case .channels: ["favourites", "recommended"].contains(section.kind) ? 176 : 190
-        case .movies, .series: 250
-        }
-    }
-
-    /// A row of the owner's own things that has none in it yet.
-    private var hasNothingYet: Bool {
-        switch (section.group, section.kind) {
-        case (.songs, "recommended"): model.whatsNew.picks.isEmpty
-        case (.songs, _): tracks.isEmpty
-        case (.channels, "favourites"), (.channels, "new"): model.followedChannels.isEmpty
-        case (.channels, "continue"): model.history.unfinished(.video).isEmpty
-        case (.channels, "recent"): model.history.recent(.video).isEmpty
-        case (.movies, "continue"), (.series, "continue"): model.history.unfinished(historyKind).isEmpty
-        case (.movies, "recent"), (.series, "recent"): model.history.recent(historyKind).isEmpty
-        case (.movies, "favourites"), (.series, "favourites"):
-            model.mediaFavourites.of(type: type).isEmpty
-        default: false
-        }
+        .task(id: taskKey) { await load(adding: false) }
     }
 
     @ViewBuilder
-    private var cards: some View {
+    private var content: some View {
         switch section.group {
         case .songs: songs
         case .channels: channels
@@ -155,37 +129,41 @@ private struct HomeRow: View {
 
     @ViewBuilder
     private var songs: some View {
-        switch section.kind {
-        case "recommended":
+        if section.kind == "recommended" {
             let page = model.whatsNew
-            let picks = Array(page.picks.prefix(Self.most))
+            let picks = page.picks
             if picks.isEmpty {
                 note(
                     page.working
                         ? "Finding songs you might like…"
                         : page.problem ?? "Songs like yours show up here once some have been found.")
-                    .task(id: model.phase) {
-                        if !page.hasAsked, model.phase == .ready { page.find([.library], count: 20) }
-                    }
-            }
-            ForEach(Array(picks.enumerated()), id: \.element.id) { index, pick in
-                SongCard(track: pick.result.track, under: pick.artistName, artist: pick.artists.first) {
-                    model.player.play(picks.map(\.result.track), startAt: index)
-                } extra: {
-                    if model.canDownload(pick) {
-                        Button("Download", systemImage: "arrow.down.circle") { model.download(pick) }
-                            .controlSize(.small)
+            } else {
+                PagedCards(
+                    items: picks, width: 130, height: 212,
+                    canLoadMore: !page.noMore, loadingMore: page.loadingMore, loadMore: { page.more() }
+                ) { pick in
+                    SongCard(track: pick.result.track, under: pick.artistName, artist: pick.artists.first) {
+                        let index = picks.firstIndex { $0.id == pick.id } ?? 0
+                        model.player.play(picks.map(\.result.track), startAt: index)
+                    } extra: {
+                        if model.canDownload(pick) {
+                            Button("Download", systemImage: "arrow.down.circle") { model.download(pick) }
+                                .controlSize(.small)
+                        }
                     }
                 }
             }
-        default:
-            let tracks = Array(tracks.prefix(Self.most))
-            if tracks.isEmpty { note(emptySongs) }
-            ForEach(Array(tracks.enumerated()), id: \.element.id) { index, track in
-                SongCard(track: track, under: track.artist ?? "", artist: track.albumArtist ?? track.artist) {
-                    model.player.play(tracks, startAt: index)
-                } extra: {
-                    EmptyView()
+        } else {
+            let tracks = tracks
+            if tracks.isEmpty {
+                note(emptySongs)
+            } else {
+                PagedCards(items: tracks, width: 130, height: 196) { track in
+                    SongCard(track: track, under: track.artist ?? "", artist: track.albumArtist ?? track.artist) {
+                        model.player.play(tracks, startAt: tracks.firstIndex { $0.id == track.id } ?? 0)
+                    } extra: {
+                        EmptyView()
+                    }
                 }
             }
         }
@@ -194,9 +172,9 @@ private struct HomeRow: View {
     private var tracks: [Track] {
         switch section.kind {
         case "favourites": model.everything.tracks(withIDs: model.listening.favourites)
-        case "mostPlayed": model.library.mostPlayed(model.listening.plays, limit: Self.most)
-        case "recentlyAdded": model.library.recentlyAdded()
-        case "downloads": model.downloaded
+        case "mostPlayed": model.library.mostPlayed(model.listening.plays)
+        case "recentlyAdded": Array(model.library.recentlyAdded().prefix(Self.mostOwn))
+        case "downloads": Array(model.downloaded.prefix(Self.mostOwn))
         default: []
         }
     }
@@ -218,47 +196,45 @@ private struct HomeRow: View {
         case "favourites":
             if model.followedChannels.isEmpty {
                 note("Channels you follow show up here. Open one and click Follow.")
-            }
-            ForEach(model.followedChannels) { channel in
-                Button { model.open(channel) } label: { MediaCard(channel: channel).frame(width: 112) }
-                    .buttonStyle(.plain)
+            } else {
+                PagedCards(items: model.followedChannels, width: 112, height: 176) { channel in
+                    Button { model.open(channel) } label: { MediaCard(channel: channel) }
+                        .buttonStyle(.plain)
+                }
             }
         case "recommended":
-            let media = model.media
             let list = lists.list(section.id)
             let followed = Set(model.followedChannels.map(\.channelId))
             let found = list.items.compactMap(ChannelRef.init(item:)).filter { !followed.contains($0.channelId) }
-            if found.isEmpty { note(list.problem ?? "Finding channels…") }
-            ForEach(found.prefix(Self.most)) { channel in
-                Button { model.open(channel) } label: { MediaCard(channel: channel).frame(width: 112) }
-                    .buttonStyle(.plain)
-            }
-            Color.clear.frame(width: 1, height: 1)
-                .task(id: media.loaded) {
-                    if let source = media.catalogs(of: "channel").first {
-                        await list.load(model, addon: source.addon, catalog: source.catalog)
-                    }
+            if found.isEmpty {
+                note(list.problem ?? "Finding channels…")
+            } else {
+                PagedCards(
+                    items: found, width: 112, height: 176, canLoadMore: list.more,
+                    loadingMore: list.working, loadMore: { Task { await load(adding: true) } }
+                ) { channel in
+                    Button { model.open(channel) } label: { MediaCard(channel: channel) }
+                        .buttonStyle(.plain)
                 }
+            }
         case "new":
             if model.followedChannels.isEmpty {
                 note("The newest videos from the channels you follow show up here.")
             } else if lists.newVideos.isEmpty {
                 note(lists.newVideosWorking ? "Looking at your channels…" : "Nothing new was found.")
-            }
-            ForEach(lists.newVideos.prefix(Self.most)) { video in
-                VideoCard(
-                    name: video.title, detail: [video.channel ?? "", video.age()].filter { !$0.isEmpty }
-                        .joined(separator: " · "),
-                    picture: video.thumbnail, progress: nil
-                ) {
-                    model.playVideos(
-                        [video.result], startAt: 0, channels: VideoHit.channels(of: [video]))
+            } else {
+                PagedCards(items: lists.newVideos, width: 208, height: 190) { video in
+                    VideoCard(
+                        name: video.title,
+                        detail: [video.channel ?? "", video.age()].filter { !$0.isEmpty }
+                            .joined(separator: " · "),
+                        picture: video.thumbnail, progress: nil
+                    ) {
+                        model.playVideos(
+                            [video.result], startAt: 0, channels: VideoHit.channels(of: [video]))
+                    }
                 }
             }
-            Color.clear.frame(width: 1, height: 1)
-                .task(id: model.followedChannels) {
-                    await lists.loadNewVideos(model, channels: model.followedChannels)
-                }
         case "downloaded":
             DownloadedVideoCards()
         default:
@@ -269,21 +245,22 @@ private struct HomeRow: View {
                     section.kind == "continue"
                         ? "A video you stop part way through shows up here, to carry on with."
                         : "Videos you watch show up here.")
-            }
-            ForEach(entries.prefix(Self.most)) { entry in
-                VideoCard(
-                    name: entry.name, detail: entry.detail ?? "", picture: entry.picture,
-                    progress: entry.isUnfinished ? entry.progress : nil
-                ) {
-                    model.resume(entry)
-                }
-                .contextMenu {
-                    if let id = entry.channelId {
-                        Button("Open Its Channel") {
-                            model.open(ChannelRef(channelId: id, name: entry.detail ?? "Channel"))
-                        }
+            } else {
+                PagedCards(items: entries, width: 208, height: 190) { entry in
+                    VideoCard(
+                        name: entry.name, detail: entry.detail ?? "", picture: entry.picture,
+                        progress: entry.isUnfinished ? entry.progress : nil
+                    ) {
+                        model.resume(entry)
                     }
-                    Button("Remove From This Row") { model.forgetWatched(entry) }
+                    .contextMenu {
+                        if let id = entry.channelId {
+                            Button("Open Its Channel") {
+                                model.open(ChannelRef(channelId: id, name: entry.detail ?? "Channel"))
+                            }
+                        }
+                        Button("Remove From This Row") { model.forgetWatched(entry) }
+                    }
                 }
             }
         }
@@ -293,87 +270,126 @@ private struct HomeRow: View {
 
     private var type: String { section.group.mediaType ?? "movie" }
     private var historyKind: WatchHistory.Entry.Kind { section.group == .series ? .series : .movie }
+    private var isRecommended: Bool { section.kind == "recommended" }
+
+    /// The genre met most among the owner's favourites and what they've watched: what
+    /// Recommended goes by.
+    private var taste: String? {
+        MediaFavourites.leadingGenre(
+            model.mediaFavourites.of(type: type) + model.history.recent(historyKind).compactMap(\.item))
+    }
 
     @ViewBuilder
     private var films: some View {
         switch section.kind {
         case "continue", "recent":
-            let entries = section.kind == "continue"
-                ? model.history.unfinished(historyKind) : model.history.recent(historyKind)
+            let entries = (section.kind == "continue"
+                ? model.history.unfinished(historyKind) : model.history.recent(historyKind))
+                .filter { $0.item != nil }
             if entries.isEmpty {
                 note(
                     section.kind == "continue"
                         ? "One you stop part way through shows up here, to carry on with."
                         : "What you watch shows up here.")
-            }
-            ForEach(entries.prefix(Self.most)) { entry in
-                if let item = entry.item {
-                    Button { model.open(item) } label: {
-                        MediaCard(item: item)
-                            .frame(width: 122)
-                            .overlay(alignment: .top) {
-                                if entry.isUnfinished {
-                                    ProgressView(value: entry.progress)
-                                        .tint(.accentColor)
-                                        .padding(.horizontal, 6)
-                                        .padding(.top, 172)
+            } else {
+                PagedCards(items: entries, width: 122, height: 250) { entry in
+                    if let item = entry.item {
+                        Button { model.open(item) } label: {
+                            MediaCard(item: item)
+                                .overlay(alignment: .top) {
+                                    if entry.isUnfinished {
+                                        ProgressView(value: entry.progress)
+                                            .tint(.accentColor)
+                                            .padding(.horizontal, 6)
+                                            .padding(.top, 172)
+                                    }
                                 }
-                            }
+                        }
+                        .buttonStyle(.plain)
+                        .help(entry.detail ?? item.name)
+                        .contextMenu { Button("Remove From This Row") { model.forgetWatched(entry) } }
                     }
-                    .buttonStyle(.plain)
-                    .help(entry.detail ?? item.name)
-                    .contextMenu { Button("Remove From This Row") { model.forgetWatched(entry) } }
                 }
             }
         case "favourites":
             let items = model.mediaFavourites.of(type: type)
-            if items.isEmpty { note("Click the heart on one's page and it shows up here.") }
-            ForEach(items.prefix(Self.most)) { item in filmCard(item) }
+            if items.isEmpty {
+                note("Click the heart on one's page and it shows up here.")
+            } else {
+                PagedCards(items: items, width: 122, height: 250) { filmCard($0) }
+            }
         default:
-            catalogCards
-        }
-    }
-
-    /// A row that's one of the film add-on's lists: Popular, New, Best Rated, a genre,
-    /// or (Recommended) Popular in the genre met most among the owner's own.
-    @ViewBuilder
-    private var catalogCards: some View {
-        let media = model.media
-        let list = lists.list(section.id)
-        let recommended = section.kind == "recommended"
-        let taste = MediaFavourites.leadingGenre(
-            model.mediaFavourites.of(type: type) + model.history.recent(historyKind).compactMap(\.item))
-        if recommended, taste == nil {
-            note("Mark a few favourites, or watch something, and suggestions show up here.")
-        } else {
-            if list.items.isEmpty { note(list.problem ?? "Loading…") }
-            ForEach(list.items.prefix(Self.most)) { item in filmCard(item) }
-            Color.clear.frame(width: 1, height: 1)
-                .task(id: "\(media.loaded)|\(taste ?? "")") {
-                    let wanted = ["new": "year", "best": "imdbRating"][section.kind] ?? "top"
-                    guard let source = media.catalogs(of: type).first(where: { $0.catalog.id == wanted })
-                    else { return }
-                    let genre = recommended ? taste : section.genre
-                    await list.load(
-                        model, addon: source.addon, catalog: source.catalog,
-                        genre: source.catalog.genre(chosen: genre ?? ""), also: section.also ?? "")
-                }
+            // One of the film add-on's lists: Popular, New, Best Rated, a genre, a search
+            // by two genres, or (Recommended) Popular in the owner's leading genre.
+            let list = lists.list(section.id)
+            if isRecommended, taste == nil {
+                note("Mark a few favourites, or watch something, and suggestions show up here.")
+            } else if list.items.isEmpty {
+                note(list.problem ?? "Loading…")
+            } else {
+                PagedCards(
+                    items: list.items, width: 122, height: 250, canLoadMore: list.more,
+                    loadingMore: list.working, loadMore: { Task { await load(adding: true) } }
+                ) { filmCard($0) }
+            }
         }
     }
 
     private func filmCard(_ item: MediaItem) -> some View {
-        Button { model.open(item) } label: { MediaCard(item: item).frame(width: 122) }
+        Button { model.open(item) } label: { MediaCard(item: item) }
             .buttonStyle(.plain)
     }
 
     private func note(_ text: String) -> some View {
         Text(text)
             .foregroundStyle(.secondary)
-            .frame(maxHeight: .infinity)
-            .padding(.trailing, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 44)
+            .padding(.vertical, 6)
     }
 
-    // MARK: More
+    // MARK: what a row fetches
+
+    /// What the row's fetching depends on: asked again when this changes.
+    private var taskKey: String {
+        switch (section.group, section.kind) {
+        case (.songs, "recommended"): "\(model.phase)"
+        case (.channels, "new"): model.followedChannels.map(\.channelId).joined(separator: ",")
+        default: "\(model.media.loaded)|\(isRecommended ? taste ?? "" : "")"
+        }
+    }
+
+    /// Fetch what the row shows, or with `adding` the next stretch of its list.
+    private func load(adding: Bool) async {
+        let media = model.media
+        switch (section.group, section.kind) {
+        case (.songs, "recommended"):
+            let page = model.whatsNew
+            if !page.hasAsked, model.phase == .ready { page.find([.library], count: 20) }
+        case (.channels, "new"):
+            await lists.loadNewVideos(model, channels: model.followedChannels)
+        case (.channels, "recommended"):
+            if let source = media.catalogs(of: "channel").first {
+                await lists.list(section.id).load(
+                    model, addon: source.addon, catalog: source.catalog, adding: adding)
+            }
+        case (.movies, let kind), (.series, let kind):
+            guard !["continue", "recent", "favourites"].contains(kind) else { return }
+            if isRecommended, taste == nil { return }
+            let wanted = ["new": "year", "best": "imdbRating"][kind] ?? "top"
+            guard let source = media.catalogs(of: type).first(where: { $0.catalog.id == wanted })
+            else { return }
+            let genre = isRecommended ? taste : section.genre
+            await lists.list(section.id).load(
+                model, addon: source.addon, catalog: source.catalog,
+                genre: source.catalog.genre(chosen: genre ?? ""), also: section.also ?? "",
+                adding: adding)
+        default:
+            break
+        }
+    }
+
+    // MARK: View More
 
     /// Open the page the row is a taste of.
     private func more() {
@@ -405,8 +421,102 @@ private struct HomeRow: View {
         }
     }
 
-    /// Cards in a row at most: More has the rest.
-    static let most = 30
+    /// Of the owner's own newest things, how many a row offers: the page has the rest.
+    static let mostOwn = 60
+}
+
+/// A row's cards, a page at a time: as many whole cards as fit across, never part of
+/// one, with an arrow at the end for the next page and one at the start to go back.
+/// The cards keep their size; what's left over is shared out between them.
+private struct PagedCards<Item: Identifiable, Card: View>: View {
+    let items: [Item]
+    let width: CGFloat
+    let height: CGFloat
+    /// There's more to fetch beyond `items`: the forward arrow stays, and asks for it.
+    var canLoadMore = false
+    var loadingMore = false
+    var loadMore: () -> Void = {}
+    @ViewBuilder let card: (Item) -> Card
+    /// The first card showing.
+    @State private var start = 0
+    /// The forward arrow was clicked on the last page: go on when more has arrived.
+    @State private var waiting = false
+
+    private static var gap: CGFloat { 16 }
+    /// Room kept at each end of the row for its arrow. The arrows stand beside the cards,
+    /// never over one: a button laid over a card lost its clicks to the card (seen
+    /// twice, 2026-10-08).
+    private static var gutter: CGFloat { 44 }
+
+    var body: some View {
+        GeometryReader { room in
+            let inner = room.size.width - 2 * Self.gutter
+            let fits = HomePaging.fitting(inner, card: width, gap: Self.gap)
+            let from = min(start, max(items.count - 1, 0))
+            let showing = Array(items.dropFirst(from).prefix(fits))
+            let hasNext = from + fits < items.count
+            // A full page is spread across the room; a short last page keeps the gap.
+            let spread = showing.count == fits && fits > 1
+                ? (inner - CGFloat(fits) * width) / CGFloat(fits - 1)
+                : Self.gap
+            HStack(alignment: .center, spacing: 0) {
+                // (A ZStack, not a Group: the room is kept whether the arrow is there or
+                // not, so nothing moves sideways when it comes and goes.)
+                ZStack {
+                    if from > 0 {
+                        arrow("chevron.left", "Back") { start = max(from - fits, 0) }
+                    }
+                }
+                .frame(width: Self.gutter, height: height)
+                HStack(alignment: .top, spacing: spread) {
+                    ForEach(showing) { item in
+                        card(item).frame(width: width, alignment: .top)
+                    }
+                }
+                .frame(width: max(inner, width), alignment: .leading)
+                ZStack {
+                    if hasNext || canLoadMore {
+                        arrow("chevron.right", loadingMore && !hasNext ? "Finding more…" : "More") {
+                            if hasNext {
+                                start = from + fits
+                            } else if showing.count == fits {
+                                waiting = true  // nothing further is here yet: on when it is
+                            }
+                            // (A page that isn't full just fills up as more arrives.)
+                            // Near the end of what's here: the next stretch is asked for,
+                            // so it has usually arrived by the time it's wanted.
+                            if canLoadMore, !loadingMore, from + 2 * fits >= items.count { loadMore() }
+                        }
+                    }
+                }
+                .frame(width: Self.gutter, height: height)
+            }
+            .onChange(of: items.count) { _, new in
+                if waiting, new > from + fits {  // what was waited for has arrived
+                    start = from + fits
+                    waiting = false
+                }
+                if new <= from { start = max(new - fits, 0) }
+            }
+            .onChange(of: loadingMore) { _, busy in
+                if !busy { waiting = false }  // it came back with nothing more
+            }
+        }
+        .frame(height: height)
+    }
+
+    private func arrow(_ symbol: String, _ title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.title2.weight(.semibold))
+                .foregroundStyle(.white)
+                .frame(width: 34, height: 54)
+                .background(.black.opacity(0.75), in: RoundedRectangle(cornerRadius: 8))
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(title)
+    }
 }
 
 /// A song on Home: its cover (click to play), its name and who it's by.
@@ -451,7 +561,7 @@ private struct SongCard<Extra: View>: View {
             }
             extra()
         }
-        .frame(width: 130, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .onHover { hovering = $0 }
     }
 }
@@ -490,7 +600,7 @@ private struct VideoCard: View {
             Text(name).font(.callout.weight(.medium)).lineLimit(2)
             Text(detail).font(.callout).foregroundStyle(.secondary).lineLimit(1)
         }
-        .frame(width: 208, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .onHover { hovering = $0 }
     }
 }
@@ -506,11 +616,14 @@ private struct DownloadedVideoCards: View {
             if files.isEmpty {
                 Text(looked ? "Videos you download show up here." : "Looking…")
                     .foregroundStyle(.secondary)
-                    .frame(maxHeight: .infinity)
-            }
-            ForEach(files.prefix(HomeRow.most)) { file in
-                VideoCard(name: file.name, detail: file.kind, picture: nil, progress: nil) {
-                    model.playFilm(file.url, title: file.name)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 44)
+                    .padding(.vertical, 6)
+            } else {
+                PagedCards(items: files, width: 208, height: 190) { file in
+                    VideoCard(name: file.name, detail: file.kind, picture: nil, progress: nil) {
+                        model.playFilm(file.url, title: file.name)
+                    }
                 }
             }
         }

@@ -2103,6 +2103,15 @@ final class HomeTests: XCTestCase {
         defaults.removePersistentDomain(forName: "home-test")
     }
 
+    func testARowShowsOnlyWholeCards() {
+        // Five cards of 122 with 16 between need 674; a point less and it's four.
+        XCTAssertEqual(HomePaging.fitting(674, card: 122, gap: 16), 5)
+        XCTAssertEqual(HomePaging.fitting(673, card: 122, gap: 16), 4)
+        XCTAssertEqual(HomePaging.fitting(1400, card: 122, gap: 16), 10)
+        XCTAssertEqual(HomePaging.fitting(50, card: 122, gap: 16), 1)  // never none
+        XCTAssertEqual(HomePaging.fitting(-40, card: 122, gap: 16), 1)
+    }
+
     func testWhatsBeenWatched() {
         var history = WatchHistory()
         let start = Date(timeIntervalSince1970: 2_000_000)
