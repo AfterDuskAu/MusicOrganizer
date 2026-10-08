@@ -132,6 +132,14 @@ public struct HomeLayout: Equatable, Sendable {
         shown.swapAt(from, from + step)
     }
 
+    /// Put the rows in this order (the page's list, after one was dragged). A row that's
+    /// chosen but not in `ids` (it isn't on offer just now) keeps its place at the end.
+    public mutating func arrange(_ ids: [String]) {
+        var seen = Set<String>()
+        let wanted = ids.filter { shown.contains($0) && seen.insert($0).inserted }
+        shown = wanted + shown.filter { !seen.contains($0) }
+    }
+
     /// The rows to draw: the chosen ones that are still on offer, in order.
     public func sections(from all: [HomeSection]) -> [HomeSection] {
         let known = Dictionary(all.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })

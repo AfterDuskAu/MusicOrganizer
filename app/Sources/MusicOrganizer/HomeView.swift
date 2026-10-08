@@ -42,7 +42,7 @@ final class HomeLists {
 }
 
 /// Home (the owner's drawing, 2026-10-08): rows of what's theirs and what's suggested,
-/// each sliding sideways, with More at its end. Overview chooses the rows.
+/// each sliding sideways, with More at its end. Customise Home chooses the rows.
 struct HomeView: View {
     @Environment(AppModel.self) private var model
     @State private var lists = HomeLists()
@@ -55,7 +55,7 @@ struct HomeView: View {
             HStack(spacing: 12) {
                 Text("Home").font(.title2.weight(.semibold)).heading()
                 Spacer()
-                Button("Overview", systemImage: "slider.horizontal.3") { editing = true }
+                Button("Customise Home", systemImage: "slider.horizontal.3") { editing = true }
                     .help("Choose what's on your Home page, and in what order")
             }
             .padding(.horizontal, 20)
@@ -522,7 +522,7 @@ private struct DownloadedVideoCards: View {
     }
 }
 
-/// Home's Overview: which rows are on the page, in what order, and every row that
+/// Customise Home (first called Overview): which rows are on the page, in what order, and every row that
 /// could be.
 private struct HomeOverview: View {
     let all: [HomeSection]
@@ -535,7 +535,7 @@ private struct HomeOverview: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Your Home Page").font(.title2.weight(.semibold)).heading()
-                    Text("Choose the rows it shows and put them in your order.")
+                    Text("Choose the rows it shows, and drag them into your order.")
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -546,30 +546,31 @@ private struct HomeOverview: View {
             .padding(16)
             Divider()
             List {
-                Section("On Your Home Page, Top to Bottom") {
+                Section("On Your Home Page, Top to Bottom (Drag to Reorder)") {
                     if shown.isEmpty { Text("Nothing yet: switch rows on below.").foregroundStyle(.secondary) }
-                    ForEach(Array(shown.enumerated()), id: \.element.id) { index, section in
+                    // Dragged into order (the owner, 2026-10-08: arrows weren't friendly).
+                    ForEach(shown) { section in
                         HStack {
+                            Image(systemName: "line.3.horizontal").foregroundStyle(.tertiary)
+                                .help("Drag to move this row")
                             Text(section.title)
                             Text(section.group.title).foregroundStyle(.secondary)
                             if section.kind == "custom" {
                                 Text("made in its Finder").foregroundStyle(.tertiary)
                             }
                             Spacer()
-                            Button("Move Up", systemImage: "chevron.up") {
-                                model.homeLayout.move(section.id, by: -1)
-                            }
-                            .disabled(index == 0)
-                            Button("Move Down", systemImage: "chevron.down") {
-                                model.homeLayout.move(section.id, by: 1)
-                            }
-                            .disabled(index == shown.count - 1)
                             Button("Take Off", systemImage: "minus.circle") {
                                 model.homeLayout.set(section.id, shown: false)
                             }
+                            .labelStyle(.iconOnly)
+                            .buttonStyle(.borderless)
+                            .help("Take this row off Home")
                         }
-                        .labelStyle(.iconOnly)
-                        .buttonStyle(.borderless)
+                    }
+                    .onMove { from, to in
+                        var ids = shown.map(\.id)
+                        ids.move(fromOffsets: from, toOffset: to)
+                        model.homeLayout.arrange(ids)
                     }
                 }
                 ForEach(HomeSection.Group.allCases, id: \.self) { group in

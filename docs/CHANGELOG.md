@@ -958,6 +958,14 @@
 - **Checked:** `swift test` (104). In the owner's app: the View More buttons, one clicked (it opened Explore); the artist buttons on the song cards; the + clicked for Documentary and Crime in Movie Finder, and the row on Home with its films. (That row was left on the owner's Home.)
 - **Not checked:** View More with a real mouse click (the checking tools press a button by its name, which never showed the fault the owner found), and taking a custom row off again.
 
+2026-10-08, about 11:35am. **Three names and a drag,** at the owner's word.
+
+- The + beside a second genre reads **"+ Home"** (a tick and "Home" once the search is on Home).
+- Home's Overview is **Customise Home**.
+- In it, the rows on the page are **dragged into order**; the up and down arrows are gone ("arnt user friendly"). Each row has a grip at its left and its take-off button at its right (`HomeLayout.arrange`).
+- **Checked:** `swift test` (104). In the owner's app: the new names, and the list with its grips.
+- **Not checked:** a drag itself. The checking tools' drag is over in a blink and the list didn't take it as one; whether a real drag reorders is for the owner to try.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

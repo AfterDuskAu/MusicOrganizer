@@ -2086,6 +2086,10 @@ final class HomeTests: XCTestCase {
         }
         layout.set(custom.id, shown: true)
         XCTAssertEqual(layout.sections(from: all).last, custom)
+        // Dragged into another order; a chosen row that isn't listed just now stays, last.
+        var dragged = HomeLayout(["a", "b", "c", "d"])
+        dragged.arrange(["c", "a", "c", "x", "b"])
+        XCTAssertEqual(dragged.shown, ["c", "a", "b", "d"])
         layout.set(custom.id, shown: false)
         // A row that's no longer on offer (its genre went from the add-on) isn't drawn.
         XCTAssertFalse(

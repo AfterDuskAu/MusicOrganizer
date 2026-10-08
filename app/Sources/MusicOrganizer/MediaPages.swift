@@ -662,13 +662,10 @@ struct MovieFinderView: View {
                                 if !also.isEmpty, also != first, chosen.catalog.genres.contains(also) {
                                     let row = HomeSection.custom(isSeries ? .series : .movies, first, also)
                                     let there = model.homeLayout.shows(row.id)
-                                    Button(
-                                        there ? "On Home" : "Add to Home",
-                                        systemImage: there ? "checkmark" : "plus"
-                                    ) {
+                                    Button("Home", systemImage: there ? "checkmark" : "plus") {
                                         model.homeLayout.set(row.id, shown: !there)
                                     }
-                                    .labelStyle(.iconOnly)
+                                    .fixedSize()
                                     .help(
                                         there
                                             ? "“\(row.title)” is a row on Home. Click to take it off."
