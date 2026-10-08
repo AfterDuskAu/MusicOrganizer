@@ -18,6 +18,12 @@ public struct Addon: Decodable, Identifiable, Hashable, Sendable {
         public func takes(_ name: String) -> Bool { extra.contains { $0.name == name } }
         /// A list that can only be searched: it has nothing to show until something is typed.
         public var needsSearch: Bool { extra.contains { $0.name == "search" && $0.required } }
+        /// A list that can be opened as it is: it needs nothing but, at most, a genre.
+        /// (An add-on's lists of "the episodes after these ones" need ids, and aren't.)
+        public var canBeBrowsed: Bool {
+            extra.allSatisfy { !$0.required || $0.name == "genre" }
+                && !extra.contains { $0.name.hasSuffix("VideosIds") }
+        }
         public var genres: [String] { extra.first { $0.name == "genre" }?.options ?? [] }
         /// A list that has to be asked with one of its genres (a list by year, whose
         /// "genres" are the years): there's no "every" to show.
@@ -100,9 +106,41 @@ public struct MediaDetails: Decodable, Sendable {
         public let released: String?
         /// The id it's played by. Nil for something that isn't a video of a channel's.
         public let videoId: String?
+        /// A series' episode: which season (0 for specials) and which episode of it.
+        public let season: Int?
+        public let episode: Int?
+        /// What happens in the episode, when the add-on says.
+        public let overview: String?
 
         /// The day it came out, as the add-on's timestamp starts ("2023-10-25").
         public var day: String { String((released ?? "").prefix(10)) }
+
+        /// "S1 E2", for an episode.
+        public var number: String? {
+            guard let season, let episode else { return nil }
+            return "S\(season) E\(episode)"
+        }
+
+        /// What an episode is called when it's played or kept: "East of Eden S01E02".
+        public func name(in series: String) -> String {
+            guard let season, let episode else { return series }
+            return String(format: "%@ S%02dE%02d", series, season, episode)
+        }
+    }
+
+    /// A series' seasons, in order, with the specials (season 0) last.
+    public var seasons: [Int] {
+        let found = Set(videos.compactMap(\.season))
+        return found.filter { $0 > 0 }.sorted() + (found.contains(0) ? [0] : [])
+    }
+
+    /// One season's episodes, in order.
+    public func episodes(in season: Int) -> [Video] {
+        videos.filter { $0.season == season }.sorted { ($0.episode ?? 0) < ($1.episode ?? 0) }
+    }
+
+    public static func seasonName(_ season: Int) -> String {
+        season == 0 ? "Specials" : "Season \(season)"
     }
 
     public let id: String
@@ -172,6 +210,11 @@ public struct StreamsAnswer: Decodable, Sendable {
 
     public let sources: [Source]
     public let problems: [Problem]
+
+    public init(sources: [Source], problems: [Problem]) {
+        self.sources = sources
+        self.problems = problems
+    }
 }
 
 /// What the Explore page under Video Finder offers (the owner's drawing, 2026-10-07):

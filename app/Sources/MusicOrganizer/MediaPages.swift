@@ -589,6 +589,8 @@ struct VideoFileRow: View {
 /// A click opens a film: what it is, and where it can be played from.
 struct MovieFinderView: View {
     @Environment(AppModel.self) private var model
+    /// Movies or series: "movie" or "series", as add-ons call them.
+    @AppStorage("movieFinderKind") private var kind = "movie"
     @AppStorage("movieFinderList") private var listKey = ""
     @AppStorage("movieFinderGenre") private var genre = ""
     /// A second genre: only films tagged with both are listed.
@@ -599,12 +601,19 @@ struct MovieFinderView: View {
 
     var body: some View {
         let media = model.media
-        let lists = media.catalogs(of: "movie")
+        let lists = media.catalogs(of: kind)
         let chosen = lists.first { Self.key($0) == listKey } ?? lists.first
         ZStack {
             VStack(spacing: 0) {
                 HStack(spacing: 12) {
                     Text("Movie Finder").font(.title2.weight(.semibold)).heading()
+                    Picker("Kind", selection: $kind) {
+                        Text("Movies").tag("movie")
+                        Text("Series").tag("series")
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .fixedSize()
                     if let chosen {
                         Picker("List", selection: Binding(get: { Self.key(chosen) }, set: { pick($0) })) {
                             ForEach(lists, id: \.catalog) { Text(Self.name($0)).tag(Self.key($0)) }
@@ -721,6 +730,13 @@ struct MovieView: View {
     @State private var details: MediaDetails?
     @State private var streams: StreamsAnswer?
     @State private var problem: String?
+    /// A series: the season showing, and the episode whose ways to play are showing.
+    @State private var season: Int?
+    @State private var episode: MediaDetails.Video?
+
+    private var isSeries: Bool { film.type == "series" }
+    /// What's played or kept: the film, or the episode chosen ("East of Eden S01E02").
+    private var playName: String { episode?.name(in: film.name) ?? film.name }
 
     var body: some View {
         // The page is the size of the room it's given. The film's picture is laid over a
@@ -758,6 +774,7 @@ struct MovieView: View {
                         .help("Play the trailer. Switch the player page to Video to see it.")
                     }
                     if let problem { Text(problem).foregroundStyle(.secondary) }
+                    if isSeries { episodes }
                     sources
                 }
                 .padding(32)
@@ -783,16 +800,83 @@ struct MovieView: View {
             } catch {
                 problem = error.localizedDescription
             }
-            streams = try? await model.ask("addon.streams", asked, as: StreamsAnswer.self)
+            if isSeries {
+                // A series is played an episode at a time: the first season shows, and
+                // an episode's ways to play are asked for when it's clicked.
+                season = details?.seasons.first
+            } else {
+                streams = try? await model.ask("addon.streams", asked, as: StreamsAnswer.self)
+            }
+        }
+    }
+
+    /// A series' seasons, and the episodes of the one showing.
+    @ViewBuilder
+    private var episodes: some View {
+        if let details, !details.seasons.isEmpty {
+            let showing = season ?? details.seasons[0]
+            part("Episodes") {
+                Picker("Season", selection: Binding(get: { showing }, set: { season = $0 })) {
+                    ForEach(details.seasons, id: \.self) { Text(MediaDetails.seasonName($0)).tag($0) }
+                }
+                .labelsHidden()
+                .fixedSize()
+                ForEach(details.episodes(in: showing)) { one in
+                    Button { choose(one) } label: {
+                        HStack(alignment: .top, spacing: 14) {
+                            Text(one.episode.map(String.init) ?? "")
+                                .monospacedDigit()
+                                .frame(width: 28, alignment: .trailing)
+                                .foregroundStyle(.secondary)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(one.title.isEmpty ? "Episode \(one.episode ?? 0)" : one.title)
+                                    .fontWeight(.medium)
+                                if episode == one, let overview = one.overview {
+                                    Text(overview)
+                                        .font(.callout)
+                                        .foregroundStyle(.secondary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                            }
+                            Spacer()
+                            Text(one.day).foregroundStyle(.secondary).monospacedDigit()
+                        }
+                        .padding(.vertical, 6)
+                        .padding(.horizontal, 10)
+                        .background(
+                            episode == one ? AnyShapeStyle(.white.opacity(0.14)) : AnyShapeStyle(.clear),
+                            in: RoundedRectangle(cornerRadius: 8))
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .frame(maxWidth: 760, alignment: .leading)
+        }
+    }
+
+    /// Show where an episode can be played from.
+    private func choose(_ one: MediaDetails.Video) {
+        guard episode != one else { return }
+        (episode, streams) = (one, nil)
+        Task {
+            let found = try? await model.ask(
+                "addon.streams", ["type": film.type, "id": one.id], as: StreamsAnswer.self)
+            if episode == one { streams = found ?? StreamsAnswer(sources: [], problems: []) }
         }
     }
 
     @ViewBuilder
     private var sources: some View {
         if let streams {
-            part("Where to Play It") {
+            part(episode.flatMap(\.number).map { "Where to Play \($0)" } ?? "Where to Play It") {
                 if streams.sources.isEmpty {
-                    Text("None of your lists has this film to play.").foregroundStyle(.secondary)
+                    Text(
+                        isSeries
+                            ? "None of your add-ons has this episode to play. The ones the app "
+                                + "starts with have details of series, but only movies to play."
+                            : "None of your add-ons has this film to play.")
+                        .foregroundStyle(.secondary)
                 }
                 ForEach(streams.sources) { source in
                     ForEach(Array(source.streams.enumerated()), id: \.offset) { _, stream in
@@ -804,14 +888,15 @@ struct MovieView: View {
                             Spacer()
                             Text(stream.kindLabel).foregroundStyle(.secondary)
                             Button("Play", systemImage: "play.fill") {
-                                model.play(stream, title: film.name)
+                                model.play(stream, title: playName)
                             }
                             .disabled(!stream.canPlay)
                             .help(stream.canPlay ? "Play it now" : "This one can't be played in the app yet")
                             if stream.kind == "torrent" {
                                 Button("Keep", systemImage: "arrow.down.circle") {
                                     model.keepFilm(
-                                        stream, title: film.name, year: details?.year ?? film.year)
+                                        stream, title: playName,
+                                        year: isSeries ? nil : details?.year ?? film.year)
                                 }
                                 .disabled(stream.infoHash.flatMap { model.filmKeeps[$0] } != nil)
                                 .help("Fetch the whole film and save it in your Movies folder")
@@ -829,7 +914,7 @@ struct MovieView: View {
                 if streams.sources.contains(where: { $0.streams.contains { $0.kind == "torrent" } }) {
                     Text(
                         "A torrent shares the parts it has fetched with others while it plays. "
-                            + "What's fetched is deleted when you close the film."
+                            + "What's fetched is kept for a day after you last played it, then deleted."
                     )
                     .font(.callout)
                     .foregroundStyle(.secondary)

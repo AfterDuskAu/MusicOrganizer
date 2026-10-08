@@ -928,6 +928,16 @@
 - **Checked:** `pytest` for add-ons and RPC, `ruff`, `swift build`, `swift test` (99). Against the real film-details add-on: Documentary and Crime gave 25 films in 2.7 seconds, Adventure and Sci-Fi 26.
 - **Not checked:** the second menu by eye in the app (the owner was using it).
 
+2026-10-08, about 10:35am. **The Channel page as the owner asked, and series.**
+
+- **Videos → Channel:** the channels followed are one row that slides sideways when there are more than fit, and under it are the downloaded videos (Media, in Downloads), which moved here from Videos → Movies. Movies lists the Movies folder only again. (The owner: "it should only hold a slideable row … and under it will show only downloaded channel videos.")
+- **Series in Movie Finder:** a Movies | Series switch beside the title; the lists, genres, second genre and search work for either. A series' page has its seasons (specials last) and the season's episodes; clicking an episode shows what happens in it and where it can be played from. An episode is played and kept as "Name S01E02".
+- **The engine already read series** (`addon.catalog`, `addon.details` and `addon.streams` take any type an add-on has); an episode now also carries its `overview`. The app offers only lists that can be opened as they are: an add-on's "episodes after these ones" lists, which need ids, are left out (`Catalog.canBeBrowsed`).
+- **What the owner should know:** the three add-ons the app starts with have details of series but only films to play, so an episode's "Where to Play" says none of the add-ons has it. Nothing was built or tested against any other add-on.
+- **Also:** the note under a torrent said what's fetched is deleted when the film is closed; it now says a day.
+- **Checked:** `pytest` for add-ons and RPC, `ruff`, `swift build`, `swift test` (101; two new). In the owner's app: the Channel page; Series' Popular list; a series' page with its eight episodes; an episode chosen, its summary, and the line saying nothing has it to play.
+- **Not checked:** playing an episode (no add-on here offers one), a series with several seasons' menu, and the two-genre menu by eye.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

@@ -94,7 +94,7 @@ final class MediaBrowser {
     /// with the add-on it's from.
     func catalogs(of type: String) -> [(addon: Addon, catalog: Addon.Catalog)] {
         addons.flatMap { addon in
-            addon.catalogs.filter { $0.type == type && !$0.needsSearch }.map { (addon, $0) }
+            addon.catalogs.filter { $0.type == type && $0.canBeBrowsed }.map { (addon, $0) }
         }
     }
 }

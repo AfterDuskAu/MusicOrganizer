@@ -376,6 +376,7 @@ def _video(raw: Any) -> dict[str, Any] | None:
         "released": _text(raw.get("released")) or _text(raw.get("publishedAt")),
         "season": raw.get("season") if isinstance(raw.get("season"), int) else None,
         "episode": raw.get("episode") if isinstance(raw.get("episode"), int) else None,
+        "overview": _text(raw.get("overview")) or _text(raw.get("description")),
         "video_id": last if is_channel_video else None,
     }
 

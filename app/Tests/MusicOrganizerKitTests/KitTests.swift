@@ -2008,3 +2008,41 @@ final class FilmExtrasTests: XCTestCase {
         defaults.removePersistentDomain(forName: "film-positions-test")
     }
 }
+
+final class SeriesTests: XCTestCase {
+    func testASeriesSeasonsAndEpisodes() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        func video(_ season: Int, _ episode: Int) -> String {
+            #"{"id":"tt1:\#(season):\#(episode)","title":"E\#(episode)","thumbnail":null,"released":"2026-10-01T11:00:00.000Z","season":\#(season),"episode":\#(episode),"overview":"What happens","video_id":null}"#
+        }
+        let said = #"{"id":"tt1","type":"series","name":"East of Eden","poster":null,"year":"2026","rating":null,"genres":[],"description":null,"background":null,"logo":null,"runtime_min":59,"cast":[],"directors":[],"trailer_video_id":null,"videos":[\#([video(2, 1), video(0, 1), video(1, 2), video(1, 1)].joined(separator: ","))]}"#
+        let series = try decoder.decode(MediaDetails.self, from: Data(said.utf8))
+        // In order, with the specials last.
+        XCTAssertEqual(series.seasons, [1, 2, 0])
+        XCTAssertEqual(series.seasons.map(MediaDetails.seasonName), ["Season 1", "Season 2", "Specials"])
+        let first = series.episodes(in: 1)
+        XCTAssertEqual(first.map(\.id), ["tt1:1:1", "tt1:1:2"])
+        XCTAssertEqual(first[1].number, "S1 E2")
+        XCTAssertEqual(first[1].name(in: series.name), "East of Eden S01E02")
+        XCTAssertEqual(first[1].overview, "What happens")
+        XCTAssertEqual(first[1].day, "2026-10-01")
+        XCTAssertTrue(series.episodes(in: 9).isEmpty)
+    }
+
+    func testOnlyListsThatNeedNothingAreOffered() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        func list(_ id: String, _ extra: String) -> String {
+            #"{"type":"series","id":"\#(id)","name":null,"extra":[\#(extra)]}"#
+        }
+        let all = [
+            list("top", #"{"name":"genre","required":false,"options":[]},{"name":"search","required":false,"options":[]}"#),
+            list("year", #"{"name":"genre","required":true,"options":["2026"]}"#),
+            list("last-videos", #"{"name":"lastVideosIds","required":false,"options":[]}"#),
+            list("found", #"{"name":"search","required":true,"options":[]}"#),
+        ].joined(separator: ",")
+        let lists = try decoder.decode([Addon.Catalog].self, from: Data("[\(all)]".utf8))
+        XCTAssertEqual(lists.map(\.canBeBrowsed), [true, true, false, false])
+    }
+}
