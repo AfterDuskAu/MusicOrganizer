@@ -13,6 +13,7 @@ struct MusicOrganizerApp: App {
         NSApplication.shared.setActivationPolicy(Snapshot.isOn ? .accessory : .regular)
         StallWatch.shared.startIfAsked()
         Snapshot.startIfAsked()
+        Bench.startIfAsked()
     }
 
     var body: some Scene {

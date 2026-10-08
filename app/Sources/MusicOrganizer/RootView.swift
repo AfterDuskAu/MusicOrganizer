@@ -239,6 +239,8 @@ struct MainView: View {
     /// one is exactly as it was left: scrolled to the same place, with the same
     /// selection and sort (Fix A-1).
     @State private var visited: [SidebarItem] = []
+    /// Each of those pages as a view of its own (`PageHost`).
+    @State private var store = PageStore()
     /// What's been opened inside each page (an album, an artist), page by page.
     @State private var paths: [SidebarItem: NavigationPath] = [:]
     @State private var showNowPlaying = false
@@ -308,7 +310,10 @@ struct MainView: View {
                 .onChange(of: item, initial: true) { opened(current) }
                 // The library's own pages are made ready just after the app opens, one at
                 // a time, so the first click on each finds it built (see `warmUp`).
-                .task(id: model.phase) { await warmUp() }
+                .task(id: model.phase) {
+                    await warmUp()
+                    await bench()
+                }
                 .onAppear {
                     let caughtUp = SidebarChoice.catchUp(saved: savedEntries, seen: seenEntries)
                     if caughtUp.seen != seenEntries {
@@ -317,6 +322,12 @@ struct MainView: View {
                     }
                 }
                 .onChange(of: model.searchText) { paths[current] = NavigationPath() }
+                // An album clicked on a page: opened over the page it was clicked on.
+                .onChange(of: model.openedAlbum) {
+                    guard let album = model.openedAlbum else { return }
+                    model.openedAlbum = nil
+                    paths[current, default: NavigationPath()].append(album)
+                }
                 // A page asked for from elsewhere (Artist Info on a song). `initial`: one
                 // asked for while the library was still being read (Settings, from the
                 // menu) is opened now; left waiting, it made every later ask do nothing.
@@ -722,6 +733,27 @@ struct MainView: View {
         }
     }
 
+    /// A developer's check (`Bench`): the steps asked for, one after the other.
+    private func bench() async {
+        guard Bench.isOn, model.phase == .ready else { return }
+        try? await Task.sleep(for: .seconds(3))
+        for step in Bench.steps {
+            if Task.isCancelled { return }
+            Bench.begin()
+            if step.name.hasPrefix("search=") {
+                let words = String(step.name.dropFirst(7))
+                model.searching = !words.isEmpty
+                model.searchText = words
+            } else if !Bench.took(step.name) {
+                showNowPlaying = false
+                item = SidebarItem(key: step.name)
+            }
+            try? await Task.sleep(for: .seconds(step.wait))
+            Bench.report(step.name)
+        }
+        NSApp.terminate(nil)
+    }
+
     private func opened(_ entry: SidebarItem) {
         if !visited.contains(entry) { visited.append(entry) }
         UserDefaults.standard.set(entry.key, forKey: "lastSection")
@@ -745,9 +777,27 @@ struct MainView: View {
         }
     }
 
+    @ViewBuilder
     private var stackedPages: some View {
-        GeometryReader { room in
-            stack(pageWidth: room.size.width)
+        if Bench.pages == "stacked" {
+            // The way it was until 2026-10-08, kept to measure against (`PageHost`).
+            GeometryReader { room in
+                stack(pageWidth: room.size.width)
+            }
+        } else {
+            let model = model
+            PageHost(
+                current: current, warming: warming, visited: visited, store: store
+            ) { entry, showing in
+                // A page in a view of its own is told what the window's pages are told:
+                // the model, and the look's colour for words.
+                AnyView(
+                    PageView(entry: entry, active: showing)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        .environment(model)
+                        .lookText()
+                        .onAppear { if Bench.isOn { Bench.say("appear \(entry.key)") } })
+            }
         }
     }
 
@@ -757,7 +807,7 @@ struct MainView: View {
                 let active = entry == current
                 // A song list works its rows out only when it's the page showing, so one
                 // being made ready ahead is told it is, for that moment.
-                page(entry, active: active || entry == warming)
+                PageView(entry: entry, active: active || entry == warming)
                     // A page shorter than the window starts at the top, under the search
                     // bar, never in the middle of the window (the owner, 2026-10-08:
                     // Downloads with a search that found nothing).
@@ -798,9 +848,16 @@ struct MainView: View {
         }
         return note
     }
+}
 
-    @ViewBuilder
-    private func page(_ entry: SidebarItem, active: Bool) -> some View {
+/// One page of the app: what a row of the sidebar opens.
+struct PageView: View {
+    let entry: SidebarItem
+    /// False while another page is showing: a song list keeps its place but does no work.
+    let active: Bool
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
         switch entry {
         case .songs:
             SongList(source: .all, title: "Songs", empty: "No songs in the library yet.", isActive: active)
@@ -895,20 +952,38 @@ struct MainView: View {
 private struct SearchBar: View {
     @Environment(AppModel.self) private var model
     @FocusState private var focused: Bool
+    /// What's in the box. The lists are searched once the typing has paused for a
+    /// moment, not at every letter: working a long list out again takes the app about
+    /// half a second, and with that done for each letter the letters themselves were
+    /// held up (the owner, 2026-10-08: "takes a long time to even be able to type").
+    @State private var typed = ""
 
     var body: some View {
-        @Bindable var model = model
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-            TextField("Search your songs, artists and albums", text: $model.searchText)
+            TextField("Search your songs, artists and albums", text: $typed)
                 .textFieldStyle(.plain)
                 .focused($focused)
+                .onSubmit { model.searchText = typed }
+                .task(id: typed) {
+                    guard typed != model.searchText else { return }
+                    try? await Task.sleep(for: .milliseconds(250))
+                    if !Task.isCancelled { model.searchText = typed }
+                }
+                .onChange(of: model.searchText, initial: true) {
+                    if model.searchText != typed { typed = model.searchText }
+                }
                 .onExitCommand { model.searching = false }
-            if !model.searchText.isEmpty {
-                Button { model.searchText = "" } label: { Image(systemName: "xmark.circle.fill") }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.secondary)
-                    .help("Clear")
+            if !typed.isEmpty {
+                Button {
+                    typed = ""
+                    model.searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .help("Clear")
             }
             Button("Done") { model.searching = false }
                 .controlSize(.small)

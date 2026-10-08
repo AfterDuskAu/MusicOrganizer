@@ -84,7 +84,7 @@ struct ColumnsMenu: View {
 
 /// One line of a song table. Its id is its place in the list before any search or sort,
 /// because a playlist may hold the same song twice.
-struct TrackRow: Identifiable, Sendable {
+struct TrackRow: Identifiable, Equatable, Sendable {
     let id: Int
     let track: Track
     let plays: Int
@@ -197,9 +197,11 @@ struct SongList: View {
             return (sortOrder.isEmpty ? rows : rows.sorted(using: sortOrder), tracks.count)
         }.value
         guard !Task.isCancelled else { return }
-        rows = worked.rows
-        total = worked.total
-        ready = true
+        // Only what's different is set: a list shown again with the same songs in it
+        // would otherwise have its table go through every row again.
+        if rows != worked.rows { rows = worked.rows }
+        if total != worked.total { total = worked.total }
+        if !ready { ready = true }
     }
 
     private func counted(_ total: Int) -> String {
@@ -522,11 +524,16 @@ struct AlbumsView: View {
 
 struct AlbumGrid: View {
     let albums: [Album]
+    @Environment(AppModel.self) private var model
 
     var body: some View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 150, maximum: 210), spacing: 20)], spacing: 22) {
             ForEach(albums) { album in
-                NavigationLink(value: album) {
+                // The window opens it (`MainView`): a page is a view of its own, and
+                // can't put another page over itself.
+                Button {
+                    model.openedAlbum = album
+                } label: {
                     VStack(alignment: .leading, spacing: 4) {
                         CoverView(track: album.coverTrack, size: .medium, corner: 8)
                             .shadow(color: .black.opacity(0.18), radius: 5, y: 2)

@@ -46,6 +46,22 @@ Each of these is covered by tests and builds, but nobody has watched it do its j
 
 Also open from that day, waiting on the owner (see `docs/ROADMAP.md`): megabytes or megabits for the upload limit; listeners' uploads in Covers & Remixes; whether Copy to Profile should ask before leaving out songs already there; and whether Music Finder's Playlists and Covers & Remixes should wait for a button instead of looking things up when opened (the owner: "come back to it later"; the service challenged this computer that evening, cause unknown).
 
+## The speed audit (2026-10-08): what's still slow
+
+The app stopped getting slower with use that day (each page is a view of its own, parked out of the window while it isn't showing: `PageHost`; the numbers are in `CHANGELOG.md`). What's left was measured the same evening on the owner's library (1,888 songs), and none of it is in the app's own code:
+
+- **The song table is the slowest thing in the app.** It's SwiftUI's `Table`, and its cost goes by how many songs the list has, not by how many are on screen:
+  - Opening a long list for the first time: about 1.1 s to build it (and 0.5 s to take one apart). Building it three different ways made no difference. The lists are built ahead just after the app opens, which hides this, at the cost of a busy first half minute.
+  - A search that changes what the list holds: 0.4 to 0.9 s each time, and as long again when the search is cleared.
+  - Scrolling: a screenful of new rows costs a few tenths of a second (about ten views a row).
+  - Showing a list again: 0.3 to 0.45 s, because its three hundred cells are each told about the window.
+  - **The mend is a table made with AppKit directly** (an `NSTableView` that reuses its rows), which costs the same for 2,000 songs as for 50,000. It's a rewrite of the song list (columns, sort, selection, the right-click menu, dragging a download), to look as it does now. Wants the owner's yes, and a look at it beside today's before it replaces it.
+- **A page of cards** (What's New's fifty, a Finder's posters) takes 0.5 to 1.4 s to build the first time: each card's buttons are AppKit controls. Once built it comes back in 0.2 to 0.6 s.
+- **A real click costs about 0.2 s more than the same page chosen by the app itself**: the sidebar and the top bar are worked out again on every choice.
+- **Not measured:** Home with every row filled over a long session, the Artists page with an artist open, dragging a playlist in the sidebar, and resizing the window.
+- **Not seen working after the change** (each needs a right-click or a drag the checks couldn't make): a song's right-click menu, dragging a download onto the sidebar, and sheets opened from a page (Edit Details, the guide). The pages, the album page and back, the library search, Settings' sections and the Downloads page were looked at.
+- **A video's start.** One look-up instead of two is built but wasn't timed against YouTube (it had this Mac paused). Still to try when it answers again: asking yt-dlp for fewer of YouTube's "clients" (each is a request), and letting a click to play go ahead of a batch of Discover look-ups in the rate limiter's queue. Looking a video up before it's clicked would be faster still, but it's more requests to a service that had just bot-checked this Mac: not without the owner's word.
+
 ## Versions in a copy's name (2026-10-04): what's left
 
 On 1 Oct, `plan adopt --unconfirmed` copied 1,062 rips in under their parsed titles, which leave the version out. 139 copies lost theirs: the rip "Come As You Are R" became "Come As You Are", and the real original became "Come As You Are (2)". The rule and the repair are in `CHANGELOG.md` (2026-10-04). These are still open.
