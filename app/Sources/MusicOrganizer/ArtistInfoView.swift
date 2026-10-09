@@ -306,13 +306,19 @@ private struct MineForArtist: View {
                     }
                     if let first = stats.firstAdded { fact("First added", day(first)) }
                 }
-                VStack(alignment: .leading, spacing: 0) {
+                // Only the lines on screen are made: an artist with a hundred songs
+                // held the app while every one was (2026-10-10, as on the Downloads page).
+                LazyVStack(alignment: .leading, spacing: 0) {
                     Text("Songs").font(.headline).padding(.bottom, 4)
                     ForEach(Array(tracks.enumerated()), id: \.element.id) { index, track in
-                        MineSongRow(track: track, plays: track.trackId.flatMap { plays[$0]?.count } ?? 0) {
-                            model.player.play(tracks, startAt: index)
+                        VStack(spacing: 0) {
+                            MineSongRow(
+                                track: track, plays: track.trackId.flatMap { plays[$0]?.count } ?? 0
+                            ) {
+                                model.player.play(tracks, startAt: index)
+                            }
+                            Divider()
                         }
-                        Divider()
                     }
                 }
             }
