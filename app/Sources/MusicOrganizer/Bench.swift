@@ -118,8 +118,17 @@ enum Bench {
             say("BENCH menu: " + (menu?.items.map { $0.isSeparatorItem ? "---" : $0.title } ?? ["none"]).joined(separator: " | "))
         case "heart":
             guard let row = Int(value), row < table.numberOfRows else { break }
-            let cell = table.view(atColumn: 0, row: row, makeIfNecessary: true)
-            (cell?.subviews.first { $0 is NSButton } as? NSButton)?.performClick(nil)
+            // The mouse pressed and let go over the heart, through the window, as a click
+            // by hand arrives: the let-go is waiting when the press is answered.
+            guard let window = table.window,
+                let heart = table.view(atColumn: 0, row: row, makeIfNecessary: true)?.subviews.first
+            else { break }
+            let spot = heart.convert(NSPoint(x: heart.bounds.midX, y: heart.bounds.midY), to: nil)
+            let (down, up) = (mouse(.leftMouseDown, at: spot, in: window), mouse(.leftMouseUp, at: spot, in: window))
+            if let down, let up {
+                window.postEvent(up, atStart: false)
+                window.sendEvent(down)
+            }
         case "drag":
             let carried = (0..<table.numberOfRows).compactMap {
                 table.dataSource?.tableView?(table, pasteboardWriterForRow: $0) as? String
@@ -129,6 +138,12 @@ enum Bench {
             if let row = Int(value) { table.scrollRowToVisible(min(row, table.numberOfRows - 1)) }
         }
         return true
+    }
+
+    private static func mouse(_ kind: NSEvent.EventType, at spot: NSPoint, in window: NSWindow) -> NSEvent? {
+        NSEvent.mouseEvent(
+            with: kind, location: spot, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+            windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1)
     }
 
     /// The steps that aren't a page: true if this was one.

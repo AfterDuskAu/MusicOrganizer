@@ -438,6 +438,14 @@ private final class SongTableView: NSTableView {
         }
     }
 
+    /// A click on a row's heart is the heart's own. (A table keeps a click for itself
+    /// unless what's under it is one of macOS's own controls that take clicks.) A
+    /// right-click there is still the table's, for the row's menu.
+    override func validateProposedFirstResponder(_ responder: NSResponder, for event: NSEvent?) -> Bool {
+        if responder is HeartMark, event?.type == .leftMouseDown { return true }
+        return super.validateProposedFirstResponder(responder, for: event)
+    }
+
     /// macOS gone light or dark (the native look follows it): the cells' own colours
     /// are set afresh.
     override func viewDidChangeEffectiveAppearance() {
@@ -570,25 +578,16 @@ private final class WordsCell: NSTableCellView {
 
 /// The heart beside a song: filled when it's a favourite.
 private final class HeartCell: NSTableCellView {
-    private let heart = NSButton()
-    private var change: (() -> Void)?
+    private let heart = HeartMark()
 
     override init(frame: NSRect) {
         super.init(frame: frame)
-        heart.isBordered = false
-        heart.imagePosition = .imageOnly
-        heart.target = self
-        heart.action = #selector(clicked)
         addSubview(heart)
     }
 
-    /// The heart's own size: the same in every row, so it's asked for once.
-    private static var size: NSSize?
-
     override func layout() {
         super.layout()
-        let size = Self.size ?? heart.fittingSize
-        if Self.size == nil, size.width > 0 { Self.size = size }
+        let size = Ink.room(for: heart)
         heart.frame = NSRect(
             x: 0, y: ((bounds.height - size.height) / 2).rounded(), width: size.width, height: size.height)
     }
@@ -597,17 +596,65 @@ private final class HeartCell: NSTableCellView {
     required init?(coder: NSCoder) { fatalError("not used") }
 
     func show(on: Bool, canChange: Bool, change: @escaping () -> Void) {
-        self.change = change
-        heart.image = Ink.symbol(on ? "heart.fill" : "heart", saying: on ? "Favourite" : "Not a favourite")
+        heart.onPress = change
+        let picture = Ink.symbol(on ? "heart.fill" : "heart", saying: on ? "Favourite" : "Not a favourite")
+        if heart.image !== picture { heart.image = picture }
         // Not a favourite: the second colour at half strength, which is what macOS's
         // third colour is.
-        heart.contentTintColor = on ? .systemPink : .tertiaryLabelColor
-        heart.isEnabled = canChange
-        heart.toolTip = on ? "Remove from Favourites" : "Add to Favourites"
+        heart.tint = on ? .systemPink : .tertiaryLabelColor
+        if heart.isEnabled != canChange { heart.isEnabled = canChange }
+        let tip = on ? "Remove from Favourites" : "Add to Favourites"
+        if heart.toolTip != tip { heart.toolTip = tip }
         needsLayout = true
     }
+}
 
-    @objc private func clicked() { change?() }
+/// The heart's picture, answering a click as a button does.
+///
+/// It was one of macOS's own buttons, and a button works out where its picture goes
+/// when it's laid out: for a screen of rows that was a tenth of a list's opening. A
+/// picture view draws the same dots (compared with a button's, favourite or not, able
+/// to be changed or not, light and dark) and works nothing out.
+private final class HeartMark: NSImageView {
+    var onPress: (() -> Void)?
+    var tint: NSColor = .tertiaryLabelColor {
+        didSet { contentTintColor = tint }
+    }
+
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        imageScaling = .scaleNone
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("not used") }
+
+    /// A click on a heart in a window that isn't in front counts, as a button's does.
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+    /// Pressed until the mouse comes up, and it counts if it comes up over the heart.
+    override func mouseDown(with event: NSEvent) {
+        guard isEnabled, let window else { return }
+        var over = true
+        contentTintColor = tint.withSystemEffect(.pressed)
+        while let next = window.nextEvent(matching: [.leftMouseUp, .leftMouseDragged]) {
+            over = bounds.contains(convert(next.locationInWindow, from: nil))
+            contentTintColor = over ? tint.withSystemEffect(.pressed) : tint
+            if next.type == .leftMouseUp { break }
+        }
+        contentTintColor = tint
+        if over { onPress?() }
+    }
+
+    // What reads the screen out is told it's a button, and can press it.
+    override func isAccessibilityElement() -> Bool { true }
+    override func accessibilityRole() -> NSAccessibility.Role? { .button }
+    override func accessibilityLabel() -> String? { image?.accessibilityDescription }
+    override func accessibilityPerformPress() -> Bool {
+        guard isEnabled, let onPress else { return false }
+        onPress()
+        return true
+    }
 }
 
 /// A song's cover, title and small badges, as `SongTitle` shows them.
