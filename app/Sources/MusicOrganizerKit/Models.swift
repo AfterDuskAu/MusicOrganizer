@@ -763,13 +763,19 @@ public struct Library: Sendable {
     public static let empty = Library(tracks: [])
 
     public init(tracks: [Track]) {
-        var byFolder: [String: [Track]] = [:]
-        for track in tracks { byFolder[track.folder, default: []].append(track) }
-        let albums = byFolder.map { folder, members -> Album in
-            let sorted = members.sorted {
-                ($0.disc ?? 1, $0.track ?? Int.max, fold($0.title))
-                    < ($1.disc ?? 1, $1.track ?? Int.max, fold($1.title))
-            }
+        // A name folded for sorting (no capitals, no accents) is slow to make, so each
+        // is made once here. Until 2026-10-10 every comparison of every sort folded
+        // both its names afresh, some hundreds of thousands of times for 2,000 songs:
+        // a third of a second of the app's opening, and again after every download.
+        let titles = tracks.map { fold($0.title) }
+        var byFolder: [String: [Int]] = [:]
+        for (place, track) in tracks.enumerated() { byFolder[track.folder, default: []].append(place) }
+        let albums = byFolder.map { folder, places -> Album in
+            let sorted = places.sorted {
+                let (one, other) = (tracks[$0], tracks[$1])
+                return (one.disc ?? 1, one.track ?? Int.max, titles[$0])
+                    < (other.disc ?? 1, other.track ?? Int.max, titles[$1])
+            }.map { tracks[$0] }
             let first = sorted[0]
             let named = sorted.first { $0.album != nil }
             return Album(
@@ -778,20 +784,15 @@ public struct Library: Sendable {
                 artist: sorted.first { $0.albumArtist != nil }?.albumArtist ?? first.artistName,
                 year: sorted.compactMap(\.year).first,
                 tracks: sorted)
-        }.sorted {
-            (sortKey($0.artist), $0.year ?? 0, sortKey($0.title), $0.id)
-                < (sortKey($1.artist), $1.year ?? 0, sortKey($1.title), $1.id)
-        }
+        }.sorted(keyed: { (sortKey($0.artist), $0.year ?? 0, sortKey($0.title), $0.id) }) { $0 < $1 }
         var byArtist: [String: [Album]] = [:]
         for album in albums { byArtist[fold(album.artist), default: []].append(album) }
         self.albums = albums
         self.artists = byArtist.map { key, albums in
             Artist(id: key, name: albums[0].artist, albums: albums)
-        }.sorted { (sortKey($0.name), $0.id) < (sortKey($1.name), $1.id) }
-        self.tracks = tracks.sorted {
-            (sortKey($0.title), sortKey($0.artistName), $0.path)
-                < (sortKey($1.title), sortKey($1.artistName), $1.path)
-        }
+        }.sorted(keyed: { (sortKey($0.name), $0.id) }) { $0 < $1 }
+        self.tracks = tracks.sorted(
+            keyed: { (sortKey($0.title), sortKey($0.artistName), $0.path) }) { $0 < $1 }
         var text: [String: String] = [:]
         text.reserveCapacity(tracks.count)
         for track in tracks {
@@ -921,6 +922,16 @@ public func fold(_ text: String) -> String {
 public func sortKey(_ text: String) -> String {
     let folded = fold(text)
     return folded.hasPrefix("the ") ? String(folded.dropFirst(4)) : folded
+}
+
+extension Sequence {
+    /// Sorted by something made once for each element, where `sorted(by:)` would make
+    /// it again at every comparison (a name's `sortKey` is slow to make).
+    public func sorted<Key>(
+        keyed key: (Element) -> Key, by inOrder: (Key, Key) -> Bool
+    ) -> [Element] {
+        map { (key: key($0), element: $0) }.sorted { inOrder($0.key, $1.key) }.map(\.element)
+    }
 }
 
 /// "3:07", "1:02:45".

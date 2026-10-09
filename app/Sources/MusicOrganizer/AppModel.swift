@@ -1258,7 +1258,7 @@ final class AppModel {
                 tracks.filter { $0.isDownload && !(separate && inMain($0)) }
                     .sorted { ($0.acquired ?? "", $1.path) > ($1.acquired ?? "", $0.path) },
                 tracks.filter { $0.isVideo && inMain($0) }
-                    .sorted { (sortKey($0.title), $0.path) < (sortKey($1.title), $1.path) }
+                    .sorted(keyed: { (sortKey($0.title), $0.path) }) { $0 < $1 }
             )
         }.value
         everything = sorted.all
