@@ -34,13 +34,17 @@ struct DownloadsByGenre: View {
                 let groups = DownloadGroups.byKind(shown, videosFirst: videosFirst)
                 // Top to bottom as the page shows them: what a Shift-click measures along.
                 let order = groups.flatMap(\.tracks)
+                let ids = order.map(\.id)
+                // What a right-click or a drag on a picked line is about: worked out once
+                // for the page, not by every line for itself.
+                let picked = selection.isEmpty ? [] : order.filter { selection.contains($0.id) }
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 18) {
                         columnNames
                         ForEach(groups) { group in
                             HStack(alignment: .top, spacing: 16) {
                                 genreLabel(group)
-                                songs(group, in: shown, order: order)
+                                songs(group, in: shown, ids: ids, picked: picked)
                             }
                         }
                     }
@@ -48,7 +52,7 @@ struct DownloadsByGenre: View {
                     // A click on the page beside the lines lets go of them.
                     .background(Color.clear.contentShape(Rectangle()).onTapGesture { selection.clear() })
                 }
-                .onChange(of: order.map(\.id)) { _, ids in selection.keep(only: ids) }
+                .onChange(of: ids) { _, ids in selection.keep(only: ids) }
             }
         }
     }
@@ -128,21 +132,29 @@ struct DownloadsByGenre: View {
         .help(group.name == "Videos" ? "Videos saved whole, picture and sound" : "Songs: sound only")
     }
 
-    private func songs(_ group: GenreGroup, in shown: [Track], order: [Track]) -> some View {
-        VStack(spacing: 0) {
+    /// A box of lines. Only the lines on screen are made (since 2026-10-10): made all at
+    /// once, each with its menu and its drag, a page of a hundred downloads held the app
+    /// for a second or more at its opening and at every click that picked a line, and
+    /// longer with every song downloaded.
+    private func songs(
+        _ group: GenreGroup, in shown: [Track], ids: [String], picked: [Track]
+    ) -> some View {
+        LazyVStack(spacing: 0) {
             ForEach(Array(group.tracks.enumerated()), id: \.element.id) { place, track in
-                if place > 0 { Divider().padding(.leading, 12) }
-                // A right-click or a drag on a picked line is about every picked line.
-                let ids = selection.acting(on: track.id, in: order.map(\.id))
-                DownloadRow(
-                    track: track,
-                    picked: selection.contains(track.id),
-                    acting: order.filter { ids.contains($0.id) },
-                    click: { selection.click(track.id, $0, in: order.map(\.id)) }
-                ) {
-                    // Playing one carries on through the rest of the page, in its order.
-                    if let index = shown.firstIndex(of: track) {
-                        model.player.play(shown, startAt: index)
+                VStack(spacing: 0) {
+                    if place > 0 { Divider().padding(.leading, 12) }
+                    let isPicked = selection.contains(track.id)
+                    DownloadRow(
+                        track: track,
+                        picked: isPicked,
+                        // A right-click or a drag on a picked line is about every picked line.
+                        acting: isPicked ? picked : [track],
+                        click: { selection.click(track.id, $0, in: ids) }
+                    ) {
+                        // Playing one carries on through the rest of the page, in its order.
+                        if let index = shown.firstIndex(of: track) {
+                            model.player.play(shown, startAt: index)
+                        }
                     }
                 }
             }

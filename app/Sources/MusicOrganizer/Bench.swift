@@ -24,6 +24,8 @@ import AppKit
 ///   (with the unseen copy, which is never in front, that's a click on an app behind
 ///   another; it works the pages' own lines and buttons, but a song list's rows don't
 ///   answer a made-up press at all, in front or not)
+/// - `down=<points>`: the page that's showing (one that isn't a song list) scrolled down
+///   this far, and how long it is written out
 /// - `settings=<section>`: this section of Settings chosen ("profile", "play", "downloads",
 ///   "lyrics", "addons", "sharing"), with the Settings page showing
 /// - `flip=<key>`: a yes-or-no setting switched over, by its saved name
@@ -212,6 +214,32 @@ enum Bench {
                 window.postEvent(up, atStart: false)
                 NSApp.sendEvent(down)
             }
+            return true
+        }
+        if name.hasPrefix("down=") {
+            // The page's own scrolling part (the widest that isn't a table's, which the
+            // sidebar's and a song list's are) moved down by this many points.
+            guard let points = Double(name.dropFirst(5)), let content = window?.contentView else { return true }
+            var widest: NSScrollView?
+            func look(in view: NSView) {
+                if let scroll = view as? NSScrollView, !scroll.isHiddenOrHasHiddenAncestor,
+                    !(scroll.documentView is NSTableView), scroll.frame.width > (widest?.frame.width ?? 0)
+                {
+                    widest = scroll
+                }
+                view.subviews.forEach(look(in:))
+            }
+            look(in: content)
+            guard let scroll = widest, let page = scroll.documentView else {
+                say("BENCH down: no page that scrolls is showing")
+                return true
+            }
+            let clip = scroll.contentView
+            let most = max(0, page.frame.height - clip.bounds.height)
+            let to = min(most, max(0, clip.bounds.origin.y + (page.isFlipped ? points : -points)))
+            clip.scroll(to: NSPoint(x: clip.bounds.origin.x, y: to))
+            scroll.reflectScrolledClipView(clip)
+            say("BENCH down: the page is \(Int(page.frame.height)) points long, and now at \(Int(to))")
             return true
         }
         if name.hasPrefix("settings=") {
