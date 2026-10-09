@@ -274,6 +274,15 @@ class _Job:
     thread: threading.Thread
 
 
+# What someone is looking at the screen waiting for: a search they typed, a page they
+# opened. Its look-ups take the rate limiter's next turn, ahead of a batch already in
+# line (`youtube.waited_on`). Playing a song or video does the same, in `youtube` itself.
+WAITED_ON = frozenset({
+    "search.ytmusic", "video.search", "channel.search", "channel.videos",
+    "artist.search", "artist.info", "artist.songs", "artist.album",
+})  # fmt: skip
+
+
 class Server:
     """Handles requests; `run()` reads them until stdin closes."""
 
@@ -442,7 +451,11 @@ class Server:
                 raise RpcError(INVALID_REQUEST, "Send engine.hello first.")
             if self.stopping.is_set():
                 raise RpcError(USER_ERROR, "The engine is shutting down.")
-            result = handler(params)
+            if method in WAITED_ON:
+                with youtube.waited_on():
+                    result = handler(params)
+            else:
+                result = handler(params)
         except Exception as exc:  # every error becomes a reply, never a crash
             if "id" not in (message if isinstance(message, dict) else {}):
                 return None

@@ -1827,5 +1827,10 @@ What's still slow, and why, is in `docs/KNOWN-ISSUES.md` ("The speed audit"): th
 - Every request to YouTube waits its turn at one rate limiter, a request every second and a half. The turns went to whoever asked first, so a click to play waited behind any batch already asking: What's New is some sixteen look-ups, over twenty seconds of turns. `RateLimiter.wait` and `call` take `first`: a request someone is waiting on takes the next turn, after the one under way. `youtube.stream` and `youtube.video` (the look-ups for playing) say so; the look-up that times a video's lyrics afterwards doesn't.
 - **Nothing reaches YouTube sooner or more often:** the gap between requests is the same for all, only the order changes (rule 8 is as it was: one gate, one pace).
 - Tests: a request marked `first` goes after the one under way and before the two in line; it waits out the same gap; `stream` and `video` ask that way and `sources` doesn't. Not tried against YouTube: this Mac's look-ups are being kept few while its downloads rest.
-- Not done: the search box and a channel's or an artist's page still wait behind a batch (`KNOWN-ISSUES.md`).
 - The downloads didn't start again at 3:44pm: the app had been closed at 3:40pm. Eighteen are still waiting, for the next time it's opened.
+
+2026-10-09, about 7:50pm. **A search typed, and an artist's or a channel's page opened, go ahead of the line too.** The same right as a click to play, for the other things someone is looking at the screen waiting for: opening Music Finder starts What's New's batch of look-ups, and a search typed straight after waited behind all of it.
+
+- `youtube.waited_on()` marks the thread that's answering such a call, and every request that thread makes takes the rate limiter's next turn. The engine's call handler puts it round a short list (`rpc.WAITED_ON`: the song search, the video and channel searches, a channel's videos, the artist search and an artist's page, songs and album). Batches aren't on it: suggestions, playlists found, an import's songs.
+- The pace is unchanged here as well: the same gap between requests, in another order.
+- Tests: the mark holds for its own thread only and comes off afterwards; a marked request goes after the one under way and before the batch in line; the song search is answered under the mark, and no batch call is on the list.

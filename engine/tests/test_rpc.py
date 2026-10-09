@@ -385,6 +385,23 @@ def test_search(opened: rpc.Server) -> None:
     assert code(opened, "search.ytmusic", query="  ") == rpc.INVALID_PARAMS
 
 
+def test_a_search_typed_goes_ahead_of_a_batch_of_look_ups(
+    opened: rpc.Server, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """What someone is looking at the screen for is marked so, and a batch isn't."""
+    marked: list[bool] = []
+
+    def search(query: str, limit: int) -> list[youtube.Candidate]:
+        marked.append(youtube.is_waited_on())
+        return []
+
+    monkeypatch.setattr(youtube, "search_songs", search)
+    result(opened, "search.ytmusic", query="band")
+    assert marked == [True] and not youtube.is_waited_on()
+    assert rpc.WAITED_ON <= set(opened.methods)
+    assert not {m for m in rpc.WAITED_ON if m.startswith(("discover.", "import.", "plan."))}
+
+
 def test_a_childs_profile_only_finds_clean_songs(
     opened: rpc.Server, monkeypatch: pytest.MonkeyPatch
 ) -> None:

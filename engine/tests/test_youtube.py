@@ -381,6 +381,54 @@ def test_a_request_someone_is_waiting_on_takes_the_next_turn() -> None:
     assert limiter.requests == 5
 
 
+def test_what_someone_is_looking_at_takes_the_next_turn_too() -> None:
+    """A search typed or a page opened: marked for the thread that answers it, and only
+    for that thread, and its requests go ahead of the line like a click to play."""
+    import threading
+    import time
+
+    assert not youtube.is_waited_on()
+    with youtube.waited_on():
+        with youtube.waited_on():
+            assert youtube.is_waited_on()
+        assert youtube.is_waited_on()
+        elsewhere: list[bool] = []
+        other = threading.Thread(target=lambda: elsewhere.append(youtube.is_waited_on()))
+        other.start()
+        other.join(5)
+        assert elsewhere == [False]
+    assert not youtube.is_waited_on()
+
+    gap_over = threading.Event()
+    limiter = RateLimiter(1.0, 0, clock=lambda: 0.0, sleep=lambda s: gap_over.wait(5))
+    limiter.wait()
+    order: list[str] = []
+
+    def batch(name: str) -> None:
+        limiter.wait()
+        order.append(name)
+
+    def search() -> None:
+        with youtube.waited_on():
+            limiter.wait()
+        order.append("search")
+
+    threads = [threading.Thread(target=batch, args=(name,)) for name in ("a", "b")]
+    for thread in threads:
+        thread.start()
+    time.sleep(0.1)
+    threads.append(threading.Thread(target=search))
+    threads[-1].start()
+    for _ in range(200):
+        if limiter._waiting_first == 1:
+            break
+        time.sleep(0.01)
+    gap_over.set()
+    for thread in threads:
+        thread.join(5)
+    assert order[1] == "search" and sorted(order) == ["a", "b", "search"]
+
+
 def test_jitter() -> None:
     clock = FakeTime()
     limiter = limiter_with(clock, jitter=0.5)

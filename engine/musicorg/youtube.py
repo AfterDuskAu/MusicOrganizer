@@ -51,7 +51,8 @@ import random
 import re
 import threading
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -2092,6 +2093,7 @@ class RateLimiter:
 
     def wait(self, *, first: bool = False) -> None:
         """Wait for this request's turn. `first`: before the ones in line that can wait."""
+        first = first or is_waited_on()
         with self._turn:
             if first:
                 self._waiting_first += 1
@@ -2159,6 +2161,26 @@ def paused_error(resume_at: datetime) -> YouTubePausedError:
         "kept, and running the command again carries on where it stopped.",
         resume_at,
     )
+
+
+_waited_on = threading.local()
+
+
+@contextmanager
+def waited_on() -> Iterator[None]:
+    """Within this, the requests this thread makes take the rate limiter's next turn:
+    someone is looking at the screen for the answer (a search they typed, an artist's
+    or a channel's page they opened), where a batch of suggestions can take its time."""
+    before = is_waited_on()
+    _waited_on.yes = True
+    try:
+        yield
+    finally:
+        _waited_on.yes = before
+
+
+def is_waited_on() -> bool:
+    return bool(getattr(_waited_on, "yes", False))
 
 
 _LIMITER = RateLimiter()
