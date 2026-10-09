@@ -453,7 +453,7 @@ struct MainView: View {
         return List(selection: $item) {
             Section(isExpanded: $openLibrary) {
                 ForEach(entries, id: \.self) { entry in
-                    Label(entry.title, systemImage: entry.symbol)
+                    row(entry)
                         .badge(entry == .unconfirmed ? waiting : 0)
                         // A download dragged here moves into the main library.
                         .dropDestination(for: String.self) { ids, _ in
@@ -491,11 +491,11 @@ struct MainView: View {
             Section(isExpanded: $openMedia) {
                 ForEach([SidebarItem.channels, .movies].filter { !hiddenRows.contains($0.key) }, id: \.self) {
                     entry in
-                    Label(entry.title, systemImage: entry.symbol)
+                    row(entry)
                         .contextMenu { Button("Remove from Sidebar") { hide(entry) } }
                 }
                 if shown.contains("videos") {
-                    Label(SidebarItem.videos.title, systemImage: SidebarItem.videos.symbol)
+                    row(.videos)
                         .tag(SidebarItem.videos)
                         .contextMenu {
                             Button("Remove from Sidebar") { remove(.videos, from: shown) }
@@ -530,7 +530,7 @@ struct MainView: View {
                 ) {
                     entry in
                     if entry == .downloads {
-                        Label(entry.title, systemImage: entry.symbol)
+                        row(entry)
                             .badge(model.downloadsBadge)
                             // Dragged back here, a download leaves the main library's lists.
                             .dropDestination(for: String.self) { ids, _ in
@@ -539,15 +539,11 @@ struct MainView: View {
                             }
                             .contextMenu { Button("Remove from Sidebar") { hide(entry) } }
                     } else {
-                        Label(entry.title, systemImage: entry.symbol)
+                        row(entry)
                             .contextMenu { Button("Remove from Sidebar") { hide(entry) } }
                         if entry == .youtube, !model.youtubeQueue.isEmpty {
                             // Shown while anything is queued with Up Next.
-                            Label(
-                                SidebarItem.youtubeQueue.title,
-                                systemImage: SidebarItem.youtubeQueue.symbol
-                            )
-                            .padding(.leading, 18)
+                            row(.youtubeQueue, inset: 18)
                             .badge(model.youtubeQueue.count)
                             .tag(SidebarItem.youtubeQueue)
                         }
@@ -558,7 +554,7 @@ struct MainView: View {
                 ForEach(model.listening.playlists.map { SidebarItem.playlist($0.id) }, id: \.self) {
                     entry in
                     if case .playlist(let id) = entry, let playlist = model.playlist(id) {
-                        Label(playlist.name, systemImage: entry.symbol)
+                        row(entry, named: playlist.name)
                             .contextMenu {
                                 Button("Rename…") { model.rename(playlist) }
                                 Button(
@@ -590,10 +586,7 @@ struct MainView: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
                 if !hiddenRows.contains(SidebarItem.importPlaylists.key) {
-                    Label(
-                        SidebarItem.importPlaylists.title,
-                        systemImage: SidebarItem.importPlaylists.symbol
-                    )
+                    row(.importPlaylists)
                     .tag(SidebarItem.importPlaylists)
                     .contextMenu { Button("Remove from Sidebar") { hide(.importPlaylists) } }
                 }
@@ -607,6 +600,22 @@ struct MainView: View {
         }
         .listStyle(.sidebar)
         .scrollContentBackground(Theme.current.listBackground)
+    }
+
+    /// A row of the sidebar: a page's name and picture, opened by a click even when
+    /// it's the click that brings the app forward from behind another app.
+    ///
+    /// macOS's list leaves that click to the window: with the app behind, a row clicked
+    /// did nothing but bring it forward, and wanted a second click (found 2026-10-09).
+    /// So the row takes the click itself, across its whole width, and opens its page;
+    /// with the app in front the list picks the row as well, which comes to the same.
+    private func row(_ entry: SidebarItem, named name: String? = nil, inset: CGFloat = 0) -> some View {
+        Label(name ?? entry.title, systemImage: entry.symbol)
+            .padding(.leading, inset)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .simultaneousGesture(TapGesture().onEnded { item = entry })
+            .takesFirstClick()
     }
 
     private func header(_ title: String, @ViewBuilder button: () -> some View) -> some View {

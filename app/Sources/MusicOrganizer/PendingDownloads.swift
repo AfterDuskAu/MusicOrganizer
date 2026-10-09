@@ -118,6 +118,8 @@ struct PendingDownloads: View {
                 Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
+            // Never by the click that only brought the app forward: it can't be taken back.
+            .takesFirstClick(false)
             .disabled(download.isRunning)
             .help(
                 download.isRunning
@@ -184,6 +186,7 @@ struct FilmKeeps: View {
                 Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
+            .takesFirstClick(false)
             .help(keeping ? "Stop keeping this movie" : "Take this off the list")
         }
         .padding(.horizontal, 16)

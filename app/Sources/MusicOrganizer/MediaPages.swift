@@ -257,6 +257,7 @@ struct VideoRow: View {
         .padding(.vertical, 4)
         .contentShape(Rectangle())
         .onTapGesture(count: 2, perform: play)
+        .takesFirstClick()
         .contextMenu {
             Button("Play", action: play)
             Button("Download") { model.keepVideo(video.result) }
@@ -571,6 +572,7 @@ struct VideoFileRow: View {
         }
         .contentShape(Rectangle())
         .onTapGesture(count: 2) { model.playFilm(file.url, title: file.name) }
+        .takesFirstClick()
         .contextMenu {
             Button("Play") { model.playFilm(file.url, title: file.name) }
             Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([file.url]) }
@@ -987,6 +989,7 @@ struct MovieView: View {
                                     Button("Stop Keeping", systemImage: "xmark.circle") {
                                         model.stopKeepingFilm(hash)
                                     }
+                                    .takesFirstClick(false)
                                     .help("Stop fetching it. Nothing has been put in your Movies folder yet")
                                 } else {
                                     Button("Keep", systemImage: "arrow.down.circle") {

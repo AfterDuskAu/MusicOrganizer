@@ -197,6 +197,7 @@ private struct DownloadRow: View {
                 click(keys.contains(.command) ? .toggle : keys.contains(.shift) ? .extend : .one)
             }
         )
+        .takesFirstClick()
         .contextMenu { SongActions(songs: acting, play: play).environment(model) }
         let ids = acting.compactMap(\.trackId)
         if track.trackId != nil, !ids.isEmpty {

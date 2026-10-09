@@ -424,6 +424,7 @@ private struct ImportRowView: View {
             // Hear what was found before downloading it. Nothing is saved.
             if let candidate { model.player.play([candidate.result.track], startAt: 0) }
         }
+        .takesFirstClick()
         .help(candidate == nil ? "" : "Double-click to play what was found, from the music service")
     }
 

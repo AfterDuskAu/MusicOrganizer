@@ -361,6 +361,7 @@ private struct MineSongRow: View {
         .padding(.vertical, 5)
         .contentShape(Rectangle())
         .onTapGesture(count: 2, perform: play)
+        .takesFirstClick()
         .contextMenu { SongActions(songs: [track], play: play).environment(model) }
         .help("Double-click to play")
     }

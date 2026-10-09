@@ -18,6 +18,13 @@ import AppKit
 /// - `scroll=<row>`: the table scrolled to this row
 /// - `heart=<row>`: this row's heart clicked
 /// - `drag=rows`: how many rows can be dragged, and what the first carries, written out
+/// - `first=<x>x<y>`: whether the thing at this spot of the window (points from its top
+///   left, as a picture of it shows) takes the click that brings the app forward
+/// - `click=<x>x<y>`: the mouse pressed and let go at this spot, as a click by hand arrives
+///   (with the unseen copy, which is never in front, that's a click on an app behind
+///   another; it works the pages' own lines and buttons, but a song list's rows don't
+///   answer a made-up press at all, in front or not)
+/// - `state`: the page showing, the song rows picked and whether the app is in front, written out
 /// - `hide`, `show`: the app hidden, and brought back
 /// - `shrink`, `grow`: the window put in the Dock, and brought back
 /// - `wait`: nothing, to see what the app does by itself
@@ -152,6 +159,49 @@ enum Bench {
         // A window in the Dock can't become the main one, so it's looked for first.
         let window = NSApp.windows.first { $0.isMiniaturized }
             ?? NSApp.windows.first { $0.canBecomeMain }
+        if name.hasPrefix("first=") {
+            // What macOS would be told if the app were behind another and this spot were
+            // clicked: the very question it asks, of the very view it asks it of. The
+            // press is sent the way a real one arrives and stopped before anything sees
+            // it, because a table answers "what's under the mouse" by the press in hand.
+            let spot = name.dropFirst(6).split(separator: "x").compactMap { Double($0) }
+            guard spot.count == 2, let window, let frame = window.contentView?.superview,
+                let press = mouse(.leftMouseDown, at: NSPoint(x: spot[0], y: window.frame.height - spot[1]), in: window)
+            else { return true }
+            var answer = "wasn't asked"
+            let watch = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { event in
+                guard event === press || event.timestamp == press.timestamp else { return event }
+                let under = frame.hitTest(event.locationInWindow)
+                answer =
+                    (under?.acceptsFirstMouse(for: event) == true ? "takes the first click" : "leaves the first click")
+                    + " (\(under.map { String(describing: type(of: $0)) } ?? "nothing there"))"
+                return nil
+            }
+            NSApp.sendEvent(press)
+            if let watch { NSEvent.removeMonitor(watch) }
+            say("BENCH first: \(Int(spot[0]))x\(Int(spot[1])) \(answer)")
+            return true
+        }
+        if name.hasPrefix("click=") {
+            // A press and a let-go at this spot, sent the way real ones arrive, so macOS's
+            // own rule for a click on an app that isn't in front is the one applied.
+            let spot = name.dropFirst(6).split(separator: "x").compactMap { Double($0) }
+            guard spot.count == 2, let window else { return true }
+            let place = NSPoint(x: spot[0], y: window.frame.height - spot[1])
+            if let down = mouse(.leftMouseDown, at: place, in: window), let up = mouse(.leftMouseUp, at: place, in: window) {
+                window.postEvent(up, atStart: false)
+                NSApp.sendEvent(down)
+            }
+            return true
+        }
+        if name == "state" {
+            let picked = songTable().map { Array($0.selectedRowIndexes).map(String.init).joined(separator: "+") }
+            say(
+                "BENCH state: page \(UserDefaults.standard.string(forKey: "lastSection") ?? "none"), "
+                    + "song rows picked: \(picked.map { $0.isEmpty ? "none" : $0 } ?? "no song list showing"), "
+                    + "app in front: \(NSApp.isActive), window key: \(window?.isKeyWindow == true)")
+            return true
+        }
         switch name {
         case "hide": NSApp.hide(nil)
         case "show":

@@ -213,6 +213,7 @@ struct ResultRow: View {
         .padding(.vertical, 3)
         .contentShape(Rectangle())
         .onTapGesture(count: 2, perform: play)
+        .takesFirstClick()
         .contextMenu { ArtistInfoItems(artists: result.artists) }
     }
 
