@@ -10,14 +10,23 @@ one queue, it survives quitting, and it goes slowly:
   in config.json under "throttle" (config.THROTTLE_DEFAULTS).
 - **Retries:** after 1 min, 5 min, 30 min and 2 h. When the retry after the 2 h wait
   fails too, the job ends `failed` with its last error.
-- **YouTube refusing us** ("confirm you're not a bot", HTTP 429), or network-level
-  failures (HTTP 403, timeouts, dropped connections) of 3 different downloads in a row,
-  pauses the whole queue for 6 hours (`paused_by_youtube`). **Different downloads**
-  (the owner's yes, 2026-10-08): one song YouTube won't hand over, tried again and again,
-  is that song's trouble and counts once, however often it's retried; it used to use up
-  all three by itself, and stopped everything for an evening over one song. A pause is
-  never retried in a tight loop and never worked around. The next session starts with
-  the quiet-start pace again.
+- **A download refused** (HTTP 403), or one the network dropped (a timeout, a lost
+  connection), by the owner's rule of 2026-10-10. That download is left alone for 15
+  minutes and tried again (15 minutes each time, as often as any retry). The queue
+  moves on to another one a minute after the refusal. If that one is refused too (two
+  different downloads in a row, nothing having come through between them), the whole
+  queue rests for 30 minutes; then a third, one not refused yet if there is one, is
+  tried, and if it's refused as well the queue pauses for 6 hours. Before that it was
+  three in a row and six hours at once, the next tried at the usual pace; refusals
+  turned out to come one attempt at a time, the same song arriving at the next try.
+  **Different downloads** (the owner's yes, 2026-10-08): one song YouTube won't hand
+  over, tried again and again, is that song's trouble and counts once, however often
+  it's retried; it used to use up all three by itself, and stopped everything for an
+  evening over one song. A download that comes through starts the count again.
+- **YouTube refusing us** ("confirm you're not a bot", HTTP 429) pauses the whole queue
+  for 6 hours at once (`paused_by_youtube`, as the rest and the pause above are too). A
+  pause is never retried in a tight loop and never worked around. The next session
+  starts with the quiet-start pace again.
 - **One video's problem is only that job's:** age-restricted, private, removed or
   region-blocked → `needs_review` with `video_unavailable`, and the queue carries on.
   ("Sign in to confirm your age" is one video; "confirm you're not a bot" is us.)
@@ -77,7 +86,12 @@ QUEUE_STATES = ("running", "idle", "paused", "paused_by_youtube")
 BACKOFF = (timedelta(minutes=1), timedelta(minutes=5), timedelta(minutes=30), timedelta(hours=2))
 MAX_ATTEMPTS = 1 + len(BACKOFF)  # the first try, then a retry after each wait
 FORMAT_TRIES = 2  # format 140 missing: one retry first (the research's deviation)
-NETWORK_FAILURES_TO_PAUSE = 3
+# A download refused, or dropped by the network (the owner's rule, 2026-10-10):
+REFUSED_RETRY = timedelta(minutes=15)  # that download is left alone this long
+AFTER_REFUSAL = timedelta(minutes=1)  # and the queue moves on to another after this
+NETWORK_FAILURES_TO_REST = 2  # different downloads in a row: the queue rests,
+REST = timedelta(minutes=30)  # this long,
+NETWORK_FAILURES_TO_PAUSE = 3  # and at the third it pauses (`youtube_pause_hours`)
 RETRY_WAIT_LIMIT = timedelta(minutes=30)  # `queue run` waits for a retry this soon; else stops
 DAY = timedelta(hours=24)
 
@@ -86,6 +100,7 @@ PAUSED = "paused"  # "1" while the owner has paused the queue
 YOUTUBE_PAUSED_UNTIL = "youtube_paused_until"
 YOUTUBE_PAUSE_REASON = "youtube_pause_reason"
 DOWNLOADS = "downloads_24h"  # JSON list of the times of downloads in the last 24 hours
+# JSON: the downloads refused in a row, each (its video's id) with its job
 NETWORK_FAILURES = "network_failures_in_a_row"
 
 
@@ -360,7 +375,7 @@ class _Runner:
                     "paused", "The queue is paused. `musicorg queue resume` starts it again."
                 )
             now = self.clock.now()
-            job = self.store.next_ready(_iso(now))
+            job = self.store.next_ready(_iso(now), last=self._refused_jobs())
             # A pause by YouTube stops what reaches YouTube. Work on files here goes on.
             if job is None or job["kind"] not in LOCAL_FIRST_KINDS:
                 until = self.youtube_pause()
@@ -431,14 +446,7 @@ class _Runner:
                 self._retry(job, attempts, exc.message)
         except DownloadError as exc:
             if exc.network:
-                failures = self._network_failed(job)
-                self._retry(job, attempts, exc.message)
-                if failures >= NETWORK_FAILURES_TO_PAUSE:
-                    raise _YouTubePause(
-                        self.pause_for_youtube(
-                            f"{failures} different downloads in a row failed on the network."
-                        )
-                    ) from exc
+                self._refused(job, attempts, exc)
             else:
                 self._network_ok()
                 self._retry(job, attempts, exc.message)
@@ -477,11 +485,37 @@ class _Runner:
         self._clean(job)
         self._close_batch_if_finished(job["batch_id"])
 
-    def _retry(self, job: dict[str, Any], attempts: int, error: str) -> None:
+    def _refused(self, job: dict[str, Any], attempts: int, exc: DownloadError) -> None:
+        """YouTube wouldn't hand a download over, or the network dropped it (the owner's
+        rule, 2026-10-10: the module's notes). This one waits a quarter of an hour, and
+        the queue goes on to another in a minute; the second different one in a row
+        rests the queue, and the third pauses it."""
+        different, again = self._network_failed(job)
+        self._retry(job, attempts, exc.message, wait=REFUSED_RETRY)
+        self.next_download_at = self.clock.now() + AFTER_REFUSAL
+        if again:
+            return  # the same one refused once more: its own trouble, counted once
+        if different >= NETWORK_FAILURES_TO_PAUSE:
+            raise _YouTubePause(
+                self.pause_for_youtube(
+                    f"{different} different downloads in a row failed on the network."
+                )
+            ) from exc
+        if different == NETWORK_FAILURES_TO_REST:
+            raise _YouTubePause(
+                self.rest_for_youtube(
+                    f"{different} different downloads in a row failed on the network, so "
+                    f"downloads are resting for {REST.seconds // 60} minutes."
+                )
+            ) from exc
+
+    def _retry(
+        self, job: dict[str, Any], attempts: int, error: str, wait: timedelta | None = None
+    ) -> None:
         if attempts >= MAX_ATTEMPTS:
             self._end(job, "failed", error=error)
             return
-        at = self.clock.now() + BACKOFF[attempts - 1]
+        at = self.clock.now() + (wait or BACKOFF[attempts - 1])
         self.store.update_job(
             job["id"], _iso(self.clock.now()), state="queued", next_attempt_at=_iso(at),
             last_error=error,
@@ -606,9 +640,10 @@ class _Runner:
         if until is None:
             return None
         if self.clock.now() >= until:
+            # The downloads refused in a row stay counted: after a rest, one more is the
+            # third. (A pause emptied the count when it began.)
             self.store.set_meta(YOUTUBE_PAUSED_UNTIL, None)
             self.store.set_meta(YOUTUBE_PAUSE_REASON, None)
-            self.store.set_meta(NETWORK_FAILURES, None)
             log.info("The YouTube pause is over")
             return None
         return until
@@ -621,21 +656,44 @@ class _Runner:
         log.warning("Queue paused by YouTube until %s: %s", _iso(until), reason)
         return until
 
-    def _network_failed(self, job: dict[str, Any]) -> int:
-        """Note a network-level failure, and say how many different downloads have had
-        one since the last thing that went right. The same download failing again (its
-        retry) is counted once."""
+    def rest_for_youtube(self, reason: str) -> datetime:
+        """The short rest after two different downloads in a row were refused. Which
+        two is kept, so one more refused after the rest is the third in a row."""
+        until = self.clock.now() + REST
+        self.store.set_meta(YOUTUBE_PAUSED_UNTIL, _iso(until))
+        self.store.set_meta(YOUTUBE_PAUSE_REASON, reason)
+        log.warning("Queue resting until %s: %s", _iso(until), reason)
+        return until
+
+    def _network_failures(self) -> dict[str, int | None]:
+        """The downloads that have had a network-level failure since the last thing
+        that went right: each one's video id, with its job."""
         try:
-            failed = json.loads(self.store.meta(NETWORK_FAILURES) or "[]")
+            failed = json.loads(self.store.meta(NETWORK_FAILURES) or "{}")
         except ValueError:
-            failed = []
-        if not isinstance(failed, list):  # a bare count, from before this was a list
-            failed = []
+            return {}
+        if isinstance(failed, list):  # the video ids alone, from before 2026-10-10
+            return {who: None for who in failed if isinstance(who, str)}
+        if not isinstance(failed, dict):  # a bare count, from before that
+            return {}
+        return {who: job if isinstance(job, int) else None for who, job in failed.items()}
+
+    def _network_failed(self, job: dict[str, Any]) -> tuple[int, bool]:
+        """Note a network-level failure. Says how many different downloads have had one
+        since the last thing that went right, and whether this one had already: the
+        same download failing again (its retry) is counted once."""
+        failed = self._network_failures()
         who = _download_row(job)["video_id"] or f"job:{job['id']}"
-        if who not in failed:
-            failed.append(who)
+        again = who in failed
+        if not again or failed[who] != job["id"]:
+            failed[who] = job["id"]
             self.store.set_meta(NETWORK_FAILURES, json.dumps(failed))
-        return len(failed)
+        return len(failed), again
+
+    def _refused_jobs(self) -> list[int]:
+        """The jobs whose downloads were refused in a row: the queue picks another
+        first, so what's tried next is a different download."""
+        return [job for job in self._network_failures().values() if job is not None]
 
     def _network_ok(self) -> None:
         if self.store.meta(NETWORK_FAILURES) is not None:

@@ -16,7 +16,7 @@ import json
 import sqlite3
 import threading
 import unicodedata
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Sequence
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -764,19 +764,21 @@ class QueueStore:
         sql = "SELECT * FROM jobs" + (f" WHERE {' AND '.join(where)}" if where else "")
         return [_job(row) for row in self._rows(sql + " ORDER BY id", params)]
 
-    def next_ready(self, now: str) -> dict[str, Any] | None:
+    def next_ready(self, now: str, last: Sequence[int] = ()) -> dict[str, Any] | None:
         """The next queued job whose retry time (if any) has come: the oldest of the
         kinds the owner asks for one at a time and waits on (`FIRST_KINDS`), then the
         oldest of the rest. So saving one song isn't stuck behind an hour-long run
-        through the whole library."""
+        through the whole library. The jobs in `last` (downloads YouTube has just
+        refused) come after every other: the queue tries a different one first."""
         local = ", ".join("?" for _ in LOCAL_FIRST_KINDS)
         first = ", ".join("?" for _ in FIRST_KINDS)
+        later = ", ".join("?" for _ in last) or "NULL"
         rows = self._rows(
             "SELECT * FROM jobs WHERE state = 'queued' "
             "AND (next_attempt_at IS NULL OR next_attempt_at <= ?) "
-            f"ORDER BY CASE WHEN kind IN ({local}) THEN 0 WHEN kind IN ({first}) THEN 1 "
-            "ELSE 2 END, id LIMIT 1",
-            (now, *LOCAL_FIRST_KINDS, *FIRST_KINDS),
+            f"ORDER BY CASE WHEN kind IN ({local}) THEN 0 WHEN id IN ({later}) THEN 3 "
+            f"WHEN kind IN ({first}) THEN 1 ELSE 2 END, id LIMIT 1",
+            (now, *LOCAL_FIRST_KINDS, *last, *FIRST_KINDS),
         )
         return _job(rows[0]) if rows else None
 
