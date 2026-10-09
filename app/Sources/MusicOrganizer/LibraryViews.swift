@@ -151,13 +151,23 @@ struct SongList: View {
                 Text(empty)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if rows.isEmpty {
-                ContentUnavailableView.search(text: model.searchText)
-                    // It fills the page: left at its own height, the whole page (its heading too)
-                    // sat in the middle of the window, under a gap.
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                table
+                // The table stays while a search finds nothing, out of sight under the
+                // words that say so. Taken away, it was made afresh (every cell on
+                // screen) when the search next found something: the letter after a
+                // slip of the finger held the app a tenth of a second (2026-10-10).
+                ZStack {
+                    table
+                        .opacity(rows.isEmpty ? 0 : 1)
+                        .allowsHitTesting(!rows.isEmpty)
+                        .accessibilityHidden(rows.isEmpty)
+                    if rows.isEmpty {
+                        ContentUnavailableView.search(text: model.searchText)
+                            // It fills the page: left at its own height, the whole page (its
+                            // heading too) sat in the middle of the window, under a gap.
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
+                }
             }
         }
         .task(id: key) { await workOutRows() }

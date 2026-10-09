@@ -72,8 +72,8 @@ struct SongTable: NSViewRepresentable {
         let headings = NSMenu()
         headings.delegate = keeper
         table.headerView?.menu = headings
-        // A list that was sorted before this table was made (a search that found nothing
-        // took the table away, and it's made afresh when the search is cleared).
+        // A list that was sorted before this table was made (an empty list has no table,
+        // and one is made when its first song arrives).
         if let sorted = sortOrder.first.flatMap(SongColumns.sorted(by:)) {
             keeper.settingUp = true
             table.sortDescriptors = [NSSortDescriptor(key: sorted.id, ascending: sorted.ascending)]
