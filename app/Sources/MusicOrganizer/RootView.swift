@@ -240,7 +240,7 @@ struct MainView: View {
     /// selection and sort (Fix A-1).
     @State private var visited: [SidebarItem] = []
     /// Each of those pages as a view of its own (`PageHost`).
-    @State private var store = PageStore()
+    @State private var store = PageStore<SidebarItem>()
     /// What's been opened inside each page (an album, an artist), page by page.
     @State private var paths: [SidebarItem: NavigationPath] = [:]
     @State private var showNowPlaying = false

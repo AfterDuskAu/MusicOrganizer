@@ -9,6 +9,8 @@ struct SettingsView: View {
     /// The section that's showing: remembered, and set by a page that sends the owner
     /// here for one thing (Import Playlists → Spotify opens Profile, with Spotify open).
     @AppStorage(SettingsView.tabKey) private var tab = "profile"
+    /// The sections opened so far, each kept as it was left (see `PageHost`).
+    @State private var store = PageStore<String>()
 
     static let tabKey = "settingsTab"
     /// Which account under Settings → Profile is open (its arrow turned down).
@@ -65,19 +67,46 @@ struct SettingsView: View {
                     .heading()
                     .padding(.horizontal, 20)
                     .padding(.top, 20)
-                Group {
-                    switch chosen.key {
-                    case "play": PlaySettings()
-                    case "downloads": DownloadSettings()
-                    case "lyrics": LyricsSettings()
-                    case "sharing": SharingSettings()
-                    case "addons": AddonSettings()
-                    default: ProfileSettingsTab()
-                    }
+                // Each section is a view of its own, kept once it's been opened: made
+                // afresh at every visit, as they were until 2026-10-09, Play Options and
+                // Downloads took over a quarter of a second each time they were chosen.
+                PageHost(current: chosen.key, visited: Self.sections.map(\.key), store: store) { key, showing in
+                    AnyView(
+                        SettingsSection(key: key, showing: showing)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                            .environment(model)
+                            .lookText())
                 }
                 .frame(maxWidth: 720, maxHeight: .infinity, alignment: .topLeading)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+    }
+}
+
+/// One section of Settings, by its saved name.
+private struct SettingsSection: View {
+    let key: String
+    /// False while another section is the one showing.
+    let showing: Bool
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        Group {
+            switch key {
+            case "play": PlaySettings()
+            case "downloads": DownloadSettings()
+            case "lyrics": LyricsSettings()
+            case "sharing": SharingSettings()
+            case "addons": AddonSettings()
+            default: ProfileSettingsTab()
+            }
+        }
+        // A section come back to asks again what it asks when it first appears.
+        .onChange(of: showing) { _, now in
+            guard now else { return }
+            if key == "sharing" { model.loadSharing() }
+            if key == "downloads" { model.loadSettings() }
         }
     }
 }

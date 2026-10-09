@@ -24,6 +24,9 @@ import AppKit
 ///   (with the unseen copy, which is never in front, that's a click on an app behind
 ///   another; it works the pages' own lines and buttons, but a song list's rows don't
 ///   answer a made-up press at all, in front or not)
+/// - `settings=<section>`: this section of Settings chosen ("profile", "play", "downloads",
+///   "lyrics", "addons", "sharing"), with the Settings page showing
+/// - `flip=<key>`: a yes-or-no setting switched over, by its saved name
 /// - `state`: the page showing, the song rows picked and whether the app is in front, written out
 /// - `hide`, `show`: the app hidden, and brought back
 /// - `shrink`, `grow`: the window put in the Dock, and brought back
@@ -192,6 +195,17 @@ enum Bench {
                 window.postEvent(up, atStart: false)
                 NSApp.sendEvent(down)
             }
+            return true
+        }
+        if name.hasPrefix("settings=") {
+            // A section of Settings chosen, as a click on its name does it.
+            UserDefaults.standard.set(String(name.dropFirst(9)), forKey: SettingsView.tabKey)
+            return true
+        }
+        if name.hasPrefix("flip=") {
+            // A yes-or-no setting switched over, as its switch in Settings does it.
+            let key = String(name.dropFirst(5))
+            UserDefaults.standard.set(!UserDefaults.standard.bool(forKey: key), forKey: key)
             return true
         }
         if name == "state" {

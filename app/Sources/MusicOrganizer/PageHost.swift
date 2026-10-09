@@ -2,12 +2,13 @@ import AppKit
 import SwiftUI
 
 /// The pages opened so far, each as a view of its own (see `PageHost`). Kept by the
-/// window, so the pages outlive anything that's shown over them for a while.
+/// window, so the pages outlive anything that's shown over them for a while. The
+/// sections of Settings are kept the same way, by the Settings page.
 @MainActor
-final class PageStore {
-    fileprivate var hosts: [SidebarItem: NSHostingView<AnyView>] = [:]
+final class PageStore<Page: Hashable> {
+    fileprivate var hosts: [Page: NSHostingView<AnyView>] = [:]
     /// The pages told they're showing (a song list works its rows out only then).
-    fileprivate var showing: Set<SidebarItem> = []
+    fileprivate var showing: Set<Page> = []
     /// Where the pages that aren't showing wait: a window that's never put on the screen.
     /// A page taken out of every window would count as closed, and be opened afresh
     /// each time it was shown (asking the add-ons and the music service all over again);
@@ -37,12 +38,12 @@ final class PageStore {
 /// own, and a page that isn't showing is moved, in one piece, to a window that's never
 /// shown (`PageStore.parked`). Nothing lays it out, draws it or tells it the window has
 /// changed until it's put back, which is one step however much is on it.
-struct PageHost: NSViewRepresentable {
-    let current: SidebarItem
-    let visited: [SidebarItem]
-    let store: PageStore
+struct PageHost<Page: Hashable>: NSViewRepresentable {
+    let current: Page
+    let visited: [Page]
+    let store: PageStore<Page>
     /// A page, told whether it's the one showing.
-    let make: (_ entry: SidebarItem, _ showing: Bool) -> AnyView
+    let make: (_ entry: Page, _ showing: Bool) -> AnyView
 
     func makeNSView(context: Context) -> NSView { NSView() }
 
@@ -66,15 +67,15 @@ struct PageHost: NSViewRepresentable {
     /// SwiftUI sometimes makes a new room before it takes the old one apart, and the
     /// page showing has moved to the new one by then (put away from there, the app
     /// opened on an empty page: 2026-10-09).
-    static func dismantleNSView(_ room: NSView, coordinator: PageStore) {
+    static func dismantleNSView(_ room: NSView, coordinator: PageStore<Page>) {
         for host in coordinator.hosts.values where host.superview === room {
             coordinator.parked.addSubview(host)
         }
     }
 
-    func makeCoordinator() -> PageStore { store }
+    func makeCoordinator() -> PageStore<Page> { store }
 
-    private func show(_ entry: SidebarItem, in room: NSView) {
+    private func show(_ entry: Page, in room: NSView) {
         let host: NSHostingView<AnyView>
         if let made = store.hosts[entry] {
             host = made
