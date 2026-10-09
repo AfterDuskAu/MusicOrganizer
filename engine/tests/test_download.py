@@ -262,6 +262,31 @@ def test_stream_gives_an_address_and_downloads_nothing(
         youtube.stream("abcdefghijk", fresh=True)
 
 
+def test_playing_takes_the_next_turn_and_timing_lyrics_waits_its_own(
+    fake_ydl: Callable[[str | None], None], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A song or video about to be played is looked up ahead of the line; the look-up
+    that times its lyrics afterwards is in no hurry."""
+    turns: list[bool] = []
+
+    class Noting(RateLimiter):
+        def wait(self, *, first: bool = False) -> None:
+            turns.append(first)
+            super().wait(first=first)
+
+    StreamYDL.calls = []
+    StreamYDL.info = {"url": "https://example.invalid/audio", "format_id": "140", "duration": 187}
+    monkeypatch.setattr(youtube, "_make_ydl", StreamYDL)
+    monkeypatch.setattr(youtube, "_LIMITER", Noting(0, 0, sleep=lambda s: None))
+    monkeypatch.setattr(youtube, "_recent", {})
+    youtube.stream("abcdefghijk")
+    youtube.video("lmnopqrstuv")
+    assert turns == [True, True]
+    monkeypatch.setattr(youtube, "_recent", {})
+    youtube.sources("abcdefghijk")
+    assert turns == [True, True, False]
+
+
 def test_a_video_is_asked_about_once_for_its_sound_and_its_picture(
     fake_ydl: Callable[[str | None], None], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -294,7 +319,7 @@ def test_a_video_is_asked_about_once_for_its_sound_and_its_picture(
     started, go_on = threading.Event(), threading.Event()
     asked: list[str] = []
 
-    def slow(video_id: str) -> dict[str, Any]:
+    def slow(video_id: str, *, first: bool = False) -> dict[str, Any]:
         asked.append(video_id)
         started.set()
         assert go_on.wait(10)
@@ -313,7 +338,7 @@ def test_a_video_is_asked_about_once_for_its_sound_and_its_picture(
     assert asked == ["abcdefghijk"] and len(answers) == 2
 
     # A look-up that fails, fails for both, and the next one asks again.
-    def refused(video_id: str) -> dict[str, Any]:
+    def refused(video_id: str, *, first: bool = False) -> dict[str, Any]:
         asked.append(video_id)
         raise DownloadError("no")
 

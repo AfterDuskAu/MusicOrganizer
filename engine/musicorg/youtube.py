@@ -17,6 +17,8 @@
 Every request goes through one rate limiter per process (`limiter()`): at most one
 request per 1.5 s (±0.5 s jitter), exponential backoff when YouTube refuses (HTTP 429)
 or the connection fails, and after 3 such failures in a row a `YouTubePausedError`.
+A song or video about to be played (`stream`, `video`) takes the limiter's next turn,
+ahead of a batch of look-ups already in line; the pace itself is the same for all.
 
 **Replay mode:** with MUSICORG_REPLAY_DIR set, answers come only from responses recorded
 there (scripts/record_ytm.py writes them), and a request with no recording raises
@@ -1277,7 +1279,8 @@ class Video:
 def stream(video_id: str, *, fresh: bool = False) -> Stream:
     """The address of a video's format-140 audio, for the app to play (v0.2). Nothing is
     downloaded or written. The address is YouTube's and stops working after a few
-    hours, so it's asked for when a song is played, through the shared rate limiter.
+    hours, so it's asked for when a song is played, through the shared rate limiter
+    (taking its next turn: someone is waiting to hear it).
 
     A video asked about in the last five minutes isn't asked about again (see
     `_looked_up`): `fresh` says its address has stopped working, and asks anyway.
@@ -1285,7 +1288,7 @@ def stream(video_id: str, *, fresh: bool = False) -> Stream:
     Raises the same errors as `download_audio`.
 
     A long video's sound is given as its segmented (HLS) sound instead: see `video`."""
-    info = _looked_up(video_id, fresh=fresh)
+    info = _looked_up(video_id, fresh=fresh, first=True)
     long = _segmented(video_id, info)
     return long.audio if long is not None else _audio_of(video_id, info)
 
@@ -1300,7 +1303,7 @@ def video(video_id: str, *, fresh: bool = False) -> Video:
     VP9 or AV1 only, and aren't listed. Checked against yt-dlp 2026.08.19: each entry of
     `formats` carries `vcodec` ("avc1.640028"), `acodec` ("none" for picture only),
     `ext`, `protocol` ("https" or "m3u8_native"), `height`, `fps`, `tbr` and `url`."""
-    info = _looked_up(video_id, fresh=fresh)
+    info = _looked_up(video_id, fresh=fresh, first=True)
     long = _segmented(video_id, info)
     if long is not None and long.qualities:
         return long
@@ -1636,8 +1639,9 @@ def _is_playable_picture(found: dict[str, Any]) -> bool:
     )
 
 
-def _look_up(video_id: str) -> dict[str, Any]:
-    """What YouTube says about a video right now (yt-dlp, nothing downloaded)."""
+def _look_up(video_id: str, *, first: bool = False) -> dict[str, Any]:
+    """What YouTube says about a video right now (yt-dlp, nothing downloaded). `first`:
+    someone is waiting to hear or see it, so it takes the rate limiter's next turn."""
     if not VIDEO_ID.fullmatch(video_id):
         raise YouTubeError(f"{video_id!r} isn't a YouTube video id.")
     url = f"https://www.youtube.com/watch?v={video_id}"
@@ -1647,7 +1651,7 @@ def _look_up(video_id: str) -> dict[str, Any]:
             return ydl.extract_info(url, download=False)
 
     try:
-        info = limiter().call(run)
+        info = limiter().call(run, first=first)
     except (YouTubePausedError, ReplayMissError):
         raise
     except Exception as exc:
@@ -1685,7 +1689,7 @@ class _Asking:
 _under_way: dict[str, _Asking] = {}
 
 
-def _looked_up(video_id: str, *, fresh: bool = False) -> dict[str, Any]:
+def _looked_up(video_id: str, *, fresh: bool = False, first: bool = False) -> dict[str, Any]:
     """What YouTube says about a video, asked once for everyone who wants it.
 
     One video is asked about from several places within moments: the app wants its sound
@@ -1715,7 +1719,7 @@ def _looked_up(video_id: str, *, fresh: bool = False) -> dict[str, Any]:
         assert asking.info is not None
         return asking.info
     try:
-        asking.info = _look_up(video_id)
+        asking.info = _look_up(video_id, first=first)
         return asking.info
     except BaseException as exc:
         asking.error = exc
@@ -2049,7 +2053,13 @@ def _int(value: Any) -> int | None:
 class RateLimiter:
     """At most one request per `interval` seconds (± `jitter`), shared by every thread.
     `call()` retries with exponential backoff when YouTube refuses or the connection
-    fails, and raises `YouTubePausedError` after `max_failures` in a row."""
+    fails, and raises `YouTubePausedError` after `max_failures` in a row.
+
+    Requests take their turns one at a time. One that someone is waiting on (`first`: a
+    song or video they've just clicked to play) takes the next turn, ahead of a batch
+    that's already in line: a page of suggestions is some sixteen look-ups, and a click
+    to play used to wait behind all of them. It waits out the same gap as any other, so
+    nothing reaches YouTube sooner or more often than before: only the order changes."""
 
     def __init__(
         self,
@@ -2070,27 +2080,45 @@ class RateLimiter:
         self.backoff = backoff
         self.pause = pause
         self._clock, self._sleep, self._uniform, self._now = clock, sleep, uniform, now
-        self._lock = threading.Lock()
+        # Whose turn it is: `_taken` while one request waits out its gap, and how many
+        # of those waiting for a turn are ones someone is waiting on.
+        self._turn = threading.Condition()
+        self._taken = False
+        self._waiting_first = 0
         self._next_at = 0.0
         self.failures = 0  # in a row
         self.requests = 0  # made by this process
         self.paused_until: datetime | None = None
 
-    def wait(self) -> None:
-        """Wait for this request's turn."""
-        with self._lock:
+    def wait(self, *, first: bool = False) -> None:
+        """Wait for this request's turn. `first`: before the ones in line that can wait."""
+        with self._turn:
+            if first:
+                self._waiting_first += 1
+            try:
+                while self._taken or (self._waiting_first and not first):
+                    self._turn.wait()
+            finally:
+                if first:
+                    self._waiting_first -= 1
+            self._taken = True
+        try:
             now = self._clock()
             if now < self._next_at:
                 self._sleep(self._next_at - now)
             gap = max(0.0, self.interval + self._uniform(-self.jitter, self.jitter))
             self._next_at = self._clock() + gap
             self.requests += 1
+        finally:
+            with self._turn:
+                self._taken = False
+                self._turn.notify_all()
 
-    def call(self, request: Callable[[], T]) -> T:
+    def call(self, request: Callable[[], T], *, first: bool = False) -> T:
         if self.paused_until is not None and self._now() < self.paused_until:
             raise paused_error(self.paused_until)
         while True:
-            self.wait()
+            self.wait(first=first)
             try:
                 result = request()
             except Exception as exc:

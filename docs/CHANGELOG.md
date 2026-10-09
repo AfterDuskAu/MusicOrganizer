@@ -1821,3 +1821,11 @@ What's still slow, and why, is in `docs/KNOWN-ISSUES.md` ("The speed audit"): th
 - A section come back to asks again what it asked each time it appeared (Sync: the paired devices; Downloads: the folders).
 - **It looks the same:** every section pictured before and after in both looks, dot for dot. In the owner's app (closed by them; built from this code and opened behind their windows on Recently Added, so that nothing was looked up): Play Options, Downloads, Sync and Play Options again all as they were. Left on Add-ons, the section they'd had.
 - Not timed in the owner's own window: the figures are the unseen copy's, which reads a little low for SwiftUI's work.
+
+2026-10-09, about 7:45pm. **A song or video about to be played is looked up ahead of the line.** The owner's question from the speed audit ("is there any way to increase the speed that it finds and loads a video?"), and their word to carry on without asking.
+
+- Every request to YouTube waits its turn at one rate limiter, a request every second and a half. The turns went to whoever asked first, so a click to play waited behind any batch already asking: What's New is some sixteen look-ups, over twenty seconds of turns. `RateLimiter.wait` and `call` take `first`: a request someone is waiting on takes the next turn, after the one under way. `youtube.stream` and `youtube.video` (the look-ups for playing) say so; the look-up that times a video's lyrics afterwards doesn't.
+- **Nothing reaches YouTube sooner or more often:** the gap between requests is the same for all, only the order changes (rule 8 is as it was: one gate, one pace).
+- Tests: a request marked `first` goes after the one under way and before the two in line; it waits out the same gap; `stream` and `video` ask that way and `sources` doesn't. Not tried against YouTube: this Mac's look-ups are being kept few while its downloads rest.
+- Not done: the search box and a channel's or an artist's page still wait behind a batch (`KNOWN-ISSUES.md`).
+- The downloads didn't start again at 3:44pm: the app had been closed at 3:40pm. Eighteen are still waiting, for the next time it's opened.

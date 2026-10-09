@@ -336,6 +336,51 @@ def test_one_request_per_interval() -> None:
     assert clock.slept == [1.5, 1.5]
 
 
+def test_a_request_someone_is_waiting_on_takes_the_next_turn() -> None:
+    """A click to play goes ahead of the look-ups already in line, and no sooner than
+    the gap allows."""
+    import threading
+    import time
+
+    # The same gap as any other request.
+    clock = FakeTime()
+    limiter = limiter_with(clock)
+    limiter.call(lambda: None)
+    limiter.call(lambda: None, first=True)
+    assert clock.slept == [1.5]
+
+    # One request is waiting out its gap, two more are in line behind it, and then one
+    # comes that someone is waiting on.
+    gap_over = threading.Event()
+    limiter = RateLimiter(1.0, 0, clock=lambda: 0.0, sleep=lambda s: gap_over.wait(5))
+    limiter.wait()  # the first of all goes at once, and starts the gap
+    order: list[str] = []
+    noted = threading.Lock()
+
+    def ask(name: str, first: bool) -> None:
+        limiter.wait(first=first)
+        with noted:
+            order.append(name)
+
+    threads = [threading.Thread(target=ask, args=(name, False)) for name in ("a", "b", "c")]
+    for thread in threads:
+        thread.start()
+    time.sleep(0.1)  # all three have joined the line
+    play = threading.Thread(target=ask, args=("play", True))
+    play.start()
+    for _ in range(200):
+        if limiter._waiting_first == 1:
+            break
+        time.sleep(0.01)
+    assert limiter._waiting_first == 1 and order == []
+    gap_over.set()
+    for thread in [*threads, play]:
+        thread.join(5)
+    # Whichever of the three had the turn finishes it; the click is next, then the rest.
+    assert order[1] == "play" and sorted(order) == ["a", "b", "c", "play"]
+    assert limiter.requests == 5
+
+
 def test_jitter() -> None:
     clock = FakeTime()
     limiter = limiter_with(clock, jitter=0.5)
