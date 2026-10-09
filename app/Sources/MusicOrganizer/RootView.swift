@@ -720,6 +720,7 @@ struct MainView: View {
     /// A developer's check (`Bench`): the steps asked for, one after the other.
     private func bench() async {
         guard Bench.isOn, model.phase == .ready else { return }
+        Bench.say(String(format: "BENCH ready %.2f s after the app was started", Bench.sinceLaunch()))
         try? await Task.sleep(for: .seconds(3))
         Bench.report("launch")  // everything since the app started
         for step in Bench.steps {

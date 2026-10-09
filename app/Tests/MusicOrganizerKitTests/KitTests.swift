@@ -314,6 +314,39 @@ final class PlayQueueTests: XCTestCase {
     }
 }
 
+final class LineBufferTests: XCTestCase {
+    /// An answer arrives in pieces of any size: the lines come out whole, in order.
+    func testLinesComeOutWholeHoweverTheyArrive() {
+        let text = "first\n\nsecond line\n" + String(repeating: "x", count: 5_000) + "\nlast"
+        for size in [1, 2, 7, 64, 4_096, 100_000] {
+            var buffer = LineBuffer()
+            var lines: [String] = []
+            var rest = Data(text.utf8)
+            while !rest.isEmpty {
+                let piece = rest.prefix(size)
+                rest = rest.dropFirst(size)
+                lines += buffer.add(Data(piece)).map { String(decoding: $0, as: UTF8.self) }
+            }
+            XCTAssertEqual(
+                lines, ["first", "second line", String(repeating: "x", count: 5_000)], "pieces of \(size)")
+            // What's left has no line end yet: it comes out when its end arrives.
+            XCTAssertEqual(buffer.add(Data("\n".utf8)).map { String(decoding: $0, as: UTF8.self) }, ["last"])
+        }
+    }
+
+    /// A long answer in many pieces is read in a time that goes with its length, not
+    /// its length squared (a megabyte in pieces of a kilobyte took seconds before).
+    func testALongAnswerInManyPiecesIsReadQuickly() {
+        let piece = Data(repeating: 0x61, count: 1_024)
+        var buffer = LineBuffer()
+        let began = Date()
+        for _ in 0..<4_096 { XCTAssertTrue(buffer.add(piece).isEmpty) }
+        let lines = buffer.add(Data("\n".utf8))
+        XCTAssertEqual(lines.first?.count, 4_096 * 1_024)
+        XCTAssertLessThan(Date().timeIntervalSince(began), 2)
+    }
+}
+
 final class RPCConnectionTests: XCTestCase {
     /// A pretend engine on the other end of two pipes.
     func makePair() -> (RPCConnection, toEngine: FileHandle, fromEngine: FileHandle) {

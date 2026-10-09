@@ -441,6 +441,7 @@ final class AppModel {
     // MARK: starting and stopping
 
     func start() async {
+        Bench.mark("the app's own start")
         installSpaceBar()
         NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification, object: nil, queue: .main
@@ -514,6 +515,7 @@ final class AppModel {
                 "engine.hello", ["client": "mac-app", "client_version": appVersion],
                 as: Hello.self)
             engineVersion = hello.engineVersion
+            Bench.mark("the engine answered")
         } catch {
             phase = .failed("The engine didn't start: \(error.localizedDescription)")
             return
@@ -1186,9 +1188,12 @@ final class AppModel {
                 saveProfiles()
             }
             _ = try await connection.call("library.open", ["root": folder.path])
+            Bench.mark("the library was opened")
             // Before anything is looked up: a child's profile finds only clean songs.
             await applyKids()
+            Bench.mark("the profile's kind was told")
             await loadFollowedChannels()
+            Bench.mark("the followed channels were read")
             try await load()
             phase = .ready
             // Downloads asked for before the app was last closed carry on in the engine.
@@ -1219,6 +1224,7 @@ final class AppModel {
     private func load() async throws {
         guard let connection = engine?.connection else { return }
         let list = try await connection.call("library.tracks", as: TrackList.self)
+        Bench.mark("the songs were listed")
         root = URL(fileURLWithPath: list.root)
         player.root = root
         // Before the songs are sorted: it says which downloads were moved into the library.
@@ -1229,7 +1235,9 @@ final class AppModel {
             playsVersion += 1
         }
         await arrange(list.tracks)
+        Bench.mark("the songs were sorted")
         status = try? await connection.call("library.status", as: LibraryStatus.self)
+        Bench.mark("the library's state was read")
     }
 
     /// Sort the songs into what each part of the app shows.

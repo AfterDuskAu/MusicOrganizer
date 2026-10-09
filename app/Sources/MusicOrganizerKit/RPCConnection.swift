@@ -100,16 +100,11 @@ public final class RPCConnection: @unchecked Sendable {
     }
 
     private func readLoop() {
-        var buffer = Data()
+        var lines = LineBuffer()
         while true {
             let chunk = output.availableData
             if chunk.isEmpty { break }  // end of file: the engine has gone
-            buffer.append(chunk)
-            while let newline = buffer.firstIndex(of: 0x0A) {
-                let line = buffer.subdata(in: buffer.startIndex..<newline)
-                buffer.removeSubrange(buffer.startIndex...newline)
-                if !line.isEmpty { handle(line) }
-            }
+            for line in lines.add(chunk) { handle(line) }
         }
         lock.lock()
         closed = true
@@ -152,5 +147,32 @@ public final class RPCConnection: @unchecked Sendable {
         } catch {
             waiter.resume(throwing: error)
         }
+    }
+}
+
+/// What has arrived from the engine, cut into its lines (one answer is one line).
+///
+/// Only the piece that has just arrived is looked through for a line's end. Looking
+/// through everything waiting each time, as was done until 2026-10-09, made one long
+/// answer slow to read in a way that grew with its length squared: the list of every
+/// song is a megabyte and arrives in dozens of pieces, and reading it took the app
+/// about a second at every opening.
+struct LineBuffer {
+    private var waiting = Data()
+
+    /// Add what has just arrived; the whole lines there now are given back, in order,
+    /// without their line ends (an empty line is left out).
+    mutating func add(_ chunk: Data) -> [Data] {
+        var lines: [Data] = []
+        // Nothing before this point holds a line's end: it was looked through already.
+        var from = waiting.count
+        waiting.append(chunk)
+        while let end = waiting[from...].firstIndex(of: 0x0A) {
+            let line = waiting.subdata(in: 0..<end)
+            waiting.removeSubrange(0...end)
+            from = 0
+            if !line.isEmpty { lines.append(line) }
+        }
+        return lines
     }
 }

@@ -4,7 +4,9 @@ Bulk downloading is what gets a home connection blocked by YouTube, so there is 
 one queue, it survives quitting, and it goes slowly:
 
 - One job at a time. A random 8–25 s pause between downloads; 20–40 s for the first 20
-  of a session ("quiet start"). At most 300 downloads in any 24 hours. All of these are
+  of a session ("quiet start"). The pause counts from this computer's last download,
+  so a run that has just started waits out what's left of it (reopening the app isn't a
+  way round the pause). At most 300 downloads in any 24 hours. All of these are
   in config.json under "throttle" (config.THROTTLE_DEFAULTS).
 - **Retries:** after 1 min, 5 min, 30 min and 2 h. When the retry after the 2 h wait
   fails too, the job ends `failed` with its last error.
@@ -544,7 +546,14 @@ class _Runner:
     def _wait_for_turn_between_jobs(self) -> bool:
         """Wait for the pause between downloads. False if stopped or paused meanwhile."""
         if self.next_download_at is None:
-            return True
+            # A run that has just started. The pause counts from this computer's last
+            # download, whenever that was: closing the app and opening it again isn't a
+            # way round the pause. (Three openings in a row fetched three songs in 24
+            # seconds on 2026-10-09, the very thing YouTube had been refusing.)
+            recent = self._recent_downloads(self.clock.now())
+            if not recent:
+                return True
+            self.next_download_at = recent[-1] + timedelta(seconds=self._gap())
         wait = (self.next_download_at - self.clock.now()).total_seconds()
         if wait > 0:
             self.report(f"Waiting {wait:.0f} s before the next download.")

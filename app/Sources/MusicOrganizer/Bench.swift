@@ -33,8 +33,9 @@ import AppKit
 /// - `wait`: nothing, to see what the app does by itself
 ///
 /// `/<seconds>` after a step waits that long before the next (4 otherwise):
-/// `youtube/10`. The first line written is `launch`: everything from the app's start to
-/// its first step.
+/// `youtube/10`. The first lines written are `ready` (how long after macOS started the
+/// app its library was showing) and `launch`: how long the app was busy from its start
+/// to its first step.
 @MainActor
 enum Bench {
     struct Step {
@@ -54,6 +55,22 @@ enum Bench {
 
     static func startIfAsked() {
         if isOn { meter.start() }
+    }
+
+    /// A moment of the app's opening, written with how long after its start it came.
+    static func mark(_ what: String) {
+        if isOn { say(String(format: "BENCH opening: %.2f s %@", sinceLaunch(), what)) }
+    }
+
+    /// How long ago macOS started this app: by its own record, so the time the app
+    /// takes to be loaded is in it too.
+    static func sinceLaunch() -> Double {
+        var info = kinfo_proc()
+        var size = MemoryLayout<kinfo_proc>.stride
+        var name: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid()]
+        guard sysctl(&name, 4, &info, &size, nil, 0) == 0 else { return 0 }
+        let born = info.kp_proc.p_starttime
+        return Date().timeIntervalSince1970 - (Double(born.tv_sec) + Double(born.tv_usec) / 1_000_000)
     }
 
     /// Forget what's been measured: the next step starts from nothing.

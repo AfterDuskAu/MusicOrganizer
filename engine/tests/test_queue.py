@@ -178,6 +178,27 @@ def test_the_pace_between_downloads(lib: Library, clock: FakeClock, yt: FakeYouT
     assert gaps == [20, 8, 8, 8]  # quiet start for the first two, then the usual pace
 
 
+def test_the_pause_counts_from_the_last_download_across_a_restart(
+    lib: Library, clock: FakeClock, yt: FakeYouTube
+) -> None:
+    """Closing the app and opening it again isn't a way round the pause."""
+    cfg = settings(quiet_start_downloads=9, quiet_start_min_s=20, pause_min_s=8)
+    enqueue(lib, 1)
+    run(lib, clock, cfg)
+    clock.t = START + timedelta(seconds=5)  # reopened five seconds later
+    enqueue(lib, 2)
+    run(lib, clock, cfg)
+    times = [t for _, t in yt.downloads]
+    assert times[0] == START
+    assert [(b - a).total_seconds() for a, b in zip(times, times[1:], strict=False)] == [20, 20]
+    # Reopened long after the last download: nothing to wait for.
+    clock.t = times[-1] + timedelta(hours=1)
+    began = clock.t
+    enqueue(lib, 1)
+    run(lib, clock, cfg)
+    assert yt.downloads[-1][1] == began
+
+
 def test_default_pace() -> None:
     t = Config(None, Path("x")).throttle()
     assert (t["pause_min_s"], t["pause_max_s"], t["daily_cap"]) == (8, 25, 250)
