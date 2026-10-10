@@ -162,9 +162,18 @@ enum Bench {
             }
         case "drag":
             let carried = (0..<table.numberOfRows).compactMap {
-                table.dataSource?.tableView?(table, pasteboardWriterForRow: $0) as? String
+                table.dataSource?.tableView?(table, pasteboardWriterForRow: $0) as? NSPasteboardItem
             }
-            say("BENCH drag: \(carried.count) of \(table.numberOfRows) rows can be dragged; the first carries \(carried.first ?? "nothing")")
+            let files = carried.filter { $0.types.contains(.fileURL) }.count
+            let ids = carried.filter { $0.types.contains(.string) }.count
+            let first = carried.first.map { item in
+                item.types.map { "\($0.rawValue) = \(item.string(forType: $0) ?? "?")" }.joined(separator: "; ")
+            }
+            say(
+                "BENCH drag: \(carried.count) of \(table.numberOfRows) rows can be dragged, \(files) with "
+                    + "their file and \(ids) with a download's id; out of the app they may be "
+                    + "\(table.draggingSession(NSDraggingSession(), sourceOperationMaskFor: .outsideApplication) == .copy ? "copied only" : "more than copied"); "
+                    + "the first carries \(first ?? "nothing")")
         default:
             if let row = Int(value) { table.scrollRowToVisible(min(row, table.numberOfRows - 1)) }
         }

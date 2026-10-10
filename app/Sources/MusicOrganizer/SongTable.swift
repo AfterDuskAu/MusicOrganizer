@@ -69,6 +69,9 @@ struct SongTable: NSViewRepresentable {
         table.onReturn = { [weak keeper] in keeper?.playSelected() }
         table.menuForRows = { [weak keeper] rows in keeper?.menu(for: rows) }
         table.setDraggingSourceOperationMask([.copy, .move], forLocal: true)
+        // Dragged out of the app (onto the desktop, into another app), a song is only
+        // ever copied: nothing but the engine moves a file of the library's.
+        table.setDraggingSourceOperationMask(.copy, forLocal: false)
         let headings = NSMenu()
         headings.delegate = keeper
         table.headerView?.menu = headings
@@ -294,11 +297,18 @@ struct SongTable: NSViewRepresentable {
 
         /// A download can be dragged onto the sidebar: onto the Library to move it there,
         /// or back onto Downloads. What's carried is the song's id. Other rows don't drag.
+        /// What a dragged row carries: the song's own file, for the Finder and other
+        /// apps (the owner, 2026-10-10), and a download's id, for the sidebar's Library
+        /// and Downloads rows.
         func tableView(_ tableView: NSTableView, pasteboardWriterForRow row: Int) -> NSPasteboardWriting? {
-            guard rows.indices.contains(row), rows[row].track.isDownload,
-                let id = rows[row].track.trackId
-            else { return nil }
-            return id as NSString
+            guard rows.indices.contains(row) else { return nil }
+            let track = rows[row].track
+            let carried = NSPasteboardItem()
+            if let file = track.file(in: list.model.root) {
+                carried.setString(file.absoluteString, forType: .fileURL)
+            }
+            if track.isDownload, let id = track.trackId { carried.setString(id, forType: .string) }
+            return carried.types.isEmpty ? nil : carried
         }
 
         // MARK: the columns

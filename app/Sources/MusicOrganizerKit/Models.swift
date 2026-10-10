@@ -41,6 +41,12 @@ public struct Track: Decodable, Identifiable, Hashable, Sendable {
     public var id: String { path }
     /// Set for a song played straight from YouTube Music: its path is "yt:<videoId>".
     public var videoId: String? { path.hasPrefix("yt:") ? String(path.dropFirst(3)) : nil }
+    /// Where this song's file is, in the library at `root`. Nil for a song played
+    /// straight from the music service: it has no file.
+    public func file(in root: URL?) -> URL? {
+        guard let root, videoId == nil else { return nil }
+        return root.appendingPathComponent(path, isDirectory: false)
+    }
     public var artistName: String { artist ?? albumArtist ?? "Unknown Artist" }
     public var albumName: String { album ?? "" }
     /// The folder the file is in: one folder is one album.

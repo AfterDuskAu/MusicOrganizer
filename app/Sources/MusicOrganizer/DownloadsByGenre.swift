@@ -1,5 +1,6 @@
 import MusicOrganizerKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Discover → Downloads, laid out as the owner drew it (2026-10-03): "Videos" and
 /// "Songs" named on the left, and beside each a box of them, each line a name, artist and
@@ -213,7 +214,25 @@ private struct DownloadRow: View {
         .contextMenu { SongActions(songs: acting, play: play).environment(model) }
         let ids = acting.compactMap(\.trackId)
         if track.trackId != nil, !ids.isEmpty {
-            row.draggable(DraggedSongs.text(of: ids))
+            row.onDrag {
+                let carried = NSItemProvider()
+                // For the sidebar's Library and Downloads rows: which downloads these
+                // are. Kept to this app; no other is shown it.
+                carried.registerObject(DraggedSongs.text(of: ids) as NSString, visibility: .ownProcess)
+                // For the Finder and other apps (the owner, 2026-10-10): this line's own
+                // file. They're handed a copy, never the library's file itself.
+                if let file = track.file(in: model.root) {
+                    let kind = UTType(filenameExtension: file.pathExtension) ?? .data
+                    carried.suggestedName = file.lastPathComponent
+                    carried.registerFileRepresentation(
+                        forTypeIdentifier: kind.identifier, fileOptions: [], visibility: .all
+                    ) { done in
+                        done(file, false, nil)
+                        return nil
+                    }
+                }
+                return carried
+            }
         } else {
             row
         }

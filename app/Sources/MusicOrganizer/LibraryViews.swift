@@ -319,10 +319,16 @@ struct SongActions: View {
                 Button("Move to Library") { model.moveDownloads(ids, toLibrary: true) }
             }
         }
+        // Any song that's a file here can be pointed at in the Finder (one played
+        // straight from the music service has no file).
+        if songs.contains(where: { $0.videoId == nil }) {
+            Button("Show in Finder") { model.showInFinder(songs) }
+        }
         // A download can be deleted (it goes to the Trash). The owner's own songs can't.
         if !downloads.isEmpty, downloads.count == songs.count {
             Button(
-                downloads.count == 1 ? "Delete…" : "Delete \(downloads.count) Downloads…",
+                downloads.count == 1
+                    ? "Delete from Computer…" : "Delete \(downloads.count) Downloads from Computer…",
                 role: .destructive
             ) {
                 model.deletingDownloads = downloads

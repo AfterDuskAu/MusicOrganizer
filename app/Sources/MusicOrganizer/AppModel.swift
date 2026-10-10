@@ -2615,6 +2615,22 @@ final class AppModel {
         }
     }
 
+    // MARK: a song's file, shown in the Finder
+
+    /// Open the Finder with these songs' files picked out (the owner, 2026-10-10).
+    /// Nothing is changed: the files are only pointed at.
+    func showInFinder(_ tracks: [Track]) {
+        let files = tracks.compactMap { $0.file(in: root) }
+            .filter { FileManager.default.fileExists(atPath: $0.path) }
+        guard !files.isEmpty else {
+            notice = tracks.count == 1
+                ? "That song's file isn't where the library last saw it."
+                : "Those songs' files aren't where the library last saw them."
+            return
+        }
+        NSWorkspace.shared.activateFileViewerSelecting(files)
+    }
+
     // MARK: deleting a download
 
     /// Send downloads to the Trash (after the owner's yes). Only songs and videos that
