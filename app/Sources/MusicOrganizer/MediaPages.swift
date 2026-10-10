@@ -909,34 +909,41 @@ struct MovieView: View {
                 }
                 .labelsHidden()
                 .fixedSize()
-                ForEach(details.episodes(in: showing)) { one in
-                    Button { choose(one) } label: {
-                        HStack(alignment: .top, spacing: 14) {
-                            Text(one.episode.map(String.init) ?? "")
-                                .monospacedDigit()
-                                .frame(width: 28, alignment: .trailing)
-                                .foregroundStyle(.secondary)
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(one.title.isEmpty ? "Episode \(one.episode ?? 0)" : one.title)
-                                    .fontWeight(.medium)
-                                if episode == one, let overview = one.overview {
-                                    Text(overview)
-                                        .font(.callout)
-                                        .foregroundStyle(.secondary)
-                                        .fixedSize(horizontal: false, vertical: true)
+                // Only the episodes on screen are made. A series that has gone on for
+                // years lists a thousand or more in one season, and made all at once
+                // they held the app for three seconds as the page opened, and a second
+                // at every episode clicked (2026-10-10). The gap between them is the
+                // part's own.
+                LazyVStack(alignment: .leading, spacing: 10) {
+                    ForEach(details.episodes(in: showing)) { one in
+                        Button { choose(one) } label: {
+                            HStack(alignment: .top, spacing: 14) {
+                                Text(one.episode.map(String.init) ?? "")
+                                    .monospacedDigit()
+                                    .frame(width: 28, alignment: .trailing)
+                                    .foregroundStyle(.secondary)
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(one.title.isEmpty ? "Episode \(one.episode ?? 0)" : one.title)
+                                        .fontWeight(.medium)
+                                    if episode == one, let overview = one.overview {
+                                        Text(overview)
+                                            .font(.callout)
+                                            .foregroundStyle(.secondary)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
                                 }
+                                Spacer()
+                                Text(one.day).foregroundStyle(.secondary).monospacedDigit()
                             }
-                            Spacer()
-                            Text(one.day).foregroundStyle(.secondary).monospacedDigit()
+                            .padding(.vertical, 6)
+                            .padding(.horizontal, 10)
+                            .background(
+                                episode == one ? AnyShapeStyle(.white.opacity(0.14)) : AnyShapeStyle(.clear),
+                                in: RoundedRectangle(cornerRadius: 8))
+                            .contentShape(Rectangle())
                         }
-                        .padding(.vertical, 6)
-                        .padding(.horizontal, 10)
-                        .background(
-                            episode == one ? AnyShapeStyle(.white.opacity(0.14)) : AnyShapeStyle(.clear),
-                            in: RoundedRectangle(cornerRadius: 8))
-                        .contentShape(Rectangle())
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
             }
             .frame(maxWidth: 760, alignment: .leading)

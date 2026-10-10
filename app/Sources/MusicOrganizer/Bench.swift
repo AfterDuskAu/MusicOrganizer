@@ -26,6 +26,8 @@ import AppKit
 ///   answer a made-up press at all, in front or not)
 /// - `down=<points>`: the page that's showing (one that isn't a song list) scrolled down
 ///   this far, and how long it is written out
+/// - `size=<w>x<h>`: the window dragged to this size in twelve steps, and how long a
+///   step took written out
 /// - `settings=<section>`: this section of Settings chosen ("profile", "play", "downloads",
 ///   "lyrics", "addons", "sharing"), with the Settings page showing
 /// - `flip=<key>`: a yes-or-no setting switched over, by its saved name
@@ -218,12 +220,13 @@ enum Bench {
         }
         if name.hasPrefix("down=") {
             // The page's own scrolling part (the widest that isn't a table's, which the
-            // sidebar's and a song list's are) moved down by this many points.
+            // sidebar's and a song list's are; of two as wide, the one in front: a film's
+            // page over its Finder) moved down by this many points.
             guard let points = Double(name.dropFirst(5)), let content = window?.contentView else { return true }
             var widest: NSScrollView?
             func look(in view: NSView) {
                 if let scroll = view as? NSScrollView, !scroll.isHiddenOrHasHiddenAncestor,
-                    !(scroll.documentView is NSTableView), scroll.frame.width > (widest?.frame.width ?? 0)
+                    !(scroll.documentView is NSTableView), scroll.frame.width >= (widest?.frame.width ?? 0)
                 {
                     widest = scroll
                 }
@@ -240,6 +243,28 @@ enum Bench {
             clip.scroll(to: NSPoint(x: clip.bounds.origin.x, y: to))
             scroll.reflectScrolledClipView(clip)
             say("BENCH down: the page is \(Int(page.frame.height)) points long, and now at \(Int(to))")
+            return true
+        }
+        if name.hasPrefix("size=") {
+            // The window dragged to this size in twelve steps, as a hand on its corner
+            // does it: each step is laid out and drawn before the next.
+            let size = name.dropFirst(5).split(separator: "x").compactMap { Double($0) }
+            guard size.count == 2, let window else { return true }
+            let from = window.frame
+            let began = Date()
+            for step in 1...12 {
+                let part = Double(step) / 12
+                let width = from.width + (size[0] - from.width) * part
+                let height = from.height + (size[1] - from.height) * part
+                // The top left corner stays where it is.
+                window.setFrame(
+                    NSRect(x: from.minX, y: from.maxY - height, width: width, height: height), display: true)
+                window.layoutIfNeeded()
+                window.displayIfNeeded()
+            }
+            say(String(
+                format: "BENCH size: to %.0f by %.0f in twelve steps, %.0f ms a step",
+                window.frame.width, window.frame.height, Date().timeIntervalSince(began) * 1000 / 12))
             return true
         }
         if name.hasPrefix("settings=") {
