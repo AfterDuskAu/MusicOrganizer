@@ -381,8 +381,8 @@ The same guards hold as for every request: a caller at home, the `Host` and `Ori
       "tracks": [
         { "id": "t-…", "title": "…", "artist": "…", "album": "…", "albumArtist": "…",
           "trackNumber": 1, "discNumber": 1, "year": 2020, "genre": "…", "duration": 201.5,
-          "explicit": false, "favourite": true, "playCount": 12, "listened": 15324.5,
-          "added": "2026-01-31T09:30:00Z",
+          "explicit": false, "favourite": true, "discovered": true, "playCount": 12,
+          "listened": 15324.5, "added": "2026-01-31T09:30:00Z",
           "audio":  { "id": "f-…", "size": 3312345, "version": "…", "type": "m4a" },
           "cover":  { "id": "c-…", "size": 48211,   "version": "…", "type": "jpg" },
           "lyrics": { "id": "l-…", "size": 1870,    "version": "…", "type": "lrc" } }
@@ -403,7 +403,12 @@ The same guards hold as for every request: a caller at home, the `Host` and `Ori
     }
 
 - **What's in it.** Every song in `Music/` that the index has and whose file is there, downloads included; every saved video in `Music/Videos/`; and the owner's playlists. Favourites, play counts and listening time come from `listening`. A song in a format the list has no name for (Ogg, Opus) is left out: a phone can't play it.
-- **A track** always has `id`, `title`, `artist`, `duration`, `explicit`, `favourite`, `playCount` and `audio`. `album`, `albumArtist`, `trackNumber`, `discNumber`, `year`, `genre`, `added` (when it came into the library), `cover` and `lyrics` are left out when the song has none.
+- **A track** always has `id`, `title`, `artist`, `duration`, `explicit`, `favourite`, `playCount` and `audio`. `album`, `albumArtist`, `trackNumber`, `discNumber`, `year`, `genre`, `added` (when it came into the library), `cover` and `lyrics` are left out when the song has none, and `discovered` when it isn't true.
+- **`discovered`** (built 2026-10-04, in main since 2026-10-10; the format is still 1, and a phone that doesn't know the field ignores it) is true for a song the computer found for its owner, as opposed to one they brought themselves. A phone lists those apart from the owner's own songs.
+  - It's what the app lists under Discover → Downloads: a song downloaded from YouTube Music with no file of the owner's behind it, which the owner hasn't moved into their main library (`listening.move`). Moving it there, or back, changes the next list and its `revision`.
+  - Every other song leaves the field out: a file of the owner's that was copied in, and one that was replaced by its official download or given official details.
+  - It's the one thing the list says about where a song came from. Which page of the app a download was asked from (Find, What's New, the search box, an artist's page, an imported playlist) isn't recorded anywhere, so the list can't say it. A video never carries the field.
+  - Nothing is written to work it out: it's read from what the index and `listening` already hold.
 - **`listened`** (2026-10-10) is how long the song has been listened to, in seconds: the computer's one figure for it, with what the app's own player played and what devices have told it added in (0 when nobody has listened yet). A phone shows it with whatever it hasn't told the computer yet. It's left out only for a file with no id of its own in the library (one that goes by its path): the computer has nothing to keep its time by, so a phone shows its own count for that one.
 - **Every `id` is only a name**: a letter for what it names, and a hash. Nothing can be read out of one: not the library's own id for the song, not a path, not where the song came from. No tag name of the engine's is sent either.
   - A song's ids are made from its own id in the library (`MUSICORG_ID`), so they stay the same from one sync to the next, and when the file is renamed, moved or retagged. A file with no id of its own goes by its path.

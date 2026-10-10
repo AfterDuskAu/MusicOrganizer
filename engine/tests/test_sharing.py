@@ -392,6 +392,7 @@ def test_the_list_carries_what_a_player_needs(share: sharing.Share, filled: Libr
         "title": "Song", "artist": "Band", "album": "Album", "albumArtist": "Band",
         "trackNumber": 1, "discNumber": 1, "year": 2020, "genre": "Rock", "explicit": True,
         "favourite": True, "playCount": 2, "listened": 0.0, "added": "2026-01-31T09:30:00Z",
+        "discovered": True,  # a download: nothing of the owner's is behind it
     }  # fmt: skip
     assert (song["audio"]["size"], song["audio"]["type"]) == (audio.stat().st_size, "m4a")
     # The album folder's cover.jpg comes before the picture inside the song.
@@ -403,6 +404,7 @@ def test_the_list_carries_what_a_player_needs(share: sharing.Share, filled: Libr
         "Band feat. Guest", False, False, 0,
     )  # fmt: skip
     assert "year" not in other and "added" not in other and "albumArtist" not in other
+    assert "discovered" not in other  # the owner's own file, copied in
     assert other["audio"]["type"] == "mp3"
     assert other["cover"] == song["cover"]  # one file for the whole album
     assert (other["lyrics"]["size"], other["lyrics"]["type"]) == (len(WORDS.encode()), "txt")
@@ -424,6 +426,43 @@ def test_the_list_carries_what_a_player_needs(share: sharing.Share, filled: Libr
     every = [f["id"] for t in found["tracks"] for f in (t["audio"], t.get("cover"),
                                                         t.get("lyrics")) if f]  # fmt: skip
     assert len({t["id"] for t in found["tracks"]}) == 3 and len(set(every)) == len(every) - 1
+
+
+def test_a_download_is_discovered_until_the_owner_moves_it_into_their_library(
+    share: sharing.Share, filled: Library, samples: dict[str, Path]
+) -> None:
+    """`discovered` marks what the computer found for its owner, apart from what they
+    brought themselves: what the app lists under Discover → Downloads."""
+    album = "Music/Band/Album (2020)/"
+    # The owner's own, whatever YouTube Music had to do with them: a rip replaced by its
+    # official download, a rip kept with official details, a copy not identified yet.
+    add(filled, samples["m4a"], album + "04 Replaced.m4a", title="Replaced", artist="Band",
+        musicorg_id=str(uuid.uuid4()), source="youtube_music", source_id=SOURCE_ID.upper(),
+        match="auto_exact", origin_path="/somewhere/rips/Replaced.mp3")  # fmt: skip
+    add(filled, samples["mp3"], album + "05 Kept.mp3", title="Kept", artist="Band",
+        musicorg_id=str(uuid.uuid4()), source="rip_copy", source_id=SOURCE_ID.lower(),
+        match="user_details", origin_path="/somewhere/rips/Kept.mp3")  # fmt: skip
+    add(filled, samples["mp3"], album + "06 Unsure.mp3", title="Unsure", artist="Band",
+        musicorg_id=str(uuid.uuid4()), source="rip_copy", match="unconfirmed",
+        origin_path="/somewhere/rips/Unsure.mp3")  # fmt: skip
+    reindex(filled)
+    key = paired(share)
+
+    first = the_list(share, key)
+    assert len(first["tracks"]) == 6
+    assert {t["title"]: t["discovered"] for t in first["tracks"] if "discovered" in t} == {
+        "Song": True
+    }  # left out everywhere else, never false
+    assert not any("discovered" in v for v in first["videos"])  # a song's, not a video's
+
+    # Moved into the main library, it's one of the owner's songs. No file changed.
+    listening.move(filled, [SONG_ID], to_library=True)
+    moved = the_list(share, key)
+    assert not any("discovered" in t for t in moved["tracks"])
+    assert moved["revision"] != first["revision"]  # so a phone takes the new list
+
+    listening.move(filled, [SONG_ID], to_library=False)  # and back under Downloads
+    assert the_list(share, key) == first
 
 
 def test_nothing_in_the_list_says_where_a_song_came_from(

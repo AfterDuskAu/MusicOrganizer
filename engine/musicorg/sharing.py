@@ -35,7 +35,9 @@ What the owner was promised, and where each promise is kept:
 
 **Privacy.** No address, computer name, pairing code or key is ever logged or put in an
 error, and no key is given out over RPC. Every id in the list is a hash: a phone never
-sees the library's own ids, a path, or where a song came from.
+sees the library's own ids, a path, or where a song came from. The one thing it's told
+is `discovered`: that a song is a download the owner hasn't moved into their main
+library, which a phone lists apart from the owner's own songs.
 
 Announcing the share on the network (Bonjour, `SERVICE_TYPE`) is the app's job: it has
 the means without a new dependency, and an announcement made by the app ends with it.
@@ -348,11 +350,13 @@ def the_list(
     folders of kept films and videos to list too, when the owner has switched that on.
 
     Songs and videos are the library's files as the index has them; favourites, play
-    counts, listening time and playlists come from `listening`. A file's details come
-    from the index when the file hasn't changed since they were read; otherwise the
-    file's tags are read now and kept in `remembered`, so that's done once."""
+    counts, listening time, playlists and which downloads the owner moved into their
+    main library come from `listening`. A file's details come from the index when the
+    file hasn't changed since they were read; otherwise the file's tags are read now
+    and kept in `remembered`, so that's done once."""
     heard = listening.get(lib)
     favourites = set(heard["favourites"])
+    moved = set(heard["library"])
     with open_index(lib.paths, write=False) as index:
         rows = index.library_tracks()
 
@@ -426,6 +430,8 @@ def the_list(
             # The computer's own total, with what devices have told it added in. A file
             # that goes by its path has none: there's no id to keep its time by.
             entry["listened"] = heard["listened"].get(own, 0.0)
+        if _is_download(row, found) and own not in moved:
+            entry["discovered"] = True
         added = _when(found.get("acquired"))
         if added:
             entry["added"] = added
@@ -477,6 +483,16 @@ def the_list(
         "playlists": playlists,
         "movies": movies,
     }, files
+
+
+def _is_download(row: dict[str, Any], found: dict[str, Any]) -> bool:
+    """Whether a song is one the computer found for its owner: downloaded from YouTube
+    Music with no file of the owner's behind it (`MUSICORG_SOURCE` is `youtube_music`
+    and there's no `MUSICORG_MATCH`). It's the rule the app lists Discover → Downloads
+    by, and the one a download may be deleted by (`pipeline.plan_remove`). A rip that
+    was replaced by a download, or kept with official details, has a match, so it's the
+    owner's own. Read from what the library already records: nothing is written."""
+    return row.get("source") == "youtube_music" and found.get("match") is None
 
 
 def _name(kind: str, key: str) -> str:
