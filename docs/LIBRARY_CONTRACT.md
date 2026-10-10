@@ -181,7 +181,8 @@ MusicBrainz IDs use Picard's standard names and are optional in v0.1. Leave room
 
 `.musicorg/state.json` holds only what tags can't:
 
-- favourites, play counts and playlists (v0.2, `listening`), by `MUSICORG_ID`
+- favourites, play counts and playlists (v0.2, `listening`), by `MUSICORG_ID`; and, since 2026-10-10, how long each song has been listened to (one figure a song, in seconds: what the app's player played and what a paired phone player played, together)
+- what has been taken from a paired phone player (2026-10-10): a short hash of each change it sent, so that one arriving twice is taken once, and which playlist was made for a playlist the phone made. These and the playlists are **the only things in the library a phone can change**, and only through the engine (`ENGINE_API.md`, section 3): never a music file, a tag, a cover or lyrics
 - review decisions, including rejected candidates, so they're never suggested again
 - registered sources with their stable ids
 - superseded-rip links (rip path → `MUSICORG_ID`)

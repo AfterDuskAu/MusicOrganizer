@@ -421,6 +421,93 @@ final class RPCConnectionTests: XCTestCase {
             XCTAssertEqual(error.code, RPCError.closed)
         }
     }
+
+    /// The last thing said as the app closes: sent at once, with nobody left to wait for
+    /// the answer, and there for the engine to read after our end has been closed.
+    func testSomethingToldAsTheAppClosesIsSentWithoutWaiting() throws {
+        let (connection, toEngine, fromEngine) = makePair()
+        connection.start()
+        connection.tell("listening.listened", ["track_id": "t_1", "seconds": 42.5])
+        connection.close()
+        let request = try readRequest(toEngine)
+        XCTAssertEqual(request["method"] as? String, "listening.listened")
+        let params = try XCTUnwrap(request["params"] as? [String: Any])
+        XCTAssertEqual(params["track_id"] as? String, "t_1")
+        XCTAssertEqual(params["seconds"] as? Double, 42.5)
+        // Its answer, when one comes, is nobody's: it's let go without a fuss.
+        fromEngine.write(Data(
+            """
+            {"jsonrpc":"2.0","id":\(try XCTUnwrap(request["id"] as? Int)),"result":{"seconds":42.5}}
+
+            """.utf8))
+        try fromEngine.close()
+    }
+}
+
+final class ListeningTimeTests: XCTestCase {
+    /// Time counts while the song plays, at whatever pace the player says where it is.
+    func testOnlyTimeThatWasPlayedIsCounted() {
+        var played = PlayedTime()
+        for place in stride(from: 0.0, through: 10.0, by: 0.2) { played.moved(to: place) }
+        XCTAssertEqual(played.seconds, 10, accuracy: 0.001)
+
+        // Paused: the player says the same place again and again.
+        for _ in 0..<50 { played.moved(to: 10) }
+        XCTAssertEqual(played.seconds, 10, accuracy: 0.001)
+
+        // Moved along the bar to 3:00, then played for two seconds: only those count.
+        played.jumped()
+        for place in stride(from: 180.0, through: 182.0, by: 0.2) { played.moved(to: place) }
+        XCTAssertEqual(played.seconds, 12, accuracy: 0.001)
+
+        // A jump nobody announced (forward, or back to the start) isn't playing either.
+        played.moved(to: 240)
+        played.moved(to: 240.2)
+        played.moved(to: 0)
+        played.moved(to: 0.2)
+        XCTAssertEqual(played.seconds, 12.4, accuracy: 0.001)
+
+        // A held-up moment (the Mac was busy) still counts as the playing it was.
+        played.moved(to: 1.9)
+        XCTAssertEqual(played.seconds, 14.1, accuracy: 0.001)
+
+        // What was counted is taken once, and counting goes on from there.
+        XCTAssertEqual(played.take(), 14.1, accuracy: 0.001)
+        XCTAssertEqual(played.take(), 0)
+        played.moved(to: 2.1)
+        XCTAssertEqual(played.seconds, 0.2, accuracy: 0.001)
+    }
+
+    func testListeningTimeIsWrittenInMinutesAndSeconds() {
+        XCTAssertEqual(listenedTime(255 * 60 + 24), "255 min 24 sec")  // the owner's own example
+        XCTAssertEqual(listenedTime(15324.5), "255 min 24 sec")
+        XCTAssertEqual(listenedTime(24.9), "24 sec")
+        XCTAssertEqual(listenedTime(60), "1 min 0 sec")
+        XCTAssertEqual(listenedTime(0), "")
+        XCTAssertEqual(listenedTime(0.9), "")
+        XCTAssertEqual(listenedTime(-5), "")
+        XCTAssertEqual(listenedTime(.nan), "")
+        XCTAssertEqual(listenedTime(.infinity), "")
+    }
+
+    func testListeningTimeComesWithTheRestOfWhatsKept() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let found = try decoder.decode(
+            Listening.self,
+            from: Data(
+                #"""
+                {"favourites": [], "plays": {}, "playlists": [], "library": [],
+                 "listened": {"t_1": 15324.5, "t_2": 12}}
+                """#.utf8))
+        XCTAssertEqual(found.listened, ["t_1": 15324.5, "t_2": 12])
+        // An engine from before listening time was kept says nothing of it.
+        let older = try decoder.decode(
+            Listening.self, from: Data(#"{"favourites": [], "plays": {}, "playlists": []}"#.utf8))
+        XCTAssertNil(older.listened)
+        let total = try decoder.decode(ListenedTotal.self, from: Data(#"{"seconds": 203.5}"#.utf8))
+        XCTAssertEqual(total.seconds, 203.5)
+    }
 }
 
 final class EngineLocateTests: XCTestCase {

@@ -220,6 +220,7 @@ struct SongTable: NSViewRepresentable {
             case "added": return (track.addedDay, true, false)
             case "plays": return (line.plays > 0 ? String(line.plays) : "", true, true)
             case "time": return (clockTime(track.durationS), true, true)
+            case "listened": return (listenedTime(line.listened), true, true)
             default: return ("", true, false)
             }
         }
@@ -408,6 +409,7 @@ extension SongColumns {
             return KeyPathComparator(\TrackRow.track.sortAdded, comparator: .localizedStandard, order: order)
         case "plays": return KeyPathComparator(\TrackRow.plays, order: order)
         case "time": return KeyPathComparator(\TrackRow.track.sortDuration, order: order)
+        case "listened": return KeyPathComparator(\TrackRow.listened, order: order)
         default: return nil
         }
     }

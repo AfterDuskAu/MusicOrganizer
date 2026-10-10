@@ -414,6 +414,9 @@ final class AppModel {
         }
         player.onVideoChange = { [weak self] showing in self?.showLyrics(forVideo: showing) }
         player.onFinished = { [weak self] track in self?.countPlay(of: track) }
+        player.onListened = { [weak self] track, seconds in
+            self?.countListening(of: track, seconds)
+        }
         player.findStream = { [weak self] videoId, again in
             guard let connection = self?.engine?.connection else {
                 throw RPCError(code: RPCError.closed, message: "The engine isn't running.")
@@ -455,7 +458,10 @@ final class AppModel {
         NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification, object: nil, queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.stopEngine() }
+            MainActor.assumeIsolated {
+                self?.tellListeningBeforeClosing()
+                self?.stopEngine()
+            }
         }
         // Leaving macOS's full screen by its own means (the green button, the menu)
         // puts the video or the visualizer back in the page as well.
@@ -1316,6 +1322,7 @@ final class AppModel {
             await refreshQueueStatus()
             await refreshDownloads()
         case "sharing.changed": loadSharing()  // a device was paired, or has synced
+        case "listening.changed": await reloadListening()  // what was done on a phone
         case "review.changed":
             if let connection = engine?.connection {
                 status = try? await connection.call("library.status", as: LibraryStatus.self)
@@ -1374,6 +1381,42 @@ final class AppModel {
             self.listening.plays[id] = count
             self.playsVersion += 1
         }
+    }
+
+    /// How long a song has been listened to, in seconds: here and on a paired phone.
+    func listenedSeconds(_ track: Track) -> Double {
+        track.trackId.flatMap { listening.listened?[$0] } ?? 0
+    }
+
+    /// The player spent this much more time playing a song. A song played from the
+    /// service isn't the owner's, and has nothing to keep its time by.
+    private func countListening(of track: Track, _ seconds: Double) {
+        guard let id = track.trackId else { return }
+        change { connection in
+            let total = try await connection.call(
+                "listening.listened", ["track_id": id, "seconds": seconds], as: ListenedTotal.self)
+            self.listening.listened = (self.listening.listened ?? [:])
+                .merging([id: total.seconds]) { _, new in new }
+            self.playsVersion += 1
+        }
+    }
+
+    /// The app is closing with a song part heard: its time is sent without waiting for
+    /// an answer, ahead of the engine being told to stop, which deals with it first.
+    private func tellListeningBeforeClosing() {
+        guard let untold = player.listenedUntold(), let id = untold.track.trackId else { return }
+        engine?.connection.tell("listening.listened", ["track_id": id, "seconds": untold.seconds])
+    }
+
+    /// A paired phone made a playlist, put a song in one, or said how long it has been
+    /// listening: the playlists and listening time are read again.
+    private func reloadListening() async {
+        guard let connection = engine?.connection,
+            let found = try? await connection.call("listening.get", as: Listening.self)
+        else { return }
+        listening = found
+        favourites = Set(found.favourites)
+        playsVersion += 1
     }
 
     func playlist(_ id: String) -> Playlist? { listening.playlists.first { $0.id == id } }

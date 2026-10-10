@@ -1,18 +1,27 @@
-"""sharing (2026-10-04): the library, shared read-only with a phone player at home.
+"""sharing (2026-10-04): the library, shared with a phone player at home.
 
 A phone player on the same home network copies the owner's songs, videos, covers, lyrics
 and playlists from here, and then plays its own copies. docs/ENGINE_API.md section 3 is
 the agreement between the two ("format 1"). This module is the computer's half of it:
-the list of everything, the files the list names, and pairing.
+the list of everything, the files the list names, pairing, and (since 2026-10-10) taking
+what was done on the phone.
 
 What the owner was promised, and where each promise is kept:
 
 - **Off until they switch it on.** Nothing here starts by itself. The app starts it
   (`sharing.set`) each time it opens with its Settings switch on; the engine keeps no
   "on" of its own, so an engine nobody asked never listens.
-- **Read-only.** A phone can ask for the list and for files, and can pair. That's all.
-  A file is only ever opened for reading, the index is opened read-only, and nothing
-  inside the library is written: not a tag, not a sidecar, not state.json.
+- **Read-only for the music.** A phone can ask for the list and for files, and can
+  pair. A file is only ever opened for reading, the index is opened read-only, and
+  nothing in the library's music folders is written: not a file, not a tag, not a
+  cover, not a sidecar.
+- **Three things come back from a phone, and nothing else** (the owner asked for them
+  on 2026-10-10; until then nothing did): a playlist made on it, a song put in a
+  playlist, and time spent listening to a song (`take_changes`). They change what
+  `listening` keeps in state.json, written by `state` as every change to it is, and
+  nothing more: a phone can't rename or delete a playlist, take a song out of one,
+  or touch a favourite or a play count. What it sends is checked and bounded before
+  any of it is kept, and none of its own words but a playlist's name is kept at all.
 - **Paired once, by a six-digit code** the computer shows when asked (`sharing.pair`).
   A code is good once and for five minutes; five wrong codes and every code is refused
   for a minute. The device is given a long random key, which it sends with every
@@ -81,6 +90,12 @@ QUIET_S = 60.0  # between two log lines about callers turned away
 REQUEST_WAIT_S = 20  # a caller that goes silent is let go
 CHUNK = 64 * 1024
 MAX_BODY = 4096  # a pairing request is a few dozen bytes
+# What a device may tell the computer was done on it (2026-10-10), and how much at once.
+ACCEPTS = ("changes",)  # said in `hello`: a phone sends changes only to a computer that says so
+CHANGE_KINDS = frozenset({"playlist_new", "playlist_add", "listened"})  # Sync change kind
+MAX_CHANGES_BODY = 1024 * 1024  # a megabyte: thousands of changes
+MAX_CHANGES = 2000  # taken from one request; any after them wait for the device's next sync
+MAX_DISCARD = 8 * MAX_CHANGES_BODY  # a body too long to take is read and thrown away, up to this
 # The library's formats that format 1 has a name for. A song in another (Ogg, Opus) is
 # left out of the list: a phone can't play it.
 SOUND_TYPES = {".m4a": "m4a", ".mp3": "mp3", ".flac": "flac"}
@@ -333,9 +348,9 @@ def the_list(
     folders of kept films and videos to list too, when the owner has switched that on.
 
     Songs and videos are the library's files as the index has them; favourites, play
-    counts and playlists come from `listening`. A file's details come from the index
-    when the file hasn't changed since they were read; otherwise the file's tags are
-    read now and kept in `remembered`, so that's done once."""
+    counts, listening time and playlists come from `listening`. A file's details come
+    from the index when the file hasn't changed since they were read; otherwise the
+    file's tags are read now and kept in `remembered`, so that's done once."""
     heard = listening.get(lib)
     favourites = set(heard["favourites"])
     with open_index(lib.paths, write=False) as index:
@@ -407,6 +422,10 @@ def the_list(
             favourite=own in favourites,
             playCount=plays["count"] if plays else 0,
         )
+        if own == key:
+            # The computer's own total, with what devices have told it added in. A file
+            # that goes by its path has none: there's no id to keep its time by.
+            entry["listened"] = heard["listened"].get(own, 0.0)
         added = _when(found.get("acquired"))
         if added:
             entry["added"] = added
@@ -508,6 +527,75 @@ def _when(value: object) -> str | None:
     return found.astimezone(UTC).strftime(_WHEN)
 
 
+# ---- what was done on a phone (2026-10-10) -------------------------------------------------
+
+
+def take_changes(lib: Library, sent: list[Any]) -> tuple[list[str], dict[str, Any]]:
+    """What a paired device says was done on it since it last said: a playlist made, a
+    song put in a playlist, time spent listening to a song (section 3, "Changes").
+    Returns the ids of the changes dealt with, for the answer, and what came of them
+    (`listening.from_devices`).
+
+    Nothing a device sends is kept as it came, bar a playlist's name. Each change is
+    checked here and put in the library's own terms first: a song by its own id, found
+    from the list's id for it (a hash); a playlist the same way; and the ids the device
+    made up, for a change and for a playlist of its own, as short hashes.
+
+    - **Dealt with** means done, or never going to be: a song or a playlist that isn't
+      here any more, a change that came before, or one that makes no sense (a length
+      of time that isn't one). The device forgets those.
+    - **Left with the device**, to send again: a kind this engine doesn't know (a
+      newer phone's), a change with no id to answer it by, and any past the first
+      `MAX_CHANGES` of a request.
+    """
+    with open_index(lib.paths, write=False) as index:
+        rows = index.library_tracks()
+    # The way back from the list's ids to the library's own.
+    songs = {_name("t", row["musicorg_id"]): row["musicorg_id"] for row in rows
+             if isinstance(row.get("musicorg_id"), str) and row["musicorg_id"]}  # fmt: skip
+    playlists = {_name("p", p["id"]): p["id"] for p in listening.get(lib)["playlists"]}
+
+    dealt_with: list[str] = []
+    understood: list[listening.DeviceChange] = []
+    for change in sent[:MAX_CHANGES]:
+        if not isinstance(change, dict):
+            continue
+        given, kind = change.get("id"), change.get("kind")
+        if not isinstance(given, str) or not given:
+            continue
+        if not isinstance(kind, str) or kind not in CHANGE_KINDS:
+            continue
+        dealt_with.append(given)
+        mark = _mark("change", given)
+        track, where = change.get("track"), change.get("playlist")
+        song = songs.get(track, "") if isinstance(track, str) else ""
+        if not isinstance(where, str) or not where:
+            where = None
+        if kind == "playlist_new":
+            name = change.get("name")
+            if where and isinstance(name, str):
+                understood.append(
+                    listening.DeviceChange(mark, kind, theirs=_mark("playlist", where), name=name)
+                )
+        elif kind == "playlist_add":
+            if song and where:
+                ours = playlists.get(where, "")  # else one the device made up, or one that's gone
+                theirs = "" if ours else _mark("playlist", where)
+                understood.append(
+                    listening.DeviceChange(mark, kind, song, playlist_id=ours, theirs=theirs)
+                )
+        else:  # listened
+            seconds = change.get("seconds")
+            if song and isinstance(seconds, int | float) and not isinstance(seconds, bool):
+                understood.append(listening.DeviceChange(mark, kind, song, seconds=seconds))
+    return dealt_with, listening.from_devices(lib, understood)
+
+
+def _mark(kind: str, key: str) -> str:
+    """What's kept of an id a device made up: a short hash of it."""
+    return _name(kind, key)[-16:]
+
+
 # ---- sharing, switched on ----------------------------------------------------------------
 
 
@@ -530,6 +618,7 @@ class Share:
         lib: Library,
         *,
         changed: Callable[[], None] | None = None,
+        took: Callable[[], None] | None = None,
         films: bool = False,
         host: str | None = None,
         port: int | None = None,
@@ -538,6 +627,7 @@ class Share:
         self.lib = lib
         self.info = library_info(lib)
         self._changed = changed
+        self._took = took  # called when a device's changes changed what `listening` keeps
         # Whether kept films and videos (outside the library) are in the list too. Off
         # until the owner switches it on, apart from sharing itself.
         self.films = films
@@ -684,6 +774,29 @@ class Share:
         _mark_synced(device["id"])
         self._tell()
 
+    # -- what was done on a device --
+
+    @property
+    def accepts(self) -> list[str]:
+        """What this share takes from a device besides its requests, as `hello` says it.
+        Changes are taken only by an engine that holds the library's lock, as the one
+        the app starts always does: nothing else may write the library's records."""
+        return list(ACCEPTS) if self.lib.writable else []
+
+    def take(self, sent: list[Any]) -> list[str]:
+        """A paired device's changes (`take_changes`): the ids of the ones dealt with.
+        The app is told when any of them changed a playlist or a song's listening time."""
+        dealt_with, done = take_changes(self.lib, sent)
+        if done["playlists"] or done["songs"] or done["seconds"]:
+            log.info(
+                "sharing: a device's changes were taken (playlists made: %d, songs put in "
+                "playlists: %d, minutes of listening: %d)",
+                done["playlists"], done["songs"], round(done["seconds"] / 60),
+            )  # fmt: skip
+            if self._took is not None:
+                self._took()
+        return dealt_with
+
     def turned_away(self) -> None:
         """A caller from outside the home network was dropped. Said in the log, without
         its address, and not for every one of a run of them."""
@@ -767,7 +880,8 @@ class _Handler(BaseHTTPRequestHandler):
             return
         if path == PREFIX + "hello":
             paired = _device_with(self.headers.get("Authorization")) is not None
-            self._answer(200, {"format": FORMAT, "library": dict(share.info), "paired": paired})
+            self._answer(200, {"format": FORMAT, "library": dict(share.info), "paired": paired,
+                               "accepts": share.accepts})  # fmt: skip
             return
         if not path.startswith(PREFIX):
             self._answer(404, refusal("not_found", "There's nothing at that address."))
@@ -805,7 +919,11 @@ class _Handler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         if not self._welcome():
             return
-        if urlsplit(self.path).path != PREFIX + "pair":
+        path = urlsplit(self.path).path
+        if path == PREFIX + "changes":
+            self._changes()
+            return
+        if path != PREFIX + "pair":
             self._answer(404, refusal("not_found", "There's nothing at that address."))
             return
         wrong = refusal("wrong_code", "That code isn't the one on the computer's screen.")
@@ -821,6 +939,55 @@ class _Handler(BaseHTTPRequestHandler):
             return
         status, body = self.server.share.pair(code, device)
         self._answer(status, body)
+
+    def _changes(self) -> None:
+        """A paired device says what was done on it (2026-10-10). The body is read before
+        anything is answered, so that the answer isn't lost behind what's left of it."""
+        share = self.server.share
+        body = self._body(MAX_CHANGES_BODY)
+        if _device_with(self.headers.get("Authorization")) is None:
+            self._answer(401, refusal("not_paired", "This device isn't paired with the computer."))
+            return
+        if "changes" not in share.accepts:  # as `hello` said: nothing is taken here
+            self._answer(404, refusal("not_found", "There's nothing at that address."))
+            return
+        if body is None:
+            self._answer(413, refusal(
+                "bad_request", "That's more than the computer takes at once."
+            ))  # fmt: skip
+            return
+        try:
+            sent = json.loads(body or b"{}").get("changes", [])
+        except (ValueError, AttributeError, RecursionError):
+            self._answer(400, refusal("bad_request", "That isn't a list of changes."))
+            return
+        try:
+            taken = share.take(sent if isinstance(sent, list) else [])
+        except (MusicOrgError, OSError) as exc:
+            log.warning("sharing: a device's changes couldn't be taken: %s", exc)
+            self._answer(500, refusal(
+                "unavailable", "The computer couldn't keep those changes just now. Try again."
+            ))  # fmt: skip
+            return
+        self._answer(200, {"taken": taken})
+
+    def _body(self, most: int) -> bytes | None:
+        """The request's body, or None if it's longer than `most`: that one is read and
+        thrown away instead (up to a point), and nothing of it is looked at."""
+        try:
+            length = max(0, int(self.headers.get("Content-Length") or 0))
+        except ValueError:
+            length = 0
+        if length <= most:
+            return self.rfile.read(length)
+        self.close_connection = True
+        left = min(length, MAX_DISCARD)
+        while left > 0:
+            chunk = self.rfile.read(min(CHUNK, left))
+            if not chunk:
+                break
+            left -= len(chunk)
+        return None
 
     # -- the checks --
 

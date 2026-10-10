@@ -316,6 +316,7 @@ class Server:
             "listening.get": self.listening_get,
             "listening.favourite": self.listening_favourite,
             "listening.played": self.listening_played,
+            "listening.listened": self.listening_listened,
             "listening.heard": self.listening_heard,
             "listening.move": self.listening_move,
             "playlist.create": self.playlist_create,
@@ -687,6 +688,11 @@ class Server:
 
     def listening_played(self, params: dict[str, Any]) -> dict[str, Any]:
         return listening.played(self._library(), need(params, "track_id", str))
+
+    def listening_listened(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Time the app's own player spent playing a song, added to the song's total."""
+        track_id, seconds = need(params, "track_id", str), need(params, "seconds", (int, float))
+        return {"seconds": listening.listened(self._library(), track_id, seconds)}
 
     def listening_heard(self, params: dict[str, Any]) -> dict[str, Any]:
         return listening.heard(self._library(), need(params, "video_id", str))
@@ -1223,6 +1229,7 @@ class Server:
             share = sharing.Share(
                 lib,
                 changed=lambda: self.writer.notify("sharing.changed", {}),
+                took=lambda: self.writer.notify("listening.changed", {}),
                 films=films is True,
             )
             share.start()

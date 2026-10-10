@@ -85,6 +85,23 @@ public final class RPCConnection: @unchecked Sendable {
         return try decoder.decode(type, from: data)
     }
 
+    /// Send a request without waiting for its answer: for the last thing said as the app
+    /// closes, when nothing will be left to hear the answer. The engine deals with its
+    /// requests in the order they were sent, so one sent before `close()` is done
+    /// before the engine stops.
+    public func tell(_ method: String, _ params: [String: Any] = [:]) {
+        lock.lock()
+        defer { lock.unlock() }
+        guard !closed else { return }
+        nextID += 1
+        let request: [String: Any] = [
+            "jsonrpc": "2.0", "id": nextID, "method": method, "params": params,
+        ]
+        guard var line = try? JSONSerialization.data(withJSONObject: request) else { return }
+        line.append(0x0A)
+        try? input.write(contentsOf: line)
+    }
+
     /// Close our end. The engine takes its stdin closing as "shut down cleanly".
     public func close() {
         try? input.close()

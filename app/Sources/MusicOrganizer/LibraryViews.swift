@@ -43,15 +43,17 @@ enum SongColumns {
     static let optional: [(id: String, title: String)] = [
         ("artist", "Artist"), ("album", "Album"), ("year", "Year"), ("genre", "Genre"),
         ("quality", "Quality"), ("added", "Added"), ("plays", "Plays"), ("time", "Time"),
+        // How long the song has been listened to, here and on a paired phone (2026-10-10).
+        ("listened", "Listened"),
     ]
     /// Hidden until the owner asks for them.
-    static let hiddenAtFirst: Set<String> = ["genre", "quality", "added"]
+    static let hiddenAtFirst: Set<String> = ["genre", "quality", "added", "listened"]
     /// Each column's width. They're all set but the title's, which takes what the others
     /// leave, so the columns are in the same places in every list, however long the
     /// names are and whenever the list is opened (owner, 2026-10-02).
     static let widths: [String: CGFloat] = [
         "artist": 190, "album": 210, "year": 46, "genre": 110, "quality": 70, "added": 90,
-        "plays": 40, "time": 52,
+        "plays": 40, "time": 52, "listened": 104,
     ]
     static let favouriteWidth: CGFloat = 20
     static let titleLeast: CGFloat = 200
@@ -86,6 +88,8 @@ struct TrackRow: Identifiable, Equatable, Sendable {
     let id: Int
     let track: Track
     let plays: Int
+    /// Seconds spent listening to the song.
+    let listened: Double
 }
 
 /// Which songs a list shows.
@@ -179,6 +183,7 @@ struct SongList: View {
         let (source, sortOrder, search) = (source, sortOrder, model.searchText)
         let (library, everything) = (model.library, model.everything)
         let (plays, downloaded, videos) = (model.listening.plays, model.downloaded, model.videos)
+        let listened = model.listening.listened ?? [:]
         let members = key.members
         let worked = await Task.detached(priority: .userInitiated) {
             () -> (rows: [TrackRow], total: Int) in
@@ -197,7 +202,8 @@ struct SongList: View {
             rows.reserveCapacity(tracks.count)
             for (place, track) in tracks.enumerated() where wanted.contains(track.path) {
                 let count = track.trackId.flatMap { plays[$0]?.count } ?? 0
-                rows.append(TrackRow(id: place, track: track, plays: count))
+                let time = track.trackId.flatMap { listened[$0] } ?? 0
+                rows.append(TrackRow(id: place, track: track, plays: count, listened: time))
             }
             // No column chosen: the list's own order (a playlist's, or newest first).
             return (sortOrder.isEmpty ? rows : rows.sorted(using: sortOrder), tracks.count)

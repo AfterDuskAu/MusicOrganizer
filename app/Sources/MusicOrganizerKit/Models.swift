@@ -488,6 +488,44 @@ public struct PlayCount: Decodable, Equatable, Sendable {
     }
 }
 
+/// `listening.listened`: a song's listening time after more was added, in seconds.
+public struct ListenedTotal: Decodable, Sendable {
+    public let seconds: Double
+}
+
+/// How long the song that's playing has really been playing, worked out from where the
+/// player says it is in the song.
+///
+/// The player says its place a few times a second. A small step forward is time that
+/// was played, and counts. Anything else is the song being moved through (a jump along
+/// the bar, back to the start), and doesn't: listening time is time spent listening,
+/// not the length of what was passed over.
+public struct PlayedTime: Sendable {
+    /// A step longer than this many seconds isn't playing: the player was moved.
+    public static let longestStep = 2.0
+    private var last: Double?
+    /// What has been counted since it was last taken.
+    public private(set) var seconds = 0.0
+
+    public init() {}
+
+    /// The player is at this place in the song now.
+    public mutating func moved(to place: Double) {
+        if let last, place > last, place - last <= Self.longestStep { seconds += place - last }
+        last = place
+    }
+
+    /// The player was put somewhere else in the song, or given something else to play:
+    /// counting starts again from the next place it says.
+    public mutating func jumped() { last = nil }
+
+    /// What has been counted, which then starts again from nothing.
+    public mutating func take() -> Double {
+        defer { seconds = 0 }
+        return seconds
+    }
+}
+
 public struct Playlist: Decodable, Identifiable, Hashable, Sendable {
     public let id: String
     public var name: String
@@ -536,11 +574,14 @@ public struct Playlist: Decodable, Identifiable, Hashable, Sendable {
     }
 }
 
-/// `listening.get`: the owner's favourites, play counts and playlists. Songs are named
-/// by their track id, which stays the same when a file is renamed.
+/// `listening.get`: the owner's favourites, play counts, listening time and playlists.
+/// Songs are named by their track id, which stays the same when a file is renamed.
 public struct Listening: Decodable, Sendable {
     public var favourites: [String]  // most recent first
     public var plays: [String: PlayCount]
+    /// How long each song has been listened to, in seconds: one figure a song, with what
+    /// this app's player played and what a paired phone player played added together.
+    public var listened: [String: Double]?
     public var playlists: [Playlist]
     /// Downloads the owner has moved into the main library's lists.
     public var library: [String]?
@@ -1005,6 +1046,15 @@ extension Sequence {
     ) -> [Element] {
         map { (key: key($0), element: $0) }.sorted { inOrder($0.key, $1.key) }.map(\.element)
     }
+}
+
+/// How long a song has been listened to, in the owner's own form: "255 min 24 sec".
+/// Under a minute it's "24 sec", and no time at all is "".
+public func listenedTime(_ seconds: Double) -> String {
+    guard seconds.isFinite, seconds >= 1 else { return "" }
+    let whole = Int(min(seconds, 1e12).rounded(.down))
+    let (minutes, secs) = (whole / 60, whole % 60)
+    return minutes == 0 ? "\(secs) sec" : "\(minutes) min \(secs) sec"
 }
 
 /// "3:07", "1:02:45".

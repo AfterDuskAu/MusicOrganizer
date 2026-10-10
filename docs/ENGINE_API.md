@@ -2,7 +2,7 @@
 
 The engine has two front doors onto the **same functions**. The CLI is for the owner, for testing and for v0.1. JSON-RPC is for the Mac app from v0.2 on. Neither may contain business logic of its own: both call into `musicorg` modules.
 
-A third door, section 3, is for a phone player on the home network. It only reads, and it's closed until the owner opens it in the app's Settings.
+A third door, section 3, is for a phone player on the home network. It's closed until the owner opens it in the app's Settings. Through it a phone reads the library, and (since 2026-10-10, at the owner's request) tells the computer three things that were done on it: a playlist made, a song put in a playlist, and time spent listening. It never changes a music file.
 
 ## 0. Enums (the only allowed values)
 
@@ -33,7 +33,8 @@ A third door, section 3, is for a phone player on the home network. It only read
 | **Torrent upload** (`settings.set`) | `max` (no limit) · `5` · `3` · `1` (megabytes a second at most) · `none` (nothing is sent on) |
 | **Kept kind** (`torrent.keep`; `movies` in home sync, section 3) | `movie` (a film, loose in the Movies folder: the standard) · `series` · `anime` (in the Movies folder's `Series` and `Anime` folders: contract, section 1) · `video` (home sync only: a file in the videos folder) |
 | **Sync file type** (home sync, section 3) | `m4a` · `mp3` · `flac` (sound) · `mp4` (a video) · `m4v` · `mov` (a kept film or video, with `mp4`) · `jpg` · `png` (a cover) · `lrc` (timed lyrics) · `txt` (plain lyrics) |
-| **Sync error** (home sync, section 3) | `not_paired` (401) · `wrong_code` (403) · `not_home` (403: the request wasn't sent to this computer at home, or a web page is behind it) · `not_found` (404) · `too_many_tries` (429) · `unavailable` (500: the library couldn't be read just now) · `bad_request` (any other request that isn't part of the format) |
+| **Sync error** (home sync, section 3) | `not_paired` (401) · `wrong_code` (403) · `not_home` (403: the request wasn't sent to this computer at home, or a web page is behind it) · `not_found` (404) · `too_many_tries` (429) · `unavailable` (500: the library couldn't be read just now, or a device's changes couldn't be kept) · `bad_request` (any other request that isn't part of the format; 400 for changes that can't be read, 413 for more than a request may carry) |
+| **Sync change kind** (home sync, section 3; 2026-10-10) | `playlist_new` (a playlist was made on the device) · `playlist_add` (a song was put at the end of a playlist) · `listened` (more time was spent listening to a song). A change of any other kind is left with the device. |
 | **`MUSICORG_SOURCE`** | `youtube_music` · `youtube` · `rip_copy` · `bandcamp` · `cd` · `itunes` · `other` |
 | **`MUSICORG_MATCH`** | `auto_exact` (AUTO match and fingerprint pass) · `user_confirmed` (owner's decision and fingerprint pass) · `manual` (adopt using the owner's `*_fix` values) · `auto_details` (step 09c: the owner's own audio with an AUTO match's official details; no fingerprint check) · `user_details` (step 09c: the same, from the owner's review choice) · `unconfirmed` (v0.2: a rip copied in under its own names before it was identified, so it can be played; its item stays in `review` or `not_found`, and the copy is upgraded in place when it's decided). Absent for adopts without fixes. |
 
@@ -113,9 +114,10 @@ Exit codes:
 | `library.lyrics` | `{ "path" }` (a Track's `path`) | `{ "synced", "plain" }`: the text of the song's `.lrc`, and the lyrics in its tags. Either may be null. |
 | `library.removed` | — | `{ "removed": [Removed] }` (2026-10-10): the downloads the owner deleted from the library and kept (a `remove` plan with `keep`), newest first, 500 at most. A log, read from the journal: one that was put back stays listed. The app's Settings → Deleted Items. |
 | `library.put_back` | `{ "batch_id" }` (a Removed's) | the same as `library.removed`, once that batch is undone, here and now: its songs are back under `Music/` (with a ` (2)` if their name has been taken since) and in the library's list, though not in the playlists or favourites they left; `library.changed` is sent. Only a batch `library.removed` lists can be put back this way: any other is -32000. Refused as busy while a job (a scan, an undo) is running. |
-| `listening.get` | — | `Listening`: the owner's favourites, play counts and playlists (v0.2), kept in `state.json`; and `heard`, the YouTube ids played all the way through (`listening.heard`) |
+| `listening.get` | — | `Listening`: the owner's favourites, play counts, listening time and playlists (v0.2), kept in `state.json`; and `heard`, the YouTube ids played all the way through (`listening.heard`) |
 | `listening.favourite` | `{ "track_id", "on" }` | `{ "favourites": [track_id] }` (most recent first) |
 | `listening.played` | `{ "track_id" }` (the app sends it when a song has played to its end) | `{ "count", "last_played" }` |
+| `listening.listened` | `{ "track_id", "seconds" }`: time the app's own player spent playing the song since it last said (2026-10-10). Only time it was playing counts: not a pause, and not the part of a song that was skipped over. More than 0 and at most 86,400 (a day), or it's -32000. | `{ "seconds" }`: the song's total. **One figure for a song**, in seconds: what the app's player played and what a paired phone player says was played on it (section 3) are added together, and `listening.get` gives it as `listened`. It's time, not a count of plays, and it changes no play count. It starts from the day this was built: nothing is worked out from the plays counted before. |
 | `listening.heard` | `{ "video_id" }` | `{ "count", "last_heard" }`: a song from YouTube Music (not the owner's: a pick or a search result) was played all the way through. Kept for good in the library's `state.json`; `listening.get` lists them as `heard`, for the app's red checkmark (2026-10-03). |
 | `listening.move` | `{ "track_ids": [..], "to": "library" \| "downloads" }` | `{ "library": [track_id] }`: the downloads the owner has moved into the main library's lists (v0.2). No file moves; it's the owner's sorting, kept in `state.json`. |
 | `playlist.create` | `{ "name" }` | `{ "playlists": [Playlist] }` |
@@ -216,6 +218,7 @@ Exit codes:
 | `queue.state` | `{ "state", "reason"?, "resume_at"? }`, when the queue worker starts or stops, and after `queue.pause`. A worker that stopped until a known time (the daily limit, a pause by YouTube, a retry that isn't due) is started again at that time by `serve` itself. |
 | `media.converted` | `{ "path", "saved"? , "error"? }`: a kept film's conversion ended (`media.convert`): where the copy is, or why there isn't one. Not sent when the engine is stopping. |
 | `sharing.changed` | `{}`: a device was paired, or a paired device asked for the list. The app asks `sharing.status` again. |
+| `listening.changed` | `{}` (2026-10-10): a paired device's changes were taken (section 3), and a playlist or a song's listening time is different for it. The app asks `listening.get` again. Not sent when nothing changed (changes that were taken before, or that couldn't be done). |
 | `review.changed` | `{ "review", "not_found" }` |
 | `library.changed` | `{ "batch_id"?, "tracks_added", "tracks_changed" }`, after a queue run that finished jobs (`tracks_changed` = jobs done) and after an undo |
 
@@ -273,7 +276,10 @@ Standard JSON-RPC codes, plus:
   "video": false, "height": null }               // a saved video (in Music/Videos/): true, and its picture's height
 
 // Listening and Playlist (v0.2). Songs are named by `track_id` (MUSICORG_ID), which survives renames.
+// `listened` (2026-10-10): seconds spent listening to each song, on the computer and on
+// paired devices together. A song nobody has listened to since then isn't in it.
 { "favourites": ["t_…"], "library": ["t_…"], "plays": { "t_…": { "count": 3, "last_played": "2026-10-01T03:00:00Z" } },
+  "listened": { "t_…": 15324.5 },
   "playlists": [ { "id": "pl_…", "name": "Road trip", "created_at": "…", "track_ids": ["t_…"] } ],
   "heard": ["DuQGokwsWF8"] }
 
@@ -291,7 +297,11 @@ A phone player on the same home network copies the library from the computer, an
 **What the owner was promised**, and the engine keeps:
 
 - **Off until they switch it on** in the app's Settings (`sharing.set`). The engine never starts it by itself.
-- **Read-only.** A phone can ask for the list and for files, and can pair. Nothing else. No request changes anything on the computer, and nothing inside the library is written while serving one.
+- **Read-only for the music.** A phone can ask for the list and for files, and can pair. No request changes, adds or removes a music file, a tag, a cover or lyrics, and nothing in the library's music folders is written while serving one.
+- **Three things come back from a phone, and nothing else** (2026-10-10, at the owner's request; until then the promise was that no request changed anything on the computer). The owner asked that what's done on the phone isn't left there: "when synced with the app, grab data, and changes made on the phone". So a phone tells the computer of **a playlist made on it**, **a song put in a playlist**, and **time spent listening to a song** (`POST /sync/v1/changes`, below). What that changes is what `listening` keeps in `state.json`: the playlists, and each song's listening time. Nothing more:
+  - a phone can't rename or delete a playlist, take a song out of one or reorder it, or change a favourite or a play count;
+  - it never touches a file inside the library's music folders, the index, the queue or the journal. `state.json` is written by `state` alone, atomically, by the engine that holds the library's lock, as every other change to it is;
+  - what it sends is checked and bounded before any of it is kept (below), so nothing a phone sends can damage the library's records.
 - **The library, and nothing else unless they say so.** The films and videos kept outside the library (the Movies folder and the videos folder: `settings.get`) are in the list only while the app's second switch is on (`sharing.set`'s `films`, 2026-10-08). It starts off: the Movies folder may hold more than this app put there.
 - **A device is paired once**, with a six-digit code the computer shows.
 - **The home network only, and only while the app is open.** Nothing is sent to the internet, and no port is opened on the router (no UPnP).
@@ -318,12 +328,49 @@ When something goes wrong the status isn't 200, and the body is
 
 | Request | Key | Answer |
 |---|---|---|
-| `GET /sync/v1/hello` | no | `{ "format": 1, "library": { "id", "name" }, "paired" }`. `paired` says whether the key that was sent (if one was) is still known. `library.id` never changes for a library: it's made from when the library was created, so it stays the same when the folder is renamed or moved, or the computer's address or name changes. `library.name` is the library folder's name. |
+| `GET /sync/v1/hello` | no | `{ "format": 1, "library": { "id", "name" }, "paired", "accepts": ["changes"] }`. `paired` says whether the key that was sent (if one was) is still known. `library.id` never changes for a library: it's made from when the library was created, so it stays the same when the folder is renamed or moved, or the computer's address or name changes. `library.name` is the library folder's name. `accepts` (2026-10-10) says what the computer takes from a device besides its requests: `changes` is there whenever the app is sharing the library. A phone sends changes only to a computer that says so; one made before this was added doesn't know the key and leaves it. |
 | `POST /sync/v1/pair` | no | Body `{ "code", "device" }`, as `application/json`: the code on the computer's screen, and what kind of device is asking (`iPhone`, `iPad`: up to 20 letters, digits and spaces, else it's listed as "Device"). Answer: `{ "key" }`, a long random string, given this once. A code works once and for five minutes. A wrong code, a code that has run out, or no code showing: 403 `wrong_code`. After five wrong codes every code is refused for a minute: 429 `too_many_tries`. |
 | `GET /sync/v1/library` | yes | The list of everything (below). |
 | `GET /sync/v1/files/<file id>` | yes | The file's bytes, with `Content-Length`. The id is percent-encoded in the path. Only a file the list names is ever given out: no path comes from a phone. A file that's gone, or has been written again since the list was made, is 404 `not_found` (never the old list's size with the new bytes); the next list has it under its new version. **Carrying on a file that was cut off** (2026-10-08): `Range: bytes=<from>-` (or `<from>-<to>`) is answered 206 with `Content-Range` and only those bytes; a phone sends `If-Range: <the version it has the start of>` with it, and if that isn't the file's version now it's sent the whole file (200), never new bytes to join to old. A part that isn't in the file is 416 with no body. Any other kind of `Range` gets the whole file. Every answer carries the version as `ETag`. |
+| `POST /sync/v1/changes` | yes | Body `{ "changes": [Change] }`, JSON: what was done on the device since the computer last took it (2026-10-10; **Changes**, below). Answer: `{ "taken": [the ids of the changes dealt with] }`. |
 
 Without a key, or with one the computer doesn't know: 401 `not_paired`.
+
+### Changes (2026-10-10)
+
+What a phone tells the computer at a sync, before it asks for the list (so the list already has them):
+
+    { "changes": [
+        { "id": "0D2E…", "kind": "playlist_new", "playlist": "new-7A40…", "name": "Driving",
+          "at": "2026-10-10T03:19:00Z" },
+        { "id": "6F1C…", "kind": "playlist_add", "playlist": "p-…", "track": "t-…",
+          "at": "2026-10-10T03:20:00Z" },
+        { "id": "A93B…", "kind": "listened", "track": "t-…", "seconds": 215.5,
+          "at": "2026-10-10T03:25:00Z" }
+    ] }
+
+`kind` is a **Sync change kind** (Enums). `id` is made up on the device, and names the change in the answer. `at` is when it was done on the device; the computer doesn't use it.
+
+- **`playlist_new`**: a playlist called `name` was made on the device. `playlist` is an id the device made up for it. The computer makes the playlist under an id of its own and remembers which is which, so a `playlist_add` that names the device's id lands in it: in the same request or a later one, and after the app has been closed and opened again. The next list has the playlist under the computer's id.
+  - **A playlist of that name is there already: that one is used**, and no second one is made. A phone can't see a playlist made on the computer since it last synced, and nobody could tell two of one name apart. Names are compared without regard to capitals or to spaces at the ends; a playlist spelled exactly the same comes before one that differs in capitals, and the older before the newer. The songs put in the device's playlist go in the one that was there.
+  - A name is tidied as the app's own are (spaces at the ends and runs of spaces), and one longer than 200 characters is cut to 200.
+- **`playlist_add`**: the song `track` (its id in the list) was put in the playlist `playlist` (its id in the list, or the id the device made up for one it made). It goes at the end. **A song the playlist has already isn't put in a second time**: a phone can't see what was put in on the computer since it last synced, so a second copy would be one nobody asked for. (On the computer a song can be in a playlist twice, and the app asks first.)
+- **`listened`**: `seconds` more were spent listening to the song `track`: time it was playing, not a count of plays, and no play count changes. It's added to the song's one figure (`listening.listened`, section 2), which the list gives back as `listened`. More than 0 and at most 86,400 (a day) in one change.
+
+**Each change is taken once.** A change may arrive twice, when the answer to it was lost on the way: the computer knows it by its `id` and does nothing the second time. What it remembers is kept with the library (`state.json`, beside what the changes changed, and saved in the same write: either a change and the note that it was taken are both there, or neither is), so it holds across restarts. The newest 5,000 are remembered.
+
+**The answer** names every change **dealt with**: done, or never going to be. The phone forgets those. Never going to be: the playlist or the song isn't there any more (or the song has no id of its own in the library, so nothing can be kept for it), the change was taken before, or it makes no sense (no playlist to put a song in, a length of time that isn't one). **Left out of the answer**, for the phone to keep and send again: a change whose `kind` this engine doesn't know (a newer phone's), one with no `id` to answer it by, and any after the first 2,000 of a request.
+
+**What one request may carry**, whatever is sent:
+
+- a body of a megabyte at most. A longer one is refused whole, unread: 413 `bad_request`. A body that isn't a JSON object is 400 `bad_request`; one with no list of `changes` is answered `{ "taken": [] }`;
+- the first 2,000 changes are looked at;
+- a phone can't make a playlist in a library that has 1,000, nor put a song in a playlist that has 10,000: those changes are dropped;
+- **nothing of the phone's own words is kept but a playlist's name.** The ids it makes up (a change's, and a playlist's of its own) are kept only as short hashes, and a song or playlist is found by the list's id for it, never by a path or by the library's own id.
+
+If the library's records can't be saved just now, the answer is 500 `unavailable` and nothing was taken: the phone keeps its changes and sends them at the next sync. The app is told when something changed (`listening.changed`).
+
+The same guards hold as for every request: a caller at home, the `Host` and `Origin` checks, and the device's key. A device that has been unpaired is 401 `not_paired` here too.
 
 ### The list
 
@@ -334,7 +381,8 @@ Without a key, or with one the computer doesn't know: 401 `not_paired`.
       "tracks": [
         { "id": "t-…", "title": "…", "artist": "…", "album": "…", "albumArtist": "…",
           "trackNumber": 1, "discNumber": 1, "year": 2020, "genre": "…", "duration": 201.5,
-          "explicit": false, "favourite": true, "playCount": 12, "added": "2026-01-31T09:30:00Z",
+          "explicit": false, "favourite": true, "playCount": 12, "listened": 15324.5,
+          "added": "2026-01-31T09:30:00Z",
           "audio":  { "id": "f-…", "size": 3312345, "version": "…", "type": "m4a" },
           "cover":  { "id": "c-…", "size": 48211,   "version": "…", "type": "jpg" },
           "lyrics": { "id": "l-…", "size": 1870,    "version": "…", "type": "lrc" } }
@@ -354,8 +402,9 @@ Without a key, or with one the computer doesn't know: 401 `not_paired`.
       ]
     }
 
-- **What's in it.** Every song in `Music/` that the index has and whose file is there, downloads included; every saved video in `Music/Videos/`; and the owner's playlists. Favourites and play counts come from `listening`. A song in a format the list has no name for (Ogg, Opus) is left out: a phone can't play it.
+- **What's in it.** Every song in `Music/` that the index has and whose file is there, downloads included; every saved video in `Music/Videos/`; and the owner's playlists. Favourites, play counts and listening time come from `listening`. A song in a format the list has no name for (Ogg, Opus) is left out: a phone can't play it.
 - **A track** always has `id`, `title`, `artist`, `duration`, `explicit`, `favourite`, `playCount` and `audio`. `album`, `albumArtist`, `trackNumber`, `discNumber`, `year`, `genre`, `added` (when it came into the library), `cover` and `lyrics` are left out when the song has none.
+- **`listened`** (2026-10-10) is how long the song has been listened to, in seconds: the computer's one figure for it, with what the app's own player played and what devices have told it added in (0 when nobody has listened yet). A phone shows it with whatever it hasn't told the computer yet. It's left out only for a file with no id of its own in the library (one that goes by its path): the computer has nothing to keep its time by, so a phone shows its own count for that one.
 - **Every `id` is only a name**: a letter for what it names, and a hash. Nothing can be read out of one: not the library's own id for the song, not a path, not where the song came from. No tag name of the engine's is sent either.
   - A song's ids are made from its own id in the library (`MUSICORG_ID`), so they stay the same from one sync to the next, and when the file is renamed, moved or retagged. A file with no id of its own goes by its path.
 - **A file** is `id`, `size` (exactly the bytes that will arrive), `version` and `type` (a **Sync file type**). `version` changes whenever the bytes do: a phone fetches a file again when its version differs from the one it has.
@@ -367,10 +416,10 @@ Without a key, or with one the computer doesn't know: 401 `not_paired`.
   - **An episode** (2026-10-08, later) also carries `show`: the series or anime it's part of, which is the name of its folder under `Series` or `Anime`. Entries with the same `show` belong together. `season` and `episode` are whole numbers, sent when the file's name or folder says them ("S01E02"; season 0 is the specials) and left out when it doesn't. An entry with no `show` stands on its own, as a film does, and as an anime that's a film does.
   - **`title`** is the file's name without its ending; for an episode whose name gives its own title (`<Show> S01E02 - <Title>`), that title.
   - Of where a file is kept, the show's name is all that's sent: no path, and no other folder's name. The same holds for a file the owner put in those folders themselves. A film kept before the `Series` and `Anime` folders were made is loose in the Movies folder and stays a `movie` until the owner moves it: nothing is guessed from a file's name alone.
-- **Playlists** hold track ids in the owner's order. A song may be there twice. A song that isn't in the list is left out.
+- **Playlists** hold track ids in the owner's order. A song may be there twice. A song that isn't in the list is left out. A playlist made on a phone is here under the computer's own id for it, once its `playlist_new` has been taken.
 
 ### Not in format 1
 
-- Sending favourites and play counts back to the computer.
+- Sending favourites and play counts back to the computer, and any other change to a playlist than the two above (a rename, a song taken out, a new order, a playlist deleted).
 - Lyrics timed to a video.
 - A film's length, cover or details, and its subtitles as files of their own.

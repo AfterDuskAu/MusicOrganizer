@@ -1,4 +1,5 @@
-"""sharing (2026-10-04): the library, shared read-only with a phone player at home.
+"""sharing (2026-10-04): the library, shared with a phone player at home; and, from
+2026-10-10, the three things a phone may tell the computer were done on it.
 
 Every test's share listens on this computer's own loopback address only (conftest), and
 is asked over real HTTP from here. The library is a test library of generated tones. No
@@ -214,7 +215,7 @@ def test_it_listens_on_this_computer_only_in_tests(share: sharing.Share) -> None
 def test_hello_needs_no_key(share: sharing.Share, filled: Library) -> None:
     status, hello = ask(share, "/sync/v1/hello")
     assert status == 200
-    assert hello == {"format": 1, "library": share.info, "paired": False}
+    assert hello == {"format": 1, "library": share.info, "paired": False, "accepts": ["changes"]}
     assert hello["library"]["name"] == filled.root.name
     key = paired(share)
     assert ask(share, "/sync/v1/hello", key=key)[1]["paired"] is True
@@ -241,9 +242,12 @@ def test_everything_else_needs_a_key(share: sharing.Share) -> None:
         status, answer = ask(share, path, key="not-a-key-" + "x" * 20)
         assert (status, answer["error"]) == (401, "not_paired"), path
     assert ask(share, "/somewhere/else")[0] == 404
-    assert ask(share, "/sync/v1/library", body={"code": "x"})[0] == 404  # only pair is posted
-    status, answer = ask(share, "/sync/v1/library", method="DELETE")
-    assert status == 501 and answer["error"] == "bad_request"  # nothing can be changed
+    # Only a pairing code and a device's changes are posted, and nothing is ever deleted.
+    assert ask(share, "/sync/v1/library", body={"code": "x"})[0] == 404
+    for method in ("DELETE", "PUT", "PATCH"):
+        for path in ("/sync/v1/library", "/sync/v1/changes", "/sync/v1/files/anything"):
+            status, answer = ask(share, path, method=method)
+            assert status == 501 and answer["error"] == "bad_request", (method, path)
 
 
 def test_pairing_with_the_code_on_the_screen(share: sharing.Share) -> None:
@@ -387,7 +391,7 @@ def test_the_list_carries_what_a_player_needs(share: sharing.Share, filled: Libr
                                                        "lyrics")} == {
         "title": "Song", "artist": "Band", "album": "Album", "albumArtist": "Band",
         "trackNumber": 1, "discNumber": 1, "year": 2020, "genre": "Rock", "explicit": True,
-        "favourite": True, "playCount": 2, "added": "2026-01-31T09:30:00Z",
+        "favourite": True, "playCount": 2, "listened": 0.0, "added": "2026-01-31T09:30:00Z",
     }  # fmt: skip
     assert (song["audio"]["size"], song["audio"]["type"]) == (audio.stat().st_size, "m4a")
     # The album folder's cover.jpg comes before the picture inside the song.
@@ -405,6 +409,7 @@ def test_the_list_carries_what_a_player_needs(share: sharing.Share, filled: Libr
 
     loose = tracks["Loose"]
     assert loose["audio"]["type"] == "flac" and "album" not in loose and "lyrics" not in loose
+    assert "listened" not in loose  # it has no id of its own to keep its time by
     assert (loose["cover"]["size"], loose["cover"]["type"]) == (len(JPEG), "jpg")  # its own
 
     (video,) = found["videos"]
@@ -965,3 +970,369 @@ def test_a_file_that_was_cut_off_is_carried_on(share: sharing.Share, filled: Lib
     assert part(share, key, lyrics, "bytes=5-")[:2] == (206, WORDS.encode()[5:])
     # A part still needs a key.
     assert part(share, "not-a-key", audio, "bytes=100-")[0] == 401
+
+
+# ---- what was done on a phone (2026-10-10) --------------------------------------------------
+
+
+def did(kind: Any, **about: Any) -> dict[str, Any]:
+    """A change as a phone sends it, under an id made up here as a phone makes one up."""
+    return {"id": str(uuid.uuid4()).upper(), "kind": kind, "at": "2026-10-10T03:20:00Z", **about}
+
+
+def its_own() -> str:
+    """An id a phone makes up for a playlist made on it."""
+    return "new-" + str(uuid.uuid4()).upper()
+
+
+def ids(*changes: dict[str, Any]) -> list[str]:
+    return [change["id"] for change in changes]
+
+
+def tell(share: sharing.Share, key: str, *changes: Any) -> list[str]:
+    """Send changes the way a phone does at a sync: the ids the computer dealt with."""
+    status, answer = ask(share, "/sync/v1/changes", key=key, body={"changes": list(changes)})
+    assert status == 200 and set(answer) == {"taken"}, answer
+    return answer["taken"]
+
+
+def post(
+    share: sharing.Share, key: str, data: bytes, kind: str = "application/json"
+) -> tuple[int, Any]:
+    """Changes sent as these very bytes."""
+    assert share.port is not None
+    conn = http.client.HTTPConnection(LOOPBACK, share.port, timeout=30)
+    sent = {"Authorization": "Bearer " + key, "Content-Type": kind}
+    conn.request("POST", "/sync/v1/changes", data, sent)
+    response = conn.getresponse()
+    answer = json.loads(response.read())
+    conn.close()
+    return response.status, answer
+
+
+def named(share: sharing.Share, key: str) -> tuple[dict[str, str], dict[str, str]]:
+    """The list's ids as a phone knows them: its songs' by title, its playlists' by name."""
+    found = the_list(share, key)
+    return ({t["title"]: t["id"] for t in found["tracks"]},
+            {p["name"]: p["id"] for p in found["playlists"]})  # fmt: skip
+
+
+def playlists(lib: Library) -> list[tuple[str, list[str]]]:
+    return [(p["name"], p["track_ids"]) for p in listening.get(lib)["playlists"]]
+
+
+MORNING = ("Morning", [SONG_ID, OTHER_ID, SONG_ID, "gone-from-the-library"])
+
+
+def test_a_song_put_in_a_playlist_on_a_phone(share: sharing.Share, filled: Library) -> None:
+    listening.create_playlist(filled, "Evening")
+    key = paired(share)
+    tracks, lists = named(share, key)
+    first = did("playlist_add", playlist=lists["Evening"], track=tracks["Other"])
+    second = did("playlist_add", playlist=lists["Evening"], track=tracks["Song"])
+    assert tell(share, key, first, second) == ids(first, second)
+    assert playlists(filled) == [MORNING, ("Evening", [OTHER_ID, SONG_ID])]  # at the end, in turn
+    # The next list has it, as the phone knows the songs.
+    after = {p["name"]: p["tracks"] for p in the_list(share, key)["playlists"]}
+    assert after["Evening"] == [tracks["Other"], tracks["Song"]]
+    assert after["Morning"] == [tracks["Song"], tracks["Other"], tracks["Song"]]
+    # A song the playlist has already isn't put in a second time: the phone can't see
+    # what was put in on the computer since it last synced.
+    again = did("playlist_add", playlist=lists["Evening"], track=tracks["Song"])
+    assert tell(share, key, again) == ids(again)
+    assert playlists(filled) == [MORNING, ("Evening", [OTHER_ID, SONG_ID])]
+
+
+def test_a_change_that_arrives_twice_is_taken_once(share: sharing.Share, filled: Library) -> None:
+    key = paired(share)
+    tracks, _ = named(share, key)
+    theirs = its_own()
+    sent = [
+        did("playlist_new", playlist=theirs, name="Driving"),
+        did("playlist_add", playlist=theirs, track=tracks["Song"]),
+        did("listened", track=tracks["Song"], seconds=215.5),
+    ]
+    assert tell(share, key, *sent) == ids(*sent)
+    once = listening.get(filled)
+    assert once["listened"] == {SONG_ID: 215.5}
+    assert playlists(filled) == [MORNING, ("Driving", [SONG_ID])]
+    # The answer was lost on the way: the phone sends all of it again, with one more.
+    more = did("listened", track=tracks["Other"], seconds=10)
+    assert tell(share, key, *sent, more) == ids(*sent, more)
+    twice = listening.get(filled)
+    assert twice["playlists"] == once["playlists"]
+    assert twice["listened"] == {SONG_ID: 215.5, OTHER_ID: 10.0}
+    # And once more after the app was closed and opened again: what was taken is
+    # remembered with the library, not by the engine that took it.
+    share.stop()
+    again = sharing.Share(filled)
+    again.start()
+    try:
+        assert tell(again, key, *sent, more) == ids(*sent, more)
+        assert listening.get(filled) == twice
+    finally:
+        again.stop()
+
+
+def test_a_playlist_made_on_a_phone(share: sharing.Share, filled: Library) -> None:
+    key = paired(share)
+    tracks, lists = named(share, key)
+    theirs = its_own()
+    made = did("playlist_new", playlist=theirs, name="  Driving ")
+    first = did("playlist_add", playlist=theirs, track=tracks["Song"])
+    assert tell(share, key, made, first) == ids(made, first)
+    # The next list has it under an id of the computer's own.
+    found = {p["name"]: p for p in the_list(share, key)["playlists"]}
+    assert set(found) == {"Morning", "Driving"}
+    assert found["Driving"]["id"].startswith("p-") and found["Driving"]["id"] != theirs
+    assert found["Driving"]["tracks"] == [tracks["Song"]]
+    assert found["Morning"]["id"] == lists["Morning"]
+
+    # A song put in it afterwards, in a later request that still names the phone's own
+    # id for it, lands in it: also when the app has been closed and opened in between.
+    share.stop()
+    again = sharing.Share(filled)
+    again.start()
+    try:
+        later = did("playlist_add", playlist=theirs, track=tracks["Other"])
+        assert tell(again, key, later) == ids(later)
+        assert playlists(filled) == [MORNING, ("Driving", [SONG_ID, OTHER_ID])]
+    finally:
+        again.stop()
+
+
+def test_a_playlist_made_on_a_phone_under_a_name_there_is(
+    share: sharing.Share, filled: Library
+) -> None:
+    listening.create_playlist(filled, "Evening")  # made on the computer since the phone synced
+    key = paired(share)
+    tracks, _ = named(share, key)
+    theirs = its_own()
+    made = did("playlist_new", playlist=theirs, name="evening")
+    put = did("playlist_add", playlist=theirs, track=tracks["Song"])
+    assert tell(share, key, made, put) == ids(made, put)
+    # The one there is, is used: there aren't two of one name.
+    assert playlists(filled) == [MORNING, ("Evening", [SONG_ID])]
+
+
+def test_time_spent_listening_comes_back_from_a_phone(
+    share: sharing.Share, filled: Library
+) -> None:
+    key = paired(share)
+    before = the_list(share, key)
+    tracks = {t["title"]: t for t in before["tracks"]}
+    assert tracks["Song"]["listened"] == 0.0
+    first = did("listened", track=tracks["Song"]["id"], seconds=215.5)
+    second = did("listened", track=tracks["Song"]["id"], seconds=60)
+    other = did("listened", track=tracks["Other"]["id"], seconds=0.5)
+    assert tell(share, key, first, second, other) == ids(first, second, other)
+    listening.listened(filled, SONG_ID, 24.5)  # the computer's own player: the same figure
+
+    after = the_list(share, key)
+    tracks = {t["title"]: t for t in after["tracks"]}
+    assert (tracks["Song"]["listened"], tracks["Other"]["listened"]) == (300.0, 0.5)
+    assert after["revision"] != before["revision"]
+    # It's time, not a count: a play is still a song heard to its end.
+    assert tracks["Song"]["playCount"] == 2 and tracks["Other"]["playCount"] == 0
+    assert listening.get(filled)["plays"].keys() == {SONG_ID}
+
+
+def test_what_this_engine_doesnt_know_is_left_with_the_phone(
+    share: sharing.Share, filled: Library, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    key = paired(share)
+    song = named(share, key)[0]["Song"]
+    before = listening.get(filled)
+    newer = did("favourite", track=song, on=True)  # a kind a newer phone might send
+    odd = did(["playlist_add"], track=song)
+    nameless = {"kind": "listened", "track": song, "seconds": 5}  # nothing to answer it by
+    numbered = {"id": 7, "kind": "listened", "track": song, "seconds": 5}
+    assert tell(share, key, newer, odd, nameless, numbered, "junk", None, 5, [newer]) == []
+    assert listening.get(filled) == before
+
+    # More than one request may carry: the first of them are taken, the rest wait.
+    monkeypatch.setattr(sharing, "MAX_CHANGES", 2)
+    many = [did("listened", track=song, seconds=10) for _ in range(5)]
+    assert tell(share, key, *many) == ids(*many[:2])
+    assert tell(share, key, *many[2:]) == ids(*many[2:4])
+    assert tell(share, key, *many[4:]) == ids(*many[4:])
+    assert listening.get(filled)["listened"] == {SONG_ID: 50.0}
+
+
+def test_what_cant_be_done_is_dropped(share: sharing.Share, filled: Library) -> None:
+    gone = listening.create_playlist(filled, "Gone")[-1]["id"]
+    key = paired(share)
+    found = the_list(share, key)
+    tracks = {t["title"]: t["id"] for t in found["tracks"]}
+    lists = {p["name"]: p["id"] for p in found["playlists"]}
+    listening.delete_playlist(filled, gone)
+    before = listening.get(filled)
+    song, morning = tracks["Song"], lists["Morning"]
+    sent = [
+        did("playlist_add", playlist=lists["Gone"], track=song),  # deleted since the list
+        did("playlist_add", playlist=its_own(), track=song),  # never made
+        did("playlist_add", playlist=morning, track=song),  # it has the song
+        did("playlist_add", playlist=morning, track="t-" + "0" * 24),  # no such song
+        did("playlist_add", playlist=morning, track=found["videos"][0]["id"]),  # not a song
+        did("playlist_add", playlist=morning, track=tracks["Loose"]),  # no id of its own
+        did("playlist_add", playlist=morning, track=OTHER_ID),  # not an id a phone is given
+        did("playlist_add", playlist=morning),
+        did("playlist_add", track=song),
+        did("playlist_add", playlist=["x"], track={"y": 1}),
+        did("playlist_new", playlist=its_own(), name=""),
+        did("playlist_new", playlist=its_own(), name=7),
+        did("playlist_new", name="Nothing To Know It By"),
+        did("listened", track=tracks["Loose"], seconds=30),
+        did("listened", track="nothing", seconds=30),
+        did("listened", track=song),
+    ]
+    not_times = (0, -5, "long", True, None, [1], float("nan"), float("inf"), 1e9, 10**400)
+    sent += [did("listened", track=song, seconds=seconds) for seconds in not_times]
+    assert tell(share, key, *sent) == ids(*sent)  # dealt with: the phone lets go of them
+    assert listening.get(filled) == before
+
+
+def test_changes_need_a_key(share: sharing.Share, filled: Library) -> None:
+    key = paired(share)
+    song = named(share, key)[0]["Song"]
+    before = listening.get(filled)
+    sent = {"changes": [did("listened", track=song, seconds=30),
+                        did("playlist_new", playlist=its_own(), name="Sneaked In")]}  # fmt: skip
+    for not_it in (None, "not-a-key-" + "x" * 20, key + "x"):
+        status, answer = ask(share, "/sync/v1/changes", key=not_it, body=sent)
+        assert (status, answer["error"]) == (401, "not_paired")
+    # A web page behind the request, or one sent to another name: not from home.
+    for headers in ({"Origin": "http://example.com"}, {"Host": "example.com"}):
+        status, answer = ask(share, "/sync/v1/changes", key=key, body=sent, headers=headers)
+        assert (status, answer["error"]) == (403, "not_home")
+    assert ask(share, "/sync/v1/changes", key=key)[0] == 404  # it's sent, never asked for
+    # A device that has been unpaired: its key has stopped working here too.
+    sharing.forget(sharing.devices()[0]["id"])
+    status, answer = ask(share, "/sync/v1/changes", key=key, body=sent)
+    assert (status, answer["error"]) == (401, "not_paired")
+    assert listening.get(filled) == before
+
+
+def test_nonsense_is_turned_away_and_changes_nothing(
+    share: sharing.Share, filled: Library, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    key = paired(share)
+    song = named(share, key)[0]["Song"]
+    records = filled.paths.state_file.read_bytes()
+    for data in (b"not json", b"[1, 2]", b'"changes"', b"7", b"\xff\xfe\xfd", b"[" * 100_000):
+        status, answer = post(share, key, data)
+        assert (status, answer["error"]) == (400, "bad_request"), data[:20]
+    for data in (b"", b"{}", b'{"changes": "all"}', b'{"changes": {"id": "x"}}',
+                 b'{"changes": []}', b'{"changes": [[], {}, 1, null]}'):  # fmt: skip
+        assert post(share, key, data) == (200, {"taken": []}), data
+
+    # More than a request may be: refused whole, and nothing of it is looked at.
+    real = did("listened", track=song, seconds=30)
+    padded = {"changes": [real], "padding": "x" * sharing.MAX_CHANGES_BODY}
+    status, answer = post(share, key, json.dumps(padded).encode())
+    assert (status, answer["error"]) == (413, "bad_request")
+    assert filled.paths.state_file.read_bytes() == records  # not so much as written again
+
+    # The library's records can't be saved just now: the phone is told, and keeps them.
+    def fails(lib: Library, changes: list[Any]) -> dict[str, Any]:
+        raise OSError("the disk is full")
+
+    with monkeypatch.context() as broken:
+        broken.setattr(listening, "from_devices", fails)
+        status, answer = post(share, key, json.dumps({"changes": [real]}).encode())
+        assert (status, answer["error"]) == (500, "unavailable")
+    # The body is read as JSON whatever it says it is: the key is what's checked.
+    data = json.dumps({"changes": [real]}).encode()
+    assert post(share, key, data, "text/plain") == (200, {"taken": [real["id"]]})
+    assert listening.get(filled)["listened"] == {SONG_ID: 30.0}
+
+
+def test_changes_touch_nothing_but_the_librarys_records(
+    share: sharing.Share, filled: Library
+) -> None:
+    key = paired(share)
+    tracks, lists = named(share, key)
+    before = snapshot(filled.root)
+    theirs = its_own()
+    sent = [
+        did("playlist_new", playlist=theirs, name="Driving"),
+        did("playlist_add", playlist=theirs, track=tracks["Song"]),
+        did("playlist_add", playlist=lists["Morning"], track=tracks["Other"]),
+        did("listened", track=tracks["Song"], seconds=215.5),
+        did("listened", track=tracks["Loose"], seconds=30),
+    ]
+    assert tell(share, key, *sent) == ids(*sent)
+    after = snapshot(filled.root)
+    records = filled.paths.state_file.relative_to(filled.root).as_posix()
+    assert after.pop(records) != before.pop(records)  # where playlists and time are kept
+    # Every other file is as it was: no song, tag, cover or lyrics was touched, nothing
+    # was added or taken away, and so there was nothing to journal.
+    assert after == before
+    assert any(name.startswith("Music/") for name in after)
+    assert not list(filled.paths.journal.glob("*"))
+
+
+def test_only_hashes_of_what_a_phone_made_up_are_kept(
+    share: sharing.Share, filled: Library, caplog: pytest.LogCaptureFixture
+) -> None:
+    key = paired(share)
+    song = named(share, key)[0]["Song"]
+    theirs = its_own()
+    sent = [
+        did("playlist_new", playlist=theirs, name="A Name Of The Owner's"),
+        did("playlist_add", playlist=theirs, track=song),
+        did("listened", track=song, seconds=90),
+    ]
+    with caplog.at_level(logging.DEBUG):
+        assert tell(share, key, *sent) == ids(*sent)
+    kept = filled.paths.state_file.read_text(encoding="utf-8")
+    assert "A Name Of The Owner's" in kept  # the one thing kept as the phone sent it
+    for made_up in (theirs, song, key, *ids(*sent)):
+        assert made_up not in kept, made_up
+    assert "changes were taken (playlists made: 1, songs put in playlists: 1, minutes" in (
+        caplog.text
+    )
+    for private in (key, "Bearer", "A Name Of The Owner's", theirs, song, SONG_ID, LOOPBACK,
+                    *ids(*sent)):  # fmt: skip
+        assert private not in caplog.text, private
+
+
+def test_an_engine_without_the_librarys_lock_takes_nothing(
+    share: sharing.Share, filled: Library
+) -> None:
+    key = paired(share)
+    share.stop()
+    filled.close()
+    with library.open(filled.root, write=False) as reading:
+        again = sharing.Share(reading)
+        again.start()
+        try:
+            assert ask(again, "/sync/v1/hello")[1]["accepts"] == []
+            sent = {"changes": [did("playlist_new", playlist=its_own(), name="Driving")]}
+            status, answer = ask(again, "/sync/v1/changes", key=key, body=sent)
+            assert (status, answer["error"]) == (404, "not_found")
+            assert len(the_list(again, key)["tracks"]) == 3  # the list is given as ever
+        finally:
+            again.stop()
+    assert playlists(filled) == [MORNING]
+
+
+def test_the_app_is_told_what_a_phone_changed(
+    opened: rpc.Server,  # noqa: F811
+    out: Capture,  # noqa: F811
+) -> None:
+    result(opened, "sharing.set", on=True)
+    share = opened._share
+    assert share is not None
+    shown = result(opened, "sharing.pair")
+    key = ask(share, "/sync/v1/pair", body={"code": shown["code"], "device": "iPhone"})[1]["key"]
+    assert ask(share, "/sync/v1/hello", key=key)[1]["accepts"] == ["changes"]
+
+    made = did("playlist_new", playlist=its_own(), name="Driving")
+    assert tell(share, key, made) == ids(made)
+    assert out.notes("listening.changed") == [{}]
+    assert [p["name"] for p in result(opened, "listening.get")["playlists"]] == ["Driving"]
+    assert tell(share, key, made) == ids(made)  # again: nothing changed, so nothing is said
+    assert tell(share, key, did("listened", track="nothing", seconds=5)) != []
+    assert len(out.notes("listening.changed")) == 1
+    result(opened, "sharing.set", on=False)

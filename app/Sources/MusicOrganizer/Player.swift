@@ -26,7 +26,10 @@ struct ShowingVideo: Equatable {
 @Observable
 final class Player {
     private(set) var queue = PlayQueue()
-    private(set) var current: Track?
+    private(set) var current: Track? {
+        // Another song (or none) has taken over: the time the one before was heard is told.
+        didSet { if oldValue != current { tellListened(of: oldValue) } }
+    }
     /// How many times the owner has asked for something to be played (a click on a song,
     /// a video, Play on a list). A song that follows on by itself doesn't count.
     private(set) var playsAsked = 0
@@ -74,6 +77,12 @@ final class Player {
     @ObservationIgnored var onVideoChange: ((ShowingVideo?) -> Void)?
     /// A song played to its end (not skipped): that's what counts as a play.
     @ObservationIgnored var onFinished: ((Track) -> Void)?
+    /// So many seconds more were spent listening to a song (2026-10-10): time it was
+    /// really playing, whether or not it reached its end. Told when the song ends, is
+    /// paused, or gives way to another.
+    @ObservationIgnored var onListened: ((Track, Double) -> Void)?
+    /// The time the song that's playing has been playing since it was last told.
+    @ObservationIgnored private var played = PlayedTime()
     /// Where a YouTube video's audio can be played from (the engine asks YouTube).
     /// With it come the song's length and its thumbs-up count, when YouTube gives them.
     /// `again` says the address given before stopped working: without it the engine
@@ -210,6 +219,7 @@ final class Player {
         if isPlaying {
             audio.pause()
             isPlaying = false
+            tellListened(of: current)
             // A device the player sends to itself pauses when it's told. Only the Mac's
             // own output needs muting to stop at once.
             if !isSendingToAirPlay { pauseSilence.paused() }
@@ -244,6 +254,7 @@ final class Player {
 
     func seek(to seconds: Double) {
         guard current != nil else { return }
+        played.jumped()  // moving through a song isn't listening to it
         clock.time = seconds
         onTick?(seconds)
         lastFrame = Date()
@@ -617,6 +628,7 @@ final class Player {
         }
         lastFrame = Date()
         nudges = 0
+        played.jumped()  // what's given to play now starts at a place of its own
         audio.replaceCurrentItem(with: item)
         if position > 0 {
             audio.seek(
@@ -638,8 +650,23 @@ final class Player {
         }
     }
 
+    /// Tell how long a song has been playing since that was last told, and start
+    /// counting again. Under a second isn't worth telling.
+    private func tellListened(of track: Track?) {
+        let seconds = played.take()
+        if let track, seconds >= 1 { onListened?(track, seconds) }
+    }
+
+    /// The app is closing: the time not yet told, for the caller to send while it can.
+    func listenedUntold() -> (track: Track, seconds: Double)? {
+        let seconds = played.take()
+        guard let current, seconds >= 1 else { return nil }
+        return (current, seconds)
+    }
+
     private func tick(_ seconds: Double) {
         guard current != nil, !isFetching, seconds.isFinite else { return }
+        played.moved(to: seconds)
         if loaded == .youtubeSound {
             // YouTube's stream claims to be twice as long as the song (its second half is
             // silence), so the length YouTube Music gave is the one that counts: the
@@ -707,6 +734,7 @@ final class Player {
 
     private func finished(_ item: AVPlayerItem?) {
         guard item === audio.currentItem else { return }
+        tellListened(of: current)
         if let current { onFinished?(current) }
         if let track = queue.advance(finished: true) {
             start(track)

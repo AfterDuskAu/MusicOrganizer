@@ -29,8 +29,10 @@ struct SharingSettings: View {
                 }
                 SideNote(
                     "On: a phone player on the same Wi-Fi can copy this profile's songs, videos, "
-                        + "covers, lyrics and playlists, and play its own copies. It can only "
-                        + "read: nothing in the library is changed. Off: nothing is listening.")
+                        + "covers, lyrics and playlists, and play its own copies. It can't "
+                        + "change a music file. Three things come back from it when it syncs: "
+                        + "a playlist made on it, a song put in a playlist, and time spent "
+                        + "listening. Off: nothing is listening.")
                 if wanted {
                     SideNote(
                         "Movies and videos: the MP4, M4V and MOV files in your Movies "
