@@ -32,6 +32,10 @@ What the owner was promised, and where each promise is kept:
   answered, and so is a request sent to any name that isn't this computer at home.
   Nothing is ever sent to the internet, and no port is opened on the router. The
   listener lives inside `musicorg serve`, which stops when the app does.
+- **Awake while a device syncs** (2026-10-10). A paired device asking for the list or
+  a file, or sending its changes, keeps the computer from going to sleep until it has
+  asked for nothing for two minutes (`Share.busy`, as the queue does while it
+  downloads). Nobody without a key can, and switching sharing off ends it at once.
 
 **Privacy.** No address, computer name, pairing code or key is ever logged or put in an
 error, and no key is given out over RPC. Every id in the list is a hash: a phone never
@@ -65,7 +69,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlsplit
 
-from musicorg import browse, config, listening, naming
+from musicorg import browse, config, listening, naming, tools
 from musicorg import state as state_file
 from musicorg.errors import MusicOrgError, NotFoundError, UserError
 from musicorg.index import open_index
@@ -89,6 +93,10 @@ WRONG_TRIES = 5  # this many wrong codes…
 LOCK_S = 60  # …and every code is refused for this long
 REBUILD_LEAST_S = 5.0  # a file the list doesn't name: the list is made again, this often at most
 QUIET_S = 60.0  # between two log lines about callers turned away
+# While a paired device syncs, the computer is kept from going to sleep (2026-10-10): a
+# film takes minutes to copy, and a computer that slept half-way cut the sync off.
+AWAKE_QUIET_S = 120.0  # it may sleep again once the device has asked for nothing this long
+AWAKE_CHECK_S = 1.0  # how often that's looked at
 REQUEST_WAIT_S = 20  # a caller that goes silent is let go
 CHUNK = 64 * 1024
 MAX_BODY = 4096  # a pairing request is a few dozen bytes
@@ -660,6 +668,9 @@ class Share:
         self._built_at: float | None = None
         self._remembered: dict[tuple[str, int, int], dict[str, Any]] = {}
         self._turned_away_at: float | None = None
+        self._awake_until = 0.0  # a paired device asked for something: awake until then
+        self._awake: threading.Thread | None = None
+        self._off = threading.Event()  # sharing was switched off: awake no longer
 
     # -- on and off --
 
@@ -674,6 +685,7 @@ class Share:
     def start(self) -> None:
         if self._http is not None:
             return
+        self._off.clear()
         self._http = _listen(self, self._host, self._port)
         threading.Thread(
             target=self._http.serve_forever,
@@ -684,10 +696,15 @@ class Share:
         log.info("sharing: switched on")
 
     def stop(self) -> None:
-        """Stop listening, at once: a file on its way to a phone is cut off too."""
+        """Stop listening, at once: a file on its way to a phone is cut off too, and a
+        computer kept awake for a syncing device may sleep again."""
         with self._lock:
             listener, self._http = self._http, None
             self._code = None
+            awake = self._awake
+        self._off.set()
+        if awake is not None:
+            awake.join(timeout=10)
         if listener is None:
             return
         listener.shutdown()
@@ -813,6 +830,40 @@ class Share:
                 self._took()
         return dealt_with
 
+    # -- awake while a device syncs --
+
+    def busy(self) -> None:
+        """A paired device is syncing: it asked for the list or a file, or is being sent
+        one, or sent its changes. The computer is kept from going to sleep until the
+        device has asked for nothing for `AWAKE_QUIET_S` (the screen may still turn
+        off), as it is while the queue downloads (`tools.keep_awake`). Only a paired
+        device's requests count: nobody else can keep the computer awake. Switching
+        sharing off lets it sleep at once."""
+        with self._lock:
+            if self._http is None:
+                return
+            self._awake_until = self._clock() + AWAKE_QUIET_S
+            if self._awake is None:
+                self._awake = threading.Thread(
+                    target=self._stay_awake, name="sharing-awake", daemon=True
+                )
+                self._awake.start()
+
+    def _stay_awake(self) -> None:
+        """Holds the computer awake, from one thread from start to end (Windows ties
+        it to the thread that asked), until the device has gone quiet or sharing is
+        switched off."""
+        log.info("sharing: a device is syncing, so the computer is kept awake")
+        with tools.keep_awake():
+            while True:
+                with self._lock:
+                    left = self._awake_until - self._clock()
+                    if left <= 0 or self._http is None:
+                        self._awake = None
+                        break
+                self._off.wait(min(left, AWAKE_CHECK_S))
+        log.info("sharing: the device has gone quiet, so the computer may sleep again")
+
     def turned_away(self) -> None:
         """A caller from outside the home network was dropped. Said in the log, without
         its address, and not for every one of a run of them."""
@@ -906,6 +957,7 @@ class _Handler(BaseHTTPRequestHandler):
         if device is None:
             self._answer(401, refusal("not_paired", "This device isn't paired with the computer."))
             return
+        share.busy()  # a paired device is syncing: the computer stays awake for it
         if path == PREFIX + "library":
             try:
                 found = share.make_list()
@@ -964,6 +1016,7 @@ class _Handler(BaseHTTPRequestHandler):
         if _device_with(self.headers.get("Authorization")) is None:
             self._answer(401, refusal("not_paired", "This device isn't paired with the computer."))
             return
+        share.busy()
         if "changes" not in share.accepts:  # as `hello` said: nothing is taken here
             self._answer(404, refusal("not_found", "There's nothing at that address."))
             return
@@ -1069,6 +1122,7 @@ class _Handler(BaseHTTPRequestHandler):
                     break
                 self.wfile.write(chunk)
                 left -= len(chunk)
+                self.server.share.busy()  # a film is minutes of this: still syncing
         return True
 
     def _part(self, shared: SharedFile) -> tuple[int, int] | None:

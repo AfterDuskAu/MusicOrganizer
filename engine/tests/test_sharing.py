@@ -8,14 +8,16 @@ address, pairing code or key is written in this file: each is made while the tes
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import http.client
 import json
 import logging
 import os
 import shutil
+import time
 import uuid
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
@@ -24,7 +26,7 @@ import pytest
 from conftest import LOOPBACK
 from test_rpc import Capture, code, opened, out, result, root, server  # noqa: F401  (fixtures)
 
-from musicorg import browse, config, library, listening, naming, rpc, scan, sharing, tags
+from musicorg import browse, config, library, listening, naming, rpc, scan, sharing, tags, tools
 from musicorg.index import open_index
 from musicorg.library import Library
 
@@ -1354,6 +1356,80 @@ def test_an_engine_without_the_librarys_lock_takes_nothing(
         finally:
             again.stop()
     assert playlists(filled) == [MORNING]
+
+
+# ---- awake while a device syncs (2026-10-10) ------------------------------------------------
+
+
+class Awake:
+    """Stands in for `tools.keep_awake`: how often the computer was kept awake, and how
+    often it was let go again."""
+
+    def __init__(self) -> None:
+        self.kept = 0
+        self.let_go = 0
+
+    @contextlib.contextmanager
+    def __call__(self) -> Iterator[None]:
+        self.kept += 1
+        try:
+            yield
+        finally:
+            self.let_go += 1
+
+
+def before_long(true: Callable[[], bool]) -> bool:
+    """Whether something comes true within a few seconds (it's done on another thread)."""
+    until = time.monotonic() + 5
+    while not true() and time.monotonic() < until:
+        time.sleep(0.01)
+    return true()
+
+
+def test_the_computer_stays_awake_while_a_paired_device_syncs(
+    filled: Library, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    awake = Awake()
+    monkeypatch.setattr(tools, "keep_awake", awake)
+    monkeypatch.setattr(sharing, "AWAKE_CHECK_S", 0.01)
+    now = [1000.0]
+    share = sharing.Share(filled, clock=lambda: now[0])
+    share.start()
+    try:
+        # Nobody without a key keeps the computer awake, and pairing isn't syncing.
+        ask(share, "/sync/v1/hello")
+        ask(share, "/sync/v1/pair", body={"code": "0" * 6, "device": "iPhone"})
+        ask(share, "/sync/v1/library")
+        ask(share, "/sync/v1/library", key="not-a-key-" + "x" * 20)
+        ask(share, "/sync/v1/changes", body={"changes": []})
+        key = paired(share)
+        ask(share, "/sync/v1/hello", key=key)
+        time.sleep(0.1)
+        assert (awake.kept, awake.let_go) == (0, 0)
+
+        found = the_list(share, key)  # a sync begins
+        assert before_long(lambda: awake.kept == 1) and awake.let_go == 0
+        # Each file asked for puts off the moment the computer may sleep.
+        for _ in range(3):
+            now[0] += sharing.AWAKE_QUIET_S - 1
+            fetch(share, key, found["tracks"][0]["audio"])
+            time.sleep(0.05)
+            assert (awake.kept, awake.let_go) == (1, 0)
+        # The device has asked for nothing for long enough: the computer may sleep.
+        now[0] += sharing.AWAKE_QUIET_S + 1
+        assert before_long(lambda: awake.let_go == 1) and awake.kept == 1
+
+        # Its next sync keeps the computer awake again (sending changes is syncing too),
+        # and switching sharing off lets it sleep at once.
+        assert tell(share, key) == []
+        assert before_long(lambda: awake.kept == 2) and awake.let_go == 1
+        share.stop()
+        assert awake.let_go == 2
+        share.busy()  # nothing is shared: nothing keeps the computer awake
+        time.sleep(0.05)
+        assert awake.kept == 2
+    finally:
+        share.stop()
 
 
 def test_the_app_is_told_what_a_phone_changed(

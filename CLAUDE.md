@@ -156,6 +156,7 @@ Weekly mix, a Subsonic-compatible server (but see sharing, below), packaging, si
 - The library and nothing else, unless the owner switches on "movies and downloaded videos too" (2026-10-08, off as standard): then the MP4, M4V and MOV files in the Movies folder and the videos folder are in the list too (`movies`), still read-only.
 - A device is paired once, with a six-digit code shown on the Mac.
 - The home network only, and only while Music Organizer is open: only callers with a private (RFC 1918), link-local or loopback address are answered, no port is ever opened on the router (no UPnP), and nothing is sent to the internet.
+- While a paired device is syncing, the engine keeps the Mac awake (2026-10-10), as the queue does while it downloads: from the device's request for the list, a file or its changes until it has been quiet for two minutes. Nobody without a key can keep it awake, and switching sharing off lets it sleep at once.
 
 **Videos and movies beside the music were started on 2026-10-07, at the owner's request** ("from now on it won't be a music organizer, but a media organiser"; the app keeps its name until the owner chooses a new one). The owner's decisions:
 
