@@ -324,6 +324,11 @@ final class AppModel {
     }
 
     @ObservationIgnored private var engine: EngineProcess?
+    /// Listening time the player has reported and the engine hasn't been told yet, in
+    /// seconds by song, and the wait before it's told (`countListening`).
+    @ObservationIgnored private var heldListening: [String: Double] = [:]
+    @ObservationIgnored private var listeningToTell: Task<Void, Never>?
+    private static let listeningWait: Duration = .seconds(5)
     /// Tells the home network this Mac is sharing, while it is.
     @ObservationIgnored private let announcer = HomeAnnouncer()
     @ObservationIgnored private var stopping = false
@@ -461,10 +466,7 @@ final class AppModel {
         NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification, object: nil, queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated {
-                self?.tellListeningBeforeClosing()
-                self?.stopEngine()
-            }
+            MainActor.assumeIsolated { self?.stopEngine() }
         }
         // Leaving macOS's full screen by its own means (the green button, the menu)
         // puts the video or the visualizer back in the page as well.
@@ -553,6 +555,7 @@ final class AppModel {
     }
 
     private func stopEngine() {
+        tellListeningNow()  // the last of a song's listening time, while there's an engine
         announcer.stop()  // nothing is shared once the engine has gone
         stopping = true
         engine?.stop()
@@ -1198,6 +1201,7 @@ final class AppModel {
 
     private func open(_ folder: URL) async {
         guard let connection = engine?.connection else { return }
+        tellListeningNow()  // what was listened to in the library that's open till now
         phase = .loading
         do {
             if profiles.current.isNew, profiles.current.libraryRoot == folder.path {
@@ -1393,22 +1397,53 @@ final class AppModel {
 
     /// The player spent this much more time playing a song. A song played from the
     /// service isn't the owner's, and has nothing to keep its time by.
+    ///
+    /// The engine isn't told at once. It saves the library's records for each telling,
+    /// which takes it a tenth of a second, and it answers the app's requests in turn:
+    /// told at the moment of a skip, the next song's lyrics waited behind that save
+    /// (measured 2026-10-10). So the time is held here and told a few seconds later,
+    /// when nothing is waiting, with whatever else has been held by then.
     private func countListening(of track: Track, _ seconds: Double) {
         guard let id = track.trackId else { return }
+        heldListening[id, default: 0] += seconds
+        guard listeningToTell == nil else { return }
+        listeningToTell = Task { [weak self] in
+            try? await Task.sleep(for: Self.listeningWait)
+            if !Task.isCancelled { self?.tellListening() }
+        }
+    }
+
+    private func tellListening() {
+        listeningToTell = nil
+        let held = heldListening
+        heldListening = [:]
+        guard !held.isEmpty else { return }
         change { connection in
-            let total = try await connection.call(
-                "listening.listened", ["track_id": id, "seconds": seconds], as: ListenedTotal.self)
-            self.listening.listened = (self.listening.listened ?? [:])
-                .merging([id: total.seconds]) { _, new in new }
+            for (id, seconds) in held {
+                let total = try await connection.call(
+                    "listening.listened", ["track_id": id, "seconds": seconds],
+                    as: ListenedTotal.self)
+                self.listening.listened = (self.listening.listened ?? [:])
+                    .merging([id: total.seconds]) { _, new in new }
+            }
             self.listenedVersion += 1
         }
     }
 
-    /// The app is closing with a song part heard: its time is sent without waiting for
-    /// an answer, ahead of the engine being told to stop, which deals with it first.
-    private func tellListeningBeforeClosing() {
-        guard let untold = player.listenedUntold(), let id = untold.track.trackId else { return }
-        engine?.connection.tell("listening.listened", ["track_id": id, "seconds": untold.seconds])
+    /// The engine is about to stop, or to open another library: the time held, and what
+    /// the song that's playing has added since, is sent now without waiting for an
+    /// answer. The engine deals with its requests in the order they were sent, so the
+    /// time is kept, and kept with the library it was listened in.
+    private func tellListeningNow() {
+        listeningToTell?.cancel()
+        listeningToTell = nil
+        if let untold = player.listenedUntold(), let id = untold.track.trackId {
+            heldListening[id, default: 0] += untold.seconds
+        }
+        for (id, seconds) in heldListening {
+            engine?.connection.tell("listening.listened", ["track_id": id, "seconds": seconds])
+        }
+        heldListening = [:]
     }
 
     /// A paired phone made a playlist, put a song in one, or said how long it has been
