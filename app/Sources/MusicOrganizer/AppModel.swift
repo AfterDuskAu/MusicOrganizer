@@ -305,6 +305,12 @@ final class AppModel {
     /// Downloads the owner asked to take out of the library, their files kept, waiting
     /// for their yes.
     var removingDownloads: [Track]?
+    /// The downloads deleted from the library whose files were kept, newest first: the
+    /// log in Settings → Deleted Items. Empty until that section has asked for it.
+    private(set) var removedLog: [RemovedSong] = []
+    /// The ones being put back right now (their batches).
+    private(set) var puttingBack: Set<String> = []
+    private var removedAsked = false
 
     struct BatchDownload {
         let planId: String
@@ -1165,6 +1171,7 @@ final class AppModel {
         (connectingLastfm, lastfmNote) = (false, nil)
         (sharing, sharingNote, pairingCode, justPaired) = (nil, nil, nil, nil)
         (auto, batch, deletingDownloads, removingDownloads, lastAuto) = (nil, nil, nil, nil, nil)
+        (removedLog, puttingBack, removedAsked) = ([], [], false)
         (youtubeQuery, youtubeResults, youtubeProblem, searchText) = ("", [], nil, "")
         libraryVersion += 1
         for page in [whatsNew, find, remixes] { page.reset() }
@@ -2649,12 +2656,78 @@ final class AppModel {
         if let current = player.current, paths.contains(current.path) { player.stop() }
         Task {
             do {
-                var asked: [String: Any] = ["paths": paths]
-                if keepingFiles { asked["keep"] = true }
-                _ = try await run(plan: "remove", asked)
+                if keepingFiles {
+                    try await setAside(paths)
+                    return
+                }
+                _ = try await run(plan: "remove", ["paths": paths])
             } catch {
                 notice = error.localizedDescription
                 try? await load()
+            }
+        }
+    }
+
+    /// Take downloads out of the library and keep their files: each as a batch of its
+    /// own, so Settings → Deleted Items can put back one song without the others.
+    private func setAside(_ paths: [String]) async throws {
+        guard let connection = engine?.connection else {
+            throw RPCError(code: RPCError.closed, message: "The engine isn't running.")
+        }
+        var batches: [String] = []
+        for path in paths {
+            let plan = try await connection.call(
+                "plan.create", ["kind": "remove", "options": ["paths": [path], "keep": true]],
+                as: PlanAnswer.self)
+            let batch = try await connection.call(
+                "plan.apply", ["plan_id": plan.planId], as: BatchAnswer.self)
+            batches.append(batch.batchId)
+        }
+        // Each is a file moved: they're over almost as soon as they're asked for.
+        var failed: String?
+        for batch in batches {
+            var jobs: [JobsAnswer.Job] = []
+            for _ in 0..<200 {
+                jobs = try await connection.call("queue.jobs", ["batch_id": batch], as: JobsAnswer.self).jobs
+                if jobs.allSatisfy(\.isOver) { break }
+                try await Task.sleep(for: .milliseconds(300))
+            }
+            if failed == nil, let one = jobs.first(where: { !$0.worked }) {
+                failed = one.message ?? one.reason?.replacingOccurrences(of: "_", with: " ") ?? "It didn't work."
+            }
+        }
+        try? await load()
+        if removedAsked { loadRemoved() }
+        if let failed { throw RPCError(code: 0, message: failed) }
+    }
+
+    // MARK: the downloads deleted from the library and kept (Settings → Deleted Items)
+
+    /// Ask the engine for the log again.
+    func loadRemoved() {
+        removedAsked = true
+        Task {
+            if let found = try? await ask("library.removed", [:], as: RemovedAnswer.self) {
+                if removedLog != found.removed { removedLog = found.removed }
+            }
+        }
+    }
+
+    /// Put one back in the library (its Undo): the file returns to where it was, and the
+    /// song to the library's lists. It stays in the log, as put back.
+    func putBack(_ entry: RemovedSong) {
+        guard entry.canPutBack, !puttingBack.contains(entry.batchId) else { return }
+        puttingBack.insert(entry.batchId)
+        Task {
+            defer { puttingBack.remove(entry.batchId) }
+            do {
+                removedLog = try await ask(
+                    "library.put_back", ["batch_id": entry.batchId], as: RemovedAnswer.self
+                ).removed
+                try? await load()
+            } catch {
+                notice = error.localizedDescription
+                loadRemoved()
             }
         }
     }

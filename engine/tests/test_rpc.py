@@ -658,6 +658,10 @@ def test_stream_jobs_and_the_new_plan_kinds(
     )
     assert code(opened, "plan.create", kind="remove", options={"paths": []}) == rpc.USER_ERROR
     assert code(opened, "plan.create", kind="remove", options={}) == rpc.INVALID_PARAMS
+    # The log of downloads deleted and kept is empty, and nothing else can be put back.
+    assert result(opened, "library.removed") == {"removed": []}
+    assert code(opened, "library.put_back", batch_id="b_nothing") == rpc.USER_ERROR
+    assert code(opened, "library.put_back") == rpc.INVALID_PARAMS
     # `keep` (out of the library, the file kept) is yes or no, and nothing else.
     assert (
         code(

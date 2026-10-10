@@ -718,6 +718,14 @@ struct MainView: View {
                 model.searchText = words
             } else if step.name.hasPrefix("finder=") {
                 model.youtubeQuery = String(step.name.dropFirst(7))
+            } else if step.name == "putback" {
+                // The newest song in Settings → Deleted Items put back: its Undo.
+                if let newest = model.removedLog.first(where: \.canPutBack) {
+                    Bench.say("BENCH putback: \(newest.title), deleted \(newest.removedAt)")
+                    model.putBack(newest)
+                } else {
+                    Bench.say("BENCH putback: nothing in the log can be put back")
+                }
             } else if step.name == "remove=library" {
                 // The newest download taken out of the library, its file kept: what
                 // Delete from Library does once the owner has said yes.

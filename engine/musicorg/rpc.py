@@ -309,6 +309,8 @@ class Server:
             "library.init": self.library_init,
             "library.open": self.library_open,
             "library.status": self.library_status,
+            "library.removed": self.library_removed,
+            "library.put_back": self.library_put_back,
             "library.tracks": self.library_tracks,
             "library.lyrics": self.library_lyrics,
             "listening.get": self.listening_get,
@@ -637,6 +639,25 @@ class Server:
         self.lib = library.open(root, write=True, command="musicorg serve")
         self.start_queue()
         return {"status": "open"}
+
+    def library_removed(self, params: dict[str, Any]) -> dict[str, Any]:
+        """The downloads deleted from the library whose files were kept: a log."""
+        return {"removed": pipeline.removed(self._library())}
+
+    def library_put_back(self, params: dict[str, Any]) -> dict[str, Any]:
+        """One of them put back in the library: that batch undone, here and now (it's a
+        file or three), so what went wrong is said in the answer."""
+        batch_id = need(params, "batch_id", str)
+        lib = self._library()
+        with self._busy_lock:
+            if self._job is not None and self._job.thread.is_alive():
+                raise RpcError(BUSY, f"The engine is busy with {self._job.kind}; try again when "
+                               "it has finished.")  # fmt: skip
+        result = pipeline.put_back(lib, batch_id).to_dict()
+        back = sum(op["status"] == "done" for op in result["operations"])
+        note = {"batch_id": batch_id, "tracks_added": back, "tracks_changed": 0}
+        self.writer.notify("library.changed", note)
+        return {"removed": pipeline.removed(lib)}
 
     def library_status(self, params: dict[str, Any]) -> dict[str, Any]:
         lib = self._library()

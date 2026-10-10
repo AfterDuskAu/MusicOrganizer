@@ -4452,6 +4452,75 @@ def test_a_download_can_be_taken_out_of_the_library_and_kept(
         assert [t["path"] for t in browse.tracks(lib, again)] == [rel]
 
 
+def test_the_log_of_downloads_deleted_and_kept_and_putting_one_back(
+    lib: Library, index: Index, downloads: FakeDownloads, fake_trash: Any,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:  # fmt: skip
+    # Settings → Deleted Items (the owner, 2026-10-10): what was deleted from the library
+    # and not from the computer, kept as a log, each with a way back.
+    found = {
+        VIDEO_A: candidate(VIDEO_A, "Melody", ("Band",), SECONDS, album="Tunes"),
+        VIDEO_B: candidate(VIDEO_B, "Other", ("Band",), SECONDS, album="Tunes"),
+    }
+    monkeypatch.setattr(youtube, "get_track", lambda video_id: found.get(video_id))
+    apply_and_run(lib, index, pipeline.plan_download(lib, index, [VIDEO_A, VIDEO_B]))
+    (first, second) = sorted(f"Music/{f}" for f in music_files(lib) if f.endswith(".m4a"))
+    assert pipeline.removed(lib) == []
+
+    # One kept, one to the Trash: only the kept one is in the log.
+    kept_batch = apply_and_run(lib, index, pipeline.plan_remove(lib, index, [first], keep=True))
+    apply_and_run(lib, index, pipeline.plan_remove(lib, index, [second]))
+    (entry,) = pipeline.removed(lib)
+    assert (entry["batch_id"], entry["state"], entry["together"]) == (kept_batch, "kept", 1)
+    assert (entry["artist"], entry["video"]) == ("Band", False)
+    assert entry["title"] in ("Melody", "Other")
+    title = entry["title"]
+    assert entry["path"] == first
+    assert entry["kept_at"] == first.replace("Music/", "_Replaced/", 1)
+    assert entry["restored_at"] is None and entry["removed_at"]
+
+    # Put back: it's in the library again, and still in the log, as put back.
+    with pytest.raises(UserError, match="deleted from the library and kept"):
+        pipeline.put_back(lib, "b_nothing")
+    pipeline.put_back(lib, kept_batch)
+    assert [f"Music/{f}" for f in music_files(lib) if f.endswith(".m4a")] == [first]
+    with open_index(lib.paths, write=True) as again:
+        assert [t["path"] for t in browse.tracks(lib, again)] == [first]
+    (entry,) = pipeline.removed(lib)
+    assert (entry["state"], entry["title"], entry["artist"]) == ("restored", title, "Band")
+    assert entry["restored_at"] is not None
+
+    # Deleted and kept once more, then its file taken out of _Replaced by hand: the log
+    # says so, with the name it had.
+    with open_index(lib.paths, write=True) as again:
+        second_batch = apply_and_run(
+            lib, again, pipeline.plan_remove(lib, again, [first], keep=True)
+        )
+    newest, older = pipeline.removed(lib)
+    assert (newest["batch_id"], newest["state"]) == (second_batch, "kept")
+    assert (older["batch_id"], older["state"]) == (kept_batch, "restored")
+    (lib.root / newest["kept_at"]).unlink()
+    newest = pipeline.removed(lib)[0]
+    assert (newest["state"], newest["title"], newest["artist"]) == ("missing", title, "Band")
+
+
+def test_only_a_kept_delete_can_be_put_back(
+    lib: Library, index: Index, downloads: FakeDownloads, fake_trash: Any,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:  # fmt: skip
+    found = {VIDEO_A: candidate(VIDEO_A, "Melody", ("Band",), SECONDS, album="Tunes")}
+    monkeypatch.setattr(youtube, "get_track", lambda video_id: found.get(video_id))
+    downloaded = apply_and_run(lib, index, pipeline.plan_download(lib, index, [VIDEO_A]))
+    (rel,) = [f"Music/{f}" for f in music_files(lib) if f.endswith(".m4a")]
+    # Not the batch that downloaded it, and not one that sent it to the Trash.
+    with pytest.raises(UserError, match="deleted from the library and kept"):
+        pipeline.put_back(lib, downloaded)
+    trashed = apply_and_run(lib, index, pipeline.plan_remove(lib, index, [rel]))
+    with pytest.raises(UserError, match="deleted from the library and kept"):
+        pipeline.put_back(lib, trashed)
+    assert pipeline.removed(lib) == []
+
+
 def test_a_plan_made_before_keeping_was_offered_still_goes_to_the_trash(
     lib: Library, index: Index, videos: FakeVideoDownloads, fake_trash: Any
 ) -> None:

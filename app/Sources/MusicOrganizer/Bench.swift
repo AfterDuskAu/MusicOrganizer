@@ -13,6 +13,8 @@ import AppKit
 /// - `finder=<words>`: these words in Music Finder's search box, as if typed (not searched for)
 /// - `remove=library`: the newest download taken out of the library, its file kept (never
 ///   on a library that matters: it's what Delete from Library does after the owner's yes)
+/// - `putback`: the newest song in Settings → Deleted Items put back (its Undo); the
+///   section has to have been opened first (`settings=deleted`)
 /// - `sort=<column>`: the song table showing, sorted by this column (`sort=-year`: backwards)
 /// - `select=<row>+<row>`: these rows of it selected
 /// - `column=<name>`: this column of it shown, or hidden if it's showing

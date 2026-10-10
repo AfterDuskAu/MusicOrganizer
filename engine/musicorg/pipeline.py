@@ -88,6 +88,7 @@ from musicorg import (
 from musicorg.config import Config, media_folders
 from musicorg.errors import (
     AudioError,
+    MusicOrgError,
     NotFoundError,
     PlanOutOfDateError,
     UndoError,
@@ -2710,6 +2711,103 @@ def remove_job(ctx: JobContext) -> Outcome:
     if keep:
         return Outcome.done(f"{path.name} is out of the library, kept in {naming.REPLACED_DIR}.")
     return Outcome.done(f"{path.name} is in the Trash.")
+
+
+# ---- the downloads deleted from the library and kept: a log, and a way back -------------
+
+MAX_REMOVED_LISTED = 500
+_COMPANIONS = (".lrc",)  # what's set aside with a song, beside the album's cover
+
+
+def removed(lib: Library) -> list[dict[str, Any]]:
+    """The downloads the owner deleted from the library and kept (`plan_remove` with
+    `keep`), newest first: a log, read from the journal, for the app's Settings → Deleted
+    Items (the owner, 2026-10-10). One that has been put back since stays listed, as
+    `restored`; one whose file is no longer in `_Replaced/` (moved or deleted by hand)
+    as `missing`. Nothing is written. (docs/ENGINE_API.md → Removed.)"""
+    journal = fileops.read_journal(lib)
+    # (the batch, the operation) → when it was undone, and where the file came back to.
+    undone: dict[tuple[str, int], tuple[str, str | None]] = {}
+    for record in journal.values():
+        if record.undo_of is None:
+            continue
+        for op in record.ops:
+            target = op.intent.get("undoes")
+            if isinstance(target, int) and op.status == "done":
+                undone.setdefault((record.undo_of, target), (record.started_at, op.result_path))
+    found: list[dict[str, Any]] = []
+    for record in reversed(list(journal.values())):
+        if record.kind != "remove":
+            continue
+        songs = [op for op in record.ops if _is_song_set_aside(op)]
+        for op in songs:
+            was = str(op.intent.get("src") or "")
+            kept_at = op.result_path
+            back = undone.get((record.batch_id, op.op_id))
+            if back is not None:
+                state, now_at = "restored", back[1]
+            elif kept_at and _in_library(lib, kept_at).is_file():
+                state, now_at = "kept", kept_at
+            else:
+                state, now_at = "missing", None
+            title, artist = _names_of(lib, now_at, was)
+            found.append({
+                "batch_id": record.batch_id,
+                "op_id": op.op_id,
+                "title": title,
+                "artist": artist,
+                "path": was,
+                "kept_at": kept_at,
+                "removed_at": record.started_at,
+                "state": state,
+                "restored_at": back[0] if back is not None else None,
+                "together": len(songs),
+                "video": naming.is_video_path(was),
+            })  # fmt: skip
+            if len(found) >= MAX_REMOVED_LISTED:
+                return found
+    return found
+
+
+def put_back(lib: Library, batch_id: str) -> fileops.UndoResult:
+    """Put a download the owner deleted from the library, and kept, back in it (the
+    app's Undo in Settings → Deleted Items): the undo of that one batch, and of no
+    other kind of batch."""
+    record = fileops.read_journal(lib).get(batch_id)
+    if (
+        record is None
+        or record.kind != "remove"
+        or not any(_is_song_set_aside(op) for op in record.ops)
+    ):
+        raise UserError("That isn't a song that was deleted from the library and kept.")
+    return undo(lib, batch_id)
+
+
+def _is_song_set_aside(op: fileops.OpRecord) -> bool:
+    """A song or video moved to `_Replaced/`, as against its lyrics or its album's cover."""
+    if op.op != "supersede" or op.status != "done":
+        return False
+    name = PurePosixPath(str(op.intent.get("src") or "")).name
+    return bool(name) and name != naming.COVER_NAME and not name.endswith(_COMPANIONS)
+
+
+def _in_library(lib: Library, rel: str) -> Path:
+    return lib.root.joinpath(*PurePosixPath(rel).parts)
+
+
+def _names_of(lib: Library, rel: str | None, was: str) -> tuple[str, str | None]:
+    """A set-aside song's title and artist: from its tags, wherever its file is now, and
+    failing that from the name it had in the library (`Music/<Artist>/<Album>/NN Title`)."""
+    if rel:
+        try:
+            read = tags.read_tags(_in_library(lib, rel))
+            if isinstance(read.title, str) and read.title:
+                return read.title, read.artist if isinstance(read.artist, str) else None
+        except (OSError, MusicOrgError):
+            pass
+    path = PurePosixPath(was)
+    title = re.sub(r"^\d+\s+", "", path.stem) or path.stem
+    return title, path.parts[1] if len(path.parts) > 3 else None
 
 
 # ---- songs from another profile's library (2026-10-03) ----------------------------------

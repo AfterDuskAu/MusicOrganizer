@@ -18,6 +18,7 @@ struct SettingsView: View {
     private static let sections: [(key: String, title: String)] = [
         ("profile", "Profile"), ("play", "Play Options"), ("downloads", "Downloads"),
         ("lyrics", "Lyrics"), ("addons", "Add-ons"), ("sharing", "Sync"),
+        ("deleted", "Deleted Items"),
     ]
 
     /// The section showing. One remembered from before Settings was regrouped opens Profile.
@@ -99,6 +100,7 @@ private struct SettingsSection: View {
             case "lyrics": LyricsSettings()
             case "sharing": SharingSettings()
             case "addons": AddonSettings()
+            case "deleted": DeletedItemsSettings()
             default: ProfileSettingsTab()
             }
         }
@@ -107,6 +109,7 @@ private struct SettingsSection: View {
             guard now else { return }
             if key == "sharing" { model.loadSharing() }
             if key == "downloads" { model.loadSettings() }
+            if key == "deleted" { model.loadRemoved() }
         }
     }
 }
@@ -994,6 +997,67 @@ private struct LyricsSettings: View {
 /// Settings → Add-ons (2026-10-08): where Movie Finder and Explore get their lists
 /// from. Each is an address that answers with lists, details and where something can
 /// be played; the engine keeps the owner's list of them and does all the asking.
+/// Settings → Deleted Items (the owner, 2026-10-10): the downloads deleted from the
+/// library but not from this Mac, kept as a log, each with a button to undo it.
+private struct DeletedItemsSettings: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let log = model.removedLog
+        Form {
+            Section("Deleted from Your Library, Still on This Mac") {
+                if log.isEmpty {
+                    Text("Nothing has been deleted this way yet.").foregroundStyle(.secondary)
+                }
+                ForEach(log) { entry in
+                    row(entry)
+                }
+                SideNote(
+                    "A download you delete from your library, but not from this Mac, is listed "
+                        + "here, and stays listed. Its file is kept in the library folder's "
+                        + "“_Replaced” folder. Undo puts the song back in your library; it "
+                        + "doesn't go back into the playlists or favourites it was in. A song "
+                        + "deleted from the computer went to the Trash, and isn't listed.")
+            }
+        }
+        .formStyle(.grouped)
+        .scrollContentBackground(Theme.current.listBackground)
+        .task(id: model.phase) { model.loadRemoved() }
+    }
+
+    private func row(_ entry: RemovedSong) -> some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(entry.title).fontWeight(.medium).lineLimit(1)
+                Text(entry.detail(day: Self.day))
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 8)
+            if let outcome = entry.outcome(day: Self.day) {
+                Text(outcome).font(.callout).foregroundStyle(.secondary)
+            } else if model.puttingBack.contains(entry.batchId) {
+                ProgressView().controlSize(.small)
+            } else {
+                Button(entry.together > 1 ? "Undo (\(entry.together) songs)" : "Undo") {
+                    model.putBack(entry)
+                }
+                .help(
+                    entry.together > 1
+                        ? "Put this song back in your library, with the \(entry.together - 1) "
+                            + "deleted in the same go"
+                        : "Put this song back in your library")
+            }
+        }
+    }
+
+    /// One of the engine's times, as a day.
+    private static func day(_ time: String) -> String {
+        engineDate(time)?.formatted(date: .abbreviated, time: .omitted) ?? ""
+    }
+}
+
 private struct AddonSettings: View {
     @Environment(AppModel.self) private var model
     @State private var address = ""

@@ -29,6 +29,7 @@ A third door, section 3, is for a phone player on the home network. It only read
 | **Batch status** | `open` (running, or an open batch from `apply`) · `closed` · `interrupted` (closed by recovery after a crash) |
 | **Journal operation** | `commit` · `copy_in` · `supersede` · `restore` (back from `_Replaced/`, by undo) · `move` · `trash` · `write_tags` · `write_sidecar` |
 | **Undo step status** | `planned` (dry run) · `done` · `skipped` (already undone, or the file is gone) · `manual` (restore from the Trash by hand) |
+| **Removed state** (`library.removed`) | `kept` (its file is in `_Replaced/`: it can be put back) · `restored` (it has been put back since) · `missing` (its file is no longer in `_Replaced/`: moved or deleted by hand) |
 | **Torrent upload** (`settings.set`) | `max` (no limit) · `5` · `3` · `1` (megabytes a second at most) · `none` (nothing is sent on) |
 | **Kept kind** (`torrent.keep`; `movies` in home sync, section 3) | `movie` (a film, loose in the Movies folder: the standard) · `series` · `anime` (in the Movies folder's `Series` and `Anime` folders: contract, section 1) · `video` (home sync only: a file in the videos folder) |
 | **Sync file type** (home sync, section 3) | `m4a` · `mp3` · `flac` (sound) · `mp4` (a video) · `m4v` · `mov` (a kept film or video, with `mp4`) · `jpg` · `png` (a cover) · `lrc` (timed lyrics) · `txt` (plain lyrics) |
@@ -110,6 +111,8 @@ Exit codes:
 | `library.status` | — | `{ "items_by_state": {..}, "tracks", "only_copy", "queue": {..}, "warnings": [..] }` |
 | `library.tracks` | — | `{ "root", "tracks": [Track] }`: every song in the library, for the app's screens (v0.2). Slow the first time (it reads each file's tags once), instant afterwards. |
 | `library.lyrics` | `{ "path" }` (a Track's `path`) | `{ "synced", "plain" }`: the text of the song's `.lrc`, and the lyrics in its tags. Either may be null. |
+| `library.removed` | — | `{ "removed": [Removed] }` (2026-10-10): the downloads the owner deleted from the library and kept (a `remove` plan with `keep`), newest first, 500 at most. A log, read from the journal: one that was put back stays listed. The app's Settings → Deleted Items. |
+| `library.put_back` | `{ "batch_id" }` (a Removed's) | the same as `library.removed`, once that batch is undone, here and now: its songs are back under `Music/` (with a ` (2)` if their name has been taken since) and in the library's list, though not in the playlists or favourites they left; `library.changed` is sent. Only a batch `library.removed` lists can be put back this way: any other is -32000. Refused as busy while a job (a scan, an undo) is running. |
 | `listening.get` | — | `Listening`: the owner's favourites, play counts and playlists (v0.2), kept in `state.json`; and `heard`, the YouTube ids played all the way through (`listening.heard`) |
 | `listening.favourite` | `{ "track_id", "on" }` | `{ "favourites": [track_id] }` (most recent first) |
 | `listening.played` | `{ "track_id" }` (the app sends it when a song has played to its end) | `{ "count", "last_played" }` |
@@ -251,6 +254,14 @@ Standard JSON-RPC codes, plus:
 // whole thing back to `import.find` as it got it.
 { "title": "…", "artists": ["…"], "album": "… or null", "duration_s": 228,
   "is_explicit": true, "candidate": { /* Candidate */ } }
+
+// Removed (2026-10-10): a download deleted from the library whose file was kept.
+// `path` is where it was under `Music/`, `kept_at` where its file was set aside (both
+// relative to the library root). `together`: how many songs that batch set aside, since
+// putting one back puts them all back (the app deletes them one batch each, so 1).
+{ "batch_id": "b_…", "op_id": 1, "title": "…", "artist": "…", "path": "Music/…/03 Song.m4a",
+  "kept_at": "_Replaced/…/03 Song.m4a", "removed_at": "2026-10-10T04:43:19.000000Z",
+  "state": "kept", "restored_at": null, "together": 1, "video": false }
 
 // Track (v0.2). `path` and `cover` are relative to the library root, with `/` separators.
 // The app plays the file and shows the cover by reading them; it never writes to them.

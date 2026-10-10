@@ -393,6 +393,73 @@ public struct BatchAnswer: Decodable, Sendable {
     public let batchId: String
 }
 
+/// `library.removed`: a download deleted from the library whose file was kept (set aside
+/// in the library's `_Replaced` folder). The list is a log: one that was put back stays.
+public struct RemovedSong: Decodable, Identifiable, Equatable, Sendable {
+    public let batchId: String
+    public let opId: Int
+    public let title: String
+    public let artist: String?
+    /// Where it was in the library, and where its file was set aside.
+    public let path: String
+    public let keptAt: String?
+    public let removedAt: String
+    /// `kept` (it can be put back), `restored` (it has been), `missing` (its file is no
+    /// longer where it was set aside).
+    public let state: String
+    public let restoredAt: String?
+    /// How many songs were deleted in the same go: putting one back puts them all back.
+    public let together: Int
+    public let video: Bool
+
+    public var id: String { "\(batchId)/\(opId)" }
+    public var canPutBack: Bool { state == "kept" }
+
+    public init(
+        batchId: String, opId: Int = 1, title: String, artist: String? = nil, path: String = "",
+        keptAt: String? = nil, removedAt: String = "", state: String = "kept",
+        restoredAt: String? = nil, together: Int = 1, video: Bool = false
+    ) {
+        self.batchId = batchId
+        self.opId = opId
+        self.title = title
+        self.artist = artist
+        self.path = path
+        self.keptAt = keptAt
+        self.removedAt = removedAt
+        self.state = state
+        self.restoredAt = restoredAt
+        self.together = together
+        self.video = video
+    }
+
+    /// The line under the title: who it's by, and the day it was deleted. `day` writes
+    /// one of the engine's times as a day, the way the owner reads it.
+    public func detail(day: (String) -> String) -> String {
+        var parts: [String] = []
+        if let artist, !artist.isEmpty { parts.append(artist) }
+        if video { parts.append("video") }
+        let when = day(removedAt)
+        parts.append(when.isEmpty ? "deleted from your library" : "deleted \(when)")
+        return parts.joined(separator: " · ")
+    }
+
+    /// What stands where the Undo button was, once there's nothing to undo.
+    public func outcome(day: (String) -> String) -> String? {
+        switch state {
+        case "kept": return nil
+        case "restored":
+            let when = restoredAt.map(day) ?? ""
+            return when.isEmpty ? "Put back" : "Put back \(when)"
+        default: return "Its file is no longer kept"
+        }
+    }
+}
+
+public struct RemovedAnswer: Decodable, Sendable {
+    public let removed: [RemovedSong]
+}
+
 public struct JobsAnswer: Decodable, Sendable {
     public struct Job: Decodable, Sendable {
         public let state: String
