@@ -988,6 +988,12 @@
 - **Cause:** a replace job links the rip to the download and marks it `superseded`, but never looked for a copy of that rip already in the library. `plan tidy` only paired copies that share a YouTube id, and an unconfirmed copy has none.
 - **Fix:** `plan tidy` now treats an unconfirmed copy whose rip is `superseded`, and whose replacement is in the library, as a duplicate: it goes to `_Replaced/`, like any other. The summary's `replaced_copies` counts them. The rip itself is never touched. Left for later: doing this in the replace job itself, so no tidy is needed.
 
+2026-10-08. **The owner's own word over an unsure fingerprint: the `official` decision.** The owner listened to nine rips that are longer than the official track or another cut of it, and said "use official" for each. The gate had called each download `uncertain`, and nothing let them overrule it.
+
+- **A contract change, at the owner's request** (`CLAUDE.md` rule 7): a rip the owner decides with `official` (or `official:<n>`) in the review sheet is replaced even when the fingerprints come out `uncertain`. One decision for one song. A download the gate calls `different` is never taken, with or without it; without it, `uncertain` goes back to review as before.
+- `review import` records it as the usual accept with `"override": true`; `plan replace` then plans a rip whose download was turned down as unsure before (summary: `overrides`), and the replace job lets it through (`pipeline._passes`). The gate's result is still recorded. The rip's earlier copy is set aside by the next `plan tidy`.
+- Not built: the same choice on the review page and over RPC (the sheet only), and `official` with a pasted link.
+
 ## 0.1.1 — in progress
 
 ### Step 09d: Duplicates and preferred names (the owner's requests, 2026-09-30)

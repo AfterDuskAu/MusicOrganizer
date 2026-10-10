@@ -638,7 +638,8 @@ def _cmd_review_export(args: argparse.Namespace) -> int:
     print(f"Wrote {result.rows:,} items to review: {result.path}")
     print(
         "Fill in the decision column (accept, cand:2, cand:3, url, only_copy, skip or "
-        "reject:1–3), save as CSV UTF-8, then run `musicorg review import` on it."
+        "reject:1–3; official to replace a song the sound check was unsure of), save as "
+        "CSV UTF-8, then run `musicorg review import` on it."
     )
     return EXIT_OK
 

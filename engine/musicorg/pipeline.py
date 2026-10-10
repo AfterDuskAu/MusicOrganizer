@@ -15,7 +15,9 @@ staging → check → tag → commit, through `fileops`, journaled and undoable.
   3. download format 140, then check it: AAC, at least 100 kbps, the length within 2 s
   4. **the fingerprint gate** against each rip (contract rule 7). `different` →
      `fingerprint_mismatch`, `uncertain` → `fingerprint_uncertain`: that rip goes back to
-     review. The result is kept in state.json ("gate"), so the same download is never
+     review. One exception, from 2026-10-08: an `uncertain` download passes when the
+     owner chose that track for the rip with the `official` decision (`_passes`).
+     The result is kept in state.json ("gate"), so the same download is never
      tried again. If no rip passes, the download is kept in `_Staging/` for 24 hours.
   5. the album from YouTube Music (the track number by the step 06 rule, never a guess)
   6. lyrics and the album cover (step 10, through `EXTRAS`)
@@ -260,7 +262,8 @@ def plan_replace(
             skip("no_candidate")
             continue
         verdict = gate.get(item["id"], {}).get(chosen["video_id"], {}).get("verdict")
-        if verdict in ("different", "uncertain"):
+        override = _owner_override(item, chosen, decisions)
+        if verdict == "different" or (verdict == "uncertain" and not override):
             skip(f"fingerprint_{'mismatch' if verdict == 'different' else 'uncertain'}_before")
             continue
         rip = Path(scan.item_path(folders, item))
@@ -285,6 +288,7 @@ def plan_replace(
                     "score": chosen["score"],
                     "rip": str(rip),
                     "stage_only": stage_only,
+                    "override": override,
                 },
             )
         )
@@ -303,6 +307,7 @@ def plan_replace(
         "low_confidence_adopts": 0,
         "only": only,
         "stage_only": stage_only,
+        "overrides": sum(1 for op in ops if op.params["override"]),
         "skipped": skipped,
     }
     plan = fileops.new_plan("replace", ops, summary)
@@ -540,6 +545,20 @@ def _chosen(
             if c["video_id"] == wanted:
                 return c
     return candidates[0]
+
+
+def _owner_override(
+    item: dict[str, Any], chosen: dict[str, Any], decisions: dict[str, dict[str, Any]]
+) -> bool:
+    """True when the owner chose this very track for the rip with `official`: their word
+    that it replaces the rip's copy even if the fingerprint gate is unsure (`uncertain`).
+    It never covers a track the gate calls `different`."""
+    decided = decisions.get(item["id"], {})
+    return (
+        item["state"] == "matched_user"
+        and decided.get("override") is True
+        and decided.get("video_id") == chosen["video_id"]
+    )
 
 
 def _unconfirmed_copies(index: Index) -> dict[str, str]:
@@ -987,9 +1006,13 @@ def replace_job(ctx: JobContext) -> Outcome:
         if payload.get("stage_only"):
             return _keep_for_calibration(ctx, path, video_id, results)
         _record_gate(ctx.lib, video_id, results)
-        passed = [op for op, result in results if result.verdict == "match"]
+        passed = [op for op, result in results if _passes(op, result)]
         for op, result in results:
-            if result.verdict != "match":
+            if _passes(op, result):
+                if result.verdict != "match":
+                    log.info("%s vs %s: %s, replaced on the owner's word (%s)",
+                             op.params["rip"], video_id, result.verdict, result.why)  # fmt: skip
+            else:
                 index.set_state(str(op.item_id), "review", [result.reason])
                 log.info("%s vs %s: %s (%s)", op.params["rip"], video_id, result.verdict,
                          result.why)  # fmt: skip
@@ -1022,6 +1045,15 @@ def replace_job(ctx: JobContext) -> Outcome:
     return Outcome.done(
         f"{final.name}: replaces {kept} rip{'s' if kept != 1 else ''}"
         + (f"; {len(results) - kept} back to review" if kept < len(results) else "")
+    )
+
+
+def _passes(op: fileops.PlanOp, result: GateResult) -> bool:
+    """Whether a rip's copy may be replaced by the download (contract rule 7): the
+    fingerprints match, or the gate is unsure and the owner chose this track for the rip
+    with `official`. A `different` download never passes."""
+    return result.verdict == "match" or (
+        result.verdict == "uncertain" and op.params.get("override") is True
     )
 
 
@@ -1067,9 +1099,9 @@ def _link_to_existing(
     existing_fp = fingerprint.fingerprint(existing, index=index)
     results = [(op, _gate(Path(op.params["rip"]), existing_fp, limits, index)) for op in live]
     _record_gate(ctx.lib, video_id, results)
-    passed = [op for op, result in results if result.verdict == "match"]
+    passed = [op for op, result in results if _passes(op, result)]
     for op, result in results:
-        if result.verdict != "match":
+        if not _passes(op, result):
             index.set_state(str(op.item_id), "review", [result.reason])
     if not passed:
         first = results[0][1]

@@ -11,6 +11,11 @@ Decisions (docs/ENGINE_API.md → CSV decision): `accept` (candidate 1), `cand:<
 (a pasted link, fetched and scored: below 0.6 it stays in review as `url_low_score`),
 `only_copy` (with the `*_fix` columns), `skip`, and `reject:<n>` (never proposed again).
 
+`official` / `official:<n>` (2026-10-08) takes candidate n like `accept` / `cand:<n>`, and
+adds the owner's word that this official track is to replace the rip's copy even if the
+fingerprint gate is unsure of it (`uncertain`): the decision carries `override`. A track
+the gate calls `different` is never taken (contract rule 7; `pipeline.replace_job`).
+
 A pasted link that scored low isn't accepted, but it is the owner's own suggestion, so
 its track becomes the item's candidate 1 whatever its score (`index.PASTED`), on the
 export, the review page and over RPC. `accept` then takes it like any candidate 1: the
@@ -64,7 +69,10 @@ _LINK = re.compile(
     r"|youtu\.be/)(?P<id>[A-Za-z0-9_-]{11})(?:[&?#]\S*)?",
     re.IGNORECASE,
 )
-_DECISION = re.compile(r"accept|url|only_copy|skip|(?:cand|reject)\s*:\s*[1-3]", re.IGNORECASE)
+_DECISION = re.compile(
+    r"accept|url|only_copy|skip|official(?:\s*:\s*[1-3])?|(?:cand|reject)\s*:\s*[1-3]",
+    re.IGNORECASE,
+)
 
 
 # ---- export ----------------------------------------------------------------------------
@@ -147,6 +155,7 @@ class Planned:
     item: dict[str, Any]
     kind: str  # accept, candidate, url, only_copy, skip or reject
     number: int | None = None  # the candidate, for accept/cand/reject
+    override: bool = False  # `official`: the owner's word over an unsure fingerprint gate
     video_id: str | None = None
     link: str | None = None  # a pasted url
     row_candidate: dict[str, str] = field(default_factory=dict)  # the row's candN columns
@@ -403,11 +412,13 @@ def _check_row(
         return None, None
     if not _DECISION.fullmatch(text):
         return None, (f"{text!r} isn't a decision; use accept, cand:2, cand:3, url, "
-                      "only_copy, skip or reject:1–3")  # fmt: skip
+                      "only_copy, skip, reject:1–3 or official")  # fmt: skip
     if item["state"] in ("superseded", "adopted"):
         return None, f"this rip was already {item['state']}; there's nothing left to decide"
     word, _, digit = text.lower().replace(" ", "").partition(":")
     plan = Planned(row=number, item=item, kind=word)
+    if word == "official":
+        word, plan.override = "cand", True
     if word in ("accept", "cand", "reject"):
         plan.number = int(digit) if digit else 1
         plan.kind = "reject" if word == "reject" else "accept" if plan.number == 1 else "candidate"
@@ -474,6 +485,8 @@ def _decide(
         chosen = _row_candidate(plan)
         entry.update(video_id=plan.video_id, candidate_id=chosen["id"],
                      title=chosen["payload"]["title"])  # fmt: skip
+        if plan.override:
+            entry["override"] = True
     elif plan.kind == "url":
         if track is None:
             return _Outcome(False, "review", ["video_unavailable"],
