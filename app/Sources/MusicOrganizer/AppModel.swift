@@ -39,6 +39,9 @@ final class AppModel {
     private(set) var libraryVersion = 0
     /// Goes up whenever a play is counted.
     private(set) var playsVersion = 0
+    /// Goes up whenever a song's listening time changes. Apart from the plays: a list
+    /// only works itself out again for it while its Listened column is showing.
+    private(set) var listenedVersion = 0
     private(set) var engineSettings: EngineSettings?
     private(set) var lyricsSearch: LyricsSearch?
 
@@ -1397,7 +1400,7 @@ final class AppModel {
                 "listening.listened", ["track_id": id, "seconds": seconds], as: ListenedTotal.self)
             self.listening.listened = (self.listening.listened ?? [:])
                 .merging([id: total.seconds]) { _, new in new }
-            self.playsVersion += 1
+            self.listenedVersion += 1
         }
     }
 
@@ -1417,6 +1420,7 @@ final class AppModel {
         listening = found
         favourites = Set(found.favourites)
         playsVersion += 1
+        listenedVersion += 1
     }
 
     func playlist(_ id: String) -> Playlist? { listening.playlists.first { $0.id == id } }

@@ -105,6 +105,9 @@ private struct RowsKey: Hashable {
     let active: Bool
     let library: Int
     let plays: Int
+    /// The listening times' version while the Listened column shows, and -1 while it
+    /// doesn't: a time that nobody can see changing doesn't work the list out again.
+    let listened: Int
     let members: [String]  // the favourites, or a playlist's songs, in order
     let search: String
     let sort: [String]
@@ -141,9 +144,12 @@ struct SongList: View {
             }
         return RowsKey(
             source: source, active: isActive, library: model.libraryVersion,
-            plays: model.playsVersion, members: members, search: model.searchText,
+            plays: model.playsVersion, listened: showsListened ? model.listenedVersion : -1,
+            members: members, search: model.searchText,
             sort: sortOrder.map { "\($0.keyPath) \($0.order)" })
     }
+
+    private var showsListened: Bool { SongColumns.isShown("listened", in: columns) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -183,7 +189,9 @@ struct SongList: View {
         let (source, sortOrder, search) = (source, sortOrder, model.searchText)
         let (library, everything) = (model.library, model.everything)
         let (plays, downloaded, videos) = (model.listening.plays, model.downloaded, model.videos)
-        let listened = model.listening.listened ?? [:]
+        // Only read while its column shows: hidden, every row says nothing, so a time
+        // that changes makes no row different and nothing is drawn again.
+        let listened = showsListened ? model.listening.listened ?? [:] : [:]
         let members = key.members
         let worked = await Task.detached(priority: .userInitiated) {
             () -> (rows: [TrackRow], total: Int) in
