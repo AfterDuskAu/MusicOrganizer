@@ -15,7 +15,7 @@ The engine guarantees everything in this document. It's written so that if the a
     Videos/                     saved videos (v0.2), apart from the songs
       <Artist>/
         <Title>.mp4             picture and sound in one file; its cover is inside it
-  _Replaced/                    library files superseded by an upgrade or undo; mirrors Music/ paths; never auto-purged
+  _Replaced/                    library files superseded by an upgrade or undo, and downloads the owner took out of the library but kept; mirrors Music/ paths; never auto-purged
   _Staging/                     engine scratch space: downloads and tag writes in progress
     calibration/                fingerprint calibration downloads (step 09b); never auto-cleaned
   Reports/                      reports and CSV exports, visible in Finder (written via fileops.write_export)
@@ -224,6 +224,7 @@ It's written atomically (temp file, fsync, rename) after every batch and every r
 
    Never use `shutil.move`. Cross-volume moves (EXDEV) fail with a clear message and are never copy-then-delete. `_Staging/` must be on the same volume as `Music/`. On Windows, `PermissionError` (file open in another app) retries 5 times over ~2 s, then fails with "That file is open in another app; close it and try again", leaving the original untouched.
 5. **Supersede, don't destroy.** Upgrades and undos move the old library file to `_Replaced/<same relative path>` first.
+   - The same move is how a download leaves the library when the owner wants its file kept (the app's Delete from Library, 2026-10-10: a `remove` plan with `keep`). The song, its `.lrc` and, with an album's last song, its `cover.jpg` go to `_Replaced/`; nothing under `Music/` or in the index says it's in the library any more, and the file is still on the computer. Undo moves them back.
 6. **Trash, not delete.** Removal from `Music/` goes to the system Trash via `send2trash`. The only outright deletes are regular files and empty folders inside the resolved `_Staging/` (`clean_staging`, `discard_staged`). Symlinks there are removed as links and never followed, and both functions refuse if `_Staging/` itself resolves outside the root.
    - Two clean-ups that hold no data are also removed: an empty name a move reserved (6.4) but didn't fill, and, during undo, folders the undone batch created that are empty again apart from junk (`.DS_Store`, `._*`, `Thumbs.db`, `desktop.ini`).
 7. **Verified copies and tag writes.**

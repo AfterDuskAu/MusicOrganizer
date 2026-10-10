@@ -847,7 +847,10 @@ class Server:
                     cover_file=Path(cover).expanduser() if cover else None,
                 )  # fmt: skip
             elif kind == "remove":
-                plan = pipeline.plan_remove(lib, index, need(options, "paths", list))
+                plan = pipeline.plan_remove(
+                    lib, index, need(options, "paths", list),
+                    keep=want(options, "keep", bool, False),
+                )  # fmt: skip
             elif kind == "share":
                 plan = pipeline.plan_share(
                     lib, index, Path(need(options, "source_root", str)),

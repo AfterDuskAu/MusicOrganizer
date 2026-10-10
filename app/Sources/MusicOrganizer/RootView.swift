@@ -399,21 +399,7 @@ struct MainView: View {
             Text(model.info?.text ?? "")
         }
         .modifier(AddingAgainQuestion())
-        .confirmationDialog(
-            Self.deleteQuestion(model.deletingDownloads ?? []),
-            isPresented: Binding(
-                get: { model.deletingDownloads != nil },
-                set: { if !$0 { model.deletingDownloads = nil } })
-        ) {
-            Button("Move to Trash", role: .destructive) {
-                if let tracks = model.deletingDownloads { model.deleteDownloads(tracks) }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text(
-                "It goes to the Trash with its lyrics, and comes off your playlists and "
-                    + "favourites. You can download it again.")
-        }
+        .modifier(DeletingQuestions())
         // Several downloads at once are a batch: the plan is shown before anything is queued.
         .alert(
             model.batch.map { "Download \($0.count) \($0.count == 1 ? "song" : "songs")?" } ?? "",
@@ -732,6 +718,13 @@ struct MainView: View {
                 model.searchText = words
             } else if step.name.hasPrefix("finder=") {
                 model.youtubeQuery = String(step.name.dropFirst(7))
+            } else if step.name == "remove=library" {
+                // The newest download taken out of the library, its file kept: what
+                // Delete from Library does once the owner has said yes.
+                if let newest = model.downloaded.first {
+                    Bench.say("BENCH remove: \(newest.path), of \(model.downloaded.count) downloads")
+                    model.deleteDownloads([newest], keepingFiles: true)
+                }
             } else if !Bench.took(step.name) {
                 showNowPlaying = false
                 item = SidebarItem(key: step.name)
@@ -780,13 +773,6 @@ struct MainView: View {
                     .lookText()
                     .onAppear { if Bench.isOn { Bench.say("appear \(entry.key)") } })
         }
-    }
-
-    private static func deleteQuestion(_ tracks: [Track]) -> String {
-        if tracks.count == 1, let only = tracks.first {
-            return "Delete “\(only.title)”\(only.isVideo ? " (the video)" : "")?"
-        }
-        return "Delete \(tracks.count) downloads?"
     }
 
     /// What a batch of downloads will take, said before the owner agrees to it.
@@ -1155,6 +1141,58 @@ private struct CustomiseSidebar: View {
 
 /// Asked before a song goes into a playlist that has it already: skip those, or add
 /// them again. (A modifier of its own: the main view's body is long enough as it is.)
+/// The two questions before a download is deleted: from the computer (to the Trash), and
+/// from the library only (its file kept). Kept apart from the window's own view, which
+/// is as much as the compiler will take in one piece.
+private struct DeletingQuestions: ViewModifier {
+    @Environment(AppModel.self) private var model
+
+    func body(content: Content) -> some View {
+        content
+            .confirmationDialog(
+                Self.question(model.deletingDownloads ?? []),
+                isPresented: Binding(
+                    get: { model.deletingDownloads != nil },
+                    set: { if !$0 { model.deletingDownloads = nil } })
+            ) {
+                Button("Move to Trash", role: .destructive) {
+                    if let tracks = model.deletingDownloads { model.deleteDownloads(tracks) }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text(
+                    "It goes to the Trash with its lyrics, and comes off your playlists and "
+                        + "favourites. You can download it again.")
+            }
+            .confirmationDialog(
+                Self.question(model.removingDownloads ?? [], fromLibrary: true),
+                isPresented: Binding(
+                    get: { model.removingDownloads != nil },
+                    set: { if !$0 { model.removingDownloads = nil } })
+            ) {
+                Button("Delete from Library", role: .destructive) {
+                    if let tracks = model.removingDownloads {
+                        model.deleteDownloads(tracks, keepingFiles: true)
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text(
+                    "It leaves your library, playlists and favourites. Its file stays on this "
+                        + "Mac, with its lyrics: set aside in the library folder's “_Replaced” "
+                        + "folder, where nothing is ever deleted for you.")
+            }
+    }
+
+    private static func question(_ tracks: [Track], fromLibrary: Bool = false) -> String {
+        let whence = fromLibrary ? " from your library" : ""
+        if tracks.count == 1, let only = tracks.first {
+            return "Delete “\(only.title)”\(only.isVideo ? " (the video)" : "")\(whence)?"
+        }
+        return "Delete \(tracks.count) downloads\(whence)?"
+    }
+}
+
 private struct AddingAgainQuestion: ViewModifier {
     @Environment(AppModel.self) private var model
 

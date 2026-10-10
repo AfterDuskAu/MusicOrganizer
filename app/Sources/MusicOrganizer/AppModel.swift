@@ -300,8 +300,11 @@ final class AppModel {
         case started(String)
         case failed(String)
     }
-    /// Downloads the owner asked to delete, waiting for their yes.
+    /// Downloads the owner asked to delete from the computer, waiting for their yes.
     var deletingDownloads: [Track]?
+    /// Downloads the owner asked to take out of the library, their files kept, waiting
+    /// for their yes.
+    var removingDownloads: [Track]?
 
     struct BatchDownload {
         let planId: String
@@ -1161,7 +1164,7 @@ final class AppModel {
         (queueStatus, accounts, accountNote, signingIn) = (nil, nil, nil, false)
         (connectingLastfm, lastfmNote) = (false, nil)
         (sharing, sharingNote, pairingCode, justPaired) = (nil, nil, nil, nil)
-        (auto, batch, deletingDownloads, lastAuto) = (nil, nil, nil, nil)
+        (auto, batch, deletingDownloads, removingDownloads, lastAuto) = (nil, nil, nil, nil, nil)
         (youtubeQuery, youtubeResults, youtubeProblem, searchText) = ("", [], nil, "")
         libraryVersion += 1
         for page in [whatsNew, find, remixes] { page.reset() }
@@ -2633,17 +2636,22 @@ final class AppModel {
 
     // MARK: deleting a download
 
-    /// Send downloads to the Trash (after the owner's yes). Only songs and videos that
-    /// were downloaded can go this way: the engine refuses anything from the owner's
-    /// own files. A deleted download can be put back from the Trash, or downloaded again.
-    func deleteDownloads(_ tracks: [Track]) {
+    /// Send downloads to the Trash (after the owner's yes), or with `keepingFiles` take
+    /// them out of the library and keep their files, set aside in the library's
+    /// `_Replaced` folder (the owner, 2026-10-10: "delete from library, delete from
+    /// computer"). Only songs and videos that were downloaded can go either way: the
+    /// engine refuses anything from the owner's own files. A deleted download can be
+    /// put back from the Trash, or downloaded again.
+    func deleteDownloads(_ tracks: [Track], keepingFiles: Bool = false) {
         let paths = tracks.filter(\.isDownload).map(\.path)
         guard !paths.isEmpty else { return }
         // The one that's playing stops first: it's about to go.
         if let current = player.current, paths.contains(current.path) { player.stop() }
         Task {
             do {
-                _ = try await run(plan: "remove", ["paths": paths])
+                var asked: [String: Any] = ["paths": paths]
+                if keepingFiles { asked["keep"] = true }
+                _ = try await run(plan: "remove", asked)
             } catch {
                 notice = error.localizedDescription
                 try? await load()

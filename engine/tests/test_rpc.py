@@ -658,6 +658,25 @@ def test_stream_jobs_and_the_new_plan_kinds(
     )
     assert code(opened, "plan.create", kind="remove", options={"paths": []}) == rpc.USER_ERROR
     assert code(opened, "plan.create", kind="remove", options={}) == rpc.INVALID_PARAMS
+    # `keep` (out of the library, the file kept) is yes or no, and nothing else.
+    assert (
+        code(
+            opened,
+            "plan.create",
+            kind="remove",
+            options={"paths": ["Music/none.m4a"], "keep": "yes"},
+        )
+        == rpc.INVALID_PARAMS
+    )
+    assert (
+        code(
+            opened,
+            "plan.create",
+            kind="remove",
+            options={"paths": ["Music/none.m4a"], "keep": True},
+        )
+        == rpc.NOT_FOUND
+    )
 
 
 def test_settings(opened: rpc.Server) -> None:

@@ -979,7 +979,12 @@ def _print_plan_summary(plan: fileops.Plan) -> None:
     elif plan.kind == "edit":
         print("  1 song to edit")
     elif plan.kind == "remove":
-        print(f"  {s.get('operations', 0):,} download(s) to send to the Trash")
+        if s.get("set_aside"):
+            print(
+                f"  {s['set_aside']:,} download(s) to take out of the library (kept in _Replaced)"
+            )
+        else:
+            print(f"  {s.get('operations', 0):,} download(s) to send to the Trash")
     elif plan.kind == "replace":
         print(
             f"  {s.get('operations', 0):,} rip(s) to replace, {s.get('downloads', 0):,} download(s)"

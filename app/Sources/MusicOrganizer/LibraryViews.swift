@@ -324,8 +324,16 @@ struct SongActions: View {
         if songs.contains(where: { $0.videoId == nil }) {
             Button("Show in Finder") { model.showInFinder(songs) }
         }
-        // A download can be deleted (it goes to the Trash). The owner's own songs can't.
+        // A download can be deleted: from the library (its file is kept, set aside), or
+        // from the computer (it goes to the Trash). The owner's own songs can't.
         if !downloads.isEmpty, downloads.count == songs.count {
+            Button(
+                downloads.count == 1
+                    ? "Delete from Library…" : "Delete \(downloads.count) Downloads from Library…",
+                role: .destructive
+            ) {
+                model.removingDownloads = downloads
+            }
             Button(
                 downloads.count == 1
                     ? "Delete from Computer…" : "Delete \(downloads.count) Downloads from Computer…",

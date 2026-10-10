@@ -2622,9 +2622,16 @@ MAX_GENRE_CHARS = 60
 MAX_KEPT_TITLE_CHARS = 300  # a video's title, before it's made a file name
 
 
-def plan_remove(lib: Library, index: Index, rel_paths: list[str]) -> fileops.Plan:
-    """A plan sending downloads to the system Trash (the app's "Delete" on Discover →
-    Downloads): songs and videos the owner downloaded from YouTube Music and doesn't want.
+def plan_remove(
+    lib: Library, index: Index, rel_paths: list[str], *, keep: bool = False
+) -> fileops.Plan:
+    """A plan sending downloads to the system Trash (the app's "Delete from Computer"):
+    songs and videos the owner downloaded from YouTube Music and doesn't want.
+
+    With `keep` (the app's "Delete from Library", the owner, 2026-10-10) each is set
+    aside in `_Replaced/` instead: out of the library and everything that lists it, the
+    file itself kept on the computer, with its `.lrc`, and the album's `cover.jpg` with
+    the album's last song. Undo puts those files back in `Music/`.
 
     Only a download can go this way: a file whose `MUSICORG_SOURCE` is `youtube_music`
     with no rip behind it (no `MUSICORG_MATCH`), which can be downloaded again. A song
@@ -2660,11 +2667,13 @@ def plan_remove(lib: Library, index: Index, rel_paths: list[str]) -> fileops.Pla
                     "musicorg_id": found.musicorg_id,
                     "title": found.title if isinstance(found.title, str) else path.stem,
                     "artist": found.artist if isinstance(found.artist, str) else None,
+                    **({"keep": True} if keep else {}),
                 },
             )
         )
     summary = {"operations": len(ops), "downloads": 0, "est_minutes": 1, "days": 0,
-               "disk_mb": 0, "low_confidence_adopts": 0}  # fmt: skip
+               "disk_mb": 0, "low_confidence_adopts": 0,
+               "set_aside": len(ops) if keep else 0}  # fmt: skip
     plan = fileops.new_plan("remove", ops, summary)
     fileops.save_plan(lib, plan)
     return plan
@@ -2681,20 +2690,25 @@ def remove_job(ctx: JobContext) -> Outcome:
     rel = _rel_path(ctx.lib, path)
     folder = path.parent
     lrc = path.with_suffix(".lrc")
-    fileops.trash(ctx.batch, path)
+    # Out of the library and kept (set aside in `_Replaced/`), or to the Trash.
+    keep = op.params.get("keep") is True
+    gone = fileops.supersede if keep else fileops.trash
+    gone(ctx.batch, path)
     if lrc.is_file():
-        fileops.trash(ctx.batch, lrc)
+        gone(ctx.batch, lrc)
     # The album's cover goes with its last song; a folder with nothing left goes too.
     cover = folder / naming.COVER_NAME
     others = [
         entry for entry in folder.iterdir() if entry.is_file() and naming.is_audio_name(entry.name)
     ]
     if not others and cover.is_file():
-        fileops.trash(ctx.batch, cover)
+        gone(ctx.batch, cover)
     fileops.remove_empty_folders(ctx.lib, folder)
     with open_index(ctx.lib.paths, write=True) as index:
         index.remove_library_tracks([rel])
     listening.forget(ctx.lib, [str(op.params["musicorg_id"])])
+    if keep:
+        return Outcome.done(f"{path.name} is out of the library, kept in {naming.REPLACED_DIR}.")
     return Outcome.done(f"{path.name} is in the Trash.")
 
 
@@ -3506,7 +3520,12 @@ def describe(plan: fileops.Plan) -> list[str]:
             lines.append(f"{op.op_id:>5}  edit     {op.source.path}  ({', '.join(what)})")
         elif op.action == "remove":
             assert op.source is not None
-            lines.append(f"{op.op_id:>5}  delete   {op.source.path}  (to the Trash)")
+            where = (
+                f"out of the library, kept in {naming.REPLACED_DIR}"
+                if op.params.get("keep") is True
+                else "to the Trash"
+            )
+            lines.append(f"{op.op_id:>5}  delete   {op.source.path}  ({where})")
         elif op.action == "adopt_unconfirmed":
             lines.append(f"{op.op_id:>5}  adopt    {rip}  →  {op.target}  [unconfirmed: stays "
                          "in review]")  # fmt: skip

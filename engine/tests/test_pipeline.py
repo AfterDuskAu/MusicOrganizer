@@ -4395,6 +4395,76 @@ def test_a_download_can_be_deleted(
     assert {step.status for step in steps} == {"manual"}
 
 
+def test_a_download_can_be_taken_out_of_the_library_and_kept(
+    lib: Library, index: Index, downloads: FakeDownloads, fake_trash: Any,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:  # fmt: skip
+    # The app's Delete from Library (the owner, 2026-10-10): out of the library, and
+    # the file kept on the computer, set aside in _Replaced.
+    found = {VIDEO_A: candidate(VIDEO_A, "Melody", ("Band",), SECONDS, album="Tunes")}
+    monkeypatch.setattr(youtube, "get_track", lambda video_id: found.get(video_id))
+    plan = pipeline.plan_download(lib, index, [VIDEO_A])
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    song = lib.paths.music / "Band" / "Tunes (2020)" / "03 Melody.m4a"
+    sound = song.read_bytes()
+    song.with_suffix(".lrc").write_text("[00:01.00]Made-up line\n", encoding="utf-8")
+    (song.parent / "cover.jpg").write_bytes(b"\xff\xd8cover")
+    rel = "Music/Band/Tunes (2020)/03 Melody.m4a"
+    track_id = str(tags.read_tags(song).musicorg_id)
+    listening.set_favourite(lib, track_id, True)
+
+    plan = pipeline.plan_remove(lib, index, [rel], keep=True)
+    assert (plan.kind, plan.summary["operations"], plan.summary["set_aside"]) == ("remove", 1, 1)
+    assert pipeline.describe(plan) == [
+        f"    1  delete   {rel}  (out of the library, kept in _Replaced)"
+    ]
+    batch_id = pipeline.apply(lib, index, plan.plan_id).batch_id
+    run_queue(lib)
+
+    # Nothing of it is left under Music, nothing went to the Trash, and the song, its
+    # lyrics and (as the album's last song) its cover are in _Replaced, as they were.
+    assert music_files(lib) == []
+    assert not (lib.paths.music / "Band").exists()
+    assert fake_trash.sent == []
+    kept = lib.paths.replaced / "Band" / "Tunes (2020)"
+    assert sorted(path.name for path in kept.iterdir()) == [
+        "03 Melody.lrc", "03 Melody.m4a", "cover.jpg",
+    ]  # fmt: skip
+    assert (kept / "03 Melody.m4a").read_bytes() == sound
+    assert index.library_tracks() == []
+    assert listening.get(lib)["favourites"] == []
+    record = fileops.read_journal(lib)[batch_id]
+    assert (record.kind, record.status) == ("remove", "closed")
+    assert [op.op for op in record.ops] == ["supersede", "supersede", "supersede"]
+    # It can be downloaded again: nothing says it's still here.
+    assert pipeline.plan_download(lib, index, [VIDEO_A]).summary["downloads"] == 1
+
+    # Undo puts the files back where they were.
+    pipeline.undo(lib, batch_id)
+    assert sorted(music_files(lib)) == [
+        "Band/Tunes (2020)/03 Melody.lrc", "Band/Tunes (2020)/03 Melody.m4a",
+        "Band/Tunes (2020)/cover.jpg",
+    ]  # fmt: skip
+    assert song.read_bytes() == sound
+    # And the library lists it again, as the app's list of songs is made.
+    with open_index(lib.paths, write=True) as again:
+        assert [t["path"] for t in browse.tracks(lib, again)] == [rel]
+
+
+def test_a_plan_made_before_keeping_was_offered_still_goes_to_the_trash(
+    lib: Library, index: Index, videos: FakeVideoDownloads, fake_trash: Any
+) -> None:
+    save_video(lib, index)
+    (rel,) = [t["rel_path"] for t in index.library_tracks()]
+    plan = pipeline.plan_remove(lib, index, [rel])
+    assert "keep" not in plan.operations[0].params and plan.summary["set_aside"] == 0
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    assert [path.suffix for path in fake_trash.sent] == [".mp4"]
+    assert not lib.paths.replaced.exists() or not any(lib.paths.replaced.rglob("*.mp4"))
+
+
 def test_undo_doesnt_take_a_second_download_for_the_first(
     lib: Library, index: Index, downloads: FakeDownloads, monkeypatch: pytest.MonkeyPatch
 ) -> None:
