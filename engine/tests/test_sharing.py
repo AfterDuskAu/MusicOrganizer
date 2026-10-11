@@ -347,6 +347,88 @@ def test_keys_are_kept_as_hashes_readable_by_this_user_only(share: sharing.Share
     assert set(sharing.devices()[0]) == {"id", "device", "paired_at", "last_synced"}
 
 
+def pair(share: sharing.Share, **sent: Any) -> tuple[int, Any]:
+    """Send the code that's showing, with whatever else a phone sends with it."""
+    key = sent.pop("key", None)
+    body = {"code": share.new_code()["code"], "device": "iPhone", **sent}
+    return ask(share, "/sync/v1/pair", key=key, body=body)
+
+
+def test_a_device_that_pairs_again_takes_its_old_place(share: sharing.Share) -> None:
+    first = paired(share)
+    the_list(share, first)  # it has synced once
+    (before,) = sharing.devices()
+    assert before["last_synced"] is not None
+    # It pairs again, with the key it still has: the same line in Settings, not a second.
+    status, answer = pair(share, key=first, device="iPad")
+    assert status == 200 and answer["key"] != first
+    second = answer["key"]
+    (after,) = sharing.devices()
+    assert (after["id"], after["device"]) == (before["id"], "iPad")
+    assert after["last_synced"] == before["last_synced"]
+    # The old key stops working: the new one took its place.
+    assert ask(share, "/sync/v1/library", key=first)[0] == 401
+    assert ask(share, "/sync/v1/library", key=second)[0] == 200
+    # A key that isn't a paired device's, or a device that sends nothing, is a new device.
+    assert pair(share, key="not-a-key")[0] == 200
+    assert paired(share) not in (first, second)
+    assert len(sharing.devices()) == 3
+
+
+def test_a_device_is_known_again_by_an_id_of_its_own_making(share: sharing.Share) -> None:
+    its_own_id, another = str(uuid.uuid4()), str(uuid.uuid4())
+    status, answer = pair(share, id=its_own_id)
+    assert status == 200
+    first = answer["key"]
+    # The phone forgot the library, and its key with it. Pairing again, it's known by
+    # the id it made up for itself: one line in Settings, and the old key is dead.
+    second = pair(share, id=its_own_id)[1]["key"]
+    assert len(sharing.devices()) == 1
+    assert ask(share, "/sync/v1/hello", key=first)[1]["paired"] is False
+    assert ask(share, "/sync/v1/hello", key=second)[1]["paired"] is True
+    # Another device has another id, and its own line.
+    third = pair(share, id=another, device="iPad")[1]["key"]
+    assert [d["device"] for d in sharing.devices()] == ["iPhone", "iPad"]
+    # Known by its key alone, a device keeps the id it gave before.
+    pair(share, key=third, device="iPad")
+    fourth = pair(share, id=another, device="iPad")[1]["key"]
+    assert [d["device"] for d in sharing.devices()] == ["iPhone", "iPad"]
+    assert ask(share, "/sync/v1/hello", key=fourth)[1]["paired"] is True
+    # A device listed twice from before this was built is listed once after: it's known
+    # by its key in one place and by its id in the other.
+    stray = paired(share)
+    assert len(sharing.devices()) == 3
+    pair(share, key=stray, id=its_own_id)
+    assert [d["device"] for d in sharing.devices()] == ["iPhone", "iPad"]
+    assert ask(share, "/sync/v1/hello", key=second)[1]["paired"] is False
+
+    # Only a hash of the id is kept, and the app is never given that.
+    saved = config.devices_path().read_text(encoding="utf-8")
+    assert its_own_id not in saved and another not in saved
+    assert hashlib.sha256(its_own_id.encode()).hexdigest() in saved
+    for given in (sharing.devices(), share.status()):
+        assert sharing.ITS_ID_FIELD not in json.dumps(given)
+        assert hashlib.sha256(its_own_id.encode()).hexdigest() not in json.dumps(given)
+    assert set(sharing.devices()[0]) == {"id", "device", "paired_at", "last_synced"}
+
+
+def test_only_the_right_code_puts_a_device_in_anothers_place(share: sharing.Share) -> None:
+    its_own_id = str(uuid.uuid4())
+    key = pair(share, id=its_own_id)[1]["key"]
+    shown = share.new_code()["code"]
+    for sent in ({"id": its_own_id}, {}):
+        body = {"code": wrong(shown), "device": "iPhone", **sent}
+        status, answer = ask(share, "/sync/v1/pair", key=key, body=body)
+        assert (status, answer["error"]) == (403, "wrong_code")
+    assert len(sharing.devices()) == 1
+    assert ask(share, "/sync/v1/library", key=key)[0] == 200  # nothing was taken from it
+    # What isn't an id is no id: each of these is a new device.
+    for odd in ("", 7, None, ["x"], {"a": 1}, "x" * (sharing.MAX_ITS_ID + 1), True):
+        assert pair(share, id=odd)[0] == 200
+    assert len(sharing.devices()) == 8
+    assert ask(share, "/sync/v1/library", key=key)[0] == 200
+
+
 def test_forgetting_a_device_stops_its_key(share: sharing.Share) -> None:
     first, second = paired(share), paired(share, "iPad")
     gone = next(d["id"] for d in sharing.devices() if d["device"] == "iPhone")
@@ -653,11 +735,14 @@ def test_nothing_private_is_logged(share: sharing.Share, caplog: pytest.LogCaptu
         fetch(share, key, found["tracks"][0]["audio"])
         ask(share, "/sync/v1/files/nothing", key=key)
         ask(share, "/sync/v1/library", key="not-the-key-" + "y" * 20)
+        its_own_id = str(uuid.uuid4())  # paired again, known by its key and by its own id
+        again = pair(share, key=key, id=its_own_id)[1]["key"]
         sharing.forget(sharing.devices()[0]["id"])
     logged = caplog.text
-    assert "sharing" in logged  # something was said
+    assert "sharing" in logged and "paired again" in logged  # something was said
     for private in (shown, wrong(shown), key, hashlib.sha256(key.encode()).hexdigest(),
-                    LOOPBACK, "Bearer", "not-the-key"):  # fmt: skip
+                    LOOPBACK, "Bearer", "not-the-key", again, its_own_id,
+                    hashlib.sha256(its_own_id.encode()).hexdigest()):  # fmt: skip
         assert private not in logged, private
 
 

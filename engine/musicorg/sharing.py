@@ -30,7 +30,10 @@ What the owner was promised, and where each promise is kept:
   A code is good once and for five minutes; five wrong codes and every code is refused
   for a minute. The device is given a long random key, which it sends with every
   request after that. What's kept of the key is its SHA-256, in `devices.json` in the
-  app's settings folder (through `config`), for this profile.
+  app's settings folder (through `config`), for this profile. A device that pairs
+  again takes its old place in that list instead of a second one (2026-10-11): it's
+  known by the key it still has, or by an id of its own making that it sends with the
+  code, of which only the SHA-256 is kept too.
 - **Home network only, and only while the app is open.** A caller whose address isn't
   private (RFC 1918), link-local or this computer's own is dropped before it's
   answered, and so is a request sent to any name that isn't this computer at home.
@@ -130,6 +133,8 @@ MOVIE_TYPES = {".mp4": "mp4", ".m4v": "m4v", ".mov": "mov"}
 NOT_OURS = frozenset({".fcpbundle", ".imovielibrary", ".tvlibrary", ".photoslibrary",
                       ".theater", ".localized", ".app"})  # fmt: skip
 KEY_FIELD = "key_sha256"
+ITS_ID_FIELD = "its_id_sha256"  # of the id a device made up for itself, if it sent one
+MAX_ITS_ID = 100  # characters of such an id; a longer one isn't taken for one
 _WHEN = "%Y-%m-%dT%H:%M:%SZ"
 _RANGE = re.compile(r"bytes=(?P<first>\d{1,18})-(?P<last>\d{1,18})?")
 _DEVICE_KIND = re.compile(r"[A-Za-z0-9 ]{1,20}")
@@ -243,15 +248,50 @@ def _device_with(header: str | None) -> dict[str, Any] | None:
     return found
 
 
-def _add_device(kind: str) -> str:
-    """Pair a device, and return its key: the only time the key exists in full here."""
+def _add_device(kind: str, *, header: str | None = None, its_id: object = None) -> tuple[str, bool]:
+    """Pair a device, and return its key (the only time the key exists in full here)
+    and whether it was paired before.
+
+    **A device that was paired before takes its old place, not a second one**
+    (2026-10-11: a phone that forgot the library and paired again was listed twice).
+    It's known in either of two ways, both optional and both the device's to send with
+    the code:
+
+    - the key it was given before, if it still has it (`header`, an `Authorization`
+      header as on every other request);
+    - an id of its own making (`its_id`: random, made once by the device, the same
+      each time it pairs). Only its SHA-256 is kept, beside the key's.
+
+    Its old key stops working: the new one takes its place. A device that sends
+    neither is a new device, as before."""
     key = secrets.token_urlsafe(32)
+    mark = _digest(its_id) if isinstance(its_id, str) and 0 < len(its_id) <= MAX_ITS_ID else None
     with _devices_lock:
         saved = _saved()
-        saved.append({"id": "d_" + secrets.token_hex(4), "device": kind, "paired_at": _now(),
-                      "last_synced": None, KEY_FIELD: _digest(key)})  # fmt: skip
+        holder = _device_with(header)
+        before = [
+            d for d in saved
+            if (holder is not None and d["id"] == holder["id"])
+            or (mark is not None and d.get(ITS_ID_FIELD) == mark)
+        ]  # fmt: skip
+        entry = {
+            "id": before[0]["id"] if before else "d_" + secrets.token_hex(4),
+            "device": kind,
+            "paired_at": _now(),
+            "last_synced": before[0].get("last_synced") if before else None,
+            KEY_FIELD: _digest(key),
+        }
+        its = mark or (before[0].get(ITS_ID_FIELD) if before else None)
+        if isinstance(its, str):
+            entry[ITS_ID_FIELD] = its
+        if before:
+            # Its old place in the list; and were it there twice already, once now.
+            twice = {d["id"] for d in before[1:]}
+            saved = [entry if d["id"] == entry["id"] else d for d in saved if d["id"] not in twice]
+        else:
+            saved.append(entry)
         config.save_devices(saved)
-    return key
+    return key, bool(before)
 
 
 def _mark_synced(device_id: str) -> None:
@@ -796,8 +836,12 @@ class Share:
         with self._lock:
             self._code = None
 
-    def pair(self, code: str, device: object) -> tuple[int, dict[str, Any]]:
-        """A phone has sent a code: (the HTTP status, the answer's body)."""
+    def pair(
+        self, code: str, device: object, *, header: str | None = None, its_id: object = None
+    ) -> tuple[int, dict[str, Any]]:
+        """A phone has sent a code: (the HTTP status, the answer's body). `header` and
+        `its_id` are how a device paired before is known again (`_add_device`): they're
+        looked at only once the code is right."""
         with self._lock:
             now = self._clock()
             if now < self._locked_until:
@@ -822,8 +866,8 @@ class Share:
             self._wrong = 0
             self._code = None  # a code works once
         kind = _device_kind(device)
-        key = _add_device(kind)
-        log.info("sharing: a device was paired (%s)", kind)
+        key, again = _add_device(kind, header=header, its_id=its_id)
+        log.info("sharing: a device was paired%s (%s)", " again" if again else "", kind)
         self._tell()
         return 200, {"key": key}
 
@@ -1060,11 +1104,13 @@ class _Handler(BaseHTTPRequestHandler):
         try:
             length = max(0, min(int(self.headers.get("Content-Length") or 0), MAX_BODY))
             asked = json.loads(self.rfile.read(length) or b"{}")
-            code, device = str(asked.get("code", "")), asked.get("device")
+            code, device, its_id = str(asked.get("code", "")), asked.get("device"), asked.get("id")
         except (ValueError, AttributeError):
             self._answer(403, wrong)
             return
-        status, body = self.server.share.pair(code, device)
+        status, body = self.server.share.pair(
+            code, device, header=self.headers.get("Authorization"), its_id=its_id
+        )
         self._answer(status, body)
 
     def _changes(self) -> None:
