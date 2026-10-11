@@ -36,7 +36,7 @@ On hold since 2026-10-01 (owner): it waits for the song-identification research,
 5. **The not-found songs:** copy them in with their own names (`plan adopt --include-not-found`), or give them a link or cover the research found.
 6. **Small decisions waiting for the owner** (`docs/KNOWN-ISSUES.md`):
    - a `sources relocate` command, so moving the rips folder doesn't lose review work
-   - daily backups of `state.json`, which holds the review decisions
+   - daily backups of `state.json`, which holds the review decisions: *built 2026-10-11 (the newest seven days, in `.musicorg/backups/`); putting one back is still by hand*
    - a focused safety check of the code before any batch of hundreds of songs
 
 ## Now: v0.2, the Mac app

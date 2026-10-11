@@ -23,6 +23,7 @@ The engine guarantees everything in this document. It's written so that if the a
     index.sqlite                cache (see section 5)
     queue.sqlite                the job queue; NOT a cache; never deleted by rebuild
     state.json                  everything files can't carry (section 5)
+    backups/state-YYYY-MM-DD.json   state.json as it was before that day's first change; the newest 7 (section 5)
     journal/YYYY-MM-DD.jsonl    append-only operation log
     plans/<plan_id>.json        dry-run plans
     undo-art/<sha256>.jpg       cover art saved for undo (.png for a PNG cover)
@@ -191,6 +192,8 @@ MusicBrainz IDs use Picard's standard names and are optional in v0.1. Leave room
 - settings
 
 It's written atomically (temp file, fsync, rename) after every batch and every review import.
+
+**A copy of each day's first version is kept** (2026-10-11, the owner's yes): before the first save of a day, the file as it is goes to `.musicorg/backups/state-<day>.json`, by this computer's clock, written the same atomic way. A day's copy is never written over, the newest seven are kept, and an older one is deleted (the engine's own copy of its own records, not user data: it doesn't go to the Trash). None of what state.json holds can be rebuilt from the music files, and since 2026-10-10 a paired phone can change some of it, so a wrong import or sync can now be taken back by a day. Nothing reads these copies: one is put back by hand, with the app closed (copy it over `state.json`, then `musicorg index rebuild`, which reads the decisions and links from it). A copy that can't be made (a full disk) never stops the save itself; the log says so once a day.
 
 **`musicorg index rebuild`** recreates `index.sqlite` as follows:
 

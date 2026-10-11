@@ -5,9 +5,17 @@
 - Carries a schema version. A file from a newer engine is refused rather than guessed at.
 - Keys this version doesn't know about are kept when saving.
 - Only a process holding the library's lock should save it.
+- **A copy of each day's first version is kept** (2026-10-11, the owner's yes), in
+  `backups/` beside it: `state-2026-10-11.json` is the file as it was before that
+  day's first change. The newest seven are kept and an older one is deleted. These
+  records can't be rebuilt from the music files (playlists, favourites, listening
+  time, review decisions), a phone can change some of them, and a wrong import or
+  sync used to be past taking back. Nothing reads a backup: putting one back is done
+  by hand, with the app closed.
 
-Under rule 3 of CLAUDE.md this module may write state.json itself. Other modules change
-it through `edit()` or `create_if_missing()`, never by writing the file.
+Under rule 3 of CLAUDE.md this module may write state.json itself, and those copies of
+it. Other modules change it through `edit()` or `create_if_missing()`, never by writing
+the file.
 
 Keys (contract section 5), each written by the step named:
 - "sources": {source_id: {"path": resolved folder, "added_at": ISO time}} (step 05)
@@ -38,20 +46,27 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
+import re
 import sys
 import tempfile
 import threading
 import unicodedata
 from collections.abc import Iterator
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
 from musicorg.errors import StateError
 
+log = logging.getLogger(__name__)
+
 STATE_SCHEMA = 1
+BACKUPS = "backups"  # the folder beside state.json for a copy of each day's first version
+BACKUPS_KEPT = 7  # the newest are kept; an older one is deleted
+_BACKUP_NAME = re.compile(r"state-\d{4}-\d{2}-\d{2}\.json")
 
 
 def default_data() -> dict[str, Any]:
@@ -104,8 +119,9 @@ class State:
         """Write state.json atomically: temp file, fsync, rename over the old one."""
         self.data.setdefault("schema", STATE_SCHEMA)
         text = json.dumps(self.data, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+        _back_up(self.path)
         try:
-            _write_atomic(self.path, text)
+            _write_atomic(self.path, text.encode("utf-8"))
         except OSError as exc:
             raise StateError(
                 f"Couldn't save the library's records to {self.path}: {exc.strerror or exc}. "
@@ -155,12 +171,60 @@ def _damaged(path: Path, detail: str) -> str:
     )
 
 
-def _write_atomic(path: Path, text: str) -> None:
+def _today() -> date:
+    """The day by this computer's clock: the owner's day, not UTC's."""
+    return datetime.now().date()
+
+
+_backed_up: dict[Path, date] = {}  # the day each state.json was last seen to have its copy
+_warned: dict[Path, date] = {}  # ...and the day a copy that couldn't be made was last said
+
+
+def _back_up(path: Path) -> None:
+    """Before the day's first save, keep the file as it is: `backups/state-<day>.json`.
+
+    - The copy is the file's own bytes, written the way state.json is (a temp file,
+      fsync, a rename), so a crash never leaves half a copy under a backup's name.
+    - A day that has its copy is left alone: a backup is never written over.
+    - The newest `BACKUPS_KEPT` are kept. An older one is deleted, not sent to the
+      Trash: it's the engine's own copy of its own records, as old as a week.
+    - **A copy that can't be made never stops the save.** What the owner just did
+      matters more than the copy of what was there before; the log says so, once a day.
+    """
+    today = _today()
+    if _backed_up.get(path) == today:
+        return
+    folder = path.parent / BACKUPS
+    target = folder / f"state-{today.isoformat()}.json"
+    try:
+        if not target.exists():
+            try:
+                before = path.read_bytes()
+            except FileNotFoundError:
+                return  # a library's very first save: there's nothing yet to keep
+            folder.mkdir(exist_ok=True)
+            _write_atomic(target, before)
+            log.info("Kept a copy of the library's records as they were: %s", target.name)
+        _backed_up[path] = today
+        kept = sorted(p for p in folder.iterdir() if _BACKUP_NAME.fullmatch(p.name))
+        for old in kept[:-BACKUPS_KEPT]:
+            old.unlink(missing_ok=True)
+    except OSError as exc:
+        if _warned.get(path) != today:
+            _warned[path] = today
+            log.warning(
+                "Couldn't keep today's copy of the library's records in %s: %s. "
+                "The records themselves are saved as usual.",
+                folder, exc.strerror or exc,
+            )  # fmt: skip
+
+
+def _write_atomic(path: Path, data: bytes) -> None:
     fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
     tmp = Path(tmp_name)
     try:
-        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
-            f.write(text)
+        with os.fdopen(fd, "wb") as f:
+            f.write(data)
             f.flush()
             _sync(f.fileno())
         os.replace(tmp, path)
