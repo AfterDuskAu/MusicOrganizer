@@ -33,7 +33,10 @@ What the owner was promised, and where each promise is kept:
   app's settings folder (through `config`), for this profile. A device that pairs
   again takes its old place in that list instead of a second one (2026-10-11): it's
   known by the key it still has, or by an id of its own making that it sends with the
-  code, of which only the SHA-256 is kept too.
+  code, of which only the SHA-256 is kept too. **A device may unpair itself**
+  (2026-10-11, the owner's choice): a phone that forgets the library says so, its own
+  key stops working and its line goes from the app's list. It can do nothing to
+  another device's pairing.
 - **Home network only, and only while the app is open.** A caller whose address isn't
   private (RFC 1918), link-local or this computer's own is dropped before it's
   answered, and so is a request sent to any name that isn't this computer at home.
@@ -113,6 +116,8 @@ MAX_BODY = 4096  # a pairing request is a few dozen bytes
 # new name, a song taken out, a new order, the playlist deleted) only to one that says
 # `playlists` (all 2026-10-11).
 ACCEPTS = ("changes", "favourites", "plays", "playlists")
+# Also said in `hello`, by any share: a device may say it has forgotten this library.
+FORGET = "forget"
 PLAYLIST_EDITS = frozenset(
     {"playlist_remove", "playlist_rename", "playlist_order", "playlist_delete"}
 )
@@ -909,8 +914,20 @@ class Share:
     def accepts(self) -> list[str]:
         """What this share takes from a device besides its requests, as `hello` says it.
         Changes are taken only by an engine that holds the library's lock, as the one
-        the app starts always does: nothing else may write the library's records."""
-        return list(ACCEPTS) if self.lib.writable else []
+        the app starts always does: nothing else may write the library's records. A
+        device saying it has forgotten the library is taken by any share: that changes
+        the list of paired devices, not the library."""
+        return [*(ACCEPTS if self.lib.writable else ()), FORGET]
+
+    def forgotten_by(self, device: dict[str, Any]) -> None:
+        """A paired device says it has forgotten this library: it's unpaired, as the
+        owner's Remove in the app does, and the app is told so its list is right."""
+        try:
+            forget(device["id"])
+        except NotFoundError:
+            pass  # the owner removed it this very moment: it's gone either way
+        log.info("sharing: that device said it had forgotten this library")
+        self._tell()
 
     def take(self, sent: list[Any]) -> list[str]:
         """A paired device's changes (`take_changes`): the ids of the ones dealt with.
@@ -1094,6 +1111,9 @@ class _Handler(BaseHTTPRequestHandler):
         if path == PREFIX + "changes":
             self._changes()
             return
+        if path == PREFIX + "forget":
+            self._forget()
+            return
         if path != PREFIX + "pair":
             self._answer(404, refusal("not_found", "There's nothing at that address."))
             return
@@ -1112,6 +1132,25 @@ class _Handler(BaseHTTPRequestHandler):
             code, device, header=self.headers.get("Authorization"), its_id=its_id
         )
         self._answer(status, body)
+
+    def _forget(self) -> None:
+        """A paired device says it has forgotten this library (2026-10-11): it's
+        unpaired. Only by its own key, so only ever itself; whatever else it sent is
+        read and not looked at. This isn't syncing: it keeps no computer awake."""
+        self._body(MAX_BODY)
+        device = _device_with(self.headers.get("Authorization"))
+        if device is None:
+            self._answer(401, refusal("not_paired", "This device isn't paired with the computer."))
+            return
+        try:
+            self.server.share.forgotten_by(device)
+        except (MusicOrgError, OSError) as exc:
+            log.warning("sharing: a device couldn't be unpaired: %s", exc)
+            self._answer(500, refusal(
+                "unavailable", "The computer couldn't do that just now. Try again."
+            ))  # fmt: skip
+            return
+        self._answer(200, {"forgotten": True})
 
     def _changes(self) -> None:
         """A paired device says what was done on it (2026-10-10). The body is read before

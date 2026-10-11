@@ -217,8 +217,8 @@ def test_it_listens_on_this_computer_only_in_tests(share: sharing.Share) -> None
 def test_hello_needs_no_key(share: sharing.Share, filled: Library) -> None:
     status, hello = ask(share, "/sync/v1/hello")
     assert status == 200
-    assert hello == {"format": 1, "library": share.info, "paired": False,
-                     "accepts": ["changes", "favourites", "plays", "playlists"]}  # fmt: skip
+    takes = ["changes", "favourites", "plays", "playlists", "forget"]
+    assert hello == {"format": 1, "library": share.info, "paired": False, "accepts": takes}
     assert hello["library"]["name"] == filled.root.name
     key = paired(share)
     assert ask(share, "/sync/v1/hello", key=key)[1]["paired"] is True
@@ -427,6 +427,48 @@ def test_only_the_right_code_puts_a_device_in_anothers_place(share: sharing.Shar
         assert pair(share, id=odd)[0] == 200
     assert len(sharing.devices()) == 8
     assert ask(share, "/sync/v1/library", key=key)[0] == 200
+
+
+def test_a_device_that_forgets_the_library_says_so(
+    filled: Library, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    told: list[str] = []
+    share = sharing.Share(filled, changed=lambda: told.append("changed"))
+    share.start()
+    awake: list[str] = []
+    monkeypatch.setattr(sharing.Share, "busy", lambda self: awake.append("busy"))
+    try:
+        phone, tablet = paired(share), paired(share, "iPad")
+        told.clear()
+        # Only a paired device can, and only by its own key: nothing else is asked of it.
+        for key in (None, "not-a-key"):
+            status, answer = ask(share, "/sync/v1/forget", key=key, body={})
+            assert (status, answer["error"]) == (401, "not_paired")
+        status, answer = ask(share, "/sync/v1/forget", key=phone, body={},
+                             headers={"Origin": "http://example.com"})  # fmt: skip
+        assert (status, answer["error"]) == (403, "not_home")  # no web page can either
+        assert ask(share, "/sync/v1/forget", key=phone)[0] == 404  # asked, not told: no such page
+        assert len(sharing.devices()) == 2 and told == []
+        awake.clear()  # (a paired device asking for anything counts as syncing)
+
+        with caplog.at_level(logging.DEBUG):
+            sent = {"device": sharing.devices()[1]["id"], "anything": "else"}  # not looked at
+            assert ask(share, "/sync/v1/forget", key=phone, body=sent) == (200, {"forgotten": True})
+        # Its line is gone from the app's list, the app was told, and its key is dead.
+        assert [d["device"] for d in sharing.devices()] == ["iPad"]
+        assert told == ["changed"]
+        assert ask(share, "/sync/v1/library", key=phone)[0] == 401
+        assert ask(share, "/sync/v1/hello", key=phone)[1]["paired"] is False
+        status, answer = ask(share, "/sync/v1/forget", key=phone, body={})
+        assert (status, answer["error"]) == (401, "not_paired")  # twice: it isn't paired
+        # The other device is as it was, and nothing of the library changed.
+        assert ask(share, "/sync/v1/hello", key=tablet)[1]["paired"] is True
+        assert playlists(filled) == [MORNING]
+        assert awake == []  # forgetting isn't syncing: it keeps no computer awake
+        assert "forgotten this library" in caplog.text
+        assert phone not in caplog.text and LOOPBACK not in caplog.text
+    finally:
+        share.stop()
 
 
 def test_forgetting_a_device_stops_its_key(share: sharing.Share) -> None:
@@ -1597,7 +1639,8 @@ def test_an_engine_without_the_librarys_lock_takes_nothing(
         again = sharing.Share(reading)
         again.start()
         try:
-            assert ask(again, "/sync/v1/hello")[1]["accepts"] == []
+            # Nothing of the library's is taken; a device may still say it has forgotten it.
+            assert ask(again, "/sync/v1/hello")[1]["accepts"] == ["forget"]
             sent = {"changes": [did("playlist_new", playlist=its_own(), name="Driving")]}
             status, answer = ask(again, "/sync/v1/changes", key=key, body=sent)
             assert (status, answer["error"]) == (404, "not_found")
@@ -1733,7 +1776,7 @@ def test_the_app_is_told_what_a_phone_changed(
     shown = result(opened, "sharing.pair")
     key = ask(share, "/sync/v1/pair", body={"code": shown["code"], "device": "iPhone"})[1]["key"]
     said = ask(share, "/sync/v1/hello", key=key)[1]["accepts"]
-    assert said == ["changes", "favourites", "plays", "playlists"]
+    assert said == ["changes", "favourites", "plays", "playlists", "forget"]
 
     made = did("playlist_new", playlist=its_own(), name="Driving")
     assert tell(share, key, made) == ids(made)
