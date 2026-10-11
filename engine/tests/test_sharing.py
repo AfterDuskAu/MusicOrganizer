@@ -218,7 +218,7 @@ def test_hello_needs_no_key(share: sharing.Share, filled: Library) -> None:
     status, hello = ask(share, "/sync/v1/hello")
     assert status == 200
     assert hello == {"format": 1, "library": share.info, "paired": False,
-                     "accepts": ["changes", "favourites", "plays"]}  # fmt: skip
+                     "accepts": ["changes", "favourites", "plays", "playlists"]}  # fmt: skip
     assert hello["library"]["name"] == filled.root.name
     key = paired(share)
     assert ask(share, "/sync/v1/hello", key=key)[1]["paired"] is True
@@ -1157,6 +1157,109 @@ def test_a_playlist_made_on_a_phone_under_a_name_there_is(
     assert playlists(filled) == [MORNING, ("Evening", [SONG_ID])]
 
 
+def test_a_playlist_is_changed_and_deleted_on_a_phone(
+    share: sharing.Share, filled: Library
+) -> None:
+    evening = listening.create_playlist(filled, "Evening")[-1]["id"]
+    listening.set_playlist_tracks(filled, evening, [SONG_ID])
+    key = paired(share)
+    before = the_list(share, key)
+    tracks = {t["title"]: t["id"] for t in before["tracks"]}
+    lists = {p["name"]: p["id"] for p in before["playlists"]}
+    song, other, morning = tracks["Song"], tracks["Other"], lists["Morning"]
+    sent = [
+        did("playlist_rename", playlist=morning, name="  Early  hours "),
+        # A new order: what the phone names first; the rest after, as it was.
+        did("playlist_order", playlist=morning, tracks=[other, "t-nothing", 7, song, song]),
+        did("playlist_remove", playlist=morning, track=song),  # one copy: the last
+        did("playlist_delete", playlist=lists["Evening"], at=in_a_minute()),
+    ]
+    assert tell(share, key, *sent) == ids(*sent)
+    # The song the list leaves out (it's gone from the library) is still in its place
+    # after the others: an order takes nothing out.
+    assert playlists(filled) == [("Early hours", [OTHER_ID, SONG_ID, "gone-from-the-library"])]
+    after = the_list(share, key)
+    assert [(p["id"], p["name"], p["tracks"]) for p in after["playlists"]] == [
+        (morning, "Early hours", [other, song])
+    ]
+    assert after["revision"] != before["revision"]
+    # Every song is where it was: only the lists changed.
+    assert [t["id"] for t in after["tracks"]] == [t["id"] for t in before["tracks"]]
+    # Sent again (the answer was lost on the way), nothing more comes of them.
+    kept = listening.get(filled)
+    assert tell(share, key, *sent) == ids(*sent)
+    assert listening.get(filled) == kept
+
+    # A playlist changed on the computer after the phone deleted it stays: the newer word.
+    listening.add_to_playlist(filled, listening.get(filled)["playlists"][0]["id"], SONG_ID)
+    stale = did("playlist_delete", playlist=morning, at="2026-10-10T03:20:00Z")
+    assert tell(share, key, stale) == ids(stale)
+    assert [name for name, _ in playlists(filled)] == ["Early hours"]
+
+    # What makes no sense, or names what isn't there, is dropped and dealt with.
+    kept = listening.get(filled)
+    odd = [
+        did("playlist_rename", playlist=morning, name=7),
+        did("playlist_rename", playlist=morning, name=""),
+        did("playlist_rename", name="No Playlist"),
+        did("playlist_rename", playlist=lists["Evening"], name="Gone"),  # deleted above
+        did("playlist_remove", playlist=morning, track="t-nothing"),
+        did("playlist_remove", playlist=morning, track=after["videos"][0]["id"]),
+        did("playlist_remove", playlist=morning),
+        did("playlist_remove", track=song),
+        did("playlist_order", playlist=morning, tracks="backwards"),
+        did("playlist_order", playlist=morning, tracks={"first": song}),
+        did("playlist_order", playlist=morning),
+        did("playlist_order", playlist=morning, tracks=[[song], None, OTHER_ID]),
+        did("playlist_order", tracks=[song]),
+        did("playlist_delete"),
+        did("playlist_delete", playlist=["x"]),
+        did("playlist_delete", playlist=its_own()),  # never made
+        did("playlist_delete", playlist=evening),  # not an id a phone is given
+        did("playlist_delete", playlist="p-" + "0" * 24),
+    ]
+    assert tell(share, key, *odd) == ids(*odd)
+    assert listening.get(filled) == kept
+
+
+def in_a_minute() -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() + 60))
+
+
+def test_a_playlist_made_on_a_phone_is_changed_before_it_has_synced(
+    share: sharing.Share, filled: Library
+) -> None:
+    listening.create_playlist(filled, "Evening")  # made on the computer since the phone synced
+    key = paired(share)
+    tracks, _ = named(share, key)
+    song, other = tracks["Song"], tracks["Other"]
+    mine, same = its_own(), its_own()
+    sent = [
+        did("playlist_new", playlist=mine, name="Driving"),
+        did("playlist_add", playlist=mine, track=song),
+        did("playlist_add", playlist=mine, track=other),
+        did("playlist_order", playlist=mine, tracks=[other, song]),
+        did("playlist_rename", playlist=mine, name="Night drive"),
+        # One under a name the computer has: the phone has never seen that playlist, so
+        # by its own id for it, it can only put songs in.
+        did("playlist_new", playlist=same, name="evening"),
+        did("playlist_add", playlist=same, track=song),
+        did("playlist_rename", playlist=same, name="Not Mine To Name"),
+        did("playlist_remove", playlist=same, track=song),
+        did("playlist_delete", playlist=same, at=in_a_minute()),
+    ]
+    assert tell(share, key, *sent) == ids(*sent)
+    assert playlists(filled) == [
+        MORNING, ("Evening", [SONG_ID]), ("Night drive", [OTHER_ID, SONG_ID]),
+    ]  # fmt: skip
+    # Once it has the list, the phone names that playlist by the list's id, and may.
+    lists = named(share, key)[1]
+    gone = did("playlist_delete", playlist=lists["Evening"], at=in_a_minute())
+    done = did("playlist_delete", playlist=mine, at=in_a_minute())  # its own id still works
+    assert tell(share, key, gone, done) == ids(gone, done)
+    assert playlists(filled) == [MORNING]
+
+
 def test_time_spent_listening_comes_back_from_a_phone(
     share: sharing.Share, filled: Library
 ) -> None:
@@ -1227,7 +1330,7 @@ def test_what_this_engine_doesnt_know_is_left_with_the_phone(
     key = paired(share)
     song = named(share, key)[0]["Song"]
     before = listening.get(filled)
-    newer = did("playlist_rename", playlist="p-1", name="New")  # a kind a newer phone might send
+    newer = did("playlist_colour", playlist="p-1", colour="red")  # a newer phone's kind
     odd = did(["playlist_add"], track=song)
     nameless = {"kind": "listened", "track": song, "seconds": 5}  # nothing to answer it by
     numbered = {"id": 7, "kind": "listened", "track": song, "seconds": 5}
@@ -1524,7 +1627,8 @@ def test_the_app_is_told_what_a_phone_changed(
     assert share is not None
     shown = result(opened, "sharing.pair")
     key = ask(share, "/sync/v1/pair", body={"code": shown["code"], "device": "iPhone"})[1]["key"]
-    assert ask(share, "/sync/v1/hello", key=key)[1]["accepts"] == ["changes", "favourites", "plays"]
+    said = ask(share, "/sync/v1/hello", key=key)[1]["accepts"]
+    assert said == ["changes", "favourites", "plays", "playlists"]
 
     made = did("playlist_new", playlist=its_own(), name="Driving")
     assert tell(share, key, made) == ids(made)
@@ -1533,4 +1637,9 @@ def test_the_app_is_told_what_a_phone_changed(
     assert tell(share, key, made) == ids(made)  # again: nothing changed, so nothing is said
     assert tell(share, key, did("listened", track="nothing", seconds=5)) != []
     assert len(out.notes("listening.changed")) == 1
+    # A playlist deleted on the phone: the app is told, so its row goes at once.
+    driving = named(share, key)[1]["Driving"]
+    assert tell(share, key, did("playlist_delete", playlist=driving, at=in_a_minute())) != []
+    assert len(out.notes("listening.changed")) == 2
+    assert result(opened, "listening.get")["playlists"] == []
     result(opened, "sharing.set", on=False)

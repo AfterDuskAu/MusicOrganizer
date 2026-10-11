@@ -34,8 +34,8 @@ struct SharingSettings: View {
                     "On: a phone player on the same Wi-Fi can copy this profile's songs, videos, "
                         + "covers, lyrics and playlists, and play its own copies. It can't "
                         + "change a music file. What's done on it comes back when it syncs: "
-                        + "a playlist made, a song put in a playlist, a heart, a play "
-                        + "counted, and time spent listening. Off: nothing is listening.")
+                        + "a playlist made, changed or deleted, a heart, a play counted, "
+                        + "and time spent listening. Off: nothing is listening.")
                 if wanted {
                     SideNote(
                         "Movies and videos: the MP4, M4V and MOV files in your Movies "

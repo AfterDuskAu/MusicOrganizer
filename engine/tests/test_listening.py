@@ -57,7 +57,9 @@ def change(kind: str, mark: str, **about: object) -> listening.DeviceChange:
 
 def came(**of_it: object) -> dict[str, object]:
     """What `from_devices` says came of a device's changes: nothing, but for these."""
-    return {"playlists": 0, "songs": 0, "seconds": 0.0, "hearts": 0, "plays": 0, **of_it}
+    nothing = {"playlists": 0, "songs": 0, "seconds": 0.0, "hearts": 0, "plays": 0,
+               "removed": 0, "renamed": 0, "ordered": 0, "deleted": 0}  # fmt: skip
+    return {**nothing, **of_it}
 
 
 def test_a_heart_and_a_play_come_back_from_a_device(
@@ -150,6 +152,151 @@ def test_a_playlist_made_on_a_device_uses_the_one_of_that_name(lib: Library) -> 
     kept = lib.load_state().data["listening"]["devices"]
     assert kept["made"] == [{"theirs": "b", "playlist": first["id"]}]
     assert kept["taken"] == [f"m{n}" for n in range(1, 12)]
+
+
+def songs_of(lib: Library) -> list[tuple[str, list[str]]]:
+    return [(p["name"], p["track_ids"]) for p in listening.get(lib)["playlists"]]
+
+
+def test_a_playlist_is_changed_on_a_device(lib: Library) -> None:
+    mix = listening.create_playlist(lib, "Mix")[0]["id"]
+    listening.set_playlist_tracks(lib, mix, ["t_1", "t_2", "t_1", "t_3", "t_4"])
+    sent = [
+        change("playlist_rename", "m1", playlist_id=mix, name="  Road   trip "),
+        change("playlist_remove", "m2", playlist_id=mix, track_id="t_3"),
+        change("playlist_remove", "m3", playlist_id=mix, track_id="t_1"),  # its last copy goes
+        change("playlist_remove", "m4", playlist_id=mix, track_id="t_9"),  # it isn't in it
+        change("playlist_rename", "m5", playlist_id=mix, name="Road trip"),  # its name already
+        change("playlist_rename", "m6", playlist_id=mix, name="   "),  # nothing to call it
+        change("playlist_rename", "m7", playlist_id="pl_gone", name="Nowhere"),
+        change("playlist_remove", "m8", playlist_id="pl_gone", track_id="t_1"),
+    ]
+    assert listening.from_devices(lib, sent) == came(renamed=1, removed=2)
+    assert songs_of(lib) == [("Road trip", ["t_1", "t_2", "t_4"])]
+    # Sent again, nothing more comes of them: a second copy of a song isn't taken out.
+    listening.set_playlist_tracks(lib, mix, ["t_1", "t_2", "t_4", "t_1"])
+    assert listening.from_devices(lib, sent) == came()
+    assert songs_of(lib) == [("Road trip", ["t_1", "t_2", "t_4", "t_1"])]
+    # A name longer than the library allows is cut, as a new playlist's is.
+    long = [change("playlist_rename", "m9", playlist_id=mix, name="y" * 5000)]
+    assert listening.from_devices(lib, long) == came(renamed=1)
+    assert listening.get(lib)["playlists"][0]["name"] == "y" * listening.MAX_NAME
+
+
+def test_a_new_order_never_puts_a_song_in_or_takes_one_out(lib: Library) -> None:
+    mix = listening.create_playlist(lib, "Mix")[0]["id"]
+    # t_5 was put in on the computer since the device last synced, and so was the
+    # second t_1: the device's order names neither.
+    listening.set_playlist_tracks(lib, mix, ["t_1", "t_2", "t_3", "t_5", "t_1"])
+    order = change("playlist_order", "m1", playlist_id=mix, tracks=("t_3", "t_9", "t_1", "t_2"))
+    assert listening.from_devices(lib, [order]) == came(ordered=1)
+    # The device's order first; what it didn't name after, as it was. t_9 isn't put in.
+    assert songs_of(lib) == [("Mix", ["t_3", "t_1", "t_2", "t_5", "t_1"])]
+    same = [
+        change("playlist_order", "m2", playlist_id=mix, tracks=("t_3", "t_1", "t_2", "t_5", "t_1")),
+        change("playlist_order", "m3", playlist_id=mix, tracks=()),  # nothing named: as it was
+        change("playlist_order", "m4", playlist_id=mix, tracks=("t_3", "t_3", "t_3")),
+        change("playlist_order", "m5", playlist_id="pl_gone", tracks=("t_1",)),
+    ]
+    assert listening.from_devices(lib, same) == came()
+    assert songs_of(lib) == [("Mix", ["t_3", "t_1", "t_2", "t_5", "t_1"])]
+    # Both copies of a song can be placed.
+    both = change("playlist_order", "m6", playlist_id=mix, tracks=("t_1", "t_1", "t_5"))
+    assert listening.from_devices(lib, [both]) == came(ordered=1)
+    assert songs_of(lib) == [("Mix", ["t_1", "t_1", "t_5", "t_3", "t_2"])]
+
+
+def test_a_playlist_deleted_on_a_device_stays_if_it_was_changed_here_since(
+    lib: Library, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(listening, "_now", lambda: "2026-10-11T03:00:00Z")
+    old, used, plain = (p["id"] for p in [listening.create_playlist(lib, n)[-1] for n in "abc"])
+    listening.set_playlist_tracks(lib, old, ["t_1", "t_2"])
+    with state.edit(lib.paths.state_file) as st:  # one from before changes were noted
+        del st.data["listening"]["playlists"][0]["changed_at"]
+        st.data["listening"]["playlists"][0]["created_at"] = None
+    listening.add_to_playlist(lib, used, "t_1")  # changed here at three o'clock
+    assert [p.get("changed_at") for p in listening.get(lib)["playlists"]] == [
+        None, "2026-10-11T03:00:00Z", None,
+    ]  # fmt: skip
+    early = [  # deleted on the device at two: the computer's word is the newer
+        change("playlist_delete", "m1", playlist_id=used, at="2026-10-11T02:00:00Z"),
+        change("playlist_delete", "m2", playlist_id=plain, at="2026-10-11T02:00:00Z"),  # made at 3
+        change("playlist_delete", "m3", playlist_id="pl_gone", at="2026-10-11T04:00:00Z"),
+    ]
+    assert listening.from_devices(lib, early) == came()
+    assert [name for name, _ in songs_of(lib)] == ["a", "b", "c"]
+    late = [
+        change("playlist_delete", "m4", playlist_id=used, at="2026-10-11T04:00:00Z"),
+        change("playlist_delete", "m5", playlist_id=plain, at="not a time"),  # counts as now
+        change("playlist_delete", "m6", playlist_id=old, at="2020-01-01T00:00:00Z"),  # no note
+    ]
+    assert listening.from_devices(lib, late) == came(deleted=3)
+    assert listening.get(lib)["playlists"] == []
+    # Only the lists went: nothing else the library keeps about a song is touched.
+    assert listening.get(lib)["favourites"] == [] and listening.get(lib)["plays"] == {}
+
+
+def test_what_a_device_did_to_a_playlist_counts_as_when_it_says(lib: Library) -> None:
+    mix = listening.create_playlist(lib, "Mix")[0]["id"]
+    at = {"at": "2026-10-10T10:00:00Z"}
+    listening.from_devices(
+        lib, [change("playlist_add", "m1", playlist_id=mix, track_id="t_1", **at)]
+    )
+    assert listening.get(lib)["playlists"][0]["changed_at"] == "2026-10-10T10:00:00Z"
+    # A second device deleted it five minutes before that: the song put in is the newer word.
+    sooner = change("playlist_delete", "m2", playlist_id=mix, at="2026-10-10T09:55:00Z")
+    assert listening.from_devices(lib, [sooner]) == came()
+    # A time in the future isn't believed: it counts as now, and no later.
+    ahead = change(
+        "playlist_remove", "m3", playlist_id=mix, track_id="t_1", at="2999-01-01T00:00:00Z"
+    )
+    assert listening.from_devices(lib, [ahead]) == came(removed=1)
+    assert listening.get(lib)["playlists"][0]["changed_at"] < "2999"
+
+
+def test_by_an_id_of_its_own_a_device_changes_only_a_playlist_made_for_it(lib: Library) -> None:
+    driving = listening.create_playlist(lib, "Driving")[0]["id"]  # made here, never seen there
+    listening.set_playlist_tracks(lib, driving, ["t_1", "t_2", "t_3"])
+    sent = [
+        # The device made a "driving" too. It lands in the one there is, and from there
+        # on the device may only put songs in it: it has never seen what's in it.
+        change("playlist_new", "m1", theirs="a", name="driving"),
+        change("playlist_add", "m2", theirs="a", track_id="t_9"),
+        change("playlist_remove", "m3", theirs="a", track_id="t_1"),
+        change("playlist_order", "m4", theirs="a", tracks=("t_9", "t_3")),
+        change("playlist_rename", "m5", theirs="a", name="Night drive"),
+        change("playlist_delete", "m6", theirs="a", at="2999-01-01T00:00:00Z"),
+        # One that was made here for the device is the device's to change, in the same
+        # request or a later one.
+        change("playlist_new", "m7", theirs="b", name="Running"),
+        change("playlist_add", "m8", theirs="b", track_id="t_1"),
+        change("playlist_add", "m9", theirs="b", track_id="t_2"),
+        change("playlist_add", "m10", theirs="b", track_id="t_3"),
+        change("playlist_remove", "m11", theirs="b", track_id="t_2"),
+        change("playlist_order", "m12", theirs="b", tracks=("t_3", "t_1")),
+        change("playlist_rename", "m13", theirs="b", name="Run"),
+        change("playlist_delete", "m14", theirs="never-made"),
+    ]
+    assert listening.from_devices(lib, sent) == came(
+        playlists=1, songs=4, removed=1, ordered=1, renamed=1
+    )
+    assert songs_of(lib) == [("Driving", ["t_1", "t_2", "t_3", "t_9"]), ("Run", ["t_3", "t_1"])]
+    kept = lib.load_state().data["listening"]["devices"]["made"]
+    assert kept == [
+        {"theirs": "a", "playlist": driving},
+        {"theirs": "b", "playlist": listening.get(lib)["playlists"][1]["id"], "new": True},
+    ]
+    # Deleted on the device afterwards: gone, and a song put in it later has nowhere to go.
+    later = [
+        change("playlist_delete", "m15", theirs="b"),
+        change("playlist_add", "m16", theirs="b", track_id="t_5"),
+    ]
+    assert listening.from_devices(lib, later) == came(deleted=1)
+    assert songs_of(lib) == [("Driving", ["t_1", "t_2", "t_3", "t_9"])]
+    assert lib.load_state().data["listening"]["devices"]["made"] == [
+        {"theirs": "a", "playlist": driving}
+    ]
 
 
 def test_a_device_cant_fill_the_librarys_records(

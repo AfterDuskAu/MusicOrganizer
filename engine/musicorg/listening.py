@@ -11,10 +11,11 @@ upgraded, so a playlist survives a tidy.
         "plays": {track_id: {"count": 3, "last_played": ISO time}},
         "listened": {track_id: 15324.5},                 # seconds spent listening to it
         "playlists": [{"id": "pl_…", "name": "…", "created_at": ISO time,
+                       "changed_at": ISO time,           # once it has been changed
                        "track_ids": [track_id, …]}],     # in the owner's order
         "library": {track_id: {"since": ISO time}},      # downloads moved into the main library
         "devices": {"taken": ["9f2c…", …],               # changes taken from paired devices
-                    "made": [{"theirs": "5b1e…", "playlist": "pl_…"}]}
+                    "made": [{"theirs": "5b1e…", "playlist": "pl_…", "new": true}]}
     }
 
 A download stays under Discover → Downloads until the owner moves it into the main
@@ -28,15 +29,23 @@ is time, not a count: a play is still a song heard to its end.
 
 **Changes from a paired device (2026-10-10).** A phone player tells the computer what
 was done on it: a playlist made, a song put in a playlist, time spent listening and,
-since 2026-10-11, a heart put on a song or taken off and a song played to its end
-(`sharing` checks what it sent and hands it over as `DeviceChange`s; docs/ENGINE_API.md,
-section 3). What's kept so that each is taken once, under "devices":
+since 2026-10-11, a heart put on a song or taken off, a song played to its end, and the
+rest of what can be done to a playlist: a new name, a song taken out, a new order, and
+the playlist deleted (`sharing` checks what it sent and hands it over as
+`DeviceChange`s; docs/ENGINE_API.md, section 3). What's kept so that each is taken once,
+under "devices":
 
 - `taken`: a short hash of every change taken, the oldest first, `TAKEN_KEPT` at most.
   A change that comes again (its answer was lost on the way) is known by it.
 - `made`: for a playlist made on a device, which of the library's playlists it is, by
   a hash of the id the device made up for it. A song the device puts in "its" playlist
-  lands in ours, in the same request or a later one. Gone with the playlist.
+  lands in ours, in the same request or a later one. Gone with the playlist. `new` says
+  the playlist was made here for the device; without it, the device's playlist was one
+  of a name the library had already, which the device has never seen (`_named`).
+
+**When a playlist was last changed** (`changed_at`, 2026-10-11) is kept so that a
+playlist deleted on a device stays if the owner has changed it here since: the newer
+word wins, as for a heart. A playlist nobody has changed since has only `created_at`.
 
 Every function takes the open library (its lock must be held to change anything) and
 returns plain data in the shapes docs/ENGINE_API.md gives.
@@ -46,6 +55,7 @@ from __future__ import annotations
 
 import re
 import secrets
+from collections import Counter
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
@@ -72,13 +82,14 @@ class DeviceChange:
 
     mark: str  # a short hash of the change's own id: a change is taken once
     kind: str
-    track_id: str = ""  # every kind but `playlist_new`: the song
-    playlist_id: str = ""  # `playlist_add`: one of the library's playlists…
+    track_id: str = ""  # the song, for the kinds that are about one
+    playlist_id: str = ""  # a playlist's kinds: one of the library's playlists…
     theirs: str = ""  # …or one the device made, by the hash of its id there
-    name: str = ""  # `playlist_new`: what the device called it
+    name: str = ""  # `playlist_new` and `playlist_rename`: what the device called it
     seconds: float = 0.0  # `listened`
     on: bool = False  # `favourite`: the heart was put on, or taken off
-    at: str = ""  # `favourite` and `played`: when the device says it was done
+    at: str = ""  # when the device says it was done
+    tracks: tuple[str, ...] = ()  # `playlist_order`: the songs, in the device's order
 
 
 def get(lib: Library) -> dict[str, Any]:
@@ -163,9 +174,12 @@ def from_devices(lib: Library, changes: list[DeviceChange]) -> dict[str, Any]:
 
     A change taken before is left alone. One that can't be done any more (its playlist
     has been deleted since) is dropped, and is noted as taken all the same. Returns what
-    was done: `{playlists, songs, seconds, hearts, plays}` (playlists made, songs put in
-    playlists, listening time added, hearts put on or taken off, and plays counted)."""
-    done: dict[str, Any] = {"playlists": 0, "songs": 0, "seconds": 0.0, "hearts": 0, "plays": 0}
+    was done: `{playlists, songs, seconds, hearts, plays, removed, renamed, ordered,
+    deleted}` (playlists made, songs put in playlists, listening time added, hearts put
+    on or taken off, plays counted; and songs taken out of playlists, playlists given a
+    new name, put in a new order, and deleted)."""
+    done: dict[str, Any] = {"playlists": 0, "songs": 0, "seconds": 0.0, "hearts": 0, "plays": 0,
+                            "removed": 0, "renamed": 0, "ordered": 0, "deleted": 0}  # fmt: skip
     if not changes:
         return done
     with state.edit(lib.paths.state_file) as st:
@@ -191,8 +205,16 @@ def from_devices(lib: Library, changes: list[DeviceChange]) -> dict[str, Any]:
             elif change.kind == "played" and change.track_id:
                 entry = data["plays"].setdefault(change.track_id, {"count": 0})
                 entry["count"] = int(entry.get("count", 0)) + 1
-                entry["last_played"] = _last_played(entry.get("last_played"), change.at)
+                entry["last_played"] = _later(entry.get("last_played"), change.at)
                 done["plays"] += 1
+            elif change.kind == "playlist_remove":
+                done["removed"] += _removed_on_a_device(data, change)
+            elif change.kind == "playlist_rename":
+                done["renamed"] += _renamed_on_a_device(data, change)
+            elif change.kind == "playlist_order":
+                done["ordered"] += _ordered_on_a_device(data, change)
+            elif change.kind == "playlist_delete":
+                done["deleted"] += _deleted_on_a_device(data, change)
         del taken[:-TAKEN_KEPT]
         del made[:-MADE_KEPT]
         st.data[KEY] = data
@@ -218,29 +240,123 @@ def _made_on_a_device(data: dict[str, Any], change: DeviceChange) -> int:
         return 0
     new = {"id": "pl_" + secrets.token_hex(6), "name": name, "created_at": _now(), "track_ids": []}
     data["playlists"].append(new)
-    made.append({"theirs": change.theirs, "playlist": new["id"]})
+    made.append({"theirs": change.theirs, "playlist": new["id"], "new": True})
     return 1
+
+
+def _named(
+    data: dict[str, Any], change: DeviceChange, *, to_change: bool = False
+) -> dict[str, Any] | None:
+    """The playlist a device's change names: one of the library's, by its id, or one
+    the device made, by the note kept when it was made. None if it has been deleted
+    since, or was never made.
+
+    `to_change` is for everything but putting a song in. **By the id a device made up,
+    only a playlist that was made here for that device can be changed.** If the
+    device's playlist turned out to be one the library had already (the same name),
+    the device has never seen that one: it mustn't rename, reorder or delete what it
+    has only ever put songs in. Once it has the list, it names the playlist by the
+    list's id, and can."""
+    wanted = change.playlist_id
+    if not wanted:
+        for note in data["devices"]["made"]:
+            if note["theirs"] == change.theirs and (note.get("new") or not to_change):
+                wanted = note["playlist"]
+    return next((p for p in data["playlists"] if p["id"] == wanted), None)
 
 
 def _added_on_a_device(data: dict[str, Any], change: DeviceChange) -> int:
     """A song put in a playlist on a device: it goes at the end, **unless the playlist
     has it already** (a device can't see what was put in here since it last synced, so a
     second copy would be one nobody asked for). Returns how many songs went in (1 or 0)."""
-    wanted = change.playlist_id
-    if not wanted:  # a playlist the device made: ours, by the note kept when it was made
-        wanted = next(
-            (m["playlist"] for m in data["devices"]["made"] if m["theirs"] == change.theirs), ""
-        )
-    for found in data["playlists"]:
-        if found["id"] == wanted:
-            songs = found["track_ids"]
-            if not change.track_id or change.track_id in songs:
-                return 0
-            if len(songs) >= MAX_PLAYLIST_SONGS:
-                return 0
-            songs.append(change.track_id)
-            return 1
-    return 0  # the playlist has been deleted since
+    found = _named(data, change)
+    if found is None:
+        return 0  # the playlist has been deleted since
+    songs = found["track_ids"]
+    if not change.track_id or change.track_id in songs or len(songs) >= MAX_PLAYLIST_SONGS:
+        return 0
+    songs.append(change.track_id)
+    found["changed_at"] = _later(found.get("changed_at"), change.at)
+    return 1
+
+
+def _removed_on_a_device(data: dict[str, Any], change: DeviceChange) -> int:
+    """A song taken out of a playlist on a device (2026-10-11). Only the playlist loses
+    it: the song stays in the library. One change takes one copy out; if the playlist
+    has the song more than once, the last copy goes, so the song keeps the place it was
+    first given. Returns how many songs were taken out (1 or 0)."""
+    found = _named(data, change, to_change=True)
+    if found is None or change.track_id not in found["track_ids"]:
+        return 0
+    songs = found["track_ids"]
+    del songs[len(songs) - 1 - songs[::-1].index(change.track_id)]
+    found["changed_at"] = _later(found.get("changed_at"), change.at)
+    return 1
+
+
+def _renamed_on_a_device(data: dict[str, Any], change: DeviceChange) -> int:
+    """A playlist given a new name on a device (2026-10-11). The name is tidied and cut
+    as a new playlist's is. Another playlist may have that name already, as on the
+    computer. Returns how many names changed (1 or 0)."""
+    found = _named(data, change, to_change=True)
+    name = " ".join(change.name.split())[:MAX_NAME].strip()
+    if found is None or not name or found["name"] == name:
+        return 0
+    found["name"] = name
+    found["changed_at"] = _later(found.get("changed_at"), change.at)
+    return 1
+
+
+def _ordered_on_a_device(data: dict[str, Any], change: DeviceChange) -> int:
+    """A playlist put in a new order on a device (2026-10-11). **An order never puts a
+    song in or takes one out:** the songs the playlist has are put in the order the
+    device gives, and any it has that the device didn't name (put in here since the
+    device last synced) stay, after the others, in the order they were. A song the
+    device names that the playlist doesn't have is passed over. Returns how many
+    playlists changed (1 or 0)."""
+    found = _named(data, change, to_change=True)
+    if found is None:
+        return 0
+    before: list[str] = found["track_ids"]
+    left = Counter(before)  # a song may be in a playlist more than once
+    first: list[str] = []
+    for track_id in change.tracks:
+        if left[track_id] > 0:
+            left[track_id] -= 1
+            first.append(track_id)
+    placed = Counter(first)
+    rest: list[str] = []
+    for track_id in before:
+        if placed[track_id] > 0:
+            placed[track_id] -= 1
+        else:
+            rest.append(track_id)
+    if first + rest == before:
+        return 0
+    found["track_ids"] = first + rest
+    found["changed_at"] = _later(found.get("changed_at"), change.at)
+    return 1
+
+
+def _deleted_on_a_device(data: dict[str, Any], change: DeviceChange) -> int:
+    """A playlist deleted on a device (2026-10-11). Only the list goes: its songs stay
+    in the library. **The newer word wins:** the playlist stays if it was changed here
+    (a song put in or taken out, a new order, a new name) after the device says it
+    deleted it, since the device tells of it only at its next sync, which may be days
+    later. A time that can't be read counts as now. Returns how many playlists were
+    deleted (1 or 0)."""
+    found = _named(data, change, to_change=True)
+    if found is None:
+        return 0
+    known = [_time(found.get("changed_at")), _time(found.get("created_at"))]
+    here = max((when for when in known if when is not None), default=None)
+    there = _time(change.at)
+    if here is not None and there is not None and here > there:
+        return 0
+    data["playlists"].remove(found)
+    made = data["devices"]["made"]  # the note of whose playlist it was goes with it
+    made[:] = [note for note in made if note["playlist"] != found["id"]]
+    return 1
 
 
 def _hearted_on_a_device(data: dict[str, Any], change: DeviceChange) -> int:
@@ -265,9 +381,10 @@ def _hearted_on_a_device(data: dict[str, Any], change: DeviceChange) -> int:
     return 1
 
 
-def _last_played(kept: object, said: str) -> str:
-    """When a song was last played, with a play on a device counted in: the later of
-    what's kept and when the device says, which is never later than now."""
+def _later(kept: object, said: str) -> str:
+    """When something was last done (a song played, a playlist changed), with what a
+    device did counted in: the later of what's kept and when the device says, which is
+    never later than now. A time that can't be read counts as now."""
     now = datetime.now(UTC)
     when = min(_time(said) or now, now)
     before = _time(kept)
@@ -370,7 +487,8 @@ def rename_playlist(lib: Library, playlist_id: str, name: str) -> list[dict[str,
     name = _name(name)
     with state.edit(lib.paths.state_file) as st:
         data = _read(st.data)
-        _find(data, playlist_id)["name"] = name
+        found = _find(data, playlist_id)
+        found["name"], found["changed_at"] = name, _now()
         st.data[KEY] = data
     return data["playlists"]
 
@@ -393,7 +511,8 @@ def set_playlist_tracks(
         _check_id(track_id)
     with state.edit(lib.paths.state_file) as st:
         data = _read(st.data)
-        _find(data, playlist_id)["track_ids"] = list(track_ids)
+        found = _find(data, playlist_id)
+        found["track_ids"], found["changed_at"] = list(track_ids), _now()
         st.data[KEY] = data
     return data["playlists"]
 
@@ -409,6 +528,7 @@ def add_to_playlist(lib: Library, playlist_id: str, track_id: str) -> bool:
             if found["id"] == playlist_id:
                 if track_id not in found["track_ids"]:
                     found["track_ids"].append(track_id)
+                    found["changed_at"] = _now()
                     st.data[KEY] = data
                 return True
     return False
@@ -449,7 +569,8 @@ def _read(data: dict[str, Any]) -> dict[str, Any]:
     time = raw.get("listened")
     kept = [
         {"id": p["id"], "name": p["name"], "created_at": p.get("created_at"),
-         "track_ids": [t for t in p.get("track_ids") or [] if isinstance(t, str)]}
+         "track_ids": [t for t in p.get("track_ids") or [] if isinstance(t, str)],
+         **({"changed_at": p["changed_at"]} if isinstance(p.get("changed_at"), str) else {})}
         for p in (playlists if isinstance(playlists, list) else [])
         if isinstance(p, dict)
         and isinstance(p.get("id"), str)
@@ -509,7 +630,11 @@ def _devices(raw: object, playlists: set[str]) -> dict[str, Any]:
     return {
         "taken": [t for t in (taken if isinstance(taken, list) else []) if isinstance(t, str)],
         "made": [
-            {"theirs": m["theirs"], "playlist": m["playlist"]}
+            {
+                "theirs": m["theirs"],
+                "playlist": m["playlist"],
+                **({"new": True} if m.get("new") is True else {}),
+            }
             for m in (made if isinstance(made, list) else [])
             if isinstance(m, dict)
             and isinstance(m.get("theirs"), str)
