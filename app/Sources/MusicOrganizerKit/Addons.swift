@@ -359,6 +359,12 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
     public let peers: Int
     /// How many of them have the whole film (2026-10-11; an older engine doesn't say).
     public let seeds: Int?
+    /// Who has the torrent, reckoned as a count from the Count button is: a tracker's
+    /// own figures where there are any, else those met so far. Seeds, and everyone
+    /// (the seeds among them). The film's page shows these, so that the numbers before
+    /// a film is opened and while it plays are the same measure.
+    public let swarmSeeds: Int?
+    public let swarmPeers: Int?
     public let bytesPerSecond: Int
     public let progress: Double
     /// The film is being kept and hasn't all arrived yet.
@@ -378,9 +384,12 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
     public init(
         state: String, peers: Int, bytesPerSecond: Int, progress: Double, keeping: Bool? = nil,
         keptPath: String? = nil, keepError: String? = nil, keepNote: String? = nil,
-        converting: Double? = nil, seeds: Int? = nil
+        converting: Double? = nil, seeds: Int? = nil, swarmSeeds: Int? = nil,
+        swarmPeers: Int? = nil
     ) {
         self.seeds = seeds
+        self.swarmSeeds = swarmSeeds
+        self.swarmPeers = swarmPeers
         self.keepNote = keepNote
         self.converting = converting
         self.state = state
@@ -431,9 +440,12 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
     }
 
     /// Seeders and leechers as the film's page writes them, "25/5": those with the whole
-    /// film, then the others. Nil from an engine that doesn't tell the two apart.
+    /// film, then the others. The same measure a count gives (`swarmSeeds`), or, from an
+    /// engine that doesn't say that, those it's connected to. Nil from one that doesn't
+    /// tell seeds apart at all.
     public var swarm: String? {
-        seeds.map { "\($0)/\(max(peers - $0, 0))" }
+        if let swarmSeeds, let swarmPeers { return "\(swarmSeeds)/\(max(swarmPeers - swarmSeeds, 0))" }
+        return seeds.map { "\($0)/\(max(peers - $0, 0))" }
     }
 
     /// One line for the player: "Finding the film…", "2 seeds · 4 peers · 4.6 MB/s · 9% here".

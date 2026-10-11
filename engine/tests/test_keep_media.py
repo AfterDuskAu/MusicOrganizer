@@ -152,6 +152,11 @@ def test_a_kept_film_is_saved_when_it_has_all_arrived(places: dict[str, Path]) -
     assert joined.status()["keeping"] is True
     # Who has it is the engine's own count, of those it's connected to: no add-on says.
     assert (joined.status()["peers"], joined.status()["seeds"]) == (3, 2)
+    # And who has the torrent, reckoned as a count from the Count button is: the same
+    # measure before a film is opened and while it plays.
+    said = joined.status()
+    assert (said["swarm_seeds"], said["swarm_peers"]) == torrents.who_has(joined.handle.status())
+    assert (said["swarm_seeds"], said["swarm_peers"]) == (2, 3)
 
     # The player lets go of it: it's still wanted, so it isn't left.
     player.close(joined.info_hash)
@@ -450,7 +455,10 @@ class Counted:
     """A torrent as libtorrent would report it, for a count: who it finds, look by look."""
 
     def __init__(self, looks: list[dict[str, int]]) -> None:
-        self.looks, self.asked = looks, 0
+        self.looks, self.asked, self.scraped = looks, 0, 0
+
+    def scrape_tracker(self) -> None:
+        self.scraped += 1
 
     def is_valid(self) -> bool:
         return True
@@ -473,25 +481,25 @@ class CountingSession(Session):
         return self.handle
 
 
-def test_who_has_a_torrent_is_the_most_that_was_found() -> None:
+def test_who_has_a_torrent_is_those_met_or_a_trackers_own_count() -> None:
     from types import SimpleNamespace as Told
 
     assert torrents.who_has(Told(num_seeds=2, num_peers=6)) == (2, 6)  # connected to
-    # Heard of, from other peers and the DHT, where that's more.
-    assert torrents.who_has(Told(num_seeds=2, num_peers=6, list_seeds=25, list_peers=30)) == (
-        25,
-        30,
-    )
     # A tracker's own count, where one answered: 25 with all of it, 5 without.
     assert torrents.who_has(Told(num_seeds=1, num_peers=1, num_complete=25, num_incomplete=5)) == (
-        25,
-        30,
-    )
+        25, 30,
+    )  # fmt: skip
+    # Seeds it has met and isn't connected to just now are seeds still.
+    assert torrents.who_has(Told(num_seeds=2, num_peers=6, list_seeds=25)) == (25, 29)
+    # A peer only heard of is not a leecher: nobody knows what it has. (As first built
+    # they all were: the owner's count read 7/2045 for a torrent that read 40/5 playing.)
+    heard_of = Told(num_seeds=7, num_peers=9, list_seeds=7, list_peers=2052)
+    assert torrents.who_has(heard_of) == (7, 9)
+    assert torrents.who_has(Told(list_peers=613)) == (0, 0)
     # "Not known" is -1 from a tracker: nothing, not one fewer.
     assert torrents.who_has(Told(num_seeds=0, num_peers=0, num_complete=-1, num_incomplete=-1)) == (
-        0,
-        0,
-    )
+        0, 0,
+    )  # fmt: skip
     assert torrents.who_has(Told()) == (0, 0)
     assert torrents.who_has(Told(num_seeds="many", num_peers=True, list_peers=None)) == (0, 0)
     assert torrents.who_has(Told(num_seeds=9, num_peers=4)) == (9, 9)  # never fewer than its seeds
@@ -516,6 +524,7 @@ def test_a_torrent_is_counted_without_fetching_any_of_it(
         # The most it found while it looked: 25 with all of it, 5 others.
         assert said == {"info_hash": "ab" * 20, "seeds": 25, "peers": 30}
         (params,) = session.added
+        assert handle.scraped == 1  # its trackers were asked for their own count
         # Told to fetch nothing, and given an empty folder of its own, not the films'.
         assert params.flags & lt.torrent_flags.upload_mode
         assert Path(params.save_path) == places["cache"] / torrents.COUNTING

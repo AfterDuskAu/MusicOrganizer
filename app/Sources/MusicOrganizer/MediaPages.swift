@@ -1098,7 +1098,10 @@ struct MovieView: View {
             Text("–").foregroundStyle(.secondary)
         } else if let said = model.swarm(of: stream) {
             Text(said).monospacedDigit()
-                .help("Seeders have the whole film; leechers are the others sharing it. Counted by this Mac.")
+                .help(
+                    "Seeders have the whole film; leechers are the others sharing it. The "
+                        + "film's trackers' own count where they give one; otherwise those "
+                        + "this Mac has met so far, which grows while the film plays.")
         } else if stream.infoHash.map({ model.swarmCounting.contains($0.lowercased()) }) == true {
             ProgressView().controlSize(.small)
         } else {

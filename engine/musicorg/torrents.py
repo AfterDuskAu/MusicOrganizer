@@ -224,24 +224,30 @@ def upload_settings(limit: int | None) -> dict[str, int]:
 
 
 def who_has(told: Any) -> tuple[int, int]:
-    """How many have a torrent, as far as libtorrent has found: `(seeds, everyone)`.
-    Seeds have all of it; everyone is the seeds and the rest. Each is the largest of
-    three ways of knowing: those it's connected to, those it has heard of (from other
-    peers and the DHT), and a tracker's own count where one has answered. So it's "at
-    least this many", found in the time it had."""
+    """How many have a torrent, as far as libtorrent knows: `(seeds, everyone)`. Seeds
+    have all of it; everyone is the seeds and the leechers (the others sharing it).
+
+    Two ways of knowing, and the larger of the two for each figure:
+
+    - **a tracker's own count**, where the torrent has a tracker and it has answered
+      (`num_complete`, `num_incomplete`): the figures a torrent's page on the web shows;
+    - **those it's connected to**, seeds and others apart (`num_seeds`, `num_peers`).
+      Seeds it has met and isn't connected to just now count as seeds too (`list_seeds`).
+
+    **A peer it has only heard of is not counted as a leecher** (`list_peers`). Whether
+    such a peer has all of the film isn't known until it's been asked, and most are
+    never asked. (As first built, on 2026-10-11, they were all taken for leechers: a
+    count read "7/2045" for a torrent that read "40/5" a minute into playing. The
+    owner saw it the same evening.) So without a tracker's count this is "at least
+    this many, met so far", and it grows the longer the torrent is joined."""
 
     def count(name: str) -> int:
         value = getattr(told, name, 0)
         return value if isinstance(value, int) and not isinstance(value, bool) and value > 0 else 0
 
     seeds = max(count("num_seeds"), count("list_seeds"), count("num_complete"))
-    others = max(
-        count("num_peers") - count("num_seeds"),
-        count("list_peers") - count("list_seeds"),
-        count("num_incomplete"),
-        0,
-    )
-    return seeds, seeds + others
+    leechers = max(count("num_peers") - count("num_seeds"), count("num_incomplete"), 0)
+    return seeds, seeds + leechers
 
 
 @dataclass
@@ -363,6 +369,10 @@ class _Joined:
             # and how many of them have the whole film (2026-10-11). No add-on says this.
             "peers": int(told.num_peers),
             "seeds": min(int(told.num_seeds), int(told.num_peers)),
+            # Who has the torrent, as a count from the owner's click reckons it
+            # (`who_has`): the same measure for a film that's open as for one that isn't.
+            "swarm_seeds": who_has(told)[0],
+            "swarm_peers": who_has(told)[1],
             "bytes_per_second": int(told.download_rate),
             "progress": round(told.progress_ppm / 1_000_000, 4),
         }
@@ -424,7 +434,8 @@ class Player:
 
     def count(self, info_hash: str, trackers: list[str]) -> dict[str, Any]:
         """Count who has a torrent, from the owner's click on Count (2026-10-11):
-        `{info_hash, seeds, peers}`, seeds among the peers (`who_has`).
+        `{info_hash, seeds, peers}`, seeds among the peers (`who_has`: a tracker's own
+        count where there is one, else those met in the time it had).
 
         A film that's open or being kept is counted as it stands. Any other torrent is
         joined for `COUNT_S` seconds **to count and nothing more**: it's told to fetch
@@ -451,6 +462,14 @@ class Player:
             params.flags |= lt.torrent_flags.upload_mode  # it asks for no piece, ever
             handle = self._session.add_torrent(params)
             self._counting.add(info_hash)
+            # Its trackers, if it has any, are asked for their own count: the surest
+            # figures there are, and the quickest.
+            ask = getattr(handle, "scrape_tracker", None)
+            if ask is not None:
+                try:
+                    ask()
+                except RuntimeError:
+                    pass
         seeds = everyone = 0
         try:
             until = time.monotonic() + COUNT_S

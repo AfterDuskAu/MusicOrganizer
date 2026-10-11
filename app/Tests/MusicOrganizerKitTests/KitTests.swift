@@ -2398,6 +2398,18 @@ final class TorrentStatusTests: XCTestCase {
             TorrentStatus(state: "fetching", peers: 30, bytesPerSecond: 0, progress: 0, seeds: 25).swarm,
             "25/5")
         XCTAssertNil(TorrentStatus(state: "fetching", peers: 30, bytesPerSecond: 0, progress: 0).swarm)
+        // A film that's open says who has it the way a count does (a tracker's own
+        // figures, here), so the page shows one measure before and during playing; the
+        // player's own line still says who it's fetching from.
+        let open = TorrentStatus(
+            state: "fetching", peers: 45, bytesPerSecond: 0, progress: 0, seeds: 40,
+            swarmSeeds: 1500, swarmPeers: 1700)
+        XCTAssertEqual(open.swarm, "1500/200")
+        XCTAssertEqual(open.sources, "40 seeds · 5 peers")
+        let told = Data(
+            #"{"state": "fetching", "peers": 9, "seeds": 7, "swarm_seeds": 7, "swarm_peers": 9, "bytes_per_second": 0, "progress": 0.1}"#
+                .utf8)
+        XCTAssertEqual(try? decoder.decode(TorrentStatus.self, from: told).swarm, "7/2")
         let counted = Data(#"{"info_hash": "abab", "seeds": 25, "peers": 30}"#.utf8)
         XCTAssertEqual(try? decoder.decode(TorrentCount.self, from: counted).swarm, "25/5")
         XCTAssertEqual(TorrentCount(infoHash: "abab", seeds: 3, peers: 1).swarm, "3/0")
