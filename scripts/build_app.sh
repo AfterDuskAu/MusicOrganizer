@@ -2,7 +2,8 @@
 # Build the Mac app (v0.2) and put it in app/build/ as "Music Organizer.app".
 #
 #     scripts/build_app.sh          build it
-#     scripts/build_app.sh --open   build it and open it
+#     scripts/build_app.sh --open   build it and open it (if it's open already, it's left
+#                                   as it is and you're told to quit and reopen it)
 #
 # The app is for this Mac only: it uses the engine in this project's .venv, and isn't
 # signed for other computers (packaging is v0.5). Nothing here touches a music library.
@@ -69,5 +70,16 @@ fi
 
 echo "Built: $APP"
 if [ "${1:-}" = "--open" ]; then
-    open "$APP"
+    # `open` only brings an app that's already open to the front, and that one is the copy
+    # from before this build, with nothing on screen to say so. So say so here, and leave
+    # it alone: a song may be playing in it, or a download or a phone's sync under way.
+    RUNNING="$(ps -axo comm=)"
+    if grep -Fxq "$APP/Contents/MacOS/MusicOrganizer" <<<"$RUNNING"; then
+        echo
+        echo "Music Organizer is still open, and that's the copy from BEFORE this build."
+        echo "To see the new one, quit it (⌘Q), then open it again:"
+        echo "    open \"$APP\""
+    else
+        open "$APP"
+    fi
 fi
