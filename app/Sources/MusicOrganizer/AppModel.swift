@@ -2027,6 +2027,10 @@ final class AppModel {
     /// the Movies folder may hold more than what this app put there.
     static let sharingFilmsKey = "shareFilmsWithDevices"
 
+    /// Where Settings keeps "keep this Mac awake while a device is syncing" (2026-10-11).
+    /// On until the owner turns it off.
+    static let sharingAwakeKey = "keepAwakeForDevices"
+
     /// Ask the engine whether it's sharing, where, and which devices are paired.
     func loadSharing() {
         guard let connection = engine?.connection else { return }
@@ -2049,7 +2053,12 @@ final class AppModel {
         do {
             sharingSaid(try await connection.call(
                     "sharing.set",
-                    ["on": on, "films": UserDefaults.standard.bool(forKey: Self.sharingFilmsKey)],
+                    [
+                        "on": on,
+                        "films": UserDefaults.standard.bool(forKey: Self.sharingFilmsKey),
+                        "awake": UserDefaults.standard.object(forKey: Self.sharingAwakeKey)
+                            as? Bool ?? true,
+                    ],
                     as: SharingStatus.self))
         } catch {
             announcer.stop()

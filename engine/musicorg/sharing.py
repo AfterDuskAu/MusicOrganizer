@@ -641,7 +641,7 @@ def status_off(lib: Library) -> dict[str, Any]:
     """What the app's Settings shows while sharing is off."""
     return {"on": False, "port": None, "address": None, "name": lib.root.name,
             "service": SERVICE_TYPE, "devices": devices(), "pairing": False,
-            "pairing_seconds_left": 0, "films": False}  # fmt: skip
+            "pairing_seconds_left": 0, "films": False, "awake": True}  # fmt: skip
 
 
 class Share:
@@ -654,6 +654,7 @@ class Share:
         changed: Callable[[], None] | None = None,
         took: Callable[[], None] | None = None,
         films: bool = False,
+        awake: bool = True,
         host: str | None = None,
         port: int | None = None,
         clock: Callable[[], float] = time.monotonic,
@@ -665,6 +666,9 @@ class Share:
         # Whether kept films and videos (outside the library) are in the list too. Off
         # until the owner switches it on, apart from sharing itself.
         self.films = films
+        # Whether the computer is kept awake while a paired device syncs (`busy`). On
+        # unless the owner switches it off in the app's Settings (2026-10-11).
+        self.awake = awake
         self._host = HOST if host is None else host
         self._port = PORT if port is None else port
         self._clock = clock
@@ -735,6 +739,7 @@ class Share:
             "pairing": left > 0,
             "pairing_seconds_left": max(0, round(left)),
             "films": self.films,
+            "awake": self.awake,
         }
 
     # -- pairing --
@@ -851,9 +856,10 @@ class Share:
         device has asked for nothing for `AWAKE_QUIET_S` (the screen may still turn
         off), as it is while the queue downloads (`tools.keep_awake`). Only a paired
         device's requests count: nobody else can keep the computer awake. Switching
-        sharing off lets it sleep at once."""
+        sharing off lets it sleep at once, and so does the owner's switch for this
+        (`awake`), which also stops it being kept awake at all."""
         with self._lock:
-            if self._http is None:
+            if self._http is None or not self.awake:
                 return
             self._awake_until = self._clock() + AWAKE_QUIET_S
             if self._awake is None:
@@ -871,11 +877,11 @@ class Share:
             while True:
                 with self._lock:
                     left = self._awake_until - self._clock()
-                    if left <= 0 or self._http is None:
+                    if left <= 0 or self._http is None or not self.awake:
                         self._awake = None
                         break
                 self._off.wait(min(left, AWAKE_CHECK_S))
-        log.info("sharing: the device has gone quiet, so the computer may sleep again")
+        log.info("sharing: the computer is no longer kept awake for a device")
 
     def turned_away(self) -> None:
         """A caller from outside the home network was dropped. Said in the log, without

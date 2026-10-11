@@ -9,6 +9,7 @@ struct SharingSettings: View {
     @Environment(AppModel.self) private var model
     @AppStorage(AppModel.sharingKey) private var wanted = false
     @AppStorage(AppModel.sharingFilmsKey) private var films = false
+    @AppStorage(AppModel.sharingAwakeKey) private var keepAwake = true
     @State private var removing: SharingStatus.Device?
 
     var body: some View {
@@ -21,6 +22,8 @@ struct SharingSettings: View {
                     LabeledContent("This Mac's address") { address(status) }
                     Toggle("Share your movies and downloaded videos too", isOn: $films)
                         .onChange(of: films) { model.setSharing(wanted) }
+                    Toggle("Keep this Mac awake while a device is syncing", isOn: $keepAwake)
+                        .onChange(of: keepAwake) { model.setSharing(wanted) }
                 }
                 if let note = model.sharingNote {
                     Text(note)
@@ -43,7 +46,8 @@ struct SharingSettings: View {
                 SideNote(
                     "This Mac shares only on the home network, only with devices paired below, "
                         + "and only while Music Organizer is open. Nothing goes to the internet. "
-                        + "While a device is syncing, this Mac stays awake. "
+                        + "Kept awake, the Mac may sleep again two minutes after a device "
+                        + "has finished; its screen may still turn off. "
                         + "If macOS asks whether to accept incoming connections, choose Allow.")
             }
             Section("Paired Devices") {

@@ -1221,9 +1221,11 @@ class Server:
         """Switch sharing on or off. On, this engine listens on the home network until
         it's switched off or the engine stops; it never starts listening by itself."""
         on = need(params, "on", bool)
-        films = params.get("films")
+        films, awake = params.get("films"), params.get("awake")
         if films is not None and not isinstance(films, bool):
             raise RpcError(INVALID_PARAMS, "films must be true or false")
+        if awake is not None and not isinstance(awake, bool):
+            raise RpcError(INVALID_PARAMS, "awake must be true or false")
         lib = self._library()
         if on and self._share is None:
             share = sharing.Share(
@@ -1231,11 +1233,15 @@ class Server:
                 changed=lambda: self.writer.notify("sharing.changed", {}),
                 took=lambda: self.writer.notify("listening.changed", {}),
                 films=films is True,
+                awake=awake is not False,
             )
             share.start()
             self._share = share
-        elif on and self._share is not None and films is not None:
-            self._share.films = films  # the next list a phone asks for has them, or not
+        elif on and self._share is not None:
+            if films is not None:
+                self._share.films = films  # the next list a phone asks for has them, or not
+            if awake is not None:
+                self._share.awake = awake  # switched off: a Mac kept awake is let go at once
         elif not on:
             self._stop_sharing()
         return self.sharing_status({})

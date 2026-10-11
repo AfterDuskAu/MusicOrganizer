@@ -706,7 +706,7 @@ def test_sharing_is_off_until_its_switched_on(
     status = result(opened, "sharing.status")
     assert status == {"on": False, "port": None, "address": None, "name": "Library",
                       "service": "_homemusicsync._tcp", "devices": [], "pairing": False,
-                      "pairing_seconds_left": 0, "films": False}  # fmt: skip
+                      "pairing_seconds_left": 0, "films": False, "awake": True}  # fmt: skip
     assert code(opened, "sharing.pair") == rpc.USER_ERROR  # no code while it's off
     assert code(opened, "sharing.set") == rpc.INVALID_PARAMS
     assert code(opened, "sharing.forget", device_id="d_nobody") == rpc.NOT_FOUND
@@ -1471,6 +1471,48 @@ def test_the_computer_stays_awake_while_a_paired_device_syncs(
         assert awake.kept == 2
     finally:
         share.stop()
+
+
+def test_the_owner_can_switch_keeping_awake_off(
+    filled: Library, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    awake = Awake()
+    monkeypatch.setattr(tools, "keep_awake", awake)
+    monkeypatch.setattr(sharing, "AWAKE_CHECK_S", 0.01)
+    share = sharing.Share(filled, awake=False)
+    share.start()
+    try:
+        key = paired(share)
+        found = the_list(share, key)  # a sync, with the switch off: the list is given…
+        fetch(share, key, found["tracks"][0]["audio"])
+        time.sleep(0.1)
+        assert (awake.kept, awake.let_go) == (0, 0)  # …and the computer isn't kept awake
+        assert share.status()["awake"] is False
+
+        share.awake = True  # switched on in Settings
+        the_list(share, key)
+        assert before_long(lambda: awake.kept == 1) and awake.let_go == 0
+        share.awake = False  # and off again in the middle of a sync: let go at once
+        assert before_long(lambda: awake.let_go == 1)
+        the_list(share, key)
+        time.sleep(0.1)
+        assert awake.kept == 1
+    finally:
+        share.stop()
+
+
+def test_the_app_switches_keeping_awake(opened: rpc.Server) -> None:  # noqa: F811
+    assert result(opened, "sharing.status")["awake"] is True
+    assert code(opened, "sharing.set", on=True, awake="yes") == rpc.INVALID_PARAMS
+    assert opened._share is None
+    assert result(opened, "sharing.set", on=True)["awake"] is True  # unsaid: on, as standard
+    assert result(opened, "sharing.set", on=True, awake=False)["awake"] is False
+    assert result(opened, "sharing.set", on=True)["awake"] is False  # unsaid: left as it is
+    assert result(opened, "sharing.set", on=True, films=True)["awake"] is False
+    assert result(opened, "sharing.set", on=True, awake=True)["awake"] is True
+    result(opened, "sharing.set", on=False)
+    assert result(opened, "sharing.set", on=True, awake=False)["awake"] is False
+    result(opened, "sharing.set", on=False)
 
 
 def test_the_app_is_told_what_a_phone_changed(

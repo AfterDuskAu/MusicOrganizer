@@ -268,7 +268,9 @@ private struct MineForArtist: View {
     private func have(_ artist: Artist) -> some View {
         let tracks = artist.albums.flatMap(\.tracks)
         let plays = model.listening.plays
-        let stats = ArtistStats(artist: artist, plays: plays, favourites: model.favourites)
+        let stats = ArtistStats(
+            artist: artist, plays: plays, listened: model.listening.listened ?? [:],
+            favourites: model.favourites)
         let rank = ArtistStats.rank(of: artist, among: model.everything.artists, plays: plays)
         return ScrollView {
             VStack(alignment: .leading, spacing: 14) {
@@ -290,6 +292,8 @@ private struct MineForArtist: View {
                         Text("You haven't played any of these to the end yet.")
                             .font(.callout)
                             .foregroundStyle(.secondary)
+                        // Listened to, though never to a song's end.
+                        if let time = stats.listened { fact("Time listening", time) }
                     } else {
                         fact("Played", stats.plays == 1 ? "1 time" : "\(stats.plays) times")
                         if let time = stats.listened { fact("Time listening", time) }

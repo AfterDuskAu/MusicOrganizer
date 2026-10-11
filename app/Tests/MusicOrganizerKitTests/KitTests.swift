@@ -1482,11 +1482,15 @@ final class SongVideoTests: XCTestCase {
         XCTAssertNil(ArtistNames.mine("Linkin Park", in: library.artists))
         XCTAssertNil(ArtistNames.mine("", in: library.artists))
 
-        let stats = ArtistStats(artist: jay, plays: plays, favourites: ["t_2", "t_3", "t_4"])
+        // The time is what was really listened, kept by song: not the plays times the
+        // songs' lengths. Another artist's time, and a song that's gone, don't count.
+        let time = ["t_1": 2880.0, "t_2": 150, "t_3": 50, "t_4": 999, "gone": 5]
+        let stats = ArtistStats(
+            artist: jay, plays: plays, listened: time, favourites: ["t_2", "t_3", "t_4"])
         XCTAssertEqual(stats.songs, 3)
         XCTAssertEqual(stats.albums, 2)
         XCTAssertEqual(stats.plays, 13)
-        XCTAssertEqual(stats.secondsListened, 12 * 240 + 200)
+        XCTAssertEqual(stats.secondsListened, 2880 + 150 + 50)
         XCTAssertEqual(stats.listened, "51 min")
         XCTAssertEqual(stats.mostPlayed, .init(title: "Often", plays: 12))
         XCTAssertEqual(stats.favourites, 2)  // only theirs
@@ -1499,17 +1503,21 @@ final class SongVideoTests: XCTestCase {
 
         // Nothing played yet: no time, no most played, no place among the artists.
         let air = try! XCTUnwrap(ArtistNames.mine("Air", in: library.artists))
-        let quiet = ArtistStats(artist: air, plays: plays, favourites: [])
+        let quiet = ArtistStats(artist: air, plays: plays, listened: time, favourites: [])
         XCTAssertEqual(quiet.plays, 0)
         XCTAssertNil(quiet.listened)
         XCTAssertNil(quiet.mostPlayed)
         XCTAssertNil(quiet.lastPlayed)
         XCTAssertNil(ArtistStats.rank(of: air, among: library.artists, plays: plays))
+        // Listened to, though never to a song's end: there's time and still no play.
+        let skipped = ArtistStats(artist: air, plays: plays, listened: ["t_5": 125], favourites: [])
+        XCTAssertEqual(skipped.plays, 0)
+        XCTAssertEqual(skipped.listened, "2 min")
         // How long, in words.
         func listened(_ seconds: Double) -> String? {
             ArtistStats(
-                artist: Library(tracks: [song(9, "S", artist: "X", seconds: seconds)]).artists[0],
-                plays: ["t_9": PlayCount(count: 1)], favourites: []
+                artist: Library(tracks: [song(9, "S", artist: "X")]).artists[0],
+                plays: ["t_9": PlayCount(count: 1)], listened: ["t_9": seconds], favourites: []
             ).listened
         }
         XCTAssertEqual(listened(20), "under a minute")

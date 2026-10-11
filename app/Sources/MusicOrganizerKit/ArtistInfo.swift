@@ -230,6 +230,9 @@ public enum ArtistNames {
 /// What the owner's own listening says about one of their artists: the "fun
 /// information" on the Mine side of the Artists page. Plays are the ones this app has
 /// counted (a song played to its end), so they start from when the app was first used.
+/// The time is the time really spent listening to their songs, on the Mac and on a
+/// paired phone (the owner's choice, 2026-10-11; until then it was worked out from the
+/// plays): it's been kept since 2026-10-10, so it starts from there.
 public struct ArtistStats: Equatable, Sendable {
     public struct Song: Equatable, Sendable {
         public let title: String
@@ -240,14 +243,18 @@ public struct ArtistStats: Equatable, Sendable {
     public let albums: Int
     /// Times any of their songs was played to its end.
     public let plays: Int
-    /// The time those plays add up to.
+    /// The time spent listening to their songs, whether or not a song reached its end.
     public let secondsListened: Double
     public let mostPlayed: Song?
     public let favourites: Int
     public let lastPlayed: Date?
     public let firstAdded: Date?
 
-    public init(artist: Artist, plays counted: [String: PlayCount], favourites: Set<String>) {
+    /// `listened` is seconds by track id (`Listening.listened`).
+    public init(
+        artist: Artist, plays counted: [String: PlayCount], listened: [String: Double],
+        favourites: Set<String>
+    ) {
         let tracks = artist.albums.flatMap(\.tracks)
         var total = 0
         var seconds = 0.0
@@ -261,9 +268,9 @@ public struct ArtistStats: Equatable, Sendable {
             }
             guard let id = track.trackId else { continue }
             if favourites.contains(id) { loved += 1 }
+            seconds += max(0, listened[id] ?? 0)
             guard let played = counted[id], played.count > 0 else { continue }
             total += played.count
-            seconds += Double(played.count) * (track.durationS ?? 0)
             if played.count > (most?.plays ?? 0) { most = Song(title: track.title, plays: played.count) }
             if let when = engineDate(played.lastPlayed), last.map({ when > $0 }) ?? true {
                 last = when
@@ -274,9 +281,9 @@ public struct ArtistStats: Equatable, Sendable {
         (self.favourites, lastPlayed, firstAdded) = (loved, last, first)
     }
 
-    /// "2 hr 31 min", "45 min", "under a minute", or nil when nothing's been played.
+    /// "2 hr 31 min", "45 min", "under a minute", or nil when no time has been kept.
     public var listened: String? {
-        guard plays > 0 else { return nil }
+        guard secondsListened >= 1 else { return nil }
         let minutes = Int((secondsListened / 60).rounded())
         if minutes < 1 { return "under a minute" }
         if minutes < 60 { return "\(minutes) min" }
