@@ -217,7 +217,8 @@ def test_it_listens_on_this_computer_only_in_tests(share: sharing.Share) -> None
 def test_hello_needs_no_key(share: sharing.Share, filled: Library) -> None:
     status, hello = ask(share, "/sync/v1/hello")
     assert status == 200
-    assert hello == {"format": 1, "library": share.info, "paired": False, "accepts": ["changes"]}
+    assert hello == {"format": 1, "library": share.info, "paired": False,
+                     "accepts": ["changes", "favourites", "plays"]}  # fmt: skip
     assert hello["library"]["name"] == filled.root.name
     key = paired(share)
     assert ask(share, "/sync/v1/hello", key=key)[1]["paired"] is True
@@ -1178,13 +1179,55 @@ def test_time_spent_listening_comes_back_from_a_phone(
     assert listening.get(filled)["plays"].keys() == {SONG_ID}
 
 
+def test_a_heart_and_a_play_come_back_from_a_phone(share: sharing.Share, filled: Library) -> None:
+    key = paired(share)
+    before = the_list(share, key)
+    tracks = {t["title"]: t for t in before["tracks"]}
+    assert (tracks["Song"]["favourite"], tracks["Other"]["favourite"]) == (True, False)
+    assert (tracks["Song"]["playCount"], tracks["Other"]["playCount"]) == (2, 0)
+    song, other = tracks["Song"]["id"], tracks["Other"]["id"]
+    # The heart is taken off on the phone a minute after it was put on here: the newer word.
+    later = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() + 60))
+    sent = [
+        did("favourite", track=other, on=True),  # a heart put on, on the phone
+        did("favourite", track=song, on=False, at=later),  # and one taken off
+        did("played", track=other),  # heard to its end there, twice
+        did("played", track=other),
+    ]
+    assert tell(share, key, *sent) == ids(*sent)
+    after = the_list(share, key)
+    tracks = {t["title"]: t for t in after["tracks"]}
+    assert (tracks["Song"]["favourite"], tracks["Other"]["favourite"]) == (False, True)
+    assert (tracks["Song"]["playCount"], tracks["Other"]["playCount"]) == (2, 2)
+    assert after["revision"] != before["revision"]
+    assert listening.get(filled)["favourites"] == [OTHER_ID]
+    assert listening.get(filled)["listened"] == {}  # a play isn't time, nor time a play
+    # Sent again, nothing more comes of them.
+    assert tell(share, key, *sent) == ids(*sent)
+    assert the_list(share, key) == after
+
+    # What makes no sense, or names a song that isn't there, is dropped and dealt with.
+    kept = listening.get(filled)
+    odd = [
+        did("favourite", track=other),  # on or off isn't said
+        did("favourite", track=other, on="yes"),
+        did("favourite", track=tracks["Loose"]["id"], on=True),  # no id of its own
+        did("favourite", track="nothing", on=True),
+        did("played", track="nothing"),
+        did("played"),
+        did("played", track=after["videos"][0]["id"]),  # a video isn't a song
+    ]
+    assert tell(share, key, *odd) == ids(*odd)
+    assert listening.get(filled) == kept
+
+
 def test_what_this_engine_doesnt_know_is_left_with_the_phone(
     share: sharing.Share, filled: Library, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     key = paired(share)
     song = named(share, key)[0]["Song"]
     before = listening.get(filled)
-    newer = did("favourite", track=song, on=True)  # a kind a newer phone might send
+    newer = did("playlist_rename", playlist="p-1", name="New")  # a kind a newer phone might send
     odd = did(["playlist_add"], track=song)
     nameless = {"kind": "listened", "track": song, "seconds": 5}  # nothing to answer it by
     numbered = {"id": 7, "kind": "listened", "track": song, "seconds": 5}
@@ -1439,7 +1482,7 @@ def test_the_app_is_told_what_a_phone_changed(
     assert share is not None
     shown = result(opened, "sharing.pair")
     key = ask(share, "/sync/v1/pair", body={"code": shown["code"], "device": "iPhone"})[1]["key"]
-    assert ask(share, "/sync/v1/hello", key=key)[1]["accepts"] == ["changes"]
+    assert ask(share, "/sync/v1/hello", key=key)[1]["accepts"] == ["changes", "favourites", "plays"]
 
     made = did("playlist_new", playlist=its_own(), name="Driving")
     assert tell(share, key, made) == ids(made)

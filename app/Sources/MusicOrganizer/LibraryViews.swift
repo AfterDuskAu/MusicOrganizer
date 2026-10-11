@@ -94,7 +94,7 @@ struct TrackRow: Identifiable, Equatable, Sendable {
 
 /// Which songs a list shows.
 enum SongSource: Hashable, Sendable {
-    case all, favourites, recentlyAdded, mostPlayed, unconfirmed, downloads, videos
+    case all, favourites, recentlyAdded, mostPlayed, mostListened, unconfirmed, downloads, videos
     case playlist(String)
 }
 
@@ -149,7 +149,11 @@ struct SongList: View {
             sort: sortOrder.map { "\($0.keyPath) \($0.order)" })
     }
 
-    private var showsListened: Bool { SongColumns.isShown("listened", in: columns) }
+    /// Most Listened is ordered by the time, so it always shows it; every other list
+    /// shows it when the owner has switched the column on.
+    private var showsListened: Bool {
+        source == .mostListened || SongColumns.isShown("listened", in: columns)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -200,6 +204,7 @@ struct SongList: View {
                 case .all: library.tracks
                 case .recentlyAdded: library.recentlyAdded()
                 case .mostPlayed: library.mostPlayed(plays)
+                case .mostListened: library.mostListened(listened)
                 case .unconfirmed: library.unconfirmed
                 case .downloads: downloaded
                 case .videos: videos
@@ -258,7 +263,8 @@ struct SongList: View {
     private var table: some View {
         SongTable(
             rows: rows, selection: $selection, sortOrder: $sortOrder,
-            shown: Set(SongColumns.optional.map(\.id).filter { SongColumns.isShown($0, in: columns) }),
+            shown: Set(SongColumns.optional.map(\.id).filter { SongColumns.isShown($0, in: columns) })
+                .union(showsListened ? ["listened"] : []),
             playing: model.player.current?.id, isPlaying: model.player.isPlaying,
             favourites: model.favourites, model: model,
             setShown: { columns[visibility: $0] = $1 ? .visible : .hidden },

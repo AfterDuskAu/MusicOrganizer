@@ -27,7 +27,8 @@ figure for a song, wherever it was heard. The app adds what its own player playe
 is time, not a count: a play is still a song heard to its end.
 
 **Changes from a paired device (2026-10-10).** A phone player tells the computer what
-was done on it: a playlist made, a song put in a playlist, time spent listening
+was done on it: a playlist made, a song put in a playlist, time spent listening and,
+since 2026-10-11, a heart put on a song or taken off and a song played to its end
 (`sharing` checks what it sent and hands it over as `DeviceChange`s; docs/ENGINE_API.md,
 section 3). What's kept so that each is taken once, under "devices":
 
@@ -71,11 +72,13 @@ class DeviceChange:
 
     mark: str  # a short hash of the change's own id: a change is taken once
     kind: str
-    track_id: str = ""  # `playlist_add` and `listened`: the song
+    track_id: str = ""  # every kind but `playlist_new`: the song
     playlist_id: str = ""  # `playlist_add`: one of the library's playlists…
     theirs: str = ""  # …or one the device made, by the hash of its id there
     name: str = ""  # `playlist_new`: what the device called it
     seconds: float = 0.0  # `listened`
+    on: bool = False  # `favourite`: the heart was put on, or taken off
+    at: str = ""  # `favourite` and `played`: when the device says it was done
 
 
 def get(lib: Library) -> dict[str, Any]:
@@ -160,9 +163,9 @@ def from_devices(lib: Library, changes: list[DeviceChange]) -> dict[str, Any]:
 
     A change taken before is left alone. One that can't be done any more (its playlist
     has been deleted since) is dropped, and is noted as taken all the same. Returns what
-    was done: `{playlists, songs, seconds}` (playlists made, songs put in playlists, and
-    listening time added)."""
-    done: dict[str, Any] = {"playlists": 0, "songs": 0, "seconds": 0.0}
+    was done: `{playlists, songs, seconds, hearts, plays}` (playlists made, songs put in
+    playlists, listening time added, hearts put on or taken off, and plays counted)."""
+    done: dict[str, Any] = {"playlists": 0, "songs": 0, "seconds": 0.0, "hearts": 0, "plays": 0}
     if not changes:
         return done
     with state.edit(lib.paths.state_file) as st:
@@ -183,6 +186,13 @@ def from_devices(lib: Library, changes: list[DeviceChange]) -> dict[str, Any]:
                 time = data["listened"]
                 time[change.track_id] = _added(time.get(change.track_id), change.seconds)
                 done["seconds"] = round(done["seconds"] + change.seconds, 1)
+            elif change.kind == "favourite" and change.track_id:
+                done["hearts"] += _hearted_on_a_device(data, change)
+            elif change.kind == "played" and change.track_id:
+                entry = data["plays"].setdefault(change.track_id, {"count": 0})
+                entry["count"] = int(entry.get("count", 0)) + 1
+                entry["last_played"] = _last_played(entry.get("last_played"), change.at)
+                done["plays"] += 1
         del taken[:-TAKEN_KEPT]
         del made[:-MADE_KEPT]
         st.data[KEY] = data
@@ -231,6 +241,48 @@ def _added_on_a_device(data: dict[str, Any], change: DeviceChange) -> int:
             songs.append(change.track_id)
             return 1
     return 0  # the playlist has been deleted since
+
+
+def _hearted_on_a_device(data: dict[str, Any], change: DeviceChange) -> int:
+    """A heart put on a song on a device, or taken off (2026-10-11). **The newer word
+    wins:** a heart taken off on the device stays on if the song was hearted here after
+    the device says it took it off (the device tells of it only at its next sync, which
+    may be days later). A time that can't be read counts as now. Returns how many
+    hearts changed (1 or 0)."""
+    hearts = data["favourites"]
+    kept = hearts.get(change.track_id)
+    if change.on:
+        if kept is not None:
+            return 0
+        hearts[change.track_id] = {"since": _now()}
+        return 1
+    if kept is None:
+        return 0
+    here, there = _time(kept.get("since")), _time(change.at)
+    if here is not None and there is not None and here > there:
+        return 0
+    del hearts[change.track_id]
+    return 1
+
+
+def _last_played(kept: object, said: str) -> str:
+    """When a song was last played, with a play on a device counted in: the later of
+    what's kept and when the device says, which is never later than now."""
+    now = datetime.now(UTC)
+    when = min(_time(said) or now, now)
+    before = _time(kept)
+    return max(when, before or when).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _time(value: object) -> datetime | None:
+    """A date and time as this file writes them (or as a device sends them), or None."""
+    if not isinstance(value, str) or not value or len(value) > 40:
+        return None
+    try:
+        found = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return found if found.tzinfo is not None else found.replace(tzinfo=UTC)
 
 
 def _believable(seconds: object) -> bool:

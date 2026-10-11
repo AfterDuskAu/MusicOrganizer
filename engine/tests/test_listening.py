@@ -55,6 +55,52 @@ def change(kind: str, mark: str, **about: object) -> listening.DeviceChange:
     return listening.DeviceChange(mark, kind, **about)  # type: ignore[arg-type]
 
 
+def came(**of_it: object) -> dict[str, object]:
+    """What `from_devices` says came of a device's changes: nothing, but for these."""
+    return {"playlists": 0, "songs": 0, "seconds": 0.0, "hearts": 0, "plays": 0, **of_it}
+
+
+def test_a_heart_and_a_play_come_back_from_a_device(
+    lib: Library, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(listening, "_now", lambda: "2026-10-11T03:00:00Z")
+    listening.set_favourite(lib, "t_1", True)  # hearted here at three o'clock
+    listening.set_favourite(lib, "t_2", True)
+    listening.played(lib, "t_1")
+    sent = [
+        change("favourite", "m1", track_id="t_3", on=True),
+        change("favourite", "m2", track_id="t_1", on=True),  # it has one already
+        # Taken off on the device at four: after it was put on here, so off it comes.
+        change("favourite", "m3", track_id="t_2", on=False, at="2026-10-11T04:00:00Z"),
+        # Taken off on the device at two, an hour before it was put on here: it stays.
+        change("favourite", "m4", track_id="t_1", on=False, at="2026-10-11T02:00:00Z"),
+        change("favourite", "m5", track_id="t_9", on=False),  # it had none
+        change("played", "m6", track_id="t_1", at="2026-10-11T02:30:00Z"),
+        change("played", "m7", track_id="t_4", at="2026-10-11T01:00:00Z"),
+        change("played", "m8", track_id="t_4", at="not a time"),
+    ]
+    assert listening.from_devices(lib, sent) == came(hearts=2, plays=3)
+    found = listening.get(lib)
+    assert set(found["favourites"]) == {"t_1", "t_3"}
+    # A play on the device is one more play. The last time played is the later of what
+    # was kept and when the device says; a time that can't be read counts as now.
+    assert found["plays"]["t_1"] == {"count": 2, "last_played": "2026-10-11T03:00:00Z"}
+    assert found["plays"]["t_4"]["count"] == 2
+    assert found["plays"]["t_4"]["last_played"] > "2026-10-11T03:00:00Z"
+    assert set(found["plays"]) == {"t_1", "t_4"}
+    # The same again changes nothing, and a heart taken off with no time is taken off.
+    assert listening.from_devices(lib, sent) == came()
+    late = [
+        change("favourite", "m9", track_id="t_1", on=False),
+        # A time still to come is no later than now: it can't set a play in the future.
+        change("played", "m10", track_id="t_5", at="2099-01-01T00:00:00Z"),
+    ]
+    assert listening.from_devices(lib, late) == came(hearts=1, plays=1)
+    after = listening.get(lib)
+    assert after["favourites"] == ["t_3"]
+    assert after["plays"]["t_5"]["last_played"] < "2027"
+
+
 def test_a_devices_changes_are_taken_once(lib: Library) -> None:
     (mix,) = listening.create_playlist(lib, "Mix")
     sent = [
@@ -63,7 +109,7 @@ def test_a_devices_changes_are_taken_once(lib: Library) -> None:
         change("playlist_add", "m3", track_id="t_2", playlist_id=mix["id"]),
         change("listened", "m4", track_id="t_1", seconds=215.5),
     ]
-    assert listening.from_devices(lib, sent) == {"playlists": 1, "songs": 2, "seconds": 215.5}
+    assert listening.from_devices(lib, sent) == came(playlists=1, songs=2, seconds=215.5)
     found = listening.get(lib)
     assert [(p["name"], p["track_ids"]) for p in found["playlists"]] == [
         ("Mix", ["t_2"]), ("Driving home", ["t_1"]),
@@ -71,10 +117,10 @@ def test_a_devices_changes_are_taken_once(lib: Library) -> None:
     assert found["listened"] == {"t_1": 215.5}
     # The same again (the answer was lost on the way), with one new change among them.
     more = [*sent, change("listened", "m5", track_id="t_1", seconds=4.5)]
-    assert listening.from_devices(lib, more) == {"playlists": 0, "songs": 0, "seconds": 4.5}
+    assert listening.from_devices(lib, more) == came(seconds=4.5)
     again = listening.get(lib)
     assert again["playlists"] == found["playlists"] and again["listened"] == {"t_1": 220.0}
-    assert listening.from_devices(lib, []) == {"playlists": 0, "songs": 0, "seconds": 0.0}
+    assert listening.from_devices(lib, []) == came()
 
 
 def test_a_playlist_made_on_a_device_uses_the_one_of_that_name(lib: Library) -> None:
@@ -92,7 +138,7 @@ def test_a_playlist_made_on_a_device_uses_the_one_of_that_name(lib: Library) -> 
         change("playlist_add", "m9", track_id="t_3", theirs="never-made"),
         change("playlist_add", "m10", track_id="t_3", playlist_id="pl_gone"),
     ])  # fmt: skip
-    assert done == {"playlists": 0, "songs": 2, "seconds": 0.0}
+    assert done == came(songs=2)
     first, second = listening.get(lib)["playlists"]
     assert (first["name"], first["track_ids"]) == ("Driving", ["t_2"])
     assert (second["id"], second["track_ids"]) == (lower["id"], ["t_1"])
@@ -117,7 +163,7 @@ def test_a_device_cant_fill_the_librarys_records(
     sent += [change("playlist_add", f"a{n}", track_id=f"t_{n}", theirs="p0") for n in range(4)]
     sent.append(change("playlist_new", "long", theirs="p9", name="x" * 5000))
     sent.append(change("listened", "late", track_id="t_1", seconds=listening.MAX_SECONDS + 1))
-    assert listening.from_devices(lib, sent) == {"playlists": 3, "songs": 2, "seconds": 0.0}
+    assert listening.from_devices(lib, sent) == came(playlists=3, songs=2)
     found = listening.get(lib)
     assert [p["name"] for p in found["playlists"]] == ["List 0", "List 1", "List 2"]
     assert found["playlists"][0]["track_ids"] == ["t_0", "t_1"]

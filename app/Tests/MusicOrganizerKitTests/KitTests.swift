@@ -109,6 +109,11 @@ final class LibraryTests: XCTestCase {
         XCTAssertEqual(library.unconfirmed.map(\.title), ["Two"])
         let plays = ["t_1": PlayCount(count: 2), "t_3": PlayCount(count: 5), "t_2": PlayCount(count: 0)]
         XCTAssertEqual(library.mostPlayed(plays).map(\.title), ["Three", "One"])
+        // By time listened, not by plays: the longest first, and none with no time kept.
+        let listened = ["t_1": 600.0, "t_2": 15324.5, "t_3": 0.4, "gone": 99]
+        XCTAssertEqual(library.mostListened(listened).map(\.title), ["Two", "One"])
+        XCTAssertEqual(library.mostListened(listened, limit: 1).map(\.title), ["Two"])
+        XCTAssertEqual(library.mostListened([:]).map(\.title), [])
         XCTAssertEqual(library.filter(library.recentlyAdded(), "one").map(\.title), ["One"])
 
         let json = """
@@ -149,17 +154,23 @@ final class LibraryTests: XCTestCase {
         XCTAssertEqual(SidebarChoice.read(""), SidebarChoice.all)
         XCTAssertEqual(SidebarChoice.read("songs,nonsense,artists,songs"), ["songs", "artists"])
         XCTAssertEqual(SidebarChoice.hidden(["songs", "artists"]),
-                       ["albums", "videos", "favourites", "mostPlayed", "recentlyAdded", "unconfirmed"])
+                       ["albums", "videos", "favourites", "mostPlayed", "mostListened", "recentlyAdded",
+                        "unconfirmed"])
         XCTAssertEqual(SidebarChoice.adding("albums", to: ["songs", "artists"]),
                        ["songs", "albums", "artists"])
         XCTAssertEqual(SidebarChoice.write(["songs", "artists"]), "songs,artists")
     }
 
     func testANewSidebarEntryIsShownOnceWithoutAsking() {
-        // A choice saved before Videos existed gains it, in its standard place.
+        // A choice saved before Videos and Most Listened existed gains them, each in its
+        // standard place.
         let first = SidebarChoice.catchUp(saved: "songs,artists,favourites", seen: nil)
-        XCTAssertEqual(first.entries, "songs,artists,videos,favourites")
+        XCTAssertEqual(first.entries, "songs,artists,videos,favourites,mostListened")
         XCTAssertEqual(first.seen, SidebarChoice.write(SidebarChoice.all))
+        // One saved since Videos, with Most Played showing: Most Listened comes after it.
+        let seenVideos = "songs,albums,artists,videos,favourites,mostPlayed,recentlyAdded,unconfirmed"
+        let second = SidebarChoice.catchUp(saved: "songs,mostPlayed,recentlyAdded", seen: seenVideos)
+        XCTAssertEqual(second.entries, "songs,mostPlayed,mostListened,recentlyAdded")
         // Removed by the owner afterwards, it stays removed.
         let later = SidebarChoice.catchUp(saved: "songs,artists,favourites", seen: first.seen)
         XCTAssertEqual(later.entries, "songs,artists,favourites")

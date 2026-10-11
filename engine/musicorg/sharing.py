@@ -15,12 +15,13 @@ What the owner was promised, and where each promise is kept:
   pair. A file is only ever opened for reading, the index is opened read-only, and
   nothing in the library's music folders is written: not a file, not a tag, not a
   cover, not a sidecar.
-- **Three things come back from a phone, and nothing else** (the owner asked for them
-  on 2026-10-10; until then nothing did): a playlist made on it, a song put in a
-  playlist, and time spent listening to a song (`take_changes`). They change what
-  `listening` keeps in state.json, written by `state` as every change to it is, and
-  nothing more: a phone can't rename or delete a playlist, take a song out of one,
-  or touch a favourite or a play count. What it sends is checked and bounded before
+- **Five things come back from a phone, and nothing else** (`take_changes`). The owner
+  asked for the first three on 2026-10-10 (until then nothing came back): a playlist
+  made on it, a song put in a playlist, and time spent listening to a song. And for
+  two more on 2026-10-11: a heart put on a song or taken off, and a song played to
+  its end. They change what `listening` keeps in state.json, written by `state` as
+  every change to it is, and nothing more: a phone can't rename or delete a
+  playlist, or take a song out of one. What it sends is checked and bounded before
   any of it is kept, and none of its own words but a playlist's name is kept at all.
 - **Paired once, by a six-digit code** the computer shows when asked (`sharing.pair`).
   A code is good once and for five minutes; five wrong codes and every code is refused
@@ -101,8 +102,12 @@ REQUEST_WAIT_S = 20  # a caller that goes silent is let go
 CHUNK = 64 * 1024
 MAX_BODY = 4096  # a pairing request is a few dozen bytes
 # What a device may tell the computer was done on it (2026-10-10), and how much at once.
-ACCEPTS = ("changes",)  # said in `hello`: a phone sends changes only to a computer that says so
-CHANGE_KINDS = frozenset({"playlist_new", "playlist_add", "listened"})  # Sync change kind
+# Said in `hello`: a phone sends its changes only to a computer that says `changes`, and
+# a heart or a play only to one that says so too (2026-10-11).
+ACCEPTS = ("changes", "favourites", "plays")
+CHANGE_KINDS = frozenset(  # Sync change kind
+    {"playlist_new", "playlist_add", "listened", "favourite", "played"}
+)
 MAX_CHANGES_BODY = 1024 * 1024  # a megabyte: thousands of changes
 MAX_CHANGES = 2000  # taken from one request; any after them wait for the device's next sync
 MAX_DISCARD = 8 * MAX_CHANGES_BODY  # a body too long to take is read and thrown away, up to this
@@ -608,10 +613,15 @@ def take_changes(lib: Library, sent: list[Any]) -> tuple[list[str], dict[str, An
                 understood.append(
                     listening.DeviceChange(mark, kind, song, playlist_id=ours, theirs=theirs)
                 )
-        else:  # listened
+        elif kind == "listened":
             seconds = change.get("seconds")
             if song and isinstance(seconds, int | float) and not isinstance(seconds, bool):
                 understood.append(listening.DeviceChange(mark, kind, song, seconds=seconds))
+        else:  # favourite, played
+            on, at = change.get("on"), change.get("at")
+            at = at if isinstance(at, str) else ""
+            if song and (kind == "played" or isinstance(on, bool)):
+                understood.append(listening.DeviceChange(mark, kind, song, on=on is True, at=at))
     return dealt_with, listening.from_devices(lib, understood)
 
 
@@ -818,14 +828,16 @@ class Share:
 
     def take(self, sent: list[Any]) -> list[str]:
         """A paired device's changes (`take_changes`): the ids of the ones dealt with.
-        The app is told when any of them changed a playlist or a song's listening time."""
+        The app is told when any of them changed something: a playlist, a heart, a play
+        count or a song's listening time."""
         dealt_with, done = take_changes(self.lib, sent)
-        if done["playlists"] or done["songs"] or done["seconds"]:
+        if any(done.values()):
             listened = round(done["seconds"])
             log.info(
                 "sharing: a device's changes were taken (playlists made: %d, songs put in "
-                "playlists: %d, listening: %d min %d s)",
+                "playlists: %d, listening: %d min %d s, hearts changed: %d, plays counted: %d)",
                 done["playlists"], done["songs"], listened // 60, listened % 60,
+                done["hearts"], done["plays"],
             )  # fmt: skip
             if self._took is not None:
                 self._took()

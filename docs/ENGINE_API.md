@@ -2,7 +2,7 @@
 
 The engine has two front doors onto the **same functions**. The CLI is for the owner, for testing and for v0.1. JSON-RPC is for the Mac app from v0.2 on. Neither may contain business logic of its own: both call into `musicorg` modules.
 
-A third door, section 3, is for a phone player on the home network. It's closed until the owner opens it in the app's Settings. Through it a phone reads the library, and (since 2026-10-10, at the owner's request) tells the computer three things that were done on it: a playlist made, a song put in a playlist, and time spent listening. It never changes a music file.
+A third door, section 3, is for a phone player on the home network. It's closed until the owner opens it in the app's Settings. Through it a phone reads the library, and (since 2026-10-10 and 2026-10-11, at the owner's request) tells the computer five things that were done on it: a playlist made, a song put in a playlist, time spent listening, a heart put on a song or taken off, and a song played to its end. It never changes a music file.
 
 ## 0. Enums (the only allowed values)
 
@@ -34,7 +34,7 @@ A third door, section 3, is for a phone player on the home network. It's closed 
 | **Kept kind** (`torrent.keep`; `movies` in home sync, section 3) | `movie` (a film, loose in the Movies folder: the standard) · `series` · `anime` (in the Movies folder's `Series` and `Anime` folders: contract, section 1) · `video` (home sync only: a file in the videos folder) |
 | **Sync file type** (home sync, section 3) | `m4a` · `mp3` · `flac` (sound) · `mp4` (a video) · `m4v` · `mov` (a kept film or video, with `mp4`) · `jpg` · `png` (a cover) · `lrc` (timed lyrics) · `txt` (plain lyrics) |
 | **Sync error** (home sync, section 3) | `not_paired` (401) · `wrong_code` (403) · `not_home` (403: the request wasn't sent to this computer at home, or a web page is behind it) · `not_found` (404) · `too_many_tries` (429) · `unavailable` (500: the library couldn't be read just now, or a device's changes couldn't be kept) · `bad_request` (any other request that isn't part of the format; 400 for changes that can't be read, 413 for more than a request may carry) |
-| **Sync change kind** (home sync, section 3; 2026-10-10) | `playlist_new` (a playlist was made on the device) · `playlist_add` (a song was put at the end of a playlist) · `listened` (more time was spent listening to a song). A change of any other kind is left with the device. |
+| **Sync change kind** (home sync, section 3; 2026-10-10) | `playlist_new` (a playlist was made on the device) · `playlist_add` (a song was put at the end of a playlist) · `listened` (more time was spent listening to a song) · `favourite` (2026-10-11: a heart was put on a song, or taken off) · `played` (2026-10-11: a song was played to its end). A change of any other kind is left with the device. |
 | **`MUSICORG_SOURCE`** | `youtube_music` · `youtube` · `rip_copy` · `bandcamp` · `cd` · `itunes` · `other` |
 | **`MUSICORG_MATCH`** | `auto_exact` (AUTO match and fingerprint pass) · `user_confirmed` (owner's decision and fingerprint pass) · `manual` (adopt using the owner's `*_fix` values) · `auto_details` (step 09c: the owner's own audio with an AUTO match's official details; no fingerprint check) · `user_details` (step 09c: the same, from the owner's review choice) · `unconfirmed` (v0.2: a rip copied in under its own names before it was identified, so it can be played; its item stays in `review` or `not_found`, and the copy is upgraded in place when it's decided). Absent for adopts without fixes. |
 
@@ -218,7 +218,7 @@ Exit codes:
 | `queue.state` | `{ "state", "reason"?, "resume_at"? }`, when the queue worker starts or stops, and after `queue.pause`. A worker that stopped until a known time (the daily limit, a pause by YouTube, a retry that isn't due) is started again at that time by `serve` itself. |
 | `media.converted` | `{ "path", "saved"? , "error"? }`: a kept film's conversion ended (`media.convert`): where the copy is, or why there isn't one. Not sent when the engine is stopping. |
 | `sharing.changed` | `{}`: a device was paired, or a paired device asked for the list. The app asks `sharing.status` again. |
-| `listening.changed` | `{}` (2026-10-10): a paired device's changes were taken (section 3), and a playlist or a song's listening time is different for it. The app asks `listening.get` again. Not sent when nothing changed (changes that were taken before, or that couldn't be done). |
+| `listening.changed` | `{}` (2026-10-10): a paired device's changes were taken (section 3), and a playlist, a heart, a play count or a song's listening time is different for it. The app asks `listening.get` again. Not sent when nothing changed (changes that were taken before, or that couldn't be done). |
 | `review.changed` | `{ "review", "not_found" }` |
 | `library.changed` | `{ "batch_id"?, "tracks_added", "tracks_changed" }`, after a queue run that finished jobs (`tracks_changed` = jobs done) and after an undo |
 
@@ -298,8 +298,12 @@ A phone player on the same home network copies the library from the computer, an
 
 - **Off until they switch it on** in the app's Settings (`sharing.set`). The engine never starts it by itself.
 - **Read-only for the music.** A phone can ask for the list and for files, and can pair. No request changes, adds or removes a music file, a tag, a cover or lyrics, and nothing in the library's music folders is written while serving one.
-- **Three things come back from a phone, and nothing else** (2026-10-10, at the owner's request; until then the promise was that no request changed anything on the computer). The owner asked that what's done on the phone isn't left there: "when synced with the app, grab data, and changes made on the phone". So a phone tells the computer of **a playlist made on it**, **a song put in a playlist**, and **time spent listening to a song** (`POST /sync/v1/changes`, below). What that changes is what `listening` keeps in `state.json`: the playlists, and each song's listening time. Nothing more:
-  - a phone can't rename or delete a playlist, take a song out of one or reorder it, or change a favourite or a play count;
+- **Five things come back from a phone, and nothing else** (`POST /sync/v1/changes`, below). Until 2026-10-10 the promise was that no request changed anything on the computer; it has been widened twice since, each time at the owner's request:
+  - **2026-10-10:** the owner asked that what's done on the phone isn't left there ("when synced with the app, grab data, and changes made on the phone"). So a phone tells the computer of **a playlist made on it**, **a song put in a playlist**, and **time spent listening to a song**.
+  - **2026-10-11:** asked which of what was left should be built, the owner chose hearts and plays. So a phone also tells of **a heart put on a song or taken off**, and **a song played to its end**.
+
+  What all of that changes is what `listening` keeps in `state.json`: the playlists, the favourites, the play counts and each song's listening time. Nothing more:
+  - a phone can't rename or delete a playlist, or take a song out of one or reorder it;
   - it never touches a file inside the library's music folders, the index, the queue or the journal. `state.json` is written by `state` alone, atomically, by the engine that holds the library's lock, as every other change to it is;
   - what it sends is checked and bounded before any of it is kept (below), so nothing a phone sends can damage the library's records.
 - **The library, and nothing else unless they say so.** The films and videos kept outside the library (the Movies folder and the videos folder: `settings.get`) are in the list only while the app's second switch is on (`sharing.set`'s `films`, 2026-10-08). It starts off: the Movies folder may hold more than this app put there.
@@ -329,7 +333,7 @@ When something goes wrong the status isn't 200, and the body is
 
 | Request | Key | Answer |
 |---|---|---|
-| `GET /sync/v1/hello` | no | `{ "format": 1, "library": { "id", "name" }, "paired", "accepts": ["changes"] }`. `paired` says whether the key that was sent (if one was) is still known. `library.id` never changes for a library: it's made from when the library was created, so it stays the same when the folder is renamed or moved, or the computer's address or name changes. `library.name` is the library folder's name. `accepts` (2026-10-10) says what the computer takes from a device besides its requests: `changes` is there whenever the app is sharing the library. A phone sends changes only to a computer that says so; one made before this was added doesn't know the key and leaves it. |
+| `GET /sync/v1/hello` | no | `{ "format": 1, "library": { "id", "name" }, "paired", "accepts": ["changes"] }`. `paired` says whether the key that was sent (if one was) is still known. `library.id` never changes for a library: it's made from when the library was created, so it stays the same when the folder is renamed or moved, or the computer's address or name changes. `library.name` is the library folder's name. `accepts` (2026-10-10) says what the computer takes from a device besides its requests: `changes` is there whenever the app is sharing the library. A phone sends changes only to a computer that says so; one made before this was added doesn't know the key and leaves it. Since 2026-10-11 the list is `["changes", "favourites", "plays"]`: the last two say that a `favourite` and a `played` change are taken too, so a phone needn't send those to a computer that would only leave them. |
 | `POST /sync/v1/pair` | no | Body `{ "code", "device" }`, as `application/json`: the code on the computer's screen, and what kind of device is asking (`iPhone`, `iPad`: up to 20 letters, digits and spaces, else it's listed as "Device"). Answer: `{ "key" }`, a long random string, given this once. A code works once and for five minutes. A wrong code, a code that has run out, or no code showing: 403 `wrong_code`. After five wrong codes every code is refused for a minute: 429 `too_many_tries`. |
 | `GET /sync/v1/library` | yes | The list of everything (below). |
 | `GET /sync/v1/files/<file id>` | yes | The file's bytes, with `Content-Length`. The id is percent-encoded in the path. Only a file the list names is ever given out: no path comes from a phone. A file that's gone, or has been written again since the list was made, is 404 `not_found` (never the old list's size with the new bytes); the next list has it under its new version. **Carrying on a file that was cut off** (2026-10-08): `Range: bytes=<from>-` (or `<from>-<to>`) is answered 206 with `Content-Range` and only those bytes; a phone sends `If-Range: <the version it has the start of>` with it, and if that isn't the file's version now it's sent the whole file (200), never new bytes to join to old. A part that isn't in the file is 416 with no body. Any other kind of `Range` gets the whole file. Every answer carries the version as `ETag`. |
@@ -350,13 +354,17 @@ What a phone tells the computer at a sync, before it asks for the list (so the l
           "at": "2026-10-10T03:25:00Z" }
     ] }
 
-`kind` is a **Sync change kind** (Enums). `id` is made up on the device, and names the change in the answer. `at` is when it was done on the device; the computer doesn't use it.
+`kind` is a **Sync change kind** (Enums). `id` is made up on the device, and names the change in the answer. `at` is when it was done on the device, in the form shown; the computer uses it only for a heart and a play (below).
 
 - **`playlist_new`**: a playlist called `name` was made on the device. `playlist` is an id the device made up for it. The computer makes the playlist under an id of its own and remembers which is which, so a `playlist_add` that names the device's id lands in it: in the same request or a later one, and after the app has been closed and opened again. The next list has the playlist under the computer's id.
   - **A playlist of that name is there already: that one is used**, and no second one is made. A phone can't see a playlist made on the computer since it last synced, and nobody could tell two of one name apart. Names are compared without regard to capitals or to spaces at the ends; a playlist spelled exactly the same comes before one that differs in capitals, and the older before the newer. The songs put in the device's playlist go in the one that was there.
   - A name is tidied as the app's own are (spaces at the ends and runs of spaces), and one longer than 200 characters is cut to 200.
 - **`playlist_add`**: the song `track` (its id in the list) was put in the playlist `playlist` (its id in the list, or the id the device made up for one it made). It goes at the end. **A song the playlist has already isn't put in a second time**: a phone can't see what was put in on the computer since it last synced, so a second copy would be one nobody asked for. (On the computer a song can be in a playlist twice, and the app asks first.)
 - **`listened`**: `seconds` more were spent listening to the song `track`: time it was playing, not a count of plays, and no play count changes. It's added to the song's one figure (`listening.listened`, section 2), which the list gives back as `listened`. More than 0 and at most 86,400 (a day) in one change.
+- **`favourite`** (2026-10-11): `{ "id", "kind": "favourite", "track": "t-…", "on": true, "at" }`. A heart was put on the song `track` on the device (`on` true), or taken off (`on` false). The list gives it back as the track's `favourite`.
+  - **The newer word wins.** A phone tells of a heart only at its next sync, which may be days later. So a heart taken off on the phone stays on if the song was hearted on the computer after `at`. A heart put on is put on (the computer keeps no record of when one was taken off, so it can't know which word was newer). An `at` that's missing or can't be read counts as now.
+  - A song that has a heart already, or one taken off that had none, changes nothing and is dealt with.
+- **`played`** (2026-10-11): `{ "id", "kind": "played", "track": "t-…", "at" }`. The song was played to its end on the device: one change is one play, added to the song's count (the list's `playCount`). When the song was last played becomes the later of what the computer has and `at`, and never later than now. It's a play, not time: listening time comes as `listened`, whether the song reached its end or not.
 
 **Each change is taken once.** A change may arrive twice, when the answer to it was lost on the way: the computer knows it by its `id` and does nothing the second time. What it remembers is kept with the library (`state.json`, beside what the changes changed, and saved in the same write: either a change and the note that it was taken are both there, or neither is), so it holds across restarts. The newest 5,000 are remembered.
 
@@ -426,6 +434,6 @@ The same guards hold as for every request: a caller at home, the `Host` and `Ori
 
 ### Not in format 1
 
-- Sending favourites and play counts back to the computer, and any other change to a playlist than the two above (a rename, a song taken out, a new order, a playlist deleted).
+- Any other change to a playlist than the two above (a rename, a song taken out, a new order, a playlist deleted).
 - Lyrics timed to a video.
 - A film's length, cover or details, and its subtitles as files of their own.

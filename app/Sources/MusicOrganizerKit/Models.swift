@@ -941,6 +941,16 @@ public struct Library: Sendable {
         return Array(counted.sorted { ($0.1, $1.0.path) > ($1.1, $0.0.path) }.map(\.0).prefix(limit))
     }
 
+    /// The songs listened to longest first, by time and not by plays (2026-10-11); songs
+    /// with no time kept are left out. `listened` is seconds by track id.
+    public func mostListened(_ listened: [String: Double], limit: Int = 200) -> [Track] {
+        let timed = tracks.compactMap { track -> (Track, Double)? in
+            guard let id = track.trackId, let seconds = listened[id], seconds >= 1 else { return nil }
+            return (track, seconds)
+        }
+        return Array(timed.sorted { ($0.1, $1.0.path) > ($1.1, $0.0.path) }.map(\.0).prefix(limit))
+    }
+
     public var unconfirmed: [Track] { tracks.filter(\.isUnconfirmed) }
 
     /// `tracks`, in their order, narrowed to those matching every word of `query`.
@@ -978,8 +988,8 @@ public struct Library: Sendable {
 /// Unknown names are dropped, and an empty or missing value gives the standard set.
 public enum SidebarChoice {
     public static let all = [
-        "songs", "albums", "artists", "videos", "favourites", "mostPlayed", "recentlyAdded",
-        "unconfirmed",
+        "songs", "albums", "artists", "videos", "favourites", "mostPlayed", "mostListened",
+        "recentlyAdded", "unconfirmed",
     ]
     /// The entries the first version of the sidebar had: what a choice saved before
     /// "seen" was kept had been offered.
@@ -1005,7 +1015,7 @@ public enum SidebarChoice {
         all.filter { shown.contains($0) || $0 == entry }
     }
 
-    /// An entry this version brings (Videos) is shown once without being asked for:
+    /// An entry this version brings (Videos; Most Listened) is shown once without being asked for:
     /// the owner's saved choice is from before it existed, so it can't have been
     /// removed on purpose. `seen` lists the entries already offered (nil: the original
     /// ones). Returns the choice and the "seen" list to save.

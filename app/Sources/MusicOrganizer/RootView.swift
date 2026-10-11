@@ -84,6 +84,8 @@ struct Message<Buttons: View>: View {
 enum SidebarItem: Hashable {
     case songs, albums, artists, videos
     case favourites, recentlyAdded, mostPlayed, unconfirmed
+    /// The songs listened to longest, by time (the owner's choice, 2026-10-11).
+    case mostListened
     case visualizer, musicExplore, importPlaylists, youtube, youtubeQueue, downloads
     /// The owner's drawing of 2026-10-07: videos and movies beside the music.
     case channels, movies, videoFinder, videoExplore, movieFinder
@@ -166,6 +168,7 @@ enum SidebarItem: Hashable {
         case "videos": self = .videos
         case "favourites": self = .favourites
         case "mostPlayed": self = .mostPlayed
+        case "mostListened": self = .mostListened
         case "recentlyAdded": self = .recentlyAdded
         case "unconfirmed": self = .unconfirmed
         default: return nil
@@ -181,6 +184,7 @@ enum SidebarItem: Hashable {
         case .favourites: "Favourites"
         case .recentlyAdded: "Recently Added"
         case .mostPlayed: "Most Played"
+        case .mostListened: "Most Listened"
         case .unconfirmed: "Not Identified Yet"
         case .musicExplore, .videoExplore: "Explore"
         case .settings: "Settings"
@@ -210,6 +214,7 @@ enum SidebarItem: Hashable {
         case .favourites: "heart"
         case .recentlyAdded: "clock"
         case .mostPlayed: "chart.bar"
+        case .mostListened: "hourglass"
         case .unconfirmed: "questionmark.circle"
         case .musicExplore, .videoExplore: "sparkles"
         case .settings: "gearshape"
@@ -821,6 +826,11 @@ struct PageView: View {
             SongList(
                 source: .mostPlayed, title: "Most Played",
                 empty: "Songs you play all the way through are counted and show up here.",
+                isActive: active)
+        case .mostListened:
+            SongList(
+                source: .mostListened, title: "Most Listened",
+                empty: "The songs you've listened to longest show up here, here and on your phone.",
                 isActive: active)
         case .unconfirmed:
             SongList(
