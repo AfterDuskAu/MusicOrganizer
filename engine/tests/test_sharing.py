@@ -1330,9 +1330,7 @@ def test_only_hashes_of_what_a_phone_made_up_are_kept(
     assert "A Name Of The Owner's" in kept  # the one thing kept as the phone sent it
     for made_up in (theirs, song, key, *ids(*sent)):
         assert made_up not in kept, made_up
-    assert "changes were taken (playlists made: 1, songs put in playlists: 1, minutes" in (
-        caplog.text
-    )
+    assert "playlists made: 1, songs put in playlists: 1, listening: 1 min 30 s" in caplog.text
     for private in (key, "Bearer", "A Name Of The Owner's", theirs, song, SONG_ID, LOOPBACK,
                     *ids(*sent)):  # fmt: skip
         assert private not in caplog.text, private

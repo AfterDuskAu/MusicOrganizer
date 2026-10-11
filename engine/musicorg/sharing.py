@@ -821,10 +821,11 @@ class Share:
         The app is told when any of them changed a playlist or a song's listening time."""
         dealt_with, done = take_changes(self.lib, sent)
         if done["playlists"] or done["songs"] or done["seconds"]:
+            listened = round(done["seconds"])
             log.info(
                 "sharing: a device's changes were taken (playlists made: %d, songs put in "
-                "playlists: %d, minutes of listening: %d)",
-                done["playlists"], done["songs"], round(done["seconds"] / 60),
+                "playlists: %d, listening: %d min %d s)",
+                done["playlists"], done["songs"], listened // 60, listened % 60,
             )  # fmt: skip
             if self._took is not None:
                 self._took()
