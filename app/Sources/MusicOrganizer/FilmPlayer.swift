@@ -158,6 +158,16 @@ final class FilmPlayer {
         command(["seek", String(seconds), "relative"])
     }
 
+    /// One of the player's keys: the space bar, or an arrow (`PlayerKey` in the Kit).
+    func press(_ key: PlayerKey) {
+        switch key {
+        case .playPause: togglePause()
+        case .louder, .quieter: volume = key.volume(from: volume, full: 100)
+        case .back, .forward:
+            if let place = key.place(from: time, length: duration) { seek(to: place) }
+        }
+    }
+
     // MARK: talking to mpv
 
     private func shut() {
@@ -250,6 +260,12 @@ struct FilmPlayerView: View {
             controlsShown = true
         }
         .onTapGesture(count: 2) { NSApp.keyWindow?.toggleFullScreen(nil) }
+        // A key that worked the film (space, an arrow) brings the controls up as the
+        // mouse does, so the sound's or the film's bar is seen to move.
+        .onChange(of: model.keyPresses) {
+            lastMove = Date()
+            controlsShown = true
+        }
         .task {
             // The controls go away three seconds after the mouse last moved.
             while !Task.isCancelled {
@@ -288,7 +304,6 @@ struct FilmPlayerView: View {
                     film.togglePause()
                 }
                 .font(.title)
-                .keyboardShortcut(.space, modifiers: [])
                 Button("Forward 30 Seconds", systemImage: "goforward.30") { film.skip(30) }
                 Spacer()
                 if film.soundTracks.count > 1 {

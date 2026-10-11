@@ -73,6 +73,9 @@ final class AppModel {
     }
     /// The video, or the custom visualizer, has the whole screen (`setPictureFullScreen`).
     private(set) var pictureFullScreen = false
+    /// Goes up at each key that worked a film, or a video on the whole screen: their
+    /// controls come up for it, as they do for the mouse, so the change can be seen.
+    private(set) var keyPresses = 0
     /// The app put its window into macOS's full screen for that, so it takes it out
     /// again afterwards. Kept here, not in the view: the view is rebuilt as the window
     /// changes, and forgot.
@@ -340,6 +343,8 @@ final class AppModel {
     @ObservationIgnored private var keyMonitor: Any?
     /// While set, the space bar does this instead of play/pause (tap-along lyrics).
     @ObservationIgnored var spaceBar: (() -> Void)?
+    /// Looks for the strip macOS makes across the top of a full screen (`tidyFullScreenTopBar`).
+    @ObservationIgnored private var fullScreenWatch: Timer?
     private static let rootKey = "libraryRoot"
 
     init() {
@@ -483,16 +488,19 @@ final class AppModel {
                 self?.pictureFullScreen = false
             }
         }
-        // The window has just gone full screen (the green button, or a double click on
-        // a film): if a picture has it, the top bar's strip goes out of sight.
+        // The window is going full screen (the green button, or a double click on a
+        // film): if a picture has it, the top bar's strip is never to be seen. macOS
+        // makes the strip's window a moment after this, so it's looked for from now
+        // until full screen has settled.
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willEnterFullScreenNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.watchForFullScreenTopBar() }
+        }
         NotificationCenter.default.addObserver(
             forName: NSWindow.didEnterFullScreenNotification, object: nil, queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.tidyFullScreenTopBar() }
-            // The strip's window is made as full screen begins; once more when it has settled.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                MainActor.assumeIsolated { self?.tidyFullScreenTopBar() }
-            }
         }
         await connect()
     }
@@ -684,14 +692,40 @@ final class AppModel {
     /// whole screen) leaves that window there, an empty strip across the picture: the
     /// owner saw it from the first full-screen video on. Asking macOS to hide it with
     /// the menu bar (`presentationOptions`) is ignored when asked from here (tried and
-    /// seen on screen, 2026-10-07). So while a picture has the screen, that window is
-    /// simply made see-through, and put back afterwards.
+    /// seen on screen, 2026-10-07). So while a picture has the screen, what's in that
+    /// window is hidden, and shown again afterwards.
+    ///
+    /// Not by making the window see-through, which is how it was done first: macOS makes
+    /// it solid again a twentieth of a second after full screen is reached (measured
+    /// 2026-10-12, with `MUSICORG_BENCH`'s `windows`), so the strip showed until it was
+    /// asked for a second time, half a second later or more: the owner's "it disappears,
+    /// but it shouldn't be there to begin with". What's in the window, macOS leaves as
+    /// it's put; and with nothing in it the window draws nothing, having no colour of
+    /// its own.
     func tidyFullScreenTopBar() {
         let hide = film.isOpen || pictureFullScreen
         for window in NSApp.windows
         where String(describing: type(of: window)).contains("ToolbarFullScreenWindow") {
-            window.alphaValue = hide ? 0 : 1
+            if window.contentView?.isHidden != hide { window.contentView?.isHidden = hide }
         }
+    }
+
+    /// From the moment full screen begins until it has settled, the strip's window is
+    /// looked for sixty times a second: macOS makes it part way through, out of sight,
+    /// about half a second before it's shown, and says nothing when it does.
+    private func watchForFullScreenTopBar() {
+        fullScreenWatch?.invalidate()
+        let until = Date().addingTimeInterval(4)
+        let watch = Timer(timeInterval: 1.0 / 60, repeats: true) { [weak self] timer in
+            MainActor.assumeIsolated {
+                self?.tidyFullScreenTopBar()
+                if Date() > until { timer.invalidate() }
+            }
+        }
+        // In every mode of the run loop: macOS's own animation runs in one of its own.
+        RunLoop.main.add(watch, forMode: .common)
+        fullScreenWatch = watch
+        tidyFullScreenTopBar()
     }
 
     /// Play one of a film's streams: a web address or a torrent in the film player, a
@@ -3091,9 +3125,12 @@ final class AppModel {
         return track.isVideo || lyrics.forVideo == player.video?.source.videoId
     }
 
-    // MARK: the space bar
+    // MARK: the space bar and the arrows
 
     /// Space plays and pauses, as in every music app, except while typing in a field.
+    /// While a film is open, or a video or the visualizer has the whole screen, the
+    /// arrows are the player's too (the owner, 2026-10-12): up and down for the sound,
+    /// left and right to go back and forward (`PlayerKey` in the Kit).
     private func installSpaceBar() {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
@@ -3107,19 +3144,49 @@ final class AppModel {
                 }
                 return left ? nil : event
             }
-            guard event.keyCode == 49,
-                event.modifierFlags.intersection([.command, .option, .control]).isEmpty
+            // With ⌘, ⌥, ⌃ or Shift held it's something else's (⌘→ is Next Song).
+            guard let key = PlayerKey(keyCode: event.keyCode),
+                event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty
             else { return event }
-            let borrowed = MainActor.assumeIsolated { () -> Bool in
-                guard let action = self?.spaceBar else { return false }
-                action()
-                return true
+            // A sheet's or a panel's keys are its own (a file panel's arrows, say).
+            let elsewhere = event.window?.isSheet == true || event.window is NSPanel
+            let typing = event.window?.firstResponder is NSText
+            let taken = MainActor.assumeIsolated {
+                self?.pressed(key, typing: typing, elsewhere: elsewhere, held: event.isARepeat) ?? false
             }
-            if borrowed { return nil }
-            guard !(event.window?.firstResponder is NSText) else { return event }
-            MainActor.assumeIsolated { self?.player.toggle() }
-            return nil
+            return taken ? nil : event
         }
+    }
+
+    /// One of the player's keys was pressed: true if it was the player's to take.
+    /// `held`: the key is being held down, which carries on for the sound and for going
+    /// back and forward, but doesn't play and pause over and over.
+    private func pressed(_ key: PlayerKey, typing: Bool, elsewhere: Bool, held: Bool) -> Bool {
+        if key == .playPause, let action = spaceBar {
+            action()
+            return true
+        }
+        guard !typing else { return false }
+        if film.isOpen {
+            guard !elsewhere else { return false }
+            if !(held && key == .playPause) { film.press(key) }
+            keyPresses += 1
+            return true
+        }
+        if key == .playPause {
+            if !held { player.toggle() }
+            return true
+        }
+        // The arrows, with no film open: the lists' own, unless a video or the
+        // visualizer has the whole screen.
+        guard pictureFullScreen, !elsewhere else { return false }
+        if let place = key.place(from: player.clock.time, length: player.clock.duration) {
+            player.seek(to: place)
+        } else {
+            player.volume = Float(key.volume(from: Double(player.volume), full: 1))
+        }
+        keyPresses += 1
+        return true
     }
 
     private var appVersion: String {

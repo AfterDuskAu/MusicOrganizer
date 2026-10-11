@@ -37,6 +37,15 @@ import AppKit
 /// - `settings=<section>`: this section of Settings chosen ("profile", "play", "downloads",
 ///   "lyrics", "addons", "sharing"), with the Settings page showing
 /// - `flip=<key>`: a yes-or-no setting switched over, by its saved name
+/// - `fullscreen`: the window sent into macOS's full screen, or brought out of it, as the
+///   green button does it (only a copy that's seen can: it takes the whole screen)
+/// - `windows`: from here on, every change to the app's own windows written out (which
+///   there are, where, how see-through, whether what's in them is hidden), with the
+///   moments full screen begins and ends; and for three seconds after each such moment,
+///   how much of macOS's strip across the top of a full screen is drawn
+/// - `key=<name>`: a key pressed, as one on the keyboard arrives: `space`, `up`, `down`,
+///   `left` or `right`
+/// - `film`: whether a film is open and playing, where it has got to and how loud, written out
 /// - `state`: the page showing, the song rows picked and whether the app is in front, written out
 /// - `hide`, `show`: the app hidden, and brought back
 /// - `shrink`, `grow`: the window put in the Dock, and brought back
@@ -358,7 +367,27 @@ enum Bench {
                     + "app in front: \(NSApp.isActive), window key: \(window?.isKeyWindow == true)")
             return true
         }
+        if name.hasPrefix("key=") {
+            let keys: [String: (UInt16, String)] = [
+                "space": (49, " "), "up": (126, "\u{F700}"), "down": (125, "\u{F701}"),
+                "left": (123, "\u{F702}"), "right": (124, "\u{F703}"),
+            ]
+            guard let (code, letter) = keys[String(name.dropFirst(4))], let window,
+                let press = NSEvent.keyEvent(
+                    with: .keyDown, location: .zero, modifierFlags: [],
+                    timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber,
+                    context: nil, characters: letter, charactersIgnoringModifiers: letter, isARepeat: false,
+                    keyCode: code)
+            else { return true }
+            NSApp.sendEvent(press)
+            return true
+        }
+        if name == "windows" {
+            WindowWatch.start()
+            return true
+        }
         switch name {
+        case "fullscreen": window?.toggleFullScreen(nil)
         case "hide": NSApp.hide(nil)
         case "show":
             NSApp.unhide(nil)
@@ -369,6 +398,120 @@ enum Bench {
         default: return false
         }
         return true
+    }
+}
+
+/// Writes out every change to the app's own windows, for finding what macOS puts on the
+/// screen around a change like full screen (the strip across the top of a film was a
+/// window of macOS's own making, and only shows in the Warm Look).
+@MainActor
+private enum WindowWatch {
+    private static var seen: [Int: String] = [:]
+    private static var began = Date()
+    private static var timer: Timer?
+    private static var measuringUntil = Date.distantPast
+    private static var lastMeasure = Date.distantPast
+
+    static func start() {
+        guard timer == nil else { return }
+        began = Date()
+        for (name, what) in [
+            (NSWindow.willEnterFullScreenNotification, "full screen begins"),
+            (NSWindow.didEnterFullScreenNotification, "full screen reached"),
+            (NSWindow.willExitFullScreenNotification, "leaving full screen begins"),
+            (NSWindow.didExitFullScreenNotification, "full screen left"),
+        ] {
+            NotificationCenter.default.addObserver(forName: name, object: nil, queue: nil) { _ in
+                MainActor.assumeIsolated {
+                    say(what)
+                    measuringUntil = Date().addingTimeInterval(3)
+                    look()
+                }
+            }
+        }
+        // In every mode of the run loop, so a change made while macOS animates is seen.
+        let timer = Timer(timeInterval: 1.0 / 120, repeats: true) { _ in
+            MainActor.assumeIsolated { look() }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        self.timer = timer
+        look()
+    }
+
+    private static func say(_ what: String) {
+        Bench.say(String(format: "WINDOWS %7.3f  %@", Date().timeIntervalSince(began), what))
+    }
+
+    private static func isStrip(_ window: NSWindow) -> Bool {
+        String(describing: type(of: window)).contains("ToolbarFullScreen")
+    }
+
+    private static func look() {
+        var now: [Int: String] = [:]
+        for window in NSApp.windows {
+            let frame = window.frame
+            now[window.windowNumber] = String(
+                format: "%@ at %.0f,%.0f size %.0fx%.0f alpha %.2f %@%@",
+                String(describing: type(of: window)), frame.minX, frame.minY, frame.width, frame.height,
+                window.alphaValue, window.isVisible ? "shown" : "hidden",
+                window.contentView?.isHidden == true ? ", what's in it hidden" : "")
+        }
+        for (number, line) in now.sorted(by: { $0.key < $1.key }) where seen[number] != line {
+            say("#\(number) \(line)")
+            // A window of macOS's own making, the first time it's seen: what's in it.
+            if seen[number] == nil, line.contains("FullScreen"),
+                let window = NSApp.windows.first(where: { $0.windowNumber == number })
+            {
+                inside(window)
+            }
+        }
+        for number in seen.keys.sorted() where now[number] == nil { say("#\(number) gone") }
+        seen = now
+        if Date() < measuringUntil, Date().timeIntervalSince(lastMeasure) >= 0.05 {
+            lastMeasure = Date()
+            measureStrip()
+        }
+    }
+
+    /// What's in a window: its views, and which of them are hidden.
+    private static func inside(_ window: NSWindow) {
+        guard let top = window.contentView?.superview ?? window.contentView else { return }
+        say("   opaque \(window.isOpaque), background \(window.backgroundColor.description), shadow \(window.hasShadow)")
+        func tell(_ view: NSView, _ depth: Int) {
+            guard depth < 4 else { return }
+            say(
+                String(repeating: "  ", count: depth + 2)
+                    + "\(type(of: view)) \(Int(view.frame.width))x\(Int(view.frame.height))"
+                    + (view.isHidden ? " hidden" : "") + (view === window.contentView ? " (content)" : ""))
+            view.subviews.forEach { tell($0, depth + 1) }
+        }
+        tell(top, 0)
+    }
+
+    /// How much of the strip's window is drawn at all, as it is on the screen: the window
+    /// pictured by itself (a picture of all the app's windows together puts the main one
+    /// over it, and the app can't picture the screen), and its dots that aren't
+    /// see-through counted. Nothing of any other app's is in the picture.
+    private static func measureStrip() {
+        for strip in NSApp.windows where strip.isVisible && isStrip(strip) {
+            // The window's number itself, not boxed up: that's the list macOS wants.
+            var one: [UnsafeRawPointer?] = [UnsafeRawPointer(bitPattern: strip.windowNumber)]
+            let (wide, high) = (64, 8)
+            guard let only = CFArrayCreate(nil, &one, 1, nil),
+                let alone = CGImage(
+                    windowListFromArrayScreenBounds: .null, windowArray: only,
+                    imageOption: [.nominalResolution, .boundsIgnoreFraming]),
+                let space = CGColorSpace(name: CGColorSpace.sRGB),
+                let canvas = CGContext(
+                    data: nil, width: wide, height: high, bitsPerComponent: 8, bytesPerRow: wide * 4,
+                    space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+            else { continue }
+            canvas.draw(alone, in: CGRect(x: 0, y: 0, width: wide, height: high))
+            guard let dots = canvas.data else { continue }
+            var solid = 0
+            for dot in 0..<(wide * high) { solid += Int(dots.load(fromByteOffset: dot * 4 + 3, as: UInt8.self)) }
+            say(String(format: "the strip's window by itself: %d%% of it is drawn", solid * 100 / (wide * high * 255)))
+        }
     }
 }
 

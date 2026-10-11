@@ -735,6 +735,15 @@ struct MainView: View {
                 } else {
                     Bench.say("BENCH putback: nothing in the log can be put back")
                 }
+            } else if step.name == "film" {
+                let film = model.film
+                Bench.say(
+                    film.isOpen
+                        ? String(
+                            format: "BENCH film: %@, at %.1f s of %.1f, sound %.0f, music %@",
+                            film.paused ? "paused" : "playing", film.time, film.duration, film.volume,
+                            model.player.isPlaying ? "playing" : "not playing")
+                        : "BENCH film: none open")
             } else if step.name == "remove=library" {
                 // The newest download taken out of the library, its file kept: what
                 // Delete from Library does once the owner has said yes.

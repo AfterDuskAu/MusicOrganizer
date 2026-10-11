@@ -58,6 +58,8 @@ struct FullScreenPicture: View {
         .onContinuousHover { phase in
             if case .active = phase { wake() }
         }
+        // An arrow that changed the sound or the place: the controls show it.
+        .onChange(of: model.keyPresses) { wake() }
         .onAppear { wake() }
         .onChange(of: showing, initial: true) {
             if showing == .visualizer { keepsVisualizer = true }
