@@ -2292,6 +2292,70 @@ final class VideoFilesTests: XCTestCase {
     }
 }
 
+final class WaysToPlayTests: XCTestCase {
+    private func way(_ quality: String?, _ name: String) -> MediaStream {
+        let text = #"{"kind": "torrent", "name": "\#(name)", "quality": \#(quality.map { "\"\($0)\"" } ?? "null"), "trackers": []}"#
+        return try! JSONDecoder().decode(MediaStream.self, from: Data(text.utf8))
+    }
+
+    private func source(_ id: String, _ streams: [MediaStream]) -> StreamsAnswer.Source {
+        let named = streams.map { "{\"kind\": \"torrent\", \"name\": \"\($0.name ?? "")\", "
+            + "\"quality\": \($0.quality.map { "\"\($0)\"" } ?? "null"), \"trackers\": []}" }
+        let text = "{\"addon_id\": \"\(id)\", \"addon\": \"\(id)\", \"streams\": [\(named.joined(separator: ","))]}"
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return try! decoder.decode(StreamsAnswer.Source.self, from: Data(text.utf8))
+    }
+
+    private func names(_ ways: [StreamsAnswer.Way]) -> [String] {
+        ways.map { "\($0.addon):\($0.stream.name ?? "")" }
+    }
+
+    func testAtMostThreeOfAQualityByTheOrderOfTheAddOns() {
+        // Four add-ons in the owner's order, each with the film in 1080p; two have 4K.
+        let answer = StreamsAnswer(
+            sources: [
+                source("A", [way("1080p", "a1"), way("1080p", "a2"), way("4k", "a3")]),
+                source("B", [way("1080p", "b1"), way("720p", "b2")]),
+                source("C", [way("4k", "c1"), way("1080p", "c2"), way("1080p", "c3")]),
+                source("D", [way("1080p", "d1"), way(nil, "d2")]),
+            ], problems: [])
+        XCTAssertEqual(answer.ways.count, 10)
+        // 1080p: the first from A, B and C, the three highest in the list; not A's
+        // second, and nothing of D's. Everything else has three or fewer, and stays.
+        XCTAssertEqual(
+            names(answer.shortlist()),
+            ["A:a1", "A:a3", "B:b1", "B:b2", "C:c1", "C:c2", "D:d2"])
+        // In the order they'd have had with nothing left out.
+        XCTAssertEqual(answer.shortlist().map(\.id), [0, 2, 3, 4, 5, 6, 9])
+    }
+
+    func testOneAddOnsOwnThreeWhenNoOtherHasThatQuality() {
+        // Only one add-on has it, five times: its first three, in its own order.
+        let alone = StreamsAnswer(
+            sources: [source("A", (1...5).map { way("1080p", "a\($0)") })], problems: [])
+        XCTAssertEqual(names(alone.shortlist()), ["A:a1", "A:a2", "A:a3"])
+        // Two add-ons: one from each first, then the higher one's second.
+        let two = StreamsAnswer(
+            sources: [
+                source("A", [way("720p", "a1"), way("720p", "a2")]),
+                source("B", [way("720p", "b1"), way("720p", "b2")]),
+            ], problems: [])
+        XCTAssertEqual(names(two.shortlist()), ["A:a1", "A:a2", "B:b1"])
+        // Twenty-five add-ons with the same film in 1080p: three lines, from the top three.
+        let many = StreamsAnswer(
+            sources: (1...25).map { source("N\($0)", [way("1080p", "x")]) }, problems: [])
+        XCTAssertEqual(many.ways.count, 25)
+        XCTAssertEqual(names(many.shortlist()), ["N1:x", "N2:x", "N3:x"])
+        // Ways that don't say their quality are one kind too.
+        let quiet = StreamsAnswer(
+            sources: [source("A", (1...4).map { way(nil, "a\($0)") })], problems: [])
+        XCTAssertEqual(quiet.shortlist().count, 3)
+        XCTAssertEqual(StreamsAnswer(sources: [], problems: []).shortlist().count, 0)
+        XCTAssertEqual(names(two.shortlist(most: 1)), ["A:a1"])
+    }
+}
+
 final class TorrentStatusTests: XCTestCase {
     func testHowAFilmFromATorrentIsGettingOnInOneLine() {
         XCTAssertEqual(

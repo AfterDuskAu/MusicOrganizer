@@ -793,6 +793,8 @@ struct MovieView: View {
     @Environment(AppModel.self) private var model
     @State private var details: MediaDetails?
     @State private var streams: StreamsAnswer?
+    /// Every way to play is shown, not only the three of each quality (Show All).
+    @State private var showsAllWays = false
     @State private var problem: String?
     /// A series: the season showing, and the episode whose ways to play are showing.
     @State private var season: Int?
@@ -953,7 +955,7 @@ struct MovieView: View {
     /// Show where an episode can be played from.
     private func choose(_ one: MediaDetails.Video) {
         guard episode != one else { return }
-        (episode, streams) = (one, nil)
+        (episode, streams, showsAllWays) = (one, nil, false)
         Task {
             let found = try? await model.ask(
                 "addon.streams", ["type": film.type, "id": one.id, "adult": apart],
@@ -977,17 +979,24 @@ struct MovieView: View {
                 // One bar a way to play, as the owner drew it (2026-10-11): where it's from,
                 // its quality, its size, who has it, then Play and Keep. Only a torrent has
                 // seeders and leechers, so the heading is there only when one is listed.
-                if streams.sources.contains(where: { $0.streams.contains { $0.kind == "torrent" } }) {
+                // At most three of a quality, by the owner's order of add-ons, until Show
+                // All is pressed (the owner, 2026-10-11: the same film in 1080p from
+                // twenty-five add-ons shouldn't be twenty-five lines).
+                let all = streams.ways
+                let few = streams.shortlist()
+                let ways = showsAllWays ? all : few
+                if ways.contains(where: { $0.stream.kind == "torrent" }) {
                     Text("Seeders/Leechers")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .padding(.leading, WayToPlayColumns.swarmStart)
                         .padding(.bottom, -6)
                 }
-                ForEach(streams.sources) { source in
-                    ForEach(Array(source.streams.enumerated()), id: \.offset) { _, stream in
+                ForEach(ways) { way in
+                    let stream = way.stream
+                    Group {
                         HStack(spacing: WayToPlayColumns.gap) {
-                            Text(source.addon)
+                            Text(way.addon)
                                 .lineLimit(1)
                                 .frame(width: WayToPlayColumns.source, alignment: .leading)
                             Text(stream.qualityLabel).fontWeight(.semibold)
@@ -1035,6 +1044,17 @@ struct MovieView: View {
                             Text(line).font(.callout).foregroundStyle(.secondary)
                         }
                     }
+                }
+                if all.count > few.count {
+                    Button(showsAllWays ? "Show Fewer" : "Show All \(all.count)") {
+                        showsAllWays.toggle()
+                    }
+                    .buttonStyle(.link)
+                    .help(
+                        showsAllWays
+                            ? "Back to three of each quality, from the add-ons highest in your list"
+                            : "Three of each quality are shown, from the add-ons highest in your "
+                                + "list (Settings → Add-ons). This shows every one")
                 }
                 ForEach(streams.problems, id: \.self) { problem in
                     Text("\(problem.addon): \(problem.message)").foregroundStyle(.secondary)

@@ -244,6 +244,65 @@ public struct StreamsAnswer: Decodable, Sendable {
         self.sources = sources
         self.problems = problems
     }
+
+    /// One way to play, with the add-on it's from: a line of the film's page.
+    public struct Way: Identifiable, Sendable {
+        /// Its place among all the ways to play, in the order the engine gave them.
+        public let id: Int
+        public let addonId: String
+        public let addon: String
+        public let stream: MediaStream
+    }
+
+    /// How many ways to play of one quality a film's page shows before Show All.
+    public static let mostOfAQuality = 3
+
+    /// Every way to play: add-on by add-on in the owner's order (Settings → Add-ons),
+    /// each add-on's in the order it gave them.
+    public var ways: [Way] {
+        var found: [Way] = []
+        for source in sources {
+            for stream in source.streams {
+                found.append(Way(id: found.count, addonId: source.addonId, addon: source.addon, stream: stream))
+            }
+        }
+        return found
+    }
+
+    /// The ways to play a film's page shows first (the owner, 2026-10-11): **at most
+    /// three of each quality**, so that twenty-five add-ons with the same film in 1080p
+    /// don't make twenty-five lines. Which three goes by the owner's order of add-ons:
+    /// the first one each add-on gives, from the add-on highest in the list down; and
+    /// only if that leaves fewer than three, their second ones, and so on. The lines
+    /// stay in the order they'd have had with nothing left out.
+    public func shortlist(most: Int = StreamsAnswer.mostOfAQuality) -> [Way] {
+        var kept = Set<Int>()
+        let all = ways
+        for quality in Set(all.map { $0.stream.quality ?? "" }) {
+            let these = all.filter { ($0.stream.quality ?? "") == quality }
+            // Each add-on's ways of this quality, the add-ons in the owner's order.
+            var perAddon: [[Way]] = []
+            var place: [String: Int] = [:]
+            for way in these {
+                if let at = place[way.addonId] {
+                    perAddon[at].append(way)
+                } else {
+                    place[way.addonId] = perAddon.count
+                    perAddon.append([way])
+                }
+            }
+            var taken = 0
+            var round = 0
+            while taken < most, perAddon.contains(where: { $0.count > round }) {
+                for theirs in perAddon where theirs.count > round && taken < most {
+                    kept.insert(theirs[round].id)
+                    taken += 1
+                }
+                round += 1
+            }
+        }
+        return all.filter { kept.contains($0.id) }
+    }
 }
 
 /// What the Explore page under Video Finder offers (the owner's drawing, 2026-10-07):
