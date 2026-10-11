@@ -998,12 +998,15 @@ private struct LyricsSettings: View {
 /// from. Each is an address that answers with lists, details and where something can
 /// be played; the engine keeps the owner's list of them and does all the asking.
 /// Settings → Deleted Items (the owner, 2026-10-10): the downloads deleted from the
-/// library but not from this Mac, kept as a log, each with a button to undo it.
+/// library but not from this Mac, kept as a log, each with a button to undo it. And,
+/// since 2026-10-11 (the owner's choice), the playlists deleted here or on a paired
+/// phone, which the engine keeps so that each can be put back.
 private struct DeletedItemsSettings: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
         let log = model.removedLog
+        let playlists = model.listening.deletedPlaylists ?? []
         Form {
             Section("Deleted from Your Library, Still on This Mac") {
                 if log.isEmpty {
@@ -1018,6 +1021,19 @@ private struct DeletedItemsSettings: View {
                         + "“_Replaced” folder. Undo puts the song back in your library; it "
                         + "doesn't go back into the playlists or favourites it was in. A song "
                         + "deleted from the computer went to the Trash, and isn't listed.")
+            }
+            Section("Deleted Playlists") {
+                if playlists.isEmpty {
+                    Text("No playlist has been deleted yet.").foregroundStyle(.secondary)
+                }
+                ForEach(playlists) { playlist in
+                    row(playlist)
+                }
+                SideNote(
+                    "A playlist you delete, here or on a paired phone, is listed here with "
+                        + "its songs in their order: the newest fifty. Undo puts it back among "
+                        + "your playlists, and a paired phone has it again when it next syncs. "
+                        + "A playlist only ever lists songs: deleting one never deleted a song.")
             }
         }
         .formStyle(.grouped)
@@ -1049,6 +1065,21 @@ private struct DeletedItemsSettings: View {
                             + "deleted in the same go"
                         : "Put this song back in your library")
             }
+        }
+    }
+
+    private func row(_ playlist: DeletedPlaylist) -> some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(playlist.name).fontWeight(.medium).lineLimit(1)
+                Text(playlist.detail(day: Self.day))
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 8)
+            Button("Undo") { model.restore(playlist) }
+                .help("Put this playlist back, with its songs in their order")
         }
     }
 

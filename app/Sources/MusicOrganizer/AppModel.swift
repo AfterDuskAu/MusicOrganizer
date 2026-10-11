@@ -1577,7 +1577,14 @@ final class AppModel {
         change { connection in
             let answer = try await connection.call(method, params, as: PlaylistsAnswer.self)
             self.listening.playlists = answer.playlists
+            if let deleted = answer.deletedPlaylists { self.listening.deletedPlaylists = deleted }
         }
+    }
+
+    /// Put a deleted playlist back (its Undo in Settings → Deleted Items): its name and
+    /// its songs in their order, at the end of the playlists.
+    func restore(_ playlist: DeletedPlaylist) {
+        playlistCall("playlist.restore", ["playlist_id": playlist.id])
     }
 
     /// Ask the engine for a change; if it says no, say why and show what's really saved.

@@ -1941,6 +1941,29 @@ final class AddonTests: XCTestCase {
 }
 
 final class PlaylistAddingTests: XCTestCase {
+    func testADeletedPlaylistSaysWhatItWasAndWhereItWasDeleted() throws {
+        let answer = Data(
+            #"""
+            {"favourites": [], "plays": {}, "playlists": [],
+             "deleted_playlists": [
+               {"id": "pl_2", "name": "Evening", "songs": 1, "deleted_at": "2026-10-11T04:00:00Z", "by": "device"},
+               {"id": "pl_1", "name": "Road Trip", "songs": 12, "deleted_at": null, "by": "computer"}]}
+            """#.utf8)
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let found = try decoder.decode(Listening.self, from: answer)
+        let deleted = try XCTUnwrap(found.deletedPlaylists)
+        XCTAssertEqual(deleted.map(\.name), ["Evening", "Road Trip"])
+        let day: (String) -> String = { _ in "11 Oct 2026" }
+        XCTAssertEqual(deleted[0].detail(day: day), "1 song · deleted 11 Oct 2026 · on a phone")
+        XCTAssertEqual(deleted[1].detail(day: day), "12 songs · deleted")
+        // An engine from before playlists were kept says nothing of them: none, not a fault.
+        let older = Data(#"{"favourites": [], "plays": {}, "playlists": []}"#.utf8)
+        XCTAssertNil(try decoder.decode(Listening.self, from: older).deletedPlaylists)
+        let said = Data(#"{"playlists": []}"#.utf8)
+        XCTAssertNil(try decoder.decode(PlaylistsAnswer.self, from: said).deletedPlaylists)
+    }
+
     func testAnExportedPlaylistSaysWhatTheOwnerNeedsToKnow() throws {
         let answer = Data(#"{"path": "/tmp/Road Trip.m3u8", "songs": 12, "left_out": 0}"#.utf8)
         let decoder = JSONDecoder()

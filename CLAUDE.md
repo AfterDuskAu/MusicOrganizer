@@ -74,7 +74,7 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
   - `lyrics` and `artwork`
   - `videolyrics`: a song's lyrics timed to its video, by lining up the two recordings' sound and by the video's captions (read-only)
   - `browse`: what the app shows: the library's tracks with their details, and a track's lyrics (read-only)
-  - `listening`: the owner's favourites, play counts, listening time and playlists, kept in `state.json` by `MUSICORG_ID`; and what a paired phone player says was done on it, taken once (2026-10-10)
+  - `listening`: the owner's favourites, play counts, listening time and playlists, kept in `state.json` by `MUSICORG_ID`; and what a paired phone player says was done on it, taken once (2026-10-10). A playlist that's deleted, in the app or from a phone, is kept there too and can be put back (2026-10-11: `playlist.restore`, Settings → Deleted Items; the newest fifty)
   - `discover`: songs the owner doesn't have, found from the ones they do (read-only; lookups through `youtube`)
   - `imports`: a playlist from elsewhere, each song found on YouTube Music (read-only; lookups through `youtube`)
   - `artist`: the Artist page: an artist's YouTube Music page, with which of their songs the owner has (read-only; lookups through `youtube`)

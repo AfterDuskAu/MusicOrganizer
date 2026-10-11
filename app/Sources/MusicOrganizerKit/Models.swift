@@ -597,6 +597,9 @@ public struct Listening: Decodable, Sendable {
     /// this app's player played and what a paired phone player played added together.
     public var listened: [String: Double]?
     public var playlists: [Playlist]
+    /// Playlists that were deleted, here or on a paired phone, and can be put back: the
+    /// newest first (Settings → Deleted Items).
+    public var deletedPlaylists: [DeletedPlaylist]?
     /// Downloads the owner has moved into the main library's lists.
     public var library: [String]?
     /// YouTube ids of songs played all the way through from YouTube (picks and search
@@ -842,6 +845,37 @@ public struct FavouritesAnswer: Decodable, Sendable {
 
 public struct PlaylistsAnswer: Decodable, Sendable {
     public let playlists: [Playlist]
+    /// Only a delete and its Undo say this: the deleted playlists as they are after it.
+    public let deletedPlaylists: [DeletedPlaylist]?
+}
+
+/// A playlist that was deleted and is kept, so that it can be put back (`playlist.restore`).
+public struct DeletedPlaylist: Decodable, Identifiable, Equatable, Sendable {
+    public let id: String
+    public let name: String
+    /// How many songs it had.
+    public let songs: Int
+    public let deletedAt: String?
+    /// `computer` (deleted in this app) or `device` (deleted on a paired phone).
+    public let by: String
+
+    public init(id: String, name: String, songs: Int, deletedAt: String? = nil, by: String = "computer") {
+        self.id = id
+        self.name = name
+        self.songs = songs
+        self.deletedAt = deletedAt
+        self.by = by
+    }
+
+    /// The line under the name: how many songs, the day it was deleted, and where. `day`
+    /// writes one of the engine's times as a day, the way the owner reads it.
+    public func detail(day: (String) -> String) -> String {
+        var parts = [songs == 1 ? "1 song" : "\(songs) songs"]
+        let when = deletedAt.map(day) ?? ""
+        parts.append(when.isEmpty ? "deleted" : "deleted \(when)")
+        if by == "device" { parts.append("on a phone") }
+        return parts.joined(separator: " · ")
+    }
 }
 
 /// `playlist.export`: where the engine saved a playlist as a file, and what's in it.

@@ -323,6 +323,7 @@ class Server:
             "playlist.create": self.playlist_create,
             "playlist.rename": self.playlist_rename,
             "playlist.delete": self.playlist_delete,
+            "playlist.restore": self.playlist_restore,
             "playlist.set_tracks": self.playlist_set_tracks,
             "playlist.export": self.playlist_export,
             "sources.add": self.sources_add,
@@ -716,7 +717,11 @@ class Server:
 
     def playlist_delete(self, params: dict[str, Any]) -> dict[str, Any]:
         playlist_id = need(params, "playlist_id", str)
-        return {"playlists": listening.delete_playlist(self._library(), playlist_id)}
+        return listening.delete_playlist(self._library(), playlist_id)
+
+    def playlist_restore(self, params: dict[str, Any]) -> dict[str, Any]:
+        playlist_id = need(params, "playlist_id", str)
+        return listening.restore_playlist(self._library(), playlist_id)
 
     def playlist_set_tracks(self, params: dict[str, Any]) -> dict[str, Any]:
         playlist_id, ids = need(params, "playlist_id", str), need(params, "track_ids", list)

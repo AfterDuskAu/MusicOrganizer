@@ -1307,6 +1307,26 @@ def test_a_playlist_is_changed_and_deleted_on_a_phone(
     assert listening.get(filled) == kept
 
 
+def test_a_playlist_deleted_on_a_phone_can_be_put_back(
+    share: sharing.Share, filled: Library
+) -> None:
+    key = paired(share)
+    tracks, lists = named(share, key)
+    gone = did("playlist_delete", playlist=lists["Morning"], at=in_a_minute())
+    assert tell(share, key, gone) == ids(gone)
+    assert the_list(share, key)["playlists"] == []
+    (kept,) = listening.get(filled)["deleted_playlists"]
+    assert (kept["name"], kept["songs"], kept["by"]) == ("Morning", 4, "device")
+    # Its Undo on the computer: the phone's next list has it again, under the id it knew,
+    # with its songs as they were. The phone's word that it's deleted isn't taken twice.
+    listening.restore_playlist(filled, kept["id"])
+    assert tell(share, key, gone) == ids(gone)
+    (back,) = the_list(share, key)["playlists"]
+    assert (back["id"], back["name"]) == (lists["Morning"], "Morning")
+    assert back["tracks"] == [tracks["Song"], tracks["Other"], tracks["Song"]]
+    assert playlists(filled) == [MORNING]
+
+
 def in_a_minute() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() + 60))
 

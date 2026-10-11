@@ -14,7 +14,7 @@ from musicorg.library import Library
 
 def test_nothing_yet(lib: Library) -> None:
     assert listening.get(lib) == {"favourites": [], "plays": {}, "listened": {}, "playlists": [],
-                                  "library": [], "heard": []}  # fmt: skip
+                                  "deleted_playlists": [], "library": [], "heard": []}  # fmt: skip
 
 
 def test_favourites_most_recent_first(lib: Library, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -299,6 +299,96 @@ def test_by_an_id_of_its_own_a_device_changes_only_a_playlist_made_for_it(lib: L
     ]
 
 
+def test_a_deleted_playlist_is_kept_and_can_be_put_back(
+    lib: Library, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(listening, "_now", lambda: "2026-10-11T03:00:00Z")
+    mix, drive, run = (listening.create_playlist(lib, n)[-1]["id"] for n in ("Mix", "Drive", "Run"))
+    listening.set_playlist_tracks(lib, mix, ["t_2", "t_1", "t_2"])
+    listening.set_playlist_tracks(lib, drive, ["t_3"])
+    said = listening.delete_playlist(lib, mix)
+    assert [p["name"] for p in said["playlists"]] == ["Drive", "Run"]
+    assert said["deleted_playlists"] == [
+        {"id": mix, "name": "Mix", "songs": 3, "deleted_at": "2026-10-11T03:00:00Z",
+         "by": "computer"}
+    ]  # fmt: skip
+    # Deleted on a device: kept the same way, and said to be from there.
+    gone = change("playlist_delete", "m1", playlist_id=drive, at="2026-10-11T04:00:00Z")
+    assert listening.from_devices(lib, [gone]) == came(deleted=1)
+    found = listening.get(lib)
+    assert [(p["name"], p["by"]) for p in found["deleted_playlists"]] == [
+        ("Drive", "device"), ("Mix", "computer"),
+    ]  # the newest first  # fmt: skip
+    # A song that leaves the library leaves a deleted playlist too.
+    listening.forget(lib, ["t_1"])
+    assert listening.get(lib)["deleted_playlists"][1]["songs"] == 2
+
+    back = listening.restore_playlist(lib, mix)
+    assert [(p["id"], p["name"], p["track_ids"]) for p in back["playlists"]] == [
+        (run, "Run", []), (mix, "Mix", ["t_2", "t_2"]),
+    ]  # at the end, with its songs in their order  # fmt: skip
+    assert [p["name"] for p in back["deleted_playlists"]] == ["Drive"]
+    with pytest.raises(NotFoundError):
+        listening.restore_playlist(lib, mix)  # it's back already
+    with pytest.raises(NotFoundError):
+        listening.restore_playlist(lib, "pl_nothing")
+    # Put back, a playlist counts as changed now: the same word from the device again
+    # (taken once), and an older word from another device, don't take it away again.
+    listening.restore_playlist(lib, drive)
+    other = change("playlist_delete", "m2", playlist_id=drive, at="2026-10-11T02:59:00Z")
+    assert listening.from_devices(lib, [gone, other]) == came()
+    assert [p["name"] for p in listening.get(lib)["playlists"]] == ["Run", "Mix", "Drive"]
+    assert listening.get(lib)["deleted_playlists"] == []
+
+
+def test_a_playlist_a_device_made_is_still_its_own_when_its_put_back(lib: Library) -> None:
+    sent = [
+        change("playlist_new", "m1", theirs="a", name="Driving"),
+        change("playlist_add", "m2", theirs="a", track_id="t_1"),
+    ]
+    listening.from_devices(lib, sent)
+    made = listening.get(lib)["playlists"][0]["id"]
+    listening.delete_playlist(lib, made)
+    # Deleted: a song the device puts in it has nowhere to go.
+    assert (
+        listening.from_devices(lib, [change("playlist_add", "m3", theirs="a", track_id="t_2")])
+        == came()
+    )
+    assert lib.load_state().data["listening"]["devices"]["made"] == []
+    listening.restore_playlist(lib, made)
+    # Put back: the device's own id for it finds it again, and may change it.
+    later = [
+        change("playlist_add", "m4", theirs="a", track_id="t_3"),
+        change("playlist_rename", "m5", theirs="a", name="Night drive"),
+    ]
+    assert listening.from_devices(lib, later) == came(songs=1, renamed=1)
+    assert songs_of(lib) == [("Night drive", ["t_1", "t_3"])]
+
+
+def test_only_the_newest_deleted_playlists_are_kept(
+    lib: Library, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(listening, "DELETED_KEPT", 2)
+    for name in ("One", "Two", "Three"):
+        listening.delete_playlist(lib, listening.create_playlist(lib, name)[-1]["id"])
+    assert [p["name"] for p in listening.get(lib)["deleted_playlists"]] == ["Three", "Two"]
+    # Damage where the deleted playlists are kept is dropped, not tripped over.
+    with state.edit(lib.paths.state_file) as st:
+        kept = st.data["listening"]["deleted_playlists"]
+        st.data["listening"]["deleted_playlists"] = [
+            "junk", {"id": 7, "name": "No id"}, {"id": "pl_x"},
+            {**kept[0], "by": "someone", "made": 5},
+            {**kept[1], "deleted_at": 12, "track_ids": ["t_1", 2]},
+        ]  # fmt: skip
+    found = listening.get(lib)["deleted_playlists"]
+    assert [(p["name"], p["by"], p["songs"], p["deleted_at"] is None) for p in found] == [
+        ("Three", "computer", 1, True), ("Two", "computer", 0, False),
+    ]  # fmt: skip
+    assert [p["name"] for p in listening.restore_playlist(lib, found[0]["id"])["playlists"]] == [
+        "Three"
+    ]
+
+
 def test_a_device_cant_fill_the_librarys_records(
     lib: Library, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -333,7 +423,9 @@ def test_playlists(lib: Library) -> None:
     listening.rename_playlist(lib, made["id"], "Drive")
     first, second = listening.get(lib)["playlists"]
     assert (first["name"], first["track_ids"]) == ("Drive", ["t_2", "t_1", "t_2"])
-    assert [p["name"] for p in listening.delete_playlist(lib, second["id"])] == ["Drive"]
+    assert [p["name"] for p in listening.delete_playlist(lib, second["id"])["playlists"]] == [
+        "Drive"
+    ]
     for bad in ("", "   ", "x" * 201):
         with pytest.raises(UserError):
             listening.create_playlist(lib, bad)
@@ -431,8 +523,27 @@ def test_rpc_methods(server: rpc.Server, lib: Library) -> None:  # noqa: F811
     assert found["playlists"][0]["name"] == "Mix 2" and found["playlists"][0]["track_ids"] == [
         "t_1"
     ]
-    assert result(server, "playlist.delete", playlist_id=made["id"]) == {"playlists": []}
+    gone = result(server, "playlist.delete", playlist_id=made["id"])
+    assert gone["playlists"] == [] and set(gone) == {"playlists", "deleted_playlists"}
+    (kept,) = gone["deleted_playlists"]
+    assert (kept["id"], kept["name"], kept["songs"], kept["by"]) == (
+        made["id"],
+        "Mix 2",
+        1,
+        "computer",
+    )
+    assert set(kept) == {"id", "name", "songs", "deleted_at", "by"}
+    assert result(server, "listening.get")["deleted_playlists"] == [kept]
     assert code(server, "playlist.delete", playlist_id=made["id"]) == rpc.NOT_FOUND
+    # Its Undo: back as it was, under the id it had.
+    back = result(server, "playlist.restore", playlist_id=made["id"])
+    assert back["deleted_playlists"] == []
+    assert [(p["id"], p["name"], p["track_ids"]) for p in back["playlists"]] == [
+        (made["id"], "Mix 2", ["t_1"])
+    ]
+    assert code(server, "playlist.restore", playlist_id=made["id"]) == rpc.NOT_FOUND
+    assert code(server, "playlist.restore") == rpc.INVALID_PARAMS
+    result(server, "playlist.delete", playlist_id=made["id"])
     assert code(server, "playlist.create", name=" ") == rpc.USER_ERROR
     assert code(server, "playlist.set_tracks", playlist_id="x", track_ids=[1]) == rpc.INVALID_PARAMS
     assert code(server, "listening.favourite", track_id="t_1") == rpc.INVALID_PARAMS

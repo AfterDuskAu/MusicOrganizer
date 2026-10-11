@@ -13,6 +13,9 @@ upgraded, so a playlist survives a tidy.
         "playlists": [{"id": "pl_…", "name": "…", "created_at": ISO time,
                        "changed_at": ISO time,           # once it has been changed
                        "track_ids": [track_id, …]}],     # in the owner's order
+        "deleted_playlists": [{…a playlist as above…,    # deleted, and can be put back
+                               "deleted_at": ISO time, "by": "computer" | "device",
+                               "made": […its notes from "devices", below…]}],
         "library": {track_id: {"since": ISO time}},      # downloads moved into the main library
         "devices": {"taken": ["9f2c…", …],               # changes taken from paired devices
                     "made": [{"theirs": "5b1e…", "playlist": "pl_…", "new": true}]}
@@ -42,6 +45,12 @@ under "devices":
   lands in ours, in the same request or a later one. Gone with the playlist. `new` says
   the playlist was made here for the device; without it, the device's playlist was one
   of a name the library had already, which the device has never seen (`_named`).
+
+**A deleted playlist is kept** (2026-10-11, the owner's choice), whether it was deleted
+here or on a paired device: it moves to "deleted_playlists" with its songs in their
+order, when it was deleted and by which (a **Playlist deleted by**, docs/ENGINE_API.md →
+Enums), and `restore_playlist` puts it back. The newest `DELETED_KEPT` are kept. Until
+that day a deleted playlist was gone for good, and a phone can delete one.
 
 **When a playlist was last changed** (`changed_at`, 2026-10-11) is kept so that a
 playlist deleted on a device stays if the owner has changed it here since: the newer
@@ -73,6 +82,7 @@ TAKEN_KEPT = 5000  # the changes remembered as taken: the newest
 MADE_KEPT = 500  # the playlists remembered as a device's own: the newest
 MAX_PLAYLISTS = 1000  # a device can't make a playlist in a library that has this many
 MAX_PLAYLIST_SONGS = 10_000  # nor make a playlist longer than this
+DELETED_KEPT = 50  # the deleted playlists that can still be put back: the newest
 
 
 @dataclass(frozen=True)
@@ -94,7 +104,8 @@ class DeviceChange:
 
 def get(lib: Library) -> dict[str, Any]:
     """Everything, cleaned of anything malformed: `{favourites, plays, listened,
-    playlists, library, heard}`. What's kept about paired devices isn't part of it."""
+    playlists, deleted_playlists, library, heard}`. What's kept about paired devices
+    isn't part of it."""
     return _shown(_read(lib.load_state().data))
 
 
@@ -138,7 +149,7 @@ def forget(lib: Library, track_ids: list[str]) -> None:
         for name in ("favourites", "plays", "listened", "library"):
             for track_id in gone:
                 data[name].pop(track_id, None)
-        for playlist in data["playlists"]:
+        for playlist in data["playlists"] + data["deleted_playlists"]:
             playlist["track_ids"] = [t for t in playlist["track_ids"] if t not in gone]
         st.data[KEY] = data
 
@@ -353,10 +364,21 @@ def _deleted_on_a_device(data: dict[str, Any], change: DeviceChange) -> int:
     there = _time(change.at)
     if here is not None and there is not None and here > there:
         return 0
-    data["playlists"].remove(found)
-    made = data["devices"]["made"]  # the note of whose playlist it was goes with it
-    made[:] = [note for note in made if note["playlist"] != found["id"]]
+    _set_aside(data, found, by="device")
     return 1
+
+
+def _set_aside(data: dict[str, Any], playlist: dict[str, Any], *, by: str) -> None:
+    """Delete a playlist, keeping it so that it can be put back (`restore_playlist`):
+    its name, its songs in their order, and the notes of which device made it. `by` is
+    a Playlist deleted by. Only the newest `DELETED_KEPT` are kept."""
+    data["playlists"].remove(playlist)
+    made = data["devices"]["made"]
+    notes = [note for note in made if note["playlist"] == playlist["id"]]
+    made[:] = [note for note in made if note["playlist"] != playlist["id"]]
+    kept = data["deleted_playlists"]
+    kept.append({**playlist, "deleted_at": _now(), "by": by, "made": notes})
+    del kept[:-DELETED_KEPT]
 
 
 def _hearted_on_a_device(data: dict[str, Any], change: DeviceChange) -> int:
@@ -493,13 +515,39 @@ def rename_playlist(lib: Library, playlist_id: str, name: str) -> list[dict[str,
     return data["playlists"]
 
 
-def delete_playlist(lib: Library, playlist_id: str) -> list[dict[str, Any]]:
-    """Remove a playlist. Only the list goes: the songs in it are untouched."""
+def delete_playlist(lib: Library, playlist_id: str) -> dict[str, Any]:
+    """Delete a playlist. Only the list goes: the songs in it are untouched. It's kept
+    among the deleted ones, and `restore_playlist` puts it back. Returns `{playlists,
+    deleted_playlists}`."""
     with state.edit(lib.paths.state_file) as st:
         data = _read(st.data)
-        data["playlists"].remove(_find(data, playlist_id))
+        _set_aside(data, _find(data, playlist_id), by="computer")
         st.data[KEY] = data
-    return data["playlists"]
+    return _lists(data)
+
+
+def restore_playlist(lib: Library, playlist_id: str) -> dict[str, Any]:
+    """Put a deleted playlist back (its Undo), as it was: its name, its songs in their
+    order, and its id, so a paired device finds it under the id it knew. It goes at
+    the end of the playlists, and counts as changed now: a device's older word that it
+    was deleted doesn't take it away again. Returns `{playlists, deleted_playlists}`."""
+    with state.edit(lib.paths.state_file) as st:
+        data = _read(st.data)
+        kept = data["deleted_playlists"]
+        found = next((p for p in kept if p["id"] == playlist_id), None)
+        if found is None:
+            raise NotFoundError("That playlist can't be put back any more.")
+        kept.remove(found)
+        back = {k: v for k, v in found.items() if k not in ("deleted_at", "by", "made")}
+        data["playlists"].append({**back, "changed_at": _now()})
+        data["devices"]["made"] += found["made"]
+        st.data[KEY] = data
+    return _lists(data)
+
+
+def _lists(data: dict[str, Any]) -> dict[str, Any]:
+    shown = _shown(data)
+    return {"playlists": shown["playlists"], "deleted_playlists": shown["deleted_playlists"]}
 
 
 def set_playlist_tracks(
@@ -567,17 +615,22 @@ def _read(data: dict[str, Any]) -> dict[str, Any]:
     heard_ = raw.get("heard")
     channels = raw.get("channels")
     time = raw.get("listened")
-    kept = [
-        {"id": p["id"], "name": p["name"], "created_at": p.get("created_at"),
-         "track_ids": [t for t in p.get("track_ids") or [] if isinstance(t, str)],
-         **({"changed_at": p["changed_at"]} if isinstance(p.get("changed_at"), str) else {})}
-        for p in (playlists if isinstance(playlists, list) else [])
-        if isinstance(p, dict)
-        and isinstance(p.get("id"), str)
-        and isinstance(p.get("name"), str)
-    ]  # fmt: skip
+    kept = [_playlist(p) for p in (playlists if isinstance(playlists, list) else [])
+            if _is_playlist(p)]  # fmt: skip
+    live = {p["id"] for p in kept}
+    deleted = raw.get("deleted_playlists")
     return {
-        "devices": _devices(raw.get("devices"), {p["id"] for p in kept}),
+        "devices": _devices(raw.get("devices"), live),
+        "deleted_playlists": [
+            {
+                **_playlist(p),
+                "deleted_at": p["deleted_at"] if isinstance(p.get("deleted_at"), str) else None,
+                "by": "device" if p.get("by") == "device" else "computer",
+                "made": _notes(p.get("made"), {p["id"]}),
+            }
+            for p in (deleted if isinstance(deleted, list) else [])
+            if _is_playlist(p) and p["id"] not in live
+        ],
         "listened": {
             k: round(float(v), 1)
             for k, v in (time.items() if isinstance(time, dict) else [])
@@ -616,6 +669,21 @@ def _read(data: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _is_playlist(p: object) -> bool:
+    return isinstance(p, dict) and isinstance(p.get("id"), str) and isinstance(p.get("name"), str)
+
+
+def _playlist(p: dict[str, Any]) -> dict[str, Any]:
+    """A playlist as it's kept, with only what's well formed."""
+    return {
+        "id": p["id"],
+        "name": p["name"],
+        "created_at": p.get("created_at"),
+        "track_ids": [t for t in p.get("track_ids") or [] if isinstance(t, str)],
+        **({"changed_at": p["changed_at"]} if isinstance(p.get("changed_at"), str) else {}),
+    }
+
+
 def _countable(value: object) -> bool:
     """A total of listening time that can be added to: a real number, not below zero,
     and not more than anyone could have listened (three hundred years)."""
@@ -626,22 +694,27 @@ def _devices(raw: object, playlists: set[str]) -> dict[str, Any]:
     """What's kept about paired devices' changes, keeping only what's well formed. The
     note of a playlist a device made goes when the playlist does."""
     raw = raw if isinstance(raw, dict) else {}
-    taken, made = raw.get("taken"), raw.get("made")
+    taken = raw.get("taken")
     return {
         "taken": [t for t in (taken if isinstance(taken, list) else []) if isinstance(t, str)],
-        "made": [
-            {
-                "theirs": m["theirs"],
-                "playlist": m["playlist"],
-                **({"new": True} if m.get("new") is True else {}),
-            }
-            for m in (made if isinstance(made, list) else [])
-            if isinstance(m, dict)
-            and isinstance(m.get("theirs"), str)
-            and isinstance(m.get("playlist"), str)
-            and m["playlist"] in playlists
-        ],
+        "made": _notes(raw.get("made"), playlists),
     }
+
+
+def _notes(made: object, playlists: set[str]) -> list[dict[str, Any]]:
+    """The notes of which device made which of these playlists, well formed only."""
+    return [
+        {
+            "theirs": m["theirs"],
+            "playlist": m["playlist"],
+            **({"new": True} if m.get("new") is True else {}),
+        }
+        for m in (made if isinstance(made, list) else [])
+        if isinstance(m, dict)
+        and isinstance(m.get("theirs"), str)
+        and isinstance(m.get("playlist"), str)
+        and m["playlist"] in playlists
+    ]
 
 
 def _shown(data: dict[str, Any]) -> dict[str, Any]:
@@ -651,6 +724,17 @@ def _shown(data: dict[str, Any]) -> dict[str, Any]:
         "plays": data["plays"],
         "listened": data["listened"],
         "playlists": data["playlists"],
+        # The newest first, as the app lists them; a count stands in for the songs.
+        "deleted_playlists": [
+            {
+                "id": p["id"],
+                "name": p["name"],
+                "songs": len(p["track_ids"]),
+                "deleted_at": p["deleted_at"],
+                "by": p["by"],
+            }
+            for p in reversed(data["deleted_playlists"])
+        ],
         "library": sorted(data["library"]),
         "heard": sorted(data["heard"]),
     }

@@ -427,7 +427,9 @@ struct MainView: View {
                 }
             }
         } message: {
-            Text("Only the list goes. The songs stay in your library.")
+            Text(
+                "Only the list goes. The songs stay in your library. "
+                    + "Settings → Deleted Items can put the playlist back.")
         }
     }
 
