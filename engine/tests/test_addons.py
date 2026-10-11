@@ -307,6 +307,80 @@ def test_the_owners_list_starts_with_the_apps_own_and_is_kept(asked: list[str]) 
         addons.details("movie", "xx1")
 
 
+def test_one_add_on_set_up_two_ways_is_kept_as_two(monkeypatch: pytest.MonkeyPatch) -> None:
+    # A made-up add-on that keeps its settings in its address: the same id and the same
+    # name at every address, and each address answers in its own way.
+    home = "https://addon.example"
+    made = {"id": "org.example.films", "name": "Example", "version": "1.0.0",
+            "resources": ["stream"], "types": ["movie"], "idPrefixes": ["tt"]}  # fmt: skip
+    answers: dict[str, Any] = {
+        f"{home}/size=1080p/manifest.json": made,
+        f"{home}/size=720p/manifest.json": {**made, "version": "1.0.1"},
+        f"{home}/size=480p/manifest.json": made,
+        f"{home}/size=1080p/stream/movie/tt1.json": {
+            "streams": [{"infoHash": "ab" * 20, "name": "1080p"}]},
+        f"{home}/size=720p/stream/movie/tt1.json": {
+            "streams": [{"infoHash": "cd" * 20, "name": "720p"}]},
+        f"{home}/size=480p/stream/movie/tt1.json": {"streams": []},
+    }  # fmt: skip
+
+    def answer(url: str) -> Any:
+        url = url.replace("ADDON.example", "addon.example")  # a name is found in any capitals
+        if url not in answers:
+            raise addons.AddonError(f"Not made up: {url}")
+        return answers[url]
+
+    monkeypatch.setattr(addons, "_http", answer)
+    config.save_addons([], offered=list(addons.STARTING))  # an empty list of the owner's own
+
+    first = addons.add(f"{home}/size=1080p/manifest.json")
+    both = addons.add(f"{home}/size=720p/manifest.json")
+    # Both are there: the second didn't take the first's place.
+    assert [one["base"] for one in both] == [f"{home}/size=1080p", f"{home}/size=720p"]
+    assert [one["name"] for one in both] == ["Example", "Example (2)"]
+    one_id, two_id = (one["id"] for one in both)
+    assert one_id == first[0]["id"] == "org.example.films"  # the first keeps the manifest's id
+    assert two_id.startswith("org.example.films@") and two_id != one_id
+
+    # Each is asked at its own address, and says which it is.
+    found = addons.streams(both, "movie", "tt1")
+    assert [(s["addon_id"], s["addon"], s["streams"][0]["quality"]) for s in found["sources"]] == [
+        (one_id, "Example", "1080p"), (two_id, "Example (2)", "720p"),
+    ]  # fmt: skip
+
+    # The same address again is read afresh in its place: not a third, and what the list
+    # knows it by doesn't change. However it's written.
+    again = addons.add("stremio://ADDON.example/size=720p/manifest.json")
+    assert [(one["id"], one["name"]) for one in again] == [
+        (one_id, "Example"),
+        (two_id, "Example (2)"),
+    ]
+    assert again[1]["version"] == "1.0.1"
+    assert addons.add(f"{home}/size=1080p/manifest.json")[0]["id"] == one_id
+    assert len(addons.listed()) == 2
+    # A third is the third.
+    third = addons.add(f"{home}/size=480p/manifest.json")
+    assert [one["name"] for one in third] == ["Example", "Example (2)", "Example (3)"]
+    assert len({one["id"] for one in third}) == 3
+
+    # Each is its own to mark, move and remove.
+    addons.mark_adult(two_id, True)
+    assert [addons.is_adult(one) for one in addons.listed()] == [False, True, False]
+    kept = addons.add(f"{home}/size=720p/manifest.json")  # read afresh, the mark stays its own
+    assert [addons.is_adult(one) for one in kept] == [False, True, False]
+    order = [third[2]["id"], two_id, one_id]
+    assert [one["id"] for one in addons.reorder(order)] == order
+    left = addons.remove(one_id)
+    assert [one["name"] for one in left] == ["Example (3)", "Example (2)"]
+    # Taken out and added again, the second has the id it had: it's made from its address.
+    addons.remove(two_id)
+    back = addons.add(f"{home}/size=1080p/manifest.json")  # the manifest's own id is free again…
+    assert back[-1]["id"] == "org.example.films" and back[-1]["name"] == "Example"
+    assert (
+        addons.add(f"{home}/size=720p/manifest.json")[-1]["id"] == two_id
+    )  # …and this one's is its own
+
+
 def test_a_starting_add_on_that_cant_be_reached_is_tried_again_next_time(
     monkeypatch: pytest.MonkeyPatch, asked: list[str]
 ) -> None:

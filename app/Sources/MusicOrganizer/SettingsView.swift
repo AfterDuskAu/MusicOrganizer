@@ -1130,7 +1130,9 @@ private struct AddonSettings: View {
                 SideNote(
                     "Paste the address an add-on gives for itself. It ends in /manifest.json. "
                         + "An add-on is made by someone else: what it lists and where it "
-                        + "sends you are its maker's doing, so add only ones you trust.")
+                        + "sends you are its maker's doing, so add only ones you trust. "
+                        + "One add-on set up two ways has two addresses: add both, and each "
+                        + "is kept, the second with (2) after its name.")
                 Button("Put Back the App's Own Add-ons") { change("addon.restore") }
                     .disabled(working)
                     .help("Adds back any of the three the app started with that you've removed")

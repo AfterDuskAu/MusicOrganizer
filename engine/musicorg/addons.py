@@ -57,6 +57,7 @@ In replay mode (`MUSICORG_REPLAY_DIR`, every test) the network is never reached:
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
 import re
@@ -628,23 +629,63 @@ def _with_new_ones(saved: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def add(text: str) -> list[dict[str, Any]]:
-    """Add the add-on at this address to the owner's list (or read it afresh if it's
-    there already), and give the list."""
+    """Add the add-on at this address to the owner's list (or read it afresh if that
+    address is there already), and give the list.
+
+    **An add-on is told from another by its address, not by the id it gives itself**
+    (the owner, 2026-10-11). Some add-ons keep their settings in the address, so one
+    add-on set up two ways is two addresses with one id and one name: both are kept,
+    each asked at its own address. Until then the second took the first's place."""
     from musicorg import config
 
     fresh = load(text)
     if _for_child and is_adult(fresh):
         raise AddonError("That add-on is for adults only, and this is a child's profile.")
     current = _everything()
-    # Read afresh, an add-on the owner marked as adults-only keeps the mark.
-    marked = any(one["id"] == fresh["id"] and is_adult(one) for one in current)
-    fresh["adult"] = is_adult(fresh) or marked
-    if any(one["id"] == fresh["id"] for one in current):
-        current = [fresh if one["id"] == fresh["id"] else one for one in current]
+    there = next((one for one in current if _place(one["base"]) == _place(fresh["base"])), None)
+    others = [one for one in current if one is not there]
+    # Read afresh, an add-on keeps its place in the list, the id the list knows it by,
+    # and the owner's mark as adults-only.
+    fresh["adult"] = is_adult(fresh) or (there is not None and is_adult(there))
+    fresh = _told_apart(fresh, others, known_as=there["id"] if there else None)
+    if there is not None:
+        current = [fresh if one is there else one for one in current]
     else:
         current.append(fresh)
     config.save_addons(current)
     return _shown(current)
+
+
+def _place(base: str) -> str:
+    """Where an add-on is, for telling whether two addresses are the same one: capitals
+    in the scheme and the host's name don't count; everything after does (settings
+    kept in the path are what makes two of one add-on different)."""
+    url = urlsplit(base)
+    return f"{url.scheme.lower()}://{url.netloc.lower()}{url.path}"
+
+
+def _told_apart(
+    fresh: dict[str, Any], others: list[dict[str, Any]], *, known_as: str | None
+) -> dict[str, Any]:
+    """An add-on going into the list, with an id and a name no other there has.
+
+    - Its id is the one it was known by (`known_as`: it's being read afresh), else the
+      id its manifest gives. If another address has that id, its own is made from the
+      manifest's id and its address ("org.example@3fa1c2d4"): the same each time it's
+      added, so nothing kept under it is lost.
+    - Its name is the manifest's, with " (2)", " (3)" after it if another add-on in the
+      list is called that: the film's page says which add-on a way to play is from.
+    """
+    ids = {one["id"] for one in others}
+    names = {one["name"] for one in others}
+    its_id = known_as or fresh["id"]
+    if its_id in ids:
+        mark = hashlib.sha1(_place(fresh["base"]).encode(), usedforsecurity=False).hexdigest()
+        its_id = f"{fresh['id']}@{mark[:8]}"
+    name, number = fresh["name"], 2
+    while name in names:
+        name, number = f"{fresh['name']} ({number})", number + 1
+    return {**fresh, "id": its_id, "name": name}
 
 
 def mark_adult(addon_id: str, on: bool) -> list[dict[str, Any]]:
