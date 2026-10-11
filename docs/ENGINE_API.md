@@ -124,6 +124,7 @@ Exit codes:
 | `playlist.rename` | `{ "playlist_id", "name" }` | `{ "playlists": [Playlist] }` |
 | `playlist.delete` | `{ "playlist_id" }` (only the list goes; its songs are untouched) | `{ "playlists": [Playlist] }` |
 | `playlist.set_tracks` | `{ "playlist_id", "track_ids": [..] }`: the playlist's songs, in order (add, remove and reorder are all this call) | `{ "playlists": [Playlist] }` |
+| `playlist.export` | `{ "playlist_id", "path" }` (2026-10-11): save the playlist as an M3U8 file at `path`, a file name ending `.m3u8` (or `.m3u`) in a folder that exists, for another player to open. Each song is an `#EXTINF:<seconds>,Artist - Title` line and then its file, by its whole path on this computer, in the playlist's order; UTF-8. Written through `fileops.write_export`: never over a file that's there (the name gets ` (2)`), and never inside the library's own folders or a source (-32000). Nothing in the library is written or moved: the songs are only named. | `{ "path", "songs", "left_out" }`: the file as saved, how many songs are in it, and how many of the playlist's songs were left out because their files aren't in the library any more. A playlist that isn't there is -32006. |
 | `sources.add` | `{ "path" }` | `{ "source" }` |
 | `sources.list` | — | `{ "sources": [..] }` |
 | `sources.scan` | `{ "source_ids"?: [..] }` | `{ "job_id" }` |

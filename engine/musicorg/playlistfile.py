@@ -19,6 +19,12 @@ changed, and nothing of where it was is kept (only its name, as the playlist's n
 when the file doesn't give one). No header names were checked against a real export
 from Amazon Music: the columns are looked for by every name such exports are known to
 use, and a file with none of them says which it needs.
+
+**The way out (2026-10-11): `export`** saves one of the library's own playlists as an
+M3U8 file, where the owner chose, for another player to open: the songs' files by where
+they are on this computer, in the playlist's order. It's an export the owner asked for,
+so it's written by `fileops.write_export`, which never writes over a file and refuses
+the library's own folders and the sources. The songs themselves are only named.
 """
 
 from __future__ import annotations
@@ -29,7 +35,10 @@ import re
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 
-from musicorg.errors import UserError
+from musicorg import fileops, listening, naming, scan
+from musicorg.errors import NotFoundError, UserError
+from musicorg.index import open_index
+from musicorg.library import Library
 
 KINDS = (".csv", ".tsv", ".txt", ".m3u", ".m3u8")
 MAX_BYTES = 5_000_000
@@ -85,6 +94,52 @@ def read(path: Path, playlist: str | None = None) -> dict[str, Any]:
         "more": len(tracks) > MAX_TRACKS,
         "playlists": named if len(named) > 1 else [],
     }
+
+
+def export(lib: Library, playlist_id: str, path: Path) -> dict[str, Any]:
+    """Save a playlist of the library's as an M3U8 file at `path`, and say what was
+    saved: `{path, songs, left_out}`. `path` is the file as written (with " (2)" in its
+    name if that name was taken: nothing is ever written over), `songs` how many are in
+    it, and `left_out` how many of the playlist's songs have no file in the library any
+    more.
+
+    Each song is two lines, as every player of such files reads them: its length in
+    seconds with "Artist - Title", then its file, by its whole path on this computer
+    (the file is outside the library, so a path from the library's folder would mean
+    nothing to it). UTF-8, which is what the "8" of M3U8 says."""
+    if path.suffix.lower() not in (".m3u8", ".m3u"):
+        raise UserError("A playlist is saved as an .m3u8 file: give the file's name that ending.")
+    found = next((p for p in listening.get(lib)["playlists"] if p["id"] == playlist_id), None)
+    if found is None:
+        raise NotFoundError("That playlist doesn't exist any more.")
+    with open_index(lib.paths, write=False) as index:
+        rows = index.library_tracks()
+        sources = list(scan.source_folders(lib, index).values())
+    files: dict[str, dict[str, Any]] = {}
+    for row in rows:  # a song's own file, not a video saved of it
+        if row["musicorg_id"] and not naming.is_video_path(row["rel_path"]):
+            files.setdefault(row["musicorg_id"], row)
+    lines = ["#EXTM3U", "#PLAYLIST:" + _one_line(found["name"])]
+    songs = 0
+    for track_id in found["track_ids"]:
+        row = files.get(track_id)
+        file = lib.root.joinpath(*row["rel_path"].split("/")) if row else None
+        if row is None or file is None or not file.is_file():
+            continue
+        title = row["title"] or file.stem
+        words = f"{row['artist']} - {title}" if row["artist"] else title
+        length = round(row["duration_s"]) if row["duration_s"] else -1
+        lines += [f"#EXTINF:{length},{_one_line(words)}", str(file)]
+        songs += 1
+    data = ("\n".join(lines) + "\n").encode("utf-8")
+    written = fileops.write_export(lib, path, data, sources=sources, what="A playlist")
+    return {"path": str(written), "songs": songs, "left_out": len(found["track_ids"]) - songs}
+
+
+def _one_line(words: str) -> str:
+    """Words for one line of a playlist file: a name with a line break in it would
+    start a line of its own, and be read as a file."""
+    return " ".join(words.split())
 
 
 def _decoded(data: bytes) -> str:

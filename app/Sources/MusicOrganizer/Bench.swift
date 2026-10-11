@@ -22,6 +22,8 @@ import AppKit
 /// - `scroll=<row>`: the table scrolled to this row
 /// - `heart=<row>`: this row's heart clicked
 /// - `drag=rows`: how many rows can be dragged, and what the first carries, written out
+/// - `move=<row>+<row>@<row>`: these rows dropped above that row of their own list, as a drag
+///   by hand ends (a playlist in its own order takes it; any other list says it isn't allowed)
 /// - `first=<x>x<y>`: whether the thing at this spot of the window (points from its top
 ///   left, as a picture of it shows) takes the click that brings the app forward
 /// - `click=<x>x<y>`: the mouse pressed and let go at this spot, as a click by hand arrives
@@ -112,7 +114,7 @@ enum Bench {
     /// The steps that work the song table as a click would.
     private static func tookTable(_ name: String) -> Bool {
         let parts = name.split(separator: "=", maxSplits: 1).map(String.init)
-        let steps = ["sort", "select", "column", "menu", "scroll", "heart", "drag"]
+        let steps = ["sort", "select", "column", "menu", "scroll", "heart", "drag", "move"]
         guard parts.count == 2, steps.contains(parts[0]) else {
             return false
         }
@@ -178,10 +180,67 @@ enum Bench {
                     + "their file and \(ids) with a download's id; out of the app they may be "
                     + "\(table.draggingSession(NSDraggingSession(), sourceOperationMaskFor: .outsideApplication) == .copy ? "copied only" : "more than copied"); "
                     + "the first carries \(first ?? "nothing")")
+        case "move":
+            // Rows dropped at another place in their own list ("1+3@0": rows 1 and 3,
+            // above row 0), as a drop by hand arrives: what the rows carry goes on a
+            // pasteboard of this step's own (never the owner's clipboard), and the table
+            // is asked the two questions macOS asks it.
+            let halves = value.split(separator: "@")
+            guard halves.count == 2, let to = Int(halves[1]) else { break }
+            let dragged = halves[0].split(separator: "+").compactMap { Int($0) }
+            let board = NSPasteboard(name: NSPasteboard.Name("org.musicorganizer.bench.move"))
+            board.clearContents()
+            board.writeObjects(
+                dragged.compactMap { table.dataSource?.tableView?(table, pasteboardWriterForRow: $0) })
+            let drop = MadeUpDrop(from: table, carrying: board)
+            let asked =
+                table.dataSource?.tableView?(
+                    table, validateDrop: drop, proposedRow: to, proposedDropOperation: .above) ?? []
+            let taken =
+                asked == .move
+                && (table.dataSource?.tableView?(table, acceptDrop: drop, row: to, dropOperation: .above)
+                    ?? false)
+            say(
+                "BENCH move: rows \(dragged) above row \(to): "
+                    + (asked == .move ? (taken ? "moved" : "allowed, then refused") : "not allowed here"))
+            board.releaseGlobally()
         default:
             if let row = Int(value) { table.scrollRowToVisible(min(row, table.numberOfRows - 1)) }
         }
         return true
+    }
+
+    /// A drop no hand made, for the `move` step: where it's from and what it carries are
+    /// real, and nothing else about it is asked.
+    private final class MadeUpDrop: NSObject, NSDraggingInfo {
+        private let table: NSTableView
+        private let board: NSPasteboard
+
+        init(from table: NSTableView, carrying board: NSPasteboard) {
+            self.table = table
+            self.board = board
+        }
+
+        var draggingDestinationWindow: NSWindow? { table.window }
+        var draggingSourceOperationMask: NSDragOperation { [.copy, .move] }
+        var draggingLocation: NSPoint { .zero }
+        var draggedImageLocation: NSPoint { .zero }
+        var draggedImage: NSImage? { nil }
+        var draggingPasteboard: NSPasteboard { board }
+        var draggingSource: Any? { table }
+        var draggingSequenceNumber: Int { 0 }
+        var draggingFormation: NSDraggingFormation = .default
+        var animatesToDestination = false
+        var numberOfValidItemsForDrop = 0
+        var springLoadingHighlight: NSSpringLoadingHighlight { .none }
+
+        func slideDraggedImage(to screenPoint: NSPoint) {}
+        func resetSpringLoading() {}
+        func enumerateDraggingItems(
+            options enumOpts: NSDraggingItemEnumerationOptions = [], for view: NSView?,
+            classes classArray: [AnyClass], searchOptions: [NSPasteboard.ReadingOptionKey: Any] = [:],
+            using block: @escaping (NSDraggingItem, Int, UnsafeMutablePointer<ObjCBool>) -> Void
+        ) {}
     }
 
     private static func mouse(_ kind: NSEvent.EventType, at spot: NSPoint, in window: NSWindow) -> NSEvent? {

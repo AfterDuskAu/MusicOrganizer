@@ -1941,6 +1941,55 @@ final class AddonTests: XCTestCase {
 }
 
 final class PlaylistAddingTests: XCTestCase {
+    func testAnExportedPlaylistSaysWhatTheOwnerNeedsToKnow() throws {
+        let answer = Data(#"{"path": "/tmp/Road Trip.m3u8", "songs": 12, "left_out": 0}"#.utf8)
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let saved = try decoder.decode(PlaylistExport.self, from: answer)
+        XCTAssertEqual(saved.songs, 12)
+        XCTAssertNil(saved.note(asked: "/tmp/Road Trip.m3u8"))  // nothing to say: it's shown
+        // The name was taken: the engine never writes over a file.
+        let second = PlaylistExport(path: "/tmp/Road Trip (2).m3u8", songs: 12, leftOut: 0)
+        XCTAssertEqual(
+            second.note(asked: "/tmp/Road Trip.m3u8"),
+            "There was already a file of that name, so the playlist was saved as “Road Trip (2).m3u8”.")
+        let fewer = PlaylistExport(path: "/tmp/Road Trip.m3u8", songs: 10, leftOut: 2)
+        XCTAssertEqual(
+            fewer.note(asked: "/tmp/Road Trip.m3u8"),
+            "2 songs were left out: their files aren't in the library any more.")
+        let one = PlaylistExport(path: "/tmp/Road Trip (2).m3u8", songs: 11, leftOut: 1)
+        XCTAssertTrue(one.note(asked: "/tmp/Road Trip.m3u8")?.hasSuffix(
+            "1 song was left out: its file isn't in the library any more.") ?? false)
+    }
+
+    func testLinesDraggedInAPlaylistLandTogetherWhereTheyWereDropped() {
+        let playlist = Playlist(id: "p", name: "Road Trip", trackIds: ["a", "b", "c", "d", "e"])
+        // One line down: dropped above "e", it lands after "d".
+        XCTAssertEqual(playlist.moving([1], to: 4).ids, ["a", "c", "d", "b", "e"])
+        XCTAssertEqual(playlist.moving([1], to: 4).at, 3)
+        // One line up, to the top, and to the very end.
+        XCTAssertEqual(playlist.moving([3], to: 0).ids, ["d", "a", "b", "c", "e"])
+        XCTAssertEqual(playlist.moving([0], to: 5).ids, ["b", "c", "d", "e", "a"])
+        XCTAssertEqual(playlist.moving([0], to: 5).at, 4)
+        // Several, not beside each other, land together in the order they were.
+        let several = playlist.moving([0, 2, 4], to: 2)
+        XCTAssertEqual(several.ids, ["b", "a", "c", "e", "d"])
+        XCTAssertEqual(several.at, 1)
+        // Dropped where they are, or on themselves: nothing changes.
+        XCTAssertEqual(playlist.moving([2], to: 2).ids, playlist.trackIds)
+        XCTAssertEqual(playlist.moving([2], to: 3).ids, playlist.trackIds)
+        XCTAssertEqual(playlist.moving([1, 2], to: 2).ids, playlist.trackIds)
+        // A song that's in twice: the line dragged is the one that moves.
+        let doubled = Playlist(id: "d", name: "Doubled", trackIds: ["a", "b", "a"])
+        XCTAssertEqual(doubled.moving([2], to: 1).ids, ["a", "a", "b"])
+        // Nonsense changes nothing and never crashes.
+        XCTAssertEqual(playlist.moving([9], to: 0).ids, playlist.trackIds)
+        XCTAssertEqual(playlist.moving([1], to: 99).ids, ["a", "c", "d", "e", "b"])
+        XCTAssertEqual(playlist.moving([1], to: -3).ids, ["b", "a", "c", "d", "e"])
+        XCTAssertEqual(playlist.moving([], to: 2).ids, playlist.trackIds)
+        XCTAssertEqual(Playlist(id: "e", name: "Empty").moving([0], to: 0).ids, [])
+    }
+
     func testSongsAlreadyInAPlaylistAreToldApartBeforeTheyreAddedAgain() {
         let playlist = Playlist(id: "p", name: "Road Trip", trackIds: ["a", "b", "c", "d"])
         let sorted = playlist.sorting(adding: ["x", "a", "y", "d", "x", "a"])

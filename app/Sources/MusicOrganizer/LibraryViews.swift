@@ -269,7 +269,30 @@ struct SongList: View {
             favourites: model.favourites, model: model,
             setShown: { columns[visibility: $0] = $1 ? .visible : .hidden },
             primary: { place in model.player.play(rows.map(\.track), startAt: place) },
-            menu: { ids in AnyView(menu(for: ids)) })
+            menu: { ids in AnyView(menu(for: ids)) },
+            reorder: ordered.map { playlist in { places, to in move(places, to: to, in: playlist) } })
+    }
+
+    /// The playlist this list is, while it shows every line of it in the playlist's own
+    /// order: not sorted by a column and not searched. Only then is a line's place on
+    /// screen its place in the playlist, for Move Up, Move Down and a drag.
+    private var ordered: Playlist? {
+        guard let playlist, playlist.trackIds.count == total, sortOrder.isEmpty,
+            model.searchText.isEmpty, rows.count == total
+        else { return nil }
+        return playlist
+    }
+
+    /// Lines dragged to a new place in the playlist: the table's rows, and the row they
+    /// were dropped above. A row's id is its place in the playlist. They stay picked
+    /// where they land.
+    private func move(_ dragged: IndexSet, to row: Int, in playlist: Playlist) {
+        let places = IndexSet(dragged.filter(rows.indices.contains).map { rows[$0].id })
+        let place = rows.indices.contains(row) ? rows[row].id : playlist.trackIds.count
+        let (ids, at) = playlist.moving(places, to: place)
+        guard ids != playlist.trackIds else { return }
+        model.setTracks(ids, of: playlist)
+        selection = Set(at..<(at + places.filter(playlist.trackIds.indices.contains).count))
     }
 
     @ViewBuilder

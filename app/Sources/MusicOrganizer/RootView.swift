@@ -567,6 +567,8 @@ struct MainView: View {
                                         }
                                     }
                                 }
+                                Button("Export Playlist…") { model.export(playlist) }
+                                    .disabled(playlist.trackIds.isEmpty)
                                 Button("Delete…", role: .destructive) { deleting = playlist }
                             }
                     }

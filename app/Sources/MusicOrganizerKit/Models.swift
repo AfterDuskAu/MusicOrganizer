@@ -537,6 +537,20 @@ public struct Playlist: Decodable, Identifiable, Hashable, Sendable {
         self.trackIds = trackIds
     }
 
+    /// The playlist's songs with the lines at `places` moved, together and in the order
+    /// they were, to just above the line that's at `place` now (`place` equal to the
+    /// number of songs is the end): what a drag in the list asks for. `at` is where
+    /// the first of them lands. Places that aren't lines of the playlist are passed over.
+    public func moving(_ places: IndexSet, to place: Int) -> (ids: [String], at: Int) {
+        let leaving = places.filter(trackIds.indices.contains)
+        let moved = leaving.map { trackIds[$0] }
+        var kept = trackIds.enumerated().filter { !leaving.contains($0.offset) }.map(\.element)
+        // The lines above the drop that are leaving make room: the drop moves up by them.
+        let at = min(max(place - leaving.filter { $0 < place }.count, 0), kept.count)
+        kept.insert(contentsOf: moved, at: at)
+        return (kept, at)
+    }
+
     /// Songs about to be added, sorted into the ones the playlist doesn't have and the
     /// ones it has already (each counted once, in the order given). A song given twice
     /// in one go is there once.
@@ -828,6 +842,38 @@ public struct FavouritesAnswer: Decodable, Sendable {
 
 public struct PlaylistsAnswer: Decodable, Sendable {
     public let playlists: [Playlist]
+}
+
+/// `playlist.export`: where the engine saved a playlist as a file, and what's in it.
+public struct PlaylistExport: Decodable, Equatable, Sendable {
+    /// The file as saved. Its name has " (2)" in it if the name asked for was taken:
+    /// the engine never writes over a file.
+    public let path: String
+    public let songs: Int
+    /// Songs of the playlist whose files aren't in the library any more.
+    public let leftOut: Int
+
+    public init(path: String, songs: Int, leftOut: Int) {
+        self.path = path
+        self.songs = songs
+        self.leftOut = leftOut
+    }
+
+    /// What to tell the owner, if anything: the file is shown in the Finder either way.
+    public func note(asked: String) -> String? {
+        var said: [String] = []
+        let name = (path as NSString).lastPathComponent
+        if name != (asked as NSString).lastPathComponent {
+            said.append("There was already a file of that name, so the playlist was saved as “\(name)”.")
+        }
+        if leftOut > 0 {
+            said.append(
+                leftOut == 1
+                    ? "1 song was left out: its file isn't in the library any more."
+                    : "\(leftOut) songs were left out: their files aren't in the library any more.")
+        }
+        return said.isEmpty ? nil : said.joined(separator: " ")
+    }
 }
 
 /// `library.status`: only the parts the app shows.

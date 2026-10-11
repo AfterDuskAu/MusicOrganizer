@@ -1,6 +1,7 @@
 import AppKit
 import MusicOrganizerKit
 import Observation
+import UniformTypeIdentifiers
 
 /// The app's state: the engine, the library it has open, and the player.
 ///
@@ -1490,6 +1491,26 @@ final class AppModel {
 
     func delete(_ playlist: Playlist) {
         playlistCall("playlist.delete", ["playlist_id": playlist.id])
+    }
+
+    /// Save a playlist as a file another player can open (an .m3u8: the songs' own
+    /// files, by where they are on this Mac, in the playlist's order). The app only asks
+    /// where; the engine writes it, and never over a file that's there.
+    func export(_ playlist: Playlist) {
+        let panel = NSSavePanel()
+        panel.title = "Export Playlist"
+        panel.prompt = "Export"
+        panel.nameFieldStringValue = playlist.name + ".m3u8"
+        if let kind = UTType(filenameExtension: "m3u8") { panel.allowedContentTypes = [kind] }
+        panel.canCreateDirectories = true
+        guard panel.runModal() == .OK, let asked = panel.url?.path else { return }
+        change { connection in
+            let saved = try await connection.call(
+                "playlist.export", ["playlist_id": playlist.id, "path": asked],
+                as: PlaylistExport.self)
+            NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: saved.path)])
+            self.notice = saved.note(asked: asked)
+        }
     }
 
     /// Add songs to a playlist. If it has some of them already, the owner is asked

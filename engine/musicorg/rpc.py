@@ -61,6 +61,7 @@ from musicorg import (
     match,
     naming,
     pipeline,
+    playlistfile,
     queue,
     relay,
     review,
@@ -323,6 +324,7 @@ class Server:
             "playlist.rename": self.playlist_rename,
             "playlist.delete": self.playlist_delete,
             "playlist.set_tracks": self.playlist_set_tracks,
+            "playlist.export": self.playlist_export,
             "sources.add": self.sources_add,
             "sources.list": self.sources_list,
             "sources.scan": self.sources_scan,
@@ -721,6 +723,10 @@ class Server:
         if not all(isinstance(i, str) for i in ids):
             raise RpcError(INVALID_PARAMS, "track_ids should be a list of track ids.")
         return {"playlists": listening.set_playlist_tracks(self._library(), playlist_id, ids)}
+
+    def playlist_export(self, params: dict[str, Any]) -> dict[str, Any]:
+        playlist_id, path = need(params, "playlist_id", str), need(params, "path", str)
+        return playlistfile.export(self._library(), playlist_id, Path(path))
 
     # -- sources, scan, match --
 

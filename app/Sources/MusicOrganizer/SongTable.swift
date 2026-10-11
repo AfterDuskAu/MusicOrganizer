@@ -35,6 +35,13 @@ struct SongTable: NSViewRepresentable {
     let primary: (_ place: Int) -> Void
     /// The right-click menu for these rows (their ids).
     let menu: (_ ids: Set<Int>) -> AnyView
+    /// A playlist in its own order: rows dragged to a new place in it (the rows' places
+    /// in the table, and the place they were dropped above). Nil for every other list,
+    /// which has no order of the owner's to change.
+    var reorder: ((_ places: IndexSet, _ to: Int) -> Void)? = nil
+
+    /// What a row dragged inside its own list carries: its place in the table.
+    fileprivate static let place = NSPasteboard.PasteboardType("org.musicorganizer.app.song-place")
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -72,6 +79,7 @@ struct SongTable: NSViewRepresentable {
         // Dragged out of the app (onto the desktop, into another app), a song is only
         // ever copied: nothing but the engine moves a file of the library's.
         table.setDraggingSourceOperationMask(.copy, forLocal: false)
+        table.registerForDraggedTypes([Self.place])
         let headings = NSMenu()
         headings.delegate = keeper
         table.headerView?.menu = headings
@@ -309,7 +317,42 @@ struct SongTable: NSViewRepresentable {
                 carried.setString(file.absoluteString, forType: .fileURL)
             }
             if track.isDownload, let id = track.trackId { carried.setString(id, forType: .string) }
+            if list.reorder != nil { carried.setString(String(row), forType: SongTable.place) }
             return carried.types.isEmpty ? nil : carried
+        }
+
+        /// Rows of a playlist dragged to a new place in it (2026-10-11). Only rows of
+        /// this very list, and only while it's in the playlist's own order: sorted by a
+        /// column or searched, the lines on screen aren't the playlist's order, and a
+        /// drop would have no place to mean. The drop is always between two lines.
+        func tableView(
+            _ tableView: NSTableView, validateDrop info: any NSDraggingInfo, proposedRow row: Int,
+            proposedDropOperation dropOperation: NSTableView.DropOperation
+        ) -> NSDragOperation {
+            guard list.reorder != nil, info.draggingSource as? NSTableView === tableView,
+                !draggedPlaces(info).isEmpty
+            else { return [] }
+            tableView.setDropRow(min(max(row, 0), rows.count), dropOperation: .above)
+            return .move
+        }
+
+        func tableView(
+            _ tableView: NSTableView, acceptDrop info: any NSDraggingInfo, row: Int,
+            dropOperation: NSTableView.DropOperation
+        ) -> Bool {
+            let places = draggedPlaces(info)
+            guard let reorder = list.reorder, info.draggingSource as? NSTableView === tableView,
+                !places.isEmpty
+            else { return false }
+            reorder(places, min(max(row, 0), rows.count))
+            return true
+        }
+
+        /// The places in the table of the rows being dragged.
+        private func draggedPlaces(_ info: any NSDraggingInfo) -> IndexSet {
+            let carried = info.draggingPasteboard.pasteboardItems ?? []
+            let places = carried.compactMap { $0.string(forType: SongTable.place) }.compactMap(Int.init)
+            return IndexSet(places.filter(rows.indices.contains))
         }
 
         // MARK: the columns

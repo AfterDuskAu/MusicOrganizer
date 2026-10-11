@@ -10,9 +10,11 @@ from pathlib import Path
 
 import pytest
 from test_rpc import Capture, code, opened, out, result, root, server  # noqa: F401  (fixtures)
+from test_sharing import OTHER, OTHER_ID, SONG, SONG_ID, filled, snapshot  # noqa: F401
 
-from musicorg import imports, playlistfile, rpc
-from musicorg.errors import UserError
+from musicorg import imports, listening, playlistfile, rpc
+from musicorg.errors import NotFoundError, UserError
+from musicorg.library import Library
 
 
 def saved(tmp_path: Path, name: str, text: str, encoding: str = "utf-8") -> Path:
@@ -205,3 +207,74 @@ def test_a_file_over_rpc(opened: rpc.Server, tmp_path: Path) -> None:  # noqa: F
     assert code(opened, "import.playlist", source="file", path=str(tmp_path / "no.csv")) == (
         rpc.USER_ERROR
     )
+
+
+# ---- the way out: a playlist of the library's, saved as a file (2026-10-11) ------------------
+
+
+def test_a_playlist_of_the_librarys_is_saved_as_a_file(filled: Library, tmp_path: Path) -> None:  # noqa: F811
+    (morning,) = listening.get(filled)["playlists"]
+    before = snapshot(filled.root)
+    wanted = tmp_path / "Morning.m3u8"
+    saved = playlistfile.export(filled, morning["id"], wanted)
+    # Three lines of the playlist have a file; the fourth song has gone from the library.
+    assert saved == {"path": str(wanted), "songs": 3, "left_out": 1}
+    song, other = (str(filled.root.joinpath(*rel.split("/"))) for rel in (SONG, OTHER))
+    lines = wanted.read_text(encoding="utf-8").splitlines()
+    assert lines[:2] == ["#EXTM3U", "#PLAYLIST:Morning"]
+    assert lines[2].startswith("#EXTINF:") and lines[2].endswith(",Band - Song")
+    assert int(lines[2][len("#EXTINF:") :].split(",")[0]) > 0  # its length, in seconds
+    assert lines[3::2] == [song, other, song]  # the songs' own files, in the playlist's order
+    assert lines[4].endswith(",Band feat. Guest - Other")
+    assert len(lines) == 8 and wanted.read_bytes().endswith(b"\n")
+    # It reads back as the playlist it is, by the reader that takes such files in.
+    back = playlistfile.read(wanted)
+    assert [(t["title"], t["artists"]) for t in back["tracks"]] == [
+        ("Song", ["Band"]), ("Other", ["Band feat. Guest"]), ("Song", ["Band"]),
+    ]  # fmt: skip
+
+    # Saved again under the same name: a second file, and the first is as it was.
+    first = wanted.read_bytes()
+    again = playlistfile.export(filled, morning["id"], wanted)
+    assert again["path"] == str(tmp_path / "Morning (2).m3u8")
+    assert wanted.read_bytes() == first == (tmp_path / "Morning (2).m3u8").read_bytes()
+    # Nothing in the library was written, moved or touched: the songs are only named.
+    assert snapshot(filled.root) == before
+
+
+def test_a_playlist_isnt_saved_where_it_mustnt_be(filled: Library, tmp_path: Path) -> None:  # noqa: F811
+    (morning,) = listening.get(filled)["playlists"]
+    before = snapshot(filled.root)
+    with pytest.raises(UserError, match="A playlist can't be saved in .* inside the library"):
+        playlistfile.export(filled, morning["id"], filled.paths.music / "Morning.m3u8")
+    with pytest.raises(UserError, match="doesn't exist"):
+        playlistfile.export(filled, morning["id"], tmp_path / "nowhere" / "Morning.m3u8")
+    with pytest.raises(UserError, match=".m3u8"):
+        playlistfile.export(filled, morning["id"], tmp_path / "Morning.mp3")
+    with pytest.raises(NotFoundError):
+        playlistfile.export(filled, "pl_gone", tmp_path / "Gone.m3u8")
+    assert snapshot(filled.root) == before and list(tmp_path.glob("*.m3u8")) == []
+    # A name with a line break in it can't start a line of its own in the file.
+    listening.rename_playlist(filled, morning["id"], "Up\nearly")
+    saved = playlistfile.export(filled, morning["id"], tmp_path / "Early.M3U8")
+    assert "#PLAYLIST:Up early" in Path(saved["path"]).read_text(encoding="utf-8")
+
+
+def test_the_app_asks_for_a_playlist_to_be_saved(
+    opened: rpc.Server,  # noqa: F811
+    root: Path,  # noqa: F811
+    tmp_path: Path,
+) -> None:
+    (made,) = result(opened, "playlist.create", name="Mix")["playlists"]
+    result(opened, "playlist.set_tracks", playlist_id=made["id"], track_ids=["t_1"])
+    wanted = tmp_path / "Mix.m3u8"
+    saved = result(opened, "playlist.export", playlist_id=made["id"], path=str(wanted))
+    # The one song it names isn't in the library: the file is a playlist with none.
+    assert saved == {"path": str(wanted), "songs": 0, "left_out": 1}
+    assert wanted.read_text(encoding="utf-8") == "#EXTM3U\n#PLAYLIST:Mix\n"
+    again = result(opened, "playlist.export", playlist_id=made["id"], path=str(wanted))
+    assert again["path"] == str(tmp_path / "Mix (2).m3u8")
+    assert code(opened, "playlist.export", playlist_id="pl_gone", path=str(wanted)) == rpc.NOT_FOUND
+    assert code(opened, "playlist.export", playlist_id=made["id"]) == rpc.INVALID_PARAMS
+    inside = str(root / "Music" / "Mix.m3u8")
+    assert code(opened, "playlist.export", playlist_id=made["id"], path=inside) == rpc.USER_ERROR

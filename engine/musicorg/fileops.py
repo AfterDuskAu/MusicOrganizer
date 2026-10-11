@@ -2319,9 +2319,15 @@ def _unlink_link(path: Path) -> None:
 
 
 def write_export(
-    lib: LibraryPaths | _HasPaths, path: PurePath | str, data: bytes, *, sources: Iterable[Path]
+    lib: LibraryPaths | _HasPaths,
+    path: PurePath | str,
+    data: bytes,
+    *,
+    sources: Iterable[Path],
+    what: str = "Reports",
 ) -> Path:
     """Save a report or CSV the user asked for, anywhere they chose, and return its path.
+    `what` names it in a refusal ("Reports can't be saved in…", "A playlist can't…").
 
     - Never overwrites: ` (2)`, ` (3)` ... if the name is taken.
     - Refuses the library's managed folders and any registered source (`sources`).
@@ -2345,7 +2351,7 @@ def write_export(
     forbidden += [p.resolve() for p in forbidden]
     if any(_within(real, f) or _within(target, f) for f in forbidden):
         raise UserError(
-            f"Reports can't be saved in {folder}: that's inside the library's own folders "
+            f"{what} can't be saved in {folder}: that's inside the library's own folders "
             f"(Music, _Replaced, _Staging, .musicorg). Choose another folder, such as "
             f"{paths.reports}."
         )
@@ -2353,7 +2359,7 @@ def write_export(
         source_path = Path(source)
         if _within(real, source_path.resolve()) or _within(target, source_path):
             raise UserError(
-                f"Reports can't be saved in {folder}: it's inside the source folder "
+                f"{what} can't be saved in {folder}: it's inside the source folder "
                 f"{source_path}, which Music Organizer never writes to. Choose another folder."
             )
     try:
