@@ -330,6 +330,8 @@ private struct DownloadSettings: View {
     @AppStorage(Player.alwaysBestDownloadKey) private var alwaysBestDownload: Bool?
     @AppStorage(Player.alwaysBestVideoKey) private var alwaysBestVideo = false
     @AppStorage(TorrentStatus.convertKey) private var convertFilms = true
+    /// The upload speed last chosen, kept while "0 once complete" is switched on.
+    @AppStorage(EngineSettings.torrentUploadSpeedKey) private var uploadSpeed: String?
     /// The limit moves in steps of this many.
     private static let step = 50
 
@@ -387,24 +389,51 @@ private struct DownloadSettings: View {
                         + "plays on this Mac, but may not on a phone or tablet, and Sync "
                         + "leaves it out. Videos always arrive as MP4, so they play "
                         + "everywhere either way.")
+                // How much is given back once a movie has all arrived, and under it the
+                // owner's switch for giving nothing back (2026-10-12). The engine has one
+                // setting for the two: its "none" is the switch on.
+                let sending = settings?.torrentUpload
+                let stops = sending == EngineSettings.torrentUploadNone
                 Picker(
                     "Upload speed for torrents",
                     selection: Binding(
-                        get: { settings?.torrentUpload ?? "max" },
-                        set: { model.setTorrentUpload($0) })
+                        get: {
+                            EngineSettings.torrentUploadSpeed(engine: sending, remembered: uploadSpeed)
+                        },
+                        set: {
+                            uploadSpeed = $0
+                            if !stops { model.setTorrentUpload($0) }
+                        })
                 ) {
-                    ForEach(EngineSettings.torrentUploads, id: \.value) { choice in
+                    ForEach(EngineSettings.torrentUploadSpeeds, id: \.value) { choice in
                         Text(choice.name).tag(choice.value)
                     }
                 }
                 .pickerStyle(.segmented)
+                .disabled(settings == nil || stops)
+                Toggle(
+                    "Once a download is complete, move upload speed to 0 MB/s",
+                    isOn: Binding(
+                        get: { stops },
+                        set: { on in
+                            if on {
+                                // The speed in use is kept, to go back to.
+                                uploadSpeed = EngineSettings.torrentUploadSpeed(
+                                    engine: sending, remembered: uploadSpeed)
+                                model.setTorrentUpload(EngineSettings.torrentUploadNone)
+                            } else {
+                                model.setTorrentUpload(
+                                    EngineSettings.torrentUploadSpeed(engine: nil, remembered: uploadSpeed))
+                            }
+                        })
+                )
                 .disabled(settings == nil)
                 SideNote(
                     "While a movie from a torrent is still arriving, the parts it has "
                         + "fetched are sent on to others freely: that's what makes it arrive "
-                        + "fastest. This is the most it may send once all of it is here, for "
-                        + "as long as it stays open. None: nothing more is sent once it's "
-                        + "all here. A change applies at once.")
+                        + "fastest. Upload speed is the most it may send once all of it is "
+                        + "here, for as long as it stays open. With the switch on, nothing "
+                        + "more is sent once it's all here. A change applies at once.")
             }
             Section {
                 LabeledContent("Library folder") {

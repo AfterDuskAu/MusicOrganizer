@@ -370,6 +370,25 @@ public struct EngineSettings: Decodable, Equatable, Sendable {
     public static let torrentUploads: [(value: String, name: String)] = [
         ("max", "Max"), ("5", "5 MB/s"), ("3", "3 MB/s"), ("1", "1 MB/s"), ("none", "None"),
     ]
+    /// The engine's word for sending nothing on once a film is all here.
+    public static let torrentUploadNone = "none"
+    /// The speeds to give back at, for the picker: "none" is the switch under it
+    /// (the owner, 2026-10-12: "once completed download, move upload speed to 0").
+    public static var torrentUploadSpeeds: [(value: String, name: String)] {
+        torrentUploads.filter { $0.value != torrentUploadNone }
+    }
+    /// Where the app keeps the speed last chosen, so that switching "0 once complete"
+    /// off again goes back to it.
+    public static let torrentUploadSpeedKey = "torrentUploadSpeed"
+
+    /// What the picker shows: the engine's choice, or while that's "none" (the switch is
+    /// on) the speed last chosen, or Max if none ever was.
+    public static func torrentUploadSpeed(engine: String?, remembered: String?) -> String {
+        let speeds = torrentUploadSpeeds.map(\.value)
+        if let engine, speeds.contains(engine) { return engine }
+        if let remembered, speeds.contains(remembered) { return remembered }
+        return "max"
+    }
 }
 
 public struct PlanAnswer: Decodable, Sendable {

@@ -2292,6 +2292,22 @@ final class VideoFilesTests: XCTestCase {
     }
 }
 
+final class UploadSpeedTests: XCTestCase {
+    func testTheSpeedShownWhileUploadIsSwitchedToNothing() {
+        // The picker offers speeds; "none" is the switch under it.
+        XCTAssertEqual(EngineSettings.torrentUploadSpeeds.map(\.value), ["max", "5", "3", "1"])
+        // The engine's own choice, when it's a speed.
+        XCTAssertEqual(EngineSettings.torrentUploadSpeed(engine: "3", remembered: "5"), "3")
+        // Switched to nothing: the speed last chosen, to go back to; Max if none ever was.
+        XCTAssertEqual(EngineSettings.torrentUploadSpeed(engine: "none", remembered: "5"), "5")
+        XCTAssertEqual(EngineSettings.torrentUploadSpeed(engine: "none", remembered: nil), "max")
+        XCTAssertEqual(EngineSettings.torrentUploadSpeed(engine: nil, remembered: "1"), "1")
+        // Nonsense kept from somewhere is no speed.
+        XCTAssertEqual(EngineSettings.torrentUploadSpeed(engine: "none", remembered: "none"), "max")
+        XCTAssertEqual(EngineSettings.torrentUploadSpeed(engine: "fast", remembered: "7"), "max")
+    }
+}
+
 final class WaysToPlayTests: XCTestCase {
     private func way(_ quality: String?, _ name: String) -> MediaStream {
         let text = #"{"kind": "torrent", "name": "\#(name)", "quality": \#(quality.map { "\"\($0)\"" } ?? "null"), "trackers": []}"#

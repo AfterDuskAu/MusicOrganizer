@@ -2141,3 +2141,10 @@ What's still slow, and why, is in `docs/KNOWN-ISSUES.md` ("The speed audit"): th
 - **How long "once it's here" lasts:** only while the film stays open. A kept film leaves its torrent as soon as it's saved, as before; nothing stays joined to give back afterwards.
 - **App:** the note under the setting, and the line under a film's ways to play, say so.
 - **Checked:** the engine's tests, all of them (2,193 pass, 5 skipped as ever), `ruff`, and the app's (132) (nothing open: the limit; a film arriving: no limit, also on None; all here: the limit, and on None nothing; a second film arriving beside a finished one: no limit until it's here too). **Not measured** on a real film, like the limit itself.
+
+2026-10-12, a little later. **A switch under the upload speed: "Once a download is complete, move upload speed to 0 MB/s".** The owner asked for it as an option of its own, toggled.
+
+- **App** (Settings → Downloads): the speed is now Max, 5, 3 or 1 MB/s, and "None" has left the row to become the switch under it. With the switch on, nothing more is sent once a movie is all here, and the speed is greyed; switched off, the speed last chosen is back. The note under them says what each does, and that a movie still arriving is sent on freely either way.
+- **The engine is unchanged:** its one setting still has `none`, which is the switch on. The speed to go back to is kept by the app (`torrentUploadSpeed` in its own settings), since the engine has nowhere for it while it's on `none`. The reckoning of which speed to show is in the Kit, tested there.
+- The owner's setting was on None, so their switch comes up on, with Max as the speed to go back to.
+- **Checked:** the app's tests (133), and in the unseen copy on a scratch profile: with the engine on "none", the switch on and the speeds greyed; with it on "3", "3 MB/s" picked and the switch off. **Not clicked by hand**, and like the limit itself not measured on a real film.
