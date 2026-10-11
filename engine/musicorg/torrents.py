@@ -11,6 +11,12 @@ What the owner should know, and what this module holds to:
 
 - **A torrent shares as it fetches.** While a film plays, the pieces already here are
   given to others in the same torrent. That is how BitTorrent works.
+- **While a film is still arriving it's sent on freely; the owner's limit is for
+  afterwards** (the owner, 2026-10-12: "while the item still isn't at 100%, it uses
+  max"; the choice of 5, 3, 1 MB/s, no limit or nothing is how much to give back once
+  it's all here). A film gets most from others while it gives to them, so the limit
+  used to slow its arriving. Until that day the limit held the whole time, and
+  "nothing" meant nothing was ever sent: now it means nothing once the film is here.
 - **No port is opened on the router** (no UPnP, no NAT-PMP), the same promise as
   sharing with a phone.
 - **The address is for this computer only:** it listens on 127.0.0.1, and its path
@@ -340,6 +346,13 @@ class _Joined:
         """Being kept, and not there yet: it isn't closed for being left alone."""
         return self.keep_name is not None and self.kept_path is None and self.keep_error is None
 
+    def arriving(self) -> bool:
+        """Not all of the film is here yet (its details may not even be)."""
+        if self.closed or not self.handle.is_valid():
+            return False
+        told = self.handle.status()
+        return not (told.progress_ppm >= 1_000_000 or told.is_seeding)
+
     def all_here(self) -> bool:
         """Every byte of the film's file has arrived."""
         if self.path is None or not self.handle.is_valid():
@@ -392,6 +405,7 @@ class Player:
         self._session: Any = None
         self._server: ThreadingHTTPServer | None = None
         self._joined: dict[str, _Joined] = {}
+        self._sending: dict[str, int] | None = None  # what libtorrent was last told
         self._counting: set[str] = set()  # the torrents being counted just now
         self._hurry: set[str] = set()  # ...of which these are wanted to play: count no longer
         self._lock = threading.Lock()
@@ -424,6 +438,7 @@ class Player:
                 self._joined[info_hash] = joined
             joined.asked_now()
             port = self._server.server_address[1] if self._server else 0
+        self._apply_upload()  # a film that's arriving is sent on freely, from the start
         return {"info_hash": info_hash, "url": f"http://127.0.0.1:{port}/{self._key}/{info_hash}"}
 
     def status(self, info_hash: str) -> dict[str, Any]:
@@ -525,9 +540,19 @@ class Player:
         self._apply_upload()
 
     def _apply_upload(self) -> None:
+        """Tell libtorrent how fast films may be sent on, as things stand now: **with no
+        limit while any film is still arriving, and at the owner's limit once every
+        film that's open is all here** (the owner, 2026-10-12). Looked at again every
+        couple of seconds (`_close_idle`), so a film that finishes arriving comes
+        under the limit then; libtorrent is only told when the answer changes."""
         apply = getattr(self._session, "apply_settings", None)  # a test's stand-in has none
-        if apply is not None:
-            apply(upload_settings(self.upload))
+        if apply is None:
+            return
+        arriving = any(joined.arriving() for joined in list(self._joined.values()))
+        wanted = upload_settings(None if arriving else self.upload)
+        if wanted != self._sending:
+            apply(wanted)
+            self._sending = wanted
 
     def stop_keeping(self, info_hash: str, *, playing: bool = False) -> None:
         """The owner has changed their mind about keeping a film. It's left at once,
@@ -573,6 +598,7 @@ class Player:
         if leaving and self._session is not None:
             time.sleep(1)  # libtorrent closes its files on its own thread
         self._session = None
+        self._sending = None
 
     def sweep(self) -> int:
         """Delete what has been in the cache unused for over a day. Films open now stay."""
@@ -692,6 +718,7 @@ class Player:
         swept = time.monotonic()
         while not self._stopping.wait(2):
             now = time.monotonic()
+            self._apply_upload()  # a film that has all arrived comes under the owner's limit
             if now - swept > SWEEP_EVERY_S:
                 swept = now
                 self.sweep()

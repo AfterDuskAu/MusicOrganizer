@@ -606,3 +606,72 @@ def test_the_app_asks_for_a_count(opened: rpc.Server, monkeypatch: pytest.Monkey
         if opened._films is not None:
             opened._films.stop()
             opened._films = None
+
+
+# ---- sent on freely while arriving, at the owner's limit after (2026-10-12) -------------------
+
+
+class HowFar:
+    """A torrent's handle that says how far along it is."""
+
+    def __init__(self, here: bool = False) -> None:
+        self.here = here
+
+    def is_valid(self) -> bool:
+        return True
+
+    def status(self) -> Any:
+        from types import SimpleNamespace
+
+        return SimpleNamespace(
+            progress_ppm=1_000_000 if self.here else 400_000, is_seeding=self.here,
+            num_peers=3, num_seeds=2, download_rate=0,
+        )  # fmt: skip
+
+
+class LimitedSession(Session):
+    def __init__(self) -> None:
+        super().__init__()
+        self.told: list[dict[str, int]] = []
+
+    def apply_settings(self, settings: dict[str, int]) -> None:
+        self.told.append(settings)
+
+
+def test_a_film_is_sent_on_freely_while_it_arrives_and_at_the_limit_after(
+    places: dict[str, Path],
+) -> None:
+    free, limit = torrents.upload_settings(None), torrents.upload_settings(3_000_000)
+    nothing = torrents.upload_settings(0)
+    player = torrents.Player(places["cache"].parent, movies=places["movies"], upload=3_000_000)
+    player._session = session = LimitedSession()
+    # Nothing open: the owner's limit stands.
+    player._apply_upload()
+    assert session.told == [limit]
+    # A film that's still arriving: no limit, whatever the setting says.
+    film = torrents._Joined(HowFar(), "ab" * 20, None, places["cache"])
+    player._joined[film.info_hash] = film
+    player._apply_upload()
+    assert session.told[-1] == free
+    player.set_upload(0)  # the owner chooses None while it arrives: still sent on freely
+    assert session.told[-1] == free and player.upload == 0
+    player._apply_upload()
+    assert len(session.told) == 2  # libtorrent is told only when the answer changes
+    # All of it is here: now the owner's choice holds, and None means nothing is sent.
+    film.handle.here = True
+    player._apply_upload()
+    assert session.told[-1] == nothing and nothing["unchoke_slots_limit"] == 0
+    player.set_upload(3_000_000)
+    assert session.told[-1] == limit
+    # A second film starts arriving beside it: freely again, until that one's here too.
+    other = torrents._Joined(HowFar(), "cd" * 20, None, places["cache"])
+    player._joined[other.info_hash] = other
+    player._apply_upload()
+    assert session.told[-1] == free
+    other.handle.here = True
+    player._apply_upload()
+    assert session.told[-1] == limit
+    # A film that's been closed doesn't count as arriving.
+    late = torrents._Joined(HowFar(), "ef" * 20, None, places["cache"])
+    late.closed = True
+    assert late.arriving() is False and film.arriving() is False

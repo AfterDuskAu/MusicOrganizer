@@ -400,10 +400,11 @@ private struct DownloadSettings: View {
                 .pickerStyle(.segmented)
                 .disabled(settings == nil)
                 SideNote(
-                    "A movie played or kept from a torrent sends the parts it has fetched "
-                        + "on to others while it's open. This is the most it may send, over "
-                        + "all movies together. None: nothing is sent, which can make a "
-                        + "movie arrive more slowly. A change applies at once.")
+                    "While a movie from a torrent is still arriving, the parts it has "
+                        + "fetched are sent on to others freely: that's what makes it arrive "
+                        + "fastest. This is the most it may send once all of it is here, for "
+                        + "as long as it stays open. None: nothing more is sent once it's "
+                        + "all here. A change applies at once.")
             }
             Section {
                 LabeledContent("Library folder") {

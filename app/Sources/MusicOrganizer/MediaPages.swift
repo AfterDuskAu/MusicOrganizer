@@ -1061,7 +1061,8 @@ struct MovieView: View {
                 }
                 if streams.sources.contains(where: { $0.streams.contains { $0.kind == "torrent" } }) {
                     Text(
-                        "A torrent shares the parts it has fetched with others while it plays. "
+                        "A torrent shares the parts it has fetched with others while it's "
+                            + "arriving, and after that as much as Settings → Downloads allows. "
                             + "What's fetched is kept for a day after you last played it, then deleted."
                     )
                     .font(.callout)
