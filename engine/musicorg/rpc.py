@@ -120,6 +120,7 @@ SLOW_METHODS = frozenset(
      # meanwhile, a favourite or a list of songs included (found 2026-10-07).
      "addon.list", "addon.add", "addon.restore", "addon.catalog", "addon.details", "addon.streams",
      "video.search", "channel.videos", "channel.search", "torrent.stop",
+     "torrent.count",  # joins a torrent for a few seconds to count who has it
      "media.convert", "torrent.stop_keeping"}  # reads the film with ffprobe first
 )  # fmt: skip
 MAX_EXCLUDE = 5000  # songs already on screen that Show More leaves out
@@ -381,6 +382,7 @@ class Server:
             "channel.followed": self.channel_followed,
             "torrent.play": self.torrent_play,
             "torrent.status": self.torrent_status,
+            "torrent.count": self.torrent_count,
             "torrent.keep": self.torrent_keep,
             "torrent.stop_keeping": self.torrent_stop_keeping,
             "media.convert": self.media_convert,
@@ -1179,6 +1181,14 @@ class Server:
         if self._films is None:
             raise RpcError(USER_ERROR, "No film is being played from a torrent.")
         return self._films.status(need(params, "info_hash", str))
+
+    def torrent_count(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Who has a torrent, counted from the owner's click: nothing of it is fetched."""
+        info_hash = need(params, "info_hash", str)
+        trackers = want(params, "trackers", list, []) or []
+        if not all(isinstance(t, str) for t in trackers):
+            raise RpcError(INVALID_PARAMS, "trackers should be a list of addresses.")
+        return self._film_player().count(info_hash, trackers)
 
     def torrent_stop_keeping(self, params: dict[str, Any]) -> dict[str, Any]:
         """A film that was being kept isn't any more. Nothing in the Movies folder is

@@ -2328,6 +2328,17 @@ final class TorrentStatusTests: XCTestCase {
         let stream = try? decoder.decode(MediaStream.self, from: way)
         XCTAssertEqual(stream?.size, 901_115_781)
         XCTAssertEqual(stream?.sizeLabel?.replacingOccurrences(of: ",", with: "."), "901.1 MB")
+        // Seeders and leechers as a film's page writes them: those with all of it, then
+        // the others; from a film that's open, and from a count asked for by a click.
+        XCTAssertEqual(
+            TorrentStatus(state: "fetching", peers: 30, bytesPerSecond: 0, progress: 0, seeds: 25).swarm,
+            "25/5")
+        XCTAssertNil(TorrentStatus(state: "fetching", peers: 30, bytesPerSecond: 0, progress: 0).swarm)
+        let counted = Data(#"{"info_hash": "abab", "seeds": 25, "peers": 30}"#.utf8)
+        XCTAssertEqual(try? decoder.decode(TorrentCount.self, from: counted).swarm, "25/5")
+        XCTAssertEqual(TorrentCount(infoHash: "abab", seeds: 3, peers: 1).swarm, "3/0")
+        XCTAssertEqual(TorrentCount(infoHash: "abab", seeds: 0, peers: 0).swarm, "0/0")
+        XCTAssertEqual(WayToPlayColumns.swarmStart, 170 + 64 + 90 + 48)
         let silent = Data(#"{"kind": "youtube", "video_id": "O5WXokyub-4", "trackers": []}"#.utf8)
         XCTAssertNil((try? decoder.decode(MediaStream.self, from: silent))?.sizeLabel)
         XCTAssertEqual(

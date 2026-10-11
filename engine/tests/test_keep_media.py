@@ -3,6 +3,8 @@ torrent player's part in it. Everything is under the test's own folders."""
 
 from __future__ import annotations
 
+import threading
+import time
 from pathlib import Path
 from typing import Any
 
@@ -439,3 +441,159 @@ def test_the_app_says_what_its_keeping(opened: rpc.Server, places: dict[str, Pat
         assert code(opened, "torrent.keep", **film, **wrong) == rpc.INVALID_PARAMS, wrong
     assert len(keeper.asked) == 5
     opened._films = None
+
+
+# ---- counting who has a torrent, from the owner's click (2026-10-11) -------------------------
+
+
+class Counted:
+    """A torrent as libtorrent would report it, for a count: who it finds, look by look."""
+
+    def __init__(self, looks: list[dict[str, int]]) -> None:
+        self.looks, self.asked = looks, 0
+
+    def is_valid(self) -> bool:
+        return True
+
+    def status(self) -> Any:
+        from types import SimpleNamespace
+
+        look = self.looks[min(self.asked, len(self.looks) - 1)]
+        self.asked += 1
+        return SimpleNamespace(**look)
+
+
+class CountingSession(Session):
+    def __init__(self, handle: Counted) -> None:
+        super().__init__()
+        self.handle, self.added = handle, []
+
+    def add_torrent(self, params: Any) -> Counted:
+        self.added.append(params)
+        return self.handle
+
+
+def test_who_has_a_torrent_is_the_most_that_was_found() -> None:
+    from types import SimpleNamespace as Told
+
+    assert torrents.who_has(Told(num_seeds=2, num_peers=6)) == (2, 6)  # connected to
+    # Heard of, from other peers and the DHT, where that's more.
+    assert torrents.who_has(Told(num_seeds=2, num_peers=6, list_seeds=25, list_peers=30)) == (
+        25,
+        30,
+    )
+    # A tracker's own count, where one answered: 25 with all of it, 5 without.
+    assert torrents.who_has(Told(num_seeds=1, num_peers=1, num_complete=25, num_incomplete=5)) == (
+        25,
+        30,
+    )
+    # "Not known" is -1 from a tracker: nothing, not one fewer.
+    assert torrents.who_has(Told(num_seeds=0, num_peers=0, num_complete=-1, num_incomplete=-1)) == (
+        0,
+        0,
+    )
+    assert torrents.who_has(Told()) == (0, 0)
+    assert torrents.who_has(Told(num_seeds="many", num_peers=True, list_peers=None)) == (0, 0)
+    assert torrents.who_has(Told(num_seeds=9, num_peers=4)) == (9, 9)  # never fewer than its seeds
+
+
+def test_a_torrent_is_counted_without_fetching_any_of_it(
+    places: dict[str, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import libtorrent as lt
+
+    monkeypatch.setattr(torrents, "COUNT_S", 0.3)
+    monkeypatch.setattr(torrents, "COUNT_CHECK_S", 0.05)
+    handle = Counted([{"num_seeds": 0, "num_peers": 0},
+                      {"num_seeds": 3, "num_peers": 8, "list_seeds": 25, "list_peers": 30},
+                      {"num_seeds": 2, "num_peers": 4}])  # fmt: skip
+    session = CountingSession(handle)
+    monkeypatch.setattr(torrents, "_new_session", lambda: session)
+    player = torrents.Player(places["cache"].parent, movies=places["movies"])
+    before = sorted(p.name for p in places["cache"].rglob("*"))
+    try:
+        said = player.count("AB" * 20, ["udp://t.example:80"])
+        # The most it found while it looked: 25 with all of it, 5 others.
+        assert said == {"info_hash": "ab" * 20, "seeds": 25, "peers": 30}
+        (params,) = session.added
+        # Told to fetch nothing, and given an empty folder of its own, not the films'.
+        assert params.flags & lt.torrent_flags.upload_mode
+        assert Path(params.save_path) == places["cache"] / torrents.COUNTING
+        # Left when the count was in, with nothing deleted and nothing of it remembered.
+        assert session.removed == [(handle,)]
+        assert player._joined == {} and player._counting == set()
+        assert sorted(p.name for p in places["cache"].rglob("*")) == before
+        with pytest.raises(torrents.TorrentError):
+            player.count("not a hash", [])
+        assert len(session.added) == 1
+    finally:
+        player.stop()
+
+
+def test_a_film_thats_open_is_counted_as_it_stands(
+    places: dict[str, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    session = CountingSession(Counted([{}]))
+    monkeypatch.setattr(torrents, "_new_session", lambda: session)
+    player = torrents.Player(places["cache"].parent, movies=places["movies"])
+    joined = joined_film(places, player)  # 3 connected to, 2 of them with all of it
+    assert player.count(joined.info_hash, []) == {
+        "info_hash": joined.info_hash, "seeds": 2, "peers": 3,
+    }  # fmt: skip
+    assert session.added == [] and session.removed == []  # nothing joined, nothing left
+    assert joined.info_hash in player._joined
+
+
+def test_pressing_play_on_a_torrent_being_counted_ends_the_count(
+    places: dict[str, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(torrents, "COUNT_S", 30.0)  # it would count for half a minute
+    monkeypatch.setattr(torrents, "COUNT_CHECK_S", 0.05)
+    handle = Counted([{"num_seeds": 4, "num_peers": 6}])
+    session = CountingSession(handle)
+    monkeypatch.setattr(torrents, "_new_session", lambda: session)
+    player = torrents.Player(places["cache"].parent, movies=places["movies"])
+    said: list[dict[str, Any]] = []
+    counting = threading.Thread(target=lambda: said.append(player.count("ab" * 20, [])))
+    try:
+        counting.start()
+        for _ in range(100):
+            if "ab" * 20 in player._counting:
+                break
+            time.sleep(0.02)
+        assert "ab" * 20 in player._counting
+        with pytest.raises(torrents.TorrentError, match="counted already"):
+            player.count("ab" * 20, [])
+        started = time.monotonic()
+        playing = player.play("ab" * 20, None, [])
+        assert time.monotonic() - started < 5  # not the half minute
+        counting.join(5)
+        # The count gave what it had and left its torrent; the film was joined afresh,
+        # in the films' own folder and free to fetch.
+        assert said == [{"info_hash": "ab" * 20, "seeds": 4, "peers": 6}]
+        assert session.removed == [(handle,)] and len(session.added) == 2
+        assert Path(session.added[1].save_path) == places["cache"]
+        assert playing["info_hash"] == "ab" * 20 and "ab" * 20 in player._joined
+        assert player._counting == set() and player._hurry == set()
+    finally:
+        player.stop()
+
+
+def test_the_app_asks_for_a_count(opened: rpc.Server, monkeypatch: pytest.MonkeyPatch) -> None:  # noqa: F811
+    assert code(opened, "torrent.count") == rpc.INVALID_PARAMS
+    assert code(opened, "torrent.count", info_hash="ab" * 20, trackers=[1]) == rpc.INVALID_PARAMS
+    assert code(opened, "torrent.count", info_hash="not a torrent's id") == rpc.USER_ERROR
+    assert "torrent.count" in rpc.SLOW_METHODS  # it takes seconds: nothing else waits behind it
+    # Asked properly, the engine's player counts and says what it found.
+    monkeypatch.setattr(torrents, "COUNT_S", 0.2)
+    monkeypatch.setattr(torrents, "COUNT_CHECK_S", 0.05)
+    session = CountingSession(Counted([{"num_seeds": 25, "num_peers": 30}]))
+    monkeypatch.setattr(torrents, "_new_session", lambda: session)
+    try:
+        said = result(opened, "torrent.count", info_hash="AB" * 20)
+        assert said == {"info_hash": "ab" * 20, "seeds": 25, "peers": 30}
+        assert len(session.added) == 1 and len(session.removed) == 1
+    finally:
+        if opened._films is not None:
+            opened._films.stop()
+            opened._films = None

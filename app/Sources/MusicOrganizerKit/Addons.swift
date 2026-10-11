@@ -371,6 +371,12 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
             + (others == 1 ? "1 peer" : "\(others) peers")
     }
 
+    /// Seeders and leechers as the film's page writes them, "25/5": those with the whole
+    /// film, then the others. Nil from an engine that doesn't tell the two apart.
+    public var swarm: String? {
+        seeds.map { "\($0)/\(max(peers - $0, 0))" }
+    }
+
     /// One line for the player: "Finding the film…", "2 seeds · 4 peers · 4.6 MB/s · 9% here".
     public var line: String {
         switch state {
@@ -386,6 +392,35 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
 public struct TorrentPlaying: Decodable, Sendable {
     public let infoHash: String
     public let url: String
+}
+
+/// Who has a torrent, counted by the engine from the owner's click (`torrent.count`):
+/// `seeds` have all of it, and `peers` is everyone found, the seeds among them.
+public struct TorrentCount: Decodable, Equatable, Sendable {
+    public let infoHash: String
+    public let seeds: Int
+    public let peers: Int
+
+    public init(infoHash: String, seeds: Int, peers: Int) {
+        self.infoHash = infoHash
+        self.seeds = seeds
+        self.peers = peers
+    }
+
+    /// Seeders and leechers as the film's page writes them: "25/5".
+    public var swarm: String { "\(seeds)/\(max(peers - seeds, 0))" }
+}
+
+/// The widths of a way to play's line on a film's page, as the owner drew it
+/// (2026-10-11): where it's from, its quality, its size, who has it, then Play and Keep.
+public enum WayToPlayColumns {
+    public static let source = 170.0
+    public static let quality = 64.0
+    public static let size = 90.0
+    public static let swarm = 130.0
+    public static let gap = 16.0
+    /// How far in the "Seeders/Leechers" heading starts, to sit over its column.
+    public static var swarmStart: Double { source + quality + size + 3 * gap }
 }
 
 /// A video as a list shows it (the engine's Video): a search result, or one of a

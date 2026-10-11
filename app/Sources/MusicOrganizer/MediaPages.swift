@@ -974,15 +974,30 @@ struct MovieView: View {
                             : "None of your add-ons has this film to play.")
                         .foregroundStyle(.secondary)
                 }
+                // One bar a way to play, as the owner drew it (2026-10-11): where it's from,
+                // its quality, its size, who has it, then Play and Keep. Only a torrent has
+                // seeders and leechers, so the heading is there only when one is listed.
+                if streams.sources.contains(where: { $0.streams.contains { $0.kind == "torrent" } }) {
+                    Text("Seeders/Leechers")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.leading, WayToPlayColumns.swarmStart)
+                        .padding(.bottom, -6)
+                }
                 ForEach(streams.sources) { source in
                     ForEach(Array(source.streams.enumerated()), id: \.offset) { _, stream in
-                        HStack(spacing: 16) {
-                            Text(source.addon).frame(width: 190, alignment: .leading)
-                            Text(stream.qualityLabel).fontWeight(.semibold).frame(width: 80, alignment: .leading)
-                            Text([stream.name, stream.title].compactMap { $0 }.joined(separator: " · "))
+                        HStack(spacing: WayToPlayColumns.gap) {
+                            Text(source.addon)
                                 .lineLimit(1)
-                            Spacer()
-                            Text(stream.kindLabel).foregroundStyle(.secondary)
+                                .frame(width: WayToPlayColumns.source, alignment: .leading)
+                            Text(stream.qualityLabel).fontWeight(.semibold)
+                                .frame(width: WayToPlayColumns.quality, alignment: .leading)
+                            Text(stream.sizeLabel ?? "–")
+                                .monospacedDigit()
+                                .frame(width: WayToPlayColumns.size, alignment: .leading)
+                            swarm(of: stream)
+                                .frame(width: WayToPlayColumns.swarm, alignment: .leading)
+                            Spacer(minLength: 0)
                             Button("Play", systemImage: "play.fill") {
                                 model.play(stream, title: playName, watching: apart ? nil : watched)
                             }
@@ -1012,6 +1027,10 @@ struct MovieView: View {
                             }
                         }
                         .padding(.vertical, 6)
+                        // What the add-on itself says of it, and how it would be played.
+                        .help(
+                            ([stream.name, stream.title].compactMap { $0 } + [stream.kindLabel])
+                                .joined(separator: " · "))
                         if let line = stream.infoHash.flatMap({ model.filmKeeps[$0.lowercased()]?.keepLine }) {
                             Text(line).font(.callout).foregroundStyle(.secondary)
                         }
@@ -1046,6 +1065,28 @@ struct MovieView: View {
                     }
                 }
             }
+        }
+    }
+
+    /// Who has a way to play: for a torrent, its seeders and leechers ("25/5") once
+    /// they've been counted, else a Count button (the app joins a torrent only from a
+    /// click, so nobody is counted for a film that was only looked at). Anything that
+    /// isn't a torrent has none: a dash.
+    @ViewBuilder
+    private func swarm(of stream: MediaStream) -> some View {
+        if stream.kind != "torrent" {
+            Text("–").foregroundStyle(.secondary)
+        } else if let said = model.swarm(of: stream) {
+            Text(said).monospacedDigit()
+                .help("Seeders have the whole film; leechers are the others sharing it. Counted by this Mac.")
+        } else if stream.infoHash.map({ model.swarmCounting.contains($0.lowercased()) }) == true {
+            ProgressView().controlSize(.small)
+        } else {
+            Button("Count") { model.countSwarm(stream) }
+                .controlSize(.small)
+                .help(
+                    "Count who has this torrent. The app joins it for a few seconds and "
+                        + "fetches nothing of the film; others sharing it can see this Mac meanwhile.")
         }
     }
 

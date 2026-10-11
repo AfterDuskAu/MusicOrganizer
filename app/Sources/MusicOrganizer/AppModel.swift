@@ -158,6 +158,10 @@ final class AppModel {
     /// The torrent the film player is playing from, if it is, and how that's going.
     private(set) var filmTorrent: String?
     private(set) var filmStatus: TorrentStatus?
+    /// Who has a torrent, by its id, from the owner's click on Count (kept while the app
+    /// is open), and the ones being counted just now.
+    private(set) var swarmCounts: [String: TorrentCount] = [:]
+    private(set) var swarmCounting = Set<String>()
     /// Videos played as themselves (a channel's video, a trailer): the picture shown is
     /// that very video, not the official video of a song with its name.
     @ObservationIgnored private var exactVideos = Set<String>()
@@ -711,6 +715,36 @@ final class AppModel {
         default:
             notice = "This one can't be played in the app yet."
         }
+    }
+
+    /// Count who has a torrent (the Count button on a film's page): the engine joins it
+    /// for a few seconds, fetches nothing of the film, and says how many it found.
+    /// Only ever from the owner's click.
+    func countSwarm(_ stream: MediaStream) {
+        guard stream.kind == "torrent", let hash = stream.infoHash?.lowercased(),
+            !swarmCounting.contains(hash)
+        else { return }
+        swarmCounting.insert(hash)
+        Task {
+            defer { swarmCounting.remove(hash) }
+            do {
+                swarmCounts[hash] = try await ask(
+                    "torrent.count", ["info_hash": hash, "trackers": stream.trackers],
+                    as: TorrentCount.self)
+            } catch {
+                notice = error.localizedDescription
+            }
+        }
+    }
+
+    /// Seeders and leechers for a way to play, "25/5", or nil when nobody has counted:
+    /// the engine's own running count while the film plays or is being kept, else what
+    /// the last click on Count found.
+    func swarm(of stream: MediaStream) -> String? {
+        guard stream.kind == "torrent", let hash = stream.infoHash?.lowercased() else { return nil }
+        if let keeping = filmKeeps[hash], keeping.isKeeping, let said = keeping.swarm { return said }
+        if filmTorrent == hash, film.isOpen, let said = filmStatus?.swarm { return said }
+        return swarmCounts[hash]?.swarm
     }
 
     /// Join a torrent through the engine and play its film as it arrives. The engine is

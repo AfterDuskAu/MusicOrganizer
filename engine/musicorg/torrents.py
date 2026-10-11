@@ -25,7 +25,14 @@ What the owner should know, and what this module holds to:
 - **A torrent is joined only while its film is open** (or being kept): closing the film,
   ten minutes unused, or the engine stopping leaves the torrent. Nothing is fetched or
   shared for a film that's merely remembered.
-- Nothing starts by itself: only `torrent.play`, from the owner's click.
+- **Or for a few seconds, to count who has it** (`count`, the owner's choice of
+  2026-10-11: a Count button beside each way to play, so a torrent nobody has can be
+  told from one many have before it's opened). Then the torrent is told to fetch
+  nothing: no piece of the film is asked for, nothing of it is written, and it's left
+  when the count is in. Like everyone in a torrent, this computer can be seen by the
+  others in it for those seconds.
+- Nothing starts by itself: only `torrent.play`, `torrent.keep` and `torrent.count`,
+  each from the owner's click.
 
 In replay mode (`MUSICORG_REPLAY_DIR`, every test) no torrent is ever joined:
 `_new_session` refuses.
@@ -61,6 +68,9 @@ METADATA_WAIT_S = 120  # how long a player's first question waits for the torren
 PIECE_WAIT_S = 120  # how long a range waits for its next piece before giving up
 AHEAD_PIECES = 12  # asked for ahead of where the player is reading
 IDLE_S = 600  # a film nobody has asked about for this long is closed
+COUNT_S = 8.0  # how long a torrent is joined to count who has it
+COUNT_CHECK_S = 0.5  # how often it's looked at meanwhile
+COUNTING = "counting"  # the empty folder in the films' cache a counted torrent is given
 KEEP_S = 24 * 3600  # what arrived of a film stays in the cache this long after it was played
 SWEEP_EVERY_S = 600
 CHUNK = 256 * 1024
@@ -213,6 +223,27 @@ def upload_settings(limit: int | None) -> dict[str, int]:
     return {"upload_rate_limit": int(limit), "unchoke_slots_limit": 8}
 
 
+def who_has(told: Any) -> tuple[int, int]:
+    """How many have a torrent, as far as libtorrent has found: `(seeds, everyone)`.
+    Seeds have all of it; everyone is the seeds and the rest. Each is the largest of
+    three ways of knowing: those it's connected to, those it has heard of (from other
+    peers and the DHT), and a tracker's own count where one has answered. So it's "at
+    least this many", found in the time it had."""
+
+    def count(name: str) -> int:
+        value = getattr(told, name, 0)
+        return value if isinstance(value, int) and not isinstance(value, bool) and value > 0 else 0
+
+    seeds = max(count("num_seeds"), count("list_seeds"), count("num_complete"))
+    others = max(
+        count("num_peers") - count("num_seeds"),
+        count("list_peers") - count("list_seeds"),
+        count("num_incomplete"),
+        0,
+    )
+    return seeds, seeds + others
+
+
 @dataclass
 class _Joined:
     """One torrent that's been joined: libtorrent's handle, and the film in it."""
@@ -351,6 +382,8 @@ class Player:
         self._session: Any = None
         self._server: ThreadingHTTPServer | None = None
         self._joined: dict[str, _Joined] = {}
+        self._counting: set[str] = set()  # the torrents being counted just now
+        self._hurry: set[str] = set()  # ...of which these are wanted to play: count no longer
         self._lock = threading.Lock()
         self._stopping = threading.Event()
 
@@ -361,6 +394,13 @@ class Player:
         its film plays at. Returns at once: the address waits for the film."""
         info_hash = info_hash.lower()
         link = magnet(info_hash, trackers)
+        if info_hash in self._counting:
+            # It's being counted, which fetches nothing: that ends now, and the film is
+            # joined in its own right (one torrent can't be both in one session).
+            self._hurry.add(info_hash)
+            until = time.monotonic() + 5
+            while info_hash in self._counting and time.monotonic() < until:
+                time.sleep(0.05)
         with self._lock:
             self._start()
             joined = self._joined.get(info_hash)
@@ -381,6 +421,57 @@ class Player:
         if joined is None:
             raise TorrentError("That film isn't being played any more.")
         return joined.status()
+
+    def count(self, info_hash: str, trackers: list[str]) -> dict[str, Any]:
+        """Count who has a torrent, from the owner's click on Count (2026-10-11):
+        `{info_hash, seeds, peers}`, seeds among the peers (`who_has`).
+
+        A film that's open or being kept is counted as it stands. Any other torrent is
+        joined for `COUNT_S` seconds **to count and nothing more**: it's told to fetch
+        nothing (`upload_mode`: no piece is ever asked for), given an empty folder so
+        there's nothing of an earlier playing to read through, and left when the time
+        is up (or at once, if the owner presses Play or Keep on it meanwhile). No
+        piece of the film is fetched, written or kept. This takes those seconds: the
+        app asks from a thread of its own."""
+        info_hash = info_hash.lower()
+        if not INFO_HASH.fullmatch(info_hash):
+            raise TorrentError("That isn't a torrent's id.")
+        with self._lock:
+            joined = self._joined.get(info_hash)
+            if joined is not None and joined.handle.is_valid():
+                seeds, everyone = who_has(joined.handle.status())
+                return {"info_hash": info_hash, "seeds": seeds, "peers": everyone}
+            if info_hash in self._counting:
+                raise TorrentError("That one is being counted already.")
+            self._start()
+            import libtorrent as lt
+
+            params = lt.parse_magnet_uri(magnet(info_hash, trackers))
+            params.save_path = str(self.folder / COUNTING)
+            params.flags |= lt.torrent_flags.upload_mode  # it asks for no piece, ever
+            handle = self._session.add_torrent(params)
+            self._counting.add(info_hash)
+        seeds = everyone = 0
+        try:
+            until = time.monotonic() + COUNT_S
+            while time.monotonic() < until and not self._stopping.is_set():
+                time.sleep(COUNT_CHECK_S)
+                if not handle.is_valid():
+                    break
+                found = who_has(handle.status())
+                seeds, everyone = max(seeds, found[0]), max(everyone, found[1])
+                if info_hash in self._hurry:
+                    break  # the owner pressed Play or Keep on it: what was found will do
+        finally:
+            with self._lock:
+                # Left, always: a count never turns into the film's own joining.
+                if self._session is not None and handle.is_valid():
+                    self._session.remove_torrent(handle)
+                self._counting.discard(info_hash)
+                self._hurry.discard(info_hash)
+        log.info("torrents: counted who has a torrent (%d with all of it, %d others)",
+                 seeds, everyone - seeds)  # fmt: skip
+        return {"info_hash": info_hash, "seeds": seeds, "peers": max(everyone, seeds)}
 
     def keep(
         self,
