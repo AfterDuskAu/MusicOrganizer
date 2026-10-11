@@ -187,11 +187,19 @@ public struct MediaStream: Decodable, Hashable, Sendable {
     public let name: String?
     public let title: String?
     public let quality: String?
+    /// How big its file is, in bytes, when the add-on says (2026-10-11).
+    public let size: Int?
     public let url: String?
     public let videoId: String?
     public let infoHash: String?
     public let fileIndex: Int?
     public let trackers: [String]
+
+    /// Its size as the Finder would write it ("901 MB"), or nil when nothing says.
+    public var sizeLabel: String? {
+        guard let size, size > 0 else { return nil }
+        return ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file)
+    }
 
     /// Whether the app can play it: a plain web address, a video by its id, or a torrent.
     public var canPlay: Bool { ["url", "youtube", "torrent"].contains(kind) }
@@ -288,7 +296,10 @@ public enum VideoExplore {
 /// How a film playing from a torrent is getting on (the engine's `torrent.status`).
 public struct TorrentStatus: Decodable, Equatable, Sendable {
     public let state: String
+    /// Everyone the engine is connected to for this film, counted by the engine itself.
     public let peers: Int
+    /// How many of them have the whole film (2026-10-11; an older engine doesn't say).
+    public let seeds: Int?
     public let bytesPerSecond: Int
     public let progress: Double
     /// The film is being kept and hasn't all arrived yet.
@@ -308,8 +319,9 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
     public init(
         state: String, peers: Int, bytesPerSecond: Int, progress: Double, keeping: Bool? = nil,
         keptPath: String? = nil, keepError: String? = nil, keepNote: String? = nil,
-        converting: Double? = nil
+        converting: Double? = nil, seeds: Int? = nil
     ) {
+        self.seeds = seeds
         self.keepNote = keepNote
         self.converting = converting
         self.state = state
@@ -349,14 +361,23 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
         return state == "finding" ? nil : min(max(progress, 0), 1)
     }
 
-    /// One line for the player: "Finding the film…", "6 sources · 4.6 MB/s · 9% here".
+    /// Who the film is coming from, as the engine counts them: "2 seeds · 4 peers" (seeds
+    /// have the whole film; peers are the others still fetching it). "6 sources" from an
+    /// engine that doesn't tell the two apart.
+    public var sources: String {
+        guard let seeds else { return peers == 1 ? "1 source" : "\(peers) sources" }
+        let others = max(peers - seeds, 0)
+        return (seeds == 1 ? "1 seed" : "\(seeds) seeds") + " · "
+            + (others == 1 ? "1 peer" : "\(others) peers")
+    }
+
+    /// One line for the player: "Finding the film…", "2 seeds · 4 peers · 4.6 MB/s · 9% here".
     public var line: String {
         switch state {
         case "finding": return "Finding the film…"
         case "complete": return "All of the film is here"
         default:
             let megabytes = String(format: "%.1f", Double(bytesPerSecond) / 1_000_000)
-            let sources = peers == 1 ? "1 source" : "\(peers) sources"
             return "\(sources) · \(megabytes) MB/s · \(Int(progress * 100))% here"
         }
     }

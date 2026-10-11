@@ -328,7 +328,10 @@ class _Joined:
             "state": state,
             "name": self.name or None,
             "bytes": self.size or None,
+            # Counted by the engine itself, of those it's connected to now: everyone,
+            # and how many of them have the whole film (2026-10-11). No add-on says this.
             "peers": int(told.num_peers),
+            "seeds": min(int(told.num_seeds), int(told.num_peers)),
             "bytes_per_second": int(told.download_rate),
             "progress": round(told.progress_ppm / 1_000_000, 4),
         }

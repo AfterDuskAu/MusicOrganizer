@@ -192,6 +192,12 @@ def test_streams_come_only_from_add_ons_that_offer_them(asked: list[str]) -> Non
     assert stream["kind"] == "torrent" and stream["quality"] == "1080p"
     assert stream["info_hash"] == "5d640678eae57c72c0d096904fd7d7405ece6653"
     assert stream["file_index"] == 1 and stream["trackers"] == []
+    # Its size as a figure, from the "💾 859.37 MB" the add-on writes: the film's file
+    # is that many bytes to within the rounding of what was written.
+    assert abs(stream["size"] - 901_115_781) < 6_000
+    # Everything a way to play carries, and no more: nothing says how many have it.
+    assert set(stream) == {"kind", "name", "title", "quality", "size", "url", "video_id",
+                           "info_hash", "file_index", "trackers"}  # fmt: skip
 
 
 def test_an_add_on_that_fails_is_named_and_the_rest_still_answer(asked: list[str]) -> None:
@@ -213,6 +219,45 @@ def test_each_kind_of_stream() -> None:
     for unknown in ({"externalUrl": "https://x.example"}, {"url": "magnet:?xt=1"},
                     {"infoHash": "short"}, {"ytId": "bad id"}, "text"):  # fmt: skip
         assert read(unknown) is None
+
+
+def test_what_a_stream_says_its_size_is() -> None:
+    size = addons.size_of
+    mb, gb = 1024**2, 1024**3
+    assert size(None, "1080p", "💾 859.37 MB") == round(859.37 * mb)
+    assert size({}, "Film 2160p HDR 14.2 GB") == round(14.2 * gb)
+    assert size(None, "1,4 GB") == round(1.4 * gb)  # a comma for the point
+    assert size(None, "700MiB") == 700 * mb and size(None, "512 kb") == 512 * 1024
+    assert size(None, "2 TB") == 2 * 1024**4
+    # The add-on's own figure, in the protocol's field for it, comes before its words.
+    assert size({"videoSize": 901_115_781}, "💾 859.37 MB") == 901_115_781
+    for odd in (0, -5, True, "901115781", 1.5, None, [1], 1024**5 + 1):
+        assert size({"videoSize": odd}, "💾 2 GB") == 2 * gb
+    assert size("not hints", "💾 2 GB") == 2 * gb
+    # What isn't a size isn't read as one.
+    for words in ("1080p", "5 Mbps", "DD5.1", "10bit x265", "v1.2GB", "", None, "GB", "0 MB"):
+        assert size(None, words) is None, words
+    assert size(None, "DD5.1 2.3 GB") == round(2.3 * gb)
+    assert size(None, "9999999 TB") is None  # nobody's film
+    # Every kind of stream carries it, or None when nothing says.
+    read = addons._stream
+    assert read({"url": "https://v.example/a.mp4", "name": "720p 350 MB"})["size"] == 350 * mb
+    assert read({"ytId": "O5WXokyub-4"})["size"] is None
+    hinted = read({"infoHash": "ab" * 20, "behaviorHints": {"videoSize": 123_456_789}})
+    assert hinted["size"] == 123_456_789
+
+
+def test_an_answer_in_another_shape_isnt_read(
+    asked: list[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A way to play is what the protocol says it is. A list of torrents under another
+    # name, with counts of who has each, isn't an add-on's answer: nothing is made of it.
+    films = addons.load(f"{FILMS}/manifest.json")
+    other = {"torrents": [{"hash": "ab" * 20, "quality": "1080p", "size": "1.4 GB",
+                           "seeds": 12, "peers": 3}]}  # fmt: skip
+    monkeypatch.setattr(addons, "_http", lambda url: other)
+    assert addons.streams([films], "movie", "tt0012349") == {"sources": [], "problems": []}
+    assert addons._stream(other["torrents"][0]) is None
 
 
 def test_what_a_stream_says_its_picture_is() -> None:

@@ -128,7 +128,9 @@ class Handle:
     def status(self) -> Any:
         from types import SimpleNamespace
 
-        return SimpleNamespace(progress_ppm=500_000, is_seeding=False, num_peers=3, download_rate=0)
+        return SimpleNamespace(
+            progress_ppm=500_000, is_seeding=False, num_peers=3, num_seeds=2, download_rate=0
+        )
 
 
 def joined_film(places: dict[str, Path], player: torrents.Player, *, here: bool = True) -> Any:
@@ -146,6 +148,8 @@ def test_a_kept_film_is_saved_when_it_has_all_arrived(places: dict[str, Path]) -
     joined.keep_name = "The Kid (1921)"
     assert joined.wanted and not joined.all_here()
     assert joined.status()["keeping"] is True
+    # Who has it is the engine's own count, of those it's connected to: no add-on says.
+    assert (joined.status()["peers"], joined.status()["seeds"]) == (3, 2)
 
     # The player lets go of it: it's still wanted, so it isn't left.
     player.close(joined.info_hash)

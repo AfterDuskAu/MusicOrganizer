@@ -41,6 +41,16 @@ Checked live on 2026-10-07 against the three add-ons the app starts with:
   (with `skip` and `search`) and stream for `movie`. A stream there is a torrent:
   `{infoHash, fileIdx, name: "1080p", title: "💾 859.37 MB"}`.
 
+**What's read of a way to play is what the protocol has** (the owner's choice,
+2026-10-11): which kind it is, its name and title, the quality and the size they say
+(`quality_of`, `size_of`), and for a torrent its hash, which file, and its trackers. The
+protocol has no field for how many have a torrent (seeds, peers), and none is read from
+an add-on: the engine counts those itself once the film is opened (`torrent.status`).
+No other shape of answer is read. A list of torrents under another name, as sites for
+pirated films publish their own, isn't an add-on's answer, and nothing here is made
+for one (CLAUDE.md: no add-on for pirated films is built in, tuned for or tested
+against).
+
 In replay mode (`MUSICORG_REPLAY_DIR`, every test) the network is never reached:
 `_http` refuses.
 """
@@ -460,6 +470,27 @@ def quality_of(*texts: str | None) -> str | None:
     return "4k" if size == "2160p" else size
 
 
+SIZE = re.compile(r"(?<![\w.,])(\d+(?:[.,]\d+)?)\s*([KMGT])i?B\b", re.I)
+# An add-on's "MB" is 1,048,576 bytes: the public-domain add-on's "859.37 MB" is a file
+# of 901 million bytes.
+SIZE_UNIT = {"k": 1024, "m": 1024**2, "g": 1024**3, "t": 1024**4}
+MAX_SIZE = 1024**5  # more than this isn't a film's size
+
+
+def size_of(hints: object, *texts: str | None) -> int | None:
+    """How big a stream says its file is, in bytes, or None if it doesn't say. The
+    add-on's own figure comes first (`behaviorHints.videoSize`, the protocol's field for
+    it); else the size written in its name or title ("💾 859.37 MB", "1,4 GB")."""
+    given = hints.get("videoSize") if isinstance(hints, dict) else None
+    if isinstance(given, int) and not isinstance(given, bool) and 0 < given <= MAX_SIZE:
+        return given
+    found = SIZE.search(" ".join(t for t in texts if t))
+    if found is None:
+        return None
+    size = round(float(found.group(1).replace(",", ".")) * SIZE_UNIT[found.group(2).lower()])
+    return size if 0 < size <= MAX_SIZE else None
+
+
 def _stream(raw: Any) -> dict[str, Any] | None:
     """One way to play something (docs/ENGINE_API.md → Stream). Which field it has says
     what kind it is; one with none the engine knows is left out."""
@@ -470,6 +501,7 @@ def _stream(raw: Any) -> dict[str, Any] | None:
         "name": name,
         "title": title,
         "quality": quality_of(name, title),
+        "size": size_of(raw.get("behaviorHints"), name, title),
         "url": None,
         "video_id": None,
         "info_hash": None,

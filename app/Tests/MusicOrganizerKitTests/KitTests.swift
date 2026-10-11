@@ -2303,6 +2303,33 @@ final class TorrentStatusTests: XCTestCase {
         XCTAssertEqual(
             TorrentStatus(state: "fetching", peers: 1, bytesPerSecond: 0, progress: 0).line,
             "1 source · 0.0 MB/s · 0% here")
+        // The engine's own count of who has the film: seeds have all of it, peers are
+        // the others it's connected to.
+        XCTAssertEqual(
+            TorrentStatus(state: "fetching", peers: 6, bytesPerSecond: 4_665_073, progress: 0.0948, seeds: 2)
+                .line,
+            "2 seeds · 4 peers · 4.7 MB/s · 9% here")
+        XCTAssertEqual(
+            TorrentStatus(state: "fetching", peers: 2, bytesPerSecond: 0, progress: 0, seeds: 1).sources,
+            "1 seed · 1 peer")
+        XCTAssertEqual(
+            TorrentStatus(state: "fetching", peers: 0, bytesPerSecond: 0, progress: 0, seeds: 0).sources,
+            "0 seeds · 0 peers")
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let said = Data(
+            #"{"state": "fetching", "peers": 9, "seeds": 3, "bytes_per_second": 0, "progress": 0.5}"#.utf8)
+        XCTAssertEqual(try? decoder.decode(TorrentStatus.self, from: said).sources, "3 seeds · 6 peers")
+        // A way to play says its size when the add-on does, and the app writes it as the
+        // Finder would.
+        let way = Data(
+            #"{"kind": "torrent", "name": "1080p", "title": "💾 859.37 MB", "quality": "1080p", "size": 901115781, "info_hash": "abab", "file_index": 1, "trackers": []}"#
+                .utf8)
+        let stream = try? decoder.decode(MediaStream.self, from: way)
+        XCTAssertEqual(stream?.size, 901_115_781)
+        XCTAssertEqual(stream?.sizeLabel?.replacingOccurrences(of: ",", with: "."), "901.1 MB")
+        let silent = Data(#"{"kind": "youtube", "video_id": "O5WXokyub-4", "trackers": []}"#.utf8)
+        XCTAssertNil((try? decoder.decode(MediaStream.self, from: silent))?.sizeLabel)
         XCTAssertEqual(
             TorrentStatus(state: "complete", peers: 3, bytesPerSecond: 0, progress: 1).line,
             "All of the film is here")

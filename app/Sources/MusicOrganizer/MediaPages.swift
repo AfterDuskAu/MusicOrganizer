@@ -1005,7 +1005,9 @@ struct MovieView: View {
                                             year: details?.year ?? film.year, apart: apart)
                                     }
                                     .disabled(keeping != nil)
-                                    .help("Fetch the whole film and save it in your Movies folder")
+                                    .help(
+                                        "Fetch the whole film and save it in your Movies folder"
+                                            + (stream.sizeLabel.map { " (\($0))" } ?? ""))
                                 }
                             }
                         }
