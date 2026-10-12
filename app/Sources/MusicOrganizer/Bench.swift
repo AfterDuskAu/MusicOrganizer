@@ -498,9 +498,7 @@ private enum WindowWatch {
             var one: [UnsafeRawPointer?] = [UnsafeRawPointer(bitPattern: strip.windowNumber)]
             let (wide, high) = (64, 8)
             guard let only = CFArrayCreate(nil, &one, 1, nil),
-                let alone = CGImage(
-                    windowListFromArrayScreenBounds: .null, windowArray: only,
-                    imageOption: [.nominalResolution, .boundsIgnoreFraming]),
+                let alone = (OwnWindows() as PicturesWindows).pictured(only),
                 let space = CGColorSpace(name: CGColorSpace.sRGB),
                 let canvas = CGContext(
                     data: nil, width: wide, height: high, bitsPerComponent: 8, bytesPerRow: wide * 4,
@@ -512,6 +510,26 @@ private enum WindowWatch {
             for dot in 0..<(wide * high) { solid += Int(dots.load(fromByteOffset: dot * 4 + 3, as: UInt8.self)) }
             say(String(format: "the strip's window by itself: %d%% of it is drawn", solid * 100 / (wide * high * 255)))
         }
+    }
+}
+
+/// A picture of some of the app's own windows, as they are on the screen.
+private protocol PicturesWindows {
+    func pictured(_ windows: CFArray) -> CGImage?
+}
+
+/// macOS's old way of picturing windows, which it has marked as on its way out since
+/// macOS 14 in favour of one that pictures the screen and asks the owner's leave for it.
+/// For the app's own windows the old way needs no leave, which is the point of this
+/// check, so it's still used here, and only here. It's reached through the protocol
+/// above because marking this one function as old, the same way macOS marks its own,
+/// is what keeps the build free of a warning about it.
+private struct OwnWindows: PicturesWindows {
+    @available(macOS, deprecated: 14.0)
+    func pictured(_ windows: CFArray) -> CGImage? {
+        CGImage(
+            windowListFromArrayScreenBounds: .null, windowArray: windows,
+            imageOption: [.nominalResolution, .boundsIgnoreFraming])
     }
 }
 
