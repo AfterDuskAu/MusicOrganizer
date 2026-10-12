@@ -2572,6 +2572,11 @@ final class WordingTests: XCTestCase {
             Wording.plain("Not found. YouTube Music has no such song on YouTube."),
             "Not found. The music service has no such song on the service.")
         XCTAssertEqual(Wording.plain("Nothing about it"), "Nothing about it")
+        // The owner's word for an add-on is "plugin".
+        XCTAssertEqual(
+            Wording.plain("An add-on didn't answer. None of your add-ons has it."),
+            "A plugin didn't answer. None of your plugins has it.")
+        XCTAssertEqual(Wording.plain("That isn't an add-on's address."), "That isn't a plugin's address.")
     }
 
     func testOnlySentencesAreChangedNeverANameOrAnId() throws {

@@ -1,116 +1,261 @@
 import MusicOrganizerKit
 import SwiftUI
 
-/// Settings, as a page of the app (the cog wheel, or ⌘,), laid out as the owner asked on
-/// 2026-10-07: the sections named down the left, the one chosen on the right. Until then
-/// it was a window of its own with tabs. A row marked "Coming" is planned but not built.
+/// Settings, as a page of the app (the cog wheel, or ⌘,). **One page that scrolls**, in
+/// the five groups the owner chose on 2026-10-12, in their order: Profile, Player,
+/// Plugins, Sync (with Lyrics in it) and General. The groups are named down the left, and
+/// a click on a name goes to that part of the page; the name of the part in sight is the
+/// one marked. From 2026-10-07 until then it was seven sections, the one chosen shown on
+/// the right; before that, a window of its own with tabs. A row marked "Coming" is
+/// planned but not built.
 struct SettingsView: View {
+    /// Settings is the page showing: what its parts show is asked for again then.
+    var isActive = true
     @Environment(AppModel.self) private var model
-    /// The section that's showing: remembered, and set by a page that sends the owner
-    /// here for one thing (Import Playlists → Spotify opens Profile, with Spotify open).
+    /// The part to go to: set by a page that sends the owner here for one thing (Import
+    /// Playlists → Spotify opens Profile, with Spotify open), and by a click on a name.
     @AppStorage(SettingsView.tabKey) private var tab = "profile"
-    /// The sections opened so far, each kept as it was left (see `PageHost`).
-    @State private var store = PageStore<String>()
+    @State private var place = SettingsPlace()
 
     static let tabKey = "settingsTab"
     /// Which account under Settings → Profile is open (its arrow turned down).
     static let openAccountKey = "settingsOpenAccount"
-    private static let sections: [(key: String, title: String)] = [
-        ("profile", "Profile"), ("play", "Play Options"), ("downloads", "Downloads"),
-        ("lyrics", "Lyrics"), ("addons", "Add-ons"), ("sharing", "Sync"),
-        ("deleted", "Deleted Items"),
+
+    /// A part of a group: one of the forms the page is made of, with its own heading
+    /// when it isn't the group's first.
+    struct Part: Identifiable {
+        let id: String
+        var title: String?
+    }
+
+    struct Group: Identifiable {
+        let id: String
+        let title: String
+        let parts: [Part]
+    }
+
+    /// The owner's groups and order. A part's id is what a page asks for by name (the
+    /// names the seven sections had are still good: "downloads", "lyrics", "deleted"…).
+    static let groups: [Group] = [
+        Group(id: "profile", title: "Profile", parts: [
+            Part(id: "profiles"), Part(id: "deleted", title: "Deleted Items"),
+        ]),
+        Group(id: "player", title: "Player", parts: [Part(id: "play")]),
+        Group(id: "plugins", title: "Plugins", parts: [
+            Part(id: "addons"), Part(id: "downloads", title: "Downloads"),
+        ]),
+        Group(id: "sync", title: "Sync", parts: [Part(id: "sharing"), Part(id: "lyrics", title: "Lyrics")]),
+        Group(id: "general", title: "General", parts: [
+            Part(id: "look"), Part(id: "terms", title: "Terms of Use"), Part(id: "privacy", title: "Privacy"),
+        ]),
     ]
 
-    /// The section showing. One remembered from before Settings was regrouped opens Profile.
-    private var chosen: (key: String, title: String) {
-        Self.sections.first { $0.key == tab } ?? Self.sections[0]
+    /// Where a name leads: a group's own, a part's, or one from before the regrouping.
+    static func anchor(for asked: String) -> String {
+        let known = groups.flatMap { [$0.id] + $0.parts.map(\.id) }
+        return known.contains(asked) ? asked : "profile"
     }
 
     var body: some View {
-        HStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 6) {
-                ForEach(Self.sections, id: \.key) { section in
-                    let isChosen = section.key == chosen.key
-                    Button {
-                        tab = section.key
-                    } label: {
-                        Text(section.title)
-                            .font(.title3.weight(isChosen ? .semibold : .regular))
-                            .foregroundStyle(isChosen ? .primary : .secondary)
-                            .padding(.horizontal, 18)
-                            .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(
-                                isChosen ? AnyShapeStyle(.quaternary.opacity(0.7)) : AnyShapeStyle(.clear),
-                                in: Capsule()
-                            )
-                            .contentShape(Capsule())
+        ScrollViewReader { page in
+            HStack(spacing: 0) {
+                names { key in
+                    tab = key
+                    go(to: key, on: page)
+                }
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 0) {
+                        ForEach(Self.groups) { group in
+                            Text(group.title)
+                                .font(.largeTitle)
+                                .heading()
+                                .padding(.horizontal, 20)
+                                .padding(.top, 24)
+                                .id(group.id)
+                                .background { SettingsSpan(id: group.id) }
+                            ForEach(group.parts) { part in
+                                if let title = part.title {
+                                    Text(title)
+                                        .font(.title2.weight(.semibold))
+                                        .heading()
+                                        .padding(.horizontal, 20)
+                                        .padding(.top, 18)
+                                }
+                                // A form of its own, as tall as what's in it: the page
+                                // does the scrolling.
+                                SettingsPart(key: part.id)
+                                    .scrollDisabled(true)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .id(part.id)
+                                    .background { SettingsSpan(id: part.id) }
+                            }
+                        }
+                        footer
                     }
-                    .buttonStyle(.plain)
+                    .frame(maxWidth: 720, alignment: .topLeading)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                    .lookText()
                 }
-                Spacer()
-                VStack(alignment: .leading, spacing: 4) {
-                    if let app = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
-                        Text("App Version: \(app)")
-                    }
-                    if let engine = model.engineVersion { Text("Engine Version: \(engine)") }
+                .coordinateSpace(name: "settings")
+                .onPreferenceChange(SettingsSpans.self) { spans in
+                    // The group whose heading or part lies across a line a little way
+                    // down the page (or, between two, the next one down). Only what's
+                    // near the part in sight is known: the rest of the page isn't made
+                    // until it's scrolled to.
+                    let line: CGFloat = 120
+                    let across = spans.first { $0.value.lowerBound <= line && line < $0.value.upperBound }?.key
+                    let next = spans.filter { $0.value.lowerBound > line }
+                        .min { $0.value.lowerBound < $1.value.lowerBound }?.key
+                    guard let at = across ?? next, let now = Self.group(of: at) else { return }
+                    if place.group != now { place.group = now }
                 }
-                .font(.callout)
-                .foregroundStyle(.tertiary)
-                .padding(.horizontal, 18)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 20)
-            .frame(width: 220)
-            VStack(alignment: .leading, spacing: 0) {
-                Text(chosen.title)
-                    .font(.largeTitle)
-                    .heading()
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-                // Each section is a view of its own, kept once it's been opened: made
-                // afresh at every visit, as they were until 2026-10-09, Play Options and
-                // Downloads took over a quarter of a second each time they were chosen.
-                PageHost(current: chosen.key, visited: Self.sections.map(\.key), store: store) { key, showing in
-                    AnyView(
-                        SettingsSection(key: key, showing: showing)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                            .environment(model)
-                            .lookText())
+            .onChange(of: tab, initial: true) { go(to: Self.anchor(for: tab), on: page) }
+        }
+        // Come back to, the page asks again what its parts ask when they first appear.
+        .onChange(of: isActive) { _, now in
+            guard now else { return }
+            model.loadSharing()
+            model.loadSettings()
+            model.loadRemoved()
+        }
+    }
+
+    /// Go to a group or a part of the page. Twice: the page makes its parts only as
+    /// they're scrolled to, so the first go lands by a guess at how tall the parts in
+    /// between are, and the second, once they're there, lands exactly.
+    private func go(to key: String, on page: ScrollViewProxy) {
+        page.scrollTo(key, anchor: .top)
+        Task {
+            try? await Task.sleep(for: .milliseconds(120))
+            page.scrollTo(key, anchor: .top)
+        }
+    }
+
+    /// The group a heading or a part belongs to.
+    static func group(of id: String) -> String? {
+        groups.first { $0.id == id || $0.parts.contains { $0.id == id } }?.id
+    }
+
+    /// The groups' names, down the left.
+    private func names(go: @escaping (String) -> Void) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(Self.groups) { group in
+                let isChosen = group.id == place.group
+                Button {
+                    go(group.id)
+                } label: {
+                    Text(group.title)
+                        .font(.title3.weight(isChosen ? .semibold : .regular))
+                        .foregroundStyle(isChosen ? .primary : .secondary)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(
+                            isChosen ? AnyShapeStyle(.quaternary.opacity(0.7)) : AnyShapeStyle(.clear),
+                            in: Capsule()
+                        )
+                        .contentShape(Capsule())
                 }
-                .frame(maxWidth: 720, maxHeight: .infinity, alignment: .topLeading)
+                .buttonStyle(.plain)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            Spacer()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 20)
+        .frame(width: 220)
+    }
+
+    /// The versions, under everything.
+    private var footer: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if let app = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+                Text("App Version: \(app)")
+            }
+            if let engine = model.engineVersion { Text("Engine Version: \(engine)") }
+        }
+        .font(.callout)
+        .foregroundStyle(.tertiary)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 24)
+    }
+}
+
+/// The group of Settings that's in sight. Apart from the page itself, so that only the
+/// names down the left are drawn again when it changes.
+@MainActor
+@Observable
+private final class SettingsPlace {
+    var group = "profile"
+}
+
+/// Where on the page each heading and part that's been made is, top to bottom.
+private struct SettingsSpans: PreferenceKey {
+    static let defaultValue: [String: ClosedRange<CGFloat>] = [:]
+
+    static func reduce(
+        value: inout [String: ClosedRange<CGFloat>], nextValue: () -> [String: ClosedRange<CGFloat>]
+    ) {
+        value.merge(nextValue()) { $1 }
+    }
+}
+
+/// Says where the heading or part it's laid behind is, for marking the group in sight.
+private struct SettingsSpan: View {
+    let id: String
+
+    var body: some View {
+        GeometryReader { room in
+            let frame = room.frame(in: .named("settings"))
+            Color.clear.preference(key: SettingsSpans.self, value: [id: frame.minY...max(frame.maxY, frame.minY)])
         }
     }
 }
 
-/// One section of Settings, by its saved name.
-private struct SettingsSection: View {
+/// One part of Settings, by its name.
+private struct SettingsPart: View {
     let key: String
-    /// False while another section is the one showing.
-    let showing: Bool
-    @Environment(AppModel.self) private var model
 
     var body: some View {
-        Group {
-            switch key {
-            case "play": PlaySettings()
-            case "downloads": DownloadSettings()
-            case "lyrics": LyricsSettings()
-            case "sharing": SharingSettings()
-            case "addons": AddonSettings()
-            case "deleted": DeletedItemsSettings()
-            default: ProfileSettingsTab()
+        switch key {
+        case "play": PlaySettings()
+        case "downloads": DownloadSettings()
+        case "lyrics": LyricsSettings()
+        case "sharing": SharingSettings()
+        case "addons": AddonSettings()
+        case "deleted": DeletedItemsSettings()
+        case "look":
+            Form { LayoutSettings() }
+                .formStyle(.grouped)
+                .scrollContentBackground(Theme.current.listBackground)
+        case "terms": LegalWords(parts: Legal.terms)
+        case "privacy": LegalWords(parts: Legal.privacy)
+        default: ProfileSettingsTab()
+        }
+    }
+}
+
+/// Settings → General → Terms of Use, and Privacy: the words, each under its heading.
+private struct LegalWords: View {
+    let parts: [Legal.Part]
+
+    var body: some View {
+        Form {
+            Section {
+                ForEach(parts, id: \.heading) { part in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(part.heading).font(.headline)
+                        Text(part.text)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .textSelection(.enabled)
+                    }
+                    .padding(.vertical, 4)
+                }
+                SideNote("Last changed \(Legal.dated).")
             }
         }
-        // A section come back to asks again what it asks when it first appears.
-        .onChange(of: showing) { _, now in
-            guard now else { return }
-            if key == "sharing" { model.loadSharing() }
-            if key == "downloads" { model.loadSettings() }
-            if key == "deleted" { model.loadRemoved() }
-        }
+        .formStyle(.grouped)
+        .scrollContentBackground(Theme.current.listBackground)
     }
 }
 
@@ -143,10 +288,10 @@ struct SideNote: View {
     }
 }
 
-/// Settings → Profile → App Layout, under the profile's accounts (moved there from a
-/// section of its own at the owner's word, 2026-10-07): the look the app is dressed in
-/// (owner, 2026-10-03). The look is put on when the app opens (`Theme`), so a new choice
-/// shows once it's been reopened. These are sections of the Profile page's form.
+/// Settings → General → App Layout (under Profile from 2026-10-07 until the owner's
+/// regrouping of 2026-10-12): the look the app is dressed in (owner, 2026-10-03). The
+/// look is put on when the app opens (`Theme`), so a new choice shows once it's been
+/// reopened. These are sections for a form.
 private struct LayoutSettings: View {
     @AppStorage(AppLook.key) private var saved = AppLook.native.rawValue
 
@@ -210,10 +355,23 @@ private struct PlaySettings: View {
     @AppStorage(CustomVisualizer.qualityKey) private var visualizerQuality =
         CustomVisualizer.standardQuality
     @AppStorage(PageChanges.key) private var changesLast = PageChanges.standard
+    @AppStorage(NextEpisode.key) private var playsNextEpisode = false
     @Environment(AppModel.self) private var model
 
     var body: some View {
         Form {
+            Section("Series") {
+                Toggle("Play the next episode when one ends", isOn: $playsNextEpisode)
+                SideNote(
+                    "On: when an episode ends, the next one starts by itself, in the same "
+                        + "quality from the same plugin. If that plugin doesn't have it in that "
+                        + "quality, it's played from the next plugin in your list that does; "
+                        + "and if none does, the episode's page opens for you to choose. "
+                        + "For an episode from a torrent, the next episode's torrent is joined "
+                        + "without a click from you: switching this on is your say-so for that. "
+                        + "Off: a film stays on its last frame when it ends, and nothing is "
+                        + "ever joined that you didn't click.")
+            }
             Section {
                 Picker("A change made on a page lasts", selection: $changesLast) {
                     ForEach(PageChanges.options, id: \.self) { minutes in
@@ -570,7 +728,6 @@ private struct ProfileSettingsTab: View {
                         + "because the service counts the computer, not the person.")
             }
             AccountSettings()
-            LayoutSettings()
         }
         .formStyle(.grouped)
         .scrollContentBackground(Theme.current.listBackground)
@@ -1129,7 +1286,7 @@ private struct AddonSettings: View {
     var body: some View {
         let addons = model.media.addons
         Form {
-            Section("Your Add-ons") {
+            Section("Your Plugins") {
                 if addons.isEmpty {
                     Text(model.media.problem ?? "Looking…").foregroundStyle(.secondary)
                 }
@@ -1137,10 +1294,10 @@ private struct AddonSettings: View {
                     row(addon, at: index, of: addons)
                 }
                 SideNote(
-                    "The order matters when two add-ons know the same film: its details "
+                    "The order matters when two plugins know the same film: its details "
                         + "come from the one nearer the top.")
             }
-            Section("Add an Add-on") {
+            Section("Add a Plugin") {
                 HStack {
                     TextField("Address", text: $address, prompt: Text("https://…/manifest.json"))
                         .labelsHidden()
@@ -1158,12 +1315,12 @@ private struct AddonSettings: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 SideNote(
-                    "Paste the address an add-on gives for itself. It ends in /manifest.json. "
-                        + "An add-on is made by someone else: what it lists and where it "
+                    "Paste the address a plugin gives for itself. It ends in /manifest.json. "
+                        + "A plugin is made by someone else: what it lists and where it "
                         + "sends you are its maker's doing, so add only ones you trust. "
-                        + "One add-on set up two ways has two addresses: add both, and each "
+                        + "One plugin set up two ways has two addresses: add both, and each "
                         + "is kept, the second with (2) after its name.")
-                Button("Put Back the App's Own Add-ons") { change("addon.restore") }
+                Button("Put Back the App's Own Plugins") { change("addon.restore") }
                     .disabled(working)
                     .help("Adds back any of the three the app started with that you've removed")
             }

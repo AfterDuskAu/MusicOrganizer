@@ -35,6 +35,9 @@ final class FilmPlayer {
     @ObservationIgnored private var looks = 0
     /// Hears where the film is (seconds, of how many) whenever that's noted.
     @ObservationIgnored var onPlace: ((Double, Double) -> Void)?
+    /// Hears that the film has played to its end: once for each film opened.
+    @ObservationIgnored var onEnded: (() -> Void)?
+    @ObservationIgnored private var ended = false
 
     var isOpen: Bool { title != nil }
     var soundTracks: [FilmTrack] { tracks.filter { $0.kind == .sound } }
@@ -47,7 +50,7 @@ final class FilmPlayer {
         close()
         self.title = title
         remembered = key ?? (address.isFileURL ? address.path : address.absoluteString)
-        (tracks, looks) = ([], 0)
+        (tracks, looks, ended) = ([], 0, false)
         (paused, time, duration, buffering, problem) = (false, 0, 0, true, nil)
         guard let made = mpv_create() else {
             problem = "The film player couldn't start."
@@ -200,6 +203,14 @@ final class FilmPlayer {
         if nothing != 0, duration == 0 {
             problem = "This film couldn't be opened."
             buffering = false
+        }
+        // The film has played to its end (it stays on its last frame: `keep-open`).
+        var atEnd: Int32 = 0
+        mpv_get_property(mpv, "eof-reached", MPV_FORMAT_FLAG, &atEnd)
+        if atEnd != 0, duration > 0, !ended {
+            ended = true
+            remember()
+            onEnded?()
         }
         // Once a second: its tracks (they arrive with the film). Every ten: where it is.
         looks += 1

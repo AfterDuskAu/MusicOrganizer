@@ -13,6 +13,7 @@ public enum Wording {
 
     /// One sentence in the app's words.
     public static func plain(_ text: String) -> String {
+        let text = plugins(text)
         guard text.contains("YouTube") else { return text }
         var words = text
         // At the start of the text or of a sentence it takes a capital.
@@ -24,6 +25,21 @@ public enum Wording {
         }
         words = words.replacingOccurrences(of: "YouTube Music", with: "the music service")
         return words.replacingOccurrences(of: "YouTube", with: "the service")
+    }
+
+    /// The owner's word for an add-on is "plugin" (2026-10-12: Settings → Plugins). The
+    /// engine, its API and the protocol they follow still say add-on, so the engine's
+    /// sentences are put into the app's word here.
+    static func plugins(_ text: String) -> String {
+        guard text.range(of: "add-on", options: .caseInsensitive) != nil else { return text }
+        var words = text
+        for (from, to) in [
+            ("An add-on", "A plugin"), ("an add-on", "a plugin"), ("Add-ons", "Plugins"),
+            ("add-ons", "plugins"), ("Add-on", "Plugin"), ("add-on", "plugin"),
+        ] {
+            words = words.replacingOccurrences(of: from, with: to)
+        }
+        return words
     }
 
     /// An engine answer with its sentences in the app's words, whatever its shape.

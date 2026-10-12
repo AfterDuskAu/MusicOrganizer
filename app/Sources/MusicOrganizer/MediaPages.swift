@@ -739,14 +739,14 @@ struct MovieFinderView: View {
                 } else if apart, media.loaded {
                     Message(
                         symbol: isAdult ? "eye.slash" : "sparkles.tv",
-                        title: isAdult ? "No add-on for adults yet" : "No list of anime yet",
+                        title: isAdult ? "No plugin for adults yet" : "No list of anime yet",
                         text: isAdult
                             ? "The app doesn't come with one. Add one by its address in Settings → "
-                                + "Add-ons: if it doesn't say itself that it's for adults only, "
+                                + "Plugins: if it doesn't say itself that it's for adults only, "
                                 + "mark it there. Its lists show up here and nowhere else: not on "
                                 + "Home, not in the other Finders, and never in a child's profile."
-                            : "None of your add-ons lists anime. Add one that does in Settings → "
-                                + "Add-ons, and its lists show up here."
+                            : "None of your plugins lists anime. Add one that does in Settings → "
+                                + "Plugins, and its lists show up here."
                     ) {
                         OpenSettings { Text("Open Settings…") }
                             .simultaneousGesture(
@@ -827,12 +827,7 @@ struct MovieView: View {
     private var playName: String { episode?.name(in: film.name) ?? film.name }
     /// What Home remembers of it once it's played: the film, or the series with the
     /// episode it has got to.
-    private var watched: WatchHistory.Entry {
-        let about = episode.map { [$0.number, $0.title].compactMap { $0 }.joined(separator: " · ") }
-        return WatchHistory.Entry(
-            id: film.id, kind: isSeries ? .series : .movie, name: film.name, detail: about,
-            picture: film.poster, item: film)
-    }
+    private var watched: WatchHistory.Entry { .watching(film, episode: episode) }
 
     var body: some View {
         // The page is the size of the room it's given. The film's picture is laid over a
@@ -899,6 +894,7 @@ struct MovieView: View {
         .clipped()
         .foregroundStyle(.white)
         .environment(\.colorScheme, .dark)
+        .onChange(of: model.episodeToChoose) { showAskedEpisode() }
         .task(id: film.id) {
             // `adult`: which side of the fence answers. A title from the Finder for
             // adults is asked of those add-ons only, and any other title never of them.
@@ -912,6 +908,7 @@ struct MovieView: View {
                 // A series is played an episode at a time: the first season shows, and
                 // an episode's ways to play are asked for when it's clicked.
                 season = details?.seasons.first
+                showAskedEpisode()
             } else {
                 streams = try? await model.ask("addon.streams", asked, as: StreamsAnswer.self)
             }
@@ -970,6 +967,17 @@ struct MovieView: View {
         }
     }
 
+    /// The next episode couldn't be played by itself the way the last one was: its ways
+    /// to play are shown here, for the owner to choose (`AppModel.playEpisode(after:)`).
+    private func showAskedEpisode() {
+        guard let asked = model.episodeToChoose, asked.series == film.id,
+            let one = details?.videos.first(where: { $0.id == asked.episode })
+        else { return }
+        model.episodeToChoose = nil
+        season = one.season ?? season
+        choose(one)
+    }
+
     /// Show where an episode can be played from.
     private func choose(_ one: MediaDetails.Video) {
         guard episode != one else { return }
@@ -989,9 +997,9 @@ struct MovieView: View {
                 if streams.sources.isEmpty {
                     Text(
                         isSeries
-                            ? "None of your add-ons has this episode to play. The ones the app "
+                            ? "None of your plugins has this episode to play. The ones the app "
                                 + "starts with have details of series, but only movies to play."
-                            : "None of your add-ons has this film to play.")
+                            : "None of your plugins has this film to play.")
                         .foregroundStyle(.secondary)
                 }
                 // One bar a way to play, as the owner drew it (2026-10-11): where it's from,
@@ -1026,7 +1034,16 @@ struct MovieView: View {
                                 .frame(width: WayToPlayColumns.swarm, alignment: .leading)
                             Spacer(minLength: 0)
                             Button("Play", systemImage: "play.fill") {
-                                model.play(stream, title: playName, watching: apart ? nil : watched)
+                                // An episode says which it is and how it was chosen, so
+                                // the next one can follow it (Settings → Player).
+                                let now = episode.map {
+                                    AppModel.EpisodeNow(
+                                        series: film, episodeId: $0.id,
+                                        played: NextEpisode.Played(addonId: way.addonId, quality: stream.quality),
+                                        apart: apart, episodes: details?.videos)
+                                }
+                                model.play(
+                                    stream, title: playName, watching: apart ? nil : watched, episode: now)
                             }
                             .disabled(!stream.canPlay)
                             .help(stream.canPlay ? "Play it now" : "This one can't be played in the app yet")
@@ -1070,9 +1087,9 @@ struct MovieView: View {
                     .buttonStyle(.link)
                     .help(
                         showsAllWays
-                            ? "Back to three of each quality, from the add-ons highest in your list"
-                            : "Three of each quality are shown, from the add-ons highest in your "
-                                + "list (Settings → Add-ons). This shows every one")
+                            ? "Back to three of each quality, from the plugins highest in your list"
+                            : "Three of each quality are shown, from the plugins highest in your "
+                                + "list (Settings → Plugins). This shows every one")
                 }
                 ForEach(streams.problems, id: \.self) { problem in
                     Text("\(problem.addon): \(problem.message)").foregroundStyle(.secondary)
@@ -1080,7 +1097,7 @@ struct MovieView: View {
                 if streams.sources.contains(where: { $0.streams.contains { $0.kind == "torrent" } }) {
                     Text(
                         "A torrent shares the parts it has fetched with others while it's "
-                            + "arriving, and after that as much as Settings → Downloads allows. "
+                            + "arriving, and after that as much as Settings → Plugins → Downloads allows. "
                             + "What's fetched is kept for a day after you last played it, then deleted."
                     )
                     .font(.callout)

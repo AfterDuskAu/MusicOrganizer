@@ -114,9 +114,9 @@ struct PlayerBar: View {
                     ?? PageChanges.standard
                 return "Lyrics are \(state) for now. The page goes back to your setting "
                     + "\(PageChanges.goesBack(minutes)); click to go back now. The setting "
-                    + "itself is in Settings → Play Options."
+                    + "itself is in Settings → Player."
             }
-            return "Lyrics are \(state) on this page, as set in Settings → Play Options. Click "
+            return "Lyrics are \(state) on this page, as set in Settings → Player. Click "
                 + "to switch them \(showLyrics ? "off" : "on") for now."
         }
         return showLyrics

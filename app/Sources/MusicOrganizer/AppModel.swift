@@ -214,6 +214,15 @@ final class AppModel {
     /// open: set by a click on Home, taken by the page when it shows.
     var channelToOpen: ChannelRef?
     var filmToOpen: MediaItem?
+    /// An episode whose ways to play its series' page is to show: the next one, when it
+    /// couldn't be played by itself the way the last one was (`playEpisode(after:)`).
+    struct EpisodeAsk: Equatable {
+        let series: String
+        let episode: String
+    }
+    var episodeToChoose: EpisodeAsk?
+    @ObservationIgnored private var episodeNow: EpisodeNow?
+    @ObservationIgnored private var episodeToBe: EpisodeNow?
     /// The film or episode in the film player, as the history knows it.
     @ObservationIgnored private var watchingFilm: String?
 
@@ -252,7 +261,14 @@ final class AppModel {
     func resume(_ entry: WatchHistory.Entry) {
         if entry.kind != .video {
             if let stream = entry.stream, stream.canPlay {
-                play(stream, title: entry.playName ?? entry.name, watching: entry)
+                // An episode played again leads on to the one after it, as from its page.
+                var episode: EpisodeNow?
+                if entry.kind == .series, let item = entry.item, let id = entry.episodeId, let source = entry.source {
+                    episode = EpisodeNow(
+                        series: item, episodeId: id,
+                        played: NextEpisode.Played(addonId: source, quality: stream.quality))
+                }
+                play(stream, title: entry.playName ?? entry.name, watching: entry, episode: episode)
             } else if let item = entry.item {
                 open(item)
             }
@@ -428,6 +444,7 @@ final class AppModel {
             self.history.place(id, seconds: seconds, length: length)
             self.history.save()
         }
+        film.onEnded = { [weak self] in self?.filmEnded() }
         Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.notePlace() }
         }
@@ -749,7 +766,71 @@ final class AppModel {
     func playFilm(_ address: URL, title: String, key: String? = nil) {
         if player.isPlaying { player.toggle() }
         film.open(address, title: title, key: key)
+        // An episode of a series, or (a file, a film) nothing that leads to another.
+        (episodeNow, episodeToBe) = (episodeToBe, nil)
         tidyFullScreenTopBar()
+    }
+
+    // MARK: the next episode
+
+    /// The episode of a series that's playing: enough to play the one after it.
+    struct EpisodeNow {
+        let series: MediaItem
+        let episodeId: String
+        /// The way the owner chose: the add-on and the quality the next one is to match.
+        let played: NextEpisode.Played
+        /// From the Finder that's kept apart: its add-ons are asked, and nothing of it
+        /// is remembered.
+        var apart = false
+        /// The series' episodes, when its page had them. Asked for otherwise.
+        var episodes: [MediaDetails.Video]?
+    }
+
+    /// A film played to its end. With Settings → Player's switch on, and the film an
+    /// episode of a series, the next episode is played (`NextEpisode` has the owner's
+    /// rule for how). With the switch off nothing happens: the film stays on its last
+    /// frame, as it always did.
+    private func filmEnded() {
+        guard UserDefaults.standard.bool(forKey: NextEpisode.key), let now = episodeNow else { return }
+        Task { await playEpisode(after: now) }
+    }
+
+    private func playEpisode(after now: EpisodeNow) async {
+        let type = now.series.type
+        var episodes = now.episodes
+        if episodes == nil {
+            episodes = (try? await ask(
+                "addon.details", ["type": type, "id": now.series.id, "adult": now.apart], as: MediaDetails.self))?
+                .videos
+        }
+        let today = ISO8601DateFormatter().string(from: Date()).prefix(10)
+        // After the last episode, or with the next one not out yet, nothing follows.
+        guard let episodes, let next = NextEpisode.after(now.episodeId, in: episodes, today: String(today))
+        else { return }
+        let found = try? await ask(
+            "addon.streams", ["type": type, "id": next.id, "adult": now.apart], as: StreamsAnswer.self)
+        // Only if that episode is still there at its end: the owner may have shut it,
+        // or started something else, while the next one was looked for.
+        guard film.isOpen, episodeNow?.episodeId == now.episodeId else { return }
+        guard let found, let way = NextEpisode.way(in: found, like: now.played) else {
+            // Not to be had the way the last one was played: the owner is asked, on
+            // the episode's own page.
+            closeFilm()
+            episodeToChoose = EpisodeAsk(series: now.series.id, episode: next.id)
+            if !now.apart { open(now.series) }
+            return
+        }
+        // A torrent that isn't the next episode's too is left before the next is joined.
+        if let old = filmTorrent, old.lowercased() != way.stream.infoHash?.lowercased() {
+            (filmTorrent, filmStatus) = (nil, nil)
+            _ = try? await ask("torrent.stop", ["info_hash": old], as: Empty.self)
+        }
+        play(
+            way.stream, title: next.name(in: now.series.name),
+            watching: now.apart ? nil : .watching(now.series, episode: next),
+            episode: EpisodeNow(
+                series: now.series, episodeId: next.id, played: now.played, apart: now.apart,
+                episodes: episodes))
     }
 
     /// In macOS's full screen, a window's top bar is drawn by a small window of its own
@@ -824,14 +905,21 @@ final class AppModel {
 
     /// Play one of a film's streams: a web address or a torrent in the film player, a
     /// video by its id in the app's own player.
-    func play(_ stream: MediaStream, title: String, watching entry: WatchHistory.Entry? = nil) {
+    func play(
+        _ stream: MediaStream, title: String, watching entry: WatchHistory.Entry? = nil,
+        episode: EpisodeNow? = nil
+    ) {
         // Remembered as watched, when it's a film or an episode from its page: with the
         // way it was played, so Home's Continue Watching can play it again.
         if var entry, stream.kind == "url" || stream.kind == "torrent" {
             (entry.stream, entry.playName) = (stream, title)
+            (entry.episodeId, entry.source) = (episode?.episodeId, episode?.played.addonId)
             watching(entry)
             watchingFilm = entry.id
         }
+        // The episode this is, for playing the one after it when it ends. Taken up when
+        // the film opens (a torrent's opens a moment later).
+        episodeToBe = episode
         switch stream.kind {
         case "url":
             if let url = stream.url.flatMap(URL.init(string:)) { playFilm(url, title: title) }
@@ -1041,6 +1129,7 @@ final class AppModel {
     func closeFilm() {
         film.close()
         watchingFilm = nil
+        (episodeNow, episodeToBe) = (nil, nil)
         tidyFullScreenTopBar()
         if let hash = filmTorrent {
             (filmTorrent, filmStatus) = (nil, nil)

@@ -34,8 +34,9 @@ import AppKit
 ///   this far, and how long it is written out
 /// - `size=<w>x<h>`: the window dragged to this size in twelve steps, and how long a
 ///   step took written out
-/// - `settings=<section>`: this section of Settings chosen ("profile", "play", "downloads",
-///   "lyrics", "addons", "sharing"), with the Settings page showing
+/// - `settings=<part>`: the Settings page gone to this group ("profile", "player", "plugins",
+///   "sync", "general") or part of one ("play", "downloads", "lyrics", "addons", "sharing",
+///   "deleted", "look", "terms", "privacy"), with the Settings page showing
 /// - `flip=<key>`: a yes-or-no setting switched over, by its saved name
 /// - `fullscreen`: the window sent into macOS's full screen, or brought out of it, as the
 ///   green button does it (only a copy that's seen can: it takes the whole screen)

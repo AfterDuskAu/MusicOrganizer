@@ -153,7 +153,7 @@ struct FullScreenPicture: View {
             .help(
                 model.lyrics.settled
                     ? "Lyrics beside the \(picture): \(lyricsShown ? "on" : "off"). Click to "
-                        + "switch them for now; your setting is in Settings → Play Options."
+                        + "switch them for now; your setting is in Settings → Player."
                     : "This song has no lyrics to show")
             Button {
                 model.setPictureFullScreen(false)

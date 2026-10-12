@@ -186,6 +186,11 @@ public struct WatchHistory: Equatable, Sendable {
         /// which is played by its id, and for one watched before this was remembered.
         public var stream: MediaStream?
         public var playName: String?
+        /// A series' episode that was played, and the add-on whose way to play it was:
+        /// what's needed to play the one after it by itself (`NextEpisode`). Nil for
+        /// anything else, and for one watched before this was remembered.
+        public var episodeId: String?
+        public var source: String?
 
         public init(
             id: String, kind: Kind, name: String, detail: String? = nil, picture: String? = nil,
@@ -195,6 +200,15 @@ public struct WatchHistory: Equatable, Sendable {
             (self.id, self.kind, self.name, self.detail, self.picture) = (id, kind, name, detail, picture)
             (self.channelId, self.item, self.seconds, self.length, self.at) =
                 (channelId, item, seconds, length, at)
+        }
+
+        /// What's remembered when a film, or an episode of a series, is played from its
+        /// page: the film, or the series with the episode it has got to.
+        public static func watching(_ item: MediaItem, episode: MediaDetails.Video? = nil) -> Entry {
+            let about = episode.map { [$0.number, $0.title].compactMap { $0 }.joined(separator: " · ") }
+            return Entry(
+                id: item.id, kind: item.type == "series" ? .series : .movie, name: item.name, detail: about,
+                picture: item.poster, item: item)
         }
 
         /// Part way through: begun, and not in its last stretch.

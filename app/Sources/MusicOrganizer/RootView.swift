@@ -431,7 +431,7 @@ struct MainView: View {
         } message: {
             Text(
                 "Only the list goes. The songs stay in your library. "
-                    + "Settings → Deleted Items can put the playlist back.")
+                    + "Settings → Profile → Deleted Items can put the playlist back.")
         }
     }
 
@@ -887,7 +887,7 @@ struct PageView: View {
             SongList(
                 source: .videos, title: "Videos",
                 empty: model.keepDownloadsSeparate
-                    ? "Saved videos are under Discover → Downloads. Settings → Downloads "
+                    ? "Saved videos are under Discover → Downloads. Settings → Plugins → Downloads "
                         + "(All Library) lists them here instead."
                     : "Videos you save show up here. Play a song on the Local Visualizer, "
                         + "switch to Video, and click Save Video.",
@@ -907,7 +907,7 @@ struct PageView: View {
                 DownloadsByGenre()
             }
         case .settings:
-            SettingsView()
+            SettingsView(isActive: active)
         case .musicExplore:
             MusicFinderView()  // no row leads here any more: the same page as Music Finder
         case .videoExplore:

@@ -72,7 +72,7 @@ struct DownloadsByGenre: View {
                             + "move some in, pick them (⌘-click or Shift-click for several), then "
                             + "drag them onto Library in the sidebar, or right-click → Move to Library."
                         : "Downloaded songs are also in your main library, and videos under "
-                            + "Library → Videos (Settings → Downloads)."
+                            + "Library → Videos (Settings → Plugins → Downloads)."
                 )
                 .font(.callout)
                 .foregroundStyle(.secondary)
