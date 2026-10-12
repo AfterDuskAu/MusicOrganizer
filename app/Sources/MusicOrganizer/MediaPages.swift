@@ -301,9 +301,7 @@ struct ChannelView: View {
         let followed = model.followedChannels.contains { $0.channelId == channel.channelId }
         VStack(spacing: 0) {
             HStack(spacing: 14) {
-                Button("Back", systemImage: "chevron.left", action: back)
-                    .labelStyle(.iconOnly)
-                    .help("Back")
+                BackButton(action: back)
                 WebPicture(
                     address: WebPictures.sized(page?.thumbnail ?? channel.thumbnail, points: 56),
                     symbol: "play.tv"
@@ -843,11 +841,7 @@ struct MovieView: View {
         ZStack(alignment: .topLeading) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    Button("Back", systemImage: "chevron.left", action: back)
-                        .labelStyle(.iconOnly)
-                        .buttonStyle(.plain)
-                        .font(.title2)
-                        .help("Back to the films")
+                    BackButton(help: "Back to the list", action: back)
                     HStack(alignment: .firstTextBaseline, spacing: 16) {
                         Text(film.name).font(.system(size: 40, weight: .bold)).heading()
                         let loved = model.mediaFavourites.contains(film)

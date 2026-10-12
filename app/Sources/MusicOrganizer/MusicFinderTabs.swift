@@ -147,11 +147,7 @@ struct FoundPlaylistPage: View {
         let results = songs.map(\.result)
         VStack(spacing: 0) {
             HStack(spacing: 12) {
-                Button("Back", systemImage: "chevron.left") { model.closePlaylist() }
-                    .labelStyle(.iconOnly)
-                    .buttonStyle(.plain)
-                    .font(.title3)
-                    .help("Back to the playlists")
+                BackButton(help: "Back to the playlists") { model.closePlaylist() }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(playlist.title).font(.title2.weight(.semibold)).heading().lineLimit(1)
                     Text(about(songs.count)).foregroundStyle(.secondary).lineLimit(1)
