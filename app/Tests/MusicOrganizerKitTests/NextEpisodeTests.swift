@@ -91,3 +91,21 @@ final class NextEpisodeTests: XCTestCase {
         XCTAssertNotNil(way)
     }
 }
+
+final class SoundCloudTests: XCTestCase {
+    func testASoundCloudTrackIsToldByItsId() {
+        XCTAssertTrue(SearchResult(videoId: "sc:1407352849", title: "A Loop", artists: ["Someone"]).isSoundCloud)
+        XCTAssertFalse(SearchResult(videoId: "dQw4w9WgXcQ", title: "A Song", artists: ["Someone"]).isSoundCloud)
+    }
+
+    func testTheSearchLooksAtTheMusicServiceUnlessSoundCloudIsChosen() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "soundcloud-test-\(UUID().uuidString)"))
+        XCTAssertEqual(MusicSearchSource.saved(in: defaults), .service)
+        defaults.set("soundcloud", forKey: MusicSearchSource.key)
+        XCTAssertEqual(MusicSearchSource.saved(in: defaults), .soundCloud)
+        defaults.set("somewhere else", forKey: MusicSearchSource.key)
+        XCTAssertEqual(MusicSearchSource.saved(in: defaults), .service)
+        // The music service is never named on screen; SoundCloud is its own name.
+        XCTAssertEqual(MusicSearchSource.allCases.map(\.title), ["Music Service", "SoundCloud"])
+    }
+}

@@ -8,6 +8,7 @@ struct MusicFinderView: View {
     @Environment(AppModel.self) private var model
     @AppStorage(MusicFinderTab.key) private var tabName = ""
     @AppStorage("musicExploreFind") private var showedFind = false
+    @AppStorage(MusicSearchSource.key) private var source = MusicSearchSource.service.rawValue
 
     private var tab: MusicFinderTab { MusicFinderTab(saved: tabName, showedFind: showedFind) }
     /// A search is on the page: its results, its problem, or the wait for them.
@@ -39,6 +40,16 @@ struct MusicFinderView: View {
                     .textFieldStyle(.plain)
                     .font(.title3)
                     .onSubmit { model.searchYouTube() }
+                // Where the search looks. Changed with a search on the page, it's run
+                // again there.
+                Picker("Search", selection: $source) {
+                    ForEach(MusicSearchSource.allCases) { Text($0.title).tag($0.rawValue) }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .fixedSize()
+                .help("Where to search: the music service, or SoundCloud")
+                .onChange(of: source) { model.searchAgain() }
                 if model.youtubeSearching {
                     ProgressView().controlSize(.small)
                 } else {
@@ -156,7 +167,7 @@ struct ResultRow: View {
                 }
             }
             .buttonStyle(.plain)
-            .help("Play from the music service")
+            .help(result.isSoundCloud ? "Play from SoundCloud" : "Play from the music service")
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(result.title).fontWeight(playing ? .semibold : .regular).lineLimit(1)
@@ -176,9 +187,11 @@ struct ResultRow: View {
                     .font(.callout)
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
-                    .help("Played \(plays) times on the music service")
+                    .help("Played \(plays) times on \(result.isSoundCloud ? "SoundCloud" : "the music service")")
             }
-            if artistButton, let artist = result.artists.first {
+            // Not for a SoundCloud track: who uploaded it isn't an artist the Artist
+            // page (the music service's) would know.
+            if artistButton, !result.isSoundCloud, let artist = result.artists.first {
                 Button {
                     model.showArtist(artist)
                 } label: {

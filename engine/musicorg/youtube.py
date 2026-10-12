@@ -211,8 +211,12 @@ def search_songs(
 
 
 def get_track(video_id: str) -> Candidate | None:
-    """One track by its videoId, or None if YouTube Music doesn't have it."""
+    """One track by its videoId, or None if YouTube Music doesn't have it. (It never has
+    a SoundCloud track, and isn't asked about one.)"""
     from ytmusicapi.exceptions import YTMusicServerError
+
+    if is_soundcloud(video_id):
+        return None
 
     try:
         raw = _fetch(
@@ -923,7 +927,9 @@ def get_lyrics(video_id: str, *, cache: SearchCache | None = None) -> TrackLyric
     Checked against ytmusicapi 1.12.3: `get_watch_playlist()["lyrics"]` is a browseId
     starting "MPLYt", and `get_lyrics(browseId, timestamps=True)` gives `hasTimestamps`,
     `source` and `lyrics` (text, or LyricLine objects with `text`, `start_time`,
-    `end_time` in milliseconds)."""
+    `end_time` in milliseconds). A SoundCloud track has none here, and isn't asked about."""
+    if is_soundcloud(video_id):
+        return None
     key = f"lyrics {video_id}"
     raw = None if cache is None else cache.cached_search(key, max_age_days=SEARCH_CACHE_DAYS)
     if raw is None:
@@ -1127,8 +1133,14 @@ def download_audio(
     Raises YouTubeRefusedError (the queue pauses), VideoUnavailableError (only this job),
     FormatUnavailableError (format 140 not offered), or DownloadError (`network` set for
     network-level failures). Goes through the shared rate limiter.
+
+    A SoundCloud track (`sc:<number>`, 2026-10-12) comes as SoundCloud has it and is
+    left in `dest_dir` as AAC in M4A, the library's one format: see `soundcloud_options`.
     """
-    return _download(video_id, Path(dest_dir), download_options(Path(dest_dir), progress))
+    opts = download_options(Path(dest_dir), progress)
+    if is_soundcloud(video_id):
+        opts.update(soundcloud_options())
+    return _download(video_id, Path(dest_dir), opts)
 
 
 def download_video(
@@ -1176,11 +1188,9 @@ def download_video(
 
 
 def _download(video_id: str, dest: Path, opts: dict[str, Any]) -> tuple[Path, dict[str, Any]]:
-    if not VIDEO_ID.fullmatch(video_id):
-        raise YouTubeError(f"{video_id!r} isn't a YouTube video id.")
+    url = _address(video_id)
     if not dest.is_dir() or STAGING_DIR not in dest.parts:
         raise ValueError(f"{dest} isn't a folder in _Staging (use fileops.stage_dir)")
-    url = f"https://www.youtube.com/watch?v={video_id}"
 
     def run() -> Any:
         with _make_ydl(opts) as ydl:
@@ -1194,7 +1204,8 @@ def _download(video_id: str, dest: Path, opts: dict[str, Any]) -> tuple[Path, di
         raise download_problem(video_id, exc) from exc
     if not isinstance(info, dict):
         raise DownloadError(f"The download of {video_id} gave an answer we can't read.")
-    return _downloaded_file(info, dest, video_id), info
+    # The file is named by the id alone (a SoundCloud track's number, without "sc:").
+    return _downloaded_file(info, dest, video_id.removeprefix(SOUNDCLOUD_PREFIX)), info
 
 
 def download_options(dest: Path, progress: ProgressHook | None = None) -> dict[str, Any]:
@@ -1290,6 +1301,8 @@ def stream(video_id: str, *, fresh: bool = False) -> Stream:
 
     A long video's sound is given as its segmented (HLS) sound instead: see `video`."""
     info = _looked_up(video_id, fresh=fresh, first=True)
+    if is_soundcloud(video_id):
+        return _audio_of(video_id, info)
     long = _segmented(video_id, info)
     return long.audio if long is not None else _audio_of(video_id, info)
 
@@ -1643,12 +1656,11 @@ def _is_playable_picture(found: dict[str, Any]) -> bool:
 def _look_up(video_id: str, *, first: bool = False) -> dict[str, Any]:
     """What YouTube says about a video right now (yt-dlp, nothing downloaded). `first`:
     someone is waiting to hear or see it, so it takes the rate limiter's next turn."""
-    if not VIDEO_ID.fullmatch(video_id):
-        raise YouTubeError(f"{video_id!r} isn't a YouTube video id.")
-    url = f"https://www.youtube.com/watch?v={video_id}"
+    url = _address(video_id)
+    sound = SOUNDCLOUD_PLAY if is_soundcloud(video_id) else ORIGINAL_SOUND
 
     def run() -> Any:
-        with _make_ydl({**_base_options(), "format": ORIGINAL_SOUND}) as ydl:
+        with _make_ydl({**_base_options(), "format": sound}) as ydl:
             return ydl.extract_info(url, download=False)
 
     try:
@@ -1735,7 +1747,7 @@ def _audio_of(video_id: str, info: dict[str, Any]) -> Stream:
     address = info.get("url")
     if not isinstance(address, str) or not address.startswith("https://"):
         raise DownloadError(f"YouTube gave no address to play {video_id} from.")
-    if not is_format_140(info.get("format_id")):
+    if not is_soundcloud(video_id) and not is_format_140(info.get("format_id")):
         raise FormatUnavailableError(f"YouTube doesn't offer {video_id} in the format we play.")
     headers = info.get("http_headers")
     likes = info.get("like_count")
@@ -1749,6 +1761,149 @@ def _audio_of(video_id: str, info: dict[str, Any]) -> Stream:
         if isinstance(likes, int) and not isinstance(likes, bool) and likes >= 0
         else None,
     )
+
+
+# ---- SoundCloud, the second place music comes from (the owner, 2026-10-12) ---------------
+#
+# yt-dlp reads SoundCloud as it reads YouTube (checked against 2026.09.27 on that day: a
+# search by `scsearchN:`, a track by `api.soundcloud.com/tracks/<number>`), so it comes
+# through this one gate and its limiter, with nothing new installed. A SoundCloud track's
+# id here is "sc:" and its number, and wherever a video's id is taken (`stream`,
+# `download_audio`, a download plan) one of those is taken too.
+
+SOUNDCLOUD_PREFIX = "sc:"
+SOUNDCLOUD_ID = re.compile(r"sc:[0-9]{1,20}")
+# What's downloaded, best first: SoundCloud's own AAC where it has one, else its MP3.
+# (Most tracks are offered as 128 kbps MP3 only; its "original file" needs a sign-in,
+# and isn't taken.)
+SOUNDCLOUD_SOUND = (
+    "bestaudio[acodec^=mp4a]/bestaudio[acodec=aac]/"
+    "bestaudio[acodec=mp3][protocol^=http]/bestaudio[acodec=mp3]"
+)
+# What's played: one file a player can read part by part (the MP3 over plain https), else
+# whatever there is.
+SOUNDCLOUD_PLAY = "bestaudio[acodec=mp3][protocol^=http]/bestaudio[protocol^=http]/bestaudio"
+# An MP3 made into AAC is given a little more room than it had, so less is lost twice.
+SOUNDCLOUD_KBPS = 160
+SOUNDCLOUD_MOST = 50
+
+
+def is_soundcloud(video_id: object) -> bool:
+    """Whether this id is a SoundCloud track's ("sc:" and its number)."""
+    return isinstance(video_id, str) and SOUNDCLOUD_ID.fullmatch(video_id) is not None
+
+
+def _address(video_id: str) -> str:
+    """Where yt-dlp finds a video, or a SoundCloud track, by its id."""
+    if is_soundcloud(video_id):
+        return f"https://api.soundcloud.com/tracks/{video_id.removeprefix(SOUNDCLOUD_PREFIX)}"
+    if not isinstance(video_id, str) or not VIDEO_ID.fullmatch(video_id):
+        raise YouTubeError(f"{video_id!r} isn't a YouTube video id.")
+    return f"https://www.youtube.com/watch?v={video_id}"
+
+
+def soundcloud_options() -> dict[str, Any]:
+    """What a SoundCloud download adds to `download_options`: its sound as SoundCloud
+    has it, then **made into AAC in M4A, the one format the library keeps** (the owner,
+    2026-10-12: "provide a converter so all songs end up as the same format"; contract
+    rule 6's exception). yt-dlp does it itself with ffmpeg, in the staging folder it was
+    given and nowhere else: SoundCloud's own AAC is only repackaged, untouched; an MP3 is
+    converted, which can't add anything to it and loses a little, and is the price of
+    one format."""
+    return {
+        "format": SOUNDCLOUD_SOUND,
+        "postprocessors": [
+            {
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "m4a",
+                "preferredquality": str(SOUNDCLOUD_KBPS),
+            }
+        ],
+    }
+
+
+def soundcloud_search(query: str, limit: int = 25) -> list[Candidate]:
+    """Tracks SoundCloud finds for these words, best first, in the Candidate shape: the
+    id is "sc:" and the track's number, the artist is who uploaded it (SoundCloud has
+    no other), and there's no album and no explicit mark."""
+    words = " ".join(query.split())
+    if not words:
+        raise YouTubeError("Type something to search for first.")
+    limit = max(1, min(limit, SOUNDCLOUD_MOST))
+    raw = _flat("soundcloud-search", f"{limit} {words}", f"scsearch{limit}:{words}", limit)
+    return [c for c in (_soundcloud_candidate(e) for e in _entries(raw)) if c is not None]
+
+
+def soundcloud_track(video_id: str) -> Candidate | None:
+    """One SoundCloud track by its id, as `soundcloud_search` would give it; None if
+    SoundCloud doesn't have it any more."""
+    try:
+        return _soundcloud_candidate(_looked_up(video_id))
+    except VideoUnavailableError:
+        return None
+
+
+def _soundcloud_candidate(entry: Any) -> Candidate | None:
+    if not isinstance(entry, dict):
+        return None
+    number, title = str(entry.get("id") or ""), entry.get("title")
+    if not number.isdigit() or not isinstance(title, str) or not title.strip():
+        return None  # a playlist or a person among a search's results
+    uploader, duration = entry.get("uploader"), entry.get("duration")
+    plays = entry.get("view_count")
+    stamp = entry.get("timestamp")
+    pictures = [
+        p for p in entry.get("thumbnails") or []
+        if isinstance(p, dict) and isinstance(p.get("url"), str) and p["url"].startswith("https://")
+    ]  # fmt: skip
+    # The 500-pixel square is the largest SoundCloud makes besides the original file.
+    best = max(
+        pictures,
+        key=lambda p: (p.get("id") == "t500x500", min(int(p.get("width") or 0), 500)),
+        default=None,
+    )
+    return Candidate(
+        video_id=f"{SOUNDCLOUD_PREFIX}{number}",
+        title=" ".join(title.split()),
+        artists=(uploader.strip(),) if isinstance(uploader, str) and uploader.strip() else (),
+        duration_s=round(duration) if isinstance(duration, int | float) else None,
+        year=datetime.fromtimestamp(stamp, UTC).strftime("%Y")
+        if isinstance(stamp, int | float) and not isinstance(stamp, bool)
+        else None,
+        thumbnail=best["url"] if best is not None else None,
+        plays=_count(plays) if isinstance(plays, int) and not isinstance(plays, bool) else None,
+    )
+
+
+def _count(number: int) -> str:
+    """A count as the music service writes its own: 738, 1.7K, 24M."""
+    for size, letter in ((1_000_000_000, "B"), (1_000_000, "M"), (1_000, "K")):
+        if number >= size:
+            short = number / size
+            if short >= 10:
+                return f"{short:.0f}{letter}"
+            return f"{short:.1f}".rstrip("0").rstrip(".") + letter
+    return str(number)
+
+
+def _soundcloud_problem(low: str, detail: str) -> Exception:
+    """The engine's error for what yt-dlp raised about a SoundCloud track. Nothing here
+    pauses the queue: SoundCloud turning one request away says nothing of YouTube."""
+    if any(s in low for s in ("404", "not found", "unable to find", "unavailable", "your country",
+                              "geo restrict", "private", "removed")):  # fmt: skip
+        return VideoUnavailableError(
+            "SoundCloud doesn't have that track any more, or not for this country."
+        )
+    if any(s in low for s in _FORMAT):
+        return FormatUnavailableError(
+            "SoundCloud doesn't offer that track as sound the app can take (its own AAC or "
+            "MP3). Nothing else is used."
+        )
+    if any(s in low for s in _EMPTY):
+        return DownloadError("The download from SoundCloud came back empty.")
+    if any(s in low for s in (*_NETWORK, *_REFUSED)):
+        return DownloadError(f"SoundCloud couldn't be reached just now: {detail}", network=True)
+    return DownloadError(f"The download from SoundCloud didn't work: {detail}")
 
 
 # ---- a video's captions and sound, for timing lyrics to it (v0.2) ------------------------
@@ -1888,6 +2043,8 @@ def download_problem(video_id: str, exc: BaseException) -> Exception:
     text = str(exc)
     low = text.lower()
     detail = _short_detail(text)
+    if is_soundcloud(video_id):
+        return _soundcloud_problem(low, detail)
     if any(s in low for s in _REFUSED):
         return YouTubeRefusedError(
             "YouTube asked us to slow down (it wants to check we're not a bot), so downloads "

@@ -57,7 +57,7 @@ public struct Track: Decodable, Identifiable, Hashable, Sendable {
     /// Copied in under its own name, still waiting to be identified.
     public var isUnconfirmed: Bool { match == "unconfirmed" }
     /// Downloaded from YouTube Music because the owner asked for it (no rip behind it).
-    public var isDownload: Bool { source == "youtube_music" && match == nil }
+    public var isDownload: Bool { (source == "youtube_music" || source == "soundcloud") && match == nil }
     /// A video saved in the library: it plays with its picture, and has its own list.
     public var isVideo: Bool { video == true }
 
@@ -157,6 +157,10 @@ public struct SearchResult: Codable, Identifiable, Hashable, Sendable {
     }
 
     public var id: String { videoId }
+
+    /// Found on SoundCloud, not on the music service (2026-10-12): its id is "sc:" and
+    /// SoundCloud's own number, and the engine takes it wherever it takes a video's id.
+    public var isSoundCloud: Bool { videoId.hasPrefix("sc:") }
 
     /// The result as a song the player can play, straight from YouTube Music.
     public var track: Track {

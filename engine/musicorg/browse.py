@@ -234,7 +234,7 @@ def artist_genre(index: Index, artists: tuple[str, ...] | list[str]) -> str | No
         return None
     found: Counter[str] = Counter()
     for row in index.library_tracks():
-        if row["source"] == "youtube_music" and row.get("match") is None:
+        if row["source"] in tags.DOWNLOAD_SOURCES and row.get("match") is None:
             continue  # a download
         credit = f" {artist_key(row.get('artist') or '')} "
         if not any(f" {key} " in credit for key in wanted):

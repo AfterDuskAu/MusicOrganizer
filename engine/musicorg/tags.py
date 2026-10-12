@@ -69,7 +69,11 @@ WRITABLE_SUFFIXES = frozenset({".m4a", ".mp4", ".mp3", ".flac", ".ogg", ".opus"}
 NOT_ADOPTED_SUFFIXES = frozenset({".webm", ".aac", ".wav"})
 
 # docs/ENGINE_API.md → Enums.
-SOURCES = frozenset({"youtube_music", "youtube", "rip_copy", "bandcamp", "cd", "itunes", "other"})
+SOURCES = frozenset(
+    {"youtube_music", "soundcloud", "youtube", "rip_copy", "bandcamp", "cd", "itunes", "other"}
+)
+# What a download carries (with no match: there's no file of the owner's behind it).
+DOWNLOAD_SOURCES = frozenset({"youtube_music", "soundcloud"})
 MATCHES = frozenset(
     {"auto_exact", "user_confirmed", "manual", "auto_details", "user_details", "unconfirmed"}
 )

@@ -1,5 +1,25 @@
 import Foundation
 
+/// Where Music Finder's search looks (the owner, 2026-10-12: music "comes from youtube
+/// and soundcloud"): the music service, as always, or SoundCloud. The choice sits beside
+/// the search box and is remembered. A song found on SoundCloud plays and downloads as
+/// any other does, and is kept in the library's one format.
+public enum MusicSearchSource: String, CaseIterable, Identifiable, Sendable {
+    case service
+    case soundCloud = "soundcloud"
+
+    public static let key = "musicSearchSource"
+
+    public var id: String { rawValue }
+
+    /// The app's words never name the music service; SoundCloud is its own name.
+    public var title: String { self == .service ? "Music Service" : "SoundCloud" }
+
+    public static func saved(in defaults: UserDefaults = .standard) -> MusicSearchSource {
+        MusicSearchSource(rawValue: defaults.string(forKey: key) ?? "") ?? .service
+    }
+}
+
 /// Where Discover's picks start from (the engine's "Discover seed").
 public enum DiscoverSeed: Hashable, Sendable {
     case library

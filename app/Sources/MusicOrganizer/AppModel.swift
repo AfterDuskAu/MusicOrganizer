@@ -99,6 +99,7 @@ final class AppModel {
     private(set) var youtubeHasMore = false
     static let youtubeStep = 25
     static let youtubeMost = 100
+    static let soundCloudMost = 50
     private(set) var youtubeProblem: String?
     /// In a child's profile: the songs the last search left out for having no clean version.
     private(set) var youtubeKidsNote: String?
@@ -1873,15 +1874,21 @@ final class AppModel {
         youtubeSearching = true
         youtubeProblem = nil
         youtubeKidsNote = nil
+        // Where the search looks (the choice beside the search box): the music service,
+        // or SoundCloud, which is asked for fifty at most.
+        let onSoundCloud = MusicSearchSource.saved() == .soundCloud
+        let most = onSoundCloud ? Self.soundCloudMost : Self.youtubeMost
+        let limit = min(limit, most)
         Task {
             do {
                 let found = try await connection.call(
-                    "search.ytmusic", ["query": query, "limit": limit], as: SearchAnswer.self)
+                    onSoundCloud ? "search.soundcloud" : "search.ytmusic",
+                    ["query": query, "limit": limit], as: SearchAnswer.self)
                 youtubeResults = found.results
                 youtubeKidsNote = found.kidsNote
                 youtubeLimit = limit
                 // A full page means there may be more; YouTube Music is asked for at most 100.
-                youtubeHasMore = found.results.count >= limit && limit < Self.youtubeMost
+                youtubeHasMore = found.results.count >= limit && limit < most
                 if found.results.isEmpty {
                     // In a child's profile the engine says what it left out, and why.
                     youtubeProblem = found.kidsNote ?? "Nothing found for “\(query)”."
@@ -1891,6 +1898,13 @@ final class AppModel {
             }
             youtubeSearching = false
         }
+    }
+
+    /// The search on the page run again from its start: where it looks has been changed.
+    func searchAgain() {
+        guard !youtubeResults.isEmpty || youtubeProblem != nil else { return }
+        (youtubeResults, youtubeProblem, youtubeKidsNote, youtubeHasMore) = ([], nil, nil, false)
+        searchYouTube()
     }
 
     /// Music Finder's search is put away: the page shows its tabs again.

@@ -3840,6 +3840,101 @@ def test_a_song_downloaded_on_request(
     assert index.library_tracks() == []
 
 
+SOUNDCLOUD_TRACK = "sc:123456"
+
+
+def soundcloud_downloads(
+    monkeypatch: pytest.MonkeyPatch, source: Path, suffix: str = ".m4a"
+) -> list[str]:
+    """youtube.download_audio's stand-in for a SoundCloud track: `source` copied into the
+    job's folder under the track's number, as yt-dlp leaves it after the conversion."""
+    calls: list[str] = []
+
+    def fake(video_id: str, dest: Path, *, progress: Any = None) -> tuple[Path, dict[str, Any]]:
+        calls.append(video_id)
+        target = Path(dest) / f"{video_id.removeprefix('sc:')}{suffix}"
+        shutil.copyfile(source, target)
+        return target, {"id": video_id.removeprefix("sc:"), "format_id": "http_mp3_1_0"}
+
+    monkeypatch.setattr(youtube, "download_audio", fake)
+    return calls
+
+
+def test_a_soundcloud_track_downloaded_on_request(
+    lib: Library, index: Index, audio: AudioFixtures, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls = soundcloud_downloads(monkeypatch, audio.melody_a_m4a)
+    picture = "https://pictures.invalid/night-drive-t500x500.jpg"
+    fetched: list[str] = []
+
+    def fetch_image(url: str) -> bytes:
+        fetched.append(url)
+        return cover(500)
+
+    monkeypatch.setattr(youtube, "fetch_image", fetch_image)
+    found = youtube.Candidate(
+        SOUNDCLOUD_TRACK, "Night Drive", ("Some Uploader",), duration_s=SECONDS, thumbnail=picture
+    )
+    # Asked for as the search gave it: SoundCloud isn't asked about it again.
+    plan = pipeline.plan_download(lib, index, [SOUNDCLOUD_TRACK], known=[found.to_dict()])
+    assert (plan.kind, plan.summary["downloads"]) == ("download", 1)
+    batch_id = pipeline.apply(lib, index, plan.plan_id).batch_id
+    run_queue(lib)
+
+    (name,) = [f for f in music_files(lib) if f.endswith(".m4a")]
+    assert name.startswith("Some Uploader/") and name.endswith("Night Drive.m4a")
+    written = tags.read_tags(lib.paths.music / name)
+    assert (written.title, written.artist) == ("Night Drive", "Some Uploader")
+    # Where it came from, and the format SoundCloud delivered it in (it was converted).
+    assert (written.source, written.source_id, written.source_format) == (
+        "soundcloud", SOUNDCLOUD_TRACK, "http_mp3_1_0",
+    )  # fmt: skip
+    assert written.match is None and isinstance(written.musicorg_id, str)
+    assert calls == [SOUNDCLOUD_TRACK]
+    # It has no album: its own picture is its cover.
+    assert written.cover is not None and fetched == [picture]
+    # It's a download, like one from YouTube Music: listed as one, and deletable as one.
+    (row,) = index.library_tracks()
+    assert row["source"] in tags.DOWNLOAD_SOURCES
+
+    again = pipeline.plan_download(lib, index, [SOUNDCLOUD_TRACK], known=[found.to_dict()])
+    assert again.operations == [] and again.summary["skipped"] == {"already_in_library": 1}
+    pipeline.undo(lib, batch_id)
+    assert [f for f in music_files(lib) if f.endswith(".m4a")] == []
+
+
+def test_a_soundcloud_track_that_wasnt_converted_is_not_kept(
+    lib: Library, index: Index, audio: AudioFixtures, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    soundcloud_downloads(monkeypatch, audio.melody_a_mp3, suffix=".mp3")
+    found = youtube.Candidate(
+        SOUNDCLOUD_TRACK, "Night Drive", ("Some Uploader",), duration_s=SECONDS
+    )
+    plan = pipeline.plan_download(lib, index, [SOUNDCLOUD_TRACK], known=[found.to_dict()])
+    pipeline.apply(lib, index, plan.plan_id)
+    run_queue(lib)
+    assert music_files(lib) == []
+    (job,) = jobs(lib)
+    assert (job["state"], job["reason"]) == ("needs_review", "soundcloud_not_converted")
+
+
+def test_a_soundcloud_track_not_given_is_asked_of_soundcloud(
+    lib: Library, index: Index, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    asked: list[str] = []
+
+    def track(video_id: str) -> youtube.Candidate | None:
+        asked.append(video_id)
+        return None  # SoundCloud doesn't have it any more
+
+    monkeypatch.setattr(youtube, "soundcloud_track", track)
+    plan = pipeline.plan_download(lib, index, [SOUNDCLOUD_TRACK])
+    assert plan.operations == [] and plan.summary["skipped"] == {"not_on_soundcloud": 1}
+    assert asked == [SOUNDCLOUD_TRACK]
+    with pytest.raises(UserError):
+        pipeline.plan_download(lib, index, ["sc:not-a-number"])
+
+
 def test_a_download_that_isnt_what_was_asked_for_is_not_kept(
     lib: Library, index: Index, downloads: FakeDownloads, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -174,6 +174,11 @@ def lyrics_extras(query: ExtrasQuery) -> Extras | None:
 
 def cover_extras(query: ExtrasQuery) -> Extras | None:
     if not query.album.browse_id:
+        # A SoundCloud track has no album: its own picture is its cover (2026-10-12).
+        found = query.candidate
+        if youtube.is_soundcloud(found.video_id) and found.thumbnail:
+            own = artwork.art_from_url(found.thumbnail)
+            return Extras(cover=own.data, cover_mime=own.mime) if own is not None else None
         return None
     art = artwork.album_art(query.album.browse_id, cache=query.cache)
     return Extras(cover=art.data, cover_mime=art.mime) if art is not None else None
@@ -2178,16 +2183,22 @@ def plan_download(
                 genres[candidate.video_id] = " ".join(genre.split())
 
     def look_up(video_id: object) -> Candidate | None:
-        if not isinstance(video_id, str) or not youtube.VIDEO_ID.fullmatch(video_id):
-            raise UserError(f"{video_id!r} isn't a YouTube video id.")
+        soundcloud = youtube.is_soundcloud(video_id)
+        known_kind = soundcloud or (
+            isinstance(video_id, str) and youtube.VIDEO_ID.fullmatch(video_id) is not None
+        )
+        if not isinstance(video_id, str) or not known_kind:
+            raise UserError(f"{video_id!r} isn't a YouTube video id or a SoundCloud track's.")
         if index.library_tracks_with_source_id(video_id):
             skipped["already_in_library"] = skipped.get("already_in_library", 0) + 1
             return None
         if video_id in given:
             return given[video_id]
-        found = youtube.get_track(video_id)
+        # A SoundCloud track ("sc:" and its number, 2026-10-12) is asked of SoundCloud.
+        found = youtube.soundcloud_track(video_id) if soundcloud else youtube.get_track(video_id)
         if found is None:
-            skipped["not_on_youtube_music"] = skipped.get("not_on_youtube_music", 0) + 1
+            why = "not_on_soundcloud" if soundcloud else "not_on_youtube_music"
+            skipped[why] = skipped.get(why, 0) + 1
         return found
 
     for video_id in dict.fromkeys(video_ids):
@@ -2339,6 +2350,26 @@ def _check_kept_video(
     return None
 
 
+def _check_soundcloud(path: Path, candidate: Candidate) -> tuple[str, str] | None:
+    """Is this a SoundCloud track in the library's format? (review reason, message), or
+    None if it is. It was to be left as AAC in M4A (`youtube.soundcloud_options`):
+    anything else isn't kept, and its length is checked as any download's is."""
+    probe = tags.probe(path)  # AudioError: the queue retries
+    if path.suffix.lower() != ".m4a" or (probe.codec or "").lower() != "aac":
+        return (
+            "soundcloud_not_converted",
+            f"The track from SoundCloud came out as {probe.codec or 'unknown'} in a "
+            f"{path.suffix or 'nameless'} file, not AAC in M4A; nothing is kept.",
+        )
+    expected = candidate.duration_s
+    if expected is not None and probe.duration_s is not None:
+        if abs(probe.duration_s - expected) > DURATION_TOLERANCE_S:
+            return ("duration_mismatch",
+                    f"The download is {probe.duration_s:.0f} s long; SoundCloud said "
+                    f"{expected:.0f} s.")  # fmt: skip
+    return None
+
+
 def download_job(ctx: JobContext) -> Outcome:
     (op,) = _ops(ctx.payload)
     if op.action == "download_video":
@@ -2358,7 +2389,11 @@ def download_job(ctx: JobContext) -> Outcome:
                 _join_playlist(ctx.lib, op, have[0].get("musicorg_id"))
             return Outcome.done("Already in the library.")
         path, info = ctx.download(video_id)
-        problem = _check_download(path, info, candidate)
+        from_soundcloud = youtube.is_soundcloud(video_id)
+        problem = (
+            _check_soundcloud(path, candidate) if from_soundcloud
+            else _check_download(path, info, candidate)
+        )  # fmt: skip
         if problem is not None:
             return Outcome.needs_review(*problem)
         names = state.names(ctx.lib.load_state().data)
@@ -2385,7 +2420,9 @@ def download_job(ctx: JobContext) -> Outcome:
             cover_mime=extras.cover_mime if extras.cover else None,
             schema=tags.SCHEMA_VERSION,
             musicorg_id=tags.new_track_id(),
-            source="youtube_music",
+            # For a SoundCloud track the format is the one SoundCloud delivered (an MP3's
+            # says so: "http_mp3_1_0"), so the file records that it was converted.
+            source="soundcloud" if from_soundcloud else "youtube_music",
             source_id=candidate.video_id,
             source_format=str(info["format_id"]),
             source_bitrate=probe.bitrate_kbps,
@@ -2687,7 +2724,7 @@ def plan_remove(
         found = tags.read_tags(path)
         if not isinstance(found.musicorg_id, str):
             raise UserError(f"{path.name} isn't a file the library manages.")
-        if found.source != "youtube_music" or found.match is not None:
+        if found.source not in tags.DOWNLOAD_SOURCES or found.match is not None:
             raise UserError(
                 f"“{found.title or path.stem}” came from your own files, not from a download, "
                 "so it isn't deleted here."
@@ -2718,7 +2755,7 @@ def remove_job(ctx: JobContext) -> Outcome:
     if path is None:
         return Outcome.needs_review(FILE_CHANGED, "The file has moved or changed since the plan.")
     found = tags.read_tags(path)
-    if found.source != "youtube_music" or found.match is not None:
+    if found.source not in tags.DOWNLOAD_SOURCES or found.match is not None:
         return Outcome.needs_review(FILE_CHANGED, "It isn't a download any more.")
     rel = _rel_path(ctx.lib, path)
     folder = path.parent

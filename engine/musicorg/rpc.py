@@ -111,7 +111,8 @@ RESUME_CHECK_S = 30.0
 RESUME_LEAST_S = 60.0
 REVIEW_STATES = ("review", "not_found", "matched_auto")
 SLOW_METHODS = frozenset(
-    {"youtube.stream", "youtube.video", "search.ytmusic", "lyrics.find", "lyrics.for_video",
+    {"youtube.stream", "youtube.video", "search.ytmusic", "search.soundcloud", "lyrics.find",
+     "lyrics.for_video",
      "discover.suggest", "discover.remixes", "discover.playlists",
      "import.playlist", "import.playlists", "import.find",
      "account.connect", "artist.info", "artist.songs", "artist.album", "artist.search",
@@ -343,6 +344,7 @@ class Server:
             "journal.undo": self.journal_undo,
             "search.ytmusic": self.search_ytmusic,
             "youtube.stream": self.youtube_stream,
+            "search.soundcloud": self.search_soundcloud,
             "youtube.video": self.youtube_video,
             "lyrics.find": self.lyrics_find,
             "lyrics.for_video": self.lyrics_for_video,
@@ -1582,6 +1584,25 @@ class Server:
         found = youtube.search_songs(query, limit)
         results = []
         for c in found:
+            data = c.to_dict()
+            data.update(candidate_id=match.candidate_id("search", c.video_id), version_tokens=[],
+                        score=None, reasons=[])  # fmt: skip
+            results.append(data)
+        return self._clean({"results": results}, "results")
+
+    def search_soundcloud(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Tracks on SoundCloud for these words (2026-10-12), in the shape
+        `search.ytmusic` gives: each one's `video_id` is "sc:" and its number, and is
+        taken wherever a video's id is (`youtube.stream`, a download plan). In a child's
+        profile none is given: SoundCloud marks nothing as clean."""
+        query = need(params, "query", str).strip()
+        limit = want(params, "limit", int, 25)
+        if not query:
+            raise RpcError(INVALID_PARAMS, "query is empty.")
+        if not 1 <= limit <= youtube.SOUNDCLOUD_MOST:
+            raise RpcError(INVALID_PARAMS, f"limit must be 1 to {youtube.SOUNDCLOUD_MOST}.")
+        results = []
+        for c in youtube.soundcloud_search(query, limit):
             data = c.to_dict()
             data.update(candidate_id=match.candidate_id("search", c.video_id), version_tokens=[],
                         score=None, reasons=[])  # fmt: skip

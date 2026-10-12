@@ -385,6 +385,18 @@ def test_search(opened: rpc.Server) -> None:
     assert code(opened, "search.ytmusic", query="  ") == rpc.INVALID_PARAMS
 
 
+def test_a_soundcloud_search(opened: rpc.Server) -> None:
+    found = result(opened, "search.soundcloud", query="creative commons piano", limit=5)["results"]
+    assert len(found) == 5
+    # The same shape as a YouTube Music search, with a SoundCloud track's id.
+    assert {"candidate_id", "video_id", "title", "artists", "duration_s"} <= set(found[0])
+    assert all(youtube.is_soundcloud(one["video_id"]) for one in found)
+    assert code(opened, "search.soundcloud", query="  ") == rpc.INVALID_PARAMS
+    assert code(opened, "search.soundcloud", query="x", limit=500) == rpc.INVALID_PARAMS
+    # It waits on the network, so it never holds up the other requests.
+    assert "search.soundcloud" in rpc.SLOW_METHODS
+
+
 def test_a_search_typed_goes_ahead_of_a_batch_of_look_ups(
     opened: rpc.Server, monkeypatch: pytest.MonkeyPatch
 ) -> None:

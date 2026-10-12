@@ -79,7 +79,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlsplit
 
-from musicorg import browse, config, listening, naming, tools
+from musicorg import browse, config, listening, naming, tags, tools
 from musicorg import state as state_file
 from musicorg.errors import MusicOrgError, NotFoundError, UserError
 from musicorg.index import open_index
@@ -553,12 +553,13 @@ def the_list(
 
 def _is_download(row: dict[str, Any], found: dict[str, Any]) -> bool:
     """Whether a song is one the computer found for its owner: downloaded from YouTube
-    Music with no file of the owner's behind it (`MUSICORG_SOURCE` is `youtube_music`
+    Music or SoundCloud with no file of the owner's behind it (`MUSICORG_SOURCE` is
+    `youtube_music` or `soundcloud`
     and there's no `MUSICORG_MATCH`). It's the rule the app lists Discover → Downloads
     by, and the one a download may be deleted by (`pipeline.plan_remove`). A rip that
     was replaced by a download, or kept with official details, has a match, so it's the
     owner's own. Read from what the library already records: nothing is written."""
-    return row.get("source") == "youtube_music" and found.get("match") is None
+    return row.get("source") in tags.DOWNLOAD_SOURCES and found.get("match") is None
 
 
 def _name(kind: str, key: str) -> str:
