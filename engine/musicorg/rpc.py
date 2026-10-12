@@ -72,6 +72,7 @@ from musicorg import (
     status,
     tags,
     torrents,
+    transfer,
     videolyrics,
     youtube,
 )
@@ -122,7 +123,8 @@ SLOW_METHODS = frozenset(
      "addon.list", "addon.add", "addon.restore", "addon.catalog", "addon.details", "addon.streams",
      "video.search", "channel.videos", "channel.search", "torrent.stop",
      "torrent.count",  # joins a torrent for a few seconds to count who has it
-     "media.convert", "torrent.stop_keeping"}  # reads the film with ffprobe first
+     "media.convert", "torrent.stop_keeping",  # reads the film with ffprobe first
+     "profile.contents", "profile.import"}  # walk the library; a dry run reads every tag
 )  # fmt: skip
 MAX_EXCLUDE = 5000  # songs already on screen that Show More leaves out
 RPC_DECISIONS = ("accept", "candidate", "url", "only_copy", "skip", "reject")
@@ -306,6 +308,7 @@ class Server:
         self._kids = {"on": False, "allow_explicit": False}
         self._films: torrents.Player | None = None  # films playing from torrents, if any
         self._converter: convert.Converter | None = None  # a kept film being converted
+        self._transfer = transfer.Runner()  # a profile's export or import under way
         self._relay: relay.Relay | None = None  # long videos' playlists, if any were asked for
         self.methods: dict[str, Callable[[dict[str, Any]], Any]] = {
             "engine.hello": self.engine_hello,
@@ -387,6 +390,10 @@ class Server:
             "torrent.count": self.torrent_count,
             "torrent.keep": self.torrent_keep,
             "torrent.stop_keeping": self.torrent_stop_keeping,
+            "profile.contents": self.profile_contents,
+            "profile.export": self.profile_export,
+            "profile.import": self.profile_import,
+            "profile.transfer": self.profile_transfer,
             "media.convert": self.media_convert,
             "media.converting": self.media_converting,
             "torrent.stop": self.torrent_stop,
@@ -1144,6 +1151,60 @@ class Server:
         if self._converter is None:
             return {"converting": None, "last": None}
         return self._converter.status()
+
+    # ---- a profile's export and import (2026-10-12; module `transfer`) -------------------
+
+    def profile_contents(self, params: dict[str, Any]) -> dict[str, Any]:
+        """What this profile has to export, part by part. Nothing is written."""
+        return transfer.contents(self._library())
+
+    def profile_export(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Start an export of this profile into a new folder inside `folder`, a place
+        the owner chose. It runs on; `profile.transfer` says how far it has got."""
+        lib = self._library()
+        folder = Path(need(params, "folder", str)).expanduser()
+        parts = self._transfer_parts(params)
+        profile = (want(params, "profile", str) or "").strip()
+        app = want(params, "app", dict)
+        self._transfer.start(
+            "export",
+            lambda tick: transfer.export_profile(
+                lib, folder, parts=parts, profile=profile, app=app, tick=tick
+            ),
+            finished=lambda ended: self.writer.notify("profile.transferred", ended),
+        )
+        return {"started": True}
+
+    def profile_import(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Bring an export into this profile's library. With `dry_run`, only say what
+        would come (answered here); without, it's started and runs on."""
+        lib = self._library()
+        folder = Path(need(params, "folder", str)).expanduser()
+        parts = self._transfer_parts(params)
+        if want(params, "dry_run", bool):
+            return transfer.import_profile(lib, folder, parts=parts, dry_run=True)
+        transfer.read_export(folder)  # said now, not later, if it isn't an export
+
+        def finished(ended: dict[str, Any]) -> None:
+            self.writer.notify("profile.transferred", ended)
+            self.writer.notify("library.changed", {})
+
+        self._transfer.start(
+            "import",
+            lambda tick: transfer.import_profile(lib, folder, parts=parts, tick=tick),
+            finished=finished,
+        )
+        return {"started": True}
+
+    def profile_transfer(self, params: dict[str, Any]) -> dict[str, Any]:
+        return self._transfer.status()
+
+    @staticmethod
+    def _transfer_parts(params: dict[str, Any]) -> list[str]:
+        parts = need(params, "parts", list)
+        if not parts or not all(isinstance(p, str) and p in transfer.PARTS for p in parts):
+            raise RpcError(INVALID_PARAMS, f"parts should be any of {', '.join(transfer.PARTS)}.")
+        return list(parts)
 
     def torrent_keep(self, params: dict[str, Any]) -> dict[str, Any]:
         """Keep a film in the Movies folder once all of it has arrived, or an episode

@@ -1576,6 +1576,131 @@ final class AppModel {
         }
     }
 
+    // MARK: a profile's export and import (Settings → Profile; the engine's `transfer`)
+
+    /// What this profile has to export, for the tick-boxes.
+    private(set) var profileContents: ProfileContents?
+    /// An export or an import under way, and how the last one ended.
+    private(set) var transfer: TransferStatus?
+    /// The export chosen to import from, and what it would bring.
+    private(set) var importFolder: URL?
+    private(set) var importPreview: TransferSummary?
+    private(set) var transferProblem: String?
+    @ObservationIgnored private var transferWatch: Task<Void, Never>?
+
+    func loadProfileContents() {
+        Task { profileContents = try? await ask("profile.contents", [:], as: ProfileContents.self) }
+    }
+
+    /// Ask where, then export what's ticked into a new folder there.
+    func exportProfile(parts: [String]) {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.canCreateDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.message = "Choose where the export goes: a drive, or a folder. A new folder is made there for it."
+        panel.prompt = "Export Here"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        transferProblem = nil
+        Task {
+            do {
+                _ = try await ask(
+                    "profile.export",
+                    ["folder": url.path, "parts": parts, "profile": profiles.current.name,
+                     "app": SettingsCarrier.pack()],
+                    as: Empty.self)
+                watchTransfer()
+            } catch {
+                transferProblem = error.localizedDescription
+            }
+        }
+    }
+
+    /// Ask for an export's folder, and say what importing it would bring.
+    func chooseExportToImport(parts: [String]) {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.message = "Choose the folder an export made (it has export.json in it)."
+        panel.prompt = "Choose"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        importFolder = url
+        previewImport(parts: parts)
+    }
+
+    /// What the chosen export would bring, with these parts ticked. Nothing is written.
+    func previewImport(parts: [String]) {
+        guard let folder = importFolder else { return }
+        (importPreview, transferProblem) = (nil, nil)
+        guard !parts.isEmpty else { return }
+        Task {
+            do {
+                importPreview = try await ask(
+                    "profile.import", ["folder": folder.path, "parts": parts, "dry_run": true],
+                    as: TransferSummary.self)
+            } catch {
+                (importFolder, transferProblem) = (nil, error.localizedDescription)
+            }
+        }
+    }
+
+    func forgetImport() {
+        (importFolder, importPreview, transferProblem) = (nil, nil, nil)
+    }
+
+    /// Bring the chosen export into this profile.
+    func importProfile(parts: [String]) {
+        guard let folder = importFolder else { return }
+        transferProblem = nil
+        Task {
+            do {
+                _ = try await ask(
+                    "profile.import", ["folder": folder.path, "parts": parts], as: Empty.self)
+                watchTransfer()
+            } catch {
+                transferProblem = error.localizedDescription
+            }
+        }
+    }
+
+    /// Asked once a second while an export or an import runs, until it has ended.
+    private func watchTransfer() {
+        transferWatch?.cancel()
+        transferWatch = Task {
+            while !Task.isCancelled {
+                guard let said = try? await ask("profile.transfer", [:], as: TransferStatus.self) else { return }
+                transfer = said
+                if said.working == nil {
+                    if let last = said.last, last.kind == "import", last.ok {
+                        await takeImportedSettings()
+                        (importFolder, importPreview) = (nil, nil)
+                        await reload()
+                        await reloadListening()
+                    }
+                    loadProfileContents()
+                    return
+                }
+                try? await Task.sleep(for: .seconds(1))
+            }
+        }
+    }
+
+    /// The app's own settings an import brought back (`SettingsCarrier`: only the ones
+    /// it names are ever taken). Some show once the app has been reopened.
+    private func takeImportedSettings() async {
+        guard let connection = engine?.connection,
+            let answer = try? await connection.call("profile.transfer"),
+            let said = try? JSONSerialization.jsonObject(with: answer) as? [String: Any],
+            let last = said["last"] as? [String: Any], let summary = last["summary"] as? [String: Any],
+            let app = summary["app"] as? [String: Any]
+        else { return }
+        SettingsCarrier.unpack(app)
+        history = WatchHistory.saved()
+        mediaFavourites = MediaFavourites.saved()
+    }
+
     private func engineSaid(_ method: String) async {
         switch method {
         case "library.changed": await reload()

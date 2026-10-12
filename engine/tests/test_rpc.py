@@ -385,6 +385,31 @@ def test_search(opened: rpc.Server) -> None:
     assert code(opened, "search.ytmusic", query="  ") == rpc.INVALID_PARAMS
 
 
+def test_a_profiles_export_and_import_over_rpc(opened: rpc.Server, tmp_path: Path) -> None:
+    said = result(opened, "profile.contents")
+    assert set(said["parts"]) == {"music", "videos", "movies", "records", "settings"}
+    drive = tmp_path / "drive"
+    drive.mkdir()
+    assert result(
+        opened, "profile.export", folder=str(drive), parts=["records", "settings"],
+        profile="D", app={"look": "warm"},
+    ) == {"started": True}  # fmt: skip
+    opened._transfer.wait(10)
+    last = result(opened, "profile.transfer")["last"]
+    assert (last["kind"], last["ok"]) == ("export", True)
+    folder = Path(last["summary"]["folder"])
+    assert folder.parent == drive and (folder / "export.json").is_file()
+    # What an import of it would bring: nothing is written by asking.
+    would = result(
+        opened, "profile.import", folder=str(folder), parts=["records", "settings"], dry_run=True
+    )
+    assert would["dry_run"] is True and would["app"] == {"look": "warm"}
+    assert code(opened, "profile.export", folder=str(drive), parts=["nonsense"]) == (
+        rpc.INVALID_PARAMS
+    )
+    assert code(opened, "profile.import", folder=str(drive), parts=["music"]) != 0  # not an export
+
+
 def test_a_soundcloud_search(opened: rpc.Server) -> None:
     found = result(opened, "search.soundcloud", query="creative commons piano", limit=5)["results"]
     assert len(found) == 5

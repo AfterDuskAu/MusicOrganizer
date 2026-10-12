@@ -39,6 +39,7 @@ struct SettingsView: View {
     static let groups: [Group] = [
         Group(id: "profile", title: "Profile", parts: [
             Part(id: "profiles"), Part(id: "deleted", title: "Deleted Items"),
+            Part(id: "moving", title: "Export and Import"),
         ]),
         Group(id: "player", title: "Player", parts: [Part(id: "play")]),
         Group(id: "plugins", title: "Plugins", parts: [
@@ -224,6 +225,7 @@ private struct SettingsPart: View {
         case "sharing": SharingSettings()
         case "addons": AddonSettings()
         case "deleted": DeletedItemsSettings()
+        case "moving": MovingSettings()
         case "look":
             Form { LayoutSettings() }
                 .formStyle(.grouped)
@@ -231,6 +233,140 @@ private struct SettingsPart: View {
         case "terms": LegalWords(parts: Legal.terms)
         case "privacy": LegalWords(parts: Legal.privacy)
         default: ProfileSettingsTab()
+        }
+    }
+}
+
+/// Settings → Profile → Export and Import (the owner's yes, 2026-10-12): a copy of this
+/// profile in a new folder on a drive they choose, with tick-boxes for what goes; and an
+/// export brought into the profile in use. The engine does both (`transfer`); no sign-in
+/// is ever in an export.
+private struct MovingSettings: View {
+    @Environment(AppModel.self) private var model
+    @State private var ticked = Set(ProfileTransfer.parts)
+
+    private var parts: [String] { ProfileTransfer.parts.filter(ticked.contains) }
+
+    var body: some View {
+        let working = model.transfer?.working
+        let last = model.transfer?.last
+        Form {
+            Section("What to Take") {
+                ForEach(ProfileTransfer.parts, id: \.self) { part in
+                    Toggle(isOn: Binding(
+                        get: { ticked.contains(part) },
+                        set: { on in
+                            if on { ticked.insert(part) } else { ticked.remove(part) }
+                            model.previewImport(parts: parts)
+                        })
+                    ) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(ProfileTransfer.title(part))
+                            if let about = model.profileContents?.about(part), !about.isEmpty {
+                                Text(about).font(.callout).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
+            Section("Export") {
+                LabeledContent("A copy of this profile, on a drive or in a folder you choose") {
+                    Button("Export…") { model.exportProfile(parts: parts) }
+                        .disabled(parts.isEmpty || working != nil)
+                }
+                if let left = model.profileContents?.parts["settings"]?.addonsLeftOut, !left.isEmpty {
+                    SideNote(
+                        "Left out: \(left.joined(separator: ", ")). A plugin set up your own way "
+                            + "has that set-up in its address, which can hold a key, so it's added "
+                            + "again by hand on the other computer.")
+                }
+                SideNote(
+                    "A new folder is made where you choose, with what's ticked above in it. Your "
+                        + "library isn't changed. Sign-ins are never in an export, nor your "
+                        + "paired devices: you sign in and pair again on the other computer.")
+            }
+            Section("Import") {
+                LabeledContent(
+                    model.importFolder.map { "From \($0.lastPathComponent)" }
+                        ?? "Bring an export into the profile in use"
+                ) {
+                    HStack {
+                        if model.importFolder != nil {
+                            Button("Not This One") { model.forgetImport() }.disabled(working != nil)
+                        }
+                        Button(model.importFolder == nil ? "Choose an Export…" : "Choose Another…") {
+                            model.chooseExportToImport(parts: parts)
+                        }
+                        .disabled(working != nil)
+                    }
+                }
+                if let preview = model.importPreview {
+                    VStack(alignment: .leading, spacing: 4) {
+                        if let profile = preview.profile, !profile.isEmpty {
+                            Text("The profile “\(profile)”, exported \(String((preview.made ?? "").prefix(10))).")
+                        }
+                        ForEach(preview.lines(done: false), id: \.self) { Text($0) }
+                        if let left = preview.leftOut, !left.isEmpty {
+                            Text("Not in it: \(left.joined(separator: "; ")).").foregroundStyle(.secondary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    Button("Import Into “\(model.profiles.current.name)”") { model.importProfile(parts: parts) }
+                        .disabled(parts.isEmpty || working != nil)
+                }
+                SideNote(
+                    "An import adds to the profile in use: songs it has already are left out, "
+                        + "nothing is written over, and its own playlists and favourites are "
+                        + "kept. To have a profile exactly as it was exported (on a new Mac, "
+                        + "say), make a new profile first, switch to it, and import there. The "
+                        + "export itself is only read.")
+            }
+            if working != nil || last != nil || model.transferProblem != nil {
+                Section {
+                    if let working {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(working.kind == "export" ? "Exporting…" : "Importing…")
+                            ProgressView(value: Double(working.done), total: Double(max(working.total, 1)))
+                            Text(
+                                working.total > 0
+                                    ? "\(working.done.formatted()) of \(working.total.formatted()): \(working.name)"
+                                    : "Getting ready…")
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                    } else if let problem = model.transferProblem {
+                        Text(problem).foregroundStyle(.orange)
+                    } else if let last {
+                        ended(last)
+                    }
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .scrollContentBackground(Theme.current.listBackground)
+        .task(id: model.phase) { model.loadProfileContents() }
+    }
+
+    /// How the last export or import ended.
+    @ViewBuilder
+    private func ended(_ last: TransferStatus.Last) -> some View {
+        if !last.ok {
+            Text(last.message ?? "It didn't work.").foregroundStyle(.orange)
+        } else if last.kind == "export", let folder = last.summary?.folder {
+            LabeledContent("Exported to \((folder as NSString).lastPathComponent)") {
+                Button("Show in Finder") {
+                    NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: folder)])
+                }
+            }
+        } else if let summary = last.summary {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Imported.").fontWeight(.semibold)
+                ForEach(summary.lines(done: true), id: \.self) { Text($0) }
+                Text("Settings that came with it show once Music Organizer has been reopened.")
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }

@@ -101,7 +101,8 @@ ENGINE = (naming.ENGINE_DIR,)
 PLAN_KINDS = frozenset(
     {"replace", "adopt", "lyrics", "artwork", "tidy", "download", "edit", "remove", "share"}
 )
-BATCH_KINDS = PLAN_KINDS | {"undo", "demo"}
+# `import`: a profile's export brought in (2026-10-12, `transfer`), songs by `copy_in`.
+BATCH_KINDS = PLAN_KINDS | {"undo", "demo", "import"}
 OPERATIONS = (
     "commit", "copy_in", "supersede", "restore", "move", "trash", "write_tags", "write_sidecar",
 )  # fmt: skip
@@ -2389,8 +2390,10 @@ def keep_media(
     the videos folder), and return where it is. The other writer, with `write_export`,
     that puts a file outside the library.
 
-    - `source` must be a file inside `cache` (the app's own cache folder): nothing else
-      is ever copied from. It's opened read-only and left where it is.
+    - `source` must be a file inside `cache`: the app's own cache folder, or (since
+      2026-10-12, a profile's import) the export folder the owner chose to bring films
+      and videos back from. Nothing else is ever copied from. It's opened read-only and
+      left where it is.
     - `folder` must be one of `allowed`, or a folder inside one. It's made if missing
       (its parents too, up to the allowed folder; the allowed folder itself only when
       the folder it sits in exists).
@@ -2446,6 +2449,116 @@ def keep_media(
     _sync_folder(target.parent)
     log.info("Kept %s", placeholder)
     return folder / placeholder.name
+
+
+# ---- a profile's export (2026-10-12) -----------------------------------------------------
+#
+# The owner's yes to a rule change (rule 2): a copy of the library may be written outside
+# the library, into one new folder the owner chose a place for. These two are the only
+# writers of it, as `write_export` is of a report.
+
+EXPORT_MARK = "export.json"
+
+
+def make_export_folder(parent: Path, name: str, *, forbidden: Iterable[Path]) -> Path:
+    """Make the one new folder a profile's export goes in, inside `parent` (a folder the
+    owner chose, which must exist), and return it.
+
+    - Always a new folder: ` (2)`, ` (3)` ... if the name is taken. Nothing that's
+      there already is ever written into.
+    - Never inside `forbidden` (the library's own folders, a source folder).
+    """
+    parent = Path(parent).expanduser().absolute()
+    clean = naming.safe_component(name)
+    if not clean.strip() or clean.startswith("."):
+        raise ValueError(f"not a folder name: {name!r}")
+    if not parent.is_dir():
+        raise UserError(f"The folder {parent} doesn't exist. Choose another place.")
+    _not_forbidden(parent, forbidden, "An export")
+    try:
+        for number in range(1, 1000):
+            folder = parent / (clean if number == 1 else f"{clean} ({number})")
+            try:
+                folder.mkdir()
+                return folder
+            except FileExistsError:
+                continue
+    except OSError as exc:
+        raise FileOperationError(
+            f"Couldn't make a folder for the export in {parent}: {exc.strerror or exc}."
+        ) from exc
+    raise UserError(f"There are too many exports named {clean} in {parent}.")
+
+
+def export_file(
+    source: Path | bytes,
+    export_root: Path,
+    rel: PurePath | str,
+    *,
+    forbidden: Iterable[Path],
+) -> Path:
+    """Put one file in an export: a copy of `source` (a file, opened read-only and left
+    as it is; or bytes, for the export's own notes) at `<export_root>/<rel>`.
+
+    - `export_root` must be a folder that exists and isn't inside `forbidden` (the
+      library's own folders, a source folder): the one `make_export_folder` made.
+    - `rel` is a path inside it: no drive, no root, no `..`.
+    - Never overwrites: ` (2)`, ` (3)` ... if the name is taken (two names that differ
+      only by capitals, on a drive that doesn't tell them apart). The file appears
+      complete or not at all: a temp file beside it, flushed, renamed onto the name.
+    - Not journaled, and needs no library lock: no library file is changed.
+    """
+    root = Path(export_root).expanduser().absolute()
+    if not root.is_dir():
+        raise UserError(f"The export's folder {root} isn't there any more.")
+    _not_forbidden(root, forbidden, "An export")
+    inside = _check_rel(rel)
+    if naming.is_junk(inside.name):
+        raise ValueError(f"not a file name: {inside.name!r}")
+    target = root / inside
+    if not isinstance(source, bytes) and not Path(source).is_file():
+        raise UserError(f"There's no file at {source}.")
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        real = target.parent.resolve()
+        if not (_key(real) == _key(root.resolve()) or _within(real, root.resolve())):
+            raise OutsideLibraryError(f"{target} would land outside the export's folder.")
+        if isinstance(source, bytes):
+            final = _write_new(real / target.name, source, _unlink_if_empty)
+        else:
+            file = Path(source)
+            placeholder = _reserve(real / target.name)
+            fd, tmp_name = tempfile.mkstemp(dir=real, prefix=".musicorg-", suffix=".tmp")
+            tmp = Path(tmp_name)
+            try:
+                with os.fdopen(fd, "wb") as out, file.open("rb") as original:
+                    while chunk := original.read(4 * 1024 * 1024):
+                        out.write(chunk)
+                    out.flush()
+                    _sync_file(out.fileno())
+                _replace(tmp, placeholder)
+            except BaseException:
+                tmp.unlink(missing_ok=True)
+                _unlink_if_empty(placeholder)
+                raise
+            final = placeholder
+    except OSError as exc:
+        raise FileOperationError(
+            f"Couldn't write {inside} in the export: {exc.strerror or exc}."
+        ) from exc
+    return target.parent / final.name
+
+
+def _not_forbidden(folder: Path, forbidden: Iterable[Path], what: str) -> None:
+    banned = [Path(f) for f in forbidden]
+    banned += [f.resolve() for f in banned]
+    real = folder.resolve()
+    for f in banned:
+        if any(_key(p) == _key(f) or _within(p, f) for p in (folder, real)):
+            raise UserError(
+                f"{what} can't go in {folder}: that's inside {f}, one of the library's own "
+                "folders or a folder Music Organizer only ever reads. Choose another place."
+            )
 
 
 def _cache_folder(folder: Path, cache: Path) -> Path:
