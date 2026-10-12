@@ -41,7 +41,7 @@ struct SharingSettings: View {
                         "Movies and videos: the MP4, M4V and MOV files in your Movies "
                             + "folder and your Videos folder, whoever put them there. "
                             + "Other kinds (MKV, AVI) are left out, because a phone can't "
-                            + "play them: Settings → Downloads converts a movie as it's kept.")
+                            + "play them: Settings → Downloads converts a movie as it's downloaded.")
                 }
                 SideNote(
                     "This Mac shares only on the home network, only with devices paired below, "

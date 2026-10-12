@@ -698,8 +698,8 @@ private struct HomeOverview: View {
                         model.homeLayout.arrange(ids)
                     }
                 }
-                // As tall as its rows, up to about ten; past that it scrolls.
-                .frame(height: min(CGFloat(shown.count) * 28 + 16, 300))
+                // As tall as its rows, up to two fifths of the sheet; past that it scrolls.
+                .frame(height: min(CGFloat(shown.count) * 28 + 16, Self.height * 0.4))
             }
             Divider()
             List {
@@ -716,6 +716,13 @@ private struct HomeOverview: View {
                 }
             }
         }
-        .frame(width: 560, height: 640)
+        .frame(width: 720, height: Self.height)
+    }
+
+    /// As tall as the screen has room for, up to 980 points (the owner, 2026-10-12: at
+    /// 640, with twelve rows on the page, only about eight of the rows that could be
+    /// added were in sight at a time).
+    private static var height: CGFloat {
+        min(980, max(640, (NSScreen.main?.visibleFrame.height ?? 800) - 140))
     }
 }

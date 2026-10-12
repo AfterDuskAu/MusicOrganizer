@@ -343,6 +343,11 @@ final class AppModel {
     @ObservationIgnored private var keyMonitor: Any?
     /// While set, the space bar does this instead of play/pause (tap-along lyrics).
     @ObservationIgnored var spaceBar: (() -> Void)?
+    /// Channels' pictures found afresh, for the cards whose own address has gone.
+    private(set) var channelPictures = ChannelPictures.saved()
+    @ObservationIgnored private var picturesWanted: [String] = []
+    @ObservationIgnored private var picturesAsked: Set<String> = []
+    @ObservationIgnored private var findingPictures = false
     /// Looks for the strip macOS makes across the top of a full screen (`tidyFullScreenTopBar`).
     @ObservationIgnored private var fullScreenWatch: Timer?
     private static let rootKey = "libraryRoot"
@@ -677,6 +682,34 @@ final class AppModel {
             throw RPCError(code: RPCError.closed, message: "The engine isn't running.")
         }
         return try await connection.call(method, params, as: type)
+    }
+
+    // MARK: channels' pictures
+
+    /// A channel's picture couldn't be had (the address its list gave has gone): the
+    /// channel is asked for as it is now, and its picture remembered. One channel at a
+    /// time, the one asked for last first (it's the one on screen now), each once in a
+    /// run of the app; every asking takes its turn at the engine's one gate.
+    func wantPicture(of channelId: String) {
+        guard picturesAsked.insert(channelId).inserted else { return }
+        picturesWanted.append(channelId)
+        guard !findingPictures else { return }
+        findingPictures = true
+        Task {
+            while let next = picturesWanted.popLast() {
+                let page = try? await ask(
+                    "channel.videos", ["channel_id": next, "limit": 1], as: ChannelPage.self)
+                rememberPicture(page?.thumbnail, of: next)
+            }
+            findingPictures = false
+        }
+    }
+
+    /// A channel's picture as it is today, come by while reading the channel.
+    func rememberPicture(_ address: String?, of channelId: String) {
+        guard let address, channelPictures.address(for: channelId) != address else { return }
+        channelPictures.remember(address, for: channelId)
+        channelPictures.save()
     }
 
     /// Play a film or a video file in the film player. The music stops for it.

@@ -458,8 +458,8 @@ private struct DownloadSettings: View {
                     "Movies folder", settings?.moviesFolder, usual: settings?.moviesFolderDefault,
                     setting: "movies_folder", named: "movies")
                 SideNote(
-                    "Movies you keep go here. Videos → Movies lists them. Choosing another "
-                        + "folder moves nothing: what's already kept stays where it is.")
+                    "Movies you download go here. Videos → Movies lists them. Choosing another "
+                        + "folder moves nothing: what's already there stays where it is.")
             }
             Section {
                 Toggle(

@@ -23,17 +23,27 @@ struct ComingPage: View {
 struct WebPicture: View {
     let address: String?
     var symbol = "play.rectangle"
+    /// Told when the picture can't be had: its address has gone, or there was none.
+    var failed: (() -> Void)?
 
     var body: some View {
-        AsyncImage(url: address.flatMap(URL.init(string:))) { phase in
-            if let image = phase.image {
-                image.resizable().scaledToFill()
-            } else {
-                ZStack {
-                    Rectangle().fill(.quaternary.opacity(0.5))
-                    Image(systemName: symbol).font(.title).foregroundStyle(.tertiary)
+        if let url = address.flatMap(URL.init(string:)) {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let image): image.resizable().scaledToFill()
+                case .failure: placeholder.onAppear { failed?() }
+                default: placeholder
                 }
             }
+        } else {
+            placeholder.onAppear { failed?() }
+        }
+    }
+
+    private var placeholder: some View {
+        ZStack {
+            Rectangle().fill(.quaternary.opacity(0.5))
+            Image(systemName: symbol).font(.title).foregroundStyle(.tertiary)
         }
     }
 }
@@ -43,14 +53,25 @@ struct MediaCard: View {
     let name: String
     let poster: String?
     let square: Bool
+    /// A channel's id: its picture is found afresh when the address given has gone
+    /// (`ChannelPictures` in the Kit).
+    let channelId: String?
+    @Environment(AppModel.self) private var model: AppModel?
     @State private var hovering = false
 
     init(item: MediaItem) {
         (name, poster, square) = (item.name, item.poster, item.posterShape == "square")
+        channelId = item.type == "channel" ? ChannelRef(item: item)?.channelId : nil
     }
 
     init(channel: ChannelRef) {
         (name, poster, square) = (channel.name, channel.thumbnail, true)
+        channelId = channel.channelId
+    }
+
+    /// The picture found afresh for a channel, when there is one; the one given otherwise.
+    private var picture: String? {
+        channelId.flatMap { model?.channelPictures.address(for: $0) } ?? poster
     }
 
     var body: some View {
@@ -59,8 +80,9 @@ struct MediaCard: View {
                 .aspectRatio(square ? 1 : 2.0 / 3.0, contentMode: .fit)
                 .overlay {
                     WebPicture(
-                        address: WebPictures.sized(poster, points: 200),
-                        symbol: square ? "play.tv" : "film")
+                        address: WebPictures.sized(picture, points: 200),
+                        symbol: square ? "play.tv" : "film",
+                        failed: channelId.map { id in { model?.wantPicture(of: id) } })
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .overlay(
@@ -342,6 +364,8 @@ struct ChannelView: View {
             do {
                 page = try await model.ask(
                     "channel.videos", ["channel_id": channel.channelId], as: ChannelPage.self)
+                // Its picture as it is today, for its card wherever that's shown.
+                model.rememberPicture(page?.thumbnail, of: channel.channelId)
             } catch {
                 problem = error.localizedDescription
             }
@@ -1017,13 +1041,13 @@ struct MovieView: View {
                                     model.filmKeeps[$0.lowercased()]
                                 }
                                 if let hash = stream.infoHash, keeping?.isKeeping == true {
-                                    Button("Stop Keeping", systemImage: "xmark.circle") {
+                                    Button("Stop Downloading", systemImage: "xmark.circle") {
                                         model.stopKeepingFilm(hash)
                                     }
                                     .takesFirstClick(false)
                                     .help("Stop fetching it. Nothing has been put in your Movies folder yet")
                                 } else {
-                                    Button("Keep", systemImage: "arrow.down.circle") {
+                                    Button("Download", systemImage: "arrow.down.circle") {
                                         model.keepFilm(
                                             stream, of: film, episode: episode,
                                             year: details?.year ?? film.year, apart: apart)

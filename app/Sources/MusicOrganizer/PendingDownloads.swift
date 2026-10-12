@@ -187,7 +187,7 @@ struct FilmKeeps: View {
             }
             .buttonStyle(.plain)
             .takesFirstClick(false)
-            .help(keeping ? "Stop keeping this movie" : "Take this off the list")
+            .help(keeping ? "Stop downloading this movie" : "Take this off the list")
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)

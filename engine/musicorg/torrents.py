@@ -525,9 +525,9 @@ class Player:
         film that phones and tablets can't play is made into an MP4 they can first
         (`convert`). Returns its status, as `status` does."""
         if self.movies is None:
-            raise TorrentError("There's nowhere set to keep films on this computer.")
+            raise TorrentError("There's nowhere set to download films to on this computer.")
         if not name.strip():
-            raise TorrentError("A film needs a name to be kept under.")
+            raise TorrentError("A film needs a name to be saved under.")
         self.play(info_hash, file_index, trackers)
         joined = self._joined[info_hash.lower()]
         joined.keep_name, joined.keep_error, joined.convert = name.strip(), None, convert
@@ -691,7 +691,7 @@ class Player:
                     joined.saving = False
                     return  # the engine is stopping: nothing is kept half-made
                 # It's kept as it arrived instead, and the owner is told.
-                joined.keep_note = f"It was kept as it arrived: {exc.message}"
+                joined.keep_note = f"It was left as it arrived: {exc.message}"
                 log.warning("A kept film wasn't converted: %s", exc.message)
                 source = joined.path
             joined.converting = None

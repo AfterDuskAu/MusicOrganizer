@@ -2446,15 +2446,15 @@ final class TorrentStatusTests: XCTestCase {
             state: "fetching", peers: 6, bytesPerSecond: 5_200_000, progress: 0.34, keeping: true)
         XCTAssertTrue(keeping.isKeeping)
         XCTAssertEqual(
-            keeping.keepLine, "Keeping: 34% here · 5.2 MB/s. It carries on while the app is open, and picks up again when it's reopened.")
+            keeping.keepLine, "Downloading: 34% here · 5.2 MB/s. It carries on while the app is open, and picks up again when it's reopened.")
         let kept = TorrentStatus(
             state: "complete", peers: 0, bytesPerSecond: 0, progress: 1, keeping: false,
             keptPath: "/Users/someone/Movies/The Kid (1921).mp4")
         XCTAssertFalse(kept.isKeeping)
-        XCTAssertEqual(kept.keepLine, "Kept in your Movies folder as “The Kid (1921).mp4”")
+        XCTAssertEqual(kept.keepLine, "Downloaded to your Movies folder as “The Kid (1921).mp4”")
         let failed = TorrentStatus(
             state: "complete", peers: 0, bytesPerSecond: 0, progress: 1, keepError: "No room.")
-        XCTAssertEqual(failed.keepLine, "Couldn't keep it: No room.")
+        XCTAssertEqual(failed.keepLine, "Couldn't download it: No room.")
         let converting = TorrentStatus(
             state: "complete", peers: 0, bytesPerSecond: 0, progress: 1, keeping: true, converting: 0.42)
         XCTAssertEqual(
@@ -2463,9 +2463,9 @@ final class TorrentStatusTests: XCTestCase {
         XCTAssertTrue(converting.isKeeping)
         let noted = TorrentStatus(
             state: "complete", peers: 0, bytesPerSecond: 0, progress: 1, keeping: false,
-            keptPath: "/Users/someone/Movies/Old.avi", keepNote: "It was kept as it arrived: no.")
+            keptPath: "/Users/someone/Movies/Old.avi", keepNote: "It was left as it arrived: no.")
         XCTAssertEqual(
-            noted.keepLine, "Kept in your Movies folder as “Old.avi”. It was kept as it arrived: no.")
+            noted.keepLine, "Downloaded to your Movies folder as “Old.avi”. It was left as it arrived: no.")
     }
 }
 

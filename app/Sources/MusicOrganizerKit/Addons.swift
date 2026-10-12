@@ -401,12 +401,14 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
         self.keepError = keepError
     }
 
-    /// One line about a film being kept, or nil when it isn't: "Keeping: 34% here ·
-    /// 5.2 MB/s", "Kept in your Movies folder", or why it couldn't be.
+    /// One line about a film being downloaded, or nil when it isn't: "Downloading: 34%
+    /// here · 5.2 MB/s", "Downloaded to your Movies folder", or why it couldn't be. (The
+    /// app's word for it was "Keep" until 2026-10-12, when the owner chose "Download";
+    /// the code and the engine still say keep.)
     public var keepLine: String? {
-        if let keepError { return "Couldn't keep it: \(keepError)" }
+        if let keepError { return "Couldn't download it: \(keepError)" }
         if let keptPath {
-            let kept = "Kept in your Movies folder as “\((keptPath as NSString).lastPathComponent)”"
+            let kept = "Downloaded to your Movies folder as “\((keptPath as NSString).lastPathComponent)”"
             return keepNote.map { "\(kept). \($0)" } ?? kept
         }
         guard keeping == true else { return nil }
@@ -414,9 +416,9 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
             return "Converting it for phones and tablets: \(Int(converting * 100))%. "
                 + "It carries on while the app is open, and picks up again when it's reopened."
         }
-        if state == "finding" { return "Keeping: finding the film…" }
+        if state == "finding" { return "Downloading: finding the film…" }
         let megabytes = String(format: "%.1f", Double(bytesPerSecond) / 1_000_000)
-        return "Keeping: \(Int(progress * 100))% here · \(megabytes) MB/s. It carries on while the app is open, and picks up again when it's reopened."
+        return "Downloading: \(Int(progress * 100))% here · \(megabytes) MB/s. It carries on while the app is open, and picks up again when it's reopened."
     }
 
     /// Still on its way: worth asking about again.

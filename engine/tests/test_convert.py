@@ -194,7 +194,7 @@ def test_a_film_that_cant_be_converted_is_kept_as_it_arrived(tmp_path: Path) -> 
     film.write_bytes(b"not really a film")
     joined = kept(tmp_path, film, convert_it=True)
     assert joined.kept_path == str(tmp_path / "Movies" / "The Film (1921).mkv")
-    assert joined.keep_error is None and "kept as it arrived" in (joined.keep_note or "")
+    assert joined.keep_error is None and "left as it arrived" in (joined.keep_note or "")
 
 
 # ---- a film that's already kept (2026-10-08) ------------------------------------------------
