@@ -44,9 +44,12 @@ final class HomeLists {
 /// Home (the owner's drawing, 2026-10-08): rows of what's theirs and what's suggested,
 /// each sliding sideways, with More at its end. Customise Home chooses the rows.
 struct HomeView: View {
+    /// Home is the page showing: the arrows are its cards' then (`CardKeys`).
+    var isActive = true
     @Environment(AppModel.self) private var model
     @State private var lists = HomeLists()
     @State private var editing = false
+    @State private var keys = CardKeys()
 
     var body: some View {
         let all = HomeSection.all(movieGenres: genres("movie"), seriesGenres: genres("series"))
@@ -68,14 +71,33 @@ struct HomeView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 26) {
-                        ForEach(sections) { section in
-                            HomeRow(section: section, lists: lists)
+                ScrollViewReader { page in
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 26) {
+                            ForEach(sections) { section in
+                                HomeRow(section: section, lists: lists).id(section.id)
+                            }
                         }
+                        .padding(.vertical, 18)
                     }
-                    .padding(.vertical, 18)
+                    // The row the arrows have gone to is brought into sight.
+                    .onChange(of: keys.shows) {
+                        guard let row = keys.showing else { return }
+                        withAnimation(.easeInOut(duration: 0.2)) { page.scrollTo(row, anchor: .center) }
+                    }
                 }
+                .environment(keys)
+            }
+        }
+        // The arrows move a highlight through the cards while Home is the page showing
+        // (the owner, 2026-10-12), and Return opens the card it's on.
+        .onChange(of: sections.map(\.id), initial: true) { keys.order = sections.map(\.id) }
+        .onChange(of: isActive, initial: true) {
+            if isActive {
+                model.cardKeys = keys
+            } else {
+                keys.clear()
+                if model.cardKeys === keys { model.cardKeys = nil }
             }
         }
         .task(id: model.phase) { await model.media.load(model) }
@@ -98,6 +120,7 @@ private struct HomeRow: View {
     let section: HomeSection
     let lists: HomeLists
     @Environment(AppModel.self) private var model
+    @Environment(CardKeys.self) private var keys: CardKeys?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -113,6 +136,8 @@ private struct HomeRow: View {
             .padding(.trailing, 20)
             content
         }
+        .environment(\.cardRow, section.id)
+        .onAppear { keys?.saw(section.id) }
         .task(id: taskKey) { await load(adding: false) }
     }
 
@@ -140,7 +165,11 @@ private struct HomeRow: View {
             } else {
                 PagedCards(
                     items: picks, width: 130, height: 212,
-                    canLoadMore: !page.noMore, loadingMore: page.loadingMore, loadMore: { page.more() }
+                    canLoadMore: !page.noMore, loadingMore: page.loadingMore, loadMore: { page.more() },
+                    open: { pick in
+                        let index = picks.firstIndex { $0.id == pick.id } ?? 0
+                        model.player.play(picks.map(\.result.track), startAt: index)
+                    }
                 ) { pick in
                     SongCard(track: pick.result.track, under: pick.artistName, artist: pick.artists.first) {
                         let index = picks.firstIndex { $0.id == pick.id } ?? 0
@@ -158,7 +187,12 @@ private struct HomeRow: View {
             if tracks.isEmpty {
                 note(emptySongs)
             } else {
-                PagedCards(items: tracks, width: 130, height: 196) { track in
+                PagedCards(
+                    items: tracks, width: 130, height: 196,
+                    open: { track in
+                        model.player.play(tracks, startAt: tracks.firstIndex { $0.id == track.id } ?? 0)
+                    }
+                ) { track in
                     SongCard(track: track, under: track.artist ?? "", artist: track.albumArtist ?? track.artist) {
                         model.player.play(tracks, startAt: tracks.firstIndex { $0.id == track.id } ?? 0)
                     } extra: {
@@ -197,7 +231,9 @@ private struct HomeRow: View {
             if model.followedChannels.isEmpty {
                 note("Channels you follow show up here. Open one and click Follow.")
             } else {
-                PagedCards(items: model.followedChannels, width: 112, height: 176) { channel in
+                PagedCards(
+                    items: model.followedChannels, width: 112, height: 176, open: { model.open($0) }
+                ) { channel in
                     Button { model.open(channel) } label: { MediaCard(channel: channel) }
                         .buttonStyle(.plain)
                 }
@@ -211,7 +247,8 @@ private struct HomeRow: View {
             } else {
                 PagedCards(
                     items: found, width: 112, height: 176, canLoadMore: list.more,
-                    loadingMore: list.working, loadMore: { Task { await load(adding: true) } }
+                    loadingMore: list.working, loadMore: { Task { await load(adding: true) } },
+                    open: { model.open($0) }
                 ) { channel in
                     Button { model.open(channel) } label: { MediaCard(channel: channel) }
                         .buttonStyle(.plain)
@@ -230,7 +267,12 @@ private struct HomeRow: View {
             } else if videos.isEmpty {
                 note(lists.newVideosWorking ? "Looking at your channels…" : "Nothing new was found.")
             } else {
-                PagedCards(items: videos, width: 208, height: 190) { video in
+                PagedCards(
+                    items: videos, width: 208, height: 190,
+                    open: { video in
+                        model.playVideos([video.result], startAt: 0, channels: VideoHit.channels(of: [video]))
+                    }
+                ) { video in
                     VideoCard(
                         name: video.title,
                         detail: [video.channel ?? "", video.age()].filter { !$0.isEmpty }
@@ -253,7 +295,7 @@ private struct HomeRow: View {
                         ? "A video you stop part way through shows up here, to carry on with."
                         : "Videos you watch show up here.")
             } else {
-                PagedCards(items: entries, width: 208, height: 190) { entry in
+                PagedCards(items: entries, width: 208, height: 190, open: { model.resume($0) }) { entry in
                     VideoCard(
                         name: entry.name, detail: entry.detail ?? "", picture: entry.picture,
                         progress: entry.isUnfinished ? entry.progress : nil
@@ -299,7 +341,13 @@ private struct HomeRow: View {
                         ? "One you stop part way through shows up here, to carry on with."
                         : "What you watch shows up here.")
             } else {
-                PagedCards(items: entries, width: 122, height: 250) { entry in
+                PagedCards(
+                    items: entries, width: 122, height: 250,
+                    open: { entry in
+                        guard let item = entry.item else { return }
+                        if section.kind == "continue" { model.resume(entry) } else { model.open(item) }
+                    }
+                ) { entry in
                     if let item = entry.item {
                         // Continue Watching plays it from where it was left (the owner,
                         // 2026-10-12); Recently Watched opens its page, as before.
@@ -330,7 +378,7 @@ private struct HomeRow: View {
             if items.isEmpty {
                 note("Click the heart on one's page and it shows up here.")
             } else {
-                PagedCards(items: items, width: 122, height: 250) { filmCard($0) }
+                PagedCards(items: items, width: 122, height: 250, open: { model.open($0) }) { filmCard($0) }
             }
         case "unwatched":
             // Hearted, and not watched past a quarter (the owner, 2026-10-12).
@@ -340,7 +388,7 @@ private struct HomeRow: View {
                     "One you've given a heart but not watched a quarter of yet shows up "
                         + "here. Click the heart on one's page.")
             } else {
-                PagedCards(items: items, width: 122, height: 250) { filmCard($0) }
+                PagedCards(items: items, width: 122, height: 250, open: { model.open($0) }) { filmCard($0) }
             }
         default:
             // One of the film add-on's lists: Popular, New, Best Rated, a genre, a search
@@ -353,7 +401,8 @@ private struct HomeRow: View {
             } else {
                 PagedCards(
                     items: list.items, width: 122, height: 250, canLoadMore: list.more,
-                    loadingMore: list.working, loadMore: { Task { await load(adding: true) } }
+                    loadingMore: list.working, loadMore: { Task { await load(adding: true) } },
+                    open: { model.open($0) }
                 ) { filmCard($0) }
             }
         }
@@ -461,7 +510,12 @@ private struct PagedCards<Item: Identifiable, Card: View>: View {
     var canLoadMore = false
     var loadingMore = false
     var loadMore: () -> Void = {}
+    /// What a click on a card does: what Return does on the card the arrows' highlight
+    /// is on (`CardKeys`).
+    let open: (Item) -> Void
     @ViewBuilder let card: (Item) -> Card
+    @Environment(CardKeys.self) private var keys: CardKeys?
+    @Environment(\.cardRow) private var row
     /// The first card showing.
     @State private var start = 0
     /// The forward arrow was clicked on the last page: go on when more has arrived.
@@ -494,11 +548,45 @@ private struct PagedCards<Item: Identifiable, Card: View>: View {
                 }
                 .frame(width: Self.gutter, height: height)
                 HStack(alignment: .top, spacing: spread) {
-                    ForEach(showing) { item in
+                    ForEach(Array(showing.enumerated()), id: \.element.id) { place, item in
                         card(item).frame(width: width, alignment: .top)
+                            // The arrows' highlight, round the card it's on.
+                            .overlay {
+                                if keys?.isOn(row, place) == true {
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .strokeBorder(Color.accentColor, lineWidth: 3)
+                                        .padding(-6)
+                                        .allowsHitTesting(false)
+                                }
+                            }
                     }
                 }
                 .frame(width: max(inner, width), alignment: .leading)
+                // What the arrows may ask of this row, told again whenever what it's
+                // showing changes: how many cards, its next ones or the ones before,
+                // and a card opened.
+                .onChange(of: RowShape(ids: showing.map { AnyHashable($0.id) }, fits: fits, more: hasNext), initial: true) {
+                    keys?.tell(
+                        row,
+                        CardKeys.Row(
+                            count: showing.count,
+                            page: { forward in
+                                if forward {
+                                    guard hasNext else {
+                                        if canLoadMore, !loadingMore { loadMore() }
+                                        return nil
+                                    }
+                                    start = from + fits
+                                    return min(fits, items.count - (from + fits))
+                                }
+                                guard from > 0 else { return nil }
+                                start = max(from - fits, 0)
+                                return fits
+                            },
+                            open: { place in
+                                if showing.indices.contains(place) { open(showing[place]) }
+                            }))
+                }
                 ZStack {
                     if hasNext || canLoadMore {
                         arrow("chevron.right", loadingMore && !hasNext ? "Finding more…" : "More") {
@@ -528,6 +616,13 @@ private struct PagedCards<Item: Identifiable, Card: View>: View {
             }
         }
         .frame(height: height)
+    }
+
+    /// What a row is showing, for telling when the keys' picture of it is out of date.
+    private struct RowShape: Equatable {
+        let ids: [AnyHashable]
+        let fits: Int
+        let more: Bool
     }
 
     private func arrow(_ symbol: String, _ title: String, action: @escaping () -> Void) -> some View {
@@ -645,7 +740,9 @@ private struct DownloadedVideoCards: View {
                     .padding(.horizontal, 44)
                     .padding(.vertical, 6)
             } else {
-                PagedCards(items: files, width: 208, height: 190) { file in
+                PagedCards(
+                    items: files, width: 208, height: 190, open: { model.playFilm($0.url, title: $0.name) }
+                ) { file in
                     VideoCard(name: file.name, detail: file.kind, picture: nil, progress: nil) {
                         model.playFilm(file.url, title: file.name)
                     }
@@ -748,5 +845,107 @@ private struct HomeOverview: View {
     /// added were in sight at a time).
     private static var height: CGFloat {
         min(980, max(640, (NSScreen.main?.visibleFrame.height ?? 800) - 140))
+    }
+}
+
+/// The arrow keys on a page of cards (the owner, 2026-10-12: on a homepage the arrows
+/// "switch through whats on the window"). A highlight goes from card to card: left and
+/// right along a row and on to its next cards, up and down between rows, and Return
+/// opens the card it's on, as a click does. Where the highlight goes is reckoned in the
+/// Kit (`CardFocus`); this holds it, and what each row said it's showing.
+@MainActor
+@Observable
+final class CardKeys {
+    /// What the keys may ask of a row.
+    struct Row {
+        /// How many cards it's showing.
+        let count: Int
+        /// Show its next cards (true) or the ones before: how many it then shows, or
+        /// nil when there are none that way.
+        let page: (Bool) -> Int?
+        /// Open the card at this place of the ones showing.
+        let open: (Int) -> Void
+    }
+
+    /// The row the highlight is on, and which of its cards.
+    private(set) var row: String?
+    private(set) var column = 0
+    /// The row to bring into sight, and a count that changes each time one is asked for.
+    private(set) var showing: String?
+    private(set) var shows = 0
+    /// The page's rows from the top, by their ids.
+    @ObservationIgnored var order: [String] = []
+    @ObservationIgnored private var rows: [String: Row] = [:]
+    /// Rows that have been on the screen: one of them with nothing told has no cards.
+    @ObservationIgnored private var seen: Set<String> = []
+    /// A row scrolled to before it had been seen: the highlight goes to it when its
+    /// cards are there.
+    @ObservationIgnored private var awaited: String?
+
+    var hasHighlight: Bool { row != nil }
+
+    func isOn(_ row: String, _ column: Int) -> Bool {
+        self.row == row && min(self.column, max((rows[row]?.count ?? 1) - 1, 0)) == column
+    }
+
+    func saw(_ row: String) { seen.insert(row) }
+
+    /// A row says what it's showing now.
+    func tell(_ row: String, _ what: Row) {
+        rows[row] = what
+        if awaited == row, what.count > 0 {
+            awaited = nil
+            (self.row, column) = (row, 0)
+        }
+    }
+
+    /// An arrow was pressed.
+    func press(_ key: PlayerKey) {
+        let states: [CardFocus.Row] = order.map { id in
+            if let row = rows[id] { return row.count > 0 ? .cards(row.count) : .empty }
+            return seen.contains(id) ? .empty : .unseen
+        }
+        let now = row.flatMap { order.firstIndex(of: $0) }.map { CardFocus(row: $0, column: column) }
+        switch CardFocus.step(from: now, key: key, rows: states) {
+        case .to(let focus):
+            (row, column) = (order[focus.row], focus.column)
+            show(order[focus.row])
+        case .page(let index, let forward):
+            if let count = rows[order[index]]?.page(forward) { column = forward ? 0 : max(count - 1, 0) }
+        case .reveal(let index):
+            awaited = order[index]
+            show(order[index])
+        case .stay:
+            break
+        }
+    }
+
+    /// Return: the card the highlight is on is opened. False when there's no highlight.
+    func open() -> Bool {
+        guard let row, let told = rows[row], told.count > 0 else { return false }
+        told.open(min(column, told.count - 1))
+        return true
+    }
+
+    /// No highlight: the page has been left, or Esc was pressed.
+    func clear() {
+        (row, column, awaited) = (nil, 0, nil)
+    }
+
+    private func show(_ row: String) {
+        showing = row
+        shows += 1
+    }
+}
+
+private struct CardRowKey: EnvironmentKey {
+    static let defaultValue = ""
+}
+
+extension EnvironmentValues {
+    /// The row of Home a row of cards belongs to: its section's id.
+    var cardRow: String {
+        get { self[CardRowKey.self] }
+        set { self[CardRowKey.self] = newValue }
     }
 }

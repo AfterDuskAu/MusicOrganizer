@@ -357,6 +357,15 @@ final class AppModel {
     @ObservationIgnored private var keyMonitor: Any?
     /// While set, the space bar does this instead of play/pause (tap-along lyrics).
     @ObservationIgnored var spaceBar: (() -> Void)?
+    /// The page of cards that's showing, whose the arrows are then (Home says so while
+    /// it's the page showing).
+    @ObservationIgnored weak var cardKeys: CardKeys?
+    /// The player's own page is showing (the Visualizer's, or the big cover over the
+    /// window): the arrows are the player's there.
+    @ObservationIgnored var playerPageShowing = false
+    /// The sidebar's last up or down arrow was its own: it's being gone through by key,
+    /// and carries on past Home (`ArrowKeys`).
+    @ObservationIgnored private var arrowingSidebar = false
     /// Channels' pictures found afresh, for the cards whose own address has gone.
     private(set) var channelPictures = ChannelPictures.saved()
     @ObservationIgnored private var picturesWanted: [String] = []
@@ -3224,65 +3233,122 @@ final class AppModel {
     // MARK: the space bar and the arrows
 
     /// Space plays and pauses, as in every music app, except while typing in a field.
-    /// While a film is open, or a video or the visualizer has the whole screen, the
-    /// arrows are the player's too (the owner, 2026-10-12): up and down for the sound,
-    /// left and right to go back and forward (`PlayerKey` in the Kit).
+    /// The arrows work whatever is playing, wherever the app is (the owner, 2026-10-12:
+    /// "Arrow keys function everywhere"): left and right go back and on, up and down
+    /// move the sound; on Home they move a highlight through the cards, and Return opens
+    /// the card it's on. Whose they are at any moment is reckoned in the Kit
+    /// (`ArrowKeys`); a list on the page keeps its own up and down, and a field its keys.
     private func installSpaceBar() {
         guard keyMonitor == nil else { return }
-        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .leftMouseDown]) { [weak self] event in
+            // A click anywhere: the sidebar isn't being gone through by key any more.
+            if event.type == .leftMouseDown {
+                MainActor.assumeIsolated { self?.arrowingSidebar = false }
+                return event
+            }
+            // A sheet's or a panel's keys are its own (a file panel's arrows, say).
+            let elsewhere = event.window?.isSheet == true || event.window is NSPanel
+            let typing = event.window?.firstResponder is NSText
+            let list = Self.listWithKeyboard(in: event.window)
+            let plain = event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty
             // Esc leaves the video's or the visualizer's full screen, whatever has the
-            // keyboard's attention (a button's own shortcut wasn't reliable there).
+            // keyboard's attention (a button's own shortcut wasn't reliable there); on
+            // Home it takes the arrows' highlight off the cards.
             if event.keyCode == 53 {
                 let left = MainActor.assumeIsolated { () -> Bool in
-                    guard let self, self.pictureFullScreen else { return false }
-                    self.setPictureFullScreen(false)
+                    guard let self else { return false }
+                    if self.pictureFullScreen {
+                        self.setPictureFullScreen(false)
+                        return true
+                    }
+                    guard !typing, !elsewhere, !self.film.isOpen, !self.playerPageShowing,
+                        let cards = self.cardKeys, cards.hasHighlight
+                    else { return false }
+                    cards.clear()
+                    self.arrowingSidebar = list == .sidebar
                     return true
                 }
                 return left ? nil : event
             }
+            // Return, on Home: the card the highlight is on is opened.
+            if event.keyCode == 36 || event.keyCode == 76 {
+                guard plain, !typing, !elsewhere else { return event }
+                let opened = MainActor.assumeIsolated { () -> Bool in
+                    guard let self, !self.film.isOpen, !self.pictureFullScreen, !self.playerPageShowing
+                    else { return false }
+                    return self.cardKeys?.open() ?? false
+                }
+                return opened ? nil : event
+            }
             // With ⌘, ⌥, ⌃ or Shift held it's something else's (⌘→ is Next Song).
-            guard let key = PlayerKey(keyCode: event.keyCode),
-                event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty
-            else { return event }
-            // A sheet's or a panel's keys are its own (a file panel's arrows, say).
-            let elsewhere = event.window?.isSheet == true || event.window is NSPanel
-            let typing = event.window?.firstResponder is NSText
+            guard let key = PlayerKey(keyCode: event.keyCode), plain else { return event }
             let taken = MainActor.assumeIsolated {
-                self?.pressed(key, typing: typing, elsewhere: elsewhere, held: event.isARepeat) ?? false
+                self?.pressed(key, typing: typing, elsewhere: elsewhere, held: event.isARepeat, list: list)
+                    ?? false
             }
             return taken ? nil : event
         }
     }
 
-    /// One of the player's keys was pressed: true if it was the player's to take.
+    /// A list that has the keyboard: the sidebar, or one on the page itself.
+    private enum KeyboardList { case none, sidebar, page }
+
+    /// Which list has the keyboard in this window, if one has. The sidebar is told from
+    /// a list on a page by where it is: at the window's left edge, and narrow.
+    private static func listWithKeyboard(in window: NSWindow?) -> KeyboardList {
+        guard let list = window?.firstResponder as? NSTableView else { return .none }
+        let frame = list.convert(list.visibleRect, to: nil)
+        return frame.minX < 1 && frame.width <= 300 ? .sidebar : .page
+    }
+
+    /// One of the player's keys was pressed: true if it was taken here.
     /// `held`: the key is being held down, which carries on for the sound and for going
     /// back and forward, but doesn't play and pause over and over.
-    private func pressed(_ key: PlayerKey, typing: Bool, elsewhere: Bool, held: Bool) -> Bool {
+    private func pressed(
+        _ key: PlayerKey, typing: Bool, elsewhere: Bool, held: Bool, list: KeyboardList
+    ) -> Bool {
         if key == .playPause, let action = spaceBar {
             action()
             return true
         }
         guard !typing else { return false }
-        if film.isOpen {
-            guard !elsewhere else { return false }
-            if !(held && key == .playPause) { film.press(key) }
+        if key == .playPause {
+            if film.isOpen {
+                guard !elsewhere else { return false }
+                if !held { film.press(key) }
+                keyPresses += 1
+            } else if !held {
+                player.toggle()
+            }
+            return true
+        }
+        var place = ArrowKeys.Place()
+        place.elsewhere = elsewhere
+        place.watching = film.isOpen || pictureFullScreen || playerPageShowing
+        place.somethingPlaying = player.current != nil
+        place.cardsShowing = cardKeys != nil
+        place.pageListHasKeyboard = list == .page
+        place.arrowingSidebar = list == .sidebar && arrowingSidebar
+        switch ArrowKeys.owner(of: key, at: place) {
+        case .theirs:
+            // Up or down left to the sidebar: it's being gone through by key.
+            if list == .sidebar, key == .louder || key == .quieter { arrowingSidebar = true }
+            return false
+        case .cards:
+            arrowingSidebar = false
+            cardKeys?.press(key)
+            return true
+        case .player:
+            if film.isOpen {
+                film.press(key)
+            } else if let place = key.place(from: player.clock.time, length: player.clock.duration) {
+                player.seek(to: place)
+            } else {
+                player.volume = Float(key.volume(from: Double(player.volume), full: 1))
+            }
             keyPresses += 1
             return true
         }
-        if key == .playPause {
-            if !held { player.toggle() }
-            return true
-        }
-        // The arrows, with no film open: the lists' own, unless a video or the
-        // visualizer has the whole screen.
-        guard pictureFullScreen, !elsewhere else { return false }
-        if let place = key.place(from: player.clock.time, length: player.clock.duration) {
-            player.seek(to: place)
-        } else {
-            player.volume = Float(key.volume(from: Double(player.volume), full: 1))
-        }
-        keyPresses += 1
-        return true
     }
 
     private var appVersion: String {

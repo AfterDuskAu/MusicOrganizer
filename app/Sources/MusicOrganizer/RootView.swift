@@ -341,6 +341,8 @@ struct MainView: View {
                     item = wanted
                 }
                 .onChange(of: model.listening.playlists) { forgetDeletedPlaylists() }
+                // The arrows are the player's while its own page is the one looked at.
+                .onChange(of: onPlayerPage, initial: true) { model.playerPageShowing = onPlayerPage }
             }
             // An overlay, so the big cover and lyrics can never change the window's layout.
             .overlay {
@@ -752,6 +754,15 @@ struct MainView: View {
                                     + film.subtitleTracks.map(\.label).joined(separator: ", ")
                                 : "no subtitles menu")
                         : "BENCH film: none open")
+            } else if step.name == "player" {
+                let player = model.player
+                Bench.say(
+                    String(
+                        format: "BENCH player: %@, at %.1f s of %.1f, sound %.2f; the arrows' highlight is %@",
+                        player.current.map { "\($0.title) \(player.isPlaying ? "playing" : "paused")" } ?? "nothing in it",
+                        player.clock.time, player.clock.duration, player.volume,
+                        model.cardKeys.map { keys in keys.row.map { "on \($0), card \(keys.column + 1)" } ?? "nowhere" }
+                            ?? "not this page's"))
             } else if step.name == "openfilm" {
                 // The film named by MUSICORG_BENCH_FILM opened now, silently: a film
                 // opened with the window in full screen already.
@@ -914,7 +925,7 @@ struct PageView: View {
         case .seriesFinder:
             MovieFinderView(kind: "series")
         case .home:
-            HomeView()
+            HomeView(isActive: active)
         case .videoFinder:
             VideoFinderView()
         case .channels:

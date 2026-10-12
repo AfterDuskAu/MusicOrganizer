@@ -53,7 +53,9 @@ import AppKit
 ///   brings the menu bar down over a full screen, or in its middle (only a copy that's
 ///   seen: it's the owner's own pointer)
 /// - `key=<name>`: a key pressed, as one on the keyboard arrives: `space`, `up`, `down`,
-///   `left` or `right`
+///   `left`, `right`, `return` or `esc`
+/// - `player`: what's in the music player, where it has got to and how loud, and where the
+///   arrows' highlight is on a page of cards, written out
 /// - `film`: whether a film is open and playing, where it has got to and how loud, written out
 /// - `state`: the page showing, the song rows picked and whether the app is in front, written out
 /// - `hide`, `show`: the app hidden, and brought back
@@ -380,6 +382,7 @@ enum Bench {
             let keys: [String: (UInt16, String)] = [
                 "space": (49, " "), "up": (126, "\u{F700}"), "down": (125, "\u{F701}"),
                 "left": (123, "\u{F702}"), "right": (124, "\u{F703}"),
+                "return": (36, "\r"), "esc": (53, "\u{1B}"),
             ]
             guard let (code, letter) = keys[String(name.dropFirst(4))], let window,
                 let press = NSEvent.keyEvent(
