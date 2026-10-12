@@ -80,6 +80,7 @@ public struct HomeSection: Identifiable, Hashable, Sendable {
             .init(id: "channels.recent", group: .channels, title: "Recently Watched Videos"),
             .init(id: "channels.favourites", group: .channels, title: "Your Favourite Channels"),
             .init(id: "channels.new", group: .channels, title: "New From Your Channels"),
+            .init(id: "channels.unwatched", group: .channels, title: "Videos You Haven't Watched"),
             .init(id: "channels.recommended", group: .channels, title: "Recommended Channels"),
             .init(id: "channels.downloaded", group: .channels, title: "Your Downloaded Videos"),
         ]
@@ -89,6 +90,7 @@ public struct HomeSection: Identifiable, Hashable, Sendable {
                 .init(id: "\(key).continue", group: group, title: "Continue Watching \(things)"),
                 .init(id: "\(key).recent", group: group, title: "Recently Watched \(things)"),
                 .init(id: "\(key).favourites", group: group, title: "Your Favourite \(things)"),
+                .init(id: "\(key).unwatched", group: group, title: "\(things) You Haven't Watched"),
                 .init(id: "\(key).recommended", group: group, title: "Recommended \(things)"),
                 .init(id: "\(key).popular", group: group, title: "Popular \(things) Now"),
                 .init(id: "\(key).new", group: group, title: "New \(things)"),
@@ -178,6 +180,12 @@ public struct WatchHistory: Equatable, Sendable {
         public var seconds: Double
         public var length: Double
         public var at: Date
+        /// The way a film or an episode was played, and the name it was played under, so
+        /// a click on it in Continue Watching plays it again from where it was left
+        /// (the owner, 2026-10-12) without its page being gone through. Nil for a video,
+        /// which is played by its id, and for one watched before this was remembered.
+        public var stream: MediaStream?
+        public var playName: String?
 
         public init(
             id: String, kind: Kind, name: String, detail: String? = nil, picture: String? = nil,
@@ -222,6 +230,15 @@ public struct WatchHistory: Equatable, Sendable {
     }
 
     public mutating func forget(_ id: String) { entries.removeAll { $0.id == id } }
+
+    /// Past this much of something, it has been begun in earnest: the owner's mark
+    /// (2026-10-12) for what still counts as not watched.
+    public static let begun = 0.25
+
+    /// Whether this has been watched past the mark. Something never played hasn't.
+    public func isBegun(_ id: String) -> Bool {
+        entries.first { $0.id == id }.map { $0.progress > Self.begun } ?? false
+    }
 
     public func recent(_ kind: Entry.Kind) -> [Entry] { entries.filter { $0.kind == kind } }
     public func unfinished(_ kind: Entry.Kind) -> [Entry] { recent(kind).filter(\.isUnfinished) }

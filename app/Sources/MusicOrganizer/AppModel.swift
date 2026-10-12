@@ -242,8 +242,19 @@ final class AppModel {
         goTo = item.type == "series" ? .seriesFinder : .movieFinder
     }
 
-    /// Play a video from Home's history, from where it was left.
+    /// Play a video from Home's history, from where it was left. A film or an episode
+    /// is played the way it was played before (the film player opens it where it was
+    /// left: `FilmPositions`); one whose way wasn't remembered opens its page instead.
+    /// This is the owner's click on that film, as a click on Play on its page is.
     func resume(_ entry: WatchHistory.Entry) {
+        if entry.kind != .video {
+            if let stream = entry.stream, stream.canPlay {
+                play(stream, title: entry.playName ?? entry.name, watching: entry)
+            } else if let item = entry.item {
+                open(item)
+            }
+            return
+        }
         let video = SearchResult(
             videoId: entry.id, title: entry.name, artists: entry.detail.map { [$0] } ?? [],
             durationS: entry.length > 0 ? entry.length : nil, thumbnail: entry.picture)
@@ -764,8 +775,10 @@ final class AppModel {
     /// Play one of a film's streams: a web address or a torrent in the film player, a
     /// video by its id in the app's own player.
     func play(_ stream: MediaStream, title: String, watching entry: WatchHistory.Entry? = nil) {
-        // Remembered as watched, when it's a film or an episode from its page.
-        if let entry, stream.kind == "url" || stream.kind == "torrent" {
+        // Remembered as watched, when it's a film or an episode from its page: with the
+        // way it was played, so Home's Continue Watching can play it again.
+        if var entry, stream.kind == "url" || stream.kind == "torrent" {
+            (entry.stream, entry.playName) = (stream, title)
             watching(entry)
             watchingFilm = entry.id
         }

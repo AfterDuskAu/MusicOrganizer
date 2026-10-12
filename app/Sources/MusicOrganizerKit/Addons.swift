@@ -182,7 +182,7 @@ public struct MediaDetails: Decodable, Sendable {
 }
 
 /// One way to play a film (the engine's Stream).
-public struct MediaStream: Decodable, Hashable, Sendable {
+public struct MediaStream: Codable, Hashable, Sendable {
     public let kind: String
     public let name: String?
     public let title: String?

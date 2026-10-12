@@ -217,13 +217,20 @@ private struct HomeRow: View {
                         .buttonStyle(.plain)
                 }
             }
-        case "new":
+        case "new", "unwatched":
+            // "unwatched": the same videos, without the ones watched past a quarter. A
+            // video has no heart of its own, so it's the channels followed that count.
+            let videos = section.kind == "new"
+                ? lists.newVideos : lists.newVideos.filter { !model.history.isBegun($0.videoId) }
             if model.followedChannels.isEmpty {
-                note("The newest videos from the channels you follow show up here.")
-            } else if lists.newVideos.isEmpty {
+                note(
+                    section.kind == "new"
+                        ? "The newest videos from the channels you follow show up here."
+                        : "New videos from the channels you follow that you haven't watched show up here.")
+            } else if videos.isEmpty {
                 note(lists.newVideosWorking ? "Looking at your channels…" : "Nothing new was found.")
             } else {
-                PagedCards(items: lists.newVideos, width: 208, height: 190) { video in
+                PagedCards(items: videos, width: 208, height: 190) { video in
                     VideoCard(
                         name: video.title,
                         detail: [video.channel ?? "", video.age()].filter { !$0.isEmpty }
@@ -294,7 +301,11 @@ private struct HomeRow: View {
             } else {
                 PagedCards(items: entries, width: 122, height: 250) { entry in
                     if let item = entry.item {
-                        Button { model.open(item) } label: {
+                        // Continue Watching plays it from where it was left (the owner,
+                        // 2026-10-12); Recently Watched opens its page, as before.
+                        Button {
+                            if section.kind == "continue" { model.resume(entry) } else { model.open(item) }
+                        } label: {
                             MediaCard(item: item)
                                 .overlay(alignment: .top) {
                                     if entry.isUnfinished {
@@ -307,7 +318,10 @@ private struct HomeRow: View {
                         }
                         .buttonStyle(.plain)
                         .help(entry.detail ?? item.name)
-                        .contextMenu { Button("Remove From This Row") { model.forgetWatched(entry) } }
+                        .contextMenu {
+                            Button("Open Its Page") { model.open(item) }
+                            Button("Remove From This Row") { model.forgetWatched(entry) }
+                        }
                     }
                 }
             }
@@ -315,6 +329,16 @@ private struct HomeRow: View {
             let items = model.mediaFavourites.of(type: type)
             if items.isEmpty {
                 note("Click the heart on one's page and it shows up here.")
+            } else {
+                PagedCards(items: items, width: 122, height: 250) { filmCard($0) }
+            }
+        case "unwatched":
+            // Hearted, and not watched past a quarter (the owner, 2026-10-12).
+            let items = model.mediaFavourites.of(type: type).filter { !model.history.isBegun($0.id) }
+            if items.isEmpty {
+                note(
+                    "One you've given a heart but not watched a quarter of yet shows up "
+                        + "here. Click the heart on one's page.")
             } else {
                 PagedCards(items: items, width: 122, height: 250) { filmCard($0) }
             }
@@ -366,7 +390,7 @@ private struct HomeRow: View {
         case (.songs, "recommended"):
             let page = model.whatsNew
             if !page.hasAsked, model.phase == .ready { page.find([.library], count: 20) }
-        case (.channels, "new"):
+        case (.channels, "new"), (.channels, "unwatched"):
             await lists.loadNewVideos(model, channels: model.followedChannels)
         case (.channels, "recommended"):
             if let source = media.catalogs(of: "channel").first {
@@ -374,7 +398,7 @@ private struct HomeRow: View {
                     model, addon: source.addon, catalog: source.catalog, adding: adding)
             }
         case (.movies, let kind), (.series, let kind):
-            guard !["continue", "recent", "favourites"].contains(kind) else { return }
+            guard !["continue", "recent", "favourites", "unwatched"].contains(kind) else { return }
             if isRecommended, taste == nil { return }
             let wanted = ["new": "year", "best": "imdbRating"][kind] ?? "top"
             guard let source = media.catalogs(of: type).first(where: { $0.catalog.id == wanted })
