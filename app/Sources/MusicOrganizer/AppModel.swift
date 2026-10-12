@@ -73,6 +73,9 @@ final class AppModel {
     }
     /// The video, or the custom visualizer, has the whole screen (`setPictureFullScreen`).
     private(set) var pictureFullScreen = false
+    /// The window whose title bar was made plain for its way into full screen
+    /// (`plainTitleBar`), until it's the look's again.
+    @ObservationIgnored private weak var plainTitled: NSWindow?
     /// Goes up at each key that worked a film, or a video on the whole screen: their
     /// controls come up for it, as they do for the mouse, so the change can be seen.
     private(set) var keyPresses = 0
@@ -510,8 +513,18 @@ final class AppModel {
         // until full screen has settled.
         NotificationCenter.default.addObserver(
             forName: NSWindow.willEnterFullScreenNotification, object: nil, queue: .main
-        ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.watchForFullScreenTopBar() }
+        ) { [weak self] note in
+            let window = note.object as? NSWindow
+            MainActor.assumeIsolated {
+                self?.plainTitleBar(of: window, true)
+                self?.watchForFullScreenTopBar()
+            }
+        }
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willExitFullScreenNotification, object: nil, queue: .main
+        ) { [weak self] note in
+            let window = note.object as? NSWindow
+            MainActor.assumeIsolated { self?.plainTitleBar(of: window, false) }
         }
         NotificationCenter.default.addObserver(
             forName: NSWindow.didEnterFullScreenNotification, object: nil, queue: .main
@@ -751,6 +764,34 @@ final class AppModel {
         for window in NSApp.windows
         where String(describing: type(of: window)).contains("ToolbarFullScreenWindow") {
             if window.contentView?.isHidden != hide { window.contentView?.isHidden = hide }
+            // Hidden, it's still a window lying over the top of the picture: clicks go
+            // through it, to the ✕ in the picture's top left corner.
+            if window.ignoresMouseEvents != hide { window.ignoresMouseEvents = hide }
+        }
+        // The picture has gone (a film shut in full screen): the bar is the look's again.
+        if !hide { plainTitleBar(of: plainTitled, false) }
+    }
+
+    /// The other place the strip came from, found on 2026-10-12 after the owner still saw
+    /// it "for a second": the picture macOS shows while the window grows into full
+    /// screen. macOS makes that picture itself, of where the window is going, before
+    /// anything here is asked, and in the Warm Look it painted the title bar into it as
+    /// a band of the window's colour across the top of the film (measured: the band was
+    /// there in the Warm Look and not in the native one; `MUSICORG_BENCH`'s `windows`
+    /// says what's across the top of that picture). Hiding the real strip can't reach a
+    /// picture of it. What makes macOS paint the band is the Warm Look's see-through
+    /// title bar (`WindowLook`), so while a picture has the screen the title bar is
+    /// macOS's plain one from the moment full screen begins, which it leaves out of the
+    /// picture; and it's the look's again when the picture goes, or full screen ends.
+    private func plainTitleBar(of window: NSWindow?, _ plain: Bool) {
+        guard Theme.current.isWarm, let window else { return }
+        if plain {
+            guard film.isOpen || pictureFullScreen, window.titlebarAppearsTransparent else { return }
+            window.titlebarAppearsTransparent = false
+            plainTitled = window
+        } else if window === plainTitled {
+            window.titlebarAppearsTransparent = true
+            plainTitled = nil
         }
     }
 
@@ -2669,7 +2710,16 @@ final class AppModel {
         if on {
             if !isFull {
                 tookTheScreen = true
-                window.toggleFullScreen(nil)
+                // A moment later, not at once: the picture has to be over the window and
+                // the top bar's buttons gone before macOS makes its picture of where the
+                // window is going, or the bar is in that picture, across the top, for
+                // the second the window takes to grow (measured 2026-10-12).
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                    guard let self, self.pictureFullScreen, self.tookTheScreen,
+                        !window.styleMask.contains(.fullScreen)
+                    else { return }
+                    window.toggleFullScreen(nil)
+                }
             }
         } else if tookTheScreen {
             tookTheScreen = false

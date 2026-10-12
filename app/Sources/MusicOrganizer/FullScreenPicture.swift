@@ -97,21 +97,25 @@ struct FullScreenPicture: View {
         }
     }
 
-    /// What's playing, along the top. No button up here: in full screen macOS keeps the
-    /// top edge for its menu bar, which slides down over it and took the click (owner,
-    /// 2026-10-03: "the leave full screen button still doesn't work").
+    /// The ✕ in the top left corner, as a film has it (the owner, 2026-10-12), with what's
+    /// playing beside it. No band across the top behind them: nothing is to run across
+    /// the top of a full screen. A button here didn't work on 2026-10-03 ("the leave full
+    /// screen button still doesn't work"): macOS's strip for the window's top bar lies
+    /// over this corner in full screen and took the click. Now that strip lets clicks
+    /// through while it's hidden (`AppModel.tidyFullScreenTopBar`), and the ✕ is clear
+    /// of the edge the menu bar comes down from.
     private func top(_ player: Player) -> some View {
-        HStack(spacing: 12) {
+        HStack(alignment: .top, spacing: 14) {
+            CornerClose(help: "Back to the app (Esc)") { model.setPictureFullScreen(false) }
             if let track = player.current {
                 Text("\(track.title) · \(track.artistName)")
                     .font(.headline)
                     .lineLimit(1)
+                    .shadow(color: .black.opacity(0.9), radius: 3)
+                    .padding(.top, 66)
             }
             Spacer()
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 14)
-        .background(.black.opacity(0.55))
     }
 
     /// The controls along the bottom. `picture` is what the lyrics would be beside,

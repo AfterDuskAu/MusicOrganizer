@@ -2600,6 +2600,29 @@ final class FilmExtrasTests: XCTestCase {
         XCTAssertNil(FilmTrack.Kind(rawValue: "video"))
     }
 
+    func testAMenuIsThereOnlyWhenTheresSomethingToChoose() {
+        let english = FilmTrack(id: 1, kind: .sound, title: "Main", language: nil, selected: true)
+        let other = FilmTrack(id: 2, kind: .sound, title: "Commentary", language: nil, selected: false)
+        let words = FilmTrack(id: 1, kind: .subtitles, title: "Signs", language: nil, selected: false)
+        // One sound track can't be switched for anything; two can.
+        XCTAssertFalse(FilmTrack.offersChoice([english], of: .sound))
+        XCTAssertTrue(FilmTrack.offersChoice([english, other], of: .sound))
+        // Any subtitles can be switched on and off; none at all is no menu.
+        XCTAssertFalse(FilmTrack.offersChoice([english, other], of: .subtitles))
+        XCTAssertTrue(FilmTrack.offersChoice([english, words], of: .subtitles))
+        XCTAssertFalse(FilmTrack.offersChoice([], of: .sound))
+    }
+
+    func testAMenusButtonSaysWhatsChosen() {
+        let english = FilmTrack(id: 1, kind: .sound, title: "Main", language: nil, selected: true)
+        let other = FilmTrack(id: 2, kind: .sound, title: "Commentary", language: nil, selected: false)
+        let words = FilmTrack(id: 1, kind: .subtitles, title: "Signs", language: nil, selected: false)
+        let shown = FilmTrack(id: 2, kind: .subtitles, title: "Full", language: nil, selected: true)
+        XCTAssertEqual(FilmTrack.chosen([english, other, words], of: .sound), "Sound: Main")
+        XCTAssertEqual(FilmTrack.chosen([english, other, words], of: .subtitles), "Subtitles: Off")
+        XCTAssertEqual(FilmTrack.chosen([english, words, shown], of: .subtitles), "Subtitles: Full")
+    }
+
     func testAFilmOpensWhereItWasLeft() {
         var places = FilmPositions()
         let start = Date(timeIntervalSince1970: 1_000_000)

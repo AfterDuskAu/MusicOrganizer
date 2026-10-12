@@ -28,6 +28,22 @@ public struct FilmTrack: Identifiable, Hashable, Sendable {
             .filter { !$0.isEmpty }
         return parts.isEmpty ? "Track \(number)" : parts.joined(separator: " · ")
     }
+
+    /// Whether a film's tracks of one kind are worth a menu (the owner, 2026-10-12:
+    /// "only if there are subtitles or audio tracks to pick from"): two sound tracks or
+    /// more, since one can't be switched for anything; any subtitles at all, since they
+    /// can be switched on and off.
+    public static func offersChoice(_ tracks: [FilmTrack], of kind: Kind) -> Bool {
+        let ofKind = tracks.filter { $0.kind == kind }
+        return kind == .sound ? ofKind.count > 1 : !ofKind.isEmpty
+    }
+
+    /// What the menu's own button says: the track that's chosen, so it's seen without
+    /// opening the menu ("Sound: English", "Subtitles: Off").
+    public static func chosen(_ tracks: [FilmTrack], of kind: Kind) -> String {
+        let now = tracks.first { $0.kind == kind && $0.selected }
+        return (kind == .sound ? "Sound: " : "Subtitles: ") + (now?.label ?? "Off")
+    }
 }
 
 /// Where each film was watched up to, so it opens there the next time (the owner,

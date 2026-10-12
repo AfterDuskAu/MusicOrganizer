@@ -740,10 +740,30 @@ struct MainView: View {
                 Bench.say(
                     film.isOpen
                         ? String(
-                            format: "BENCH film: %@, at %.1f s of %.1f, sound %.0f, music %@",
+                            format: "BENCH film: %@, at %.1f s of %.1f, sound %.0f, music %@; %@; %@",
                             film.paused ? "paused" : "playing", film.time, film.duration, film.volume,
-                            model.player.isPlaying ? "playing" : "not playing")
+                            model.player.isPlaying ? "playing" : "not playing",
+                            FilmTrack.offersChoice(film.soundTracks, of: .sound)
+                                ? "sound menu says \(FilmTrack.chosen(film.soundTracks, of: .sound)) of "
+                                    + film.soundTracks.map(\.label).joined(separator: ", ")
+                                : "no sound menu",
+                            FilmTrack.offersChoice(film.subtitleTracks, of: .subtitles)
+                                ? "subtitles menu says \(FilmTrack.chosen(film.subtitleTracks, of: .subtitles)) of "
+                                    + film.subtitleTracks.map(\.label).joined(separator: ", ")
+                                : "no subtitles menu")
                         : "BENCH film: none open")
+            } else if step.name == "openfilm" {
+                // The film named by MUSICORG_BENCH_FILM opened now, silently: a film
+                // opened with the window in full screen already.
+                if let path = ProcessInfo.processInfo.environment["MUSICORG_BENCH_FILM"] {
+                    model.film.volume = 0
+                    model.playFilm(URL(fileURLWithPath: path), title: "Check")
+                }
+            } else if step.name == "closefilm" {
+                model.closeFilm()
+            } else if step.name == "picture" {
+                // The video or the visualizer given the whole screen, or brought back.
+                model.setPictureFullScreen(!model.pictureFullScreen)
             } else if step.name == "remove=library" {
                 // The newest download taken out of the library, its file kept: what
                 // Delete from Library does once the owner has said yes.

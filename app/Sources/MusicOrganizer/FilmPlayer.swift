@@ -253,6 +253,12 @@ struct FilmPlayerView: View {
                 controls(film)
             }
         }
+        // The ✕ is in the top left corner (the owner, 2026-10-12), with the controls.
+        .overlay(alignment: .topLeading) {
+            if controlsShown || film.paused || film.problem != nil {
+                CornerClose(help: "Stop the film and go back") { close() }
+            }
+        }
         .environment(\.colorScheme, .dark)
         .ignoresSafeArea()
         .onContinuousHover { _ in
@@ -295,32 +301,36 @@ struct FilmPlayerView: View {
                 .disabled(film.duration == 0)
                 Text(Self.clock(film.duration)).monospacedDigit()
             }
+            // Play and pause in the very middle, whatever is on the right.
             HStack(spacing: 18) {
-                Button("Close", systemImage: "xmark") { close() }
-                    .help("Stop the film and go back")
-                Spacer()
                 Button("Back 10 Seconds", systemImage: "gobackward.10") { film.skip(-10) }
                 Button(film.paused ? "Play" : "Pause", systemImage: film.paused ? "play.fill" : "pause.fill") {
                     film.togglePause()
                 }
                 .font(.title)
                 Button("Forward 30 Seconds", systemImage: "goforward.30") { film.skip(30) }
-                Spacer()
-                if film.soundTracks.count > 1 {
+            }
+            .frame(maxWidth: .infinity)
+            .overlay(alignment: .trailing) { HStack(spacing: 18) {
+                // Each menu is there only when the film has something to choose between
+                // (two sound tracks or more; any subtitles), and says which is chosen.
+                if FilmTrack.offersChoice(film.soundTracks, of: .sound) {
                     Menu {
                         ForEach(film.soundTracks) { track in
                             Toggle(track.label, isOn: Binding(
                                 get: { track.selected }, set: { _ in film.chooseSound(track) }))
                         }
                     } label: {
-                        Label("Sound Track", systemImage: "waveform")
+                        Label(FilmTrack.chosen(film.soundTracks, of: .sound), systemImage: "waveform")
                     }
                     .menuStyle(.borderlessButton)
                     .menuIndicator(.hidden)
+                    .labelStyle(.titleAndIcon)
+                    .font(.callout)
                     .fixedSize()
-                    .help("Which sound track plays")
+                    .help("The sound track that's playing. Click to choose another.")
                 }
-                if !film.subtitleTracks.isEmpty {
+                if FilmTrack.offersChoice(film.subtitleTracks, of: .subtitles) {
                     Menu {
                         Toggle("Off", isOn: Binding(
                             get: { !film.subtitleTracks.contains(where: \.selected) },
@@ -331,19 +341,21 @@ struct FilmPlayerView: View {
                                 get: { track.selected }, set: { _ in film.chooseSubtitles(track) }))
                         }
                     } label: {
-                        Label("Subtitles", systemImage: "captions.bubble")
+                        Label(FilmTrack.chosen(film.subtitleTracks, of: .subtitles), systemImage: "captions.bubble")
                     }
                     .menuStyle(.borderlessButton)
                     .menuIndicator(.hidden)
+                    .labelStyle(.titleAndIcon)
+                    .font(.callout)
                     .fixedSize()
-                    .help("Subtitles")
+                    .help("The subtitles that are showing. Click to choose others, or none.")
                 }
                 Image(systemName: "speaker.wave.2.fill")
                 Slider(value: Bindable(film).volume, in: 0...100).frame(width: 110)
                 Button("Full Screen", systemImage: "arrow.up.left.and.arrow.down.right") {
                     NSApp.keyWindow?.toggleFullScreen(nil)
                 }
-            }
+            } }
             .labelStyle(.iconOnly)
             .buttonStyle(.plain)
             .font(.title3)
@@ -365,5 +377,30 @@ struct FilmPlayerView: View {
         return hours > 0
             ? String(format: "%d:%02d:%02d", hours, minutes, rest)
             : String(format: "%d:%02d", minutes, rest)
+    }
+}
+
+/// The ✕ in the top left corner of a picture that has the window or the whole screen: a
+/// film, a video, the visualizer (the owner, 2026-10-12: "the X appears in the top left,
+/// not the bottom left"). It's a little way down from the corner: in a window, clear of
+/// the window's own red, yellow and green buttons; in full screen, clear of the edge
+/// where macOS brings its menu bar down when the pointer touches it.
+struct CornerClose: View {
+    let help: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "xmark")
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(.white)
+                .frame(width: 40, height: 40)
+                .background(.black.opacity(0.6), in: Circle())
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .help(help)
+        .padding(.leading, 20)
+        .padding(.top, 56)
     }
 }

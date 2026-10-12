@@ -41,8 +41,17 @@ import AppKit
 ///   green button does it (only a copy that's seen can: it takes the whole screen)
 /// - `windows`: from here on, every change to the app's own windows written out (which
 ///   there are, where, how see-through, whether what's in them is hidden), with the
-///   moments full screen begins and ends; and for three seconds after each such moment,
-///   how much of macOS's strip across the top of a full screen is drawn
+///   moments full screen begins and ends; and for four seconds after each such moment,
+///   how much of macOS's strip across the top of a full screen is drawn, and what's
+///   across the top of the picture macOS shows while the window grows (with
+///   `MUSICORG_WINDOW_SHOTS=<folder>`, small pictures of that are saved there)
+/// - `openfilm`, `closefilm`: the film named by `MUSICORG_BENCH_FILM` opened silently (as
+///   one opened with the window in full screen already), and the open film shut
+/// - `picture`: the video or the visualizer given the whole screen, or brought back, as
+///   its Full Screen button does it
+/// - `mouse=top`, `mouse=middle`: the pointer put at the top of the screen, where macOS
+///   brings the menu bar down over a full screen, or in its middle (only a copy that's
+///   seen: it's the owner's own pointer)
 /// - `key=<name>`: a key pressed, as one on the keyboard arrives: `space`, `up`, `down`,
 ///   `left` or `right`
 /// - `film`: whether a film is open and playing, where it has got to and how loud, written out
@@ -386,6 +395,20 @@ enum Bench {
             WindowWatch.start()
             return true
         }
+        if name.hasPrefix("mouse=") {
+            // The pointer put at the top of the screen (where macOS brings the menu bar
+            // down over a full screen), or back in its middle. Only a copy that's seen:
+            // it's the owner's own pointer that moves.
+            guard let screen = NSScreen.main?.frame else { return true }
+            let top = name.dropFirst(6) == "top"
+            let to = CGPoint(x: screen.width / 2, y: top ? 0 : screen.height / 2)
+            CGWarpMouseCursorPosition(to)
+            // A move the system hears of as well, where it's allowed to be sent.
+            CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: to, mouseButton: .left)?
+                .post(tap: .cghidEventTap)
+            WindowWatch.measure(for: 3)
+            return true
+        }
         switch name {
         case "fullscreen": window?.toggleFullScreen(nil)
         case "hide": NSApp.hide(nil)
@@ -424,7 +447,7 @@ private enum WindowWatch {
             NotificationCenter.default.addObserver(forName: name, object: nil, queue: nil) { _ in
                 MainActor.assumeIsolated {
                     say(what)
-                    measuringUntil = Date().addingTimeInterval(3)
+                    measuringUntil = Date().addingTimeInterval(4)
                     look()
                 }
             }
@@ -440,6 +463,11 @@ private enum WindowWatch {
 
     private static func say(_ what: String) {
         Bench.say(String(format: "WINDOWS %7.3f  %@", Date().timeIntervalSince(began), what))
+    }
+
+    /// Measure the strip for this long from now.
+    static func measure(for seconds: Double) {
+        measuringUntil = max(measuringUntil, Date().addingTimeInterval(seconds))
     }
 
     private static func isStrip(_ window: NSWindow) -> Bool {
@@ -470,7 +498,83 @@ private enum WindowWatch {
         if Date() < measuringUntil, Date().timeIntervalSince(lastMeasure) >= 0.05 {
             lastMeasure = Date()
             measureStrip()
+            measureTransition()
         }
+    }
+
+    /// How much of a window pictured by itself is drawn, in a band of it: the share of
+    /// its dots that aren't see-through, and how bright they are (0 black, 100 white).
+    /// `band` is in parts of the window's height from its top (0...1).
+    private static func drawn(_ window: NSWindow, band: ClosedRange<Double>) -> (solid: Int, bright: Int)? {
+        var one: [UnsafeRawPointer?] = [UnsafeRawPointer(bitPattern: window.windowNumber)]
+        let (wide, high) = (64, 180)
+        guard let only = CFArrayCreate(nil, &one, 1, nil),
+            let alone = (OwnWindows() as PicturesWindows).pictured(only),
+            let space = CGColorSpace(name: CGColorSpace.sRGB),
+            let canvas = CGContext(
+                data: nil, width: wide, height: high, bitsPerComponent: 8, bytesPerRow: wide * 4,
+                space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        canvas.draw(alone, in: CGRect(x: 0, y: 0, width: wide, height: high))
+        guard let dots = canvas.data else { return nil }
+        // The picture's first row in memory is its top one.
+        let rows = Int(band.lowerBound * Double(high))..<max(Int(band.upperBound * Double(high)), 1)
+        var (solid, bright) = (0, 0)
+        for row in rows {
+            for column in 0..<wide {
+                let at = (row * wide + column) * 4
+                solid += Int(dots.load(fromByteOffset: at + 3, as: UInt8.self))
+                bright += (0..<3).reduce(0) { $0 + Int(dots.load(fromByteOffset: at + $1, as: UInt8.self)) }
+            }
+        }
+        let count = rows.count * wide
+        return (solid * 100 / (count * 255), bright * 100 / (count * 255 * 3))
+    }
+
+    /// The picture macOS shows while the window grows into full screen (a window of its
+    /// own over everything, `_NSFullScreenTransitionOverlayWindow`): what's across its
+    /// top, where the strip would be, beside what's just under that. A strip in that
+    /// picture is one no hiding of the real strip can reach.
+    private static func measureTransition() {
+        for window in NSApp.windows
+        where window.isVisible && String(describing: type(of: window)).contains("TransitionOverlay") {
+            let strip = 68 / max(window.frame.height, 1)
+            guard let top = drawn(window, band: 0...strip),
+                let under = drawn(window, band: (strip * 1.5)...(strip * 2.5))
+            else { continue }
+            say("the transition's picture: its top band \(top.solid)% drawn at brightness \(top.bright), "
+                + "the band under it \(under.solid)% at \(under.bright)")
+            if let folder = ProcessInfo.processInfo.environment["MUSICORG_WINDOW_SHOTS"] {
+                keep(window, in: folder)
+            }
+        }
+    }
+
+    private static var kept = 0
+
+    /// A small picture of a window by itself, saved for looking at.
+    private static func keep(
+        _ window: NSWindow, in folder: String, as what: String = "overlay", wide: Int = 640, high: Int = 360
+    ) {
+        var one: [UnsafeRawPointer?] = [UnsafeRawPointer(bitPattern: window.windowNumber)]
+        guard kept < 16, let only = CFArrayCreate(nil, &one, 1, nil),
+            let alone = (OwnWindows() as PicturesWindows).pictured(only),
+            let space = CGColorSpace(name: CGColorSpace.sRGB),
+            let canvas = CGContext(
+                data: nil, width: wide, height: high, bitsPerComponent: 8, bytesPerRow: wide * 4,
+                space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return }
+        // On mid grey, so a see-through part is told from a black one.
+        canvas.setFillColor(CGColor(gray: 0.5, alpha: 1))
+        canvas.fill(CGRect(x: 0, y: 0, width: wide, height: high))
+        canvas.draw(alone, in: CGRect(x: 0, y: 0, width: wide, height: high))
+        guard let small = canvas.makeImage(),
+            let png = NSBitmapImageRep(cgImage: small).representation(using: .png, properties: [:])
+        else { return }
+        kept += 1
+        let name = String(format: "%@-%02d-%.3f.png", what, kept, Date().timeIntervalSince(began))
+        // Bench-only: a developer's picture in a folder they named. Not the library's.
+        try? png.write(to: URL(fileURLWithPath: folder).appendingPathComponent(name))
     }
 
     /// What's in a window: its views, and which of them are hidden.
@@ -509,6 +613,17 @@ private enum WindowWatch {
             var solid = 0
             for dot in 0..<(wide * high) { solid += Int(dots.load(fromByteOffset: dot * 4 + 3, as: UInt8.self)) }
             say(String(format: "the strip's window by itself: %d%% of it is drawn", solid * 100 / (wide * high * 255)))
+            // The window a press on the ✕ in the picture's top left corner would land on.
+            if let screen = NSScreen.main?.frame {
+                let number = NSWindow.windowNumber(
+                    at: NSPoint(x: 40, y: screen.maxY - 62), belowWindowWithWindowNumber: 0)
+                let landed = NSApp.windows.first { $0.windowNumber == number }
+                say("a press on the top left corner's ✕ would land on: "
+                    + (landed.map { String(describing: type(of: $0)) } ?? "another app's window"))
+            }
+            if solid > 0, let folder = ProcessInfo.processInfo.environment["MUSICORG_WINDOW_SHOTS"] {
+                keep(strip, in: folder, as: "strip", wide: 1280, high: 34)
+            }
         }
     }
 }
