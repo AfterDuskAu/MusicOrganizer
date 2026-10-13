@@ -675,19 +675,20 @@ struct MovieFinderView: View {
                         Picker(
                             "List",
                             selection: Binding(
-                                get: { showsWatched ? Self.watchedKey : Self.key(chosen) }, set: { pick($0) })
+                                get: { ownList ?? Self.key(chosen) }, set: { pick($0) })
                         ) {
                             ForEach(lists, id: \.catalog) { Text(Self.name($0)).tag(Self.key($0)) }
                             // What's been watched, as a list of its own (the owner,
                             // 2026-10-13). Not where nothing is remembered as watched.
                             if hasWatchedList {
                                 Divider()
+                                Text("Watchlist").tag(Self.watchlistKey)
                                 Text("Watched").tag(Self.watchedKey)
                             }
                         }
                         .labelsHidden()
                         .fixedSize()
-                        if !chosen.catalog.genres.isEmpty, !showsWatched {
+                        if !chosen.catalog.genres.isEmpty, ownList == nil {
                             Picker(
                                 "Genre",
                                 selection: Binding(
@@ -759,8 +760,16 @@ struct MovieFinderView: View {
                         isSeries ? media.series : isAnime ? media.anime
                         : isAdult ? media.adult : media.films
                     let everywhere = searchesEverything && !search.isEmpty
-                    if showsWatched, !everywhere {
-                        watchedGrid
+                    if let ownList, !everywhere {
+                        grid(
+                            of: ownList == Self.watchedKey
+                                ? model.history.watched(isSeries ? .series : .movie)
+                                : model.watchlist.of(type: isSeries ? "series" : "movie"),
+                            empty: ownList == Self.watchedKey
+                                ? "Nothing watched yet. \(isSeries ? "A series" : "A movie") you play from its "
+                                    + "page shows up here, and has a green check on its picture in every list."
+                                : "Nothing on your Watchlist yet. Open \(isSeries ? "a series" : "a movie") "
+                                    + "and click Add to Watchlist.")
                     } else {
                         // What's opened from a list of anime is marked as anime, so that what's
                         // kept of it goes in the Movies folder's Anime folder.
@@ -833,12 +842,16 @@ struct MovieFinderView: View {
         (typed, search, genre) = ("", "", "")
     }
 
-    /// The list menu's "Watched", by the name it's saved under.
+    /// The list menu's "Watched" and "Watchlist", by the names they're saved under.
     private static let watchedKey = "watched"
-    /// Movies and series have a Watched list. (What's opened from a list of anime is
-    /// remembered as a series or a film, and is in theirs.)
+    private static let watchlistKey = "watchlist"
+    /// Movies and series have a Watched list and a Watchlist. (What's opened from a list
+    /// of anime is remembered as a series or a film, and is in theirs.)
     private var hasWatchedList: Bool { !apart }
-    private var showsWatched: Bool { hasWatchedList && listKey == Self.watchedKey }
+    /// The list of the owner's own that's chosen in the menu, if one is.
+    private var ownList: String? {
+        hasWatchedList && [Self.watchedKey, Self.watchlistKey].contains(listKey) ? listKey : nil
+    }
     /// Every plugin is searched at once, except in the Finder kept apart.
     private var searchesEverything: Bool { !isAdult }
 
@@ -850,14 +863,11 @@ struct MovieFinderView: View {
         }
     }
 
-    /// The films, or the series, that have been watched, the latest first.
+    /// A list of the owner's own (what's been watched; the Watchlist), as cards.
     @ViewBuilder
-    private var watchedGrid: some View {
-        let items = model.history.watched(isSeries ? .series : .movie)
+    private func grid(of items: [MediaItem], empty: String) -> some View {
         if items.isEmpty {
-            Text(
-                "Nothing watched yet. \(isSeries ? "A series" : "A movie") you play from its page "
-                    + "shows up here, and has a green check on its picture in every list.")
+            Text(empty)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(40)
@@ -938,6 +948,31 @@ struct MovieView: View {
                         .font(.title)
                         .help(loved ? "Take it out of your favourites" : "A favourite: it shows on Home")
                         }
+                    }
+                    // The Watchlist (the owner, 2026-10-14): on every movie's and
+                    // series' page. Not in the Finder kept apart, where nothing is
+                    // remembered.
+                    if !apart {
+                        let listed = model.watchlist.contains(film)
+                        Button {
+                            model.toggleWatchlist(film)
+                        } label: {
+                            Label(
+                                listed ? "On Your Watchlist" : "Add to Watchlist",
+                                systemImage: listed ? "checkmark" : "plus"
+                            )
+                                .font(.body.weight(.semibold))
+                                .padding(.horizontal, 14)
+                                .frame(height: 32)
+                                .background(.white.opacity(listed ? 0.28 : 0.14), in: Capsule())
+                                .overlay { Capsule().strokeBorder(.white.opacity(0.4)) }
+                                .contentShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                        .help(
+                            listed
+                                ? "It's on your Watchlist (in the sidebar, under Videos). Click to take it off."
+                                : "Put it on your Watchlist, to find it again and watch it later")
                     }
                     HStack(spacing: 28) {
                         if let minutes = details?.runtimeMin { Text("\(minutes) min") }
@@ -1323,6 +1358,79 @@ struct MoviesView: View {
         panel.allowsOtherFileTypes = true
         if panel.runModal() == .OK, let url = panel.url {
             model.playFilm(url, title: url.deletingPathExtension().lastPathComponent)
+        }
+    }
+}
+
+/// Videos → Watchlist (the owner, 2026-10-14): the movies and series put on the Watchlist
+/// from their pages, and beside it what's been watched. A click opens one's page, in its
+/// Finder; a right-click takes it off the list.
+struct WatchlistView: View {
+    @Environment(AppModel.self) private var model
+    @AppStorage("watchlistShows") private var shows = "towatch"
+
+    var body: some View {
+        let watched = shows == "watched"
+        let movies = watched ? model.history.watched(.movie) : model.watchlist.of(type: "movie")
+        let series = watched ? model.history.watched(.series) : model.watchlist.of(type: "series")
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                Text("Watchlist").font(.title2.weight(.semibold)).heading()
+                Picker("Show", selection: $shows) {
+                    Text("To Watch").tag("towatch")
+                    Text("Watched").tag("watched")
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .fixedSize()
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            Divider()
+            if movies.isEmpty, series.isEmpty {
+                Text(
+                    watched
+                        ? "Nothing watched yet. A movie or a series you play from its page shows up "
+                            + "here, and has a green check on its picture in every list."
+                        : "Nothing on your Watchlist yet. Open a movie or a series (Movie Finder, "
+                            + "Series Finder) and click Add to Watchlist on its page.")
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(40)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 8) {
+                        cards("Movies", movies, removable: !watched)
+                        cards("Series", series, removable: !watched)
+                    }
+                    .padding(.vertical, 14)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func cards(_ title: String, _ items: [MediaItem], removable: Bool) -> some View {
+        if !items.isEmpty {
+            Text(title).font(.title3.weight(.semibold)).heading().padding(.horizontal, 20)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 22)], spacing: 22) {
+                ForEach(items) { item in
+                    Button { model.open(item) } label: { MediaCard(item: item) }
+                        .buttonStyle(.plain)
+                        .contextMenu {
+                            Button("Open Its Page") { model.open(item) }
+                            if removable {
+                                Button("Remove From Watchlist") { model.toggleWatchlist(item) }
+                            } else if !model.watchlist.contains(item) {
+                                Button("Add to Watchlist") { model.toggleWatchlist(item) }
+                            }
+                        }
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 14)
         }
     }
 }

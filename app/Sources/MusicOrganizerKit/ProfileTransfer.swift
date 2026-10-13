@@ -141,7 +141,9 @@ public enum SettingsCarrier {
         HomeLayout.key, "songColumnOrder",
     ]
     /// What the app remembers of what's been watched and liked.
-    public static let records = [WatchHistory.key, MediaFavourites.key, FilmPositions.key, ChannelPictures.key]
+    public static let records = [
+        WatchHistory.key, MediaFavourites.key, Watchlist.key, FilmPositions.key, ChannelPictures.key,
+    ]
 
     public static var carried: Set<String> { Set(settings + records) }
 

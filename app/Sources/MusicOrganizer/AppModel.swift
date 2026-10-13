@@ -232,6 +232,14 @@ final class AppModel {
         mediaFavourites.save()
     }
 
+    /// The Watchlist: what the owner means to watch (the button on a film's page).
+    private(set) var watchlist = Watchlist.saved()
+
+    func toggleWatchlist(_ item: MediaItem) {
+        watchlist.toggle(item)
+        watchlist.save()
+    }
+
     /// Something has started playing: it goes to the front of what's been watched.
     func watching(_ entry: WatchHistory.Entry) {
         history.watched(entry)
@@ -766,11 +774,21 @@ final class AppModel {
     /// Play a film or a video file in the film player. The music stops for it.
     func playFilm(_ address: URL, title: String, key: String? = nil) {
         if player.isPlaying { player.toggle() }
-        film.open(address, title: title, key: key)
+        // The next episode, started by itself, starts at its beginning: where it was
+        // left another time isn't where anyone expects it to carry on from.
+        film.open(address, title: title, key: key, fromStart: startsAfresh)
+        startsAfresh = false
+        filmsOpened += 1
         // An episode of a series, or (a file, a film) nothing that leads to another.
         (episodeNow, episodeToBe) = (episodeToBe, nil)
         tidyFullScreenTopBar()
     }
+
+    /// The next film to open starts at its beginning (`playEpisode(after:)`).
+    @ObservationIgnored private var startsAfresh = false
+    /// How many films have been opened: a torrent's "how is it going" stops asking when
+    /// another film has been opened since, even one from the same torrent.
+    @ObservationIgnored private var filmsOpened = 0
 
     // MARK: the next episode
 
@@ -826,6 +844,7 @@ final class AppModel {
             (filmTorrent, filmStatus) = (nil, nil)
             _ = try? await ask("torrent.stop", ["info_hash": old], as: Empty.self)
         }
+        startsAfresh = true
         play(
             way.stream, title: next.name(in: now.series.name),
             watching: now.apart ? nil : .watching(now.series, episode: next),
@@ -979,7 +998,8 @@ final class AppModel {
                 url, title: title,
                 key: "torrent:\(playing.infoHash):\(stream.fileIndex.map(String.init) ?? "")")
             filmTorrent = playing.infoHash
-            while film.isOpen, filmTorrent == playing.infoHash {
+            let mine = filmsOpened
+            while film.isOpen, filmTorrent == playing.infoHash, filmsOpened == mine {
                 filmStatus = try? await ask(
                     "torrent.status", ["info_hash": playing.infoHash], as: TorrentStatus.self)
                 try? await Task.sleep(for: .seconds(2))
@@ -1699,6 +1719,7 @@ final class AppModel {
         SettingsCarrier.unpack(app)
         history = WatchHistory.saved()
         mediaFavourites = MediaFavourites.saved()
+        watchlist = Watchlist.saved()
     }
 
     private func engineSaid(_ method: String) async {

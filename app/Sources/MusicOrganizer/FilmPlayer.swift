@@ -46,7 +46,7 @@ final class FilmPlayer {
     /// Open a film and start it, where it was left the last time if it was left part
     /// way. `address` is a file's or a web address; `key` is what the film is
     /// remembered by when its address isn't the same each time (a torrent's).
-    func open(_ address: URL, title: String, key: String? = nil) {
+    func open(_ address: URL, title: String, key: String? = nil, fromStart: Bool = false) {
         close()
         self.title = title
         remembered = key ?? (address.isFileURL ? address.path : address.absoluteString)
@@ -63,6 +63,13 @@ final class FilmPlayer {
             ("ytdl", "no"),  // nothing is looked up or fetched by the player itself
             ("input-default-bindings", "no"), ("input-media-keys", "no"),
             ("subs-fallback", "yes"), ("keep-open", "yes"),
+            // Subtitles are drawn on the picture, along its bottom edge, in a window as
+            // in full screen. mpv's own way puts them in the black band under the
+            // picture when the window is taller than the film: at the very bottom of
+            // the window, under the controls, a long way from the picture (the owner,
+            // 2026-10-14: they "should be right under the video frame, not at the
+            // bottom of the page"; pictured that day).
+            ("sub-use-margins", "no"), ("sub-ass-force-margins", "no"),
             // A film from a torrent may take a while to start arriving.
             ("network-timeout", "180"),
         ] {
@@ -85,7 +92,7 @@ final class FilmPlayer {
             return
         }
         set("volume", volume)
-        if let key = remembered, let place = FilmPositions.saved().place(of: key) {
+        if !fromStart, let key = remembered, let place = FilmPositions.saved().place(of: key) {
             mpv_set_property_string(made, "start", String(Int(place)))
         }
         let location = address.isFileURL ? address.path : address.absoluteString
@@ -249,6 +256,8 @@ struct FilmPlayerView: View {
     @State private var controlsShown = true
     @State private var lastMove = Date()
     @State private var dragging: Double?
+    /// How wide the menus and the sound are, on the right of the controls.
+    @State private var rightWidth: CGFloat = 0
 
     var body: some View {
         let film = model.film
@@ -312,17 +321,22 @@ struct FilmPlayerView: View {
                 .disabled(film.duration == 0)
                 Text(Self.clock(film.duration)).monospacedDigit()
             }
-            // Play and pause in the very middle, whatever is on the right.
+            // Play and pause in the very middle, whatever is on the right: as much room
+            // is left empty on the left as the menus and the sound take on the right.
+            // In a narrow window that room gives way first, so nothing is ever drawn
+            // over anything else (laid over each other, as these were for two days,
+            // Play sat on top of the sound-track menu in a window 900 points wide).
             HStack(spacing: 18) {
+                Color.clear.frame(maxWidth: rightWidth, maxHeight: 1)
+                Spacer(minLength: 0)
                 Button("Back 10 Seconds", systemImage: "gobackward.10") { film.skip(-10) }
                 Button(film.paused ? "Play" : "Pause", systemImage: film.paused ? "play.fill" : "pause.fill") {
                     film.togglePause()
                 }
                 .font(.title)
                 Button("Forward 30 Seconds", systemImage: "goforward.30") { film.skip(30) }
-            }
-            .frame(maxWidth: .infinity)
-            .overlay(alignment: .trailing) { HStack(spacing: 18) {
+                Spacer(minLength: 0)
+                HStack(spacing: 18) {
                 // Each menu is there only when the film has something to choose between
                 // (two sound tracks or more; any subtitles), and says which is chosen.
                 if FilmTrack.offersChoice(film.soundTracks, of: .sound) {
@@ -366,7 +380,16 @@ struct FilmPlayerView: View {
                 Button("Full Screen", systemImage: "arrow.up.left.and.arrow.down.right") {
                     NSApp.keyWindow?.toggleFullScreen(nil)
                 }
-            } }
+                }
+                .fixedSize()
+                .background {
+                    GeometryReader { room in
+                        Color.clear
+                            .onAppear { rightWidth = room.size.width }
+                            .onChange(of: room.size.width) { _, now in rightWidth = now }
+                    }
+                }
+            }
             .labelStyle(.iconOnly)
             .buttonStyle(.plain)
             .font(.title3)

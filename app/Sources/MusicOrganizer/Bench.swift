@@ -53,6 +53,9 @@ import AppKit
 /// - `mouse=top`, `mouse=middle`: the pointer put at the top of the screen, where macOS
 ///   brings the menu bar down over a full screen, or in its middle (only a copy that's
 ///   seen: it's the owner's own pointer)
+/// - `popups`: every pop-up menu showing in the window, with what it offers and what's chosen
+/// - `shot`: a picture of the window as the screen has it, a film's picture included (only a
+///   copy that's seen), saved in the folder `MUSICORG_WINDOW_SHOTS` names
 /// - `key=<name>`: a key pressed, as one on the keyboard arrives: `space`, `up`, `down`,
 ///   `left`, `right`, `return` or `esc`
 /// - `player`: what's in the music player, where it has got to and how loud, and where the
@@ -399,6 +402,25 @@ enum Bench {
             WindowWatch.start()
             return true
         }
+        if name == "popups" {
+            // Every pop-up menu in the window that isn't hidden, with what it offers and
+            // what's chosen: a menu can't be opened in the unseen copy, but it can be read.
+            func look(in view: NSView) {
+                if let popup = view as? NSPopUpButton, !popup.isHiddenOrHasHiddenAncestor {
+                    let items = popup.itemArray.map { $0.isSeparatorItem ? "—" : $0.title }
+                    say("BENCH popups: [\(items.joined(separator: " | "))], chosen: \(popup.titleOfSelectedItem ?? "none")")
+                }
+                view.subviews.forEach(look(in:))
+            }
+            if let content = window?.contentView { look(in: content) }
+            return true
+        }
+        if name == "shot" {
+            // A picture of the window as it is on the screen, a film's picture included
+            // (only a copy that's seen), saved in the folder MUSICORG_WINDOW_SHOTS names.
+            if let window { WindowWatch.picture(window) }
+            return true
+        }
         if name.hasPrefix("mouse=") {
             // The pointer put at the top of the screen (where macOS brings the menu bar
             // down over a full screen), or back in its middle. Only a copy that's seen:
@@ -467,6 +489,13 @@ private enum WindowWatch {
 
     private static func say(_ what: String) {
         Bench.say(String(format: "WINDOWS %7.3f  %@", Date().timeIntervalSince(began), what))
+    }
+
+    /// A picture of one of the app's windows, saved where MUSICORG_WINDOW_SHOTS says.
+    static func picture(_ window: NSWindow) {
+        guard let folder = ProcessInfo.processInfo.environment["MUSICORG_WINDOW_SHOTS"] else { return }
+        let size = window.frame.size
+        keep(window, in: folder, as: "window", wide: 1200, high: Int(1200 * size.height / max(size.width, 1)))
     }
 
     /// Measure the strip for this long from now.

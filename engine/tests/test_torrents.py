@@ -136,3 +136,214 @@ def test_a_film_that_stops_arriving_ends_the_answer_where_it_got_to() -> None:
     film = StandIn(b"y" * 1000, missing=400)
     status, _, body = ask(film, {"Range": "bytes=0-999"})
     assert status == 206 and body == b"y" * 400  # what came; the player asks again
+
+
+# ---- a joined torrent, with a stand-in for libtorrent (2026-10-14) -------------------------
+#
+# Two faults the owner met with a series played from one torrent: the picture broke up
+# while an episode was arriving, and "play next" played the same episode again.
+
+PIECE = 128
+FILES = [("Show/E1.mkv", 300), ("Show/E2.mkv", 500), ("Show/notes.txt", 40)]
+WHOLE = bytes(i % 251 for i in range(sum(size for _, size in FILES)))
+
+
+class StandInFiles:
+    def num_files(self) -> int:
+        return len(FILES)
+
+    def file_path(self, index: int) -> str:
+        return FILES[index][0]
+
+    def file_size(self, index: int) -> int:
+        return FILES[index][1]
+
+    def file_offset(self, index: int) -> int:
+        return sum(size for _, size in FILES[:index])
+
+
+class StandInInfo:
+    def files(self) -> StandInFiles:
+        return StandInFiles()
+
+    def piece_length(self) -> int:
+        return PIECE
+
+
+class StandInHandle:
+    """libtorrent's handle for one torrent: every piece is here, and none is on the disk."""
+
+    def __init__(self) -> None:
+        self.joined: torrents._Joined | None = None
+        self.priorities: list[int] = []
+        self.raised: list[tuple[int, int]] = []
+        self.asked: list[int] = []
+        self.broken: set[int] = set()
+
+    def is_valid(self) -> bool:
+        return True
+
+    def torrent_file(self) -> StandInInfo:
+        return StandInInfo()
+
+    def prioritize_files(self, priorities: list[int]) -> None:
+        self.priorities = priorities
+
+    def file_priority(self, index: int, priority: int) -> None:
+        self.raised.append((index, priority))
+
+    def set_piece_deadline(self, piece: int, deadline: int) -> None:
+        pass
+
+    def have_piece(self, piece: int) -> bool:
+        return True
+
+    def read_piece(self, piece: int) -> None:
+        self.asked.append(piece)
+        data = None if piece in self.broken else WHOLE[piece * PIECE : (piece + 1) * PIECE]
+        assert self.joined is not None
+        threading.Thread(target=self.joined.piece_arrived, args=(piece, data)).start()
+
+
+def joined_for(tmp_path: Path, index: int | None) -> tuple[torrents._Joined, StandInHandle]:
+    handle = StandInHandle()
+    joined = torrents._Joined(handle, HASH, index, tmp_path)
+    joined.through_libtorrent = True
+    handle.joined = joined
+    assert joined.ready(1)
+    return joined, handle
+
+
+def all_of(film: torrents.Film) -> bytes:
+    got = b""
+    while len(got) < film.size:
+        part = film.read(len(got), 1000)
+        assert part
+        got += part
+    return got
+
+
+def test_a_films_bytes_are_asked_of_libtorrent_not_read_from_its_file(tmp_path: Path) -> None:
+    joined, handle = joined_for(tmp_path, 1)
+    # Nothing is on the disk at all: every byte comes as libtorrent holds it.
+    assert not (tmp_path / "Show").exists()
+    assert (joined.name, joined.size, handle.priorities) == ("E2.mkv", 500, [0, 4, 0])
+    # A read never runs past the end of the piece it starts in.
+    first = joined.read(0, 1000)
+    assert first == WHOLE[300:384]  # the file starts 300 bytes in: 84 bytes to the piece's end
+    assert all_of(joined) == WHOLE[300:800]
+    # Each piece was asked for once, however many reads it took.
+    assert sorted(handle.asked) == [2, 3, 4, 5, 6] and len(handle.asked) == 5
+
+
+def test_a_piece_that_cant_be_handed_over_ends_the_read(tmp_path: Path) -> None:
+    joined, handle = joined_for(tmp_path, 0)
+    handle.broken = {1}
+    assert joined.read(0, 1000) == WHOLE[0:128]
+    assert joined.read(128, 1000) is None  # the player asks again; nothing wrong is given
+    handle.broken = set()
+    assert joined.read(128, 1000) == WHOLE[128:256]
+
+
+def test_only_the_pieces_just_read_are_kept_in_memory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(torrents, "PIECES_KEPT", 3 * PIECE)
+    joined, handle = joined_for(tmp_path, 1)
+    all_of(joined)
+    assert len(joined._pieces) == 3 and list(joined._pieces) == [4, 5, 6]
+
+
+def test_the_next_episode_of_a_season_in_one_torrent_is_the_next_episode(tmp_path: Path) -> None:
+    joined, handle = joined_for(tmp_path, 0)
+    assert joined.name == "E1.mkv"
+    joined.turn_to(1)
+    assert joined.ready(1)
+    # The torrent is the second episode's now: it alone is fetched.
+    assert (joined.name, joined.size, handle.priorities) == ("E2.mkv", 500, [0, 4, 0])
+    assert all_of(joined) == WHOLE[300:800]
+    # Asked for the one it's on already, or for none in particular: nothing changes.
+    joined.turn_to(1)
+    joined.turn_to(None)
+    assert joined.path is not None and joined.name == "E2.mkv"
+
+
+def test_an_episode_played_while_another_is_kept_is_fetched_beside_it(tmp_path: Path) -> None:
+    joined, handle = joined_for(tmp_path, 0)
+    joined.keep_name = "Show S01E01"  # the owner clicked Download on the first episode
+    joined.turn_to(1)
+    assert joined.name == "E1.mkv"  # what's being kept is still this torrent's film
+    second = joined.film(1)
+    assert second is not None and (second.name, second.size) == ("E2.mkv", 500)
+    assert all_of(second) == WHOLE[300:800]
+    assert handle.raised == [(1, 4)]  # fetched as well, with the first still wanted
+    # Then a third: the second isn't fetched any more.
+    third = joined.film(2)
+    assert third is not None and all_of(third) == WHOLE[800:840]
+    assert handle.raised == [(1, 4), (1, 0), (2, 4)]
+    # The film itself, by its own number or by none; and no such file.
+    for own in (joined.film(0), joined.film(None)):
+        assert own is not None and all_of(own) == WHOLE[0:300]
+    assert joined.film(9) is None
+
+
+def test_a_part_way_player_keeps_its_file_when_the_torrent_turns(tmp_path: Path) -> None:
+    joined, handle = joined_for(tmp_path, 0)
+    watching = joined.film(None)
+    assert watching is not None
+    start = watching.read(0, 1000)
+    joined.turn_to(1)
+    assert joined.ready(1)
+    # The old player's next read is still the first episode's, not the second's.
+    assert start == WHOLE[0:128] and watching.read(128, 1000) == WHOLE[128:256]
+
+
+class StandInSession:
+    def __init__(self) -> None:
+        self.handle = StandInHandle()
+
+    def add_torrent(self, params: object) -> StandInHandle:
+        return self.handle
+
+    def remove_torrent(self, handle: object, *how: object) -> None:
+        pass
+
+
+def test_each_file_of_a_torrent_has_its_own_address(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    session = StandInSession()
+    monkeypatch.setattr(torrents, "_new_session", lambda: session)
+    player = torrents.Player(tmp_path)
+    try:
+        first = player.play(HASH, 0, [])["url"]
+        session.handle.joined = player._joined[HASH]
+        assert first.endswith(f"/{HASH}/0")
+
+        def fetch(url: str) -> bytes:
+            host = url.split("/")[2]
+            connection = http.client.HTTPConnection(host, timeout=10)
+            connection.request("GET", "/" + url.split("/", 3)[3])
+            answer = connection.getresponse()
+            assert answer.status == 200
+            return answer.read()
+
+        assert fetch(first) == WHOLE[0:300]
+        # Play Next: the same torrent, the next file. Its own address, its own bytes.
+        second = player.play(HASH, 1, [])["url"]
+        assert second.endswith(f"/{HASH}/1") and second != first
+        assert fetch(second) == WHOLE[300:800]
+        assert player._joined[HASH].name == "E2.mkv"
+        # An address with no file in it is the film the torrent is for.
+        assert fetch(second.rsplit("/", 1)[0]) == WHOLE[300:800]
+        # No such file, or an address that isn't one: not found.
+        for wrong in (
+            f"{second.rsplit('/', 1)[0]}/9",
+            f"{second}/1",
+            f"{second.rsplit('/', 1)[0]}/x",
+        ):
+            connection = http.client.HTTPConnection(wrong.split("/")[2], timeout=10)
+            connection.request("GET", "/" + wrong.split("/", 3)[3])
+            assert connection.getresponse().status == 404
+    finally:
+        player.stop()

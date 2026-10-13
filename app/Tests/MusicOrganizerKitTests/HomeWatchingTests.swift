@@ -83,5 +83,35 @@ final class HomeWatchingTests: XCTestCase {
         history.forget("tt1")
         XCTAssertFalse(history.hasWatched("tt1"))
     }
+
+    // MARK: the Watchlist
+
+    func testAFilmIsPutOnTheWatchlistAndTakenOff() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        func item(_ id: String, _ type: String) throws -> MediaItem {
+            try decoder.decode(
+                MediaItem.self,
+                from: Data(#"{"id":"\#(id)","type":"\#(type)","name":"\#(id)","poster_shape":"poster","genres":[]}"#.utf8))
+        }
+        let (film, show, other) = (try item("tt1", "movie"), try item("tt2", "series"), try item("tt3", "movie"))
+        var list = Watchlist()
+        XCTAssertFalse(list.contains(film))
+        list.toggle(film)
+        list.toggle(show)
+        list.toggle(other)
+        XCTAssertTrue(list.contains(film) && list.contains(show))
+        // The newest first, films and series apart.
+        XCTAssertEqual(list.of(type: "movie").map(\.id), ["tt3", "tt1"])
+        XCTAssertEqual(list.of(type: "series").map(\.id), ["tt2"])
+        list.toggle(film)  // on it already: taken off
+        XCTAssertEqual(list.items.map(\.id), ["tt3", "tt2"])
+        // It's kept on this Mac, and travels with an export's records.
+        let kept = try XCTUnwrap(UserDefaults(suiteName: "watchlist-test-\(UUID().uuidString)"))
+        list.save(in: kept)
+        XCTAssertEqual(Watchlist.saved(in: kept), list)
+        XCTAssertTrue(SettingsCarrier.records.contains(Watchlist.key))
+        XCTAssertTrue(SidebarRows.all.contains { $0.key == "watchlist" && $0.group == "Videos" })
+    }
 }
 

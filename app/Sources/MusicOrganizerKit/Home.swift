@@ -323,6 +323,44 @@ public struct MediaFavourites: Equatable, Sendable {
     }
 }
 
+/// The Watchlist: the movies and series the owner means to watch, put on it from a film's
+/// or a series' own page (the owner, 2026-10-14: "say you click on a tv show, you can add
+/// it to watchlist"). Kept by the app on this Mac, the newest first; nothing of it is in
+/// the library. What's been watched is `WatchHistory`'s, and shows as a green check on
+/// the same cards.
+public struct Watchlist: Equatable, Sendable {
+    public private(set) var items: [MediaItem]
+
+    public init(_ items: [MediaItem] = []) { self.items = items }
+
+    public func contains(_ item: MediaItem) -> Bool { items.contains { $0.id == item.id } }
+
+    /// Put it on the list, at the front; or, if it's on it, take it off.
+    public mutating func toggle(_ item: MediaItem) {
+        if contains(item) {
+            items.removeAll { $0.id == item.id }
+        } else {
+            items.insert(item, at: 0)
+        }
+    }
+
+    /// The films ("movie"), or the series ("series"), on the list.
+    public func of(type: String) -> [MediaItem] { items.filter { $0.type == type } }
+
+    public static let key = "watchlist"
+
+    public static func saved(in defaults: UserDefaults = .standard) -> Watchlist {
+        guard let data = defaults.data(forKey: key),
+            let items = try? JSONDecoder().decode([MediaItem].self, from: data)
+        else { return Watchlist() }
+        return Watchlist(items)
+    }
+
+    public func save(in defaults: UserDefaults = .standard) {
+        if let data = try? JSONEncoder().encode(items) { defaults.set(data, forKey: Self.key) }
+    }
+}
+
 /// A Home row shows whole cards only, as many as fit, and pages through the rest.
 public enum HomePaging {
     /// How many whole cards `card` wide, `gap` apart, fit across `room`: at least one.

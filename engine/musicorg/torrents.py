@@ -52,6 +52,7 @@ import re
 import secrets
 import threading
 import time
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -80,6 +81,9 @@ COUNTING = "counting"  # the empty folder in the films' cache a counted torrent 
 KEEP_S = 24 * 3600  # what arrived of a film stays in the cache this long after it was played
 SWEEP_EVERY_S = 600
 CHUNK = 256 * 1024
+READ_WAIT_S = 30  # how long libtorrent is given to hand over a piece it has
+PIECES_KEPT = 48 * 1024 * 1024  # of pieces just read, this much is kept in memory a torrent
+FLUSH_WAIT_S = 60  # how long a film that's all here is given to be all on the disk
 
 
 class TorrentError(UserError):
@@ -212,7 +216,10 @@ def _new_session() -> Any:
             "enable_dht": True,
             "enable_lsd": False,
             "user_agent": "musicorg",
-            "alert_mask": 0,
+            # What it must say back: a piece that was asked for (`read_piece`), and that
+            # a film's last parts are on the disk (`flush_cache`). Nothing else.
+            "alert_mask": int(lt.alert.category_t.storage_notification)
+            | int(lt.alert.category_t.error_notification),
         }
     )
 
@@ -288,6 +295,16 @@ class _Joined:
     file_offset: int = 0
     piece_length: int = 0
     top: str = ""  # the file or folder in the cache folder that the film is in
+    # A film's bytes are asked of libtorrent, a piece at a time (`_piece`), not read
+    # from its file. False only for a stand-in handle in a test, which has no pieces.
+    through_libtorrent: bool = False
+    _pieces: OrderedDict[int, bytes] = field(default_factory=OrderedDict, repr=False)
+    _asked: dict[int, threading.Event] = field(default_factory=dict, repr=False)
+    _pieces_lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
+    flushed: threading.Event = field(default_factory=threading.Event, repr=False)
+    # Another file of the same torrent being played while this one is kept (an episode
+    # watched while another downloads): its number. See `turn_to`.
+    beside: int | None = None
 
     def asked_now(self) -> None:
         self.last_asked = time.monotonic()
@@ -319,14 +336,34 @@ class _Joined:
         return True
 
     def read(self, offset: int, length: int) -> bytes | None:
-        self.asked_now()
-        if self.path is None or self.closed:
+        if self.path is None:
             return None
-        place = self.file_offset + offset
+        return self.read_file(self.path, self.file_offset, self.size, offset, length)
+
+    def read_file(
+        self, path: Path, file_offset: int, size: int, offset: int, length: int
+    ) -> bytes | None:
+        """Bytes of one file of the torrent, from `offset` in it: at most `length`, and
+        no further than the end of the piece they're in (the next may not be here).
+
+        **They're asked of libtorrent, not read from the file** (2026-10-14). A piece
+        libtorrent says it has (`have_piece`) has passed its check, but its last blocks
+        may still be waiting to be written: read from the file in that moment, they're
+        whatever was there before, and the film player was given them as film. Measured
+        that day with an open film arriving no faster than it was read: one part in
+        121 served wasn't what the finished file holds. The owner saw it as a picture
+        that broke into pink and purple while an episode was arriving, and played
+        cleanly once it had all arrived. `read_piece` gives the piece as libtorrent
+        itself holds it, written or not."""
+        self.asked_now()
+        if self.closed or self.piece_length <= 0 or not 0 <= offset < size:
+            return None
+        place = file_offset + offset
         piece = place // self.piece_length
-        # Up to the end of this piece: the next one may not be here yet.
-        length = min(length, (piece + 1) * self.piece_length - place)
-        last_piece = (self.file_offset + self.size - 1) // self.piece_length
+        # Never past the end of the file (the piece's rest is the next file's), nor of
+        # the piece.
+        length = min(length, size - offset, (piece + 1) * self.piece_length - place)
+        last_piece = (file_offset + size - 1) // self.piece_length
         for ahead, wanted in enumerate(range(piece, min(piece + AHEAD_PIECES, last_piece) + 1)):
             self.handle.set_piece_deadline(wanted, 500 * (ahead + 1))
         until = time.monotonic() + PIECE_WAIT_S
@@ -334,12 +371,96 @@ class _Joined:
             if self.closed or time.monotonic() > until:
                 return None
             time.sleep(0.1)
-        try:
-            with self.path.open("rb") as file:
-                file.seek(offset)
-                return file.read(length) or None
-        except OSError:
+        if not self.through_libtorrent:
+            try:
+                with path.open("rb") as file:
+                    file.seek(offset)
+                    return file.read(length) or None
+            except OSError:
+                return None
+        whole = self._piece(piece)
+        if whole is None:
             return None
+        inside = place - piece * self.piece_length
+        return whole[inside : inside + length] or None
+
+    def _piece(self, piece: int) -> bytes | None:
+        """One piece libtorrent has, as it holds it. The pieces just read are kept (a
+        player reads a piece in several goes, and goes back a little), so each is asked
+        for once."""
+        with self._pieces_lock:
+            held = self._pieces.get(piece)
+            if held is not None:
+                self._pieces.move_to_end(piece)
+                return held
+            waiting = self._asked.get(piece)
+            first = waiting is None
+            if waiting is None:
+                waiting = self._asked[piece] = threading.Event()
+        if first:
+            self.handle.read_piece(piece)  # answered by `piece_arrived`, from the alerts
+        until = time.monotonic() + READ_WAIT_S
+        while not waiting.wait(0.25):
+            if self.closed or time.monotonic() > until:
+                with self._pieces_lock:
+                    self._asked.pop(piece, None)
+                return None
+        with self._pieces_lock:
+            return self._pieces.get(piece)
+
+    def piece_arrived(self, piece: int, data: bytes | None) -> None:
+        """libtorrent has handed over a piece that was asked for (None: it couldn't)."""
+        with self._pieces_lock:
+            if data:
+                self._pieces[piece] = data
+                self._pieces.move_to_end(piece)
+                while len(self._pieces) > 2 and sum(map(len, self._pieces.values())) > PIECES_KEPT:
+                    self._pieces.popitem(last=False)
+            waiting = self._asked.pop(piece, None)
+        if waiting is not None:
+            waiting.set()
+
+    def film(self, index: int | None) -> _View | None:
+        """One file of the torrent, as the address serves it: the film this torrent was
+        joined for (`index` None, or its own number), or another file of it by its
+        number. None if the torrent has no such file. Its details must have arrived."""
+        if self.path is None:
+            return None
+        if index is None or index == self.index:
+            return _View(self, self.path, self.name, self.size, self.file_offset)
+        info = self.handle.torrent_file()
+        files = info.files() if info is not None else None
+        if files is None or not 0 <= index < files.num_files():
+            return None
+        if index != self.beside:
+            # The one played beside it before isn't fetched any more; this one is.
+            if self.beside is not None:
+                self.handle.file_priority(self.beside, 0)
+            self.handle.file_priority(index, 4)
+            self.beside = index
+        inside = files.file_path(index)
+        return _View(
+            self, self.folder / inside, Path(inside).name, files.file_size(index),
+            files.file_offset(index),
+        )  # fmt: skip
+
+    def turn_to(self, index: int | None) -> None:
+        """The player wants another file of this torrent now (the next episode of a
+        season that's one torrent). Until 2026-10-14 it was answered with the file the
+        torrent was first joined for: the same episode played again under the next
+        one's name (the owner: "it restarts the current film, but says its showing the
+        next episode").
+
+        A torrent that's only being played becomes that file's: it alone is fetched
+        from now. One that's being kept keeps fetching its own film, and the other is
+        fetched beside it (`film`)."""
+        if index is None or index == (self.index if self.path is not None else self.file_index):
+            return
+        if self.keep_name is not None or self.saving:
+            return  # kept: `film(index)` gives the other file, beside it
+        self.file_index = index
+        self.beside = None
+        self.path = None  # `ready` chooses again, and asks for this file only
 
     @property
     def wanted(self) -> bool:
@@ -391,6 +512,22 @@ class _Joined:
         }
 
 
+@dataclass(frozen=True)
+class _View:
+    """One file of a joined torrent, as the address serves it: where it lies in the
+    torrent doesn't change under a player that's part way through it, whatever the
+    torrent is turned to next."""
+
+    joined: _Joined
+    path: Path
+    name: str
+    size: int
+    file_offset: int
+
+    def read(self, offset: int, length: int) -> bytes | None:
+        return self.joined.read_file(self.path, self.file_offset, self.size, offset, length)
+
+
 class Player:
     """The films being played from torrents, and the address they're played at. One
     for the engine, made the first time a film is asked for."""
@@ -435,11 +572,20 @@ class Player:
                 params.save_path = str(self.folder)
                 handle = self._session.add_torrent(params)
                 joined = _Joined(handle, info_hash, file_index, self.folder)
+                joined.through_libtorrent = True
                 self._joined[info_hash] = joined
+            else:
+                # Joined already: perhaps for another file of it (the episode before).
+                joined.turn_to(file_index)
             joined.asked_now()
             port = self._server.server_address[1] if self._server else 0
         self._apply_upload()  # a film that's arriving is sent on freely, from the start
-        return {"info_hash": info_hash, "url": f"http://127.0.0.1:{port}/{self._key}/{info_hash}"}
+        # The address names the file, so one torrent's films each have their own.
+        which = "" if file_index is None else f"/{file_index}"
+        return {
+            "info_hash": info_hash,
+            "url": f"http://127.0.0.1:{port}/{self._key}/{info_hash}{which}",
+        }
 
     def status(self, info_hash: str) -> dict[str, Any]:
         joined = self._joined.get(info_hash.lower())
@@ -646,18 +792,52 @@ class Player:
         self._server.daemon_threads = True
         threading.Thread(target=self._server.serve_forever, daemon=True).start()
         threading.Thread(target=self._close_idle, daemon=True).start()
+        if hasattr(self._session, "pop_alerts"):  # (a test's stand-in has none)
+            threading.Thread(target=self._hear, args=(self._session,), daemon=True).start()
+
+    def _hear(self, session: Any) -> None:
+        """What libtorrent says back, for as long as the engine plays films: a piece
+        that was asked for, and that a film's last parts are on the disk."""
+        while not self._stopping.is_set() and self._session is session:
+            try:
+                session.wait_for_alert(500)
+                alerts = session.pop_alerts()
+            except RuntimeError:
+                return
+            for alert in alerts:
+                kind = type(alert).__name__
+                if kind not in ("read_piece_alert", "cache_flushed_alert"):
+                    continue
+                try:
+                    joined = self._joined.get(str(alert.handle.info_hash()))
+                except RuntimeError:
+                    continue  # its torrent has been left meanwhile
+                if joined is None:
+                    continue
+                if kind == "cache_flushed_alert":
+                    joined.flushed.set()
+                    continue
+                error = getattr(alert, "error", None) or getattr(alert, "ec", None)
+                failed = error is not None and error.value() != 0
+                joined.piece_arrived(int(alert.piece), None if failed else bytes(alert.buffer))
 
     def _answer(self, handler: BaseHTTPRequestHandler, *, head: bool) -> None:
+        # /<key>/<torrent>, or /<key>/<torrent>/<file's number> for one file of several.
         parts = handler.path.split("?", 1)[0].strip("/").split("/")
-        joined = self._joined.get(parts[1]) if len(parts) == 2 else None
-        if len(parts) != 2 or not secrets.compare_digest(parts[0], self._key) or joined is None:
+        well_formed = len(parts) in (2, 3) and (len(parts) == 2 or parts[2].isdigit())
+        joined = self._joined.get(parts[1]) if well_formed else None
+        if not well_formed or not secrets.compare_digest(parts[0], self._key) or joined is None:
             handler.send_error(404)
             return
         joined.asked_now()
         if not joined.ready(METADATA_WAIT_S):
             handler.send_error(504, "The torrent's details didn't arrive.")
             return
-        serve(handler, joined, head=head)
+        film = joined.film(int(parts[2]) if len(parts) == 3 else None)
+        if film is None:
+            handler.send_error(404)
+            return
+        serve(handler, film, head=head)
 
     def _save_kept(self, joined: _Joined) -> None:
         """A film that's being kept and has all arrived: copy it into the Movies
@@ -668,6 +848,14 @@ class Player:
 
         assert joined.path is not None and self.movies is not None
         joined.saving = True
+        # Every piece has arrived; the last of them may not be written yet. The file is
+        # copied once libtorrent says it's all on the disk (the same fault as `read_file`
+        # mends: a film kept in that moment had holes in it).
+        if joined.through_libtorrent:
+            joined.flushed.clear()
+            joined.handle.flush_cache()
+            if not joined.flushed.wait(FLUSH_WAIT_S):
+                log.warning("A kept film's last parts weren't confirmed written; kept anyway.")
         source, made = joined.path, None
         if joined.convert:
             try:
