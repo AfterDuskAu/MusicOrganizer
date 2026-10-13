@@ -47,13 +47,14 @@ struct SettingsView: View {
         ]),
         Group(id: "sync", title: "Sync", parts: [Part(id: "sharing"), Part(id: "lyrics", title: "Lyrics")]),
         Group(id: "general", title: "General", parts: [
-            Part(id: "look"), Part(id: "terms", title: "Terms of Use"), Part(id: "privacy", title: "Privacy"),
+            Part(id: "look"), Part(id: "legal", title: "Terms and Privacy"),
         ]),
     ]
 
     /// Where a name leads: a group's own, a part's, or one from before the regrouping.
     static func anchor(for asked: String) -> String {
         let known = groups.flatMap { [$0.id] + $0.parts.map(\.id) }
+        if asked == "terms" || asked == "privacy" { return "legal" }
         return known.contains(asked) ? asked : "profile"
     }
 
@@ -91,21 +92,38 @@ struct SettingsView: View {
                                     .background { SettingsSpan(id: part.id) }
                             }
                         }
-                        footer
+                        footer.background { SettingsSpan(id: SettingsPlace.end) }
                     }
                     .frame(maxWidth: 720, alignment: .topLeading)
                     .frame(maxWidth: .infinity, alignment: .topLeading)
                     .lookText()
                 }
                 .coordinateSpace(name: "settings")
+                // How tall the room for the page is, for knowing when it's at its end.
+                .background {
+                    GeometryReader { room in
+                        Color.clear
+                            .onAppear { place.height = room.size.height }
+                            .onChange(of: room.size.height) { _, now in place.height = now }
+                    }
+                }
                 .onPreferenceChange(SettingsSpans.self) { spans in
                     // The group whose heading or part lies across a line a little way
                     // down the page (or, between two, the next one down). Only what's
                     // near the part in sight is known: the rest of the page isn't made
                     // until it's scrolled to.
                     let line: CGFloat = 120
-                    let across = spans.first { $0.value.lowerBound <= line && line < $0.value.upperBound }?.key
-                    let next = spans.filter { $0.value.lowerBound > line }
+                    // At the very end of the page the last group is the one marked: it's
+                    // short, and its heading can't come up as far as the line.
+                    if let end = spans[SettingsPlace.end], place.height > 0, end.upperBound <= place.height + 2,
+                        let last = Self.groups.last
+                    {
+                        if place.group != last.id { place.group = last.id }
+                        return
+                    }
+                    let known = spans.filter { $0.key != SettingsPlace.end }
+                    let across = known.first { $0.value.lowerBound <= line && line < $0.value.upperBound }?.key
+                    let next = known.filter { $0.value.lowerBound > line }
                         .min { $0.value.lowerBound < $1.value.lowerBound }?.key
                     guard let at = across ?? next, let now = Self.group(of: at) else { return }
                     if place.group != now { place.group = now }
@@ -188,6 +206,10 @@ struct SettingsView: View {
 @Observable
 private final class SettingsPlace {
     var group = "profile"
+    /// How tall the room the page scrolls in is.
+    @ObservationIgnored var height: CGFloat = 0
+    /// What the versions under everything are known by, among the page's parts.
+    static let end = "end"
 }
 
 /// Where on the page each heading and part that's been made is, top to bottom.
@@ -230,8 +252,7 @@ private struct SettingsPart: View {
             Form { LayoutSettings() }
                 .formStyle(.grouped)
                 .scrollContentBackground(Theme.current.listBackground)
-        case "terms": LegalWords(parts: Legal.terms)
-        case "privacy": LegalWords(parts: Legal.privacy)
+        case "legal": LegalButtons()
         default: ProfileSettingsTab()
         }
     }
@@ -371,27 +392,72 @@ private struct MovingSettings: View {
     }
 }
 
-/// Settings → General → Terms of Use, and Privacy: the words, each under its heading.
-private struct LegalWords: View {
-    let parts: [Legal.Part]
+/// Settings → General → Terms and Privacy: a button for each, which opens its words in a
+/// small window to read (the owner, 2026-10-13: they "shouldn't be displayed like that";
+/// until then both were written out in full on the page).
+private struct LegalButtons: View {
+    private struct Paper: Identifiable {
+        let title: String
+        let parts: [Legal.Part]
+        var id: String { title }
+    }
+
+    @State private var reading: Paper?
 
     var body: some View {
         Form {
             Section {
-                ForEach(parts, id: \.heading) { part in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(part.heading).font(.headline)
-                        Text(part.text)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .textSelection(.enabled)
-                    }
-                    .padding(.vertical, 4)
+                LabeledContent("What you agree to by using the app") {
+                    Button("Terms of Use") { reading = Paper(title: "Terms of Use", parts: Legal.terms) }
                 }
-                SideNote("Last changed \(Legal.dated).")
+                LabeledContent("What the app does with what it knows") {
+                    Button("Privacy Policy") {
+                        reading = Paper(title: "Privacy Policy", parts: Legal.privacy)
+                    }
+                }
             }
         }
         .formStyle(.grouped)
         .scrollContentBackground(Theme.current.listBackground)
+        .sheet(item: $reading) { paper in
+            LegalSheet(title: paper.title, parts: paper.parts).dressed()
+        }
+    }
+}
+
+/// The terms, or the privacy policy, in a small window: each part under its heading.
+private struct LegalSheet: View {
+    let title: String
+    let parts: [Legal.Part]
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(title).font(.title2.weight(.semibold)).heading().padding(20)
+            Divider()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    ForEach(parts, id: \.heading) { part in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(part.heading).font(.headline)
+                            Text(part.text)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .textSelection(.enabled)
+                        }
+                    }
+                    Text("Last changed \(Legal.dated).").font(.callout).foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(20)
+            }
+            Divider()
+            HStack {
+                Spacer()
+                Button("Done") { dismiss() }.keyboardShortcut(.defaultAction)
+            }
+            .padding(14)
+        }
+        .frame(width: 520, height: 540)
     }
 }
 

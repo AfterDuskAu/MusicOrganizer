@@ -56,17 +56,21 @@ struct MediaCard: View {
     /// A channel's id: its picture is found afresh when the address given has gone
     /// (`ChannelPictures` in the Kit).
     let channelId: String?
+    /// A film's or a series' id, for the green check on one that's been watched.
+    let filmId: String?
     @Environment(AppModel.self) private var model: AppModel?
     @State private var hovering = false
 
     init(item: MediaItem) {
         (name, poster, square) = (item.name, item.poster, item.posterShape == "square")
         channelId = item.type == "channel" ? ChannelRef(item: item)?.channelId : nil
+        filmId = item.type == "channel" ? nil : item.id
     }
 
     init(channel: ChannelRef) {
         (name, poster, square) = (channel.name, channel.thumbnail, true)
         channelId = channel.channelId
+        filmId = nil
     }
 
     /// The picture found afresh for a channel, when there is one; the one given otherwise.
@@ -89,6 +93,21 @@ struct MediaCard: View {
                     RoundedRectangle(cornerRadius: 10)
                         .strokeBorder(hovering ? AnyShapeStyle(.primary) : AnyShapeStyle(.quaternary))
                 )
+                // Watched, however far: a green check in the picture's top left corner
+                // (the owner, 2026-10-13). Nothing from the Finder kept apart is ever
+                // remembered as watched, so nothing there has one.
+                .overlay(alignment: .topLeading) {
+                    if let filmId, model?.history.hasWatched(filmId) == true {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.title2)
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(.white, .green)
+                            .shadow(color: .black.opacity(0.6), radius: 2)
+                            .padding(6)
+                            .help("You've watched this")
+                            .accessibilityLabel("Watched")
+                    }
+                }
             Text(name)
                 .font(.callout.weight(.medium))
                 .lineLimit(2)
@@ -653,12 +672,22 @@ struct MovieFinderView: View {
                         .lineLimit(1)
                         .fixedSize()
                     if let chosen {
-                        Picker("List", selection: Binding(get: { Self.key(chosen) }, set: { pick($0) })) {
+                        Picker(
+                            "List",
+                            selection: Binding(
+                                get: { showsWatched ? Self.watchedKey : Self.key(chosen) }, set: { pick($0) })
+                        ) {
                             ForEach(lists, id: \.catalog) { Text(Self.name($0)).tag(Self.key($0)) }
+                            // What's been watched, as a list of its own (the owner,
+                            // 2026-10-13). Not where nothing is remembered as watched.
+                            if hasWatchedList {
+                                Divider()
+                                Text("Watched").tag(Self.watchedKey)
+                            }
                         }
                         .labelsHidden()
                         .fixedSize()
-                        if !chosen.catalog.genres.isEmpty {
+                        if !chosen.catalog.genres.isEmpty, !showsWatched {
                             Picker(
                                 "Genre",
                                 selection: Binding(
@@ -698,10 +727,17 @@ struct MovieFinderView: View {
                             }
                         }
                         Spacer()
-                        if chosen.catalog.takes("search") {
-                            TextField("Search this list", text: $typed)
+                        // A search looks through everything every plugin has of this
+                        // kind, whichever list is showing (the owner, 2026-10-13); so
+                        // the box is always there, and as wide as there's room for. The
+                        // Finder kept apart searches the one list, as before.
+                        if searchesEverything || chosen.catalog.takes("search") {
+                            TextField(
+                                searchesEverything ? "Search all \(Self.plural(kind))" : "Search this list",
+                                text: $typed
+                            )
                                 .textFieldStyle(.roundedBorder)
-                                .frame(width: 220)
+                                .frame(minWidth: 220, idealWidth: 340, maxWidth: 440)
                                 .onSubmit { search = typed.trimmingCharacters(in: .whitespaces) }
                                 .onChange(of: typed) { _, now in if now.isEmpty { search = "" } }
                         }
@@ -722,19 +758,28 @@ struct MovieFinderView: View {
                     let list =
                         isSeries ? media.series : isAnime ? media.anime
                         : isAdult ? media.adult : media.films
-                    // What's opened from a list of anime is marked as anime, so that what's
-                    // kept of it goes in the Movies folder's Anime folder.
-                    MediaGrid(list: list, width: 140, open: { opened = isAnime ? $0.asAnime : $0 }) {
-                        Task {
-                            await list.load(
-                                model, addon: chosen.addon, catalog: chosen.catalog, genre: wanted,
-                                search: search, also: second, adding: true)
+                    let everywhere = searchesEverything && !search.isEmpty
+                    if showsWatched, !everywhere {
+                        watchedGrid
+                    } else {
+                        // What's opened from a list of anime is marked as anime, so that what's
+                        // kept of it goes in the Movies folder's Anime folder.
+                        MediaGrid(list: list, width: 140, open: { opened = isAnime ? $0.asAnime : $0 }) {
+                            Task {
+                                await list.load(
+                                    model, addon: chosen.addon, catalog: chosen.catalog, genre: wanted,
+                                    search: search, also: second, adding: true)
+                            }
                         }
-                    }
-                    .task(id: "\(Self.key(chosen))|\(wanted ?? "")|\(search)|\(second)") {
-                        await list.load(
-                            model, addon: chosen.addon, catalog: chosen.catalog, genre: wanted,
-                            search: search, also: second)
+                        .task(id: "\(Self.key(chosen))|\(wanted ?? "")|\(search)|\(second)|\(everywhere)") {
+                            if everywhere {
+                                await list.search(model, type: chosen.catalog.type, words: search)
+                            } else {
+                                await list.load(
+                                    model, addon: chosen.addon, catalog: chosen.catalog, genre: wanted,
+                                    search: search, also: second)
+                            }
+                        }
                     }
                 } else if apart, media.loaded {
                     Message(
@@ -786,6 +831,48 @@ struct MovieFinderView: View {
     private func pick(_ key: String) {
         listKey = key
         (typed, search, genre) = ("", "", "")
+    }
+
+    /// The list menu's "Watched", by the name it's saved under.
+    private static let watchedKey = "watched"
+    /// Movies and series have a Watched list. (What's opened from a list of anime is
+    /// remembered as a series or a film, and is in theirs.)
+    private var hasWatchedList: Bool { !apart }
+    private var showsWatched: Bool { hasWatchedList && listKey == Self.watchedKey }
+    /// Every plugin is searched at once, except in the Finder kept apart.
+    private var searchesEverything: Bool { !isAdult }
+
+    private static func plural(_ kind: String) -> String {
+        switch kind {
+        case "series": "series"
+        case "anime": "anime"
+        default: "movies"
+        }
+    }
+
+    /// The films, or the series, that have been watched, the latest first.
+    @ViewBuilder
+    private var watchedGrid: some View {
+        let items = model.history.watched(isSeries ? .series : .movie)
+        if items.isEmpty {
+            Text(
+                "Nothing watched yet. \(isSeries ? "A series" : "A movie") you play from its page "
+                    + "shows up here, and has a green check on its picture in every list.")
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(40)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 22)], spacing: 22) {
+                    ForEach(items) { item in
+                        Button { opened = item } label: { MediaCard(item: item) }
+                            .buttonStyle(.plain)
+                    }
+                }
+                .padding(20)
+            }
+        }
     }
 
     private static func key(_ list: (addon: Addon, catalog: Addon.Catalog)) -> String {

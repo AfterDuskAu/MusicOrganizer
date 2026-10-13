@@ -36,7 +36,7 @@ import AppKit
 ///   step took written out
 /// - `settings=<part>`: the Settings page gone to this group ("profile", "player", "plugins",
 ///   "sync", "general") or part of one ("play", "downloads", "lyrics", "addons", "sharing",
-///   "deleted", "look", "terms", "privacy"), with the Settings page showing
+///   "deleted", "moving", "look", "legal"), with the Settings page showing
 /// - `flip=<key>`: a yes-or-no setting switched over, by its saved name
 /// - `fullscreen`: the window sent into macOS's full screen, or brought out of it, as the
 ///   green button does it (only a copy that's seen can: it takes the whole screen)

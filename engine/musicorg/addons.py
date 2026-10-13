@@ -361,6 +361,78 @@ def catalog(
     return {"items": items, "more": more, "next_skip": skip + len(metas)}
 
 
+SEARCH_PAGES = 3  # of one add-on's answer to a search, when it has pages
+
+
+def search(addons: list[dict[str, Any]], kind: str, query: str) -> dict[str, Any]:
+    """Everything of one kind that these add-ons find for some words: `{items: [Item],
+    problems: [{addon, message}]}` (the owner, 2026-10-13: a search "searches the whole
+    database", whichever list is showing, and brings "all the Avengers").
+
+    Until then a search asked only the list that was chosen, and only a list that takes
+    a search had a search box at all. Here every add-on is asked, of the first of its
+    lists of this kind that takes a search, in the owner's order, and what they find is
+    put together, each title once.
+
+    An add-on gives a search's best few and no more (the film-details one: sixteen,
+    whatever `skip` says; checked that day). So each is asked a second time with "the"
+    before the words, which brings titles the first answer had no room for; of those,
+    only the ones with every word of the search in their name are kept, so nothing
+    unlike what was asked for is added. An add-on that fails is named in `problems`
+    and the rest still answer."""
+    words = " ".join(query.split())
+    if not words:
+        raise AddonError("Type something to search for first.")
+    wanted = [word.casefold() for word in words.split()]
+    items: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    problems: list[dict[str, str]] = []
+
+    def take(found: list[dict[str, Any]], *, only_alike: bool) -> int:
+        new = 0
+        for item in found:
+            name = str(item.get("name") or "").casefold()
+            if item["id"] in seen or (only_alike and not all(word in name for word in wanted)):
+                continue
+            seen.add(item["id"])
+            items.append(item)
+            new += 1
+        return new
+
+    wider = None if wanted[0] == "the" else f"the {words}"
+    for addon in addons:
+        if not supports(addon, "catalog", kind):
+            continue
+        listing = next(
+            (
+                one
+                for one in addon.get("catalogs") or []
+                if one.get("type") == kind
+                and any(extra["name"] == "search" for extra in one["extra"])
+                and not any(
+                    extra.get("required") and extra["name"] != "search" for extra in one["extra"]
+                )
+            ),
+            None,
+        )
+        if listing is None:
+            continue
+        try:
+            skip = 0
+            for _ in range(SEARCH_PAGES):
+                page = catalog(addon, kind, listing["id"], search=words, skip=skip)
+                # An add-on that takes no notice of `skip` sends the same again: stop.
+                if not take(page["items"], only_alike=False) or not page["more"]:
+                    break
+                skip = page["next_skip"]
+            if wider is not None:
+                take(catalog(addon, kind, listing["id"], search=wider)["items"], only_alike=True)
+        except AddonError as exc:
+            named_as = str(addon.get("name") or "An add-on")
+            problems.append({"addon": named_as, "message": exc.message})
+    return {"items": items, "problems": problems}
+
+
 def _text(value: Any) -> str | None:
     return value if isinstance(value, str) and value.strip() else None
 

@@ -30,6 +30,7 @@ log = logging.getLogger(__name__)
 TOOL_NAMES = ("ffmpeg", "ffprobe", "fpcalc", "deno")
 MIN_DENO_VERSION = (2, 3)
 VERSION_TIMEOUT_S = 20
+_TOO_SLOW = "it didn't answer within"
 
 _VERSION_ARGS = {
     "ffmpeg": ["-version"],
@@ -117,18 +118,55 @@ def find(tool: str, config: Config | None = None) -> ToolInfo:
     return ToolInfo(name=tool, problem="not found", note=note)
 
 
+# Tools found usable, for this run of the engine: by tool, the path set for it and PATH
+# (what `find` goes by), with the file's size and time, so a copy that's replaced is
+# looked at afresh.
+_good: dict[tuple[str, str, str], tuple[Path, tuple[int, int]]] = {}
+
+
 def require(tool: str, config: Config | None = None) -> Path:
-    """Path to a usable copy of `tool`, or ToolMissingError with install hints."""
+    """Path to a usable copy of `tool`, or ToolMissingError with install hints.
+
+    A copy found usable is remembered for as long as the engine runs and its file is
+    unchanged. Until 2026-10-13 every look-up at YouTube ran `deno --version` first,
+    and every download `ffmpeg -version` too: a fifth of a second each on a quiet Mac,
+    and on a very busy one more than the twenty seconds allowed, which failed the song
+    (the owner's picture that day, with the Mac's load at 96). A copy that can't be
+    used isn't remembered: it's tried again the next time it's wanted."""
+    _check_name(tool)
+    override = config.tool_path(tool) if config is not None else None
+    key = (tool, str(override or ""), os.environ.get("PATH", ""))
+    known = _good.get(key)
+    if known is not None and _stamp(known[0]) == known[1]:
+        return known[0]
     info = find(tool, config)
     if info.ok and info.path is not None:
+        stamp = _stamp(info.path)
+        if stamp is not None:
+            _good[key] = (info.path, stamp)
         return info.path
     raise ToolMissingError(tool, missing_message(info))
+
+
+def _stamp(path: Path) -> tuple[int, int] | None:
+    try:
+        found = os.stat(path)
+    except OSError:
+        return None
+    return (found.st_size, found.st_mtime_ns)
 
 
 def missing_message(info: ToolInfo, platform: str | None = None) -> str:
     """Plain-English explanation of why a tool can't be used, and how to fix it."""
     if info.path is None:
         first = f"{info.name} isn't installed, or Music Organizer can't find it."
+    elif info.problem is not None and info.problem.startswith(_TOO_SLOW):
+        # It's installed: the computer was too busy to start it. Nothing to install.
+        return (
+            f"This computer is very busy just now: {info.name}, a helper the app needs for "
+            f"this, took more than {VERSION_TIMEOUT_S} seconds to start. Try again in a "
+            "moment, or once whatever is keeping the computer busy has finished."
+        )
     else:
         first = f"The {info.name} at {info.path} can't be used: {info.problem}."
     return f"{first} {install_hint(info.name, platform)}"
@@ -203,7 +241,7 @@ def _inspect(tool: str, path: Path, found_in: str) -> ToolInfo:
             creationflags=_NO_WINDOW,
         )
     except subprocess.TimeoutExpired:
-        return replace(base, problem=f"it didn't answer within {VERSION_TIMEOUT_S} seconds")
+        return replace(base, problem=f"{_TOO_SLOW} {VERSION_TIMEOUT_S} seconds")
     except OSError as exc:
         return replace(base, problem=f"it couldn't be started ({exc.strerror or exc})")
     if result.returncode != 0:

@@ -121,6 +121,7 @@ SLOW_METHODS = frozenset(
      # Answered on the main line they held up every other request the app made
      # meanwhile, a favourite or a list of songs included (found 2026-10-07).
      "addon.list", "addon.add", "addon.restore", "addon.catalog", "addon.details", "addon.streams",
+     "addon.search",
      "video.search", "channel.videos", "channel.search", "torrent.stop",
      "torrent.count",  # joins a torrent for a few seconds to count who has it
      "media.convert", "torrent.stop_keeping",  # reads the film with ffprobe first
@@ -378,6 +379,7 @@ class Server:
             "addon.mark": self.addon_mark,
             "addon.restore": self.addon_restore,
             "addon.catalog": self.addon_catalog,
+            "addon.search": self.addon_search,
             "addon.details": self.addon_details,
             "addon.streams": self.addon_streams,
             "video.search": self.video_search,
@@ -1042,6 +1044,12 @@ class Server:
             skip=skip,
             also=[g for g in want(params, "also", list, []) or [] if isinstance(g, str)][:4],
         )
+
+    def addon_search(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Everything of one kind that the owner's add-ons find for some words: every
+        add-on on the side asked (`adult`), not one list of one of them."""
+        asked = addons.kept_to(want(params, "adult", bool) is True)
+        return addons.search(asked, need(params, "type", str), need(params, "query", str))
 
     def addon_details(self, params: dict[str, Any]) -> dict[str, Any]:
         return addons.details(

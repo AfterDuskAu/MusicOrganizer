@@ -58,4 +58,30 @@ final class HomeWatchingTests: XCTestCase {
         // Offered, not put on the page for anyone: Customise Home switches them on.
         XCTAssertFalse(HomeSection.standard.contains { $0.hasSuffix(".unwatched") })
     }
+
+    // MARK: watched at all (the green check, and the Watched list)
+
+    func testAFilmPlayedHoweverFarHasBeenWatched() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let film = try decoder.decode(
+            MediaItem.self, from: Data(#"{"id":"tt1","type":"movie","name":"A Film","poster_shape":"poster","genres":[]}"#.utf8))
+        let show = try decoder.decode(
+            MediaItem.self, from: Data(#"{"id":"tt2","type":"series","name":"A Show","poster_shape":"poster","genres":[]}"#.utf8))
+        var history = WatchHistory()
+        XCTAssertFalse(history.hasWatched("tt1"))
+        history.watched(.watching(film))
+        history.watched(.watching(show))
+        history.watched(WatchHistory.Entry(id: "vid12345678", kind: .video, name: "A Video"))
+        XCTAssertTrue(history.hasWatched("tt1"))  // begun is enough: "if you've watched anything"
+        XCTAssertTrue(history.hasWatched("tt2"))
+        XCTAssertFalse(history.hasWatched("vid12345678"))  // a channel's video isn't a film
+        XCTAssertFalse(history.hasWatched("tt9"))
+        // The Watched lists: films in one, series in the other, the latest first.
+        XCTAssertEqual(history.watched(.movie).map(\.id), ["tt1"])
+        XCTAssertEqual(history.watched(.series).map(\.id), ["tt2"])
+        history.forget("tt1")
+        XCTAssertFalse(history.hasWatched("tt1"))
+    }
 }
+

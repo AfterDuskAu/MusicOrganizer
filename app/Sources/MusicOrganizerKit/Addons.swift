@@ -110,6 +110,13 @@ public struct MediaItem: Codable, Identifiable, Hashable, Sendable {
     }
 }
 
+/// What every plugin found for some words (the engine's `addon.search`, 2026-10-13):
+/// each title once, and the plugins that couldn't be asked.
+public struct MediaSearchAnswer: Decodable, Sendable {
+    public let items: [MediaItem]
+    public let problems: [StreamsAnswer.Problem]
+}
+
 public struct CatalogAnswer: Decodable, Sendable {
     public let items: [MediaItem]
     public let more: Bool

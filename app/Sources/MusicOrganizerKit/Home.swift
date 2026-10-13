@@ -255,6 +255,17 @@ public struct WatchHistory: Equatable, Sendable {
     }
 
     public func recent(_ kind: Entry.Kind) -> [Entry] { entries.filter { $0.kind == kind } }
+
+    /// Whether a film or a series has been watched at all: played from its page, however
+    /// far (the owner, 2026-10-13: "if you've watched anything", it has a green check on
+    /// its picture). A channel's video isn't what this is asked of.
+    public func hasWatched(_ id: String) -> Bool {
+        entries.contains { $0.id == id && $0.kind != .video }
+    }
+
+    /// The films, or the series, that have been watched, the latest first, as their
+    /// lists gave them: the Watched list of Movie Finder and Series Finder.
+    public func watched(_ kind: Entry.Kind) -> [MediaItem] { recent(kind).compactMap(\.item) }
     public func unfinished(_ kind: Entry.Kind) -> [Entry] { recent(kind).filter(\.isUnfinished) }
 
     public static let key = "watchHistory"

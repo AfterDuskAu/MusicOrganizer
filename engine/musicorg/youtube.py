@@ -65,6 +65,7 @@ from musicorg.errors import (
     DownloadError,
     FormatUnavailableError,
     ReplayMissError,
+    ToolMissingError,
     VideoUnavailableError,
     YouTubeError,
     YouTubePausedError,
@@ -1137,8 +1138,9 @@ def download_audio(
     A SoundCloud track (`sc:<number>`, 2026-10-12) comes as SoundCloud has it and is
     left in `dest_dir` as AAC in M4A, the library's one format: see `soundcloud_options`.
     """
-    opts = download_options(Path(dest_dir), progress)
-    if is_soundcloud(video_id):
+    soundcloud = is_soundcloud(video_id)
+    opts = download_options(Path(dest_dir), progress, deno=not soundcloud)
+    if soundcloud:
         opts.update(soundcloud_options())
     return _download(video_id, Path(dest_dir), opts)
 
@@ -1198,7 +1200,7 @@ def _download(video_id: str, dest: Path, opts: dict[str, Any]) -> tuple[Path, di
 
     try:
         info = limiter().call(run)
-    except (YouTubePausedError, ReplayMissError):
+    except (YouTubePausedError, ReplayMissError, ToolMissingError):
         raise
     except Exception as exc:
         raise download_problem(video_id, exc) from exc
@@ -1208,7 +1210,9 @@ def _download(video_id: str, dest: Path, opts: dict[str, Any]) -> tuple[Path, di
     return _downloaded_file(info, dest, video_id.removeprefix(SOUNDCLOUD_PREFIX)), info
 
 
-def download_options(dest: Path, progress: ProgressHook | None = None) -> dict[str, Any]:
+def download_options(
+    dest: Path, progress: ProgressHook | None = None, *, deno: bool = True
+) -> dict[str, Any]:
     """yt-dlp's options for one download (names checked against yt-dlp 2026.08.19)."""
 
     def hook(status: dict[str, Any]) -> None:
@@ -1218,7 +1222,7 @@ def download_options(dest: Path, progress: ProgressHook | None = None) -> dict[s
             progress(int(done), int(total) if total else None)
 
     return {
-        **_base_options(),
+        **_base_options(deno=deno),
         "paths": {"home": str(dest), "temp": str(dest)},
         "outtmpl": {"default": "%(id)s.%(ext)s"},
         "ffmpeg_location": str(tools.require("ffmpeg")),
@@ -1232,11 +1236,15 @@ def download_options(dest: Path, progress: ProgressHook | None = None) -> dict[s
     }
 
 
-def _base_options() -> dict[str, Any]:
-    """What every yt-dlp call shares: format 140 only, deno, our cache folder, quiet."""
+def _base_options(*, deno: bool = True) -> dict[str, Any]:
+    """What every yt-dlp call shares: format 140 only, deno, our cache folder, quiet.
+
+    `deno`: YouTube needs it (yt-dlp works out a video's address with it). SoundCloud
+    doesn't, and isn't made to wait on it or fail for want of it."""
+    runtime = {"js_runtimes": {"deno": {"path": str(tools.require("deno"))}}} if deno else {}
     return {
         "format": DOWNLOAD_FORMAT,
-        "js_runtimes": {"deno": {"path": str(tools.require("deno"))}},
+        **runtime,
         "cachedir": str(ensure_app_dir(app_dirs().cache) / "yt-dlp"),
         "noplaylist": True,
         "quiet": True,
@@ -1480,7 +1488,7 @@ def _flat(
     replay = os.environ.get(REPLAY_ENV)
     if replay:
         return read_recording(Path(replay), kind, key)
-    opts = _base_options()
+    opts = _base_options(deno=not kind.startswith("soundcloud"))
     del opts["format"]  # nothing is going to be played or fetched from this
     opts.update(extract_flat="in_playlist", playlistend=most, noplaylist=False, skip_download=True)
     if extractor_args:
@@ -1657,15 +1665,21 @@ def _look_up(video_id: str, *, first: bool = False) -> dict[str, Any]:
     """What YouTube says about a video right now (yt-dlp, nothing downloaded). `first`:
     someone is waiting to hear or see it, so it takes the rate limiter's next turn."""
     url = _address(video_id)
-    sound = SOUNDCLOUD_PLAY if is_soundcloud(video_id) else ORIGINAL_SOUND
+    soundcloud = is_soundcloud(video_id)
+    # Made here, not inside the limiter: a helper that can't be found is said at once,
+    # as itself, and isn't taken for YouTube turning a request away.
+    opts = {
+        **_base_options(deno=not soundcloud),
+        "format": SOUNDCLOUD_PLAY if soundcloud else ORIGINAL_SOUND,
+    }
 
     def run() -> Any:
-        with _make_ydl({**_base_options(), "format": sound}) as ydl:
+        with _make_ydl(opts) as ydl:
             return ydl.extract_info(url, download=False)
 
     try:
         info = limiter().call(run, first=first)
-    except (YouTubePausedError, ReplayMissError):
+    except (YouTubePausedError, ReplayMissError, ToolMissingError):
         raise
     except Exception as exc:
         raise download_problem(video_id, exc) from exc

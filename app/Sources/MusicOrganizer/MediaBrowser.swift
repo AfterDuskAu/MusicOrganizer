@@ -58,6 +58,29 @@ final class MediaList {
         shownFor = wanted
         working = false
     }
+
+    /// Every plugin asked for some words (the owner, 2026-10-13: a search "searches the
+    /// whole database", whichever list is chosen), and what they found put together.
+    func search(_ model: AppModel, type: String, words: String) async {
+        let wanted = "search|\(type)|\(words)"
+        if working || (wanted == shownFor && problem == nil) { return }
+        working = true
+        problem = nil
+        (items, cursor, more) = ([], 0, false)
+        do {
+            let found = try await model.ask(
+                "addon.search", ["type": type, "query": words], as: MediaSearchAnswer.self)
+            items = found.items
+            if items.isEmpty {
+                problem = found.problems.first.map { "\($0.addon): \($0.message)" }
+                    ?? "Nothing was found for “\(words)”."
+            }
+        } catch {
+            problem = error.localizedDescription
+        }
+        shownFor = wanted
+        working = false
+    }
 }
 
 /// The add-ons, and what's open from them. One for the whole app, so a page is as it

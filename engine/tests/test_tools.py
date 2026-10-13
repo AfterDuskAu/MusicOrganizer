@@ -333,3 +333,50 @@ def test_keep_awake_elsewhere_does_nothing(monkeypatch: pytest.MonkeyPatch) -> N
     monkeypatch.setattr(tools.subprocess, "Popen", None)
     with REAL_KEEP_AWAKE("linux"):
         pass
+
+
+# ---- a tool found good is remembered (2026-10-13) ----------------------------------------
+
+
+def test_a_good_tool_is_asked_its_version_once(
+    fake_tool: FakeTool, isolated_path: Isolate, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    exe = fake_tool(tmp_path / "bin", "deno", "deno 2.9.7 (stable)")
+    isolated_path([tmp_path / "bin"])
+    monkeypatch.setattr(tools, "_good", {})
+    looked: list[str] = []
+    inspect = tools._inspect
+
+    def counting(tool: str, path: Path, found_in: str) -> tools.ToolInfo:
+        looked.append(tool)
+        return inspect(tool, path, found_in)
+
+    monkeypatch.setattr(tools, "_inspect", counting)
+    assert tools.require("deno") == exe
+    assert tools.require("deno") == exe
+    assert tools.require("deno") == exe
+    assert looked == ["deno"]  # every look-up at YouTube used to run it again
+
+    # A copy that's been replaced is looked at afresh, and a bad one isn't remembered.
+    fake_tool(tmp_path / "bin", "deno", "deno 1.0.0 (an old one, written over the good one)")
+    with pytest.raises(ToolMissingError):
+        tools.require("deno")
+    with pytest.raises(ToolMissingError):
+        tools.require("deno")
+    assert looked == ["deno", "deno", "deno"]
+
+
+def test_a_tool_too_slow_to_start_isnt_said_to_be_missing(tmp_path: Path) -> None:
+    slow = tools.ToolInfo(
+        name="deno", path=tmp_path / "deno", found_in="fallback folder",
+        problem=f"{tools._TOO_SLOW} {tools.VERSION_TIMEOUT_S} seconds",
+    )  # fmt: skip
+    said = tools.missing_message(slow, "darwin")
+    assert "very busy" in said and "Try again in a moment" in said
+    # Nothing about installing it: it's installed. (And no word a download's error
+    # sorter takes for the network: the install hint's "curl -fsSL" was read as "ssl".)
+    assert "install" not in said.lower() and "ssl" not in said.lower()
+    broken = tools.ToolInfo(
+        name="deno", path=tmp_path / "deno", problem="it stopped with error code 1"
+    )
+    assert "brew install deno" in tools.missing_message(broken, "darwin")

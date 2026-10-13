@@ -433,6 +433,102 @@ def test_a_list_by_two_genres_keeps_only_what_has_both(
     assert long == {"items": [], "more": True, "next_skip": addons.ALSO_PAGES}
 
 
+# ---- a search of every add-on (the owner, 2026-10-13) ---------------------------------------
+
+
+def searchable(name: str, base: str, *, pages: bool = False) -> dict[str, Any]:
+    extra = [{"name": "search", "required": False, "options": []}]
+    if pages:
+        extra.append({"name": "skip", "required": False, "options": []})
+    return {
+        "name": name, "base": base, "types": ["movie"],
+        "resources": [{"name": "catalog", "types": ["movie"], "id_prefixes": []}],
+        "catalogs": [
+            # A list that must be asked by genre can't be searched, and isn't asked.
+            {"type": "movie", "id": "year", "name": None,
+             "extra": [{"name": "genre", "required": True, "options": []}]},
+            {"type": "movie", "id": "top", "name": None, "extra": extra},
+        ],
+    }  # fmt: skip
+
+
+def titles(*named: tuple[str, str]) -> dict[str, Any]:
+    return {"metas": [{"id": i, "type": "movie", "name": name} for i, name in named]}
+
+
+def test_a_search_asks_every_add_on_and_puts_the_answers_together(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seen: list[str] = []
+    answers = {
+        "https://one.invalid/catalog/movie/top/search=avengers.json": titles(
+            ("tt1", "The Avengers"), ("tt2", "Avengers: Endgame"), ("tt9", "Thunderbolts*")
+        ),
+        # Asked again more widely: a title there was no room for, and ones unlike it.
+        "https://one.invalid/catalog/movie/top/search=the%20avengers.json": titles(
+            ("tt1", "The Avengers"), ("tt3", "Ultimate Avengers"), ("tt8", "The Avenger")
+        ),
+        "https://two.invalid/catalog/movie/top/search=avengers.json": titles(
+            ("tt2", "Avengers: Endgame"), ("tt4", "Next Avengers")
+        ),
+        "https://two.invalid/catalog/movie/top/search=the%20avengers.json": titles(),
+    }
+
+    def http(url: str) -> Any:
+        seen.append(url)
+        if url not in answers:
+            raise addons.AddonError("It didn't answer.")
+        return answers[url]
+
+    monkeypatch.setattr(addons, "_http", http)
+    owned = [searchable("One", "https://one.invalid"), searchable("Two", "https://two.invalid"),
+             searchable("Three", "https://three.invalid")]  # fmt: skip
+    found = addons.search(owned, "movie", "  avengers ")
+    # Each title once, in the add-ons' order; what an add-on's own answer holds is kept
+    # as it is (it knows why), and of the wider asking only titles with the word in.
+    assert [(item["id"], item["name"]) for item in found["items"]] == [
+        ("tt1", "The Avengers"), ("tt2", "Avengers: Endgame"), ("tt9", "Thunderbolts*"),
+        ("tt3", "Ultimate Avengers"), ("tt4", "Next Avengers"),
+    ]  # fmt: skip
+    # One that failed is named, and the others still answered.
+    assert found["problems"] == [{"addon": "Three", "message": "It didn't answer."}]
+    assert not any("/year" in url for url in seen)
+    with pytest.raises(addons.AddonError):
+        addons.search(owned, "movie", "   ")
+    # Nothing that offers this kind: nothing is asked, and nothing is found.
+    seen.clear()
+    assert addons.search(owned, "series", "avengers") == {"items": [], "problems": []}
+    assert seen == []
+
+
+def test_a_searchs_pages_are_read_until_nothing_new_comes(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen: list[str] = []
+
+    def http(url: str) -> Any:
+        seen.append(url.rsplit("/", 1)[1])
+        if "skip=" in url:  # this add-on takes no notice of skip: the same again
+            return {**titles(("tt1", "Avengers One"), ("tt2", "Avengers Two")), "hasMore": True}
+        if "the%20" in url:
+            return titles()
+        return {**titles(("tt1", "Avengers One"), ("tt2", "Avengers Two")), "hasMore": True}
+
+    monkeypatch.setattr(addons, "_http", http)
+    found = addons.search(
+        [searchable("One", "https://one.invalid", pages=True)], "movie", "avengers"
+    )
+    assert [item["id"] for item in found["items"]] == ["tt1", "tt2"]
+    # The second page brought nothing new, so there was no third.
+    assert seen == [
+        "search=avengers.json",
+        "search=avengers&skip=2.json",
+        "search=the%20avengers.json",
+    ]
+    # A search that starts with "the" isn't asked a second way.
+    seen.clear()
+    addons.search([searchable("One", "https://one.invalid")], "movie", "The Avengers")
+    assert seen == ["search=The%20Avengers.json"]
+
+
 # ---- anime (the owner, 2026-10-08) ---------------------------------------------------------
 
 

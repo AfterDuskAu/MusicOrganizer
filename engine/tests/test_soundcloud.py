@@ -198,3 +198,41 @@ def test_soundcloud_turning_a_request_away_doesnt_pause_youtube() -> None:
     assert isinstance(
         youtube.download_problem("dQw4w9WgXcQ", Exception("HTTP Error 429")), YouTubeRefusedError
     )
+
+
+def test_soundcloud_never_waits_on_deno(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, dest: Path
+) -> None:
+    """deno is YouTube's helper. A Mac too busy to start it failed a song on 2026-10-13:
+    SoundCloud doesn't need it, and isn't made to ask for it."""
+    from musicorg.errors import ToolMissingError
+
+    def require(name: str, config: object = None) -> Path:
+        if name == "deno":
+            raise ToolMissingError("deno", "deno can't be used just now.")
+        return tmp_path / "bin" / name
+
+    monkeypatch.setattr(tools, "require", require)
+    monkeypatch.setattr(youtube, "_LIMITER", RateLimiter(0, 0, sleep=lambda s: None))
+    monkeypatch.setattr(youtube, "_recent", {})
+    seen: list[dict[str, Any]] = []
+    StreamYDL.info = {"id": "1", "url": "https://example.invalid/track.mp3",
+                      "format_id": "http_mp3_1_0", "duration": 60}  # fmt: skip
+
+    def make(opts: dict[str, Any]) -> Any:
+        seen.append(opts)
+        return SoundCloudYDL(opts) if "paths" in opts else StreamYDL(opts)
+
+    monkeypatch.setattr(youtube, "_make_ydl", make)
+    FakeYoutubeDL.calls = []
+    assert youtube.stream(TRACK).url == "https://example.invalid/track.mp3"
+    assert youtube.download_audio(TRACK, dest)[0].name == "1398629833.m4a"
+    assert all("js_runtimes" not in opts for opts in seen)
+    # YouTube still needs it, and says so as itself: not as "failed on the network",
+    # and without counting against YouTube as a request it turned away.
+    before = youtube.limiter().failures
+    with pytest.raises(ToolMissingError, match="can't be used just now"):
+        youtube.stream("dQw4w9WgXcQ")
+    with pytest.raises(ToolMissingError):
+        youtube.download_audio("dQw4w9WgXcQ", dest)
+    assert youtube.limiter().failures == before
