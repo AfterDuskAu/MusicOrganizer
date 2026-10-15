@@ -93,11 +93,12 @@ struct MediaCard: View {
                     RoundedRectangle(cornerRadius: 10)
                         .strokeBorder(hovering ? AnyShapeStyle(.primary) : AnyShapeStyle(.quaternary))
                 )
-                // Watched, however far: a green check in the picture's top left corner
-                // (the owner, 2026-10-13). Nothing from the Finder kept apart is ever
-                // remembered as watched, so nothing there has one.
+                // Watched: a green check in the picture's top left corner (the owner,
+                // 2026-10-13). A movie played to nine tenths, a series whose latest
+                // episode has been (2026-10-15: `AppModel.isWatched`). Nothing from the
+                // Finder kept apart is ever remembered as watched, so nothing there has one.
                 .overlay(alignment: .topLeading) {
-                    if let filmId, model?.history.hasWatched(filmId) == true {
+                    if let filmId, model?.isWatched(filmId) == true {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.title2)
                             .symbolRenderingMode(.palette)
@@ -763,11 +764,13 @@ struct MovieFinderView: View {
                     if let ownList, !everywhere {
                         grid(
                             of: ownList == Self.watchedKey
-                                ? model.history.watched(isSeries ? .series : .movie)
+                                ? model.watchedItems(isSeries ? "series" : "movie")
                                 : model.watchlist.of(type: isSeries ? "series" : "movie"),
                             empty: ownList == Self.watchedKey
-                                ? "Nothing watched yet. \(isSeries ? "A series" : "A movie") you play from its "
-                                    + "page shows up here, and has a green check on its picture in every list."
+                                ? (isSeries
+                                    ? "Nothing watched yet. A series whose latest episode you've watched shows "
+                                    : "Nothing watched yet. A movie you've watched nine tenths of shows ")
+                                    + "up here, and has a green check on its picture in every list."
                                 : "Nothing on your Watchlist yet. Open \(isSeries ? "a series" : "a movie") "
                                     + "and click Add to Watchlist.")
                     } else {
@@ -820,7 +823,11 @@ struct MovieFinderView: View {
             .opacity(opened == nil ? 1 : 0)
             .allowsHitTesting(opened == nil)
             if let opened {
+                // A page of its own for each film: opened over another (from Home, or the
+                // Watchlist) it kept that one's trailer, episode and ways to play until
+                // its own details came, and Play could play the other one (2026-10-15).
                 MovieView(film: opened, apart: isAdult) { self.opened = nil }
+                    .id(opened.id)
             }
         }
         .onChange(of: opened) { _, film in
@@ -1031,6 +1038,8 @@ struct MovieView: View {
                 // an episode's ways to play are asked for when it's clicked.
                 season = details?.seasons.first
                 showAskedEpisode()
+                // Its latest episode, for whether it's been watched.
+                if !apart, let details { model.learn(film, episodes: details.videos) }
             } else {
                 streams = try? await model.ask("addon.streams", asked, as: StreamsAnswer.self)
             }
@@ -1055,8 +1064,19 @@ struct MovieView: View {
                 // part's own.
                 LazyVStack(alignment: .leading, spacing: 10) {
                     ForEach(details.episodes(in: showing)) { one in
+                        let seen = !apart && model.finished.contains(one.id)
                         Button { choose(one) } label: {
                             HStack(alignment: .top, spacing: 14) {
+                                // A check before each episode that's been watched (the
+                                // owner, 2026-10-15), to nine tenths of it or marked so.
+                                Image(systemName: "checkmark.circle.fill")
+                                    .symbolRenderingMode(.palette)
+                                    .foregroundStyle(.white, .green)
+                                    .opacity(seen ? 1 : 0)
+                                    .frame(width: 18)
+                                    .help(seen ? "You've watched this episode" : "")
+                                    .accessibilityLabel(seen ? "Watched" : "")
+                                    .padding(.trailing, -6)
                                 Text(one.episode.map(String.init) ?? "")
                                     .monospacedDigit()
                                     .frame(width: 28, alignment: .trailing)
@@ -1082,10 +1102,32 @@ struct MovieView: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
+                        .contextMenu {
+                            if !apart {
+                                Button(seen ? "Mark as Not Watched" : "Mark as Watched") {
+                                    model.markWatched([one.id], !seen, of: film)
+                                }
+                                let earlier = Self.before(one, in: details.videos)
+                                if !earlier.isEmpty {
+                                    Button("Mark Every Episode Before This as Watched") {
+                                        model.markWatched(earlier.map(\.id), true, of: film)
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
             .frame(maxWidth: 760, alignment: .leading)
+        }
+    }
+
+    /// The episodes before this one, by season and number (specials aren't before anything).
+    private static func before(_ one: MediaDetails.Video, in videos: [MediaDetails.Video]) -> [MediaDetails.Video] {
+        guard let season = one.season, season > 0, let number = one.episode else { return [] }
+        return videos.filter { video in
+            guard let itsSeason = video.season, itsSeason > 0, let itsNumber = video.episode else { return false }
+            return (itsSeason, itsNumber) < (season, number)
         }
     }
 
@@ -1362,17 +1404,22 @@ struct MoviesView: View {
     }
 }
 
-/// Videos → Watchlist (the owner, 2026-10-14): the movies and series put on the Watchlist
-/// from their pages, and beside it what's been watched. A click opens one's page, in its
-/// Finder; a right-click takes it off the list.
+/// Videos → Watchlist (the owner, 2026-10-14): To Watch, the movies and series put on the
+/// Watchlist from their pages that haven't been watched yet, with a series caught up with
+/// that has a new episode; and Watched (both by the owner's rule of 2026-10-15). A click
+/// opens one's page, in its Finder; a right-click takes it off the list, or marks a movie.
 struct WatchlistView: View {
     @Environment(AppModel.self) private var model
     @AppStorage("watchlistShows") private var shows = "towatch"
 
     var body: some View {
         let watched = shows == "watched"
-        let movies = watched ? model.history.watched(.movie) : model.watchlist.of(type: "movie")
-        let series = watched ? model.history.watched(.series) : model.watchlist.of(type: "series")
+        // To Watch: what's on the Watchlist and not watched yet, and a series caught up
+        // with that has a new episode. Watched: a movie played to nine tenths, a series
+        // whose latest episode has been (the owner, 2026-10-15).
+        let movies = watched ? model.watchedItems("movie") : model.toWatch("movie")
+        let allSeries = watched ? model.watchedItems("series") : model.toWatch("series")
+        let (anime, series) = (allSeries.filter { $0.anime == true }, allSeries.filter { $0.anime != true })
         VStack(spacing: 0) {
             HStack(spacing: 12) {
                 Text("Watchlist").font(.title2.weight(.semibold)).heading()
@@ -1384,17 +1431,23 @@ struct WatchlistView: View {
                 .labelsHidden()
                 .fixedSize()
                 Spacer()
+                if model.readingSeries {
+                    ProgressView().controlSize(.small)
+                        .help("Looking for new episodes of your series")
+                }
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
             Divider()
-            if movies.isEmpty, series.isEmpty {
+            if movies.isEmpty, allSeries.isEmpty {
                 Text(
                     watched
-                        ? "Nothing watched yet. A movie or a series you play from its page shows up "
-                            + "here, and has a green check on its picture in every list."
-                        : "Nothing on your Watchlist yet. Open a movie or a series (Movie Finder, "
-                            + "Series Finder) and click Add to Watchlist on its page.")
+                        ? "Nothing watched yet. A movie you've watched nine tenths of, or a series whose "
+                            + "latest episode you've watched, shows up here, and has a green check on its "
+                            + "picture in every list."
+                        : "Nothing to watch on your Watchlist. Open a movie or a series (Movie Finder, "
+                            + "Series Finder) and click Add to Watchlist on its page. A series you've "
+                            + "caught up with comes back here when a new episode is out.")
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(40)
@@ -1402,31 +1455,56 @@ struct WatchlistView: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 8) {
-                        cards("Movies", movies, removable: !watched)
-                        cards("Series", series, removable: !watched)
+                        cards("Movies", movies)
+                        cards("Series", series)
+                        cards("Anime", anime)
                     }
                     .padding(.vertical, 14)
                 }
             }
         }
+        // Whether a series has a new episode, or its latest has been watched, goes by its
+        // episodes: read again when they're six hours old.
+        .task { await model.readSeries(model.ownSeries) }
     }
 
     @ViewBuilder
-    private func cards(_ title: String, _ items: [MediaItem], removable: Bool) -> some View {
+    private func cards(_ title: String, _ items: [MediaItem]) -> some View {
         if !items.isEmpty {
             Text(title).font(.title3.weight(.semibold)).heading().padding(.horizontal, 20)
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 22)], spacing: 22) {
                 ForEach(items) { item in
-                    Button { model.open(item) } label: { MediaCard(item: item) }
-                        .buttonStyle(.plain)
-                        .contextMenu {
-                            Button("Open Its Page") { model.open(item) }
-                            if removable {
-                                Button("Remove From Watchlist") { model.toggleWatchlist(item) }
-                            } else if !model.watchlist.contains(item) {
-                                Button("Add to Watchlist") { model.toggleWatchlist(item) }
+                    Button { model.open(item) } label: {
+                        MediaCard(item: item)
+                            .overlay(alignment: .top) {
+                                if model.hasNewEpisode(item.id) {
+                                    Text("NEW EPISODE")
+                                        .font(.caption2.weight(.bold))
+                                        .foregroundStyle(.white)
+                                        .padding(.horizontal, 7)
+                                        .padding(.vertical, 3)
+                                        .background(Color.accentColor, in: Capsule())
+                                        .padding(.top, 8)
+                                        .help("A new episode is out since you caught up")
+                                }
+                            }
+                    }
+                    .buttonStyle(.plain)
+                    .contextMenu {
+                        Button("Open Its Page") { model.open(item) }
+                        if model.watchlist.contains(item) {
+                            Button("Remove From Watchlist") { model.toggleWatchlist(item) }
+                        } else {
+                            Button("Add to Watchlist") { model.toggleWatchlist(item) }
+                        }
+                        // A movie by the owner's word; a series' episodes are marked on its page.
+                        if item.type != "series" {
+                            let seen = model.isWatched(item.id)
+                            Button(seen ? "Mark as Not Watched" : "Mark as Watched") {
+                                model.markWatched([item.id], !seen)
                             }
                         }
+                    }
                 }
             }
             .padding(.horizontal, 20)

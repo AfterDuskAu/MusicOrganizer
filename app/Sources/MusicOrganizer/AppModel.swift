@@ -204,8 +204,20 @@ final class AppModel {
     // MARK: Home (the owner's drawing, 2026-10-08)
 
     /// Which rows the Home page shows, in order. Its Overview changes it.
-    var homeLayout = HomeLayout.saved() {
+    var homeLayout = AppModel.keptHomeLayout() {
         didSet { homeLayout.save() }
+    }
+
+    /// The owner's Home page, with the Recommended rows they asked for (2026-10-15) put
+    /// on it the first time it's opened since.
+    private static func keptHomeLayout() -> HomeLayout {
+        var layout = HomeLayout.saved()
+        if !UserDefaults.standard.bool(forKey: HomeSection.recommendedAdded) {
+            layout.addRecommended()
+            layout.save()
+            UserDefaults.standard.set(true, forKey: HomeSection.recommendedAdded)
+        }
+        return layout
     }
     /// What's been watched: Home's Continue Watching and Recently Watched.
     private(set) var history = WatchHistory.saved()
@@ -238,6 +250,158 @@ final class AppModel {
     func toggleWatchlist(_ item: MediaItem) {
         watchlist.toggle(item)
         watchlist.save()
+    }
+
+    // MARK: what's been watched to its end (the owner, 2026-10-15)
+
+    /// Movies and episodes played to nine tenths (`Finished`), and where each series
+    /// stands (`SeriesProgress`): what the Watchlist's To Watch and Watched, the green
+    /// checks and an episode's check go by.
+    private(set) var finished = AppModel.keptFinished()
+    private(set) var seriesProgress = SeriesProgress.saved()
+    /// Series' episodes read while the app is open, by the series' id: the calendar's.
+    private(set) var seriesEpisodes: [String: [MediaDetails.Video]] = [:]
+    private(set) var readingSeries = false
+    /// Counts the series' episodes read, so the calendar knows to lay out its days again.
+    private(set) var seriesRead = 0
+
+    /// What's been finished, or (the first time) what the history says was.
+    private static func keptFinished() -> Finished {
+        if let kept = Finished.saved() { return kept }
+        let seeded = Finished.seeded(from: WatchHistory.saved())
+        seeded.save()
+        return seeded
+    }
+
+    /// Watched (the owner, 2026-10-15): a movie played to nine tenths of it ("this 10%
+    /// accounts for credits"); a series whose latest episode out has been. An id the
+    /// app knows as a series' is a series.
+    func isWatched(_ id: String) -> Bool {
+        seriesProgress.latest(of: id) != nil
+            ? seriesProgress.isWatched(id, finished: finished) : finished.contains(id)
+    }
+
+    /// The owner had caught up with this series, and a new episode has come out since.
+    func hasNewEpisode(_ id: String) -> Bool { seriesProgress.hasNewEpisode(id, finished: finished) }
+
+    /// A film or episodes marked watched, or not, by the owner (an episode's menu, a
+    /// card's). Episodes say their series, which may be caught up by it.
+    func markWatched(_ ids: [String], _ watched: Bool, of series: MediaItem? = nil) {
+        for id in ids {
+            finished.mark(id, watched: watched)
+            if watched, let series { seriesProgress.finished(id, of: series.id) }
+        }
+        finished.save()
+        seriesProgress.save()
+    }
+
+    /// A series' episodes have been read (its page, the next episode looked for, the
+    /// Watchlist, the calendar): its latest episode out is noted.
+    func learn(_ series: MediaItem, episodes: [MediaDetails.Video]) {
+        guard series.type == "series", !episodes.isEmpty else { return }
+        seriesEpisodes[series.id] = episodes
+        seriesRead += 1
+        seriesProgress.learned(series.id, episodes: episodes, finished: finished)
+        seriesProgress.save()
+    }
+
+    /// Open an episode on its series' page, with its ways to play showing (the calendar).
+    func openEpisode(_ episodeId: String, of series: MediaItem) {
+        episodeToChoose = EpisodeAsk(series: series.id, episode: episodeId)
+        open(series)
+    }
+
+    // MARK: the calendar's videos
+
+    /// The newest videos of the channels followed, for the calendar (the owner, 2026-10-12:
+    /// "your favourite channel uploads without warning, it loads that there was a[n]
+    /// episode uploaded 1 day ago"): the first eight channels, eight videos each.
+    private(set) var calendarUploads: [VideoHit] = []
+    private(set) var readingUploads = false
+    @ObservationIgnored private var uploadsRead: (channels: [String], at: Date)?
+
+    /// Read the followed channels' newest videos, unless they were read in the last
+    /// hour. One question a channel, each through the gate to YouTube at its pace.
+    func readUploads() async {
+        let wanted = followedChannels.prefix(8).map(\.channelId)
+        if let read = uploadsRead, read.channels == wanted, Date().timeIntervalSince(read.at) < 3600 { return }
+        guard !readingUploads, !wanted.isEmpty else { return }
+        readingUploads = true
+        defer { readingUploads = false }
+        var found: [VideoHit] = []
+        for channel in wanted {
+            if let page = try? await ask(
+                "channel.videos", ["channel_id": channel, "limit": 8], as: ChannelPage.self)
+            {
+                found += page.videos
+                calendarUploads = found
+            }
+        }
+        uploadsRead = (wanted, Date())
+    }
+
+    /// The owner's series: on the Watchlist, hearted, or watched. The ones the Watchlist
+    /// and the calendar keep up with.
+    var ownSeries: [MediaItem] {
+        var seen = Set<String>()
+        return (watchlist.of(type: "series") + mediaFavourites.of(type: "series") + history.watched(.series))
+            .filter { seen.insert($0.id).inserted }
+    }
+
+    /// A film or series the app has a record of, by its id.
+    func knownItem(_ id: String) -> MediaItem? {
+        watchlist.items.first { $0.id == id } ?? mediaFavourites.items.first { $0.id == id }
+            ?? history.entries.first { $0.id == id }?.item
+    }
+
+    /// The Watchlist's To Watch (the owner, 2026-10-15): what's on it and not watched yet,
+    /// and a series they'd caught up with that has a new episode, on the list or not.
+    func toWatch(_ type: String) -> [MediaItem] {
+        var seen = Set<String>()
+        let fresh = type == "series" ? seriesProgress.withNewEpisodes(finished: finished).compactMap(knownItem) : []
+        return (fresh + watchlist.of(type: type).filter { !isWatched($0.id) }).filter { seen.insert($0.id).inserted }
+    }
+
+    /// The Watchlist's Watched: every movie played to nine tenths, and every series whose
+    /// latest episode has been watched, the latest watched first.
+    func watchedItems(_ type: String) -> [MediaItem] {
+        var seen = Set<String>()
+        let all = (history.entries.compactMap(\.item) + watchlist.items + mediaFavourites.items)
+            .filter { $0.type == type && isWatched($0.id) && seen.insert($0.id).inserted }
+        func when(_ item: MediaItem) -> Date {
+            finished.day(of: seriesProgress.latest(of: item.id) ?? item.id) ?? .distantPast
+        }
+        return all.sorted { when($0) > when($1) }
+    }
+
+    /// Read these series' episodes where they're due (every six hours, or never read
+    /// while the app's been open), three at a time: their latest episodes, and the
+    /// calendar's. Each is one question to the plugins, not through the gate to YouTube.
+    func readSeries(_ items: [MediaItem], force: Bool = false) async {
+        guard !readingSeries else { return }
+        let due = items.filter {
+            $0.type == "series"
+                && (force || seriesEpisodes[$0.id] == nil || seriesProgress.isDue($0.id, every: 6 * 3600))
+        }
+        guard !due.isEmpty else { return }
+        readingSeries = true
+        defer { readingSeries = false }
+        var waiting = due[...]
+        await withTaskGroup(of: (MediaItem, MediaDetails?).self) { group in
+            func next() {
+                guard let series = waiting.popFirst() else { return }
+                group.addTask { @MainActor in
+                    let details = try? await self.ask(
+                        "addon.details", ["type": "series", "id": series.id, "adult": false], as: MediaDetails.self)
+                    return (series, details)
+                }
+            }
+            for _ in 0..<3 { next() }
+            for await (series, details) in group {
+                if let details { learn(series, episodes: details.videos) }
+                next()
+            }
+        }
     }
 
     /// Something has started playing: it goes to the front of what's been watched.
@@ -450,6 +614,11 @@ final class AppModel {
         }
         film.onPlace = { [weak self] seconds, length in
             guard let self, let id = self.watchingFilm else { return }
+            self.noteFinished(id, at: seconds, of: length)
+            // Not onto the next episode: the one ending says where it got to as it shuts,
+            // when the next is already what's remembered of the series (`play`).
+            guard self.history.entries.first(where: { $0.id == id })?.episodeId == self.episodeNow?.episodeId
+            else { return }
             self.history.place(id, seconds: seconds, length: length)
             self.history.save()
         }
@@ -781,7 +950,66 @@ final class AppModel {
         filmsOpened += 1
         // An episode of a series, or (a file, a film) nothing that leads to another.
         (episodeNow, episodeToBe) = (episodeToBe, nil)
+        lookForNextEpisode()
         tidyFullScreenTopBar()
+    }
+
+    /// The film or the episode playing (`id`, as the history knows it) has got to
+    /// `seconds` of `length`: past nine tenths, it's been watched (`Finished`). Nothing
+    /// from the Finder kept apart is remembered.
+    private func noteFinished(_ id: String, at seconds: Double, of length: Double) {
+        if let now = episodeNow {
+            guard !now.apart, now.series.id == id,
+                finished.played(now.episodeId, to: seconds, of: length)
+            else { return }
+            finished.save()
+            seriesProgress.finished(now.episodeId, of: id)
+            seriesProgress.save()
+            // Whether the series is watched now goes by its latest episode: read it if
+            // it never has been.
+            if seriesProgress.latest(of: id) == nil {
+                let series = now.series
+                Task { await readSeries([series], force: true) }
+            }
+        } else if finished.played(id, to: seconds, of: length) {
+            finished.save()
+        }
+    }
+
+    /// The episode after the one that's opened, once it's known to be out: what the
+    /// player's Next Episode button plays (the owner, 2026-10-15). Nil for a film.
+    private(set) var nextEpisode: MediaDetails.Video?
+    /// Next Episode was pressed, and the next one's ways to play are being looked for.
+    private(set) var findingNextEpisode = false
+
+    private func lookForNextEpisode() {
+        nextEpisode = nil
+        guard let now = episodeNow else { return }
+        Task {
+            var episodes = now.episodes
+            if episodes == nil {
+                episodes = (try? await ask(
+                    "addon.details", ["type": now.series.type, "id": now.series.id, "adult": now.apart],
+                    as: MediaDetails.self))?.videos
+            }
+            guard let episodes, episodeNow?.episodeId == now.episodeId else { return }
+            episodeNow?.episodes = episodes
+            if !now.apart { learn(now.series, episodes: episodes) }
+            let today = ISO8601DateFormatter().string(from: Date()).prefix(10)
+            nextEpisode = NextEpisode.after(now.episodeId, in: episodes, today: String(today))
+        }
+    }
+
+    /// The player's Next Episode button: the next episode, by the owner's rule for which
+    /// of its ways to play (`NextEpisode`), as when one plays by itself. A click, so a
+    /// torrent is joined whatever Settings → Player's switch says.
+    func playNextEpisode() {
+        guard let now = episodeNow, !findingNextEpisode else { return }
+        findingNextEpisode = true
+        Task {
+            defer { findingNextEpisode = false }
+            _ = await playEpisode(after: now)
+        }
     }
 
     /// The next film to open starts at its beginning (`playEpisode(after:)`).
@@ -807,14 +1035,28 @@ final class AppModel {
 
     /// A film played to its end. With Settings → Player's switch on, and the film an
     /// episode of a series, the next episode is played (`NextEpisode` has the owner's
-    /// rule for how). With the switch off nothing happens: the film stays on its last
-    /// frame, as it always did.
+    /// rule for how). Otherwise, or with nothing after it, the player shuts and the page
+    /// it was opened from is back (the owner, 2026-10-15: "when a series finishes or a
+    /// movie ends, it moves it back to the previous page. doesn't keep a black screen").
     private func filmEnded() {
-        guard UserDefaults.standard.bool(forKey: NextEpisode.key), let now = episodeNow else { return }
-        Task { await playEpisode(after: now) }
+        guard UserDefaults.standard.bool(forKey: NextEpisode.key), let now = episodeNow else {
+            closeFilm()
+            return
+        }
+        let opened = filmsOpened
+        Task {
+            if await playEpisode(after: now) { return }
+            // The last episode out: back to the page, unless the owner has already
+            // started something else.
+            if film.isOpen, filmsOpened == opened { closeFilm() }
+        }
     }
 
-    private func playEpisode(after now: EpisodeNow) async {
+    /// Play the episode after `now`. False when there's none to play (after the last one
+    /// out), or the owner has moved on meanwhile; true when it's playing, or its page is
+    /// open for the owner to choose how.
+    @discardableResult
+    private func playEpisode(after now: EpisodeNow) async -> Bool {
         let type = now.series.type
         var episodes = now.episodes
         if episodes == nil {
@@ -825,19 +1067,19 @@ final class AppModel {
         let today = ISO8601DateFormatter().string(from: Date()).prefix(10)
         // After the last episode, or with the next one not out yet, nothing follows.
         guard let episodes, let next = NextEpisode.after(now.episodeId, in: episodes, today: String(today))
-        else { return }
+        else { return false }
         let found = try? await ask(
             "addon.streams", ["type": type, "id": next.id, "adult": now.apart], as: StreamsAnswer.self)
         // Only if that episode is still there at its end: the owner may have shut it,
         // or started something else, while the next one was looked for.
-        guard film.isOpen, episodeNow?.episodeId == now.episodeId else { return }
+        guard film.isOpen, episodeNow?.episodeId == now.episodeId else { return false }
         guard let found, let way = NextEpisode.way(in: found, like: now.played) else {
             // Not to be had the way the last one was played: the owner is asked, on
             // the episode's own page.
             closeFilm()
             episodeToChoose = EpisodeAsk(series: now.series.id, episode: next.id)
             if !now.apart { open(now.series) }
-            return
+            return true
         }
         // A torrent that isn't the next episode's too is left before the next is joined.
         if let old = filmTorrent, old.lowercased() != way.stream.infoHash?.lowercased() {
@@ -851,6 +1093,7 @@ final class AppModel {
             episode: EpisodeNow(
                 series: now.series, episodeId: next.id, played: now.played, apart: now.apart,
                 episodes: episodes))
+        return true
     }
 
     /// In macOS's full screen, a window's top bar is drawn by a small window of its own
@@ -931,11 +1174,15 @@ final class AppModel {
     ) {
         // Remembered as watched, when it's a film or an episode from its page: with the
         // way it was played, so Home's Continue Watching can play it again.
-        if var entry, stream.kind == "url" || stream.kind == "torrent" {
-            (entry.stream, entry.playName) = (stream, title)
-            (entry.episodeId, entry.source) = (episode?.episodeId, episode?.played.addonId)
-            watching(entry)
-            watchingFilm = entry.id
+        if stream.kind == "url" || stream.kind == "torrent" {
+            if var entry {
+                (entry.stream, entry.playName) = (stream, title)
+                (entry.episodeId, entry.source) = (episode?.episodeId, episode?.played.addonId)
+                watching(entry)
+            }
+            // Nothing of a film from the Finder kept apart is remembered, even where
+            // the last film was got to.
+            watchingFilm = entry?.id
         }
         // The episode this is, for playing the one after it when it ends. Taken up when
         // the film opens (a torrent's opens a moment later).
@@ -1151,6 +1398,7 @@ final class AppModel {
         film.close()
         watchingFilm = nil
         (episodeNow, episodeToBe) = (nil, nil)
+        nextEpisode = nil
         tidyFullScreenTopBar()
         if let hash = filmTorrent {
             (filmTorrent, filmStatus) = (nil, nil)
@@ -1720,6 +1968,8 @@ final class AppModel {
         history = WatchHistory.saved()
         mediaFavourites = MediaFavourites.saved()
         watchlist = Watchlist.saved()
+        finished = Self.keptFinished()
+        seriesProgress = SeriesProgress.saved()
     }
 
     private func engineSaid(_ method: String) async {

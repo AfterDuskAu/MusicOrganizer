@@ -35,7 +35,8 @@ final class FilmPlayer {
     @ObservationIgnored private var looks = 0
     /// Hears where the film is (seconds, of how many) whenever that's noted.
     @ObservationIgnored var onPlace: ((Double, Double) -> Void)?
-    /// Hears that the film has played to its end: once for each film opened.
+    /// Hears that the film has played to its end: once for each film opened. The app
+    /// shuts the player then, or plays the next episode (`AppModel.filmEnded`).
     @ObservationIgnored var onEnded: (() -> Void)?
     @ObservationIgnored private var ended = false
 
@@ -211,10 +212,15 @@ final class FilmPlayer {
             problem = "This film couldn't be opened."
             buffering = false
         }
-        // The film has played to its end (it stays on its last frame: `keep-open`).
+        // The film has played to its end (it stays on its last frame: `keep-open`). Only
+        // near its real end (its last minute or so, and never more than its last tenth):
+        // a film whose stream stopped part way is left where it stopped, not taken for
+        // finished and shut.
         var atEnd: Int32 = 0
         mpv_get_property(mpv, "eof-reached", MPV_FORMAT_FLAG, &atEnd)
-        if atEnd != 0, duration > 0, !ended {
+        if atEnd != 0, duration > 0, duration - time <= min(max(60, duration * 0.02), duration * 0.1),
+            !ended
+        {
             ended = true
             remember()
             onEnded?()
@@ -273,10 +279,17 @@ struct FilmPlayerView: View {
                 controls(film)
             }
         }
-        // The ✕ is in the top left corner (the owner, 2026-10-12), with the controls.
+        // The ✕ is in the top left corner (the owner, 2026-10-12), with the controls; and
+        // an episode's Next Episode in the top right, opposite it (2026-10-15), once the
+        // next one is known to be out.
         .overlay(alignment: .topLeading) {
             if controlsShown || film.paused || film.problem != nil {
                 CornerClose(help: "Stop the film and go back") { close() }
+            }
+        }
+        .overlay(alignment: .topTrailing) {
+            if controlsShown || film.paused || film.problem != nil, let next = model.nextEpisode {
+                NextEpisodeButton(next: next, finding: model.findingNextEpisode) { model.playNextEpisode() }
             }
         }
         .environment(\.colorScheme, .dark)
@@ -426,15 +439,70 @@ struct CornerClose: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: "xmark")
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(.white)
-                .frame(width: 40, height: 40)
-                .background(.black.opacity(0.6), in: Circle())
-                .contentShape(Circle())
+                .font(.title3.weight(.bold))
+                .frame(width: 44, height: 44)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SolidPictureButtonStyle())
         .help(help)
         .padding(.leading, 20)
         .padding(.top, 56)
+    }
+}
+
+/// A film's Next Episode, in the top right corner, opposite the ✕ (the owner, 2026-10-15:
+/// "add a button on series pages to go to next episode. can be on opposite side of the X").
+/// It plays the next episode the way the next one plays by itself (`NextEpisode`).
+struct NextEpisodeButton: View {
+    let next: MediaDetails.Video
+    /// Its ways to play are being looked for.
+    let finding: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Text("Next Episode").font(.body.weight(.semibold))
+                if finding {
+                    ProgressView().controlSize(.small)
+                } else {
+                    Image(systemName: "forward.end.fill")
+                }
+            }
+            .padding(.horizontal, 18)
+            .frame(height: 44)
+        }
+        .buttonStyle(SolidPictureButtonStyle())
+        .disabled(finding)
+        .help("Play " + ([next.number, next.title.isEmpty ? nil : next.title].compactMap { $0 }.joined(separator: " · ")))
+        .padding(.trailing, 20)
+        .padding(.top, 56)
+    }
+}
+
+/// A button over a picture that looks like one you can press (the owner, 2026-10-15: "Give
+/// X and that button a solid pressable button"): solid, edged, lighter under the pointer,
+/// and pressed in while it's held. The picture is always dark, so it's always light on dark.
+struct SolidPictureButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        Solid(label: configuration.label, pressed: configuration.isPressed)
+    }
+
+    private struct Solid<Label: View>: View {
+        let label: Label
+        let pressed: Bool
+        @State private var hovering = false
+        @Environment(\.isEnabled) private var enabled
+
+        var body: some View {
+            label
+                .foregroundStyle(.white.opacity(enabled ? 1 : 0.6))
+                .background(Capsule().fill(Color(white: pressed ? 0.1 : hovering ? 0.3 : 0.2)))
+                .overlay(Capsule().strokeBorder(.white.opacity(hovering ? 0.6 : 0.35), lineWidth: 1))
+                .shadow(color: .black.opacity(0.55), radius: pressed ? 1 : 5, y: pressed ? 0 : 2)
+                .scaleEffect(pressed ? 0.93 : 1)
+                .animation(.easeOut(duration: 0.08), value: pressed)
+                .contentShape(Capsule())
+                .onHover { hovering = $0 }
+        }
     }
 }

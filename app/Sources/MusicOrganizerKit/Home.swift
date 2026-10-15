@@ -4,7 +4,7 @@ import Foundation
 /// (songs, channels, movies, series) and which of them.
 public struct HomeSection: Identifiable, Hashable, Sendable {
     public enum Group: String, CaseIterable, Sendable {
-        case songs, channels, movies, series
+        case songs, channels, movies, series, anime
 
         public var title: String {
             switch self {
@@ -12,14 +12,17 @@ public struct HomeSection: Identifiable, Hashable, Sendable {
             case .channels: "Channels"
             case .movies: "Movies"
             case .series: "Series"
+            case .anime: "Anime"
             }
         }
 
-        /// What add-ons call the kind: "movie" or "series". Nil for songs and channels.
+        /// What add-ons call the kind of their lists: "movie", "series" or "anime". Nil
+        /// for songs and channels. (What's in a list of anime is a series or a movie.)
         public var mediaType: String? {
             switch self {
             case .movies: "movie"
             case .series: "series"
+            case .anime: "anime"
             default: nil
             }
         }
@@ -50,7 +53,7 @@ public struct HomeSection: Identifiable, Hashable, Sendable {
     public init?(customID id: String) {
         let parts = id.split(separator: ".", maxSplits: 2).map(String.init)
         guard parts.count == 3, parts[1] == "custom", let group = Group(rawValue: parts[0]),
-            group.mediaType != nil
+            group == .movies || group == .series
         else { return nil }
         let genres = parts[2].components(separatedBy: Self.joint)
         guard genres.count == 2, !genres[0].isEmpty, !genres[1].isEmpty else { return nil }
@@ -100,8 +103,20 @@ public struct HomeSection: Identifiable, Hashable, Sendable {
                 .init(id: "\(key).genre.\($0)", group: group, title: "\($0) \(things)", genre: $0)
             }
         }
+        // Anime (2026-10-15, with the owner's Recommended row for it): from the lists of
+        // anime the plugins give.
+        found += [
+            .init(id: "anime.recommended", group: .anime, title: "Recommended Anime"),
+            .init(id: "anime.popular", group: .anime, title: "Popular Anime Now"),
+        ]
         return found
     }
+
+    /// The Recommended rows put on a Home page that was made before they were asked for
+    /// (the owner, 2026-10-15: "Give a recommended section in home. for tv shows and
+    /// series, anime"): each after the last row of its kind, or at the end.
+    public static let recommendedAdded = "homeRecommendedAdded"
+    public static let recommended = ["series.recommended", "anime.recommended"]
 
     /// The page as it starts, before the owner has changed it: their drawing's rows.
     public static let standard = [
@@ -126,6 +141,21 @@ public struct HomeLayout: Equatable, Sendable {
     public mutating func set(_ id: String, shown on: Bool) {
         if on, !shown.contains(id) { shown.append(id) }
         if !on { shown.removeAll { $0 == id } }
+    }
+
+    /// The Recommended rows (`HomeSection.recommended`) put on the page once: each after
+    /// the last row of its kind (anime's after the series'), or at the end.
+    public mutating func addRecommended() {
+        for id in HomeSection.recommended where !shown.contains(id) {
+            let kind = String(id.prefix { $0 != "." })
+            let after = kind == "anime" ? ["anime.", "series."] : [kind + "."]
+            let rows = shown
+            if let last = after.compactMap({ prefix in rows.lastIndex { $0.hasPrefix(prefix) } }).first {
+                shown.insert(id, at: last + 1)
+            } else {
+                shown.append(id)
+            }
+        }
     }
 
     /// Move a row one place up (-1) or down (1).
@@ -211,9 +241,10 @@ public struct WatchHistory: Equatable, Sendable {
                 picture: item.poster, item: item)
         }
 
-        /// Part way through: begun, and not in its last stretch.
+        /// Part way through: begun, and not past the mark that's all of it (the owner,
+        /// 2026-10-15: nine tenths; the rest is the credits, `Finished.mark`).
         public var isUnfinished: Bool {
-            length > 0 && seconds >= FilmPositions.startS && seconds <= length - min(FilmPositions.endS, length * 0.08)
+            length > 0 && seconds >= FilmPositions.startS && progress < Finished.mark
         }
 
         /// How far through it is, 0 to 1.
@@ -226,10 +257,13 @@ public struct WatchHistory: Equatable, Sendable {
     public init(_ entries: [Entry] = []) { self.entries = entries }
 
     /// Something was started, or has moved on: it goes to the front. An entry for the
-    /// same thing keeps its place in the film if the new one doesn't know it yet.
+    /// same thing keeps its place in the film if the new one doesn't know it yet; a
+    /// series' only if it's the same episode (the next one starts at its beginning).
     public mutating func watched(_ entry: Entry) {
         var fresh = entry
-        if let old = entries.first(where: { $0.id == entry.id }), entry.length == 0 {
+        if let old = entries.first(where: { $0.id == entry.id }), entry.length == 0,
+            old.episodeId == entry.episodeId || entry.episodeId == nil
+        {
             (fresh.seconds, fresh.length) = (old.seconds, old.length)
         }
         entries.removeAll { $0.id == entry.id }

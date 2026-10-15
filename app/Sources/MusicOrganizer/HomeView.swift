@@ -146,7 +146,7 @@ private struct HomeRow: View {
         switch section.group {
         case .songs: songs
         case .channels: channels
-        case .movies, .series: films
+        case .movies, .series, .anime: films
         }
     }
 
@@ -320,12 +320,36 @@ private struct HomeRow: View {
     private var type: String { section.group.mediaType ?? "movie" }
     private var historyKind: WatchHistory.Entry.Kind { section.group == .series ? .series : .movie }
     private var isRecommended: Bool { section.kind == "recommended" }
+    private var isAnime: Bool { section.group == .anime }
 
-    /// The genre met most among the owner's favourites and what they've watched: what
-    /// Recommended goes by.
-    private var taste: String? {
-        MediaFavourites.leadingGenre(
-            model.mediaFavourites.of(type: type) + model.history.recent(historyKind).compactMap(\.item))
+    /// What Recommended goes by (the owner, 2026-10-15: "takes your watchlisted watched"):
+    /// what's on their Watchlist, what they've watched and what they've hearted, of the
+    /// row's kind. Anime is apart from the rest: its genres are its own plugin's.
+    private var taste: [MediaItem] {
+        let kind = section.group == .movies ? "movie" : "series"
+        var seen = Set<String>()
+        return (model.watchlist.items + model.history.entries.compactMap(\.item) + model.mediaFavourites.items)
+            .filter { item in
+                (isAnime ? item.anime == true : item.anime != true && item.type == kind)
+                    && seen.insert(item.id).inserted
+            }
+    }
+
+    /// The list Recommended asks, and the owner's leading genres that it offers.
+    private var recommending: (source: (addon: Addon, catalog: Addon.Catalog), genres: [String])? {
+        guard let source = listSource(for: isAnime ? "popular" : "top") else { return nil }
+        let offered = Recommending.genres(of: taste, most: 30).filter(source.catalog.genres.contains)
+        return offered.isEmpty ? nil : (source, Array(offered.prefix(3)))
+    }
+
+    /// The plugin's list a row is from: for movies and series, Cinemeta's by its id
+    /// ("top", "year", "imdbRating"); for anime, the first list of anime whose id has
+    /// the word in it, else the first that can be asked by genre.
+    private func listSource(for wanted: String) -> (addon: Addon, catalog: Addon.Catalog)? {
+        let lists = model.media.catalogs(of: type)
+        guard isAnime else { return lists.first { $0.catalog.id == wanted } }
+        return lists.first { $0.catalog.id.contains(wanted) && !$0.catalog.genres.isEmpty }
+            ?? lists.first { !$0.catalog.genres.isEmpty } ?? lists.first
     }
 
     @ViewBuilder
@@ -392,24 +416,32 @@ private struct HomeRow: View {
             }
         default:
             // One of the film add-on's lists: Popular, New, Best Rated, a genre, a search
-            // by two genres, or (Recommended) Popular in the owner's leading genre.
+            // by two genres, or Recommended: the popular lists of the owner's leading
+            // genres, closest to their taste first, without what they've seen or listed.
             let list = lists.list(section.id)
-            if isRecommended, taste == nil {
-                note("Mark a few favourites, or watch something, and suggestions show up here.")
-            } else if list.items.isEmpty {
+            let seen = isRecommended ? Set(taste.map(\.id)) : []
+            let items = seen.isEmpty ? list.items : list.items.filter { !seen.contains($0.id) }
+            if isRecommended, recommending == nil {
+                note(
+                    model.media.loaded
+                        ? "Put a few on your Watchlist, watch something, or give one a heart, and "
+                            + "suggestions like them show up here."
+                        : "Loading…")
+            } else if items.isEmpty {
                 note(list.problem ?? "Loading…")
             } else {
                 PagedCards(
-                    items: list.items, width: 122, height: 250, canLoadMore: list.more,
+                    items: items, width: 122, height: 250, canLoadMore: list.more,
                     loadingMore: list.working, loadMore: { Task { await load(adding: true) } },
-                    open: { model.open($0) }
+                    open: { model.open(isAnime ? $0.asAnime : $0) }
                 ) { filmCard($0) }
             }
         }
     }
 
     private func filmCard(_ item: MediaItem) -> some View {
-        Button { model.open(item) } label: { MediaCard(item: item) }
+        // What's opened from a list of anime is marked as anime, as in Anime Finder.
+        Button { model.open(isAnime ? item.asAnime : item) } label: { MediaCard(item: item) }
             .buttonStyle(.plain)
     }
 
@@ -428,7 +460,7 @@ private struct HomeRow: View {
         switch (section.group, section.kind) {
         case (.songs, "recommended"): "\(model.phase)"
         case (.channels, "new"): model.followedChannels.map(\.channelId).joined(separator: ",")
-        default: "\(model.media.loaded)|\(isRecommended ? taste ?? "" : "")"
+        default: "\(model.media.loaded)|\(isRecommended ? recommending?.genres.joined(separator: ",") ?? "" : "")"
         }
     }
 
@@ -446,16 +478,22 @@ private struct HomeRow: View {
                 await lists.list(section.id).load(
                     model, addon: source.addon, catalog: source.catalog, adding: adding)
             }
+        case (_, "recommended"):
+            guard let (source, genres) = recommending else { return }
+            await lists.list(section.id).recommend(
+                model, addon: source.addon, catalog: source.catalog, genres: genres, taste: taste,
+                anime: isAnime)
+        case (.anime, _):
+            guard let source = listSource(for: "popular") else { return }
+            await lists.list(section.id).load(model, addon: source.addon, catalog: source.catalog, adding: adding)
         case (.movies, let kind), (.series, let kind):
             guard !["continue", "recent", "favourites", "unwatched"].contains(kind) else { return }
-            if isRecommended, taste == nil { return }
             let wanted = ["new": "year", "best": "imdbRating"][kind] ?? "top"
             guard let source = media.catalogs(of: type).first(where: { $0.catalog.id == wanted })
             else { return }
-            let genre = isRecommended ? taste : section.genre
             await lists.list(section.id).load(
                 model, addon: source.addon, catalog: source.catalog,
-                genre: source.catalog.genre(chosen: genre ?? ""), also: section.also ?? "",
+                genre: source.catalog.genre(chosen: section.genre ?? ""), also: section.also ?? "",
                 adding: adding)
         default:
             break
@@ -478,6 +516,7 @@ private struct HomeRow: View {
         case (.songs, _): model.goTo = .downloads
         case (.channels, "recommended"): model.goTo = .videoFinder
         case (.channels, _): model.goTo = .channels
+        case (.anime, _): model.goTo = .animeFinder
         case (.movies, _), (.series, _):
             // A list's row opens that list in its Finder, at the row's genre.
             let name = section.group == .series ? "seriesFinder" : "movieFinder"

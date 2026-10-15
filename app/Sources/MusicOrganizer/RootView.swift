@@ -96,6 +96,7 @@ enum SidebarItem: Hashable {
     case animeFinder
     /// The Watchlist: what the owner means to watch, and what they have (2026-10-14).
     case watchlist
+    case calendar
     /// The lists of add-ons for adults only, in a Finder of their own (owner, 2026-10-08).
     case adultFinder
     /// Settings: a page like the others, opened by the cog wheel or ⌘, (no row of its own).
@@ -112,6 +113,7 @@ enum SidebarItem: Hashable {
         case .channels: "channels"
         case .movies: "movies"
         case .watchlist: "watchlist"
+        case .calendar: "calendar"
         case .videoFinder: "videoFinder"
         case .videoExplore: "videoExplore"
         case .movieFinder: "movieFinder"
@@ -141,6 +143,7 @@ enum SidebarItem: Hashable {
         case "channels": self = .channels
         case "movies": self = .movies
         case "watchlist": self = .watchlist
+        case "calendar": self = .calendar
         case "videoFinder": self = .videoFinder
         case "videoExplore": self = .videoFinder  // Explore is Video Finder itself now
         case "animeFinder": self = .animeFinder
@@ -195,6 +198,7 @@ enum SidebarItem: Hashable {
         case .channels: "Channel"
         case .movies: "Movies"
         case .watchlist: "Watchlist"
+        case .calendar: "Calendar"
         case .videoFinder: "Video Finder"
         case .movieFinder: "Movie Finder"
         case .home: "Home"
@@ -226,6 +230,7 @@ enum SidebarItem: Hashable {
         case .channels: "play.tv"
         case .movies: "popcorn"
         case .watchlist: "bookmark"
+        case .calendar: "calendar"
         case .videoFinder: "play.rectangle.on.rectangle"
         case .movieFinder: "movieclapper"
         case .home: "house"
@@ -490,7 +495,7 @@ struct MainView: View {
                 }
             }
             Section(isExpanded: $openMedia) {
-                ForEach([SidebarItem.channels, .movies, .watchlist].filter { !hiddenRows.contains($0.key) }, id: \.self) {
+                ForEach([SidebarItem.channels, .movies, .watchlist, .calendar].filter { !hiddenRows.contains($0.key) }, id: \.self) {
                     entry in
                     row(entry)
                         .contextMenu { Button("Remove from Sidebar") { hide(entry) } }
@@ -940,6 +945,8 @@ struct PageView: View {
             MoviesView()
         case .watchlist:
             WatchlistView()
+        case .calendar:
+            CalendarView()
         case .importPlaylists:
             ImportView()
         case .playlist(let id):

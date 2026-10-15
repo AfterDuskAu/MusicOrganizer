@@ -70,10 +70,11 @@ public struct FilmPositions: Equatable, Sendable {
     public func place(of key: String) -> Double? { places[key]?.seconds }
 
     /// The film was at `seconds` of `length` when it was last looked at. One that's
-    /// hardly begun, or is in its last minute and a half, is forgotten.
+    /// hardly begun, or has been watched (in its last minute and a half, or past nine
+    /// tenths of it: `Finished.mark`), is forgotten, and starts again next time.
     public mutating func watched(_ key: String, to seconds: Double, of length: Double, now: Date = Date()) {
         guard length > 0 else { return }
-        if seconds < Self.startS || seconds > length - Self.endS {
+        if seconds < Self.startS || seconds > length - Self.endS || seconds >= length * Finished.mark {
             places[key] = nil
             return
         }

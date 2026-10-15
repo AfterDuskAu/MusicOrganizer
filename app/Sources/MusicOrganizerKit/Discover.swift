@@ -467,7 +467,7 @@ public enum SidebarRows {
     /// The rows that can be hidden, by the name each is saved under, in the sidebar's
     /// order, with the group each is in.
     public static let all: [(key: String, group: String)] = [
-        ("channels", "Videos"), ("movies", "Videos"), ("watchlist", "Videos"),
+        ("channels", "Videos"), ("movies", "Videos"), ("watchlist", "Videos"), ("calendar", "Videos"),
         ("home", "Media Discovery"), ("youtube", "Media Discovery"),
         ("videoFinder", "Media Discovery"), ("movieFinder", "Media Discovery"),
         ("seriesFinder", "Media Discovery"), ("animeFinder", "Media Discovery"),
