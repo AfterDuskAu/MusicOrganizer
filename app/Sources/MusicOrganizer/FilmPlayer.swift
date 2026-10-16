@@ -47,7 +47,9 @@ final class FilmPlayer {
     /// Open a film and start it, where it was left the last time if it was left part
     /// way. `address` is a file's or a web address; `key` is what the film is
     /// remembered by when its address isn't the same each time (a torrent's).
-    func open(_ address: URL, title: String, key: String? = nil, fromStart: Bool = false) {
+    func open(
+        _ address: URL, title: String, key: String? = nil, fromStart: Bool = false, otherwiseAt: Double? = nil
+    ) {
         close()
         self.title = title
         remembered = key ?? (address.isFileURL ? address.path : address.absoluteString)
@@ -93,7 +95,9 @@ final class FilmPlayer {
             return
         }
         set("volume", volume)
-        if !fromStart, let key = remembered, let place = FilmPositions.saved().place(of: key) {
+        // Where it was left this way; or, opened this way for the first time, where it was
+        // left another (`otherwiseAt`).
+        if !fromStart, let place = remembered.flatMap(FilmPositions.saved().place(of:)) ?? otherwiseAt {
             mpv_set_property_string(made, "start", String(Int(place)))
         }
         let location = address.isFileURL ? address.path : address.absoluteString

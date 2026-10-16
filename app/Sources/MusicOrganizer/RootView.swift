@@ -781,6 +781,24 @@ struct MainView: View {
                     model.film.volume = 0
                     model.playFilm(URL(fileURLWithPath: path), title: "Check")
                 }
+            } else if step.name == "stremio=read" {
+                // What Stremio on this Mac remembers, read (only read) and written out.
+                model.stremio.read()
+                for _ in 0..<40 where model.stremio.stage == .reading {
+                    try? await Task.sleep(for: .milliseconds(250))
+                }
+                Bench.say("BENCH stremio: \(model.stremio.stage) \(model.stremio.lines.joined(separator: " | "))")
+            } else if step.name == "stremio=import" {
+                // That put in the profile in use (never one that matters: a scratch one).
+                model.stremio.run(model)
+                while model.stremio.isWorking { try? await Task.sleep(for: .milliseconds(500)) }
+                Bench.say("BENCH stremio: \(model.stremio.stage)")
+                Bench.say(
+                    "BENCH stremio: watchlist \(model.watchlist.items.count), finished \(model.finished.days.count), "
+                        + "history \(model.history.entries.count), to watch \(model.toWatch("series").count) series "
+                        + "\(model.toWatch("movie").count) movies, watched \(model.watchedItems("series").count) series "
+                        + "\(model.watchedItems("movie").count) movies, continue \(model.history.unfinished(.series).count) "
+                        + "series \(model.history.unfinished(.movie).count) movies")
             } else if step.name == "closefilm" {
                 model.closeFilm()
             } else if step.name == "picture" {

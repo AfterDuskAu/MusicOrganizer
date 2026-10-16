@@ -244,6 +244,9 @@ final class AppModel {
         mediaFavourites.save()
     }
 
+    /// Settings → Profile → From Stremio: an import of what Stremio on this Mac remembers.
+    let stremio = StremioImporter()
+
     /// The Watchlist: what the owner means to watch (the button on a film's page).
     private(set) var watchlist = Watchlist.saved()
 
@@ -293,6 +296,26 @@ final class AppModel {
         }
         finished.save()
         seriesProgress.save()
+    }
+
+    /// What an import from Stremio found, put in this profile (`StremioLibrary.plan`): added
+    /// to the Watchlist, to what's been watched and to the history; nothing is taken away,
+    /// and what was watched here more lately is kept. Each series' episodes (read for the
+    /// import) give its latest. Returns how many went on the Watchlist.
+    func takeStremio(_ plan: StremioLibrary.Plan, details: [String: MediaDetails]) -> Int {
+        let added = watchlist.add(plan.watchlist)
+        watchlist.save()
+        for (id, when) in plan.finished where !finished.contains(id) { finished.mark(id, watched: true, now: when) }
+        finished.save()
+        history.merge(plan.history)
+        history.save()
+        for (id, found) in details where found.type == "series" && !found.videos.isEmpty {
+            seriesEpisodes[id] = found.videos
+            seriesProgress.learned(id, episodes: found.videos, finished: finished)
+        }
+        seriesProgress.save()
+        seriesRead += 1
+        return added
     }
 
     /// A series' episodes have been read (its page, the next episode looked for, the
@@ -944,8 +967,12 @@ final class AppModel {
     func playFilm(_ address: URL, title: String, key: String? = nil) {
         if player.isPlaying { player.toggle() }
         // The next episode, started by itself, starts at its beginning: where it was
-        // left another time isn't where anyone expects it to carry on from.
-        film.open(address, title: title, key: key, fromStart: startsAfresh)
+        // left another time isn't where anyone expects it to carry on from. Otherwise a
+        // film this way to play hasn't been opened by before starts where it was left
+        // another way (an import from Stremio brings only where, not how).
+        film.open(
+            address, title: title, key: key, fromStart: startsAfresh,
+            otherwiseAt: startsAfresh ? nil : leftAt(episode: episodeToBe?.episodeId))
         startsAfresh = false
         filmsOpened += 1
         // An episode of a series, or (a file, a film) nothing that leads to another.
@@ -1010,6 +1037,15 @@ final class AppModel {
             defer { findingNextEpisode = false }
             _ = await playEpisode(after: now)
         }
+    }
+
+    /// Where the film about to open was left, by what's been watched (not by the way to
+    /// play it): only part way, and only the same episode.
+    private func leftAt(episode: String?) -> Double? {
+        guard let id = watchingFilm, let entry = history.entries.first(where: { $0.id == id }),
+            entry.episodeId == episode, entry.isUnfinished
+        else { return nil }
+        return entry.seconds
     }
 
     /// The next film to open starts at its beginning (`playEpisode(after:)`).
@@ -1714,6 +1750,7 @@ final class AppModel {
         closePlaylist()
         importing.reset()
         artistBrowser.reset()
+        stremio.reset()
         for key in Array(pageChanges.keys) { forgetPageChange(key) }
         keepDownloadsSeparate =
             UserDefaults.standard.object(forKey: "keepDownloadsSeparate") as? Bool ?? true

@@ -60,6 +60,9 @@ import AppKit
 ///   `left`, `right`, `return` or `esc`
 /// - `player`: what's in the music player, where it has got to and how loud, and where the
 ///   arrows' highlight is on a page of cards, written out
+/// - `stremio=read`, `stremio=import`: what Stremio on this Mac remembers read (only read)
+///   and written out; then put in the profile in use, and what that profile then has written
+///   out (only ever with a scratch profile)
 /// - `film`: whether a film is open and playing, where it has got to and how loud, written out
 /// - `state`: the page showing, the song rows picked and whether the app is in front, written out
 /// - `hide`, `show`: the app hidden, and brought back

@@ -342,6 +342,7 @@ private struct MovingSettings: View {
                         + "say), make a new profile first, switch to it, and import there. The "
                         + "export itself is only read.")
             }
+            StremioImportSection()
             if working != nil || last != nil || model.transferProblem != nil {
                 Section {
                     if let working {

@@ -96,6 +96,15 @@ public struct MediaItem: Codable, Identifiable, Hashable, Sendable {
     /// opened there, and a favourite or what's been watched carries the mark with it.
     public private(set) var anime: Bool?
 
+    /// A title made here rather than read from a plugin's answer (an import).
+    public init(
+        id: String, type: String, name: String, poster: String?, posterShape: String, year: String?,
+        rating: Double?, genres: [String]
+    ) {
+        (self.id, self.type, self.name, self.poster, self.posterShape) = (id, type, name, poster, posterShape)
+        (self.year, self.rating, self.genres, self.anime) = (year, rating, genres, nil)
+    }
+
     /// The same film or series, marked as found in a list of anime.
     public var asAnime: MediaItem {
         var marked = self

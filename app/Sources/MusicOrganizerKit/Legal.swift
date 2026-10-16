@@ -67,7 +67,10 @@ public enum Legal {
                 + "played or downloaded from a torrent is fetched from, and sent on to, other "
                 + "people who have it, who can see your internet address, as with any torrent "
                 + "program. If you connect Spotify or Last.fm, the app reads your playlists "
-                + "and lists from them, and changes nothing there."),
+                + "and lists from them, and changes nothing there. If you import from "
+                + "Stremio, the app reads what Stremio on this Mac remembers of what you've "
+                + "watched (on this Mac only; Stremio isn't changed, and its sign-in isn't "
+                + "read), and asks your plugins for each title's details."),
         Part(
             heading: "Sync with your devices",
             text: "Off until you switch it on. Then a device you've paired with a code can "

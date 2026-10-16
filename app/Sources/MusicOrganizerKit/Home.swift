@@ -251,7 +251,8 @@ public struct WatchHistory: Equatable, Sendable {
         public var progress: Double { length > 0 ? min(max(seconds / length, 0), 1) : 0 }
     }
 
-    public static let most = 200
+    /// Entries kept at most (1,000 since 2026-10-16: a Stremio import brings a few hundred).
+    public static let most = 1000
     public private(set) var entries: [Entry]
 
     public init(_ entries: [Entry] = []) { self.entries = entries }
@@ -380,6 +381,16 @@ public struct Watchlist: Equatable, Sendable {
 
     /// The films ("movie"), or the series ("series"), on the list.
     public func of(type: String) -> [MediaItem] { items.filter { $0.type == type } }
+
+    /// Titles from elsewhere (an import): those not on the list already go after the ones
+    /// that are, in the order given. Nothing is taken off. Returns how many were added.
+    @discardableResult
+    public mutating func add(_ others: [MediaItem]) -> Int {
+        var seen = Set(items.map(\.id))
+        let fresh = others.filter { seen.insert($0.id).inserted }
+        items += fresh
+        return fresh.count
+    }
 
     public static let key = "watchlist"
 
