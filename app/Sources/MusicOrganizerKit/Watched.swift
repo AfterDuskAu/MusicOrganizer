@@ -12,8 +12,14 @@ public struct Finished: Equatable, Sendable {
     public static let most = 5000
 
     public private(set) var days: [String: Date]
+    /// Films and episodes the owner marked Not Watched here, by id: a sync never marks one
+    /// watched again (2026-10-16), until it's watched or marked watched here.
+    public private(set) var unmarked: Set<String>
 
-    public init(_ days: [String: Date] = [:]) { self.days = days }
+    public init(_ days: [String: Date] = [:], unmarked: Set<String> = []) {
+        self.days = days
+        self.unmarked = unmarked
+    }
 
     public func contains(_ id: String) -> Bool { days[id] != nil }
     public func day(of id: String) -> Date? { days[id] }
@@ -31,8 +37,10 @@ public struct Finished: Equatable, Sendable {
     public mutating func mark(_ id: String, watched: Bool, now: Date = Date()) {
         guard watched else {
             days[id] = nil
+            unmarked.insert(id)
             return
         }
+        unmarked.remove(id)
         if days[id] == nil { days[id] = now }
         while days.count > Self.most, let oldest = days.min(by: { $0.value < $1.value }) {
             days[oldest.key] = nil
@@ -54,17 +62,19 @@ public struct Finished: Equatable, Sendable {
     }
 
     public static let key = "finishedFilms"
+    public static let unmarkedKey = "finishedUnmarked"
 
     /// What's kept, or nil when nothing ever was (then it's seeded from the history).
     public static func saved(in defaults: UserDefaults = .standard) -> Finished? {
         guard let data = defaults.data(forKey: key),
             let days = try? JSONDecoder().decode([String: Date].self, from: data)
         else { return nil }
-        return Finished(days)
+        return Finished(days, unmarked: Set(defaults.stringArray(forKey: unmarkedKey) ?? []))
     }
 
     public func save(in defaults: UserDefaults = .standard) {
         if let data = try? JSONEncoder().encode(days) { defaults.set(data, forKey: Self.key) }
+        defaults.set(unmarked.sorted(), forKey: Self.unmarkedKey)
     }
 }
 
@@ -115,6 +125,14 @@ public struct SeriesProgress: Equatable, Sendable {
     public mutating func finished(_ episodeId: String, of id: String) {
         guard series[id]?.latest == episodeId else { return }
         series[id]?.caughtUp = episodeId
+    }
+
+    /// Episodes were marked watched from elsewhere (a sync): a series whose latest episode
+    /// is among them is caught up.
+    public mutating func notice(_ finished: Finished) {
+        for (id, known) in series {
+            if let latest = known.latest, finished.contains(latest) { series[id]?.caughtUp = latest }
+        }
     }
 
     /// Watched: its latest episode out has been. One whose episodes have never been read

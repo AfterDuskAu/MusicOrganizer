@@ -83,6 +83,7 @@ from musicorg.config import (
     Config,
     app_dirs,
     default_media_folders,
+    is_profile_id,
     media_folders,
     save_daily_cap,
     save_media_folder,
@@ -404,6 +405,9 @@ class Server:
             "sharing.pair": self.sharing_pair,
             "sharing.stop_pairing": self.sharing_stop_pairing,
             "sharing.forget": self.sharing_forget,
+            "watching.set": self.watching_set,
+            "watching.sent": self.watching_sent,
+            "watching.done": self.watching_done,
         }
 
     # -- the loop --
@@ -413,6 +417,10 @@ class Server:
         # starts (and every ten minutes while a film player is running).
         threading.Thread(
             target=torrents.sweep, args=(app_dirs().cache,), daemon=True, name="film-cache"
+        ).start()
+        # And what arrived of a film a device was sending and had no part for two days.
+        threading.Thread(
+            target=sharing.sweep_uploads, args=(app_dirs().cache,), daemon=True, name="uploads"
         ).start()
         try:
             for raw in iter(self.reader.readline, b""):
@@ -1324,6 +1332,7 @@ class Server:
                 lib,
                 changed=lambda: self.writer.notify("sharing.changed", {}),
                 took=lambda: self.writer.notify("listening.changed", {}),
+                watched=lambda whose: self.writer.notify("watching.changed", {"profile": whose}),
                 films=films is True,
                 awake=awake is not False,
             )
@@ -1354,6 +1363,31 @@ class Server:
         self._library()
         sharing.forget(need(params, "device_id", str))
         return self.sharing_status({})
+
+    # -- methods: what's watched, for a paired video app (2026-10-16) --
+
+    def watching_set(self, params: dict[str, Any]) -> dict[str, Any]:
+        """A profile's watching, for its paired devices to have (section 3). Checked as a
+        device's is; kept in watching.json, never in the library."""
+        profile = need(params, "profile", str)
+        if not is_profile_id(profile):
+            raise RpcError(INVALID_PARAMS, "profile should be one of the app's profile ids.")
+        try:
+            revision = sharing.set_watching(profile, need(params, "watching", dict))
+        except sharing.WatchingError as exc:
+            raise RpcError(INVALID_PARAMS, exc.message) from None
+        return {"revision": revision}
+
+    def watching_sent(self, params: dict[str, Any]) -> dict[str, Any]:
+        """What paired devices have sent of their watching, for the app to add to each
+        profile's records."""
+        return {"sent": sharing.sent_watching()}
+
+    def watching_done(self, params: dict[str, Any]) -> dict[str, Any]:
+        ids = need(params, "ids", list)
+        if not all(isinstance(one, str) for one in ids):
+            raise RpcError(INVALID_PARAMS, "ids should be the ids watching.sent gave.")
+        return {"left": sharing.done_watching(ids)}
 
     def youtube_stream(self, params: dict[str, Any]) -> dict[str, Any]:
         # `fresh`: the address given before has stopped working, so YouTube is asked

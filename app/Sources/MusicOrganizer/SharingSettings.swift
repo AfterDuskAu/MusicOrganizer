@@ -35,13 +35,18 @@ struct SharingSettings: View {
                         + "covers, lyrics and playlists, and play its own copies. It can't "
                         + "change a music file. What's done on it comes back when it syncs: "
                         + "a playlist made, changed or deleted, a heart, a play counted, "
-                        + "and time spent listening. Off: nothing is listening.")
+                        + "and time spent listening. A video app on a phone or tablet syncs what's "
+                        + "been watched both ways: the Watchlist, every episode and movie watched, and "
+                        + "where you got to; it only ever adds. Off: nothing is listening.")
                 if wanted {
                     SideNote(
                         "Movies and videos: the MP4, M4V and MOV files in your Movies "
                             + "folder and your Videos folder, whoever put them there. "
                             + "Other kinds (MKV, AVI) are left out, because a phone can't "
-                            + "play them: Settings → Plugins → Downloads converts a movie as it's downloaded.")
+                            + "play them: Settings → Plugins → Downloads converts a movie as it's downloaded. "
+                            + "A video app lists your movies, and brings over the ones you pick; the "
+                            + "movies downloaded on it are copied into your Movies folder, never over a "
+                            + "file that's there.")
                 }
                 SideNote(
                     "This Mac shares only on the home network, only with devices paired below, "
@@ -62,8 +67,10 @@ struct SharingSettings: View {
                 Button("Pair a Device…", systemImage: "plus") { model.pairDevice() }
                     .disabled(status?.on != true)
                 SideNote(
-                    "A device is paired once, with a six-digit code shown here. Removing a "
-                        + "device stops it syncing; the music already on it stays there.")
+                    "A device is paired once, with a six-digit code shown here, and belongs to "
+                        + "the profile that's open when it's paired: pair someone's tablet with their "
+                        + "profile open. A video app then syncs their watching whichever profile is "
+                        + "open here. Removing a device stops it syncing; what's already on it stays there.")
             }
         }
         .formStyle(.grouped)

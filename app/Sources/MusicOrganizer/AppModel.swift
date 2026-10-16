@@ -363,6 +363,111 @@ final class AppModel {
         uploadsRead = (wanted, Date())
     }
 
+    // MARK: what's watched, with a paired video app (2026-10-16)
+
+    /// The watching last given to the engine, by profile, so the same isn't given twice.
+    @ObservationIgnored private var watchingGiven: [String: Data] = [:]
+
+    /// Give the engine a profile's watching, for a paired video app to have (docs/ENGINE_API.md,
+    /// section 3): the open profile's whenever it has changed; with `all`, every profile's
+    /// (the others' from where they're put away), as when the app opens. Only while
+    /// sharing is on: no device can ask otherwise.
+    func giveWatching(all: Bool) async {
+        guard phase == .ready, sharing?.on == true, engine?.connection != nil else { return }
+        var states = [profiles.currentId: WatchSync.state(watchlist: watchlist, finished: finished, history: history)]
+        if all {
+            for profile in profiles.profiles where profile.id != profiles.currentId {
+                states[profile.id] = putAwayWatching(of: profile.id).state
+            }
+        }
+        for (id, state) in states {
+            guard let data = try? JSONEncoder().encode(state), watchingGiven[id] != data,
+                let object = try? JSONSerialization.jsonObject(with: data)
+            else { continue }
+            if (try? await ask("watching.set", ["profile": id, "watching": object], as: Empty.self)) != nil {
+                watchingGiven[id] = data
+            }
+        }
+    }
+
+    /// What paired video apps sent, added to the records of the profile each belongs to:
+    /// the open one's, or another's where it's put away (it's there when that profile is
+    /// opened). Adds, never takes away (`WatchSync.merge`).
+    func takeWatching() async {
+        struct Sent: Decodable {
+            struct One: Decodable {
+                let id: String
+                let profile: String
+                let watching: WatchSync.State
+            }
+            let sent: [One]
+        }
+        guard engine?.connection != nil,
+            let answer = try? await ask("watching.sent", [:], as: Sent.self), !answer.sent.isEmpty
+        else { return }
+        for one in answer.sent {
+            if one.profile == profiles.currentId {
+                if WatchSync.merge(one.watching, into: &watchlist, finished: &finished, history: &history) {
+                    watchlist.save()
+                    finished.save()
+                    history.save()
+                    seriesProgress.notice(finished)
+                    seriesProgress.save()
+                    seriesRead += 1
+                }
+            } else if profiles.profile(one.profile) != nil {
+                var records = putAwayWatching(of: one.profile)
+                if WatchSync.merge(
+                    one.watching, into: &records.watchlist, finished: &records.finished, history: &records.history)
+                {
+                    records.progress.notice(records.finished)
+                    putAway(records, of: one.profile)
+                }
+            }
+        }
+        _ = try? await ask("watching.done", ["ids": answer.sent.map(\.id)], as: Empty.self)
+        await giveWatching(all: true)
+    }
+
+    /// A profile's watching where it's put away while another profile is open.
+    private struct PutAwayWatching {
+        var watchlist: Watchlist
+        var finished: Finished
+        var history: WatchHistory
+        var progress: SeriesProgress
+        var state: WatchSync.State { WatchSync.state(watchlist: watchlist, finished: finished, history: history) }
+    }
+
+    private func putAwayWatching(of id: String) -> PutAwayWatching {
+        let stash = UserDefaults.standard.dictionary(forKey: Self.settingsKey(id)) ?? [:]
+        func read<T: Decodable>(_ key: String, as type: T.Type) -> T? {
+            (stash[key] as? Data).flatMap { try? JSONDecoder().decode(type, from: $0) }
+        }
+        let history = WatchHistory(read(WatchHistory.key, as: [WatchHistory.Entry].self) ?? [])
+        let unmarked = Set(stash[Finished.unmarkedKey] as? [String] ?? [])
+        return PutAwayWatching(
+            watchlist: Watchlist(
+                read(Watchlist.key, as: [MediaItem].self) ?? [],
+                takenOff: Set(stash[Watchlist.takenOffKey] as? [String] ?? [])),
+            // Never opened since what's finished was kept: what its history says, as when it opens.
+            finished: read(Finished.key, as: [String: Date].self).map { Finished($0, unmarked: unmarked) }
+                ?? Finished.seeded(from: history),
+            history: history,
+            progress: SeriesProgress(read(SeriesProgress.key, as: [String: SeriesProgress.Known].self) ?? [:]))
+    }
+
+    private func putAway(_ records: PutAwayWatching, of id: String) {
+        var stash = UserDefaults.standard.dictionary(forKey: Self.settingsKey(id)) ?? [:]
+        let encoder = JSONEncoder()
+        stash[Watchlist.key] = try? encoder.encode(records.watchlist.items)
+        stash[Watchlist.takenOffKey] = records.watchlist.takenOff.sorted()
+        stash[Finished.key] = try? encoder.encode(records.finished.days)
+        stash[Finished.unmarkedKey] = records.finished.unmarked.sorted()
+        stash[WatchHistory.key] = try? encoder.encode(records.history.entries)
+        stash[SeriesProgress.key] = try? encoder.encode(records.progress.series)
+        UserDefaults.standard.set(stash, forKey: Self.settingsKey(id))
+    }
+
     /// The owner's series: on the Watchlist, hearted, or watched. The ones the Watchlist
     /// and the calendar keep up with.
     var ownSeries: [MediaItem] {
@@ -647,7 +752,11 @@ final class AppModel {
         }
         film.onEnded = { [weak self] in self?.filmEnded() }
         Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.notePlace() }
+            MainActor.assumeIsolated {
+                self?.notePlace()
+                // The open profile's watching, given again if it has changed.
+                Task { await self?.giveWatching(all: false) }
+            }
         }
         player.onTrackChange = { [weak self] track in
             guard let self else { return }
@@ -1751,6 +1860,7 @@ final class AppModel {
         importing.reset()
         artistBrowser.reset()
         stremio.reset()
+        watchingGiven = [:]  // the next engine is given everything afresh
         for key in Array(pageChanges.keys) { forgetPageChange(key) }
         keepDownloadsSeparate =
             UserDefaults.standard.object(forKey: "keepDownloadsSeparate") as? Bool ?? true
@@ -1794,6 +1904,10 @@ final class AppModel {
                 loadSharing()  // off: Settings still lists the paired devices
             }
             await receiveShares()
+            // A paired video app's watching: what devices sent while the app was shut is
+            // taken, and the engine is given every profile's.
+            await takeWatching()
+            await giveWatching(all: true)
         } catch {
             phase = .failed(error.localizedDescription)
         }
@@ -2018,6 +2132,7 @@ final class AppModel {
             await refreshDownloads()
         case "sharing.changed": loadSharing()  // a device was paired, or has synced
         case "listening.changed": await reloadListening()  // what was done on a phone
+        case "watching.changed": await takeWatching()  // what a video app sent
         case "review.changed":
             if let connection = engine?.connection {
                 status = try? await connection.call("library.status", as: LibraryStatus.self)
@@ -2797,6 +2912,8 @@ final class AppModel {
     private func sharingSaid(_ status: SharingStatus) {
         let before = sharing
         sharing = status
+        // Just switched on: a paired video app can ask for any profile's watching now.
+        if status.on, before?.on != true { Task { await giveWatching(all: true) } }
         if status.on, let port = status.port {
             if !announcer.start(type: status.service, port: port) {
                 sharingNote =

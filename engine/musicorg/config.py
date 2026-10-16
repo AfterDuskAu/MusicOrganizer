@@ -1,8 +1,9 @@
 """Settings (config.json) and the app's own folders for config, logs and cache.
 
 Under rule 3 of CLAUDE.md this module may write config.json (and beside it accounts.json,
-downloads.json and devices.json), atomically, and it is the one place that creates the
-app's own folders. The library is never stored here.
+downloads.json, devices.json, addons.json and, since 2026-10-16, watching.json),
+atomically, and it is the one place that creates the app's own folders. The library is
+never stored here.
 
 Setting MUSICORG_HOME puts all three folders under that one folder instead of the
 platform defaults. Tests use it so they never touch the real settings.
@@ -296,7 +297,12 @@ def current_profile() -> str:
     line, it's the first profile. A profile is a person's own library and sign-ins on
     this computer: there's nothing online about it."""
     given = os.environ.get(PROFILE_ENV, "")
-    return given if _PROFILE_ID.fullmatch(given) else DEFAULT_PROFILE
+    return given if is_profile_id(given) else DEFAULT_PROFILE
+
+
+def is_profile_id(text: object) -> bool:
+    """Whether `text` could be a profile's id: letters, digits, `-` and `_`, at most 40."""
+    return isinstance(text, str) and _PROFILE_ID.fullmatch(text) is not None
 
 
 # ---- sign-ins (imports, v0.3) --------------------------------------------------------------
@@ -386,20 +392,29 @@ def _all_devices() -> dict[str, list[dict[str, Any]]]:
     }
 
 
-def load_devices() -> list[dict[str, Any]]:
-    """The devices paired with this profile's library. Another profile's are never
-    given out: a phone paired for one person's music can't read the next person's."""
-    return _all_devices().get(current_profile()) or []
+def load_devices(profile: str | None = None) -> list[dict[str, Any]]:
+    """The devices paired with this profile's library (or with `profile`'s). Another
+    profile's are never given out: a phone paired for one person's music can't read the
+    next person's."""
+    return _all_devices().get(profile or current_profile()) or []
 
 
-def save_devices(devices: list[dict[str, Any]]) -> None:
-    """Replace this profile's paired devices. Written atomically, and readable by this
-    user only (the temp file it's written through is made that way)."""
+def load_all_devices() -> dict[str, list[dict[str, Any]]]:
+    """Every profile's paired devices, by profile id. Only for `sharing` to know whose
+    device a key is (2026-10-16: a video app's requests answer a device of any profile,
+    each for its own profile's records); nothing of it is given out."""
+    return _all_devices()
+
+
+def save_devices(devices: list[dict[str, Any]], *, profile: str | None = None) -> None:
+    """Replace this profile's paired devices (or `profile`'s). Written atomically, and
+    readable by this user only (the temp file it's written through is made that way)."""
+    whose = profile or current_profile()
     everyone = _all_devices()
     if devices:
-        everyone[current_profile()] = [dict(d) for d in devices]
+        everyone[whose] = [dict(d) for d in devices]
     else:
-        everyone.pop(current_profile(), None)
+        everyone.pop(whose, None)
     path = devices_path()
     ensure_app_dir(path.parent)
     text = json.dumps({"profiles": everyone}, indent=2, ensure_ascii=False) + "\n"
@@ -408,6 +423,56 @@ def save_devices(devices: list[dict[str, Any]]) -> None:
     except OSError as exc:
         raise ConfigError(
             f"Couldn't save the paired device on this computer: {exc.strerror or exc}."
+        ) from exc
+
+
+# ---- what's watched, for a paired video app (2026-10-16) -------------------------------------
+
+WATCHING_FILE_NAME = "watching.json"
+
+
+def watching_path() -> Path:
+    """Where the home share keeps what's watched for a paired video app (`sharing`):
+    beside config.json, in the app's own settings folder. Never in the library and never
+    in the repo. Each profile's watching as the app last gave it (`given`), and what
+    devices sent that the app hasn't taken yet (`sent`). No key is in it."""
+    return app_dirs().config / WATCHING_FILE_NAME
+
+
+def load_watching() -> dict[str, Any]:
+    """`{"given": {profile: watching}, "sent": [sending]}`. A missing or damaged file
+    reads as nothing: the app gives its watching again, and a device sends all of its
+    own at every sync."""
+    try:
+        loaded = json.loads(watching_path().read_text(encoding="utf-8"))
+    except (OSError, ValueError, RecursionError):
+        loaded = None
+    given = loaded.get("given") if isinstance(loaded, dict) else None
+    sent = loaded.get("sent") if isinstance(loaded, dict) else None
+    return {
+        "given": {
+            k: dict(v) for k, v in given.items() if isinstance(k, str) and isinstance(v, dict)
+        }
+        if isinstance(given, dict)
+        else {},
+        "sent": [dict(one) for one in sent if isinstance(one, dict)]
+        if isinstance(sent, list)
+        else [],
+    }
+
+
+def save_watching(kept: dict[str, Any]) -> None:
+    """Replace watching.json. Written atomically, and readable by this user only (the
+    temp file it's written through is made that way). Compact: it can hold thousands of
+    titles."""
+    path = watching_path()
+    ensure_app_dir(path.parent)
+    text = json.dumps(kept, ensure_ascii=False, separators=(",", ":")) + "\n"
+    try:
+        _write_atomic(path, text)
+    except OSError as exc:
+        raise ConfigError(
+            f"Couldn't save what was watched on this computer: {exc.strerror or exc}."
         ) from exc
 
 

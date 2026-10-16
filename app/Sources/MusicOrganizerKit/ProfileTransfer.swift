@@ -143,7 +143,7 @@ public enum SettingsCarrier {
     /// What the app remembers of what's been watched and liked.
     public static let records = [
         WatchHistory.key, MediaFavourites.key, Watchlist.key, FilmPositions.key, ChannelPictures.key,
-        Finished.key, SeriesProgress.key,
+        Finished.key, SeriesProgress.key, Watchlist.takenOffKey, Finished.unmarkedKey,
     ]
 
     public static var carried: Set<String> { Set(settings + records) }

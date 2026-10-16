@@ -365,8 +365,15 @@ public struct MediaFavourites: Equatable, Sendable {
 /// the same cards.
 public struct Watchlist: Equatable, Sendable {
     public private(set) var items: [MediaItem]
+    /// Titles the owner took off this list, by id: a sync with a video app never puts one
+    /// back (the device keeps its own; nothing is removed across a sync), until the owner
+    /// puts it on again here (2026-10-16).
+    public private(set) var takenOff: Set<String>
 
-    public init(_ items: [MediaItem] = []) { self.items = items }
+    public init(_ items: [MediaItem] = [], takenOff: Set<String> = []) {
+        self.items = items
+        self.takenOff = takenOff
+    }
 
     public func contains(_ item: MediaItem) -> Bool { items.contains { $0.id == item.id } }
 
@@ -374,8 +381,10 @@ public struct Watchlist: Equatable, Sendable {
     public mutating func toggle(_ item: MediaItem) {
         if contains(item) {
             items.removeAll { $0.id == item.id }
+            takenOff.insert(item.id)
         } else {
             items.insert(item, at: 0)
+            takenOff.remove(item.id)
         }
     }
 
@@ -393,16 +402,17 @@ public struct Watchlist: Equatable, Sendable {
     }
 
     public static let key = "watchlist"
+    public static let takenOffKey = "watchlistTakenOff"
 
     public static func saved(in defaults: UserDefaults = .standard) -> Watchlist {
-        guard let data = defaults.data(forKey: key),
-            let items = try? JSONDecoder().decode([MediaItem].self, from: data)
-        else { return Watchlist() }
-        return Watchlist(items)
+        let items = defaults.data(forKey: key).flatMap { try? JSONDecoder().decode([MediaItem].self, from: $0) }
+        let off = defaults.stringArray(forKey: takenOffKey) ?? []
+        return Watchlist(items ?? [], takenOff: Set(off))
     }
 
     public func save(in defaults: UserDefaults = .standard) {
         if let data = try? JSONEncoder().encode(items) { defaults.set(data, forKey: Self.key) }
+        defaults.set(takenOff.sorted(), forKey: Self.takenOffKey)
     }
 }
 

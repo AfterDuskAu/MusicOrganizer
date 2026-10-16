@@ -13,6 +13,9 @@ guarantees of docs/LIBRARY_CONTRACT.md section 6. In order below:
 - `undo()` and `list_batches()`
 - plans with preconditions: `Plan`, `save_plan`, `load_plan`, `validate`, `check_op`
 - staging cleanup (`discard_staged`, `clean_staging`) and `write_export`
+- outside the library: `keep_media` (the Movies and videos folders), a profile's export,
+  the app's own cache (`sweep_cached` and its neighbours), and a film arriving from a
+  paired device into that cache (`write_upload_part`, `write_upload_note`; 2026-10-16)
 
 The journal
 -----------
@@ -2656,6 +2659,138 @@ def sweep_cached(
         except OSError as exc:
             log.warning("Couldn't clear %s from the cache: %s", entry.name, exc.strerror or exc)
     return gone
+
+
+# ---- a film arriving from a paired device (2026-10-16) ----------------------------------
+#
+# A paired device may send the computer a film of its own (`sharing`, docs/ENGINE_API.md
+# section 3). Its bytes arrive a part at a time, over minutes or days, into one file in
+# the app's own cache folder, `<cache>/uploads/`, beside a small note of what it is and
+# how much has arrived; once it has all arrived, `keep_media` copies it into the Movies
+# folder and `forget_cached` deletes both. These two are the only writers of that folder;
+# `sweep_cached` clears what has sat there unused for two days.
+
+UPLOADS_DIR = "uploads"
+
+
+def _upload_file(path: Path, cache: Path) -> Path:
+    """`path`, checked: a name directly inside `<cache>/uploads/`, which must be a real
+    folder inside the app's cache (not a link), and not itself a link or a folder."""
+    path, cache = Path(path).absolute(), Path(cache).absolute()
+    folder = cache / UPLOADS_DIR
+    if (
+        _key(path.parent) != _key(folder)
+        or _is_link(folder)
+        or not folder.is_dir()
+        or not _inside(folder.resolve(), cache.resolve())
+    ):
+        raise OutsideLibraryError(f"{path.name} isn't a film arriving in the app's cache.")
+    if not path.name or path.name.startswith(".") or naming.is_junk(path.name):
+        raise ValueError(f"not a file name: {path.name!r}")
+    if _is_link(path) or path.is_dir():
+        raise OutsideLibraryError(
+            f"Something else is in the way of {path.name} in the app's cache."
+        )
+    return path
+
+
+def write_upload_part(
+    path: Path,
+    offset: int,
+    source: Any,
+    length: int,
+    *,
+    cache: Path,
+    going_on: Callable[[int], bool] | None = None,
+) -> int:
+    """Write the next part of a film arriving from a paired device into its file in the
+    app's cache (`<cache>/uploads/<name>`), and return how many of its bytes were
+    written.
+
+    - Only a file directly in that folder: never a link, never anything outside the
+      app's cache, never anything of a library's.
+    - `offset` is where the part goes: at most the file's length now (0 for a new file).
+      Anything after it (bytes from an earlier part that was cut off before it was
+      counted) is cut off first, so the file is exactly what was counted, then this part.
+    - `length` bytes are read from `source` (the device's connection: anything with
+      `read(n)`) a chunk at a time and written as they come, never held in memory.
+      Fewer arrive when the connection ends early or goes silent; what did arrive is
+      kept, and the count says how much.
+    - `going_on(written)`, if given, is asked after each chunk; False stops there (the
+      share was switched off).
+    - Flushed to the disk before it returns: every byte counted is on the disk.
+    - Not journaled, and there's nothing to undo: no library file is touched, and it's
+      the app's own cache, which the device can send again.
+    """
+    path = _upload_file(path, cache)
+    if isinstance(offset, bool) or offset < 0 or length < 0:
+        raise ValueError("offset and length must be whole numbers from 0")
+    flags = os.O_WRONLY | os.O_CREAT | _O_BINARY | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        fd = os.open(path, flags, 0o600)
+    except OSError as exc:
+        raise FileOperationError(
+            f"Couldn't write a film arriving from a device in the app's cache: "
+            f"{exc.strerror or exc}."
+        ) from exc
+    written = 0
+    try:
+        about = os.fstat(fd)
+        if not stat.S_ISREG(about.st_mode):
+            raise OutsideLibraryError(
+                f"Something else is in the way of {path.name} in the app's cache."
+            )
+        if offset > about.st_size:
+            raise UserError("That part of the film doesn't follow on from what has arrived.")
+        os.ftruncate(fd, offset)
+        os.lseek(fd, offset, os.SEEK_SET)
+        while written < length:
+            try:
+                chunk = source.read(min(_CHUNK, length - written))
+            except OSError:  # the connection dropped, or went silent too long
+                break
+            if not chunk:
+                break
+            view = memoryview(chunk)
+            while view:
+                view = view[os.write(fd, view) :]
+            written += len(chunk)
+            if going_on is not None and not going_on(written):
+                break
+        _sync_file(fd)
+    except OSError as exc:
+        raise FileOperationError(
+            f"Couldn't write a film arriving from a device in the app's cache: "
+            f"{exc.strerror or exc}."
+        ) from exc
+    finally:
+        os.close(fd)
+    return written
+
+
+def write_upload_note(path: Path, text: str, *, cache: Path) -> None:
+    """Save the small note kept beside a film arriving from a device (what it is, and
+    how much of it has arrived), in `<cache>/uploads/`, under the same guards as
+    `write_upload_part`. The note is replaced whole: a temp file beside it, flushed,
+    then renamed over it, so a reader never sees half of one."""
+    path = _upload_file(path, cache)
+    fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=".musicorg-", suffix=".tmp")
+    tmp = Path(tmp_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
+            f.write(text)
+            f.flush()
+            _sync_file(f.fileno())
+        _replace(tmp, path)
+    except BaseException as exc:
+        tmp.unlink(missing_ok=True)
+        if isinstance(exc, OSError):
+            raise FileOperationError(
+                f"Couldn't note a film arriving from a device in the app's cache: "
+                f"{exc.strerror or exc}."
+            ) from exc
+        raise
+    _sync_folder(path.parent)
 
 
 def _write_new(target: Path, data: bytes, remove_placeholder: Callable[[Path], object]) -> Path:
