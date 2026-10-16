@@ -60,6 +60,9 @@ import AppKit
 ///   `left`, `right`, `return` or `esc`
 /// - `player`: what's in the music player, where it has got to and how loud, and where the
 ///   arrows' highlight is on a page of cards, written out
+/// - `profile=<id>`: another profile switched to, as Settings → Profile does (only with a
+///   scratch copy's own profiles)
+/// - `records`: the profile in use, and how much of what's watched and liked it has
 /// - `stremio=read`, `stremio=import`: what Stremio on this Mac remembers read (only read)
 ///   and written out; then put in the profile in use, and what that profile then has written
 ///   out (only ever with a scratch profile)

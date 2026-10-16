@@ -781,6 +781,15 @@ struct MainView: View {
                     model.film.volume = 0
                     model.playFilm(URL(fileURLWithPath: path), title: "Check")
                 }
+            } else if step.name.hasPrefix("profile=") {
+                // Another profile switched to, as Settings → Profile does.
+                model.switchProfile(to: String(step.name.dropFirst("profile=".count)))
+            } else if step.name == "records" {
+                // The profile in use, and how much of what's watched and liked it has.
+                Bench.say(
+                    "BENCH records: \(model.profiles.current.name): watchlist \(model.watchlist.items.map(\.id)), "
+                        + "finished \(model.finished.days.count), history \(model.history.entries.count), "
+                        + "favourites \(model.mediaFavourites.items.count), home rows \(model.homeLayout.shown.count)")
             } else if step.name == "stremio=read" {
                 // What Stremio on this Mac remembers, read (only read) and written out.
                 model.stremio.read()

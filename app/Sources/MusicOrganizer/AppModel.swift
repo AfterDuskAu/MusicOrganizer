@@ -1867,6 +1867,19 @@ final class AppModel {
         youtubeQueue = Self.savedYouTubeQueue()  // the next profile's own
         youtubePlayed = Self.savedResults(Self.youtubePlayedKey)
         lastTrack = nil
+        // The next profile's own records of what's watched and liked, read afresh: kept
+        // only in memory, the last profile's showed in the next one (the owner, 2026-10-16:
+        // a Stremio import into D showed in C), and anything C saved would have written
+        // D's records over C's own.
+        homeLayout = Self.keptHomeLayout()
+        history = WatchHistory.saved()
+        mediaFavourites = MediaFavourites.saved()
+        watchlist = Watchlist.saved()
+        finished = Self.keptFinished()
+        seriesProgress = SeriesProgress.saved()
+        channelPictures = ChannelPictures.saved()
+        (seriesEpisodes, calendarUploads, uploadsRead) = ([:], [], nil)
+        seriesRead += 1
     }
 
     private func open(_ folder: URL) async {
