@@ -15,8 +15,9 @@ guarantees of docs/LIBRARY_CONTRACT.md section 6. In order below:
 - staging cleanup (`discard_staged`, `clean_staging`) and `write_export`
 - outside the library: `keep_media` (the Movies and videos folders) and, at the owner's
   word, `trash_media` (one of those films to the Trash: 2026-10-17), a profile's export,
-  the app's own cache (`sweep_cached` and its neighbours), and a film arriving from a
-  paired device into that cache (`write_upload_part`, `write_upload_note`; 2026-10-16)
+  the app's own cache (`sweep_cached` and its neighbours, among them `write_cached` for
+  a torrent's resume data, 2026-10-17), and a film arriving from a paired device into
+  that cache (`write_upload_part`, `write_upload_note`; 2026-10-16)
 
 The journal
 -----------
@@ -2678,6 +2679,51 @@ def forget_cached(path: Path, *, cache: Path) -> None:
             path.unlink()
     except OSError as exc:
         log.warning("Couldn't clear %s from the cache: %s", path.name, exc.strerror or exc)
+
+
+def write_cached(path: Path, data: bytes, *, cache: Path) -> Path:
+    """Save one small file the engine keeps for itself in its own cache folder: what
+    libtorrent knows of a film it has fetched (`torrents/.<hash>.resume`, 2026-10-17),
+    so the film is all there at once when it's played again, not checked from 0%.
+
+    - Only directly in a real folder strictly inside `cache`, the app's cache folder:
+      never a link, never anywhere else, never anything of a library's.
+    - The name may start with a dot (the engine's own notes are hidden), but not be
+      empty, `.` or `..`, or a junk name (`.DS_Store`, `._*`).
+    - Replaced whole: a temp file beside it, flushed, then renamed over the old one, so
+      a reader finds the old note or the new one, never half of one. It's the engine's
+      own note in its own cache, not the owner's file, which is why replacing it is
+      allowed. Something else in its place (a folder, a link) is refused, not replaced.
+    - Not journaled, and there's nothing to undo: it's the cache, which can be made
+      again. It goes with what it's about: `sweep_cached` deletes it after its day.
+    """
+    path = Path(path).absolute()
+    folder = _cache_folder(path.parent, cache)
+    if _is_link(folder) or not folder.is_dir():
+        raise OutsideLibraryError(f"{folder} isn't a folder in the app's cache.")
+    if path.name in ("", ".", "..") or naming.is_junk(path.name):
+        raise ValueError(f"not a file name: {path.name!r}")
+    if _is_link(path) or path.is_dir():
+        raise OutsideLibraryError(
+            f"Something else is in the way of {path.name} in the app's cache."
+        )
+    fd, tmp_name = tempfile.mkstemp(dir=folder, prefix=".musicorg-", suffix=".tmp")
+    tmp = Path(tmp_name)
+    try:
+        with os.fdopen(fd, "wb") as f:
+            f.write(data)
+            f.flush()
+            _sync_file(f.fileno())
+        _replace(tmp, path)
+    except BaseException as exc:
+        tmp.unlink(missing_ok=True)
+        if isinstance(exc, OSError):
+            raise FileOperationError(
+                f"Couldn't save {path.name} in the app's cache: {exc.strerror or exc}."
+            ) from exc
+        raise
+    _sync_folder(folder)
+    return path
 
 
 def sweep_cached(
