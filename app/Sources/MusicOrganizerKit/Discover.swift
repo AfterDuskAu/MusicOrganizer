@@ -468,6 +468,7 @@ public enum SidebarRows {
     /// order, with the group each is in.
     public static let all: [(key: String, group: String)] = [
         ("channels", "Videos"), ("movies", "Videos"), ("watchlist", "Videos"), ("calendar", "Videos"),
+        ("adultVideos", "Videos"),
         ("home", "Media Discovery"), ("youtube", "Media Discovery"),
         ("videoFinder", "Media Discovery"), ("movieFinder", "Media Discovery"),
         ("seriesFinder", "Media Discovery"), ("animeFinder", "Media Discovery"),
@@ -475,6 +476,16 @@ public enum SidebarRows {
         ("import", "Playlists"),
     ]
     public static let key = "sidebarHidden"
+
+    /// The rows for adults: the Finder kept apart, and (2026-10-17) Videos → 18+, what's
+    /// downloaded from it. Never in a child's profile, whatever the sidebar's choices say,
+    /// and not offered in its Customise Sidebar either.
+    public static let adultRows: Set<String> = ["adultFinder", "adultVideos"]
+
+    /// Whether a row may be in the sidebar of this profile at all.
+    public static func offered(_ row: String, isChild: Bool) -> Bool {
+        !(isChild && adultRows.contains(row))
+    }
 
     public static func hidden(_ saved: String?) -> Set<String> {
         let known = Set(all.map(\.key))

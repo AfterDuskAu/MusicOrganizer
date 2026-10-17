@@ -220,6 +220,15 @@ public struct MediaStream: Codable, Hashable, Sendable {
     /// Whether the app can play it: a plain web address, a video by its id, or a torrent.
     public var canPlay: Bool { ["url", "youtube", "torrent"].contains(kind) }
 
+    /// Whether it can be downloaded to keep: a torrent, or (2026-10-17, the owner: "add a
+    /// way to download from the porn finder. it only offers play") a plain web address.
+    public var canDownload: Bool {
+        (kind == "torrent" && infoHash != nil) || (kind == "url" && url != nil)
+    }
+
+    /// What its download goes by (`PendingKeeps.Keep.id`): the address, or the torrent's id.
+    public var keepId: String? { kind == "url" ? url : infoHash?.lowercased() }
+
     /// The picture's size as a label: "Cam" for one filmed off a screen.
     public var qualityLabel: String {
         switch quality {
@@ -369,6 +378,30 @@ public enum VideoExplore {
 }
 
 /// How a film playing from a torrent is getting on (the engine's `torrent.status`).
+/// How a film being downloaded from a plugin's web address is going (`stream.status`,
+/// 2026-10-17). Shown exactly as a torrent's keep is (`asKeep`): the same bar and line.
+public struct FetchStatus: Decodable, Equatable, Sendable {
+    public let id: String
+    /// "finding", "fetching" or "complete" (the engine's Fetch state).
+    public let state: String
+    public let bytes: Int
+    public let size: Int?
+    public let bytesPerSecond: Int
+    public let progress: Double
+    public let keeping: Bool
+    public let keptPath: String?
+    public let keepError: String?
+    public let keepNote: String?
+    public let converting: Double?
+
+    public var asKeep: TorrentStatus {
+        TorrentStatus(
+            state: state, peers: 0, bytesPerSecond: bytesPerSecond, progress: progress,
+            keeping: keeping, keptPath: keptPath, keepError: keepError, keepNote: keepNote,
+            converting: converting)
+    }
+}
+
 public struct TorrentStatus: Decodable, Equatable, Sendable {
     public let state: String
     /// Everyone the engine is connected to for this film, counted by the engine itself.
@@ -424,7 +457,12 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
     public var keepLine: String? {
         if let keepError { return "Couldn't download it: \(keepError)" }
         if let keptPath {
-            let kept = "Downloaded to your Movies folder as “\((keptPath as NSString).lastPathComponent)”"
+            let path = keptPath as NSString
+            // One from the Finder for adults is in the Movies folder's own 18+ folder.
+            let place =
+                (path.deletingLastPathComponent as NSString).lastPathComponent == VideoFiles.adultFolderName
+                ? "the 18+ folder in your Movies folder" : "your Movies folder"
+            let kept = "Downloaded to \(place) as “\(path.lastPathComponent)”"
             return keepNote.map { "\(kept). \($0)" } ?? kept
         }
         guard keeping == true else { return nil }

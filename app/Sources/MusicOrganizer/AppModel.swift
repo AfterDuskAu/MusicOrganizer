@@ -169,12 +169,17 @@ final class AppModel {
     var channelSearches: [String: [ChannelRef]] = [:]
     /// The channels the owner follows (Videos → Channel), by name.
     private(set) var followedChannels: [ChannelRef] = []
-    /// Films being kept, or kept since the app opened, by their torrent's id.
+    /// Films being kept, or kept since the app opened, by what each goes by
+    /// (`PendingKeeps.Keep.id`): its torrent's id, or (2026-10-17) the web address it's
+    /// downloaded from. A download from an address is shown as a torrent's keep is.
     private(set) var filmKeeps: [String: TorrentStatus] = [:]
     private var filmKeepTasks: [String: Task<Void, Never>] = [:]
     /// The films being kept, or just kept, that Downloads lists: what each was asked
     /// for as, in the order asked. Not the ones kept from the Finder for adults.
     private(set) var listedKeeps: [PendingKeeps.Keep] = []
+    /// Those kept from the Finder for adults: listed at the top of Videos → 18+ instead,
+    /// and nowhere else (2026-10-17).
+    private(set) var adultKeeps: [PendingKeeps.Keep] = []
     /// Goes up each time a film or a video has been kept, or moved to the Trash, so
     /// Videos → Movies looks at its folders again.
     private(set) var keptArrived = 0
@@ -1178,7 +1183,9 @@ final class AppModel {
     }
 
     /// Play a film or a video file in the film player. The music stops for it.
-    func playFilm(_ address: URL, title: String, key: String? = nil) {
+    /// `remembering` false: not even where it was got to is kept (2026-10-17: a film from
+    /// the Finder for adults, or Videos → 18+).
+    func playFilm(_ address: URL, title: String, key: String? = nil, remembering: Bool = true) {
         if player.isPlaying { player.toggle() }
         // The next episode, started by itself, starts at its beginning: where it was
         // left another time isn't where anyone expects it to carry on from. Otherwise a
@@ -1186,7 +1193,8 @@ final class AppModel {
         // another way (an import from Stremio brings only where, not how).
         film.open(
             address, title: title, key: key, fromStart: startsAfresh,
-            otherwiseAt: startsAfresh ? nil : leftAt(episode: episodeToBe?.episodeId))
+            otherwiseAt: startsAfresh || !remembering ? nil : leftAt(episode: episodeToBe?.episodeId),
+            remembering: remembering)
         startsAfresh = false
         filmsOpened += 1
         // An episode of a series, or (a file, a film) nothing that leads to another.
@@ -1419,11 +1427,13 @@ final class AppModel {
     }
 
     /// Play one of a film's streams: a web address or a torrent in the film player, a
-    /// video by its id in the app's own player.
+    /// video by its id in the app's own player. `apart`: from the Finder for adults, where
+    /// nothing of it is remembered, not even where it was got to.
     func play(
         _ stream: MediaStream, title: String, watching entry: WatchHistory.Entry? = nil,
-        episode: EpisodeNow? = nil
+        episode: EpisodeNow? = nil, apart: Bool = false
     ) {
+        let remembering = !(apart || episode?.apart == true)
         // Remembered as watched, when it's a film or an episode from its page: with the
         // way it was played, so Home's Continue Watching can play it again.
         if stream.kind == "url" || stream.kind == "torrent" {
@@ -1441,14 +1451,16 @@ final class AppModel {
         episodeToBe = episode
         switch stream.kind {
         case "url":
-            if let url = stream.url.flatMap(URL.init(string:)) { playFilm(url, title: title) }
+            if let url = stream.url.flatMap(URL.init(string:)) {
+                playFilm(url, title: title, remembering: remembering)
+            }
         case "youtube":
             if let id = stream.videoId {
                 playVideos([SearchResult(videoId: id, title: title, artists: [])], startAt: 0)
             }
         case "torrent":
             guard let hash = stream.infoHash else { return }
-            Task { await playTorrent(hash, stream, title: title) }
+            Task { await playTorrent(hash, stream, title: title, remembering: remembering) }
         default:
             notice = "This one can't be played in the app yet."
         }
@@ -1486,7 +1498,9 @@ final class AppModel {
 
     /// Join a torrent through the engine and play its film as it arrives. The engine is
     /// asked how it's going every two seconds, which also keeps the film open there.
-    private func playTorrent(_ hash: String, _ stream: MediaStream, title: String) async {
+    private func playTorrent(
+        _ hash: String, _ stream: MediaStream, title: String, remembering: Bool = true
+    ) async {
         var asked: [String: Any] = ["info_hash": hash, "trackers": stream.trackers]
         if let index = stream.fileIndex { asked["file_index"] = index }
         do {
@@ -1495,7 +1509,8 @@ final class AppModel {
             // Remembered by the torrent and the file in it: its address here is new each time.
             playFilm(
                 url, title: title,
-                key: "torrent:\(playing.infoHash):\(stream.fileIndex.map(String.init) ?? "")")
+                key: "torrent:\(playing.infoHash):\(stream.fileIndex.map(String.init) ?? "")",
+                remembering: remembering)
             filmTorrent = playing.infoHash
             let mine = filmsOpened
             while film.isOpen, filmTorrent == playing.infoHash, filmsOpened == mine {
@@ -1573,20 +1588,21 @@ final class AppModel {
         }
     }
 
-    /// Keep a film from its page, or the episode chosen there. The engine files it by
-    /// what it is: a movie loose in the Movies folder, a series' or an anime's episode
-    /// in its show's folder there. `apart`: kept from the Finder for adults.
+    /// Keep a film from its page, or the episode chosen there: from a torrent, or
+    /// (2026-10-17) downloaded from a plugin's web address. The engine files it by what
+    /// it is: a movie loose in the Movies folder, a series' or an anime's episode in its
+    /// show's folder there. `apart`: kept from the Finder for adults, in its 18+ folder.
     func keepFilm(
         _ stream: MediaStream, of film: MediaItem, episode: MediaDetails.Video?, year: String?,
         apart: Bool = false
     ) {
-        guard let hash = stream.infoHash?.lowercased(), filmKeeps[hash]?.isKeeping != true
-        else { return }
+        guard let id = stream.keepId, filmKeeps[id]?.isKeeping != true else { return }
         // Settings → Downloads: made into a file phones and tablets play, unless switched off.
         let convert = UserDefaults.standard.object(forKey: TorrentStatus.convertKey) as? Bool ?? true
-        let keep = PendingKeeps.Keep(
-            infoHash: hash, trackers: stream.trackers, fileIndex: stream.fileIndex,
-            convert: convert, apart: apart, of: film, part: episode, year: year)
+        guard
+            let keep = PendingKeeps.Keep(
+                stream, convert: convert, apart: apart, of: film, part: episode, year: year)
+        else { return }
         // Remembered until it's in the Movies folder, so it carries on if the app is
         // closed first.
         var pending = PendingKeeps.load()
@@ -1599,24 +1615,25 @@ final class AppModel {
     /// stopped. `quietly`: one carried on when the app opened, where a failure (no
     /// network yet, say) isn't put in front of the owner; it's tried again next time.
     private func follow(_ keep: PendingKeeps.Keep, quietly: Bool) {
-        let hash = keep.infoHash
-        guard filmKeepTasks[hash] == nil else { return }
-        if !keep.isApart, !listedKeeps.contains(where: { $0.infoHash == hash }) {
+        let id = keep.id
+        guard filmKeepTasks[id] == nil else { return }
+        if keep.isApart {
+            if !adultKeeps.contains(where: { $0.id == id }) { adultKeeps.append(keep) }
+        } else if !listedKeeps.contains(where: { $0.id == id }) {
             listedKeeps.append(keep)
         }
-        filmKeepTasks[hash] = Task {
-            defer { filmKeepTasks[hash] = nil }
+        filmKeepTasks[id] = Task {
+            defer { filmKeepTasks[id] = nil }
             do {
-                filmKeeps[hash] = try await ask("torrent.keep", keep.asked, as: TorrentStatus.self)
-                while filmKeeps[hash]?.isKeeping == true {
+                filmKeeps[id] = try await keepStatus(keep.keepMethod, keep.asked, of: keep)
+                while filmKeeps[id]?.isKeeping == true {
                     try? await Task.sleep(for: .seconds(2))
                     if Task.isCancelled { return }
-                    filmKeeps[hash] = try await ask(
-                        "torrent.status", ["info_hash": hash], as: TorrentStatus.self)
+                    filmKeeps[id] = try await keepStatus(keep.statusMethod, keep.which, of: keep)
                 }
                 // It's in the Movies folder now (or couldn't be put there): done with.
                 var pending = PendingKeeps.load()
-                pending.remove(hash)
+                pending.remove(id)
                 pending.save()
                 keptArrived += 1
             } catch {
@@ -1625,41 +1642,67 @@ final class AppModel {
         }
     }
 
-    /// The owner has changed their mind about a film being kept.
-    func stopKeepingFilm(_ infoHash: String) {
-        let hash = infoHash.lowercased()
+    /// How a keep is going, as the engine says it: a torrent's status, or a download from
+    /// an address's, shown the same way.
+    private func keepStatus(
+        _ method: String, _ asked: [String: Any], of keep: PendingKeeps.Keep
+    ) async throws -> TorrentStatus {
+        if keep.isAddress {
+            return try await ask(method, asked, as: FetchStatus.self).asKeep
+        }
+        return try await ask(method, asked, as: TorrentStatus.self)
+    }
+
+    /// The owner has changed their mind about a film being kept (`id`: what its keep goes
+    /// by, a torrent's id or a web address).
+    func stopKeepingFilm(_ id: String) {
+        let address = id.contains("://")
+        let key = address ? id : id.lowercased()
         var pending = PendingKeeps.load()
-        pending.remove(hash)
+        pending.remove(key)
         pending.save()
-        filmKeepTasks[hash]?.cancel()
-        filmKeepTasks[hash] = nil
-        filmKeeps[hash] = nil
-        listedKeeps.removeAll { $0.infoHash == hash }
+        filmKeepTasks[key]?.cancel()
+        filmKeepTasks[key] = nil
+        filmKeeps[key] = nil
+        listedKeeps.removeAll { $0.id == key }
+        adultKeeps.removeAll { $0.id == key }
+        if address {
+            // What arrived stays in the engine's cache for two days: Download carries on.
+            Task { _ = try? await ask("stream.stop", ["url": key], as: Empty.self) }
+            return
+        }
         // Left at once, unless it's the film in the player: that one plays on.
-        let playing = filmTorrent?.lowercased() == hash
+        let playing = filmTorrent?.lowercased() == key
         Task {
             _ = try? await ask(
-                "torrent.stop_keeping", ["info_hash": hash, "playing": playing], as: Empty.self)
+                "torrent.stop_keeping", ["info_hash": key, "playing": playing], as: Empty.self)
         }
     }
 
     /// The number on Downloads' row in the sidebar: what's arrived, and what's on its
     /// way (songs, videos, and movies being kept).
     var downloadsBadge: Int {
-        let keeping = listedKeeps.filter { filmKeeps[$0.infoHash]?.isKeeping ?? true }.count
+        let keeping = listedKeeps.filter { filmKeeps[$0.id]?.isKeeping ?? true }.count
         return downloaded.count + pending.filter(\.isActive).count + keeping
     }
 
     /// Downloads' ✕ on a film that's been kept, or couldn't be: off the list. (One still
-    /// on its way is stopped with `stopKeepingFilm`.)
-    func dismissKeep(_ infoHash: String) {
-        listedKeeps.removeAll { $0.infoHash == infoHash.lowercased() }
+    /// on its way is stopped with `stopKeepingFilm`.) The same on Videos → 18+.
+    func dismissKeep(_ id: String) {
+        let key = id.contains("://") ? id : id.lowercased()
+        listedKeeps.removeAll { $0.id == key }
+        adultKeeps.removeAll { $0.id == key }
     }
 
     /// When the app opens: the films that were still being kept when it closed carry on.
-    /// Each came from the owner's own click on Keep, and Stop Keeping ends it.
+    /// Each came from the owner's own click on Download, and Stop Downloading ends it.
+    /// One from the Finder for adults waits while a child's profile is open: it carries on
+    /// when a grown-up's is (2026-10-17).
     private func carryOnKeeps() {
-        for keep in PendingKeeps.load().keeps { follow(keep, quietly: true) }
+        let child = profiles.current.isChild
+        for keep in PendingKeeps.load().keeps where !(child && keep.isApart) {
+            follow(keep, quietly: true)
+        }
     }
 
     /// Shut the film player. A film from a torrent is left; what arrived of it stays in

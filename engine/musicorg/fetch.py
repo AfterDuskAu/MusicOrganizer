@@ -66,7 +66,9 @@ KEEP_S = 2 * 24 * 3600  # what arrived waits this long after it was last touched
 SWEEP_EVERY_S = 600
 CONNECT_S = 15  # how long an address is given to answer at all...
 READ_S = 30  # ...and to send the next of the film, before it counts as cut off
-PART_BYTES = 32 * 1024 * 1024  # counted in the note after each part: a cut loses less
+# What has arrived is counted in the note after each part, once it is on the disk: the app
+# closed part way, or a cut, loses at most the part it was on.
+PART_BYTES = 8 * 1024 * 1024
 TRY_WAITS_S = (2, 5, 15, 30, 60)  # a cut-off fetch is asked again after these, then given up
 PROBE_S = 60  # how long ffprobe is given to read a playlist's length
 RATE_S = 5.0  # how fast it's arriving is reckoned over this long

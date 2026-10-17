@@ -140,6 +140,10 @@ enum SidebarItem: Hashable {
     case calendar
     /// The lists of add-ons for adults only, in a Finder of their own (owner, 2026-10-08).
     case adultFinder
+    /// Videos → 18+: what's downloaded from that Finder, in the Movies folder's 18+ folder
+    /// (the owner, 2026-10-17: "These downloads would move to a new section under videos
+    /// called 18+"). Never in a child's profile.
+    case adultVideos
     /// Settings: a page like the others, opened by the cog wheel or ⌘, (no row of its own).
     case settings
     case playlist(String)
@@ -162,6 +166,7 @@ enum SidebarItem: Hashable {
         case .seriesFinder: "seriesFinder"
         case .animeFinder: "animeFinder"
         case .adultFinder: "adultFinder"
+        case .adultVideos: "adultVideos"
         case .importPlaylists: "import"
         case .youtube: "youtube"
         case .youtubeQueue: "youtubeQueue"
@@ -189,6 +194,7 @@ enum SidebarItem: Hashable {
         case "videoExplore": self = .videoFinder  // Explore is Video Finder itself now
         case "animeFinder": self = .animeFinder
         case "adultFinder": self = .adultFinder
+        case "adultVideos": self = .adultVideos
         case "movieFinder": self = .movieFinder
         case "home": self = .home
         case "seriesFinder": self = .seriesFinder
@@ -246,6 +252,7 @@ enum SidebarItem: Hashable {
         case .seriesFinder: "Series Finder"
         case .animeFinder: "Anime Finder"
         case .adultFinder: "Porn Finder"
+        case .adultVideos: "18+"
         case .importPlaylists: "Import Playlists"
         case .youtube: "Music Finder"
         case .youtubeQueue: "Queue"
@@ -278,6 +285,7 @@ enum SidebarItem: Hashable {
         case .seriesFinder: "tv"
         case .animeFinder: "sparkles.tv"
         case .adultFinder: "eye.slash"
+        case .adultVideos: "18.circle"
         case .importPlaylists: "square.and.arrow.down.on.square"
         case .youtube: "magnifyingglass"
         case .youtubeQueue: "text.append"
@@ -539,7 +547,11 @@ struct MainView: View {
                 }
             }
             Section(isExpanded: $openMedia) {
-                ForEach([SidebarItem.channels, .movies, .watchlist, .calendar].filter { !hiddenRows.contains($0.key) }, id: \.self) {
+                ForEach(
+                    [SidebarItem.channels, .movies, .watchlist, .calendar, .adultVideos]
+                        .filter { !hiddenRows.contains($0.key) && offered($0) },
+                    id: \.self
+                ) {
                     entry in
                     row(entry)
                         .contextMenu { Button("Remove from Sidebar") { hide(entry) } }
@@ -575,7 +587,7 @@ struct MainView: View {
                         .animeFinder, .adultFinder, .downloads,
                     ].filter { !hiddenRows.contains($0.key) }
                         // Never in a child's profile, whatever the sidebar's choices say.
-                        .filter { $0 != .adultFinder || !model.profiles.current.isChild },
+                        .filter(offered),
                     id: \.self
                 ) {
                     entry in
@@ -686,6 +698,12 @@ struct MainView: View {
 
     /// The rows outside Music that the owner has taken out (Customise Sidebar).
     private var hiddenRows: Set<String> { SidebarRows.hidden(savedHidden) }
+
+    /// Whether a row may be in this profile's sidebar at all: the rows for adults (the
+    /// Finder kept apart, and Videos → 18+) never are in a child's.
+    private func offered(_ entry: SidebarItem) -> Bool {
+        SidebarRows.offered(entry.key, isChild: model.profiles.current.isChild)
+    }
 
     /// Take a row out of the sidebar. It comes back from Customise Sidebar.
     private func hide(_ entry: SidebarItem) {
@@ -1037,6 +1055,12 @@ struct PageView: View {
             } else {
                 MovieFinderView(kind: "adult")
             }
+        case .adultVideos:
+            if model.profiles.current.isChild {
+                Text("This page isn't part of this profile.").foregroundStyle(.secondary)
+            } else {
+                MoviesView(isActive: active, adult: true)
+            }
         case .movieFinder:
             MovieFinderView(kind: "movie")
         case .seriesFinder:
@@ -1287,7 +1311,7 @@ private struct CustomiseSidebar: View {
                     Section(group) {
                         ForEach(
                             SidebarRows.all.filter { $0.group == group }
-                                .filter { $0.key != "adultFinder" || !model.profiles.current.isChild },
+                                .filter { SidebarRows.offered($0.key, isChild: model.profiles.current.isChild) },
                             id: \.key
                         ) { row in
                             let entry = SidebarItem(key: row.key)

@@ -103,28 +103,46 @@ public struct FilmPositions: Equatable, Sendable {
 /// The films the owner asked to keep that aren't in the Movies folder yet, remembered
 /// by the app on this Mac (not in the library), so a keep that was cut off when the app
 /// closed carries on when it's opened again. One is forgotten when its film has been
-/// kept, couldn't be, or the owner stops it.
+/// kept, couldn't be, or the owner stops it. A keep is of a torrent, or (2026-10-17) of
+/// a plugin's plain web address (`url`), which the engine downloads (`stream.keep`).
 public struct PendingKeeps: Codable, Equatable, Sendable {
     public struct Keep: Codable, Equatable, Sendable, Identifiable {
+        /// The torrent's id; empty for a web address's keep.
         public let infoHash: String
+        /// The web address a plugin gave (a way to play of kind "url"), for a keep that
+        /// isn't a torrent's (2026-10-17). Nil in every keep remembered before then.
+        public let url: String?
+        /// How big the plugin said the film is, if it did: the engine looks for room by it
+        /// when the address doesn't say.
+        public let size: Int?
         public let trackers: [String]
         public let title: String
         public let year: String?
         public let fileIndex: Int?
         public let convert: Bool
-        /// Kept from the Finder for adults: it isn't listed with the other downloads.
+        /// Kept from the Finder for adults: it isn't listed with the other downloads, but
+        /// on the 18+ page, and it's kept in the Movies folder's 18+ folder (2026-10-17).
         /// (Nil in a keep remembered before this was noted.)
         public let apart: Bool?
-        /// What it is, which decides its folder in the Movies folder: "movie", "series"
-        /// or "anime". Nil (a keep remembered before there were folders): a movie.
+        /// What it is, which decides its folder in the Movies folder: "movie", "series",
+        /// "anime" or (2026-10-17) "adult". Nil (a keep remembered before there were
+        /// folders): a movie.
         public let kind: String?
         /// For an episode: the series or anime it's part of, and where it comes in it,
         /// as far as the add-on said. `title` is then the episode's own, and may be empty.
         public let show: String?
         public let season: Int?
         public let episode: Int?
-        public var id: String { infoHash }
+        /// What it goes by: its address, or its torrent's id.
+        public var id: String { url ?? infoHash }
         public var isApart: Bool { apart == true }
+        /// Downloaded from a web address, not fetched from a torrent.
+        public var isAddress: Bool { url != nil }
+
+        /// What it's kept as: "adult" for one from the Finder for adults, whatever kind
+        /// was remembered with it (one asked for before 2026-10-17 said "movie", and would
+        /// have gone loose in the Movies folder).
+        public var keptKind: String? { isApart ? "adult" : kind }
 
         /// What it's called where keeps are listed (Downloads): a film's title, or for
         /// an episode its show's name and number, "East of Eden S01E02".
@@ -135,18 +153,27 @@ public struct PendingKeeps: Codable, Equatable, Sendable {
             return title.isEmpty ? show : "\(show) - \(title)"
         }
 
-        /// What it is, in a word, where keeps are listed: "Movie", "Series" or "Anime".
+        /// What it is, in a word, where keeps are listed: "Movie", "Series", "Anime" or
+        /// "18+".
         public var kindName: String {
-            kind == "series" ? "Series" : kind == "anime" ? "Anime" : "Movie"
+            switch keptKind {
+            case "series": "Series"
+            case "anime": "Anime"
+            case "adult": "18+"
+            default: "Movie"
+            }
         }
 
         public init(
             infoHash: String, trackers: [String], title: String, year: String? = nil,
             fileIndex: Int? = nil, convert: Bool = true, apart: Bool = false,
-            kind: String? = nil, show: String? = nil, season: Int? = nil, episode: Int? = nil
+            kind: String? = nil, show: String? = nil, season: Int? = nil, episode: Int? = nil,
+            url: String? = nil, size: Int? = nil
         ) {
             self.apart = apart ? true : nil
-            self.infoHash = infoHash.lowercased()
+            self.infoHash = url == nil ? infoHash.lowercased() : ""
+            self.url = url
+            self.size = size
             self.trackers = trackers
             self.title = title
             self.year = year
@@ -160,40 +187,74 @@ public struct PendingKeeps: Codable, Equatable, Sendable {
 
         /// A film from its page, or the episode chosen there (`part`). A film is kept
         /// under its own name and year; an episode under its show's name, with its
-        /// season and episode. Anime is what was found in a list of anime.
+        /// season and episode. Anime is what was found in a list of anime; anything from
+        /// the Finder for adults (`apart`) is "adult", kept in the 18+ folder.
         public init(
             infoHash: String, trackers: [String], fileIndex: Int? = nil, convert: Bool = true,
             apart: Bool = false, of item: MediaItem, part: MediaDetails.Video? = nil,
-            year: String? = nil
+            year: String? = nil, url: String? = nil, size: Int? = nil
         ) {
-            let kind = item.keptKind
+            let kind = apart ? "adult" : item.keptKind
             guard let part, kind != "movie" else {
                 self.init(
                     infoHash: infoHash, trackers: trackers,
                     title: part?.name(in: item.name) ?? item.name,
                     year: part == nil ? year.map { String($0.prefix(4)) } : nil,
-                    fileIndex: fileIndex, convert: convert, apart: apart, kind: kind)
+                    fileIndex: fileIndex, convert: convert, apart: apart, kind: kind,
+                    url: url, size: size)
                 return
             }
             self.init(
                 infoHash: infoHash, trackers: trackers, title: part.title, fileIndex: fileIndex,
                 convert: convert, apart: apart, kind: kind, show: item.name,
-                season: part.season, episode: part.episode)
+                season: part.season, episode: part.episode, url: url, size: size)
         }
 
-        /// What the engine is asked (`torrent.keep`).
+        /// A way to play's keep, from its page: a torrent's, or a web address's. Nil for
+        /// one that can't be downloaded (a video by its id).
+        public init?(
+            _ stream: MediaStream, convert: Bool = true, apart: Bool = false, of item: MediaItem,
+            part: MediaDetails.Video? = nil, year: String? = nil
+        ) {
+            if stream.kind == "url", let url = stream.url {
+                self.init(
+                    infoHash: "", trackers: [], convert: convert, apart: apart, of: item,
+                    part: part, year: year, url: url, size: stream.size)
+            } else if stream.kind == "torrent", let hash = stream.infoHash {
+                self.init(
+                    infoHash: hash, trackers: stream.trackers, fileIndex: stream.fileIndex,
+                    convert: convert, apart: apart, of: item, part: part, year: year)
+            } else {
+                return nil
+            }
+        }
+
+        /// What the engine is asked to keep it: `torrent.keep`, or `stream.keep` for a web
+        /// address (`keepMethod`).
         public var asked: [String: Any] {
-            var asked: [String: Any] = [
-                "info_hash": infoHash, "trackers": trackers, "title": title, "convert": convert,
-            ]
-            if let fileIndex { asked["file_index"] = fileIndex }
+            var asked: [String: Any] = ["title": title, "convert": convert]
+            if let url {
+                asked["url"] = url
+                if let size { asked["size"] = size }
+            } else {
+                asked["info_hash"] = infoHash
+                asked["trackers"] = trackers
+                if let fileIndex { asked["file_index"] = fileIndex }
+            }
             if let year { asked["year"] = year }
-            if let kind { asked["kind"] = kind }
+            if let kind = keptKind { asked["kind"] = kind }
             if let show { asked["show"] = show }
             if let season { asked["season"] = season }
             if let episode { asked["episode"] = episode }
             return asked
         }
+
+        /// How the engine is asked to keep it, how it's going, and to stop.
+        public var keepMethod: String { isAddress ? "stream.keep" : "torrent.keep" }
+        public var statusMethod: String { isAddress ? "stream.status" : "torrent.status" }
+        public var stopMethod: String { isAddress ? "stream.stop" : "torrent.stop_keeping" }
+        /// What says which it is, for those.
+        public var which: [String: Any] { url.map { ["url": $0] } ?? ["info_hash": infoHash] }
     }
 
     public private(set) var keeps: [Keep] = []
@@ -202,12 +263,14 @@ public struct PendingKeeps: Codable, Equatable, Sendable {
     public init() {}
 
     public mutating func add(_ keep: Keep) {
-        keeps.removeAll { $0.infoHash == keep.infoHash }
+        keeps.removeAll { $0.id == keep.id }
         keeps.append(keep)
     }
 
-    public mutating func remove(_ infoHash: String) {
-        keeps.removeAll { $0.infoHash == infoHash.lowercased() }
+    /// Forget a keep, by what it goes by (`Keep.id`): a web address, or a torrent's id in
+    /// any case.
+    public mutating func remove(_ id: String) {
+        keeps.removeAll { $0.id == id || (!$0.isAddress && $0.infoHash == id.lowercased()) }
     }
 
     public static func load(from defaults: UserDefaults = .standard) -> PendingKeeps {

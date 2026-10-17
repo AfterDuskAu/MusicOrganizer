@@ -136,19 +136,23 @@ struct PendingDownloads: View {
     }
 }
 
-/// Above them on Downloads: the movies being kept from torrents (2026-10-08), each with
-/// how far along it is and a way to stop it; and the ones just kept, until they're taken
-/// off the list. The same rows as a song on its way. Until now a keep showed only on
-/// its movie's own page.
+/// Above them on Downloads: the movies being kept from torrents (2026-10-08) or, since
+/// 2026-10-17, downloaded from a plugin's web address, each with how far along it is and
+/// a way to stop it; and the ones just kept, until they're taken off the list. The same
+/// rows as a song on its way. Until now a keep showed only on its movie's own page.
+///
+/// With `adult`, the ones from the Finder for adults instead: at the top of Videos → 18+,
+/// and nowhere else.
 struct FilmKeeps: View {
+    var adult = false
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        let keeps = model.listedKeeps
+        let keeps = adult ? model.adultKeeps : model.listedKeeps
         if !keeps.isEmpty {
             VStack(spacing: 0) {
                 ForEach(keeps) { keep in
-                    row(keep, model.filmKeeps[keep.infoHash])
+                    row(keep, model.filmKeeps[keep.id])
                     Divider()
                 }
             }
@@ -162,7 +166,8 @@ struct FilmKeeps: View {
             Image(systemName: "popcorn").foregroundStyle(.secondary).frame(width: 20)
             VStack(alignment: .leading, spacing: 2) {
                 Text(keep.name).fontWeight(.medium).lineLimit(1)
-                Text("\(keep.kindName) · to Movies").font(.callout).foregroundStyle(.secondary).lineLimit(1)
+                Text(adult ? "To the 18+ folder in Movies" : "\(keep.kindName) · to Movies")
+                    .font(.callout).foregroundStyle(.secondary).lineLimit(1)
             }
             .frame(minWidth: 160, maxWidth: 320, alignment: .leading)
             VStack(alignment: .leading, spacing: 3) {
@@ -181,7 +186,7 @@ struct FilmKeeps: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             Button {
-                if keeping { model.stopKeepingFilm(keep.infoHash) } else { model.dismissKeep(keep.infoHash) }
+                if keeping { model.stopKeepingFilm(keep.id) } else { model.dismissKeep(keep.id) }
             } label: {
                 Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
             }

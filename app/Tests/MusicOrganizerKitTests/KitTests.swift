@@ -2231,8 +2231,11 @@ final class PendingKeepsTests: XCTestCase {
         XCTAssertEqual([carried.name, carried.kindName], ["East of Eden S01E02", "Movie"])
         let listed = PendingKeeps.Keep(
             infoHash: "ab", trackers: [], apart: true, of: anime, part: try part("Asteroid Blues", "1", "1"))
-        XCTAssertEqual([listed.name, listed.kindName], ["Cowboy Bebop S01E01", "Anime"])
+        // (Since 2026-10-17 it's kept in the 18+ folder, whatever its list called it.)
+        XCTAssertEqual([listed.name, listed.kindName], ["Cowboy Bebop S01E01", "18+"])
         XCTAssertTrue(listed.isApart)
+        XCTAssertEqual(
+            said(listed.asked), ["kind=adult", "title=Asteroid Blues", "-", "show=Cowboy Bebop", "season=1", "episode=1"])
         let plain = PendingKeeps.Keep(infoHash: "ab", trackers: [], of: film, year: "1921")
         XCTAssertEqual([plain.name, plain.kindName], ["The Kid", "Movie"])
         XCTAssertFalse(plain.isApart)
