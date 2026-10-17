@@ -729,100 +729,149 @@ struct MovieFinderView: View {
     @State private var clears = 0
     @State private var opened: MediaItem?
 
+    // MARK: the top of the page
+
+    /// The Finder's name and the list chosen.
+    @ViewBuilder
+    private func titleAndList(
+        _ lists: [(addon: Addon, catalog: Addon.Catalog)], _ chosen: (addon: Addon, catalog: Addon.Catalog)?
+    ) -> some View {
+        Text(
+            isSeries ? "Series Finder" : isAnime ? "Anime Finder"
+                : isAdult ? "Porn Finder" : "Movie Finder")
+            .font(.title2.weight(.semibold)).heading()
+            .lineLimit(1)
+            .fixedSize()
+        if let chosen {
+            Picker(
+                "List",
+                selection: Binding(
+                    get: { ownList ?? Self.key(chosen) },
+                    set: { pick($0, over: ownList ?? Self.key(chosen)) })
+            ) {
+                ForEach(lists, id: \.catalog) { Text(Self.name($0)).tag(Self.key($0)) }
+                // What's been watched, as a list of its own (the owner,
+                // 2026-10-13). Not where nothing is remembered as watched.
+                if hasWatchedList {
+                    Divider()
+                    Text("Watchlist").tag(Self.watchlistKey)
+                    Text("Watched").tag(Self.watchedKey)
+                }
+            }
+            .labelsHidden()
+            .fixedSize()
+        }
+    }
+
+    /// One genre, or two, of the list chosen (and the second's row on Home).
+    @ViewBuilder
+    private func genreChoices(_ chosen: (addon: Addon, catalog: Addon.Catalog)?) -> some View {
+        if let chosen {
+            if !chosen.catalog.genres.isEmpty, ownList == nil {
+                Picker(
+                    "Genre",
+                    selection: Binding(
+                        get: { chosen.catalog.genre(chosen: genre) ?? "" },
+                        set: { choose(genre: $0) })
+                ) {
+                    if chosen.catalog.offersEveryGenre { Text("Every Genre").tag("") }
+                    ForEach(chosen.catalog.genres, id: \.self) { Text($0).tag($0) }
+                }
+                .labelsHidden()
+                .fixedSize()
+                if let first = chosen.catalog.genre(chosen: genre), chosen.catalog.id != "year" {
+                    Picker(
+                        "Second Genre",
+                        selection: Binding(
+                            get: { also },
+                            set: {
+                                also = $0
+                                putSearchAway()
+                            })
+                    ) {
+                        Text("One Genre").tag("")
+                        ForEach(chosen.catalog.genres.filter { $0 != first }, id: \.self) {
+                            Text("and \($0)").tag($0)
+                        }
+                    }
+                    .labelsHidden()
+                    .fixedSize()
+                    .help("Only movies tagged with both genres")
+                    // Two genres chosen: the search can be a row on Home.
+                    if !apart, !also.isEmpty, also != first,
+                        chosen.catalog.genres.contains(also)
+                    {
+                        let row = HomeSection.custom(isSeries ? .series : .movies, first, also)
+                        let there = model.homeLayout.shows(row.id)
+                        Button("Home", systemImage: there ? "checkmark" : "plus") {
+                            model.homeLayout.set(row.id, shown: !there)
+                        }
+                        .fixedSize()
+                        .help(
+                            there
+                                ? "“\(row.title)” is a row on Home. Click to take it off."
+                                : "Add this search to Home, as “\(row.title)”")
+                    }
+                }
+            }
+        }
+    }
+
+    /// The search box, where the list chosen (or every plugin) can be searched.
+    @ViewBuilder
+    private func searchBox(_ chosen: (addon: Addon, catalog: Addon.Catalog)?) -> some View {
+        if let chosen {
+            // A search looks through everything every plugin has of this
+            // kind, whichever list is showing (the owner, 2026-10-13); so
+            // the box is always there, and as wide as there's room for. The
+            // Finder kept apart searches the one list, as before.
+            if searchesEverything || chosen.catalog.takes("search") {
+                FinderSearchField(
+                    prompt: searchesEverything ? "Search all \(Self.plural(kind))" : "Search this list",
+                    search: $search, clears: clears
+                )
+                .frame(minWidth: 220, idealWidth: 340, maxWidth: 440)
+            }
+        }
+    }
+
     var body: some View {
         let media = model.media
         let lists = isAdult ? media.adultCatalogs() : media.catalogs(of: kind)
         let chosen = lists.first { Self.key($0) == listKey } ?? lists.first
         ZStack {
             VStack(spacing: 0) {
-                HStack(spacing: 12) {
-                    Text(
-                        isSeries ? "Series Finder" : isAnime ? "Anime Finder"
-                            : isAdult ? "Porn Finder" : "Movie Finder")
-                        .font(.title2.weight(.semibold)).heading()
-                        .lineLimit(1)
-                        .fixedSize()
-                    if let chosen {
-                        Picker(
-                            "List",
-                            selection: Binding(
-                                get: { ownList ?? Self.key(chosen) },
-                                set: { pick($0, over: ownList ?? Self.key(chosen)) })
-                        ) {
-                            ForEach(lists, id: \.catalog) { Text(Self.name($0)).tag(Self.key($0)) }
-                            // What's been watched, as a list of its own (the owner,
-                            // 2026-10-13). Not where nothing is remembered as watched.
-                            if hasWatchedList {
-                                Divider()
-                                Text("Watchlist").tag(Self.watchlistKey)
-                                Text("Watched").tag(Self.watchedKey)
-                            }
-                        }
-                        .labelsHidden()
-                        .fixedSize()
-                        if !chosen.catalog.genres.isEmpty, ownList == nil {
-                            Picker(
-                                "Genre",
-                                selection: Binding(
-                                    get: { chosen.catalog.genre(chosen: genre) ?? "" },
-                                    set: { choose(genre: $0) })
-                            ) {
-                                if chosen.catalog.offersEveryGenre { Text("Every Genre").tag("") }
-                                ForEach(chosen.catalog.genres, id: \.self) { Text($0).tag($0) }
-                            }
-                            .labelsHidden()
-                            .fixedSize()
-                            if let first = chosen.catalog.genre(chosen: genre), chosen.catalog.id != "year" {
-                                Picker(
-                                    "Second Genre",
-                                    selection: Binding(
-                                        get: { also },
-                                        set: {
-                                            also = $0
-                                            putSearchAway()
-                                        })
-                                ) {
-                                    Text("One Genre").tag("")
-                                    ForEach(chosen.catalog.genres.filter { $0 != first }, id: \.self) {
-                                        Text("and \($0)").tag($0)
-                                    }
-                                }
-                                .labelsHidden()
-                                .fixedSize()
-                                .help("Only movies tagged with both genres")
-                                // Two genres chosen: the search can be a row on Home.
-                                if !apart, !also.isEmpty, also != first,
-                                    chosen.catalog.genres.contains(also)
-                                {
-                                    let row = HomeSection.custom(isSeries ? .series : .movies, first, also)
-                                    let there = model.homeLayout.shows(row.id)
-                                    Button("Home", systemImage: there ? "checkmark" : "plus") {
-                                        model.homeLayout.set(row.id, shown: !there)
-                                    }
-                                    .fixedSize()
-                                    .help(
-                                        there
-                                            ? "“\(row.title)” is a row on Home. Click to take it off."
-                                            : "Add this search to Home, as “\(row.title)”")
-                                }
-                            }
-                        }
+                // The top of the page in one row when it fits, else the search on a row
+                // of its own, else the genres too: a plugin's long list and genre names
+                // (the Porn Finder's) made one row wider than the window, and with it
+                // the page and a film's page opened over it, which slid under the
+                // sidebar (the owner, 2026-10-18).
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 12) {
+                        titleAndList(lists, chosen)
+                        genreChoices(chosen)
                         Spacer()
-                        // A search looks through everything every plugin has of this
-                        // kind, whichever list is showing (the owner, 2026-10-13); so
-                        // the box is always there, and as wide as there's room for. The
-                        // Finder kept apart searches the one list, as before.
-                        if searchesEverything || chosen.catalog.takes("search") {
-                            FinderSearchField(
-                                prompt: searchesEverything ? "Search all \(Self.plural(kind))" : "Search this list",
-                                search: $search, clears: clears
-                            )
-                            .frame(minWidth: 220, idealWidth: 340, maxWidth: 440)
+                        searchBox(chosen)
+                    }
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 12) {
+                            titleAndList(lists, chosen)
+                            genreChoices(chosen)
                         }
-                    } else {
-                        Spacer()
+                        searchBox(chosen)
+                    }
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 12) { titleAndList(lists, chosen) }
+                        HStack(spacing: 12) { genreChoices(chosen) }
+                        searchBox(chosen)
+                    }
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 12) { titleAndList(lists, chosen) }
+                        genreChoices(chosen)
+                        searchBox(chosen)
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
                 Divider()
@@ -893,6 +942,11 @@ struct MovieFinderView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
+            // Never wider than the room it's given, whatever is in it: what doesn't fit is
+            // cut off at the right, and the page (and a film's page over it) stays the
+            // window's width.
+            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .topLeading)
+            .clipped()
             // The list stays as it was left (scrolled to the same place) while a film is
             // open over it, but out of sight and out of reach: its search box showed
             // through the film's page.
