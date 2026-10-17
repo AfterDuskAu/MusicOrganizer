@@ -56,6 +56,13 @@ What the owner was promised, and where each promise is kept:
   is then copied into the Movies folder by `fileops.keep_media`, never over a file
   that's there. Films go either way only while the app's films switch is on. The music
   requests still answer only the devices of the profile whose library is shared.
+- **Films for adults, for a phone player that asks** (2026-10-17, the owner: "can be
+  synced to [the phone player] ... it requires clicking download on the phone for it to
+  download, just like how movies work"). The Movies folder's `18+` folder is listed, as
+  kind `adult`, only to a phone player whose request for the list says `?adult=1`, only
+  while the films switch is on and the profile open in the app isn't a child's; and its
+  files are given only to the device whose list named them. Never to a video app (the
+  films list and its files leave them out), and a device can't send one.
 
 **Privacy.** No address, computer name, pairing code or key is ever logged or put in an
 error, and no key is given out over RPC. Every id in the list is a hash: a phone never
@@ -79,7 +86,6 @@ import math
 import os
 import re
 import secrets
-import shutil
 import socket
 import stat
 import threading
@@ -91,7 +97,7 @@ from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
-from urllib.parse import unquote, urlsplit
+from urllib.parse import parse_qs, unquote, urlsplit
 
 from musicorg import browse, config, fileops, listening, naming, tags, tools
 from musicorg import state as state_file
@@ -148,6 +154,12 @@ VIDEO_TYPE = "mp4"
 # Kept films and videos (outside the library) that a phone can play, by their ending.
 # Anything else in those folders (an MKV, an AVI) isn't listed.
 MOVIE_TYPES = {".mp4": "mp4", ".m4v": "m4v", ".mov": "mov"}
+# The films kept from the Finder for adults (2026-10-17): the Movies folder's `18+` folder,
+# kind `adult`. A phone player is told of them only when it asks (`?adult=1` on the list),
+# and only while the profile open on the computer isn't a child's; a video app never is.
+# One made before this would have put them with its movies, since a kind it doesn't know
+# is a movie to it.
+ADULT_QUERY = "adult"
 # Folders inside the Movies folder that are another program's own, never looked into.
 NOT_OURS = frozenset({".fcpbundle", ".imovielibrary", ".tvlibrary", ".photoslibrary",
                       ".theater", ".localized", ".app"})  # fmt: skip
@@ -176,7 +188,8 @@ MOST_SECONDS = 7 * 24 * 3600  # a place in a title, or its length: a week at mos
 EARLIEST_YEAR = 1970  # a time before this can't be when anything was watched on a device
 TITLE_TYPES = ("movie", "series")
 _POSTER_SHAPE = re.compile(r"[A-Za-z]{1,20}")
-# A film a device sends to be copied into the Movies folder.
+# A film a device sends to be copied into the Movies folder: never into its 18+ folder.
+UPLOAD_KINDS = ("movie", "series", "anime")
 UPLOAD_TYPES = ("mp4", "m4v", "mov", "mkv", "avi", "webm")
 MOST_UPLOAD = 200 * 1024**3  # 200 GB
 MOST_PART = 256 * 1024 * 1024  # 256 MB in one request
@@ -185,8 +198,8 @@ MOST_PART = 256 * 1024 * 1024  # 256 MB in one request
 MAX_PART_DISCARD = 257 * 1024 * 1024
 UPLOAD_KEEP_S = 2 * 24 * 3600  # what has arrived waits this long after its last part
 # A film from a device never fills a disk to its last gigabyte: the library's own records
-# (state.json, the index) still need room to be saved.
-ROOM_TO_SPARE = 1024**3
+# (state.json, the index) still need room to be saved (`tools.room_for`).
+ROOM_TO_SPARE = tools.ROOM_TO_SPARE
 KEEP_CHECK_S = 30.0  # while a film is copied into the Movies folder: still syncing, this often
 _UPLOAD_ID = re.compile(r"u-[0-9a-f]{24}")
 _CONTENT_RANGE = re.compile(r"bytes (?P<first>\d{1,15})-(?P<last>\d{1,15})/(?P<size>\d{1,15})")
@@ -400,6 +413,7 @@ class SharedFile:
     type: str
     path: Path  # the file itself, or the song or video a part is inside
     inside: str | None = None  # "cover" or "lyrics": taken out of that file's tags
+    adult: bool = False  # a film in the Movies folder's 18+ folder (2026-10-17)
 
     def listed(self) -> dict[str, Any]:
         return {"id": self.id, "size": self.size, "version": self.version, "type": self.type}
@@ -418,8 +432,9 @@ def library_info(lib: Library) -> dict[str, str]:
 def kept_media(folders: dict[str, Path]) -> list[tuple[dict[str, Any], SharedFile]]:
     """The films and videos the owner keeps outside the library (`config.media_folders`),
     as the list names them: `video` for what's in the videos folder, and for what's in
-    the Movies folder `series` or `anime` inside its `Series` or `Anime` folder and
-    `movie` anywhere else. Only looked at, never changed.
+    the Movies folder `series` or `anime` inside its `Series` or `Anime` folder, `adult`
+    inside its `18+` folder (2026-10-17; marked `adult`, for the callers to leave out
+    unless they may give them) and `movie` anywhere else. Only looked at, never changed.
 
     An episode also says what it's part of and where it comes in it (`show`, `season`,
     `episode`), read from its folder and its name (`naming.kept_details`): nothing
@@ -460,12 +475,16 @@ def kept_media(folders: dict[str, Path]) -> list[tuple[dict[str, Any], SharedFil
                 # Ids go by the folder the file was found under, as they always have: a
                 # film listed before episodes were told apart keeps the id it had.
                 key = f"{kind}:{inside_top}"
-                main = SharedFile(_name("f", key), about.st_size, _stamp(about), ending, path)
+                # A film, or an episode of a series or an anime, or a film for adults.
+                about_it = naming.kept_details(inside_top) if kind == "movie" else {}
+                adult = about_it.get("kind") == naming.KEPT_ADULT
+                main = SharedFile(
+                    _name("f", key), about.st_size, _stamp(about), ending, path, adult=adult
+                )
                 added = datetime.fromtimestamp(about.st_mtime, UTC).strftime(_WHEN)
                 entry = {"id": _name("m", key), "title": path.stem, "kind": kind,
                          "added": added, "video": main.listed()}  # fmt: skip
-                if kind == "movie":  # a film, or an episode of a series or an anime
-                    entry.update(naming.kept_details(inside_top))
+                entry.update(about_it)
                 found.append((entry, main))
     return found
 
@@ -480,9 +499,13 @@ def the_list(
     remembered: dict[tuple[str, int, int], dict[str, Any]],
     *,
     films: dict[str, Path] | None = None,
+    adult: bool = False,
 ) -> tuple[dict[str, Any], dict[str, SharedFile]]:
     """The list of everything (format 1), and every file it names, by id. `films`: the
     folders of kept films and videos to list too, when the owner has switched that on.
+    `adult`: the films in the Movies folder's 18+ folder too (kind `adult`, 2026-10-17),
+    when the phone asked for them and may have them (`Share.make_list` decides); without
+    it none of them is named, and the revision is what it would be without them.
 
     Songs and videos are the library's files as the index has them; favourites, play
     counts, listening time, playlists and which downloads the owner moved into their
@@ -606,6 +629,8 @@ def the_list(
     ]  # fmt: skip
     movies: list[dict[str, Any]] = []
     for entry, main in kept_media(films) if films else []:
+        if main.adult and not adult:
+            continue
         files[main.id] = main
         movies.append(entry)
     body = json.dumps([tracks, shown_videos, playlists, movies], sort_keys=True, ensure_ascii=False)
@@ -1108,7 +1133,7 @@ def _upload_details(asked: object) -> dict[str, Any]:
     if not isinstance(asked, dict):
         raise refuse("That isn't a film to send.")
     kind = asked.get("kind", naming.KEPT_MOVIE)
-    if kind not in naming.KEPT_KINDS:
+    if kind not in UPLOAD_KINDS:  # never `adult`: a device's own film isn't one of those
         raise refuse("kind should be movie, series or anime.")
     title, show, year = asked.get("title", ""), asked.get("show") or "", asked.get("year")
     if not isinstance(title, str) or not isinstance(show, str):
@@ -1194,28 +1219,6 @@ def _named_already(folder: Path, name: str) -> bool:
     return False
 
 
-def _nearest(path: Path) -> Path:
-    """`path`, or the nearest folder above it that's there."""
-    for candidate in (path, *path.parents):
-        if candidate.exists():
-            return candidate
-    return path
-
-
-def _room_for(coming: int, size: int, cache: Path, movies: Path) -> bool:
-    """Whether there's room for the rest of a film in the app's cache (`coming` bytes)
-    and for all of it in the Movies folder, with a gigabyte to spare on each disk. Only
-    looked at; when it can't be told, the film is let come (a full disk is said then)."""
-    try:
-        here, there = _nearest(cache), _nearest(movies)
-        if os.stat(here).st_dev == os.stat(there).st_dev:
-            return shutil.disk_usage(here).free >= coming + size + ROOM_TO_SPARE
-        return (shutil.disk_usage(here).free >= coming + ROOM_TO_SPARE
-                and shutil.disk_usage(there).free >= size + ROOM_TO_SPARE)  # fmt: skip
-    except OSError:
-        return True
-
-
 def _why_not_kept(exc: BaseException) -> str:
     """Why a film couldn't be put in the Movies folder, as a device is told it: plain
     words, and nothing of where the folder is."""
@@ -1254,6 +1257,7 @@ class Share:
         watched: Callable[[str], None] | None = None,
         films: bool = False,
         awake: bool = True,
+        child: Callable[[], bool] | None = None,
         host: str | None = None,
         port: int | None = None,
         clock: Callable[[], float] = time.monotonic,
@@ -1270,6 +1274,10 @@ class Share:
         # Whether the computer is kept awake while a paired device syncs (`busy`). On
         # unless the owner switches it off in the app's Settings (2026-10-11).
         self.awake = awake
+        # Whether the profile open in the app is a child's, or might be (the app hasn't
+        # said yet): then no film for adults is ever named to a device (2026-10-17).
+        # Without anyone to ask, it's taken as a child's.
+        self._child = child if child is not None else (lambda: True)
         self._host = HOST if host is None else host
         self._port = PORT if port is None else port
         self._clock = clock
@@ -1281,6 +1289,10 @@ class Share:
         self._locked_until = 0.0
         self._files: dict[str, SharedFile] = {}
         self._built_at: float | None = None
+        # The films for adults the list named, for each device whose request asked for
+        # them (2026-10-17): by the device's id in the list of paired devices. Only these
+        # are given out, and only to that device.
+        self._adult_files: dict[str, dict[str, SharedFile]] = {}
         self._film_files: dict[str, SharedFile] = {}  # the films list's, by id
         self._films_built_at: float | None = None
         self._uploading: set[str] = set()  # uploads a request is working on right now
@@ -1401,27 +1413,50 @@ class Share:
 
     # -- the list and its files --
 
-    def make_list(self) -> dict[str, Any]:
+    def adult_allowed(self) -> bool:
+        """Whether films for adults may be named to a phone that asks for them: while
+        the films switch is on and the profile open in the app isn't a child's."""
+        return self.films and not self._child()
+
+    def make_list(self, *, adult: bool = False, device: str | None = None) -> dict[str, Any]:
         """The list of everything, made now. The files it names are remembered, to be
-        given out when they're asked for."""
+        given out when they're asked for.
+
+        `adult`: the phone asked for the films in the Movies folder's 18+ folder too
+        (`?adult=1`, 2026-10-17). They're named only when `adult_allowed`, and their
+        files are remembered for `device` alone; a list made without them forgets that
+        device's, so it can fetch none of them until it asks again."""
+        adult = adult and self.adult_allowed()
         found, files = the_list(
             self.lib, self.info, self._remembered,
-            films=config.media_folders() if self.films else None,
+            films=config.media_folders() if self.films else None, adult=adult,
         )  # fmt: skip
+        theirs = {file_id: one for file_id, one in files.items() if one.adult}
         with self._lock:
-            self._files = files
+            self._files = {file_id: one for file_id, one in files.items() if not one.adult}
             self._built_at = self._clock()
+            if device is not None:
+                if theirs:
+                    self._adult_files[device] = theirs
+                else:
+                    self._adult_files.pop(device, None)
         return found
 
-    def file(self, file_id: str) -> SharedFile | None:
+    def file(self, file_id: str, device: str | None = None) -> SharedFile | None:
         """The file a list named by this id, or None. Only a file the list names is
-        ever given out: no path comes from a phone."""
+        ever given out: no path comes from a phone. A film for adults only to `device`,
+        when the last list it was given named it, and while it may still have them."""
         with self._lock:
             found = self._files.get(file_id)
+            if found is None and device is not None:
+                found = self._adult_files.get(device, {}).get(file_id)
             stale = self._built_at is None or self._clock() - self._built_at > REBUILD_LEAST_S
+        if found is not None and found.adult and not self.adult_allowed():
+            return None  # the films switch went off, or a child's profile is open now
         if found is None and stale:
             # The phone's list may be newer than the one remembered here (the engine
             # has started again since), so the list is made again, but not every time.
+            # (Without the films for adults: those are named only when a phone asks.)
             self.make_list()
             with self._lock:
                 found = self._files.get(file_id)
@@ -1504,9 +1539,11 @@ class Share:
         """The films and episodes in the Movies folder, as the list's `movies` names them,
         without the videos folder's. The files it names are remembered, to be given out
         to a device of any profile when they're asked for."""
+        # Never the videos folder's, and never a film for adults (2026-10-17): the 18+
+        # folder is for a phone player that asks for it, not for a video app.
         found = [
             (entry, main) for entry, main in kept_media(config.media_folders())
-            if entry["kind"] != "video"
+            if entry["kind"] != "video" and not main.adult
         ]  # fmt: skip
         movies = [entry for entry, _ in found]
         with self._lock:
@@ -1577,7 +1614,7 @@ class Share:
                 if why is not None:
                     return 500, refusal("unavailable", why)
                 return 200, {"upload": upload_id, "have": 0, "already": True}
-            if not _room_for(about["size"] - have, about["size"], cache, movies):
+            if not tools.room_for(about["size"] - have, about["size"], cache, movies):
                 return 500, refusal(
                     "unavailable",
                     "There isn't room on the computer for that film just now. Make some "
@@ -1837,7 +1874,8 @@ class _Handler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         share = self.server.share
-        path = urlsplit(self.path).path
+        asked = urlsplit(self.path)
+        path = asked.path
         if not self._welcome():
             return
         header = self.headers.get("Authorization")
@@ -1867,8 +1905,10 @@ class _Handler(BaseHTTPRequestHandler):
             self._films()
             return
         if path == PREFIX + "library" and device is not None:  # this profile's devices only
+            # The films for adults only when asked for, exactly so (2026-10-17).
+            adult = parse_qs(asked.query).get(ADULT_QUERY) == ["1"]
             try:
-                found = share.make_list()
+                found = share.make_list(adult=adult, device=device["id"])
             except (MusicOrgError, OSError) as exc:
                 log.warning("sharing: the list couldn't be made: %s", exc)
                 self._answer(500, refusal(
@@ -1887,7 +1927,7 @@ class _Handler(BaseHTTPRequestHandler):
                 # list of everything named, for one of this profile's only.
                 shared = share.film_file(file_id, rebuild=False) if share.films else None
                 if shared is None and device is not None:
-                    shared = share.file(file_id)
+                    shared = share.file(file_id, device["id"])
                 if shared is None and share.films:
                     shared = share.film_file(file_id)
             except (MusicOrgError, OSError):

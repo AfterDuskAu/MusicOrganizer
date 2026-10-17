@@ -594,6 +594,18 @@ def test_a_film_is_loose_and_an_episode_is_in_its_shows_folder() -> None:
     assert kept(kind="movie", title="A Film", show="A Show", season=1, episode=1) == "A Film"
 
 
+def test_a_film_for_adults_is_loose_in_its_own_folder() -> None:
+    """The owner, 2026-10-17: what's downloaded from the Finder for adults goes in 18+."""
+    assert kept(kind="adult", title="A Film", year=2001) == "18+/A Film (2001)"
+    assert kept(kind="adult", title="A Film") == "18+/A Film"
+    # An episode, if one ever comes, keeps its show's name, with no folders of its own.
+    assert kept(kind="adult", title="Pilot", show="A Show", season=1, episode=2) == (
+        "18+/A Show S01E02 - Pilot"
+    )
+    assert kept(kind="adult", show="A Show", season=0, episode=3) == "18+/A Show S00E03"
+    assert naming.kept_place("adult", "  ")[1] == ""  # nothing to make a name from
+
+
 def test_only_whats_known_of_an_episode_is_written() -> None:
     assert kept(show="A Show", season=1, episode=2) == "Series/A Show/Season 1/A Show S01E02"
     assert kept(title="Recap", show="A Show", season=0, episode=3) == (
@@ -684,6 +696,12 @@ def test_on_windows_a_kept_path_fits_and_a_show_has_one_folder() -> None:
             {"kind": "series", "show": "A Show", "title": "Extra"},
         ),
         ("Series/A Show/A Show.mp4", {"kind": "series", "show": "A Show"}),
+        # Anything inside 18+ is for adults, and nothing more is read of it (2026-10-17).
+        ("18+/A Film (2001).mp4", {"kind": "adult"}),
+        ("18+/A Show S01E02 - Pilot.mp4", {"kind": "adult"}),
+        ("18+/Put Here/By Hand/A Film.mkv", {"kind": "adult"}),
+        ("18+.mp4", {"kind": "movie"}),
+        ("Old/18+/A Film.mp4", {"kind": "movie"}),
         # Files the owner put there under other names: the folder and "S01E02" are read.
         (
             "series/a.show/a.show.s02e07.1080p.web.mp4",

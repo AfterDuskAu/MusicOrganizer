@@ -57,6 +57,12 @@ def test_an_episode_and_a_downloaded_video_can_go_too(
     trash(places, clip)
     assert fake_trash.sent == [episode, clip]
     assert (places["movies"] / "Series" / "A Show" / "Season 1").is_dir()  # folders stay
+    # And a film from the Finder for adults, from Videos → 18+ (2026-10-17); its folder stays.
+    adult = places["movies"] / "18+" / "A Film (2001).mp4"
+    adult.parent.mkdir()
+    adult.write_bytes(b"three")
+    trash(places, adult)
+    assert fake_trash.sent[-1] == adult and adult.parent.is_dir()
 
 
 def test_a_videos_folder_chosen_elsewhere_counts(

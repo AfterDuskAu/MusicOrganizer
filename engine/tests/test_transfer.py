@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 from conftest import AudioFixtures
 
-from musicorg import config, fileops, library, listening, pipeline, scan, tags, transfer
+from musicorg import config, fileops, library, listening, naming, pipeline, scan, tags, transfer
 from musicorg.errors import FileOperationError, OutsideLibraryError, UserError
 from musicorg.index import open_index
 from musicorg.library import Library
@@ -45,6 +45,9 @@ def filled(lib: Library, audio: AudioFixtures, app_home: Path) -> dict[str, Any]
     (folders["movies"] / "A Film (2020).mp4").write_bytes(b"film" * 100)
     (folders["movies"] / "Series" / "A Show" / "A Show S01E01.mkv").write_bytes(b"episode")
     (folders["movies"] / "notes.txt").write_bytes(b"not a film")
+    # A film from the Finder for adults (2026-10-17): never in an export.
+    (folders["movies"] / naming.ADULT_DIR).mkdir()
+    (folders["movies"] / naming.ADULT_DIR / "A Film for Adults.mp4").write_bytes(b"adults")
     folders["media"].mkdir(parents=True, exist_ok=True)
     (folders["media"] / "A Talk.mp4").write_bytes(b"talk")
     return {"ids": [first, second], "playlist": made}

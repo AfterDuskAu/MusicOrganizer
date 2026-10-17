@@ -22,15 +22,30 @@ public enum VideoFiles {
         endings.contains(url.pathExtension.lowercased())
     }
 
+    /// The Movies folder's own folder for what's downloaded from the Finder for adults
+    /// (2026-10-17, the engine's kind "adult"). Listed on its own page, Videos → 18+, and
+    /// on no other: Videos → Movies leaves it out.
+    public static let adultFolderName = "18+"
+
+    public static func adultFolder(in movies: URL) -> URL {
+        movies.appendingPathComponent(adultFolderName, isDirectory: true)
+    }
+
     /// The video files in a folder and the folders inside it, by name. Hidden files,
     /// and what's inside a package (a Final Cut library, say), are left alone.
-    public static func inside(_ folder: URL) -> [File] { inside(folder, leavingOut: nil) }
+    public static func inside(_ folder: URL) -> [File] { inside(folder, leavingOut: []) }
 
     /// The same, without what's in one folder inside it (Videos, in Movies, which has a
     /// page of its own).
     public static func inside(_ folder: URL, leavingOut other: URL?) -> [File] {
-        let skipped = other.map { $0.standardizedFileURL.path }
+        inside(folder, leavingOut: other.map { [$0] } ?? [])
+    }
+
+    /// The same, without what's in any of these folders inside it (Videos, in Movies, and
+    /// its 18+ folder: each has a page of its own).
+    public static func inside(_ folder: URL, leavingOut others: [URL]) -> [File] {
         let top = folder.standardizedFileURL.path
+        let skipped = Set(others.map { $0.standardizedFileURL.path }.filter { $0 != top })
         let keys: [URLResourceKey] = [.isRegularFileKey, .fileSizeKey]
         guard
             let walker = FileManager.default.enumerator(
@@ -39,7 +54,7 @@ public enum VideoFiles {
         else { return [] }
         var found: [File] = []
         for case let url as URL in walker {
-            if let skipped, skipped != top, url.standardizedFileURL.path == skipped {
+            if skipped.contains(url.standardizedFileURL.path) {
                 walker.skipDescendants()
                 continue
             }

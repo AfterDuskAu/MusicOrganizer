@@ -621,6 +621,9 @@ struct ChannelsView: View {
 /// Channel): double-click plays it in the film player.
 struct VideoFileRow: View {
     let file: VideoFiles.File
+    /// False on Videos → 18+: nothing of a film played there is kept, not even where it
+    /// was got to (2026-10-17).
+    var remembering = true
     @Environment(AppModel.self) private var model
 
     var body: some View {
@@ -638,10 +641,10 @@ struct VideoFileRow: View {
                 .frame(width: 90, alignment: .trailing)
         }
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) { model.playFilm(file.url, title: file.name) }
+        .onTapGesture(count: 2) { model.playFilm(file.url, title: file.name, remembering: remembering) }
         .takesFirstClick()
         .contextMenu {
-            Button("Play") { model.playFilm(file.url, title: file.name) }
+            Button("Play") { model.playFilm(file.url, title: file.name, remembering: remembering) }
             Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([file.url]) }
             Divider()
             Button("Convert for Phones and Tablets") { model.convertFilm(file.url) }
@@ -1305,20 +1308,25 @@ struct MovieView: View {
                                         apart: apart, episodes: details?.videos)
                                 }
                                 model.play(
-                                    stream, title: playName, watching: apart ? nil : watched, episode: now)
+                                    stream, title: playName, watching: apart ? nil : watched, episode: now,
+                                    apart: apart)
                             }
                             .disabled(!stream.canPlay)
                             .help(stream.canPlay ? "Play it now" : "This one can't be played in the app yet")
-                            if stream.kind == "torrent" {
-                                let keeping = stream.infoHash.flatMap {
-                                    model.filmKeeps[$0.lowercased()]
-                                }
-                                if let hash = stream.infoHash, keeping?.isKeeping == true {
+                            // A torrent, or (2026-10-17, the owner: "add a way to download
+                            // from the porn finder. it only offers play") a plain web
+                            // address: the same button, followed the same way.
+                            if stream.canDownload, let id = stream.keepId {
+                                let keeping = model.filmKeeps[id]
+                                if keeping?.isKeeping == true {
                                     Button("Stop Downloading", systemImage: "xmark.circle") {
-                                        model.stopKeepingFilm(hash)
+                                        model.stopKeepingFilm(id)
                                     }
                                     .takesFirstClick(false)
-                                    .help("Stop fetching it. Nothing has been put in your Movies folder yet")
+                                    .help(
+                                        "Stop fetching it. Nothing has been put in your Movies folder yet"
+                                            + (stream.kind == "url"
+                                                ? "; what has arrived is kept for two days, so Download carries on" : ""))
                                 } else {
                                     Button("Download", systemImage: "arrow.down.circle") {
                                         model.keepFilm(
@@ -1328,6 +1336,7 @@ struct MovieView: View {
                                     .disabled(keeping != nil)
                                     .help(
                                         "Fetch the whole film and save it in your Movies folder"
+                                            + (apart ? "'s 18+ folder" : "")
                                             + (stream.sizeLabel.map { " (\($0))" } ?? ""))
                                 }
                             }
@@ -1337,7 +1346,7 @@ struct MovieView: View {
                         .help(
                             ([stream.name, stream.title].compactMap { $0 } + [stream.kindLabel])
                                 .joined(separator: " · "))
-                        if let line = stream.infoHash.flatMap({ model.filmKeeps[$0.lowercased()]?.keepLine }) {
+                        if let line = stream.keepId.flatMap({ model.filmKeeps[$0]?.keepLine }) {
                             Text(line).font(.callout).foregroundStyle(.secondary)
                         }
                     }
@@ -1421,9 +1430,15 @@ struct MovieView: View {
 
 /// Videos → Movies: the video files in this Mac's Movies folder, and any other file the
 /// owner opens. Double-click plays one in the film player. Nothing here is changed.
+///
+/// With `adult`, Videos → 18+ (2026-10-17): the same page for the Movies folder's 18+
+/// folder alone, what's downloaded from the Finder for adults, which Videos → Movies
+/// leaves out; with those downloads still under way at its top (they're not listed in
+/// Downloads), and nothing remembered of what's played there.
 struct MoviesView: View {
     /// False while another page is showing (`PageHost`): the folder isn't looked at then.
     var isActive = true
+    var adult = false
     @Environment(AppModel.self) private var model
     @State private var files: [VideoFiles.File] = []
     @State private var looked = false
@@ -1436,27 +1451,38 @@ struct MoviesView: View {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text("Movies").font(.title2.weight(.semibold)).heading()
+                        Text(adult ? "18+" : "Movies").font(.title2.weight(.semibold)).heading()
                         Text(count == 1 ? "1 file" : "\(count.formatted()) files")
                             .foregroundStyle(.secondary)
                     }
-                    Text("The video files in your Movies folder. Double-click one to play it.")
+                    Text(
+                        adult
+                            ? "What you've downloaded from the Porn Finder, in the 18+ folder in your Movies "
+                                + "folder. Double-click one to play it: nothing of it is remembered."
+                            : "The video files in your Movies folder. Double-click one to play it.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button("Open File…", systemImage: "folder") { openFile() }
-                    .help("Play a video file from anywhere on this Mac")
+                if !adult {
+                    Button("Open File…", systemImage: "folder") { openFile() }
+                        .help("Play a video file from anywhere on this Mac")
+                }
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
             Divider()
+            if adult { FilmKeeps(adult: true) }
             if count == 0 {
-                Text(looked ? "There are no video files in your Movies folder yet." : "Looking…")
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                Text(
+                    !looked ? "Looking…"
+                        : adult ? "Nothing has been downloaded from the Porn Finder yet."
+                        : "There are no video files in your Movies folder yet."
+                )
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                List(files) { VideoFileRow(file: $0) }
+                List(files) { VideoFileRow(file: $0, remembering: !adult) }
                     .scrollContentBackground(Theme.current.listBackground)
             }
         }
@@ -1472,7 +1498,7 @@ struct MoviesView: View {
         .task {
             // For checking the player without a click: MUSICORG_FILM=<file> plays it once,
             // silently; MUSICORG_FILM=torrent:<info-hash>:<file number> plays that torrent.
-            if let what = ProcessInfo.processInfo.environment["MUSICORG_FILM"], !model.film.isOpen {
+            if !adult, let what = ProcessInfo.processInfo.environment["MUSICORG_FILM"], !model.film.isOpen {
                 model.film.volume = 0
                 let parts = what.split(separator: ":").map(String.init)
                 if parts.count == 3, parts[0] == "torrent" {
@@ -1492,11 +1518,16 @@ struct MoviesView: View {
 
     /// Off the main thread: a big folder takes a moment to walk.
     private func look() async {
-        // Videos has a page of its own (Videos → Channel), so what's in it isn't listed here.
+        // Videos has a page of its own (Videos → Channel), and so does the 18+ folder
+        // (Videos → 18+), so what's in them isn't listed here.
         let movies = model.moviesFolder
         let videos = model.videosFolder
+        let adult = adult
         files = await Task.detached {
-            movies.map { VideoFiles.inside($0, leavingOut: videos) } ?? []
+            guard let movies else { return [] }
+            let theirs = VideoFiles.adultFolder(in: movies)
+            if adult { return VideoFiles.inside(theirs) }
+            return VideoFiles.inside(movies, leavingOut: [videos, theirs].compactMap { $0 })
         }.value
         looked = true
     }

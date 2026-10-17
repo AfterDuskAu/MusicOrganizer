@@ -9,7 +9,7 @@ place the owner chose, holding what they ticked:
     Music/...                   the library's songs, covers and lyrics, as they lie
     Music/Videos/...            the saved music videos
     Videos/...                  the videos kept outside the library
-    Movies/...                  the films kept (with Series/ and Anime/)
+    Movies/...                  the films kept (with Series/ and Anime/; never 18+/)
     records/state.json          the library's own records
     settings/addons.json        the owner's add-ons that need no set-up of their own
     settings/app.json           what the app handed over of its own settings
@@ -62,18 +62,19 @@ Tick = Callable[[int, int, str], None]
 File = tuple[Path, PurePosixPath]
 
 
-def _files(folder: Path, *, leaving_out: Path | None = None) -> list[File]:
-    """Every file under a folder that isn't junk, with its path inside it."""
+def _files(folder: Path, *, leaving_out: Iterable[Path] = ()) -> list[File]:
+    """Every file under a folder that isn't junk, with its path inside it, but for what's
+    in the folders `leaving_out`."""
     if not folder.is_dir():
         return []
-    skip = leaving_out.resolve() if leaving_out is not None else None
+    skips = [other.resolve() for other in leaving_out]
     found: list[File] = []
     for path in sorted(folder.rglob("*")):
         if not path.is_file() or path.is_symlink() or naming.is_junk(path.name):
             continue
         if any(part.startswith(".") for part in path.relative_to(folder).parts):
             continue  # a hidden file or folder (a temp file of a copy under way)
-        if skip is not None and naming.is_within(path.resolve(), skip):
+        if any(naming.is_within(path.resolve(), skip) for skip in skips):
             continue
         found.append((path, PurePosixPath(path.relative_to(folder).as_posix())))
     return found
@@ -106,7 +107,11 @@ def gather(lib: Library) -> dict[str, list[File]]:
         + [(path, PurePosixPath("Videos") / rel) for path, rel in _videos_only(_files(media))],
         "movies": [
             (path, PurePosixPath("Movies") / rel)
-            for path, rel in _videos_only(_files(movies, leaving_out=media))
+            # Never the films for adults (2026-10-17): they're only ever listed on the
+            # Mac's own 18+ page, and an export may be made from a child's profile.
+            for path, rel in _videos_only(
+                _files(movies, leaving_out=(media, movies / naming.ADULT_DIR))
+            )
         ],
     }
 
@@ -285,7 +290,8 @@ def import_profile(
     folders = config.media_folders()
     kept: list[tuple[Path, PurePosixPath, Path]] = []
     if "movies" in wanted:
-        kept += [(p, rel, folders["movies"]) for p, rel in _videos_only(_files(folder / "Movies"))]
+        films = _files(folder / "Movies", leaving_out=[folder / "Movies" / naming.ADULT_DIR])
+        kept += [(p, rel, folders["movies"]) for p, rel in _videos_only(films)]
     if "videos" in wanted:
         kept += [(p, rel, folders["media"]) for p, rel in _videos_only(_files(folder / "Videos"))]
     result["films"] = _keep(lib, folder, kept, folders, dry_run=dry_run)

@@ -51,6 +51,7 @@ from musicorg import (
     browse,
     convert,
     discover,
+    fetch,
     fileops,
     imports,
     kids,
@@ -316,7 +317,12 @@ class Server:
         # A child's profile: only clean songs are looked up. The app says so each time it
         # opens (`kids.set`); the engine keeps no "on" of its own.
         self._kids = {"on": False, "allow_explicit": False}
+        # Whether the app has said yet (2026-10-17): until it has, a film for adults is
+        # never named to a device, in case this is a child's profile.
+        self._kids_said = False
         self._films: torrents.Player | None = None  # films playing from torrents, if any
+        # Films being downloaded from a plugin's web address (2026-10-17), if any.
+        self._fetcher: fetch.Fetcher | None = None
         self._converter: convert.Converter | None = None  # a kept film being converted
         self._transfer = transfer.Runner()  # a profile's export or import under way
         self._relay: relay.Relay | None = None  # long videos' playlists, if any were asked for
@@ -401,6 +407,9 @@ class Server:
             "torrent.count": self.torrent_count,
             "torrent.keep": self.torrent_keep,
             "torrent.stop_keeping": self.torrent_stop_keeping,
+            "stream.keep": self.stream_keep,
+            "stream.status": self.stream_status,
+            "stream.stop": self.stream_stop,
             "profile.contents": self.profile_contents,
             "profile.export": self.profile_export,
             "profile.import": self.profile_import,
@@ -430,6 +439,10 @@ class Server:
         # And what arrived of a film a device was sending and had no part for two days.
         threading.Thread(
             target=sharing.sweep_uploads, args=(app_dirs().cache,), daemon=True, name="uploads"
+        ).start()
+        # And of a film downloaded from a plugin's address, untouched for two days.
+        threading.Thread(
+            target=fetch.sweep, args=(app_dirs().cache,), daemon=True, name="fetched"
         ).start()
         try:
             for raw in iter(self.reader.readline, b""):
@@ -519,6 +532,8 @@ class Server:
         spotify.cancel_sign_in()  # stop listening for a sign-in nobody finished
         self._stop_sharing()  # first of all: nothing is shared once the app has gone
         self._stop_films()  # and no torrent is left joined (what arrived stays its day)
+        if self._fetcher is not None:
+            self._fetcher.stop_all()  # nor any download from an address (what came is noted)
         if self._converter is not None:
             self._converter.stop()  # nor a film half converted
         if self._relay is not None:
@@ -1255,18 +1270,18 @@ class Server:
             raise RpcError(INVALID_PARAMS, f"parts should be any of {', '.join(transfer.PARTS)}.")
         return list(parts)
 
-    def torrent_keep(self, params: dict[str, Any]) -> dict[str, Any]:
-        """Keep a film in the Movies folder once all of it has arrived, or an episode
-        of a series or an anime in its show's folder there (`naming.kept_place`). Only
-        ever from the owner's click."""
+    @staticmethod
+    def _kept_place(params: dict[str, Any], movies: Path | None) -> tuple[tuple[str, ...], str]:
+        """Where a film the owner keeps goes in the Movies folder, from what `torrent.keep`
+        and `stream.keep` are told (`naming.kept_place`): its folders and its name. Kind
+        `adult` (2026-10-17) is a film from the Finder for adults, kept in `18+`."""
         title = need(params, "title", str).strip()
         year = (want(params, "year", str) or "").strip()
-        trackers = want(params, "trackers", list, []) or []
         kind = want(params, "kind", str) or naming.KEPT_MOVIE
         show = (want(params, "show", str) or "").strip()
         season, episode = want(params, "season", int), want(params, "episode", int)
         if kind not in naming.KEPT_KINDS:
-            raise RpcError(INVALID_PARAMS, "kind should be movie, series or anime.")
+            raise RpcError(INVALID_PARAMS, "kind should be movie, series, anime or adult.")
         if show and kind == naming.KEPT_MOVIE:
             raise RpcError(INVALID_PARAMS, "show is for a series or an anime: say which in kind.")
         if not show and (season is not None or episode is not None):
@@ -1275,15 +1290,23 @@ class Server:
             raise RpcError(INVALID_PARAMS, "season and episode should be whole numbers from 0.")
         if not title and not show:
             raise RpcError(INVALID_PARAMS, "title is empty.")
-        if not all(isinstance(t, str) for t in trackers):
-            raise RpcError(INVALID_PARAMS, "trackers should be a list of addresses.")
-        player = self._film_player()
         folder, name = naming.kept_place(
             kind, title, year=year if year.isdigit() and len(year) == 4 else None,
-            show=show, season=season, episode=episode, root=player.movies,
+            show=show, season=season, episode=episode, root=movies,
         )  # fmt: skip
         if not name:
             raise RpcError(INVALID_PARAMS, "That title can't be made into a file's name.")
+        return folder, name
+
+    def torrent_keep(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Keep a film in the Movies folder once all of it has arrived, or an episode
+        of a series or an anime in its show's folder there (`naming.kept_place`); a film
+        from the Finder for adults in its 18+ folder. Only ever from the owner's click."""
+        trackers = want(params, "trackers", list, []) or []
+        if not all(isinstance(t, str) for t in trackers):
+            raise RpcError(INVALID_PARAMS, "trackers should be a list of addresses.")
+        player = self._film_player()
+        folder, name = self._kept_place(params, player.movies)
         return player.keep(
             need(params, "info_hash", str), want(params, "file_index", int), trackers, name,
             folder=folder, convert=bool(want(params, "convert", bool, False)),
@@ -1319,6 +1342,51 @@ class Server:
                 self._films.close(info_hash)
         return {}
 
+    # -- methods: a film downloaded from a plugin's web address (2026-10-17) --
+
+    def _fetching(self) -> fetch.Fetcher:
+        if self._fetcher is None:
+            self._fetcher = fetch.Fetcher(
+                app_dirs().cache,
+                media_folders()["movies"],
+                forbidden=lambda: [self.lib.root] if self.lib is not None else [],
+            )
+        return self._fetcher
+
+    def stream_keep(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Download a film from a web address a plugin gave (a Stream of kind `url`) and
+        keep it in the Movies folder, filed as `torrent.keep` files one: a film from the
+        Finder for adults (kind `adult`) in its 18+ folder. Only ever from the owner's
+        click (or the app carrying on one it asked for before it was closed)."""
+        url = need(params, "url", str)
+        size = want(params, "size", int)
+        fetcher = self._fetching()
+        folder, name = self._kept_place(params, fetcher.movies)
+        return fetcher.keep(
+            url, name, folder=folder, convert=bool(want(params, "convert", bool, False)),
+            size=size if size is not None and size > 0 else None,
+        )  # fmt: skip
+
+    def _which_fetch(self, params: dict[str, Any]) -> str:
+        which = want(params, "id", str) or want(params, "url", str)
+        if not which:
+            raise RpcError(INVALID_PARAMS, "Say which download: its id, or its url.")
+        return which
+
+    def stream_status(self, params: dict[str, Any]) -> dict[str, Any]:
+        which = self._which_fetch(params)
+        if self._fetcher is None:
+            raise RpcError(USER_ERROR, "That film isn't being downloaded any more.")
+        return self._fetcher.status(which)
+
+    def stream_stop(self, params: dict[str, Any]) -> dict[str, Any]:
+        """The owner has changed their mind about a download. What arrived stays in the
+        app's cache for two days, so Download pressed again carries on from there."""
+        which = self._which_fetch(params)
+        if self._fetcher is not None:
+            self._fetcher.stop(which)
+        return {}
+
     # -- methods: a child's profile (2026-10-07) --
 
     def kids_set(self, params: dict[str, Any]) -> dict[str, Any]:
@@ -1327,8 +1395,14 @@ class Server:
         on = need(params, "on", bool)
         allow = on and bool(want(params, "allow_explicit", bool, False))
         self._kids = {"on": on, "allow_explicit": allow}
+        self._kids_said = True
         addons.set_for_child(on)  # and no add-on for adults only is in this profile's list
         return dict(self._kids)
+
+    def _maybe_child(self) -> bool:
+        """Whether this may be a child's profile: it is one, or the app hasn't said yet.
+        Then no film for adults is named to a device (`sharing`, 2026-10-17)."""
+        return bool(self._kids["on"]) or not self._kids_said
 
     def _clean(self, answer: dict[str, Any], key: str, note: str = "kids_note") -> dict[str, Any]:
         """A lookup's answer as a child's profile gets it: `answer[key]` with only clean
@@ -1368,6 +1442,7 @@ class Server:
                 watched=lambda whose: self.writer.notify("watching.changed", {"profile": whose}),
                 films=films is True,
                 awake=awake is not False,
+                child=self._maybe_child,
             )
             share.start()
             self._share = share

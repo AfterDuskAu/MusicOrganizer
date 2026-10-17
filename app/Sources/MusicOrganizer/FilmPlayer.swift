@@ -47,12 +47,15 @@ final class FilmPlayer {
     /// Open a film and start it, where it was left the last time if it was left part
     /// way. `address` is a file's or a web address; `key` is what the film is
     /// remembered by when its address isn't the same each time (a torrent's).
+    /// `remembering` false: nothing of it is kept, not even where it was got to, and it
+    /// starts at its beginning (2026-10-17: a film for adults).
     func open(
-        _ address: URL, title: String, key: String? = nil, fromStart: Bool = false, otherwiseAt: Double? = nil
+        _ address: URL, title: String, key: String? = nil, fromStart: Bool = false, otherwiseAt: Double? = nil,
+        remembering: Bool = true
     ) {
         close()
         self.title = title
-        remembered = key ?? (address.isFileURL ? address.path : address.absoluteString)
+        remembered = remembering ? key ?? (address.isFileURL ? address.path : address.absoluteString) : nil
         (tracks, looks, ended) = ([], 0, false)
         (paused, time, duration, buffering, problem) = (false, 0, 0, true, nil)
         guard let made = mpv_create() else {
@@ -97,7 +100,9 @@ final class FilmPlayer {
         set("volume", volume)
         // Where it was left this way; or, opened this way for the first time, where it was
         // left another (`otherwiseAt`).
-        if !fromStart, let place = remembered.flatMap(FilmPositions.saved().place(of:)) ?? otherwiseAt {
+        if !fromStart, remembering,
+            let place = remembered.flatMap(FilmPositions.saved().place(of:)) ?? otherwiseAt
+        {
             mpv_set_property_string(made, "start", String(Int(place)))
         }
         let location = address.isFileURL ? address.path : address.absoluteString
