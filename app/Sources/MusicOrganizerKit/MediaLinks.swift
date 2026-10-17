@@ -216,3 +216,99 @@ public struct PageFindings: Sendable {
         }
     }
 }
+
+/// How good a found video is, as far as can be told (the owner, 2026-10-18: "Is there any
+/// way to diferentiate which of the download links has the highest quality? And if so,
+/// sort by highest quality first. Showing how big the file is"): its picture's height, how
+/// big it is, and how long. A file's are read by the browser window as a browser reads a
+/// video's details before playing it, else its height is taken from its name; a stream's
+/// come from its list of sizes, its size reckoned from its bit rate and length.
+public struct MediaQuality: Equatable, Sendable {
+    public var height: Int?
+    public var bytes: Int?
+    public var seconds: Double?
+    /// `bytes` is reckoned (a stream's bit rate times its length), not said.
+    public var estimated: Bool
+
+    public init(height: Int? = nil, bytes: Int? = nil, seconds: Double? = nil, estimated: Bool = false) {
+        self.height = height
+        self.bytes = bytes
+        self.seconds = seconds
+        self.estimated = estimated
+    }
+
+    /// A stream's, from the size of it that's chosen (or its best).
+    public init(_ choice: StreamChoice) {
+        var bytes: Int?
+        if let bandwidth = choice.bandwidth, let seconds = choice.seconds, seconds > 0 {
+            bytes = Int(Double(bandwidth) / 8 * seconds)
+        }
+        self.init(height: choice.height, bytes: bytes, seconds: choice.seconds, estimated: true)
+    }
+
+    /// "1080p · 1.2 GB · 42:10"; "about 1.2 GB" when it's reckoned; "size not known" when
+    /// nothing says.
+    public var label: String {
+        var parts: [String] = []
+        if let height { parts.append("\(height)p") }
+        if let bytes, bytes > 0 {
+            let size = ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .file)
+            parts.append(estimated ? "about \(size)" : size)
+        } else {
+            parts.append("size not known")
+        }
+        if let seconds, seconds >= 1 { parts.append(Self.clock(seconds)) }
+        return parts.joined(separator: " · ")
+    }
+
+    /// "4:05", "1:02:03".
+    public static func clock(_ seconds: Double) -> String {
+        let whole = Int(seconds.rounded())
+        let (hours, minutes, rest) = (whole / 3600, whole / 60 % 60, whole % 60)
+        return hours > 0
+            ? String(format: "%d:%02d:%02d", hours, minutes, rest)
+            : String(format: "%d:%02d", minutes, rest)
+    }
+}
+
+extension MediaLinks {
+    /// A picture's height written in a video's address: "_1080p", "720P", "/1080/",
+    /// "1920x1080", "hd1080". Nil when it says none.
+    public static func heightNamed(_ url: URL) -> Int? {
+        let text = (url.path + "?" + (url.query ?? "")).lowercased()
+        let heights = "(4320|2160|1440|1080|720|576|540|480|432|360|288|240|180|144)"
+        let patterns = [
+            "\\d{3,4}x\(heights)(?![0-9])",
+            "(?<![0-9])\(heights)p(?![a-z0-9])",
+            "(?:hd|sd|fhd|uhd|q|h|res|quality)[_=-]?\(heights)(?![0-9])",
+            "[/_.=-]\(heights)(?=[/_.&-]|$)",
+        ]
+        for pattern in patterns {
+            guard let found = try? NSRegularExpression(pattern: pattern),
+                let match = found.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+                let range = Range(match.range(at: 1), in: text)
+            else { continue }
+            return Int(text[range])
+        }
+        return nil
+    }
+
+    /// Found videos, the best first: the sharpest picture, then the biggest, then the
+    /// longest; those whose height isn't known after those whose is, and those that can't
+    /// be saved (`last`) at the end. Otherwise in the order they were found.
+    public static func ranked(
+        _ media: [FoundMedia], by quality: [String: MediaQuality], last: Set<String> = []
+    ) -> [FoundMedia] {
+        func key(_ item: (offset: Int, element: FoundMedia)) -> (Int, Int, Int, Int, Int) {
+            let known = quality[item.element.id]
+            return (
+                last.contains(item.element.id) ? 1 : 0,
+                -(known?.height ?? -1),
+                -(known?.bytes ?? -1),
+                -Int(known?.seconds ?? -1),
+                item.offset
+            )
+        }
+        return media.enumerated().sorted { key($0) < key($1) }.map(\.element)
+    }
+}

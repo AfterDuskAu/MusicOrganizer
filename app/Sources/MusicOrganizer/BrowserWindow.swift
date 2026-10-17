@@ -107,6 +107,8 @@ final class PageBrowser {
     var chosen: [String: String] = [:]
     var problems: [String: String] = [:]
     var sizes: [String: Int] = [:]
+    /// How good each is, as far as can be told (2026-10-18): what the list is sorted by.
+    var quality: [String: MediaQuality] = [:]
     /// What's being saved, or was, by what it's found by.
     var saves: [String: BrowserSave] = [:]
     var name = ""
@@ -116,6 +118,9 @@ final class PageBrowser {
 
     @ObservationIgnored var frames: [String: WKFrameInfo] = [:]
     @ObservationIgnored private var reading: Set<String> = []
+    /// Videos waiting to have their picture size read, one at a time.
+    @ObservationIgnored private var toMeasure: [FoundMedia] = []
+    @ObservationIgnored private var measuring = false
     @ObservationIgnored private var tasks: [String: Task<Void, Never>] = [:]
     @ObservationIgnored private var engineIds: [String: String] = [:]
     @ObservationIgnored var downloads: [String: WKDownload] = [:]
@@ -192,6 +197,8 @@ final class PageBrowser {
         chosen = [:]
         problems = [:]
         sizes = [:]
+        quality = [:]
+        toMeasure = []
         reading = []
         frames = [:]
         name = ""
@@ -231,7 +238,13 @@ final class PageBrowser {
         do {
             switch media.kind {
             case .file:
-                if let size = try? await sizeOf(media) { sizes[media.id] = size }
+                // Its height from its name, until the browser has read it.
+                quality[media.id] = MediaQuality(height: MediaLinks.heightNamed(media.url))
+                if let size = try? await sizeOf(media) {
+                    sizes[media.id] = size
+                    quality[media.id]?.bytes = size
+                }
+                measure(media)
             case .hls:
                 let text = try await text(of: media.url, frame: media.frame)
                 switch try HLSList.read(text, base: media.url) {
@@ -243,23 +256,68 @@ final class PageBrowser {
                         for at in sizes.indices { sizes[at].seconds = parts.seconds }
                     }
                     choices[media.id] = sizes
+                    if let best = sizes.first { quality[media.id] = MediaQuality(best) }
                     // Each size's own list, found too, is the same video: not listed apart.
                     findings.leaveOut(Set(sizes.flatMap { [$0.list, $0.audioList] }.compactMap { $0?.absoluteString }))
                 case .parts(let parts):
                     choices[media.id] = [
                         StreamChoice(id: media.id, video: parts.all, seconds: parts.seconds)
                     ]
+                    // One size only, which the list doesn't name: the browser reads it.
+                    quality[media.id] = MediaQuality(seconds: parts.seconds)
+                    measure(media)
                     findings.leaveOut(Set(parts.all.map(\.url.absoluteString)))
                 }
             case .dash:
                 let text = try await text(of: media.url, frame: media.frame)
                 let found = try DASHList.read(text, base: media.url)
                 choices[media.id] = found
+                if let best = found.first { quality[media.id] = MediaQuality(best) }
                 findings.leaveOut(Set(found.flatMap { $0.video + $0.audio }.map(\.url.absoluteString)))
             }
         } catch {
             problems[media.id] = error.localizedDescription
         }
+    }
+
+    /// Have the browser read a video's picture size and length, one video at a time (a
+    /// page may name many).
+    private func measure(_ media: FoundMedia) {
+        toMeasure.append(media)
+        guard !measuring else { return }
+        measuring = true
+        Task {
+            while !toMeasure.isEmpty {
+                let next = toMeasure.removeFirst()
+                guard findings.media.contains(where: { $0.id == next.id }) else { continue }
+                let said = try? await web.callAsyncJavaScript(
+                    BrowserScript.measure, arguments: ["url": next.url.absoluteString],
+                    in: next.frame.flatMap { frames[$0] }, contentWorld: .page)
+                guard let found = said as? [String: Any], quality[next.id] != nil else { continue }
+                if let height = (found["height"] as? NSNumber)?.intValue, height > 0 {
+                    quality[next.id]?.height = height
+                }
+                if let seconds = (found["seconds"] as? NSNumber)?.doubleValue, seconds > 0 {
+                    quality[next.id]?.seconds = seconds
+                }
+            }
+            measuring = false
+        }
+    }
+
+    /// The videos found, the best first (the sharpest, then the biggest, then the
+    /// longest); those that can't be saved last.
+    var ranked: [FoundMedia] {
+        MediaLinks.ranked(findings.media, by: quality, last: Set(problems.keys))
+    }
+
+    /// The one marked as the best: the first, when its picture's height is known and it
+    /// can be saved.
+    var best: String? {
+        guard let first = ranked.first, quality[first.id]?.height != nil, problems[first.id] == nil else {
+            return nil
+        }
+        return first.id
     }
 
     // MARK: saving
@@ -707,7 +765,7 @@ struct FoundVideosPanel: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        let media = browser.findings.media
+        let media = browser.ranked
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 Text("Videos on this page").font(.headline)
@@ -719,7 +777,7 @@ struct FoundVideosPanel: View {
                 media.isEmpty
                     ? "Play the video on the page: Bear Media looks for it in the player, the page's "
                         + "requests and its code as it plays."
-                    : "Choose one, then Download. Keep this window open until it's saved."
+                    : "The best first. Choose one, then Download. Keep this window open until it's saved."
             )
             .font(.callout)
             .foregroundStyle(.secondary)
@@ -754,9 +812,12 @@ struct FoundVideosPanel: View {
         return VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline) {
                 Text(found.kindName).fontWeight(.medium)
-                if let size = browser.sizes[found.id] {
-                    Text(ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file))
-                        .foregroundStyle(.secondary)
+                if browser.best == found.id {
+                    Text("Highest quality")
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(.green.opacity(0.25), in: Capsule())
                 }
                 Spacer()
                 if save?.running == true {
@@ -765,6 +826,20 @@ struct FoundVideosPanel: View {
                     Button("Download") { browser.save(found) }
                         .disabled(found.kind != .file && (offered ?? []).isEmpty)
                 }
+            }
+            if let offered, offered.count > 1 {
+                Picker("Quality", selection: Binding(
+                    get: { browser.chosen[found.id] ?? offered[0].id },
+                    set: { browser.chosen[found.id] = $0 })
+                ) {
+                    ForEach(offered) { Text(MediaQuality($0).label).tag($0.id) }
+                }
+                .fixedSize()
+            } else if let known = browser.quality[found.id], browser.problems[found.id] == nil {
+                // A file's (or a stream with one size): its height, how big, how long.
+                Text(known.label).font(.callout)
+            } else if found.kind != .file && browser.problems[found.id] == nil {
+                Text("Reading the stream…").font(.callout).foregroundStyle(.secondary)
             }
             Text(found.url.host() ?? found.url.absoluteString)
                 .font(.caption)
@@ -775,19 +850,6 @@ struct FoundVideosPanel: View {
             Text("Found in " + found.found.sorted().joined(separator: ", "))
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            if let offered, offered.count > 1 {
-                Picker("Quality", selection: Binding(
-                    get: { browser.chosen[found.id] ?? offered[0].id },
-                    set: { browser.chosen[found.id] = $0 })
-                ) {
-                    ForEach(offered) { Text($0.label).tag($0.id) }
-                }
-                .fixedSize()
-            } else if let only = offered?.first {
-                Text(only.label).font(.callout).foregroundStyle(.secondary)
-            } else if found.kind != .file && browser.problems[found.id] == nil {
-                Text("Reading the stream…").font(.callout).foregroundStyle(.secondary)
-            }
             if let problem = browser.problems[found.id] {
                 Text(problem).font(.callout).foregroundStyle(.secondary)
             }

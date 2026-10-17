@@ -239,6 +239,33 @@ enum BrowserScript {
     }
     """#
 
+    /// A video's picture size and length, read as a browser reads them before playing it:
+    /// a video player is made, not shown or put on the page, told to load only the
+    /// video's details (`preload = metadata`), and let go. Null when the browser can't
+    /// read them within fifteen seconds. Argument: `url`.
+    static let measure = #"""
+    return await new Promise(done => {
+      const video = document.createElement('video');
+      let over = false;
+      const end = (found) => {
+        if (over) return;
+        over = true;
+        clearTimeout(timer);
+        try { video.removeAttribute('src'); video.load(); } catch (e) {}
+        done(found);
+      };
+      const timer = setTimeout(() => end(null), 15000);
+      video.muted = true;
+      video.preload = 'metadata';
+      video.addEventListener('loadedmetadata', () => end({
+        width: video.videoWidth || null, height: video.videoHeight || null,
+        seconds: isFinite(video.duration) && video.duration > 0 ? video.duration : null,
+      }));
+      video.addEventListener('error', () => end(null));
+      video.src = url;
+    });
+    """#
+
     /// Search the page again, everywhere, at once.
     static let searchAgain = "if (window.__bearMediaSearch) window.__bearMediaSearch();"
 }

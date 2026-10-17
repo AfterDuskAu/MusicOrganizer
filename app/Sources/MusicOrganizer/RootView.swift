@@ -847,10 +847,12 @@ struct MainView: View {
                     return
                 }
                 Bench.say("BENCH browserfound: \(browser.findings.media.count) found, protected: \(browser.findings.protected), page \(browser.title)")
-                for (at, found) in browser.findings.media.enumerated() {
+                for (at, found) in browser.ranked.enumerated() {
                     let offered = browser.choices[found.id]?.map(\.label).joined(separator: " | ") ?? "-"
+                    let best = browser.best == found.id ? " (highest quality)" : ""
                     Bench.say(
-                        "BENCH browserfound \(at): \(found.kindName) \(found.url.path) in [\(found.found.sorted().joined(separator: ", "))] "
+                        "BENCH browserfound \(at): \(found.kindName)\(best) \(browser.quality[found.id]?.label ?? "-") "
+                            + "\(found.url.path) in [\(found.found.sorted().joined(separator: ", "))] "
                             + "choices [\(offered)] size \(browser.sizes[found.id].map(String.init) ?? "-") "
                             + "problem \(browser.problems[found.id] ?? "-") save \(browser.saves[found.id]?.line ?? "-")")
                 }
@@ -858,10 +860,10 @@ struct MainView: View {
                 // One of them saved (its number in that list), into a place: as Download does.
                 let parts = step.name.dropFirst(12).split(separator: "@").map(String.init)
                 if let browser = model.newestBrowser, let at = Int(parts.first ?? ""),
-                    browser.findings.media.indices.contains(at)
+                    browser.ranked.indices.contains(at)
                 {
                     if parts.count > 1, let place = KeptPlace(rawValue: parts[1]) { browser.place = place }
-                    browser.save(browser.findings.media[at])
+                    browser.save(browser.ranked[at])
                 } else {
                     Bench.say("BENCH browsersave: nothing to save there")
                 }

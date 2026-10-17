@@ -76,6 +76,54 @@ final class BrowserFindingTests: XCTestCase {
         XCTAssertTrue(findings.protected)
     }
 
+    // MARK: which is best (2026-10-18)
+
+    func testAHeightWrittenInAnAddressIsRead() {
+        func height(_ text: String) -> Int? { MediaLinks.heightNamed(URL(string: text)!) }
+        XCTAssertEqual(height("https://a.test/v/film_1080p.mp4"), 1080)
+        XCTAssertEqual(height("https://a.test/v/FILM-720P.mp4"), 720)
+        XCTAssertEqual(height("https://a.test/videos/480/film.mp4"), 480)
+        XCTAssertEqual(height("https://a.test/v/film_1920x1080.mp4"), 1080)
+        XCTAssertEqual(height("https://a.test/v/film.mp4?quality=360"), 360)
+        XCTAssertEqual(height("https://a.test/v/hd1080/film.mp4"), 1080)
+        XCTAssertNil(height("https://a.test/v/film.mp4"))
+        XCTAssertNil(height("https://a.test/v/108007.mp4"))
+        XCTAssertNil(height("https://a.test/2024/10/film.mp4"))
+    }
+
+    func testAVideosQualityIsSaidInAWord() {
+        XCTAssertEqual(MediaQuality(height: 1080, bytes: 1_200_000_000, seconds: 2530).label, "1080p · 1.2 GB · 42:10")
+        XCTAssertEqual(MediaQuality(height: 720).label, "720p · size not known")
+        XCTAssertEqual(MediaQuality(bytes: 5_000_000, seconds: 3725).label, "5 MB · 1:02:05")
+        let choice = StreamChoice(id: "a", height: 1080, bandwidth: 4_000_000, seconds: 600)
+        XCTAssertEqual(MediaQuality(choice).label, "1080p · about 300 MB · 10:00")
+    }
+
+    func testTheBestComesFirstAndWhatCantBeSavedLast() {
+        func found(_ name: String, _ kind: MediaKind = .file) -> FoundMedia {
+            FoundMedia(url: URL(string: "https://a.test/\(name)")!, kind: kind)
+        }
+        let preview = found("preview.mp4")
+        let small = found("small.mp4")
+        let big = found("big.mp4")
+        let stream = found("master.m3u8", .hls)
+        let locked = found("locked.m3u8", .hls)
+        let unknown = found("what.mp4")
+        let quality: [String: MediaQuality] = [
+            preview.id: MediaQuality(height: 240, bytes: 900_000, seconds: 10),
+            small.id: MediaQuality(height: 720, bytes: 90_000_000),
+            big.id: MediaQuality(height: 1080, bytes: 1_000_000_000),
+            stream.id: MediaQuality(height: 1080, bytes: 2_000_000_000, estimated: true),
+            locked.id: MediaQuality(height: 2160),
+            unknown.id: MediaQuality(bytes: 5_000_000_000),
+        ]
+        let ranked = MediaLinks.ranked(
+            [preview, unknown, small, locked, big, stream], by: quality, last: [locked.id])
+        XCTAssertEqual(
+            ranked.map(\.url.lastPathComponent),
+            ["master.m3u8", "big.mp4", "small.mp4", "preview.mp4", "what.mp4", "locked.m3u8"])
+    }
+
     // MARK: HLS
 
     func testAnHLSMasterListsItsSizesSharpestFirstWithTheirSound() throws {
