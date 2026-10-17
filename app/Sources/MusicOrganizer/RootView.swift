@@ -10,7 +10,7 @@ struct RootView: View {
             // The bear, while the app gets ready (the owner, 2026-10-17); the page is made
             // under it, so it's there the moment the bear fades.
             if model.showingBear {
-                BearScene(frameRate: 45)
+                BearLayerScene()
                     .overlay(alignment: .bottom) { BearNote() }
                     .transition(.opacity)
                     .zIndex(1)

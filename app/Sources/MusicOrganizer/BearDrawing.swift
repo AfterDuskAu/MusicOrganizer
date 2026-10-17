@@ -10,9 +10,29 @@ import SwiftUI
 /// or a tablet. Measured off the owner's 256-point picture, so its shapes are given in
 /// those points and scaled to fit.
 enum BearDrawing {
-    /// The night sky behind the bear, from its top to its bottom (the owner's picture).
-    static let skyTop = Color(hex: 0x1F1F26)
-    static let skyBottom = Color(hex: 0x3C3C48)
+    /// The night sky behind the bear, from its top to its bottom (the owner's picture),
+    /// and the warm glow behind the bear, as 0xRRGGBB.
+    static let skyHex: (top: UInt32, bottom: UInt32) = (0x1F1F26, 0x3C3C48)
+    static let glowHex: UInt32 = 0xC9A27E
+    static let skyTop = Color(hex: skyHex.top)
+    static let skyBottom = Color(hex: skyHex.bottom)
+    /// Where the stars are, as parts of the sky's width and height, and how big.
+    static let stars: [(x: CGFloat, y: CGFloat, size: CGFloat)] = [
+        (0.14, 0.15, 1.6), (0.84, 0.12, 1.5), (0.09, 0.41, 1.2), (0.9, 0.32, 1.3),
+        (0.24, 0.07, 0.9), (0.68, 0.06, 1.0), (0.95, 0.6, 0.9), (0.05, 0.72, 1.0),
+        (0.31, 0.24, 0.8), (0.76, 0.22, 0.8), (0.58, 0.14, 0.7), (0.18, 0.88, 0.8),
+    ]
+    /// The ticket, its tile, and the play button's middle, in the picture's points.
+    static let ticketOuter = CGRect(x: 76, y: 150, width: 103, height: 73)
+    static let ticketTile = ticketOuter.insetBy(dx: 5.5, dy: 5.5)
+    static let discCentre = CGPoint(x: 128, y: 188)
+
+    /// How big the bear's square is in a scene of this size, taking `share` of its height.
+    /// On a screen held upright (a phone) it may be wider than the screen: only sky is cut
+    /// off at the sides.
+    static func side(in size: CGSize, share: CGFloat) -> CGFloat {
+        min(size.height * share, size.width * (size.height > size.width * 1.3 ? 1.2 : 0.9))
+    }
 
     private static let fur = Color(hex: 0xAB6F43)
     private static let furShade = Color(hex: 0x95603A)
@@ -41,8 +61,7 @@ enum BearDrawing {
         body.translateBy(x: 128, y: 256)
         body.scaleBy(x: 1 + pose.breath * 0.006, y: 1 + pose.breath * 0.014)
         body.translateBy(x: -128, y: -256)
-        body.fill(Path(ellipseIn: rect(128, 238, 74, 80)), with: .linearGradient(
-            Gradient(colors: [fur, furShade]), startPoint: CGPoint(x: 128, y: 170), endPoint: CGPoint(x: 128, y: 300)))
+        drawBody(in: body)
 
         // The head and its ears, swaying a little from the neck, and lifting as it breathes.
         var head = context
@@ -51,35 +70,94 @@ enum BearDrawing {
         head.translateBy(x: -128, y: -152)
         drawEar(in: head, x: 84, inner: 82, tilt: pose.twitch)
         drawEar(in: head, x: 172, inner: 174, tilt: 0)
-        head.fill(Path(ellipseIn: rect(128, 100, 63, 54)), with: .color(fur))
-        head.drawLayer { soft in
+        drawFace(in: head)
+        drawEye(in: head, x: 105, look: pose.look, blink: pose.blink)
+        drawEye(in: head, x: 151, look: pose.look, blink: pose.blink)
+
+        // The ticket, held up in front, rising and falling with the paws, a sheen passing
+        // over it now and then.
+        var held = context
+        held.translateBy(x: 0, y: pose.bob)
+        drawTicket(in: held)
+        if pose.shine > 0, pose.shine < 1 {
+            var sheen = held
+            sheen.clip(to: Path(roundedRect: ticketTile, cornerRadius: 7.5, style: .continuous))
+            drawBand(in: sheen, at: ticketTile.minX - 40 + (ticketTile.width + 80) * pose.shine)
+        }
+        drawPlayButton(in: held, centre: discCentre, spin: pose.spin)
+        drawPaw(in: held, x: 72.5, inward: 1)
+        drawPaw(in: held, x: 183.5, inward: -1)
+    }
+
+    // MARK: one part at a time
+
+    /// The bear's parts, each drawn on its own and still, for the loading screen to move
+    /// each in the window server (`BearLayers`): the same shapes as above.
+    enum Part: CaseIterable {
+        case body, leftEar, rightEar, head, eyes, lids, ticket, sheen, disc, leftPaw, rightPaw
+    }
+
+    /// Where a part is, in the picture's points, with room for its shadow or softness.
+    static func area(of part: Part) -> CGRect {
+        switch part {
+        case .body: CGRect(x: 50, y: 155, width: 156, height: 166)
+        case .leftEar: CGRect(x: 60, y: 38, width: 48, height: 48)
+        case .rightEar: CGRect(x: 148, y: 38, width: 48, height: 48)
+        case .head: CGRect(x: 60, y: 42, width: 136, height: 118)
+        case .eyes, .lids: CGRect(x: 94, y: 86, width: 68, height: 20)
+        case .ticket: CGRect(x: 62, y: 140, width: 132, height: 100)
+        case .sheen: CGRect(x: ticketTile.minX - 30, y: ticketTile.minY, width: 52, height: ticketTile.height)
+        case .disc: CGRect(x: 104, y: 164, width: 48, height: 50)
+        case .leftPaw: CGRect(x: 53, y: 167, width: 40, height: 48)
+        case .rightPaw: CGRect(x: 163, y: 167, width: 40, height: 48)
+        }
+    }
+
+    /// One part, still, in the picture's points: the eyes open, the lids shut, the sheen
+    /// at the start of its pass.
+    static func draw(_ part: Part, in context: GraphicsContext) {
+        switch part {
+        case .body: drawBody(in: context)
+        case .leftEar: drawEar(in: context, x: 84, inner: 82, tilt: 0)
+        case .rightEar: drawEar(in: context, x: 172, inner: 174, tilt: 0)
+        case .head: drawFace(in: context)
+        case .eyes: for x in [105.0, 151.0] { drawEye(in: context, x: x, look: .zero, blink: 0) }
+        case .lids: for x in [105.0, 151.0] { drawEye(in: context, x: x, look: .zero, blink: 1) }
+        case .ticket: drawTicket(in: context)
+        case .sheen: drawBand(in: context, at: area(of: .sheen).minX + 30)
+        case .disc: drawPlayButton(in: context, centre: discCentre, spin: 0)
+        case .leftPaw: drawPaw(in: context, x: 72.5, inward: 1)
+        case .rightPaw: drawPaw(in: context, x: 183.5, inward: -1)
+        }
+    }
+
+    // MARK: the parts
+
+    private static func drawBody(in context: GraphicsContext) {
+        context.fill(Path(ellipseIn: rect(128, 238, 74, 80)), with: .linearGradient(
+            Gradient(colors: [fur, furShade]), startPoint: CGPoint(x: 128, y: 170), endPoint: CGPoint(x: 128, y: 300)))
+    }
+
+    /// The head, with its cheeks, muzzle, nose and mouth: all but the eyes.
+    private static func drawFace(in context: GraphicsContext) {
+        context.fill(Path(ellipseIn: rect(128, 100, 63, 54)), with: .color(fur))
+        context.drawLayer { soft in
             soft.addFilter(.blur(radius: 1.6))
             soft.opacity = 0.5
             soft.fill(Path(ellipseIn: rect(90, 119, 10.5, 6.2)), with: .color(cheek))
             soft.fill(Path(ellipseIn: rect(166, 119, 10.5, 6.2)), with: .color(cheek))
         }
-        drawEye(in: head, x: 105, look: pose.look, blink: pose.blink)
-        drawEye(in: head, x: 151, look: pose.look, blink: pose.blink)
-        head.fill(Path(ellipseIn: rect(128, 126.5, 26.5, 18.5)), with: .color(light))
-        head.fill(Path(ellipseIn: rect(128, 117, 10, 6.6)), with: .color(ink))
-        head.fill(Path(ellipseIn: rect(124.2, 114.6, 2.8, 1.5)), with: .color(.white.opacity(0.45)))
+        context.fill(Path(ellipseIn: rect(128, 126.5, 26.5, 18.5)), with: .color(light))
+        context.fill(Path(ellipseIn: rect(128, 117, 10, 6.6)), with: .color(ink))
+        context.fill(Path(ellipseIn: rect(124.2, 114.6, 2.8, 1.5)), with: .color(.white.opacity(0.45)))
         var mouth = Path()
         mouth.move(to: CGPoint(x: 128, y: 122.5))
         mouth.addLine(to: CGPoint(x: 128, y: 129.5))
         mouth.move(to: CGPoint(x: 114.5, y: 129))
         mouth.addQuadCurve(to: CGPoint(x: 128, y: 129.5), control: CGPoint(x: 120.5, y: 138))
         mouth.addQuadCurve(to: CGPoint(x: 141.5, y: 129), control: CGPoint(x: 135.5, y: 138))
-        head.stroke(mouth, with: .color(ink), style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
-
-        // The ticket, held up in front, rising and falling with the paws.
-        var held = context
-        held.translateBy(x: 0, y: pose.bob)
-        drawTicket(in: held, spin: pose.spin, shine: pose.shine)
-        drawPaw(in: held, x: 72.5, inward: 1)
-        drawPaw(in: held, x: 183.5, inward: -1)
+        context.stroke(mouth, with: .color(ink), style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
     }
-
-    // MARK: the parts
 
     private static func drawEar(in context: GraphicsContext, x: CGFloat, inner: CGFloat, tilt: Double) {
         var ear = context
@@ -109,9 +187,9 @@ enum BearDrawing {
         }
     }
 
-    private static func drawTicket(in context: GraphicsContext, spin: Double, shine: Double) {
-        let outer = CGRect(x: 76, y: 150, width: 103, height: 73)
-        let tile = outer.insetBy(dx: 5.5, dy: 5.5)
+    /// The ticket: its frame and shadow, its tile and stitching (not the play button).
+    private static func drawTicket(in context: GraphicsContext) {
+        let (outer, tile) = (ticketOuter, ticketTile)
         let outerPath = Path(roundedRect: outer, cornerRadius: 11, style: .continuous)
         let tilePath = Path(roundedRect: tile, cornerRadius: 7.5, style: .continuous)
         // Its shadow, on the bear.
@@ -130,21 +208,20 @@ enum BearDrawing {
                     with: .color(frameLine.opacity(0.75)))
             }
         }
-        // A sheen that passes over it now and then.
-        if shine > 0, shine < 1 {
-            var sheen = context
-            sheen.clip(to: tilePath)
-            let x = tile.minX - 40 + (tile.width + 80) * shine
-            var band = Path()
-            band.move(to: CGPoint(x: x, y: tile.minY))
-            band.addLine(to: CGPoint(x: x + 16, y: tile.minY))
-            band.addLine(to: CGPoint(x: x - 8, y: tile.maxY))
-            band.addLine(to: CGPoint(x: x - 24, y: tile.maxY))
-            band.closeSubpath()
-            sheen.addFilter(.blur(radius: 3))
-            sheen.fill(band, with: .color(.white.opacity(0.32)))
-        }
-        drawPlayButton(in: context, centre: CGPoint(x: 128, y: 188), spin: spin)
+    }
+
+    /// The sheen's band of light, slanting, with `x` the top of its leading edge.
+    private static func drawBand(in context: GraphicsContext, at x: CGFloat) {
+        let tile = ticketTile
+        var sheen = context
+        var band = Path()
+        band.move(to: CGPoint(x: x, y: tile.minY))
+        band.addLine(to: CGPoint(x: x + 16, y: tile.minY))
+        band.addLine(to: CGPoint(x: x - 8, y: tile.maxY))
+        band.addLine(to: CGPoint(x: x - 24, y: tile.maxY))
+        band.closeSubpath()
+        sheen.addFilter(.blur(radius: 3))
+        sheen.fill(band, with: .color(.white.opacity(0.32)))
     }
 
     /// The play button, turning about its upright line like a coin spun on a table: its
@@ -278,11 +355,7 @@ struct BearScene: View {
         .ignoresSafeArea()
     }
 
-    /// How big the bear's square is. On a screen held upright (a phone) it may be wider
-    /// than the screen: only sky is cut off at the sides.
-    private func bearSide(in size: CGSize) -> CGFloat {
-        min(size.height * bearSize, size.width * (size.height > size.width * 1.3 ? 1.2 : 0.9))
-    }
+    private func bearSide(in size: CGSize) -> CGFloat { BearDrawing.side(in: size, share: bearSize) }
 
     /// The sky: dark at the top, lighter towards the bottom, a warm glow behind the bear,
     /// and a few stars that twinkle.
@@ -295,16 +368,10 @@ struct BearScene: View {
         let centre = CGPoint(x: size.width / 2, y: size.height - bearSide(in: size) * (1 - 110 / 256))
         let glow = 0.22 + 0.04 * sin(time * 2 * .pi / 6)
         context.fill(Path(all), with: .radialGradient(
-            Gradient(colors: [Color(hex: 0xC9A27E).opacity(glow), .clear]), center: centre,
+            Gradient(colors: [Color(hex: BearDrawing.glowHex).opacity(glow), .clear]), center: centre,
             startRadius: 0, endRadius: side * 0.5))
-        // Where the stars are, as parts of the sky's width and height, and how big.
-        let stars: [(CGFloat, CGFloat, CGFloat)] = [
-            (0.14, 0.15, 1.6), (0.84, 0.12, 1.5), (0.09, 0.41, 1.2), (0.9, 0.32, 1.3),
-            (0.24, 0.07, 0.9), (0.68, 0.06, 1.0), (0.95, 0.6, 0.9), (0.05, 0.72, 1.0),
-            (0.31, 0.24, 0.8), (0.76, 0.22, 0.8), (0.58, 0.14, 0.7), (0.18, 0.88, 0.8),
-        ]
         let dot = side / 256
-        for (index, star) in stars.enumerated() {
+        for (index, star) in BearDrawing.stars.enumerated() {
             let twinkle = 0.55 + 0.45 * sin(time * 2 * .pi / (2.3 + Double(index % 5) * 0.7) + Double(index) * 1.9)
             let r = star.2 * dot * 1.2
             context.fill(
@@ -316,7 +383,7 @@ struct BearScene: View {
 
 extension Color {
     /// A colour given as 0xRRGGBB.
-    fileprivate init(hex: UInt32) {
+    init(hex: UInt32) {
         self.init(
             red: Double((hex >> 16) & 0xFF) / 255, green: Double((hex >> 8) & 0xFF) / 255,
             blue: Double(hex & 0xFF) / 255)
