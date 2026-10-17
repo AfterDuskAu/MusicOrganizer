@@ -63,6 +63,18 @@ public enum NextEpisode {
         return first.flatMap { id in videos.first { $0.id == id } }
     }
 
+    /// The episode a click on a series in Home carries on with (2026-10-18): the one last
+    /// played when it isn't watched (one started and left before it was begun, the next
+    /// one started by itself, say); else `toWatch`'s. One left part way is played on from
+    /// where it was, before this is asked.
+    public static func toCarryOn(
+        from last: String?, in videos: [MediaDetails.Video], fresh: [String], finished: Finished,
+        today: String? = nil
+    ) -> MediaDetails.Video? {
+        if let last, !finished.contains(last), let it = videos.first(where: { $0.id == last }) { return it }
+        return toWatch(after: last, in: videos, fresh: fresh, finished: finished, today: today)
+    }
+
     /// The owner's rule for how the next episode is played: **the same quality from the
     /// same source**; failing that, **the next source that has that quality** (in the
     /// owner's order of add-ons); and failing that nothing, and the app opens the

@@ -745,7 +745,8 @@ final class AppModel {
     }
 
     /// A series from Home, between episodes (the owner, 2026-10-18): the episode to carry on
-    /// with (`NextEpisode.toWatch`: the one after the last played, else the first new one),
+    /// with (`NextEpisode.toCarryOn`: the one last played if it isn't watched, else the one
+    /// after it, else the first new one),
     /// played the way the last one was by the owner's rule (`NextEpisode`), as the player's
     /// Next Episode button does. A click, so a torrent is joined. One that can't be played
     /// that way, or whose last one's way isn't known (from a sync or an import), is opened
@@ -767,8 +768,8 @@ final class AppModel {
             guard isStillWanted(series.id, opened: opened) else { return }
             let today = String(ISO8601DateFormatter().string(from: Date()).prefix(10))
             guard let episodes,
-                let next = NextEpisode.toWatch(
-                    after: entry?.episodeId, in: episodes,
+                let next = NextEpisode.toCarryOn(
+                    from: entry?.episodeId, in: episodes,
                     fresh: seriesProgress.newEpisodes(series.id, finished: finished), finished: finished, today: today)
             else {
                 open(series)

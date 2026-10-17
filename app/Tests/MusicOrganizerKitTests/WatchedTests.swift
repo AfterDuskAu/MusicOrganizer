@@ -331,5 +331,13 @@ final class WatchedTests: XCTestCase {
             "s:1:4")
         // Nothing to carry on with.
         XCTAssertNil(NextEpisode.toWatch(after: "s:1:4", in: all, fresh: [], finished: done, today: today))
+        // A click on Home carries on with the one last played when it isn't watched (the
+        // next one, started by itself and left before it was begun), else as above.
+        var none = Finished()
+        none.mark("s:1:1", watched: true)
+        XCTAssertEqual(NextEpisode.toCarryOn(from: "s:1:2", in: all, fresh: [], finished: none, today: today)?.id, "s:1:2")
+        XCTAssertEqual(NextEpisode.toCarryOn(from: "s:1:1", in: all, fresh: [], finished: none, today: today)?.id, "s:1:2")
+        XCTAssertEqual(
+            NextEpisode.toCarryOn(from: nil, in: all, fresh: ["s:1:3"], finished: none, today: today)?.id, "s:1:3")
     }
 }
