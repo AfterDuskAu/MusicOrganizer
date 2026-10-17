@@ -189,7 +189,8 @@ def test_a_site_closed_to_this_connection_says_so_not_that_it_cant_be_reached() 
         "ERROR: [Example] 0123456789abc: Unable to download webpage: HTTP Error 410: Gone "
         "(caused by <HTTPError 410: Gone>)"
     )
-    assert "won't show its pages to this connection (HTTP 410)" in str(gone)
+    assert "wouldn't give that page to Bear Media (HTTP 410)" in str(gone)
+    assert "lets only web browsers in" in str(gone)  # with a VPN on, that was the reason
     assert "reached" not in str(gone) and "0123456789abc" not in str(gone)
     assert not gone.network  # the site answered: nothing of the network's to retry
     assert "HTTP 451" in str(said("ERROR: HTTP Error 451: Unavailable For Legal Reasons"))

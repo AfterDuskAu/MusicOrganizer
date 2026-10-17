@@ -2444,14 +2444,21 @@ def _page_problem(exc: BaseException, address: str) -> Exception:
         )
     answered = re.search(r"http error (\d{3})", low)
     code = int(answered[1]) if answered else None
-    if code in (410, 451):
-        # 2026-10-18: every page of a site answered 410 ("gone") with the owner's VPN off and
-        # opened with it on. A site that has closed to visitors from somewhere says so this
-        # way to every page, so it isn't taken for one video being gone.
+    if code == 451:
         return DownloadError(
-            f"{host} won't show its pages to this connection (HTTP {code}). A site answers "
-            "this way when it's closed to visitors from where the connection comes from. "
-            "Nothing was downloaded."
+            f"{host} won't show its pages to this connection (HTTP 451): it's closed to "
+            "visitors from where the connection comes from. Nothing was downloaded."
+        )
+    if code == 410:
+        # 2026-10-18: a site answered 410 ("gone") to every page in two ways. With the
+        # owner's VPN off, a browser was refused too: closed to where they are. With it on,
+        # a browser got the page and yt-dlp still got 410: the site lets in only what
+        # connects as a browser does (yt-dlp's own reader for it says it needs to
+        # imitate one). Either way it isn't one video being gone.
+        return DownloadError(
+            f"{host} wouldn't give that page to Bear Media (HTTP 410). A site answers this "
+            "way when it's closed to where the connection comes from, or when it lets only "
+            "web browsers in. Nothing was downloaded."
         )
     if code == 404 or any(s in low for s in ("not found", "has been removed", "unavailable")):
         return DownloadError(f"{host} doesn't have that video any more.")
