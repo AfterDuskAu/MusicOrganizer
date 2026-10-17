@@ -113,5 +113,125 @@ final class HomeWatchingTests: XCTestCase {
         XCTAssertTrue(SettingsCarrier.records.contains(Watchlist.key))
         XCTAssertTrue(SidebarRows.all.contains { $0.key == "watchlist" && $0.group == "Videos" })
     }
-}
 
+    // MARK: Continue Watching Series (the owner, 2026-10-18: "It should always be the one that was last watched")
+
+    private func show(_ id: String) -> MediaItem {
+        MediaItem(id: id, type: "series", name: "Show \(id)", poster: nil, posterShape: "poster", year: nil, rating: nil, genres: [])
+    }
+
+    private func at(_ minutes: Double) -> Date { Date(timeIntervalSince1970: 1_800_000_000 + minutes * 60) }
+
+    /// A series at one of its episodes ("tt2:1:3"), `seconds` of `length` into it, watched at minute `minute`.
+    private func episode(
+        _ series: String, _ season: Int, _ number: Int, seconds: Double = 0, length: Double = 0, minute: Double
+    ) -> WatchHistory.Entry {
+        var entry = WatchHistory.Entry(
+            id: series, kind: .series, name: "Show \(series)", detail: "S\(season) E\(number)", item: show(series),
+            seconds: seconds, length: length, at: at(minute))
+        entry.episodeId = "\(series):\(season):\(number)"
+        return entry
+    }
+
+    /// A series' episodes, season 1, each out long ago.
+    private func episodes(_ series: String, _ count: Int) throws -> [MediaDetails.Video] {
+        let list = (1...count).map {
+            #"{"id":"\#(series):1:\#($0)","title":"E\#($0)","season":1,"episode":\#($0),"released":"2020-01-0\#($0)T01:00:00.000Z"}"#
+        }
+        return try JSONDecoder().decode([MediaDetails.Video].self, from: Data(("[" + list.joined(separator: ",") + "]").utf8))
+    }
+
+    func testTheSeriesWatchedLastIsFirstInContinueWatching() throws {
+        var history = WatchHistory()
+        var finished = Finished()
+        var progress = SeriesProgress()
+        // An older series left part way through an episode, a day ago.
+        history.watched(episode("tt1", 1, 2, seconds: 600, length: 3000, minute: -1440))
+        // One the owner caught up with (its latest, episode 3, played to its end): nothing to carry on with.
+        finished.mark("tt3:1:3", watched: true, now: at(-600))
+        history.watched(episode("tt3", 1, 3, seconds: 2950, length: 3000, minute: -600))
+        progress.learned("tt3", episodes: try episodes("tt3", 3), finished: finished)
+        // One opened for a moment and left, nothing of it watched: not something being watched.
+        history.watched(episode("tt4", 1, 1, seconds: 2, length: 3000, minute: -300))
+        // The series being watched now: episodes 1 and 2 played to their end, one after the
+        // other, the place noted as each played.
+        for number in 1...2 {
+            let minute = Double(number * 30)
+            history.watched(episode("tt2", 1, number, minute: minute))
+            history.place("tt2", seconds: 2950, length: 3000, now: at(minute + 29))
+            XCTAssertTrue(finished.played("tt2:1:\(number)", to: 2950, of: 3000, now: at(minute + 29)))
+        }
+        progress.learned("tt2", episodes: try episodes("tt2", 8), finished: finished)
+        // Between episodes, the one it's at played to its end: still the first. (Before
+        // 2026-10-18 it wasn't in the row at all: only part way counted.)
+        XCTAssertEqual(history.continuing(finished: finished, progress: progress).map(\.id), ["tt2", "tt1"])
+        XCTAssertEqual(history.unfinished(.series).map(\.id), ["tt1"])
+        // Episode 3 started by itself, nothing known of it yet (no length): still the first.
+        history.watched(episode("tt2", 1, 3, minute: 90))
+        XCTAssertEqual(history.continuing(finished: finished, progress: progress).map(\.id), ["tt2", "tt1"])
+
+        // Reopened: the same order.
+        let name = "continue-watching-test-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: name))
+        defer { defaults.removePersistentDomain(forName: name) }
+        history.save(in: defaults)
+        history = WatchHistory.saved(in: defaults)
+        XCTAssertEqual(history.continuing(finished: finished, progress: progress).map(\.id), ["tt2", "tt1"])
+
+        // The older one played again from the row (the app stamps it as watched now): first.
+        var again = try XCTUnwrap(history.entries.first { $0.id == "tt1" })
+        again.at = at(120)
+        history.watched(again)
+        XCTAssertEqual(history.continuing(finished: finished, progress: progress).map(\.id), ["tt1", "tt2"])
+
+        // A sync from a paired video app that had the other series where it was earlier
+        // changes nothing; then one that watched it there later puts it first.
+        var pad = WatchHistory()
+        pad.watched(episode("tt2", 1, 2, seconds: 1500, length: 3000, minute: 60))
+        var list = Watchlist()
+        XCTAssertFalse(
+            WatchSync.merge(
+                WatchSync.state(watchlist: Watchlist(), finished: Finished(), history: pad), into: &list,
+                finished: &finished, history: &history))
+        XCTAssertEqual(history.continuing(finished: finished, progress: progress).map(\.id), ["tt1", "tt2"])
+        pad.watched(episode("tt2", 1, 3, seconds: 400, length: 3000, minute: 150))
+        WatchSync.merge(
+            WatchSync.state(watchlist: Watchlist(), finished: Finished(), history: pad), into: &list,
+            finished: &finished, history: &history)
+        XCTAssertEqual(history.continuing(finished: finished, progress: progress).map(\.id), ["tt2", "tt1"])
+        XCTAssertEqual(history.entries.first?.episodeId, "tt2:1:3")
+
+        // Where one has got to makes it the one watched last, though it was further back.
+        history.place("tt1", seconds: 700, length: 3000, now: at(160))
+        XCTAssertEqual(history.continuing(finished: finished, progress: progress).map(\.id), ["tt1", "tt2"])
+        // And once its latest episode out is watched, a series has nothing to carry on with.
+        history.watched(episode("tt2", 1, 8, minute: 170))
+        history.place("tt2", seconds: 2990, length: 3000, now: at(199))
+        XCTAssertTrue(finished.played("tt2:1:8", to: 2990, of: 3000, now: at(199)))
+        progress.finished("tt2:1:8", of: "tt2")
+        XCTAssertEqual(history.continuing(finished: finished, progress: progress).map(\.id), ["tt1"])
+    }
+
+    func testAHistoryKeptOutOfOrderIsReadLatestFirst() {
+        // Kept before 2026-10-18, a series played again from Continue Watching could be at
+        // the front with the time it was watched before: read back, it's put in its place.
+        let entries = [
+            episode("tt1", 1, 1, minute: 10), episode("tt2", 1, 1, minute: 30), episode("tt3", 1, 1, minute: 30),
+        ]
+        XCTAssertEqual(WatchHistory(entries).entries.map(\.id), ["tt2", "tt3", "tt1"])  // a tie keeps its order
+    }
+
+    func testAKitsuSeriesIsBetweenEpisodesToo() {
+        // Kitsu's ids have a colon of their own ("kitsu:7442", its episodes "kitsu:7442:2").
+        var history = WatchHistory()
+        var entry = WatchHistory.Entry(
+            id: "kitsu:7442", kind: .series, name: "An Anime", item: show("kitsu:7442"), seconds: 1400,
+            length: 1440, at: at(0))
+        entry.episodeId = "kitsu:7442:2"
+        history.watched(entry)
+        var finished = Finished()
+        XCTAssertTrue(history.continuing(finished: finished, progress: SeriesProgress()).isEmpty)
+        finished.mark("kitsu:7442:2", watched: true, now: at(0))
+        XCTAssertEqual(history.continuing(finished: finished, progress: SeriesProgress()).map(\.id), ["kitsu:7442"])
+    }
+}

@@ -563,6 +563,12 @@ final class AppModel {
         UserDefaults.standard.set(stash, forKey: Self.settingsKey(id))
     }
 
+    /// Home's Continue Watching Series: part way through an episode, or between episodes
+    /// and not caught up; the one watched last first (`WatchHistory.continuing`).
+    var continuingSeries: [WatchHistory.Entry] {
+        history.continuing(finished: finished, progress: seriesProgress)
+    }
+
     /// The owner's series: on the Watchlist, hearted, or watched. The ones the Watchlist
     /// and the calendar keep up with.
     var ownSeries: [MediaItem] {
@@ -665,6 +671,20 @@ final class AppModel {
     /// left: `FilmPositions`); one whose way wasn't remembered opens its page instead.
     /// This is the owner's click on that film, as a click on Play on its page is.
     func resume(_ entry: WatchHistory.Entry) {
+        // A series between episodes, the one it's at played to its end: on to the next
+        // episode, on its series' page with its ways to play showing, not the same one
+        // again (`WatchHistory.continuing`).
+        if entry.kind == .series, !entry.isUnfinished, let item = entry.item, let id = entry.episodeId,
+            entry.progress >= Finished.mark || finished.contains(id)
+        {
+            let today = String(ISO8601DateFormatter().string(from: Date()).prefix(10))
+            if let next = seriesEpisodes[item.id].flatMap({ NextEpisode.after(id, in: $0, today: today) }) {
+                openEpisode(next.id, of: item)
+            } else {
+                open(item)
+            }
+            return
+        }
         if entry.kind != .video {
             if let stream = entry.stream, stream.canPlay {
                 // An episode played again leads on to the one after it, as from its page.
@@ -1440,6 +1460,10 @@ final class AppModel {
             if var entry {
                 (entry.stream, entry.playName) = (stream, title)
                 (entry.episodeId, entry.source) = (episode?.episodeId, episode?.played.addonId)
+                // Watched now: one played again from Continue Watching came with the time
+                // it was last watched, and a sync, which goes by that time, put it back
+                // behind the others (2026-10-18).
+                entry.at = Date()
                 watching(entry)
             }
             // Nothing of a film from the Finder kept apart is remembered, even where

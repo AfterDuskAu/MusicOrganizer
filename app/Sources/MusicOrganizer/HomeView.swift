@@ -356,8 +356,10 @@ private struct HomeRow: View {
     private var films: some View {
         switch section.kind {
         case "continue", "recent":
-            let entries = (section.kind == "continue"
-                ? model.history.unfinished(historyKind) : model.history.recent(historyKind))
+            // A series is carried on with between episodes too, the one watched last first
+            // (`WatchHistory.continuing`); a film only part way through.
+            let continuing = historyKind == .series ? model.continuingSeries : model.history.unfinished(historyKind)
+            let entries = (section.kind == "continue" ? continuing : model.history.recent(historyKind))
                 .filter { $0.item != nil }
             if entries.isEmpty {
                 note(

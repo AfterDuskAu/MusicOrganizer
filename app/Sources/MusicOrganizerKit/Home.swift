@@ -255,7 +255,13 @@ public struct WatchHistory: Equatable, Sendable {
     public static let most = 1000
     public private(set) var entries: [Entry]
 
-    public init(_ entries: [Entry] = []) { self.entries = entries }
+    /// The entries, put in order of when each was last watched, the latest first (a tie
+    /// keeps the order given): what Continue Watching and Recently Watched go by.
+    public init(_ entries: [Entry] = []) {
+        self.entries = entries.enumerated()
+            .sorted { ($0.element.at, $1.offset) > ($1.element.at, $0.offset) }
+            .map(\.element)
+    }
 
     /// Something was started, or has moved on: it goes to the front. An entry for the
     /// same thing keeps its place in the film if the new one doesn't know it yet; a
@@ -272,10 +278,14 @@ public struct WatchHistory: Equatable, Sendable {
         if entries.count > Self.most { entries.removeLast(entries.count - Self.most) }
     }
 
-    /// Where something has got to, without moving it in the list.
+    /// Where something has got to. It's being watched now, so it's the one watched last:
+    /// it goes before everything watched earlier (2026-10-18; it used to keep its place,
+    /// and a sync or an import, which go by when each was watched, moved it).
     public mutating func place(_ id: String, seconds: Double, length: Double, now: Date = Date()) {
         guard length > 0, let index = entries.firstIndex(where: { $0.id == id }) else { return }
-        (entries[index].seconds, entries[index].length, entries[index].at) = (seconds, length, now)
+        var entry = entries.remove(at: index)
+        (entry.seconds, entry.length, entry.at) = (seconds, length, now)
+        entries.insert(entry, at: entries.firstIndex { $0.at <= now } ?? entries.endIndex)
     }
 
     public mutating func forget(_ id: String) { entries.removeAll { $0.id == id } }
@@ -302,6 +312,31 @@ public struct WatchHistory: Equatable, Sendable {
     /// lists gave them: the Watched list of Movie Finder and Series Finder.
     public func watched(_ kind: Entry.Kind) -> [MediaItem] { recent(kind).compactMap(\.item) }
     public func unfinished(_ kind: Entry.Kind) -> [Entry] { recent(kind).filter(\.isUnfinished) }
+
+    /// Home's Continue Watching Series: the series to carry on with, the one watched last
+    /// first (the owner, 2026-10-18: "It should always be the one that was last watched").
+    /// One part way through an episode, as a film is; and one between episodes, that has
+    /// an episode played to its end and isn't caught up with its latest episode out
+    /// (`SeriesProgress`): the episode it's at was finished, or is the next one, not begun
+    /// yet. Before this a series between episodes left the row, so the one being watched
+    /// an episode after another, the next starting by itself, was hardly ever in it.
+    public func continuing(finished: Finished, progress: SeriesProgress) -> [Entry] {
+        // The series with an episode played to its end. An episode's id is its series'
+        // and then its season and number ("tt0944947:1:2"; Kitsu's "kitsu:7442:2"), so
+        // its series' id is the start of it, up to one of its colons.
+        var begun = Set<String>()
+        for episode in finished.days.keys {
+            var start = episode[...]
+            while let colon = start.lastIndex(of: ":") {
+                start = start[..<colon]
+                begun.insert(String(start))
+            }
+        }
+        return recent(.series).filter { entry in
+            entry.isUnfinished
+                || (begun.contains(entry.id) && !progress.isWatched(entry.id, finished: finished))
+        }
+    }
 
     public static let key = "watchHistory"
 

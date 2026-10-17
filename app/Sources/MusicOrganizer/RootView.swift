@@ -941,7 +941,8 @@ struct MainView: View {
                 Bench.say(
                     "BENCH records: \(model.profiles.current.name): watchlist \(model.watchlist.items.map(\.id)), "
                         + "finished \(model.finished.days.count), history \(model.history.entries.count), "
-                        + "favourites \(model.mediaFavourites.items.count), home rows \(model.homeLayout.shown.count)")
+                        + "favourites \(model.mediaFavourites.items.count), home rows \(model.homeLayout.shown.count), "
+                        + "continue series \(model.continuingSeries.prefix(5).map(\.id))")
             } else if step.name == "stremio=read" {
                 // What Stremio on this Mac remembers, read (only read) and written out.
                 model.stremio.read()
@@ -958,7 +959,7 @@ struct MainView: View {
                     "BENCH stremio: watchlist \(model.watchlist.items.count), finished \(model.finished.days.count), "
                         + "history \(model.history.entries.count), to watch \(model.toWatch("series").count) series "
                         + "\(model.toWatch("movie").count) movies, watched \(model.watchedItems("series").count) series "
-                        + "\(model.watchedItems("movie").count) movies, continue \(model.history.unfinished(.series).count) "
+                        + "\(model.watchedItems("movie").count) movies, continue \(model.continuingSeries.count) "
                         + "series \(model.history.unfinished(.movie).count) movies")
             } else if step.name == "closefilm" {
                 model.closeFilm()
