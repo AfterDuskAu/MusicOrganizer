@@ -155,9 +155,11 @@ final class AppModel {
     /// The films being kept, or just kept, that Downloads lists: what each was asked
     /// for as, in the order asked. Not the ones kept from the Finder for adults.
     private(set) var listedKeeps: [PendingKeeps.Keep] = []
-    /// Goes up each time a film or a video has been kept, so Videos → Movies looks at
-    /// its folders again.
+    /// Goes up each time a film or a video has been kept, or moved to the Trash, so
+    /// Videos → Movies looks at its folders again.
     private(set) var keptArrived = 0
+    /// A video file the owner asked to move to the Trash, waiting for their yes.
+    var trashingFile: VideoFiles.File?
     /// What a video file's row says about being converted for phones and tablets, by the
     /// file's path: "Converting… 42%", "Converted", or why it wasn't.
     private(set) var conversionNotes: [String: String] = [:]
@@ -200,6 +202,27 @@ final class AppModel {
     /// A page to open in the sidebar, asked for from somewhere else in the app (Artist
     /// Info on a song). The main view opens it and clears this.
     var goTo: SidebarItem?
+    /// How many times each page's row in the sidebar has been clicked, each page's count
+    /// on its own, so a click tells only the page clicked.
+    @ObservationIgnored private var sidebarClicks: [SidebarItem: SidebarClicks] = [:]
+
+    /// A row of the sidebar clicked (or Home's View More, which is a way to the same page).
+    /// A Finder puts its search away and shows its lists again, with the genres chosen
+    /// before (the owner, 2026-10-17: "clicking Series Finder after a search should move
+    /// it back to series finder, it stays on the searched platform until it's manually
+    /// erased"). Whether its page was showing or not: a page kept out of the window
+    /// (`PageHost`) is as it was left, search and all, until it's told.
+    func clickedInSidebar(_ entry: SidebarItem) {
+        clicks(on: entry).count += 1
+    }
+
+    /// The clicks on one page's row, for that page to watch.
+    func clicks(on entry: SidebarItem) -> SidebarClicks {
+        if let made = sidebarClicks[entry] { return made }
+        let made = SidebarClicks()
+        sidebarClicks[entry] = made
+        return made
+    }
 
     // MARK: Home (the owner's drawing, 2026-10-08)
 
@@ -1421,6 +1444,24 @@ final class AppModel {
             } catch {
                 conversionNotes[path] = error.localizedDescription
             }
+        }
+    }
+
+    /// A video file's menu, after the owner's yes: the file goes to the Trash, from
+    /// Videos → Movies or the downloaded videos under Videos → Channel (the owner,
+    /// 2026-10-17: "should be able to right click and delete source material"). The
+    /// engine moves it (`media.trash`), only ever to the Trash and only from the Movies
+    /// or the videos folder; the lists then look at their folders again.
+    func trashMedia(_ file: VideoFiles.File) {
+        let path = file.url.path
+        Task {
+            do {
+                _ = try await ask("media.trash", ["path": path], as: Empty.self)
+                conversionNotes[path] = nil
+            } catch {
+                notice = error.localizedDescription
+            }
+            keptArrived += 1  // gone, or (it was gone already) not there to list
         }
     }
 
@@ -4020,6 +4061,14 @@ final class AppModel {
     private var appVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.2.0"
     }
+}
+
+/// The clicks on one row of the sidebar (`AppModel.clickedInSidebar`): watched by that
+/// row's page alone, so a click on one row doesn't make every other page work.
+@MainActor
+@Observable
+final class SidebarClicks {
+    var count = 0
 }
 
 struct NamePrompt: Identifiable {

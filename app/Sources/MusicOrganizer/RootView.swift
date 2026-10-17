@@ -617,12 +617,17 @@ struct MainView: View {
     /// did nothing but bring it forward, and wanted a second click (found 2026-10-09).
     /// So the row takes the click itself, across its whole width, and opens its page;
     /// with the app in front the list picks the row as well, which comes to the same.
+    /// The page is told of the click too: a Finder puts its search away (2026-10-17).
     private func row(_ entry: SidebarItem, named name: String? = nil, inset: CGFloat = 0) -> some View {
         Label(name ?? entry.title, systemImage: entry.symbol)
             .padding(.leading, inset)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
-            .simultaneousGesture(TapGesture().onEnded { item = entry })
+            .simultaneousGesture(
+                TapGesture().onEnded {
+                    item = entry
+                    model.clickedInSidebar(entry)
+                })
             .takesFirstClick()
     }
 
@@ -740,6 +745,36 @@ struct MainView: View {
                 model.searchText = words
             } else if step.name.hasPrefix("finder=") {
                 model.youtubeQuery = String(step.name.dropFirst(7))
+            } else if step.name.hasPrefix("type=") {
+                // Typed as a hand types: a letter, then the time to the next one.
+                let letters = step.name.dropFirst(5).map(String.init)
+                for letter in letters {
+                    if !Bench.typeLetter(letter) {
+                        Bench.say("BENCH type: no search box is showing")
+                        break
+                    }
+                    try? await Task.sleep(for: .milliseconds(150))
+                }
+                Bench.say("BENCH type: \(letters.count) letters")
+            } else if step.name.hasPrefix("trash=") {
+                // The video file of this name in the Movies folder sent to the Trash: what
+                // Move to Trash… does once the owner has said yes. Only ever with a scratch
+                // Movies folder, and an engine whose Trash is a stand-in.
+                let name = String(step.name.dropFirst(6))
+                let movies = model.moviesFolder
+                let files = await Task.detached { movies.map(VideoFiles.inside) ?? [] }.value
+                if let file = files.first(where: { $0.url.lastPathComponent == name }) {
+                    model.trashMedia(file)
+                } else {
+                    Bench.say("BENCH trash: there's no \(name) in the Movies folder")
+                }
+            } else if step.name == "lists" {
+                let media = model.media
+                for (kind, list) in [("movies", media.films), ("series", media.series), ("anime", media.anime)] {
+                    Bench.say(
+                        "BENCH lists: \(kind) shows \(list.shownFor ?? "nothing")\(list.working ? " (asking)" : ""), "
+                            + "\(list.items.count) titles: \(list.items.prefix(4).map(\.name).joined(separator: ", "))")
+                }
             } else if step.name == "putback" {
                 // The newest song in Settings → Deleted Items put back: its Undo.
                 if let newest = model.removedLog.first(where: \.canPutBack) {
@@ -967,9 +1002,9 @@ struct PageView: View {
         case .videoFinder:
             VideoFinderView()
         case .channels:
-            ChannelsView()
+            ChannelsView(isActive: active)
         case .movies:
-            MoviesView()
+            MoviesView(isActive: active)
         case .watchlist:
             WatchlistView()
         case .calendar:
@@ -1267,6 +1302,23 @@ private struct DeletingQuestions: ViewModifier {
                 Text(
                     "It goes to the Trash with its lyrics, and comes off your playlists and "
                         + "favourites. You can download it again.")
+            }
+            // A video file in the Movies folder or the videos folder (2026-10-17): only
+            // to the Trash, where the Finder can put it back.
+            .confirmationDialog(
+                "Move “\(model.trashingFile?.url.lastPathComponent ?? "")” to the Trash?",
+                isPresented: Binding(
+                    get: { model.trashingFile != nil },
+                    set: { if !$0 { model.trashingFile = nil } })
+            ) {
+                Button("Move to Trash", role: .destructive) {
+                    if let file = model.trashingFile { model.trashMedia(file) }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text(
+                    "The file itself goes to the Trash, and leaves the app's lists. The Finder can "
+                        + "put it back from the Trash.")
             }
             .confirmationDialog(
                 Self.question(model.removingDownloads ?? [], fromLibrary: true),

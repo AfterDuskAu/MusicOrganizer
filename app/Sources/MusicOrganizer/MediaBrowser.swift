@@ -15,10 +15,37 @@ final class MediaList {
     private(set) var shownFor: String?
     /// Where the next page begins, as the engine said.
     private var cursor = 0
+    /// The newest asking, and what it's for: an answer that comes after a later asking
+    /// began is left unshown (`Askings`).
+    @ObservationIgnored private var askings = Askings()
 
     /// Back to nothing: another profile is in use now.
     func reset() {
         (items, more, working, problem, shownFor, cursor) = ([], false, false, nil, nil, 0)
+        askings = Askings()
+    }
+
+    /// A new asking for `wanted`, or nil when there's no need: the same is on its way,
+    /// or on show already. Show More (`adding`) waits for whatever is being asked.
+    private func begin(_ wanted: String, adding: Bool = false) -> Int? {
+        if adding {
+            guard !working else { return nil }
+        } else if askings.asking == wanted || (!askings.isAsking && wanted == shownFor && problem == nil) {
+            return nil
+        }
+        working = true
+        problem = nil
+        return askings.begin(wanted)
+    }
+
+    /// The asking with this ticket has its answer: true if it's still the one wanted
+    /// (the page is then marked as showing it), false if a later one has taken over.
+    private func end(_ ticket: Int, showing wanted: String) -> Bool {
+        guard askings.isNewest(ticket) else { return false }
+        askings.end(ticket)
+        shownFor = wanted
+        working = false
+        return true
     }
 
     /// Ask for the first page, or with `adding` for the next one.
@@ -27,10 +54,8 @@ final class MediaList {
         search: String = "", also: String = "", adding: Bool = false
     ) async {
         let wanted = "\(addon.id)|\(catalog.type)|\(catalog.id)|\(genre ?? "")|\(search)|\(also)"
-        if working || (!adding && wanted == shownFor && problem == nil) { return }
-        working = true
-        problem = nil
-        if !adding { (items, cursor) = ([], 0) }
+        guard let ticket = begin(wanted, adding: adding) else { return }
+        if !adding { (items, cursor, more) = ([], 0, false) }
         var asked: [String: Any] = ["addon_id": addon.id, "type": catalog.type, "id": catalog.id]
         if let genre { asked["genre"] = genre }
         if !search.isEmpty { asked["search"] = search }
@@ -38,8 +63,15 @@ final class MediaList {
         // A second genre: only what's tagged with both (the engine does the sifting).
         let both = genre != nil && !also.isEmpty
         if both { asked["also"] = [also] }
+        let answer: Result<CatalogAnswer, Error>
         do {
-            let found = try await model.ask("addon.catalog", asked, as: CatalogAnswer.self)
+            answer = .success(try await model.ask("addon.catalog", asked, as: CatalogAnswer.self))
+        } catch {
+            answer = .failure(error)
+        }
+        guard end(ticket, showing: wanted) else { return }
+        switch answer {
+        case .success(let found):
             let known = Set(items.map(\.id))
             let fresh = found.items.filter { !known.contains($0.id) }
             items += fresh
@@ -52,11 +84,9 @@ final class MediaList {
                     ? "Nothing with both genres near the top of the list. Try another pair."
                     : "Nothing was found."
             }
-        } catch {
+        case .failure(let error):
             problem = error.localizedDescription
         }
-        shownFor = wanted
-        working = false
     }
 
     /// Home's Recommended (the owner, 2026-10-15): the popular list of each of the owner's
@@ -67,9 +97,7 @@ final class MediaList {
         anime: Bool = false
     ) async {
         let wanted = "recommend|\(addon.id)|\(catalog.type)|\(catalog.id)|\(genres.joined(separator: ","))"
-        if working || (wanted == shownFor && problem == nil) { return }
-        working = true
-        problem = nil
+        guard let ticket = begin(wanted) else { return }
         var found: [[MediaItem]] = []
         for genre in genres {
             let asked: [String: Any] = ["addon_id": addon.id, "type": catalog.type, "id": catalog.id, "genre": genre]
@@ -77,37 +105,39 @@ final class MediaList {
                 found.append(answer.items)
             }
         }
+        guard end(ticket, showing: wanted) else { return }
         let ranked = Recommending.rank(found, taste: taste, seen: Set(taste.map(\.id)))
         items = anime ? ranked.map(\.asAnime) : ranked
         (more, cursor) = (false, items.count)
         if items.isEmpty {
             problem = found.isEmpty ? "The plugins couldn't be reached just now." : "Nothing new to suggest just now."
         }
-        shownFor = wanted
-        working = false
     }
 
     /// Every plugin asked for some words (the owner, 2026-10-13: a search "searches the
     /// whole database", whichever list is chosen), and what they found put together.
     func search(_ model: AppModel, type: String, words: String) async {
         let wanted = "search|\(type)|\(words)"
-        if working || (wanted == shownFor && problem == nil) { return }
-        working = true
-        problem = nil
+        guard let ticket = begin(wanted) else { return }
         (items, cursor, more) = ([], 0, false)
+        let answer: Result<MediaSearchAnswer, Error>
         do {
-            let found = try await model.ask(
-                "addon.search", ["type": type, "query": words], as: MediaSearchAnswer.self)
+            answer = .success(
+                try await model.ask("addon.search", ["type": type, "query": words], as: MediaSearchAnswer.self))
+        } catch {
+            answer = .failure(error)
+        }
+        guard end(ticket, showing: wanted) else { return }
+        switch answer {
+        case .success(let found):
             items = found.items
             if items.isEmpty {
                 problem = found.problems.first.map { "\($0.addon): \($0.message)" }
                     ?? "Nothing was found for “\(words)”."
             }
-        } catch {
+        case .failure(let error):
             problem = error.localizedDescription
         }
-        shownFor = wanted
-        working = false
     }
 }
 

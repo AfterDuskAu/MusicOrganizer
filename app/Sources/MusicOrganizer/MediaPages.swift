@@ -206,6 +206,8 @@ struct VideoExploreView: View {
             }
         }
         .task(id: model.phase) { await media.load(model) }
+        // Video Finder's row clicked in the sidebar: back to the sections (2026-10-17).
+        .onChange(of: model.clicks(on: .videoFinder).count) { opened = nil }
     }
 }
 
@@ -479,6 +481,13 @@ struct VideoFinderView: View {
         .onChange(of: opened) { _, channel in
             if channel != nil { NSApp.keyWindow?.makeFirstResponder(nil) }
         }
+        // A click on Video Finder's row in the sidebar: the search put away, and Explore
+        // back, as the other Finders' lists are (2026-10-17).
+        .onChange(of: model.clicks(on: .videoFinder).count) {
+            typed = ""
+            (videos, problem, asked) = ([], nil, "")
+            opened = nil
+        }
     }
 
     private func search() {
@@ -486,15 +495,21 @@ struct VideoFinderView: View {
         guard !words.isEmpty, !working else { return }
         (working, problem, asked) = (true, nil, words)
         Task {
+            var found: [VideoHit] = []
+            var trouble: String?
             do {
-                let found = try await model.ask(
-                    "video.search", ["query": words, "limit": 30], as: VideosAnswer.self)
-                videos = found.videos
-                if videos.isEmpty { problem = "Nothing found for “\(words)”." }
+                found = try await model.ask(
+                    "video.search", ["query": words, "limit": 30], as: VideosAnswer.self
+                ).videos
             } catch {
-                problem = error.localizedDescription
+                trouble = error.localizedDescription
             }
             working = false
+            // Put away while it was asked for (the box emptied, the row clicked in the
+            // sidebar): its answer isn't wanted, and Explore stays (2026-10-17).
+            guard asked == words else { return }
+            videos = found
+            problem = trouble ?? (found.isEmpty ? "Nothing found for “\(words)”." : nil)
         }
     }
 }
@@ -502,12 +517,16 @@ struct VideoFinderView: View {
 /// Videos → Channel: the channels the owner follows. A click opens one, with its
 /// newest videos.
 struct ChannelsView: View {
+    /// False while another page is showing (`PageHost`): the folder isn't looked at then.
+    var isActive = true
     @Environment(AppModel.self) private var model
     @State private var opened: ChannelRef?
     /// The videos downloaded from channels and Video Finder: the Videos folder
     /// (`AppModel.videosFolder`).
     @State private var kept: [VideoFiles.File] = []
     @State private var looked = false
+    /// Goes up when the app comes back to the front: the Finder may have changed the folder.
+    @State private var backInFront = 0
 
     var body: some View {
         let channels = model.followedChannels
@@ -583,11 +602,17 @@ struct ChannelsView: View {
                 model.channelToOpen = nil
             }
         }
-        // Looked at again whenever a video has just arrived.
-        .task(id: "\(model.keptArrived) \(model.videosFolder?.path ?? "")") {
+        // Looked at again whenever a video has just arrived or been binned, each time
+        // the page is shown, and when the app comes back to the front (as Videos → Movies
+        // is, 2026-10-17: a video deleted in the Finder stayed listed).
+        .task(id: "\(model.keptArrived) \(model.videosFolder?.path ?? "") \(isActive) \(backInFront)") {
+            guard isActive else { return }
             let folder = model.videosFolder
             kept = await Task.detached { folder.map(VideoFiles.inside) ?? [] }.value
             looked = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            if isActive { backInFront += 1 }
         }
     }
 }
@@ -620,7 +645,33 @@ struct VideoFileRow: View {
             Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([file.url]) }
             Divider()
             Button("Convert for Phones and Tablets") { model.convertFilm(file.url) }
+            Divider()
+            // The file itself, to the Trash, once the owner says yes (2026-10-17).
+            Button("Move to Trash…", role: .destructive) { model.trashingFile = file }
         }
+    }
+}
+
+/// A Finder's search box. What's typed is the box's own until Return is pressed (or the
+/// box is emptied), so a letter redraws the box and nothing else. With the words kept by
+/// the page, every letter made the page work itself out again, its grid of cards with
+/// it, and the letters lagged behind the typing (the owner, 2026-10-17). The search
+/// itself was never sent before Return, and still isn't.
+struct FinderSearchField: View {
+    let prompt: String
+    /// What's searched for: set on Return, and "" when the box is emptied.
+    @Binding var search: String
+    /// Goes up when the page puts its search away (its row clicked in the sidebar,
+    /// another list chosen): the box is emptied.
+    let clears: Int
+    @State private var typed = ""
+
+    var body: some View {
+        TextField(prompt, text: $typed)
+            .textFieldStyle(.roundedBorder)
+            .onSubmit { search = typed.trimmingCharacters(in: .whitespaces) }
+            .onChange(of: typed) { _, now in if now.isEmpty, !search.isEmpty { search = "" } }
+            .onChange(of: clears) { typed = "" }
     }
 }
 
@@ -655,8 +706,15 @@ struct MovieFinderView: View {
     private var isAdult: Bool { kind == "adult" }
     /// A page whose rows can't be put on Home.
     private var apart: Bool { isAnime || isAdult }
-    @State private var typed = ""
+    /// This Finder's row in the sidebar.
+    private var page: SidebarItem {
+        isSeries ? .seriesFinder : isAnime ? .animeFinder : isAdult ? .adultFinder : .movieFinder
+    }
+    /// What's searched for: set when Return is pressed in the box (`FinderSearchField`,
+    /// which keeps what's typed to itself).
     @State private var search = ""
+    /// Goes up to empty the search box.
+    @State private var clears = 0
     @State private var opened: MediaItem?
 
     var body: some View {
@@ -676,7 +734,8 @@ struct MovieFinderView: View {
                         Picker(
                             "List",
                             selection: Binding(
-                                get: { ownList ?? Self.key(chosen) }, set: { pick($0) })
+                                get: { ownList ?? Self.key(chosen) },
+                                set: { pick($0, over: ownList ?? Self.key(chosen)) })
                         ) {
                             ForEach(lists, id: \.catalog) { Text(Self.name($0)).tag(Self.key($0)) }
                             // What's been watched, as a list of its own (the owner,
@@ -694,7 +753,7 @@ struct MovieFinderView: View {
                                 "Genre",
                                 selection: Binding(
                                     get: { chosen.catalog.genre(chosen: genre) ?? "" },
-                                    set: { genre = $0 })
+                                    set: { choose(genre: $0) })
                             ) {
                                 if chosen.catalog.offersEveryGenre { Text("Every Genre").tag("") }
                                 ForEach(chosen.catalog.genres, id: \.self) { Text($0).tag($0) }
@@ -702,7 +761,15 @@ struct MovieFinderView: View {
                             .labelsHidden()
                             .fixedSize()
                             if let first = chosen.catalog.genre(chosen: genre), chosen.catalog.id != "year" {
-                                Picker("Second Genre", selection: $also) {
+                                Picker(
+                                    "Second Genre",
+                                    selection: Binding(
+                                        get: { also },
+                                        set: {
+                                            also = $0
+                                            putSearchAway()
+                                        })
+                                ) {
                                     Text("One Genre").tag("")
                                     ForEach(chosen.catalog.genres.filter { $0 != first }, id: \.self) {
                                         Text("and \($0)").tag($0)
@@ -734,14 +801,11 @@ struct MovieFinderView: View {
                         // the box is always there, and as wide as there's room for. The
                         // Finder kept apart searches the one list, as before.
                         if searchesEverything || chosen.catalog.takes("search") {
-                            TextField(
-                                searchesEverything ? "Search all \(Self.plural(kind))" : "Search this list",
-                                text: $typed
+                            FinderSearchField(
+                                prompt: searchesEverything ? "Search all \(Self.plural(kind))" : "Search this list",
+                                search: $search, clears: clears
                             )
-                                .textFieldStyle(.roundedBorder)
-                                .frame(minWidth: 220, idealWidth: 340, maxWidth: 440)
-                                .onSubmit { search = typed.trimmingCharacters(in: .whitespaces) }
-                                .onChange(of: typed) { _, now in if now.isEmpty { search = "" } }
+                            .frame(minWidth: 220, idealWidth: 340, maxWidth: 440)
                         }
                     } else {
                         Spacer()
@@ -834,6 +898,14 @@ struct MovieFinderView: View {
             // Let go of the search box, so its ring isn't drawn and typing goes nowhere.
             if film != nil { NSApp.keyWindow?.makeFirstResponder(nil) }
         }
+        // A click on this Finder's row in the sidebar, whether it was showing or not:
+        // its lists again, at the genres chosen before, with no search and no film open
+        // over them (the owner, 2026-10-17: "clicking Series Finder after a search should
+        // move it back to series finder").
+        .onChange(of: model.clicks(on: page).count) {
+            clearSearch()
+            opened = nil
+        }
         // A film or series clicked on Home opens here.
         .onChange(of: model.filmToOpen, initial: true) { _, wanted in
             if let wanted, !apart, (wanted.type == "series") == isSeries {
@@ -844,9 +916,35 @@ struct MovieFinderView: View {
         .task(id: model.phase) { await media.load(model) }
     }
 
-    private func pick(_ key: String) {
+    /// A list chosen in the list menu, `shown` being the one showing: the search is put
+    /// away, and the genres too unless it's the same list again (`GenreChoice`).
+    private func pick(_ key: String, over shown: String) {
+        var choice = GenreChoice(genre: genre, also: also)
+        choice.choose(list: key, over: shown)
         listKey = key
-        (typed, search, genre) = ("", "", "")
+        (genre, also) = (choice.genre, choice.also)
+        clearSearch()
+    }
+
+    /// A genre chosen in the first menu: the second is empty again (`GenreChoice`).
+    private func choose(genre wanted: String) {
+        var choice = GenreChoice(genre: genre, also: also)
+        choice.choose(genre: wanted)
+        (genre, also) = (choice.genre, choice.also)
+        putSearchAway()
+    }
+
+    /// A genre chosen while a search of everything is showing is a wish to see that
+    /// genre's list, so the search is put away (2026-10-17). In the Finder kept apart a
+    /// search is of the one list, at its genre, and stays. A search never changes the
+    /// genres chosen: they're there again when it's put away.
+    private func putSearchAway() {
+        if searchesEverything, !search.isEmpty { clearSearch() }
+    }
+
+    private func clearSearch() {
+        search = ""
+        clears += 1
     }
 
     /// The list menu's "Watched" and "Watchlist", by the names they're saved under.
@@ -1324,9 +1422,13 @@ struct MovieView: View {
 /// Videos → Movies: the video files in this Mac's Movies folder, and any other file the
 /// owner opens. Double-click plays one in the film player. Nothing here is changed.
 struct MoviesView: View {
+    /// False while another page is showing (`PageHost`): the folder isn't looked at then.
+    var isActive = true
     @Environment(AppModel.self) private var model
     @State private var files: [VideoFiles.File] = []
     @State private var looked = false
+    /// Goes up when the app comes back to the front: the Finder may have changed the folder.
+    @State private var backInFront = 0
 
     var body: some View {
         let count = files.count
@@ -1358,8 +1460,15 @@ struct MoviesView: View {
                     .scrollContentBackground(Theme.current.listBackground)
             }
         }
-        // Looked at again whenever a film or a video has just been kept.
-        .task(id: "\(model.keptArrived) \(model.moviesFolder?.path ?? "")") { await look() }
+        // Looked at again whenever a film or a video has just been kept or binned, each
+        // time the page is shown, and when the app comes back to the front (the owner,
+        // 2026-10-17: "I went into Finder to delete a movie but it still shows in movies").
+        .task(id: "\(model.keptArrived) \(model.moviesFolder?.path ?? "") \(isActive) \(backInFront)") {
+            if isActive { await look() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            if isActive { backInFront += 1 }
+        }
         .task {
             // For checking the player without a click: MUSICORG_FILM=<file> plays it once,
             // silently; MUSICORG_FILM=torrent:<info-hash>:<file number> plays that torrent.

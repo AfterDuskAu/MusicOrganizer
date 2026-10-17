@@ -399,6 +399,7 @@ class Server:
             "profile.transfer": self.profile_transfer,
             "media.convert": self.media_convert,
             "media.converting": self.media_converting,
+            "media.trash": self.media_trash,
             "torrent.stop": self.torrent_stop,
             "sharing.status": self.sharing_status,
             "sharing.set": self.sharing_set,
@@ -1167,6 +1168,28 @@ class Server:
         if self._converter is None:
             return {"converting": None, "last": None}
         return self._converter.status()
+
+    def media_trash(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Move one film or video in the Movies or the videos folder to the system Trash,
+        at the owner's word (2026-10-17: a film deleted in the Finder by hand stayed in
+        the app's list). Never a file of the library's or of a source, and never one
+        that's being converted just now."""
+        film = Path(need(params, "path", str))
+        if self._converter is not None:
+            now = self._converter.status()["converting"]
+            if now is not None and Path(now["path"]) == film:
+                raise RpcError(
+                    USER_ERROR,
+                    f"{film.name} is being converted just now. Try again when that has finished.",
+                )
+        forbidden: list[Path] = []
+        if self.lib is not None:
+            forbidden.append(self.lib.root)
+            with self._index() as index:
+                forbidden += scan.source_folders(self.lib, index).values()
+        folders = media_folders()
+        gone = fileops.trash_media(film, folders["movies"], folders["media"], forbidden=forbidden)
+        return {"path": str(gone)}
 
     # ---- a profile's export and import (2026-10-12; module `transfer`) -------------------
 
