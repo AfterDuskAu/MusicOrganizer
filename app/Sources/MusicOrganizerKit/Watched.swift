@@ -92,6 +92,23 @@ public struct SeriesProgress: Equatable, Sendable {
         /// after it is told from one they haven't got to.
         public var caughtUp: String?
         public var read: Date
+        /// The latest episode out when the owner last had no new one to watch: what's out
+        /// after it is new, Home's New Episodes and a card's "+1, +2" (2026-10-18, as a
+        /// video app on a tablet has it since 2026-10-17). "" when nothing was out then;
+        /// nil before this was kept (then it's taken from `caughtUp`).
+        public var seen: String?
+        /// The episodes out after `seen`, in order, as last read.
+        public var fresh: [String]?
+        /// When the latest of them came out: the newest first.
+        public var freshAt: Date?
+
+        public init(
+            latest: String?, caughtUp: String?, read: Date, seen: String? = nil, fresh: [String]? = nil,
+            freshAt: Date? = nil
+        ) {
+            (self.latest, self.caughtUp, self.read) = (latest, caughtUp, read)
+            (self.seen, self.fresh, self.freshAt) = (seen, fresh, freshAt)
+        }
     }
 
     public private(set) var series: [String: Known]
@@ -102,10 +119,15 @@ public struct SeriesProgress: Equatable, Sendable {
     /// time has come. Specials (season 0) aren't counted. An episode with no time of its
     /// own counts as out only when none of them has one.
     public static func latest(in videos: [MediaDetails.Video], now: Date = Date()) -> MediaDetails.Video? {
+        out(in: videos, now: now).last
+    }
+
+    /// A series' episodes out, by season and number, by the same rule.
+    public static func out(in videos: [MediaDetails.Video], now: Date = Date()) -> [MediaDetails.Video] {
         let numbered = videos.filter { ($0.season ?? 0) > 0 && $0.episode != nil }
         let dated = numbered.filter { $0.releasedAt != nil }
         let out = dated.isEmpty ? numbered : dated.filter { $0.releasedAt! <= now }
-        return out.max { ($0.season ?? 0, $0.episode ?? 0) < ($1.season ?? 0, $1.episode ?? 0) }
+        return out.sorted { ($0.season ?? 0, $0.episode ?? 0) < ($1.season ?? 0, $1.episode ?? 0) }
     }
 
     public func latest(of id: String) -> String? { series[id]?.latest }
@@ -114,10 +136,24 @@ public struct SeriesProgress: Equatable, Sendable {
     public mutating func learned(
         _ id: String, episodes: [MediaDetails.Video], finished: Finished, now: Date = Date()
     ) {
-        let latest = Self.latest(in: episodes, now: now)?.id
+        let out = Self.out(in: episodes, now: now)
+        let latest = out.last?.id
+        let isNew = series[id] == nil
         var known = series[id] ?? Known(latest: nil, caughtUp: nil, read: now)
+        // Kept from before there was `seen`: new is what came after the owner caught up.
+        if known.seen == nil { known.seen = isNew ? latest ?? "" : known.caughtUp ?? known.latest ?? "" }
         (known.latest, known.read) = (latest, now)
         if let latest, finished.contains(latest) { known.caughtUp = latest }
+        // What's out after the last one seen; with none of it left to watch, everything
+        // out now has been seen. (One seen that's gone from the list is the same.)
+        let seen = known.seen ?? ""
+        let after = seen.isEmpty ? out[...] : out.firstIndex { $0.id == seen }.map { out[($0 + 1)...] } ?? []
+        if after.allSatisfy({ finished.contains($0.id) }) {
+            (known.seen, known.fresh, known.freshAt) = (latest ?? seen, nil, nil)
+        } else {
+            known.fresh = after.map(\.id)
+            known.freshAt = after.compactMap(\.releasedAt).max() ?? known.freshAt ?? now
+        }
         series[id] = known
     }
 
@@ -141,7 +177,21 @@ public struct SeriesProgress: Equatable, Sendable {
         series[id]?.latest.map(finished.contains) ?? false
     }
 
-    /// The owner had caught up, and an episode has come out since that they haven't watched.
+    /// The episodes out since the owner last had none new to watch, that they haven't
+    /// watched, in order: a card's "+1, +2" and Home's New Episodes (2026-10-18).
+    public func newEpisodes(_ id: String, finished: Finished) -> [String] {
+        (series[id]?.fresh ?? []).filter { !finished.contains($0) }
+    }
+
+    /// The series with new episodes (`newEpisodes`), the one whose latest came out last
+    /// first (a tie: by id): Home's New Episodes.
+    public func withFreshEpisodes(finished: Finished) -> [String] {
+        series.keys.filter { !newEpisodes($0, finished: finished).isEmpty }
+            .sorted { (series[$0]?.freshAt ?? .distantPast, $1) > (series[$1]?.freshAt ?? .distantPast, $0) }
+    }
+
+    /// The owner had caught up, and an episode has come out since that they haven't
+    /// watched: the Watchlist's NEW EPISODE (its own rule, kept as it was: 2026-10-18).
     public func hasNewEpisode(_ id: String, finished: Finished) -> Bool {
         guard let known = series[id], let latest = known.latest, let caughtUp = known.caughtUp else {
             return false
@@ -154,10 +204,12 @@ public struct SeriesProgress: Equatable, Sendable {
         series.keys.filter { hasNewEpisode($0, finished: finished) }.sorted()
     }
 
-    /// Whether a series' episodes are due to be read again: never read, or not for a while.
+    /// Whether a series' episodes are due to be read again: never read, not for a while,
+    /// or not since new episodes were counted (`seen`, 2026-10-18: read once more then, so
+    /// Home's New Episodes has them at once).
     public func isDue(_ id: String, every interval: TimeInterval, now: Date = Date()) -> Bool {
-        guard let read = series[id]?.read else { return true }
-        return now.timeIntervalSince(read) > interval
+        guard let known = series[id], known.seen != nil else { return true }
+        return now.timeIntervalSince(known.read) > interval
     }
 
     public static let key = "seriesProgress"

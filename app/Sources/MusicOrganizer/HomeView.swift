@@ -391,14 +391,7 @@ private struct HomeRow: View {
                                 }
                                 .overlay(alignment: .top) {
                                     // Its next episode being found, to play (2026-10-18).
-                                    if section.kind == "continue", model.startingEpisode == entry.id {
-                                        ProgressView()
-                                            .controlSize(.small)
-                                            .environment(\.colorScheme, .dark)  // light, on the dark square, in every look
-                                            .padding(10)
-                                            .background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: 8))
-                                            .padding(.top, 70)
-                                    }
+                                    if section.kind == "continue", model.startingEpisode == entry.id { FindingEpisode() }
                                 }
                         }
                         .buttonStyle(.plain)
@@ -407,6 +400,31 @@ private struct HomeRow: View {
                             Button("Open Its Page") { model.open(item) }
                             Button("Remove From This Row") { model.forgetWatched(entry) }
                         }
+                    }
+                }
+            }
+        case "newEpisodes":
+            // Series with episodes out that haven't been watched, "+1, +2", the newest first
+            // (the owner, 2026-10-18). A click plays the one to carry on with.
+            let items = model.newEpisodeSeries
+            if items.isEmpty {
+                note("A series you watch shows up here when an episode of it comes out that you haven't watched.")
+            } else {
+                PagedCards(items: items, width: 122, height: 250, open: { model.carryOn($0) }) { item in
+                    let count = model.newEpisodeCount(item.id)
+                    Button {
+                        model.carryOn(item)
+                    } label: {
+                        MediaCard(item: item)
+                            .overlay(alignment: .topTrailing) { NewEpisodesBadge(count: count) }
+                            .overlay(alignment: .top) {
+                                if model.startingEpisode == item.id { FindingEpisode() }
+                            }
+                    }
+                    .buttonStyle(.plain)
+                    .help(count == 1 ? "1 new episode" : "\(count) new episodes")
+                    .contextMenu {
+                        Button("Open Its Page") { model.open(item) }
                     }
                 }
             }
@@ -499,6 +517,10 @@ private struct HomeRow: View {
         case (.anime, _):
             guard let source = listSource(for: "popular") else { return }
             await lists.list(section.id).load(model, addon: source.addon, catalog: source.catalog, adding: adding)
+        case (.series, "newEpisodes"):
+            // Which episodes are out goes by the series' episodes: read again when they're
+            // six hours old.
+            await model.readSeries(model.ownSeries)
         case (.movies, let kind), (.series, let kind):
             guard !["continue", "recent", "favourites", "unwatched"].contains(kind) else { return }
             let wanted = ["new": "year", "best": "imdbRating"][kind] ?? "top"
@@ -533,6 +555,7 @@ private struct HomeRow: View {
             // Its lists, not a search left in its box (2026-10-17), as from the sidebar.
             model.clickedInSidebar(.animeFinder)
             model.goTo = .animeFinder
+        case (.series, "newEpisodes"): model.goTo = .watchlist
         case (.movies, _), (.series, _):
             // A list's row opens that list in its Finder, at the row's genre.
             let name = section.group == .series ? "seriesFinder" : "movieFinder"
@@ -554,6 +577,43 @@ private struct HomeRow: View {
 
     /// Of the owner's own newest things, how many a row offers: the page has the rest.
     static let mostOwn = 60
+}
+
+/// "+2" in a poster's corner, on a little stack of cards: the episodes of a series out
+/// that the owner hasn't watched (as a video app on a tablet has had it since 2026-10-17).
+private struct NewEpisodesBadge: View {
+    let count: Int
+
+    var body: some View {
+        if count > 0 {
+            Text("+\(count)")
+                .font(.subheadline.weight(.bold))
+                .monospacedDigit()
+                .foregroundStyle(.white)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 2)
+                .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 6))
+                .background(alignment: .topTrailing) {
+                    RoundedRectangle(cornerRadius: 6).fill(Color.accentColor.opacity(0.45)).offset(x: 4, y: -4)
+                }
+                .shadow(color: .black.opacity(0.5), radius: 3, y: 1)
+                .padding(.top, 10)
+                .padding(.trailing, 10)
+        }
+    }
+}
+
+/// A series' episode being found, to play, after a click on its card (2026-10-18): the
+/// player's Next Episode button's small spinner, on a dark square over the picture.
+private struct FindingEpisode: View {
+    var body: some View {
+        ProgressView()
+            .controlSize(.small)
+            .environment(\.colorScheme, .dark)  // light, on the dark square, in every look
+            .padding(10)
+            .background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: 8))
+            .padding(.top, 70)
+    }
 }
 
 /// A row's cards, a page at a time: as many whole cards as fit across, never part of

@@ -89,6 +89,11 @@ public struct HomeSection: Identifiable, Hashable, Sendable {
         ]
         for (group, genres) in [(Group.movies, movieGenres), (.series, seriesGenres)] {
             let (key, things) = (group.rawValue, group.title)
+            if group == .series {
+                // Series with episodes out that haven't been watched, "+1, +2" (the owner,
+                // 2026-10-18): out of Continue Watching, into a row of their own.
+                found.append(.init(id: newEpisodes, group: group, title: "New Episodes"))
+            }
             found += [
                 .init(id: "\(key).continue", group: group, title: "Continue Watching \(things)"),
                 .init(id: "\(key).recent", group: group, title: "Recently Watched \(things)"),
@@ -118,10 +123,15 @@ public struct HomeSection: Identifiable, Hashable, Sendable {
     public static let recommendedAdded = "homeRecommendedAdded"
     public static let recommended = ["series.recommended", "anime.recommended"]
 
-    /// The page as it starts, before the owner has changed it: their drawing's rows.
+    /// New Episodes (2026-10-18), and its row put once on a Home page made before it.
+    public static let newEpisodes = "series.newEpisodes"
+    public static let newEpisodesAdded = "homeNewEpisodesAdded"
+
+    /// The page as it starts, before the owner has changed it: their drawing's rows, and
+    /// New Episodes before the films' Continue Watching.
     public static let standard = [
         "songs.favourites", "songs.recommended", "channels.continue", "channels.favourites",
-        "channels.recommended", "movies.continue", "movies.popular", "series.continue",
+        "channels.recommended", newEpisodes, "movies.continue", "movies.popular", "series.continue",
         "series.popular",
     ]
 }
@@ -156,6 +166,15 @@ public struct HomeLayout: Equatable, Sendable {
                 shown.append(id)
             }
         }
+    }
+
+    /// New Episodes put on the page once (the owner, 2026-10-18): before the first of the
+    /// films' Continue Watching rows, or at the end.
+    public mutating func addNewEpisodes() {
+        guard !shown.contains(HomeSection.newEpisodes) else { return }
+        let continuing = ["movies.continue", "series.continue", "anime.continue"]
+        let at = shown.firstIndex(where: continuing.contains) ?? shown.endIndex
+        shown.insert(HomeSection.newEpisodes, at: at)
     }
 
     /// Move a row one place up (-1) or down (1).
@@ -336,6 +355,8 @@ public struct WatchHistory: Equatable, Sendable {
     /// (`SeriesProgress`): the episode it's at was finished, or is the next one, not begun
     /// yet. Before this a series between episodes left the row, so the one being watched
     /// an episode after another, the next starting by itself, was hardly ever in it.
+    /// A series with new episodes ("+1, +2": `SeriesProgress.newEpisodes`) is in Home's
+    /// New Episodes instead (the owner, 2026-10-18), not here.
     public func continuing(finished: Finished, progress: SeriesProgress) -> [Entry] {
         // The series with an episode played to its end. An episode's id is its series'
         // and then its season and number ("tt0944947:1:2"; Kitsu's "kitsu:7442:2"), so
@@ -349,7 +370,8 @@ public struct WatchHistory: Equatable, Sendable {
             }
         }
         return recent(.series).filter { entry in
-            entry.isUnfinished
+            guard progress.newEpisodes(entry.id, finished: finished).isEmpty else { return false }
+            return entry.isUnfinished
                 || (begun.contains(entry.id) && !progress.isWatched(entry.id, finished: finished))
         }
     }

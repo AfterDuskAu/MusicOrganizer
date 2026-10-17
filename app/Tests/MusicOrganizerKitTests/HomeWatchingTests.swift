@@ -260,4 +260,44 @@ final class HomeWatchingTests: XCTestCase {
         (movie.stream, movie.source) = (way, "torrentio.example")
         XCTAssertNil(movie.played)
     }
+
+    func testASeriesWithNewEpisodesIsInNewEpisodesNotContinueWatching() throws {
+        var history = WatchHistory()
+        var finished = Finished()
+        var progress = SeriesProgress()
+        let outBy = { (count: Int) -> [MediaDetails.Video] in
+            let list = (1...count).map {
+                #"{"id":"tt5:1:\#($0)","title":"E\#($0)","season":1,"episode":\#($0),"released":"2026-10-0\#($0)T01:00:00.000Z"}"#
+            }
+            return (try? JSONDecoder().decode([MediaDetails.Video].self, from: Data(("[" + list.joined(separator: ",") + "]").utf8))) ?? []
+        }
+        // Part way through episode 1 of a series with two out: Continue Watching.
+        finished.mark("tt5:1:1", watched: true, now: at(0))
+        history.watched(episode("tt5", 1, 2, seconds: 600, length: 3000, minute: 10))
+        progress.learned("tt5", episodes: outBy(2), finished: finished, now: at(20))
+        XCTAssertEqual(history.continuing(finished: finished, progress: progress).map(\.id), ["tt5"])
+        // A third comes out: "+1", and it's in New Episodes instead.
+        progress.learned("tt5", episodes: outBy(3), finished: finished, now: at(30))
+        XCTAssertEqual(progress.newEpisodes("tt5", finished: finished), ["tt5:1:3"])
+        XCTAssertTrue(history.continuing(finished: finished, progress: progress).isEmpty)
+        XCTAssertEqual(progress.withFreshEpisodes(finished: finished), ["tt5"])
+        // Watched: back where it was.
+        finished.mark("tt5:1:3", watched: true, now: at(40))
+        XCTAssertEqual(history.continuing(finished: finished, progress: progress).map(\.id), ["tt5"])
+    }
+
+    func testNewEpisodesIsPutOnHomeOnceBeforeTheFilmsContinueWatching() {
+        XCTAssertTrue(HomeSection.all(movieGenres: [], seriesGenres: []).contains { $0.id == HomeSection.newEpisodes })
+        XCTAssertEqual(HomeSection(id: HomeSection.newEpisodes, group: .series, title: "New Episodes").kind, "newEpisodes")
+        var layout = HomeLayout(["songs.favourites", "channels.continue", "series.continue", "movies.continue"])
+        layout.addNewEpisodes()
+        XCTAssertEqual(layout.shown, ["songs.favourites", "channels.continue", HomeSection.newEpisodes, "series.continue", "movies.continue"])
+        layout.addNewEpisodes()  // once
+        XCTAssertEqual(layout.shown.filter { $0 == HomeSection.newEpisodes }.count, 1)
+        var none = HomeLayout(["songs.favourites"])
+        none.addNewEpisodes()
+        XCTAssertEqual(none.shown, ["songs.favourites", HomeSection.newEpisodes])
+        let standard = HomeSection.standard
+        XCTAssertLessThan(standard.firstIndex(of: HomeSection.newEpisodes)!, standard.firstIndex(of: "movies.continue")!)
+    }
 }

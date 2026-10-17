@@ -228,4 +228,108 @@ final class WatchedTests: XCTestCase {
         places.watched("m1", to: 5450, of: 6000)
         XCTAssertNil(places.place(of: "m1"))  // opened again, it starts again
     }
+
+    // MARK: new episodes, "+1, +2" (2026-10-18, as the video app on a tablet counts them)
+
+    func testNewEpisodesAreCountedFromWhenTheOwnerLastHadNoneNew() throws {
+        let all = try episodes([
+            (1, 1, "2026-10-01"), (1, 2, "2026-10-08"), (1, 3, "2026-10-15"), (1, 4, "2026-10-22"), (0, 1, "2026-10-20"),
+        ])
+        var done = Finished()
+        var progress = SeriesProgress()
+        done.mark("s:1:1", watched: true)
+        done.mark("s:1:2", watched: true)
+        progress.learned("s", episodes: all, finished: done, now: day("2026-10-09"))
+        XCTAssertEqual(progress.newEpisodes("s", finished: done), [])
+        // Two come out (and a special, which isn't counted): +2, the newest's day kept.
+        progress.learned("s", episodes: all, finished: done, now: day("2026-10-23"))
+        XCTAssertEqual(progress.newEpisodes("s", finished: done), ["s:1:3", "s:1:4"])
+        XCTAssertEqual(progress.series["s"]?.freshAt, ISO8601DateFormatter().date(from: "2026-10-22T01:00:00Z"))
+        done.mark("s:1:3", watched: true)
+        XCTAssertEqual(progress.newEpisodes("s", finished: done), ["s:1:4"])
+        done.mark("s:1:4", watched: true)
+        XCTAssertEqual(progress.newEpisodes("s", finished: done), [])
+        XCTAssertTrue(progress.isWatched("s", finished: done))
+        // Marked not watched again, an episode that came out new is new again.
+        done.mark("s:1:4", watched: false)
+        XCTAssertEqual(progress.newEpisodes("s", finished: done), ["s:1:4"])
+        done.mark("s:1:4", watched: true)
+        // Read with none of them left to watch: from then, all of them have been seen.
+        progress.learned("s", episodes: all, finished: done, now: day("2026-10-24"))
+        done.mark("s:1:4", watched: false)
+        XCTAssertEqual(progress.newEpisodes("s", finished: done), [])
+    }
+
+    func testPartWayThroughOnlyWhatCameOutSinceIsNew() throws {
+        let all = try episodes([(1, 1, "2026-10-01"), (1, 2, "2026-10-08"), (1, 3, "2026-10-15")])
+        var done = Finished()
+        done.mark("s:1:1", watched: true)
+        var progress = SeriesProgress()
+        progress.learned("s", episodes: all, finished: done, now: day("2026-10-09"))
+        // Episode 2 was out already: not new. Episode 3 is.
+        progress.learned("s", episodes: all, finished: done, now: day("2026-10-16"))
+        XCTAssertEqual(progress.newEpisodes("s", finished: done), ["s:1:3"])
+        XCTAssertFalse(progress.isWatched("s", finished: done))
+        // The Watchlist's NEW EPISODE keeps its own rule (the owner, 2026-10-18: "Watchlist
+        // stays how it is"): only for someone who had caught up.
+        XCTAssertFalse(progress.hasNewEpisode("s", finished: done))
+    }
+
+    func testASeriesWithNothingOutYetHasItsFirstEpisodeAsNew() throws {
+        let all = try episodes([(1, 1, "2026-10-20"), (1, 2, "2026-10-20")])
+        var progress = SeriesProgress()
+        progress.learned("s", episodes: all, finished: Finished(), now: day("2026-10-16"))
+        XCTAssertNil(progress.latest(of: "s"))
+        progress.learned("s", episodes: all, finished: Finished(), now: day("2026-10-21"))
+        XCTAssertEqual(progress.newEpisodes("s", finished: Finished()).count, 2)
+    }
+
+    func testWhatWasKeptBeforeCountsFromWhenTheOwnerCaughtUp() throws {
+        let all = try episodes([(1, 1, "2026-10-01"), (1, 2, "2026-10-08"), (1, 3, "2026-10-15")])
+        var done = Finished()
+        done.mark("s:1:1", watched: true)
+        done.mark("s:1:2", watched: true)
+        // As it was saved before `seen`: caught up with episode 2.
+        let saved = Data(#"{"s":{"latest":"s:1:2","caughtUp":"s:1:2","read":0}}"#.utf8)
+        var progress = SeriesProgress(try JSONDecoder().decode([String: SeriesProgress.Known].self, from: saved))
+        // Read once more straight away, whenever it was read last, to count them.
+        XCTAssertTrue(progress.isDue("s", every: 86_400 * 365 * 100, now: day("2026-10-16")))
+        progress.learned("s", episodes: all, finished: done, now: day("2026-10-16"))
+        XCTAssertFalse(progress.isDue("s", every: 3600, now: day("2026-10-16")))
+        XCTAssertEqual(progress.newEpisodes("s", finished: done), ["s:1:3"])
+        XCTAssertTrue(progress.hasNewEpisode("s", finished: done))  // the Watchlist's too
+    }
+
+    func testTheNewestNewEpisodeComesFirst() throws {
+        let early = try episodes([(1, 1, "2026-10-01"), (1, 2, "2026-10-10")])
+        let late = try episodes([(1, 1, "2026-10-01"), (1, 2, "2026-10-12")])
+        let one = try episodes([(1, 1, "2026-10-01")])
+        var progress = SeriesProgress()
+        for id in ["a", "b", "c"] { progress.learned(id, episodes: one, finished: Finished(), now: day("2026-10-02")) }
+        progress.learned("a", episodes: early, finished: Finished(), now: day("2026-10-13"))
+        progress.learned("b", episodes: late, finished: Finished(), now: day("2026-10-13"))
+        progress.learned("c", episodes: one, finished: Finished(), now: day("2026-10-13"))
+        XCTAssertEqual(progress.withFreshEpisodes(finished: Finished()), ["b", "a"])
+    }
+
+    func testTheEpisodeToCarryOnWithIsTheNextNotWatchedElseTheFirstNew() throws {
+        let all = try episodes([(1, 1, "2026-10-01"), (1, 2, "2026-10-08"), (1, 3, "2026-10-15"), (1, 4, "2026-10-22")])
+        var done = Finished()
+        let today = "2026-10-23"
+        // After the last one played.
+        XCTAssertEqual(
+            NextEpisode.toWatch(after: "s:1:1", in: all, fresh: [], finished: done, today: today)?.id, "s:1:2")
+        // That one watched already (on another device, say): the first new one.
+        done.mark("s:1:2", watched: true)
+        XCTAssertEqual(
+            NextEpisode.toWatch(after: "s:1:1", in: all, fresh: ["s:1:3", "s:1:4"], finished: done, today: today)?.id,
+            "s:1:3")
+        // Never played here: the first new one not watched.
+        done.mark("s:1:3", watched: true)
+        XCTAssertEqual(
+            NextEpisode.toWatch(after: nil, in: all, fresh: ["s:1:3", "s:1:4"], finished: done, today: today)?.id,
+            "s:1:4")
+        // Nothing to carry on with.
+        XCTAssertNil(NextEpisode.toWatch(after: "s:1:4", in: all, fresh: [], finished: done, today: today))
+    }
 }

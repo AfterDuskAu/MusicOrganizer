@@ -942,7 +942,8 @@ struct MainView: View {
                     "BENCH records: \(model.profiles.current.name): watchlist \(model.watchlist.items.map(\.id)), "
                         + "finished \(model.finished.days.count), history \(model.history.entries.count), "
                         + "favourites \(model.mediaFavourites.items.count), home rows \(model.homeLayout.shown.count), "
-                        + "continue series \(model.continuingSeries.prefix(5).map(\.id))")
+                        + "continue series \(model.continuingSeries.prefix(5).map(\.id)), "
+                        + "new episodes \(model.newEpisodeSeries.prefix(5).map { "\($0.id) +\(model.newEpisodeCount($0.id))" })")
             } else if step.name == "stremio=read" {
                 // What Stremio on this Mac remembers, read (only read) and written out.
                 model.stremio.read()

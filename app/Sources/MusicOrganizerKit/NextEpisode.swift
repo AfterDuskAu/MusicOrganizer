@@ -49,6 +49,20 @@ public enum NextEpisode {
         return next
     }
 
+    /// The episode to carry on with, from Home (Continue Watching or New Episodes, 2026-10-18):
+    /// the one after the episode last played (`last`) when it isn't watched yet, else the
+    /// first of the new ones (`fresh`, in order) not watched yet. Nil when there's neither.
+    public static func toWatch(
+        after last: String?, in videos: [MediaDetails.Video], fresh: [String], finished: Finished,
+        today: String? = nil
+    ) -> MediaDetails.Video? {
+        if let last, let next = after(last, in: videos, today: today), !finished.contains(next.id) {
+            return next
+        }
+        let first = fresh.first { !finished.contains($0) }
+        return first.flatMap { id in videos.first { $0.id == id } }
+    }
+
     /// The owner's rule for how the next episode is played: **the same quality from the
     /// same source**; failing that, **the next source that has that quality** (in the
     /// owner's order of add-ons); and failing that nothing, and the app opens the
