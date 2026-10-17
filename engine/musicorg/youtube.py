@@ -2442,8 +2442,26 @@ def _page_problem(exc: BaseException, address: str) -> Exception:
             f"{host} turned Bear Media away: it lets web browsers in, but not an app asking "
             "for its pages. Nothing was downloaded."
         )
-    if any(s in low for s in ("http error 404", "not found", "has been removed", "unavailable")):
+    answered = re.search(r"http error (\d{3})", low)
+    code = int(answered[1]) if answered else None
+    if code in (410, 451):
+        # 2026-10-18: every page of a site answered 410 ("gone") with the owner's VPN off and
+        # opened with it on. A site that has closed to visitors from somewhere says so this
+        # way to every page, so it isn't taken for one video being gone.
+        return DownloadError(
+            f"{host} won't show its pages to this connection (HTTP {code}). A site answers "
+            "this way when it's closed to visitors from where the connection comes from. "
+            "Nothing was downloaded."
+        )
+    if code == 404 or any(s in low for s in ("not found", "has been removed", "unavailable")):
         return DownloadError(f"{host} doesn't have that video any more.")
+    if code == 429:
+        return DownloadError(f"{host} is getting too many requests just now. Try again later.")
+    if code is not None and code >= 500:
+        return DownloadError(f"{host} is having trouble just now (HTTP {code}). Try again later.")
+    if code is not None:
+        # The site was reached and said no: not a fault of the network.
+        return DownloadError(f"{host} refused that page (HTTP {code}). Nothing was downloaded.")
     if any(s in low for s in _NETWORK):
         return DownloadError(f"{host} couldn't be reached just now: {detail}", network=True)
     return DownloadError(f"{host}'s video couldn't be read: {detail}")

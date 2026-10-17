@@ -21,7 +21,7 @@ from test_fetch import Page, Site, cache, film, left_in_cache, movies, serve
 from test_rpc import Capture, code, opened, out, result, root, server  # noqa: F401  (fixtures)
 
 from musicorg import config, fetch, rpc, tools, youtube
-from musicorg.errors import ReplayMissError, YouTubeError
+from musicorg.errors import DownloadError, ReplayMissError, YouTubeError
 
 # A page on this computer that nothing answers (port 9, "discard"): for what's refused or
 # stood in for before anything is asked.
@@ -173,6 +173,32 @@ def test_a_site_that_turns_programs_away_isnt_said_to_want_a_sign_in() -> None:
     assert "signed in" in said("ERROR: [vimeo] 1: This video is private. Use --cookies to sign in")
     assert "signed in" in said("ERROR: HTTP Error 401: Unauthorized")
     assert "any more" in said("ERROR: HTTP Error 404: Not Found")
+
+
+def test_a_site_closed_to_this_connection_says_so_not_that_it_cant_be_reached() -> None:
+    """2026-10-18: a site answered 410 ("gone") to every page with the owner's VPN off,
+    and the app said it "couldn't be reached just now", with yt-dlp's own words after."""
+    page = "https://www.example.org/view_video.php?viewkey=0123456789abc"
+
+    def said(text: str) -> DownloadError:
+        found = youtube._page_problem(Exception(text), page)
+        assert isinstance(found, DownloadError)
+        return found
+
+    gone = said(
+        "ERROR: [Example] 0123456789abc: Unable to download webpage: HTTP Error 410: Gone "
+        "(caused by <HTTPError 410: Gone>)"
+    )
+    assert "won't show its pages to this connection (HTTP 410)" in str(gone)
+    assert "reached" not in str(gone) and "0123456789abc" not in str(gone)
+    assert not gone.network  # the site answered: nothing of the network's to retry
+    assert "HTTP 451" in str(said("ERROR: HTTP Error 451: Unavailable For Legal Reasons"))
+    assert "too many requests" in str(said("ERROR: Unable to download webpage: HTTP Error 429"))
+    assert "trouble" in str(said("ERROR: Unable to download webpage: HTTP Error 503"))
+    assert "refused that page (HTTP 400)" in str(said("ERROR: HTTP Error 400: Bad Request"))
+    # A connection that really failed is still said to be one.
+    lost = said("ERROR: Unable to download webpage: <urlopen error timed out>")
+    assert "couldn't be reached" in str(lost) and lost.network
 
 
 def test_qualities_sharpest_first_with_sound_beside_a_picture_alone() -> None:
