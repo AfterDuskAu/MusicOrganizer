@@ -60,6 +60,16 @@ import AppKit
 ///   `left`, `right`, `return` or `esc`
 /// - `player`: what's in the music player, where it has got to and how loud, and where the
 ///   arrows' highlight is on a page of cards, written out
+/// - `type=<letters>`: these letters typed into the page's search box (the widest one
+///   showing), one every 150 ms as a hand types them; `enter`: Return pressed in it;
+///   `erase`: everything in it deleted
+/// - `pick=<item>`: this item chosen in the first pop-up menu showing that offers it, as
+///   a click on it does
+/// - `lists`: what the Finders' lists are showing (what they were asked with, and their
+///   first few titles), written out
+/// - `trash=<file name>`: that video file in the Movies folder moved to the Trash, as Move
+///   to Trash… does after the owner's yes (never with a Movies folder that matters: only a
+///   scratch one, with an engine whose Trash is a stand-in)
 /// - `profile=<id>`: another profile switched to, as Settings → Profile does (only with a
 ///   scratch copy's own profiles)
 /// - `records`: the profile in use, and how much of what's watched and liked it has
@@ -279,6 +289,33 @@ enum Bench {
             windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1)
     }
 
+    /// The editor of the page's search box (the widest box that can be typed in), given
+    /// the keyboard first if it hasn't it: what a click in the box does.
+    static func searchEditor(in window: NSWindow) -> NSTextView? {
+        var widest: NSTextField?
+        func look(in view: NSView) {
+            if let field = view as? NSTextField, field.isEditable, !field.isHiddenOrHasHiddenAncestor,
+                field.frame.width > (widest?.frame.width ?? 0)
+            {
+                widest = field
+            }
+            view.subviews.forEach(look(in:))
+        }
+        if let content = window.contentView { look(in: content) }
+        guard let field = widest else { return nil }
+        if field.currentEditor() == nil { window.makeFirstResponder(field) }
+        return field.currentEditor() as? NSTextView
+    }
+
+    /// One letter typed into the page's search box, as a key pressed in it arrives.
+    static func typeLetter(_ letter: String) -> Bool {
+        guard let window = NSApp.windows.first(where: { $0.canBecomeMain }),
+            let editor = searchEditor(in: window)
+        else { return false }
+        editor.insertText(letter, replacementRange: editor.selectedRange())
+        return true
+    }
+
     /// The steps that aren't a page: true if this was one.
     static func took(_ name: String) -> Bool {
         if tookTable(name) { return true }
@@ -402,6 +439,41 @@ enum Bench {
                     keyCode: code)
             else { return true }
             NSApp.sendEvent(press)
+            return true
+        }
+        if name == "enter" || name == "erase" {
+            guard let window, let editor = searchEditor(in: window) else {
+                say("BENCH \(name): no search box is showing")
+                return true
+            }
+            if name == "enter" {
+                editor.insertNewline(nil)
+            } else {
+                editor.selectAll(nil)
+                editor.deleteBackward(nil)
+            }
+            return true
+        }
+        if name.hasPrefix("pick=") {
+            // An item of one of the page's pop-up menus chosen, as a click on it does: the
+            // menu's own action is sent, which is what tells SwiftUI. The first menu showing
+            // that offers it is the one.
+            let wanted = String(name.dropFirst(5))
+            var found: NSPopUpButton?
+            func look(in view: NSView) {
+                if found == nil, let popup = view as? NSPopUpButton, !popup.isHiddenOrHasHiddenAncestor,
+                    popup.itemArray.contains(where: { $0.title == wanted })
+                {
+                    found = popup
+                }
+                view.subviews.forEach(look(in:))
+            }
+            if let content = window?.contentView { look(in: content) }
+            guard let popup = found, let index = popup.itemArray.firstIndex(where: { $0.title == wanted }) else {
+                say("BENCH \(name): no menu showing offers “\(wanted)”")
+                return true
+            }
+            popup.menu?.performActionForItem(at: index)
             return true
         }
         if name == "windows" {

@@ -13,7 +13,8 @@ guarantees of docs/LIBRARY_CONTRACT.md section 6. In order below:
 - `undo()` and `list_batches()`
 - plans with preconditions: `Plan`, `save_plan`, `load_plan`, `validate`, `check_op`
 - staging cleanup (`discard_staged`, `clean_staging`) and `write_export`
-- outside the library: `keep_media` (the Movies and videos folders), a profile's export,
+- outside the library: `keep_media` (the Movies and videos folders) and, at the owner's
+  word, `trash_media` (one of those films to the Trash: 2026-10-17), a profile's export,
   the app's own cache (`sweep_cached` and its neighbours), and a film arriving from a
   paired device into that cache (`write_upload_part`, `write_upload_note`; 2026-10-16)
 
@@ -42,6 +43,8 @@ regular files and empty folders inside `_Staging/`; an empty name a move reserve
 didn't use (contract 6.4); during undo, folders the undone batch created that are empty
 again; and folders in `Music/` left empty by moves (`remove_empty_folders`, step 09d).
 "Empty" ignores `.DS_Store` and the other junk names, which go with the folder.
+Outside the library, only the app's own cache is ever deleted from; a film or video the
+owner chose goes from the Movies or videos folder to the Trash (`trash_media`).
 """
 
 from __future__ import annotations
@@ -2452,6 +2455,77 @@ def keep_media(
     _sync_folder(target.parent)
     log.info("Kept %s", placeholder)
     return folder / placeholder.name
+
+
+# What `trash_media` takes: the kinds of video file the app lists in the Movies folder and
+# the videos folder (`VideoFiles` in the app), and nothing else kept there.
+MEDIA_TRASH_ENDINGS = frozenset(
+    {".mkv", ".mp4", ".m4v", ".mov", ".avi", ".webm", ".wmv", ".flv", ".mpg", ".mpeg", ".ts",
+     ".m2ts", ".3gp", ".ogv"}
+)  # fmt: skip
+
+
+def trash_media(
+    path: Path,
+    movies_folder: Path,
+    videos_folder: Path,
+    *,
+    forbidden: Iterable[Path] = (),
+) -> Path:
+    """Send one film or video the owner chose to the system Trash, from the Movies folder
+    or the videos folder (the owner, 2026-10-17: "should be able to right click and
+    delete source material"). Returns where it was. Only ever the Trash, from which the
+    owner can put it back: nothing here deletes a file outright.
+
+    - `path` must be a real video file (not a link, not a folder, not a hidden file),
+      strictly inside `movies_folder` or `videos_folder` once every link on the way has
+      been followed. The two folders themselves are never touched.
+    - Never anything inside `forbidden` (a library, a source folder), even when one of
+      them is inside the Movies folder.
+    - Not journaled, and needs no library lock: no library file is touched, and the
+      film is the owner's to keep or bin, as when it was kept (`keep_media`).
+    """
+    given = Path(path).expanduser()
+    if not given.is_absolute():
+        raise OutsideLibraryError(f"{path} isn't a whole path, so it was left alone.", path)
+    if not os.path.lexists(given):
+        raise NotFoundError(f"There's no file at {given}. It may have gone already.")
+    if _is_link(given):
+        raise OutsideLibraryError(
+            f"{given.name} is a link to a file somewhere else, so it was left alone.", given
+        )
+    real = Path(os.path.realpath(given))
+    roots = [Path(os.path.realpath(Path(f).expanduser())) for f in (movies_folder, videos_folder)]
+    if any(_key(real) == _key(root) for root in roots):
+        raise UserError(f"{given.name} is where films and videos are kept, and is never moved.")
+    if not any(_inside(real, root) for root in roots):
+        raise OutsideLibraryError(
+            f"Only a film or video in your Movies or Videos folder can be moved to the Trash "
+            f"here, and {given.name} isn't in either.",
+            given,
+        )
+    banned = [Path(f).expanduser() for f in forbidden]
+    banned += [Path(os.path.realpath(f)) for f in banned]
+    if any(_within(real, f) or _within(given, f) for f in banned):
+        raise OutsideLibraryError(
+            f"{given.name} is inside a library or a source folder, so it was left alone.", given
+        )
+    if not real.is_file():
+        raise UserError(f"{given.name} isn't a file: only a film or a video can go this way.")
+    if real.name.startswith(".") or naming.is_junk(real.name):
+        raise UserError(f"{given.name} isn't a film or a video.")
+    if real.suffix.lower() not in MEDIA_TRASH_ENDINGS:
+        raise UserError(f"{given.name} isn't a film or a video, so it was left alone.")
+    try:
+        _send_to_trash(real)
+    except Exception as exc:
+        raise FileOperationError(
+            f"Couldn't move {given.name} to the Trash: {_describe(exc)}. It's still where it was."
+        ) from exc
+    if os.path.lexists(real):
+        raise FileOperationError(f"{given.name} is still there after moving it to the Trash.")
+    log.info("Moved %s to the Trash, at the owner's word", real)
+    return given
 
 
 # ---- a profile's export (2026-10-12) -----------------------------------------------------

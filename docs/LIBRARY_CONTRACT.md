@@ -68,6 +68,8 @@ The engine guarantees everything in this document. It's written so that if the a
   - **it never overwrites** (` (2)`, ` (3)` if the name is taken), and a file appears complete or not at all;
   - it makes a missing folder inside those two, and the `Media` folder itself, but never the Movies or Downloads folder;
   - it's not journaled and can't be undone from the journal: nothing of the library's is touched, and the file is the owner's to keep or bin, like an export. No tags are written to it and it isn't indexed.
+
+  **Binning one, at the owner's word (2026-10-17):** a film or video the owner chooses (its right-click Move to Trash…, after a yes) is sent to the system Trash by `fileops.trash_media`, the one thing the engine ever removes from these two folders, and only ever to the Trash. Only a video file strictly inside the Movies folder or the videos folder once every link on the way is followed; never a link, a folder, either folder itself, or anything inside a library or a source folder. Not journaled: the Finder's Put Back is its undo.
 - **Recommended root:** `~/Music Organizer Library` or a folder on an external drive, **not** inside `~/Music` if `~/Music` holds the rips you'll register as a source. The engine refuses a root inside a source, and a source that contains the root.
 - `Mix/` (the weekly mix, v1.1) will sit beside `Music/` and is not part of the library.
 

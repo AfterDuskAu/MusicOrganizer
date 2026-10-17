@@ -516,7 +516,10 @@ private struct HomeRow: View {
         case (.songs, _): model.goTo = .downloads
         case (.channels, "recommended"): model.goTo = .videoFinder
         case (.channels, _): model.goTo = .channels
-        case (.anime, _): model.goTo = .animeFinder
+        case (.anime, _):
+            // Its lists, not a search left in its box (2026-10-17), as from the sidebar.
+            model.clickedInSidebar(.animeFinder)
+            model.goTo = .animeFinder
         case (.movies, _), (.series, _):
             // A list's row opens that list in its Finder, at the row's genre.
             let name = section.group == .series ? "seriesFinder" : "movieFinder"
@@ -530,7 +533,9 @@ private struct HomeRow: View {
                 UserDefaults.standard.set(section.genre ?? "", forKey: "\(name)Genre")
                 UserDefaults.standard.set(section.also ?? "", forKey: "\(name)Also")
             }
-            model.goTo = section.group == .series ? .seriesFinder : .movieFinder
+            let finder: SidebarItem = section.group == .series ? .seriesFinder : .movieFinder
+            model.clickedInSidebar(finder)
+            model.goTo = finder
         }
     }
 
