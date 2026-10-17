@@ -1,5 +1,6 @@
-"""Finding the external programs the engine needs: ffmpeg, ffprobe, fpcalc and deno; and
-`keep_awake()`, which stops the computer sleeping while the queue works.
+"""Finding the external programs the engine needs: ffmpeg, ffprobe, fpcalc and deno;
+`keep_awake()`, which stops the computer sleeping while the queue works; and `room_for()`,
+whether a film coming in has room on the disk.
 
 Search order for each tool:
 1. the path set under "tools" in config.json
@@ -15,6 +16,7 @@ from __future__ import annotations
 import logging
 import os
 import re
+import shutil
 import subprocess
 import sys
 from collections.abc import Iterator
@@ -377,3 +379,32 @@ def _execution_state() -> Iterator[None]:
         yield
     finally:
         set_state(_ES_CONTINUOUS)
+
+
+# ---- room on the disk for a film ---------------------------------------------------------
+
+ROOM_TO_SPARE = 1024**3  # a gigabyte left over on each disk, whatever comes
+
+
+def _nearest(path: Path) -> Path:
+    """`path`, or the nearest folder above it that's there."""
+    for candidate in (path, *path.parents):
+        if candidate.exists():
+            return candidate
+    return path
+
+
+def room_for(coming: int, size: int, cache: Path, movies: Path) -> bool:
+    """Whether there's room for the rest of a film in the app's cache (`coming` bytes)
+    and for all of it in the Movies folder (`size`), with a gigabyte to spare on each
+    disk: a film sent from a device (`sharing`, 2026-10-16) or fetched from a plugin's
+    address (`fetch`, 2026-10-17). Only looked at; when it can't be told, the film is
+    let come (a full disk is said then)."""
+    try:
+        here, there = _nearest(cache), _nearest(movies)
+        if os.stat(here).st_dev == os.stat(there).st_dev:
+            return shutil.disk_usage(here).free >= coming + size + ROOM_TO_SPARE
+        return (shutil.disk_usage(here).free >= coming + ROOM_TO_SPARE
+                and shutil.disk_usage(there).free >= size + ROOM_TO_SPARE)  # fmt: skip
+    except OSError:
+        return True

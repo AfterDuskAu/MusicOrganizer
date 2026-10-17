@@ -16,8 +16,10 @@ guarantees of docs/LIBRARY_CONTRACT.md section 6. In order below:
 - outside the library: `keep_media` (the Movies and videos folders) and, at the owner's
   word, `trash_media` (one of those films to the Trash: 2026-10-17), a profile's export,
   the app's own cache (`sweep_cached` and its neighbours, among them `write_cached` for
-  a torrent's resume data, 2026-10-17), and a film arriving from a paired device into
-  that cache (`write_upload_part`, `write_upload_note`; 2026-10-16)
+  a torrent's resume data, 2026-10-17), a film arriving from a paired device into
+  that cache (`write_upload_part`, `write_upload_note`; 2026-10-16), and a film fetched
+  from a plugin's web address into it (`write_fetched_part`, `write_fetched_note`;
+  2026-10-17)
 
 The journal
 -----------
@@ -2789,22 +2791,35 @@ def sweep_cached(
 # how much has arrived; once it has all arrived, `keep_media` copies it into the Movies
 # folder and `forget_cached` deletes both. These two are the only writers of that folder;
 # `sweep_cached` clears what has sat there unused for two days.
+#
+# ---- a film fetched from an address a plugin gave (2026-10-17) -------------------------
+#
+# The same, for a film the owner downloads from a plugin's plain web address (`fetch`):
+# its bytes arrive a part at a time from that address into one file in `<cache>/fetched/`,
+# beside a note of how much has come, so a fetch that was cut off (the network, or the
+# app shut) carries on from there. `write_fetched_part` and `write_fetched_note` are the
+# only writers of that folder (ffmpeg aside: it writes one named file there for a film
+# that comes as a playlist of parts, as it does for `convert`); `keep_media` copies the
+# film into the Movies folder, `forget_cached` deletes what's left, and `sweep_cached`
+# clears what has sat there unused for two days.
 
 UPLOADS_DIR = "uploads"
+FETCHED_DIR = "fetched"
 
 
-def _upload_file(path: Path, cache: Path) -> Path:
-    """`path`, checked: a name directly inside `<cache>/uploads/`, which must be a real
-    folder inside the app's cache (not a link), and not itself a link or a folder."""
+def _part_file(path: Path, cache: Path, place: str, what: str) -> Path:
+    """`path`, checked: a name directly inside `<cache>/<place>/`, which must be a real
+    folder inside the app's cache (not a link), and not itself a link or a folder.
+    `what` is how an error names the kind of file ("a film arriving")."""
     path, cache = Path(path).absolute(), Path(cache).absolute()
-    folder = cache / UPLOADS_DIR
+    folder = cache / place
     if (
         _key(path.parent) != _key(folder)
         or _is_link(folder)
         or not folder.is_dir()
         or not _inside(folder.resolve(), cache.resolve())
     ):
-        raise OutsideLibraryError(f"{path.name} isn't a film arriving in the app's cache.")
+        raise OutsideLibraryError(f"{path.name} isn't {what} in the app's cache.")
     if not path.name or path.name.startswith(".") or naming.is_junk(path.name):
         raise ValueError(f"not a file name: {path.name!r}")
     if _is_link(path) or path.is_dir():
@@ -2812,6 +2827,87 @@ def _upload_file(path: Path, cache: Path) -> Path:
             f"Something else is in the way of {path.name} in the app's cache."
         )
     return path
+
+
+def _upload_file(path: Path, cache: Path) -> Path:
+    """`path`, checked: a name directly inside `<cache>/uploads/` (`_part_file`)."""
+    return _part_file(path, cache, UPLOADS_DIR, "a film arriving")
+
+
+def _write_part(
+    path: Path,
+    offset: int,
+    source: Any,
+    length: int | None,
+    going_on: Callable[[int], bool] | None,
+    what: str,
+) -> int:
+    """The writing `write_upload_part` and `write_fetched_part` share, once `path` has
+    been checked: `length` bytes from `source` (all it has, when None) written at
+    `offset`, after cutting off anything beyond it. `what` is how an error names it."""
+    if isinstance(offset, bool) or offset < 0 or (length is not None and length < 0):
+        raise ValueError("offset and length must be whole numbers from 0")
+    flags = os.O_WRONLY | os.O_CREAT | _O_BINARY | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        fd = os.open(path, flags, 0o600)
+    except OSError as exc:
+        raise FileOperationError(
+            f"Couldn't write {what} in the app's cache: {exc.strerror or exc}."
+        ) from exc
+    written = 0
+    try:
+        about = os.fstat(fd)
+        if not stat.S_ISREG(about.st_mode):
+            raise OutsideLibraryError(
+                f"Something else is in the way of {path.name} in the app's cache."
+            )
+        if offset > about.st_size:
+            raise UserError("That part of the film doesn't follow on from what has arrived.")
+        os.ftruncate(fd, offset)
+        os.lseek(fd, offset, os.SEEK_SET)
+        while length is None or written < length:
+            wanted = _CHUNK if length is None else min(_CHUNK, length - written)
+            try:
+                chunk = source.read(wanted)
+            except OSError:  # the connection dropped, or went silent too long
+                break
+            if not chunk:
+                break
+            view = memoryview(chunk)
+            while view:
+                view = view[os.write(fd, view) :]
+            written += len(chunk)
+            if going_on is not None and not going_on(written):
+                break
+        _sync_file(fd)
+    except OSError as exc:
+        raise FileOperationError(
+            f"Couldn't write {what} in the app's cache: {exc.strerror or exc}."
+        ) from exc
+    finally:
+        os.close(fd)
+    return written
+
+
+def _write_part_note(path: Path, text: str, what: str) -> None:
+    """Replace a small note whole, once `path` has been checked: a temp file beside it,
+    flushed, then renamed over it, so a reader never sees half of one."""
+    fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=".musicorg-", suffix=".tmp")
+    tmp = Path(tmp_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
+            f.write(text)
+            f.flush()
+            _sync_file(f.fileno())
+        _replace(tmp, path)
+    except BaseException as exc:
+        tmp.unlink(missing_ok=True)
+        if isinstance(exc, OSError):
+            raise FileOperationError(
+                f"Couldn't note {what} in the app's cache: {exc.strerror or exc}."
+            ) from exc
+        raise
+    _sync_folder(path.parent)
 
 
 def write_upload_part(
@@ -2843,49 +2939,9 @@ def write_upload_part(
       the app's own cache, which the device can send again.
     """
     path = _upload_file(path, cache)
-    if isinstance(offset, bool) or offset < 0 or length < 0:
-        raise ValueError("offset and length must be whole numbers from 0")
-    flags = os.O_WRONLY | os.O_CREAT | _O_BINARY | getattr(os, "O_NOFOLLOW", 0)
-    try:
-        fd = os.open(path, flags, 0o600)
-    except OSError as exc:
-        raise FileOperationError(
-            f"Couldn't write a film arriving from a device in the app's cache: "
-            f"{exc.strerror or exc}."
-        ) from exc
-    written = 0
-    try:
-        about = os.fstat(fd)
-        if not stat.S_ISREG(about.st_mode):
-            raise OutsideLibraryError(
-                f"Something else is in the way of {path.name} in the app's cache."
-            )
-        if offset > about.st_size:
-            raise UserError("That part of the film doesn't follow on from what has arrived.")
-        os.ftruncate(fd, offset)
-        os.lseek(fd, offset, os.SEEK_SET)
-        while written < length:
-            try:
-                chunk = source.read(min(_CHUNK, length - written))
-            except OSError:  # the connection dropped, or went silent too long
-                break
-            if not chunk:
-                break
-            view = memoryview(chunk)
-            while view:
-                view = view[os.write(fd, view) :]
-            written += len(chunk)
-            if going_on is not None and not going_on(written):
-                break
-        _sync_file(fd)
-    except OSError as exc:
-        raise FileOperationError(
-            f"Couldn't write a film arriving from a device in the app's cache: "
-            f"{exc.strerror or exc}."
-        ) from exc
-    finally:
-        os.close(fd)
-    return written
+    if not isinstance(length, int) or isinstance(length, bool):
+        raise ValueError("a device's part says how long it is")
+    return _write_part(path, offset, source, length, going_on, "a film arriving from a device")
 
 
 def write_upload_note(path: Path, text: str, *, cache: Path) -> None:
@@ -2893,24 +2949,50 @@ def write_upload_note(path: Path, text: str, *, cache: Path) -> None:
     how much of it has arrived), in `<cache>/uploads/`, under the same guards as
     `write_upload_part`. The note is replaced whole: a temp file beside it, flushed,
     then renamed over it, so a reader never sees half of one."""
-    path = _upload_file(path, cache)
-    fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=".musicorg-", suffix=".tmp")
-    tmp = Path(tmp_name)
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
-            f.write(text)
-            f.flush()
-            _sync_file(f.fileno())
-        _replace(tmp, path)
-    except BaseException as exc:
-        tmp.unlink(missing_ok=True)
-        if isinstance(exc, OSError):
-            raise FileOperationError(
-                f"Couldn't note a film arriving from a device in the app's cache: "
-                f"{exc.strerror or exc}."
-            ) from exc
-        raise
-    _sync_folder(path.parent)
+    _write_part_note(_upload_file(path, cache), text, "a film arriving from a device")
+
+
+def _fetched_file(path: Path, cache: Path) -> Path:
+    """`path`, checked: a name directly inside `<cache>/fetched/` (`_part_file`)."""
+    return _part_file(path, cache, FETCHED_DIR, "a film being fetched")
+
+
+def write_fetched_part(
+    path: Path,
+    offset: int,
+    source: Any,
+    length: int | None,
+    *,
+    cache: Path,
+    going_on: Callable[[int], bool] | None = None,
+) -> int:
+    """Write the next part of a film fetched from a plugin's web address into its file
+    in the app's cache (`<cache>/fetched/<name>`), and return how many of its bytes were
+    written (2026-10-17). The same guards as `write_upload_part`, for that folder:
+
+    - only a file directly in `<cache>/fetched/`: never a link, never anything outside
+      the app's cache, never anything of a library's;
+    - `offset` is where the part goes, at most the file's length now; anything after it
+      (what arrived after the note last counted) is cut off first;
+    - `length` bytes are read from `source` (the address's answer: anything with
+      `read(n)`), or everything it has when `length` is None (an answer that doesn't say
+      how long it is). Fewer arrive when the connection ends early or goes silent: what
+      did arrive is kept, and the count says how much;
+    - `going_on(written)`, if given, is asked after each chunk; False stops there (the
+      owner pressed Stop, or the engine is stopping);
+    - flushed to the disk before it returns: every byte counted is on the disk;
+    - not journaled, and there's nothing to undo: it's the app's own cache, which the
+      address can be asked for again.
+    """
+    path = _fetched_file(path, cache)
+    return _write_part(path, offset, source, length, going_on, "a film being fetched")
+
+
+def write_fetched_note(path: Path, text: str, *, cache: Path) -> None:
+    """Save the small note kept beside a film being fetched (where it's from, and how
+    much of it has arrived), in `<cache>/fetched/`, under the same guards as
+    `write_fetched_part`. Replaced whole, as `write_upload_note` replaces its note."""
+    _write_part_note(_fetched_file(path, cache), text, "a film being fetched")
 
 
 def _write_new(target: Path, data: bytes, remove_placeholder: Callable[[Path], object]) -> Path:

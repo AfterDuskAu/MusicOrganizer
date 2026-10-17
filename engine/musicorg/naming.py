@@ -300,9 +300,16 @@ def candidate_names(target: Path, limit: int = 1000) -> Iterator[Path]:
 # A film the owner keeps is loose in the Movies folder. A series' episodes and anime have
 # a folder each inside it, and that folder is what says which a file is (the owner,
 # 2026-10-08): nothing else records it, so it holds for a file the owner puts there too.
+# A film from the Finder for adults has one too, `18+` (the owner, 2026-10-17: "These
+# downloads would move to a new section under videos called 18+"): every one of them
+# loose in it, named as a film is, an episode (if one ever comes) with its show's name
+# but no folders of its own.
 KEPT_MOVIE = "movie"
-KEPT_FOLDERS = {"series": "Series", "anime": "Anime"}
+KEPT_ADULT = "adult"
+ADULT_DIR = "18+"
+KEPT_FOLDERS = {"series": "Series", "anime": "Anime", KEPT_ADULT: ADULT_DIR}
 KEPT_KINDS = (KEPT_MOVIE, *KEPT_FOLDERS)
+_FLAT_KINDS = frozenset({KEPT_ADULT})  # an episode stays in the kind's own folder
 SPECIALS_DIR = "Specials"  # season 0
 _EPISODE_TITLE_GAP = " - "
 _SEASON_DIR = re.compile(r"season\s*(\d{1,4})", re.IGNORECASE)
@@ -335,6 +342,8 @@ def kept_place(
         an episode of a series         Series/<Show>/Season 1/<Show> S01E02 - <Title>
         an episode of an anime         Anime/<Show>/Season 1/<Show> S01E02 - <Title>
         an anime that's a film         Anime/<Title> (<Year>)
+        a film for adults              18+/<Title> (<Year>)
+        an episode of one              18+/<Show> S01E02 - <Title>
 
     Only what's known is written: an episode with no title of its own is `<Show> S01E02`,
     one whose season isn't known is `<Show>/<Show> E02`, and season 0 is `Specials`.
@@ -362,8 +371,8 @@ def kept_place(
         dated = f" ({made})" if made else ""
         most = _chars(_kept_name_room(spare, folders), own)
         return folders, _finish(_fit(own, most, MAX_BYTES, fixed=dated) + dated) if own else ""
-    folders = (top, part_of)
-    if season is not None:
+    folders = (top,) if kind in _FLAT_KINDS else (top, part_of)
+    if season is not None and kind not in _FLAT_KINDS:
         folders += (SPECIALS_DIR if season == 0 else f"Season {season}",)
     if season is not None and episode is not None:
         number = f" S{season:02d}E{episode:02d}"
@@ -398,7 +407,8 @@ def kept_details(rel: PurePath | str) -> dict[str, str | int]:
     the Movies folder down). Always `kind`; for an episode also `show`, and `season`,
     `episode` and `title` (the episode's own) where the path says.
 
-    - `kind` is `series` or `anime` for a file inside `Series/` or `Anime/`, and
+    - `kind` is `series` or `anime` for a file inside `Series/` or `Anime/`, `adult`
+      for one anywhere inside `18+/` (2026-10-17: and nothing more is read of it), and
       `movie` for one anywhere else. Nothing is guessed from a film's name.
     - A file straight inside `Series/` or `Anime/` is part of no show (an anime film).
       Otherwise `show` is the name of the folder under it.
@@ -413,7 +423,7 @@ def kept_details(rel: PurePath | str) -> dict[str, str | int]:
         top = parts[0].casefold()
         kind = next((k for k, name in KEPT_FOLDERS.items() if name.casefold() == top), kind)
     found: dict[str, str | int] = {"kind": kind}
-    if kind == KEPT_MOVIE or len(parts) < 3:
+    if kind in (KEPT_MOVIE, KEPT_ADULT) or len(parts) < 3:
         return found
     show, stem = parts[1], PurePosixPath(parts[-1]).stem
     found["show"] = show

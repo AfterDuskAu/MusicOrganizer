@@ -426,12 +426,15 @@ def test_the_app_says_what_its_keeping(opened: rpc.Server, places: dict[str, Pat
         opened, "torrent.keep", title="", kind="anime", show="A Show", season=1, episode=2, **film
     )
     result(opened, "torrent.keep", title="A Film", year="2001", kind="anime", **film)
+    # From the Finder for adults (2026-10-17): in the Movies folder's own 18+ folder.
+    result(opened, "torrent.keep", title="A Film", year="2001", kind="adult", **film)
     assert keeper.asked == [
         ("The Kid (1921)", ()),
         ("The Kid", ()),
         ("A Show S01E02 - Pilot", ("Series", "A Show", "Season 1")),
         ("A Show S01E02", ("Anime", "A Show", "Season 1")),
         ("A Film (2001)", ("Anime",)),
+        ("A Film (2001)", ("18+",)),
     ]
     for wrong in (
         {"title": "A Film", "kind": "cartoon"},  # not a kind
@@ -444,7 +447,7 @@ def test_the_app_says_what_its_keeping(opened: rpc.Server, places: dict[str, Pat
         {"title": " "},
     ):
         assert code(opened, "torrent.keep", **film, **wrong) == rpc.INVALID_PARAMS, wrong
-    assert len(keeper.asked) == 5
+    assert len(keeper.asked) == 6
     opened._films = None
 
 

@@ -625,7 +625,7 @@ def test_a_film_needs_room_on_the_computer(
     class Usage:
         free = sharing.ROOM_TO_SPARE + len(FILM)  # room for it once, not twice
 
-    monkeypatch.setattr(sharing.shutil, "disk_usage", lambda path: Usage)
+    monkeypatch.setattr(tools.shutil, "disk_usage", lambda path: Usage)
     status, answer = start(share, key)
     assert (status, answer["error"]) == (500, "unavailable") and "room" in answer["message"]
     Usage.free += len(FILM)
