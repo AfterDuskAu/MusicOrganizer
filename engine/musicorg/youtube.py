@@ -2431,10 +2431,17 @@ def _page_problem(exc: BaseException, address: str) -> Exception:
         return YouTubeError(f"No video was found on that page of {host}.")
     if any(s in low for s in ("requested format is not available", "format is not available")):
         return YouTubeError(f"{host} doesn't offer that quality any more. Look the page up again.")
-    if any(s in low for s in ("http error 401", "http error 403", "sign in", "log in", "login",
-                              "private", "cookies")):  # fmt: skip
+    if any(s in low for s in ("http error 401", "sign in", "log in", "login", "private",
+                              "cookies")):  # fmt: skip
         return DownloadError(f"{host} only shows that video to someone signed in, so it can't "
                              "be downloaded here.")  # fmt: skip
+    if any(s in low for s in ("http error 403", "forbidden", "access denied")):
+        # Not a sign-in (2026-10-18: tesla.com's videos play for anyone in a browser): the
+        # site's guard turns away whatever doesn't look like a web browser to it.
+        return DownloadError(
+            f"{host} turned Bear Media away: it lets web browsers in, but not an app asking "
+            "for its pages. Nothing was downloaded."
+        )
     if any(s in low for s in ("http error 404", "not found", "has been removed", "unavailable")):
         return DownloadError(f"{host} doesn't have that video any more.")
     if any(s in low for s in _NETWORK):

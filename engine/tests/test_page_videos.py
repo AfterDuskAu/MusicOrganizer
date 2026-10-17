@@ -155,6 +155,26 @@ def test_a_page_with_no_video_says_so(site: tuple[Site, str]) -> None:
         youtube.page_videos(f"{address}/none.html")
 
 
+def test_a_site_that_turns_programs_away_isnt_said_to_want_a_sign_in() -> None:
+    """2026-10-18: tesla.com answered 403 to the page itself (its guard lets only web
+    browsers in), and the app said the video was only for someone signed in."""
+    page = "https://www.example.org/support/videos/watch/a-video"
+
+    def said(text: str) -> str:
+        return str(youtube._page_problem(Exception(text), page))
+
+    turned = said(
+        f"ERROR: [generic] a-video: Unable to download webpage: HTTP Error 403: Forbidden "
+        f"(caused by <HTTPError 403: Forbidden>) {page}"
+    )
+    assert "turned Bear Media away" in turned and "signed in" not in turned
+    assert page not in turned  # never the address itself
+    assert "turned" in said("ERROR: unable to download video data: HTTP Error 403: Forbidden")
+    assert "signed in" in said("ERROR: [vimeo] 1: This video is private. Use --cookies to sign in")
+    assert "signed in" in said("ERROR: HTTP Error 401: Unauthorized")
+    assert "any more" in said("ERROR: HTTP Error 404: Not Found")
+
+
 def test_qualities_sharpest_first_with_sound_beside_a_picture_alone() -> None:
     info = {
         "formats": [
