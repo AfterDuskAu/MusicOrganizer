@@ -133,6 +133,8 @@ SLOW_METHODS = frozenset(
      "video.search", "channel.videos", "channel.search", "torrent.stop",
      "torrent.count",  # joins a torrent for a few seconds to count who has it
      "media.convert", "torrent.stop_keeping",  # reads the film with ffprobe first
+     "page.videos",  # reads a web page (2026-10-17)
+     "media.move",  # to another drive, a film is copied
      "profile.contents", "profile.import"}  # walk the library; a dry run reads every tag
 )  # fmt: skip
 MAX_EXCLUDE = 5000  # songs already on screen that Show More leaves out
@@ -410,6 +412,8 @@ class Server:
             "stream.keep": self.stream_keep,
             "stream.status": self.stream_status,
             "stream.stop": self.stream_stop,
+            "page.videos": self.page_videos,
+            "page.keep": self.page_keep,
             "profile.contents": self.profile_contents,
             "profile.export": self.profile_export,
             "profile.import": self.profile_import,
@@ -417,6 +421,7 @@ class Server:
             "media.convert": self.media_convert,
             "media.converting": self.media_converting,
             "media.trash": self.media_trash,
+            "media.move": self.media_move,
             "torrent.stop": self.torrent_stop,
             "sharing.status": self.sharing_status,
             "sharing.set": self.sharing_set,
@@ -1200,6 +1205,52 @@ class Server:
         the app's list). Never a file of the library's or of a source, and never one
         that's being converted just now."""
         film = Path(need(params, "path", str))
+        self._not_converting(film)
+        folders = media_folders()
+        gone = fileops.trash_media(
+            film, folders["movies"], folders["media"], forbidden=self._not_kept_media()
+        )
+        return {"path": str(gone)}
+
+    def media_move(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Move one film or video in the Movies or the videos folder into another of the
+        places they're kept (the owner, 2026-10-17: "right clicking on a downloaded
+        movie/tv show, it can move to any download folder, including the 18+ one, incase
+        there is a problem with detection"). `to` is a kind: `movie` (loose in the Movies
+        folder), `series`, `anime`, `adult` (its 18+ folder) or `video` (the videos
+        folder); an episode named "<Show> S01E02" goes into its show's season folder
+        (`naming.kept_move_place`). Never over a file, never a file of the library's or
+        a source's, and nothing for adults in what may be a child's profile."""
+        film = Path(need(params, "path", str))
+        kind = need(params, "to", str)
+        if kind not in naming.MOVE_KINDS:
+            raise RpcError(INVALID_PARAMS, f"to should be one of {', '.join(naming.MOVE_KINDS)}.")
+        folders = media_folders()
+        if self._maybe_child() and (
+            kind == naming.KEPT_ADULT or self._is_adult_file(film, folders["movies"])
+        ):
+            raise RpcError(USER_ERROR, "That isn't part of this profile.")
+        self._not_converting(film)
+        root = folders["media"] if kind == naming.KEPT_VIDEO else folders["movies"]
+        moved = fileops.move_media(
+            film,
+            root.joinpath(*naming.kept_move_place(kind, film.name)),
+            folders["movies"],
+            folders["media"],
+            forbidden=self._not_kept_media(),
+        )
+        return {"path": str(moved)}
+
+    @staticmethod
+    def _is_adult_file(film: Path, movies: Path) -> bool:
+        try:
+            rel = Path(os.path.realpath(film)).relative_to(Path(os.path.realpath(movies)))
+        except ValueError:
+            return False
+        return naming.kept_details(rel)["kind"] == naming.KEPT_ADULT
+
+    def _not_converting(self, film: Path) -> None:
+        """Refuse a film that's being converted just now (`media.convert`)."""
         if self._converter is not None:
             now = self._converter.status()["converting"]
             if now is not None and Path(now["path"]) == film:
@@ -1207,14 +1258,16 @@ class Server:
                     USER_ERROR,
                     f"{film.name} is being converted just now. Try again when that has finished.",
                 )
+
+    def _not_kept_media(self) -> list[Path]:
+        """What's never touched as a kept film, even inside the Movies folder: the open
+        library, and the folders it reads from."""
         forbidden: list[Path] = []
         if self.lib is not None:
             forbidden.append(self.lib.root)
             with self._index() as index:
                 forbidden += scan.source_folders(self.lib, index).values()
-        folders = media_folders()
-        gone = fileops.trash_media(film, folders["movies"], folders["media"], forbidden=forbidden)
-        return {"path": str(gone)}
+        return forbidden
 
     # ---- a profile's export and import (2026-10-12; module `transfer`) -------------------
 
@@ -1346,9 +1399,11 @@ class Server:
 
     def _fetching(self) -> fetch.Fetcher:
         if self._fetcher is None:
+            folders = media_folders()
             self._fetcher = fetch.Fetcher(
                 app_dirs().cache,
-                media_folders()["movies"],
+                folders["movies"],
+                videos=folders["media"],
                 forbidden=lambda: [self.lib.root] if self.lib is not None else [],
             )
         return self._fetcher
@@ -1368,10 +1423,66 @@ class Server:
         )  # fmt: skip
 
     def _which_fetch(self, params: dict[str, Any]) -> str:
+        """Which download: its id, its address, or (a video from a page) its page's
+        address, its place there and its quality."""
         which = want(params, "id", str) or want(params, "url", str)
         if not which:
             raise RpcError(INVALID_PARAMS, "Say which download: its id, or its url.")
+        quality = want(params, "quality", str)
+        if quality is not None and not want(params, "id", str):
+            return fetch.page_id(which, self._page_item(params), quality)
         return which
+
+    # -- methods: the videos on a web page (2026-10-17) --
+
+    def _no_pages_for_a_child(self) -> None:
+        """The URL page isn't part of a child's profile: anything from anywhere could
+        come of it."""
+        if self._kids["on"]:
+            raise RpcError(USER_ERROR, "That isn't part of this profile.")
+
+    @staticmethod
+    def _page_item(params: dict[str, Any]) -> int | None:
+        item = want(params, "item", int)
+        if item is not None and not 1 <= item <= 10_000:
+            raise RpcError(INVALID_PARAMS, "item should be a video's place on the page, from 1.")
+        return item
+
+    def page_videos(self, params: dict[str, Any]) -> dict[str, Any]:
+        """The videos on a web page the owner pasted (the owner, 2026-10-17: "add in a
+        "URL" which would get the video from the page from any website, shows which
+        videos are on the page"). Nothing is downloaded (`youtube.page_videos`)."""
+        self._no_pages_for_a_child()
+        with youtube.waited_on():
+            return youtube.page_videos(need(params, "url", str))
+
+    def page_keep(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Download one video from a web page in the quality chosen, with yt-dlp, and keep
+        it where the owner chose: `kind` `video` (the videos folder: the standard),
+        `movie`, `series`, `anime` or `adult` (the Movies folder's 18+ folder), filed as
+        `media.move` files one. Answered as `stream.keep` is, and followed with
+        `stream.status` and `stream.stop` (by its id, or its `url`, `item` and
+        `quality`). Only ever from the owner's click (or the app carrying on one it
+        asked for before it was closed); never a YouTube or SoundCloud video."""
+        self._no_pages_for_a_child()
+        url = need(params, "url", str)
+        quality = need(params, "quality", str)
+        title = need(params, "title", str).strip()
+        kind = want(params, "kind", str) or naming.KEPT_VIDEO
+        if kind not in naming.MOVE_KINDS:
+            raise RpcError(INVALID_PARAMS, f"kind should be one of {', '.join(naming.MOVE_KINDS)}.")
+        if kind == naming.KEPT_ADULT and self._maybe_child():
+            raise RpcError(USER_ERROR, "That isn't part of this profile.")
+        fetcher = self._fetching()
+        root = fetcher.videos if kind == naming.KEPT_VIDEO else fetcher.movies
+        _, name = naming.kept_place(naming.KEPT_MOVIE, title, root=root)
+        if not name:
+            raise RpcError(INVALID_PARAMS, "That title can't be made into a file's name.")
+        return fetcher.keep_page(
+            url, self._page_item(params), quality, name,
+            folder=naming.kept_move_place(kind, name), to_videos=kind == naming.KEPT_VIDEO,
+            convert=bool(want(params, "convert", bool, False)),
+        )  # fmt: skip
 
     def stream_status(self, params: dict[str, Any]) -> dict[str, Any]:
         which = self._which_fetch(params)

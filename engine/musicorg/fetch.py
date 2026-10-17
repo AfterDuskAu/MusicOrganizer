@@ -31,6 +31,15 @@ What this module holds to:
 - Nothing else is fetched or told to anyone: the address is the plugin's own, asked as
   the film player would ask it.
 
+**A video from a web page** (2026-10-17, the owner: "add in a "URL" which would get the
+video from the page from any website ... use yt-dlp engine to download"): the URL page
+names a page, a video on it and a quality (`youtube.page_videos`), and `keep_page` has
+yt-dlp download that video (`youtube.download_page_video`, the one gate's) into a folder
+of its own in `fetched/`, `<id>.page/`, which yt-dlp writes and nothing else does. It's
+then checked, converted and kept exactly as a film from an address is, into the folder
+the owner chose: the Movies folder, one of its folders, or (`to_videos`) the videos
+folder. Never a YouTube or SoundCloud video: those go through the queue.
+
 In replay mode (`MUSICORG_REPLAY_DIR`, every test) only an address on this computer is
 ever fetched: any other raises `ReplayMissError`.
 """
@@ -53,7 +62,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
-from musicorg import convert, fileops, tools
+from musicorg import convert, fileops, tools, youtube
 from musicorg.errors import MusicOrgError, ReplayMissError, UserError
 
 log = logging.getLogger(__name__)
@@ -93,6 +102,10 @@ FORMAT_ENDINGS = (
     ("mpegts", ".ts"), ("flv", ".flv"), ("asf", ".wmv"), ("mpeg", ".mpg"),
 )  # fmt: skip
 PLAYLIST_PROTOCOLS = "http,https,tcp,tls,crypto"  # all ffmpeg may open for a playlist
+# What a fetch keeps in `fetched/`, each named `<id><ending>`: what arrived, its note, a
+# playlist's joined film, and a converted copy; and a page's video's own folder.
+ENDINGS = (".part", ".json", ".hls.mp4", ".converting.mp4")
+PAGE_ENDING = ".page"
 
 
 class FetchError(UserError):
@@ -107,6 +120,13 @@ def fetch_id(url: str) -> str:
     """The id a fetch goes by: made from its address, so asking for the same one again
     (after the app was closed) finds what has arrived of it."""
     return "s-" + hashlib.sha256(url.encode("utf-8", "surrogatepass")).hexdigest()[:24]
+
+
+def page_id(url: str, item: int | None, quality: str) -> str:
+    """The id a video's download from a page goes by: made from its page's address, its
+    place there and its quality, so the same one asked for again finds what has arrived."""
+    made = f"{url.strip()}\n{item or 0}\n{quality}"
+    return "p-" + hashlib.sha256(made.encode("utf-8", "surrogatepass")).hexdigest()[:24]
 
 
 def check_address(url: str) -> str:
@@ -172,6 +192,10 @@ class _Fetch:
     keep_error: str | None = None
     keep_note: str | None = None
     converting: float | None = None
+    # A video from a web page (`keep_page`): its place on the page and its quality.
+    page: tuple[int | None, str] | None = None
+    to_videos: bool = False  # kept in the videos folder, not the Movies folder
+    no_room: bool = False
     ended: bool = False
     stop: threading.Event = field(default_factory=threading.Event)
     process: subprocess.Popen[str] | None = None
@@ -254,11 +278,13 @@ class Fetcher:
         cache: Path,
         movies: Path | None,
         *,
+        videos: Path | None = None,
         forbidden: Callable[[], list[Path]] = list,
     ) -> None:
         self.cache = cache  # the app's cache folder
         self.folder = cache / fileops.FETCHED_DIR
         self.movies = movies  # where a kept film goes; None: none can be kept
+        self.videos = videos  # where a video from a page may go instead (`keep_page`)
         self._forbidden = forbidden  # inside these nothing is ever kept: the open library
         self._jobs: dict[str, _Fetch] = {}
         self._lock = threading.Lock()
@@ -301,6 +327,47 @@ class Fetcher:
         threading.Thread(target=self._run, args=(job,), name="fetch", daemon=True).start()
         return job.status()
 
+    def keep_page(
+        self,
+        url: str,
+        item: int | None,
+        quality: str,
+        name: str,
+        *,
+        folder: tuple[str, ...] = (),
+        to_videos: bool = False,
+        convert: bool = False,
+    ) -> dict[str, Any]:
+        """Download one video from a web page (its `item` there, in `quality`: as
+        `youtube.page_videos` gave them) and keep it as `name`, in `folder` inside the
+        Movies folder, or in the videos folder (`to_videos`). Returns at once, with its
+        status, as `keep` does, and the same is true of asking again."""
+        url = youtube.page_address(url)
+        if youtube._is_service(None, url):
+            raise FetchError("That's a YouTube or SoundCloud address: those are downloaded "
+                             "through Video Finder and Music Finder, not here.")  # fmt: skip
+        quality = youtube.check_page_quality(quality)
+        root = self.videos if to_videos else self.movies
+        if root is None:
+            raise FetchError("There's nowhere set to download videos to on this computer.")
+        if not name.strip():
+            raise FetchError("A video needs a name to be saved under.")
+        job_id = page_id(url, item, quality)
+        with self._lock:
+            job = self._jobs.get(job_id)
+            if job is not None and not job.ended:
+                return job.status()
+            job = _Fetch(job_id, url, name.strip(), tuple(folder), convert, None,
+                         page=(item, quality), to_videos=to_videos)  # fmt: skip
+            kept = self._kept_before(job)
+            if kept is not None:
+                job.kept_path, job.ended, job.state = kept, True, COMPLETE
+                self._remember(job)
+                return job.status()
+            self._remember(job)
+        threading.Thread(target=self._run, args=(job,), name="fetch", daemon=True).start()
+        return job.status()
+
     def status(self, which: str) -> dict[str, Any]:
         job = self._find(which)
         if job is None:
@@ -333,7 +400,7 @@ class Fetcher:
         """Delete what has sat unused in `fetched/` for two days; what's in use stays."""
         self._swept = time.monotonic()
         skip = [f"{job.id}{ending}" for job in list(self._jobs.values()) if not job.ended
-                for ending in (".part", ".json", ".hls.mp4", ".converting.mp4")]  # fmt: skip
+                for ending in (*ENDINGS, PAGE_ENDING)]  # fmt: skip
         return sweep(self.cache, skip)
 
     # -- the workings --
@@ -351,8 +418,7 @@ class Fetcher:
             self._jobs.pop(old.id, None)
 
     def _files(self, job: _Fetch) -> dict[str, Path]:
-        return {ending: self.folder / f"{job.id}{ending}"
-                for ending in (".part", ".json", ".hls.mp4", ".converting.mp4")}  # fmt: skip
+        return {ending: self.folder / f"{job.id}{ending}" for ending in ENDINGS}
 
     def _note(self, job: _Fetch) -> dict[str, Any] | None:
         """The note beside a fetch, if it's there, whole, and for this address."""
@@ -381,8 +447,12 @@ class Fetcher:
         try:
             fileops.make_cached_folder(self.folder, cache=self.cache)
             self.sweep()
-            log.info("fetch: downloading a film from a plugin's address")
-            source = self._fetch(job, host)
+            if job.page is not None:
+                log.info("fetch: downloading a video from a web page")
+                source = self._fetch_page(job)
+            else:
+                log.info("fetch: downloading a film from a plugin's address")
+                source = self._fetch(job, host)
             job.state = COMPLETE
             self._keep(job, source)
         except _Stopped:
@@ -465,6 +535,49 @@ class Fetcher:
                 self._wait(job, TRY_WAITS_S[tries - 1])
         finally:
             session.close()
+
+    def _fetch_page(self, job: _Fetch) -> Path:
+        """A video from a web page, downloaded by yt-dlp into its own folder in the
+        cache (`<id>.page/`), carried on from what arrived there before. The file."""
+        assert job.page is not None
+        item, quality = job.page
+        work = fileops.make_cached_folder(self.folder / f"{job.id}{PAGE_ENDING}", cache=self.cache)
+        fileops.touch_cached(work, cache=self.cache)
+        if self._note(job) is None:
+            self._write_note(job, page=[item, quality])
+        root = self.videos if job.to_videos else self.movies
+        roomy = False
+
+        def heard(have: int, whole: int | None) -> None:
+            nonlocal roomy
+            job.state = FETCHING
+            job.size = whole
+            job.heard(have)
+            if not roomy and whole and root is not None:
+                roomy = True
+                if not tools.room_for(max(whole - have, 0), whole, self.cache, root):
+                    job.no_room = True
+            if time.monotonic() - self._swept > SWEEP_EVERY_S:
+                self.sweep()
+
+        try:
+            made = youtube.download_page_video(
+                job.url, item, quality, work, progress=heard,
+                should_stop=lambda: job.no_room or not self._going_on(job),
+            )  # fmt: skip
+        except Exception:
+            if job.no_room:
+                raise FetchError(
+                    "There isn't room on this Mac for that video. Make some room, then press "
+                    "Download again."
+                ) from None
+            if not self._going_on(job):
+                raise _Stopped from None
+            raise
+        job.state = COMPLETE
+        job.size = made.stat().st_size
+        job.heard(job.size)
+        return made
 
     def _answered(self, job: _Fetch, response: Any, host: str, roomy: bool) -> _Answer:
         """What an answer from the address is (`_Answer`). FetchError when it's no film
@@ -638,7 +751,8 @@ class Fetcher:
         """A film that has all arrived: checked, converted if that was asked for and it
         needs it, then copied into the Movies folder by `fileops.keep_media` (never over a
         file that's there), and what's left in the cache let go of."""
-        assert self.movies is not None
+        root = self.videos if job.to_videos else self.movies
+        assert root is not None and self.movies is not None
         try:
             found = convert.streams_of(source)
         except convert.ConvertError:
@@ -652,7 +766,10 @@ class Fetcher:
             self._let_go(job)
             raise FetchError("What that address gave isn't a film: nothing was kept.")
         # A playlist's parts were joined into an MP4; a file keeps the kind it is.
-        ending = ".mp4" if source == self._files(job)[".hls.mp4"] else _ending(found, job.url)
+        if source == self._files(job)[".hls.mp4"]:
+            ending = ".mp4"
+        else:
+            ending = _ending(found, source.name if job.page is not None else job.url)
         made: Path | None = None
         kept_from = source
         if job.convert:
@@ -681,14 +798,16 @@ class Fetcher:
             job.converting = None
         saved = fileops.keep_media(
             kept_from,
-            self.movies.joinpath(*job.folder),
+            root.joinpath(*job.folder),
             f"{job.name}{ending}",
             cache=self.folder,
-            allowed=[self.movies],
+            allowed=[r for r in (self.movies, self.videos) if r is not None],
             forbidden=self._forbidden(),
         )
         job.kept_path = str(saved)
-        log.info("fetch: a downloaded film was kept in the Movies folder")
+        log.info("fetch: a downloaded %s was kept in the %s folder",
+                 "video" if job.page is not None else "film",
+                 "videos" if job.to_videos else "Movies")  # fmt: skip
         self._let_go(job)
         try:
             # Remembered for its two days, so the same film asked for again (the app
@@ -702,6 +821,9 @@ class Fetcher:
         for ending, path in self._files(job).items():
             if ending != ".json":
                 fileops.forget_cached(path, cache=self.cache)
+        work = self.folder / f"{job.id}{PAGE_ENDING}"
+        if work.is_dir():
+            fileops.forget_cached_folder(work, cache=self.cache)
         fileops.forget_cached(self._files(job)[".json"], cache=self.cache)
 
 

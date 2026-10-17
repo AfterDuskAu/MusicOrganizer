@@ -2531,6 +2531,149 @@ def trash_media(
     return given
 
 
+def move_media(
+    path: Path,
+    folder: Path,
+    movies_folder: Path,
+    videos_folder: Path,
+    *,
+    forbidden: Iterable[Path] = (),
+) -> Path:
+    """Move one film or video the owner chose into another of the places kept media goes
+    (the owner, 2026-10-17: "right clicking on a downloaded movie/tv show, it can move to
+    any download folder, including the 18+ one, incase there is a problem with
+    detection"). Returns where it is now.
+
+    - `path` is checked as `trash_media` checks it: a real video file (not a link, a
+      folder or a hidden file) strictly inside `movies_folder` or `videos_folder` once
+      every link on the way is followed, and never inside `forbidden`.
+    - `folder` must be one of those two folders or a folder inside one, never inside
+      `forbidden`; it's made if missing (as `keep_media` makes one).
+    - Never overwrites: ` (2)`, ` (3)` ... if the name is taken there (reserve, then
+      rename onto the reserved name).
+    - Within one drive it's a rename, the file never copied. To another drive (the videos
+      folder may be on one) it's copied beside the reserved name, flushed, checked to be
+      the same size, renamed onto it, and only then is the one it came from sent to the
+      system Trash: never deleted outright.
+    - The folders it leaves empty (a show's, a season's) are taken away, up to the Movies
+      or videos folder, which never are; a folder with anything in it stays.
+    - Not journaled, and needs no library lock: no library file is touched. The same menu
+      moves it back.
+    """
+    given = Path(path).expanduser()
+    if not given.is_absolute():
+        raise OutsideLibraryError(f"{path} isn't a whole path, so it was left alone.", path)
+    if not os.path.lexists(given):
+        raise NotFoundError(f"There's no file at {given}. It may have gone already.")
+    if _is_link(given):
+        raise OutsideLibraryError(
+            f"{given.name} is a link to a file somewhere else, so it was left alone.", given
+        )
+    real = Path(os.path.realpath(given))
+    roots = [Path(os.path.realpath(Path(f).expanduser())) for f in (movies_folder, videos_folder)]
+    banned = [Path(f).expanduser() for f in forbidden]
+    banned += [Path(os.path.realpath(f)) for f in banned]
+    if any(_key(real) == _key(root) for root in roots):
+        raise UserError(f"{given.name} is where films and videos are kept, and is never moved.")
+    # The nearest of the two it's in (the videos folder is most often inside Movies).
+    homes = [root for root in roots if _inside(real, root)]
+    home = max(homes, key=lambda r: len(r.parts), default=None)
+    if home is None:
+        raise OutsideLibraryError(
+            f"Only a film or video in your Movies or Videos folder can be moved here, and "
+            f"{given.name} isn't in either.",
+            given,
+        )
+    if any(_within(real, f) or _within(given, f) for f in banned):
+        raise OutsideLibraryError(
+            f"{given.name} is inside a library or a source folder, so it was left alone.", given
+        )
+    if not real.is_file():
+        raise UserError(f"{given.name} isn't a file: only a film or a video can be moved this way.")
+    if real.name.startswith(".") or naming.is_junk(real.name):
+        raise UserError(f"{given.name} isn't a film or a video.")
+    if real.suffix.lower() not in MEDIA_TRASH_ENDINGS:
+        raise UserError(f"{given.name} isn't a film or a video, so it was left alone.")
+    there = Path(folder).expanduser().absolute()
+    root = next(
+        (r for r in roots if _key(Path(os.path.realpath(there))) == _key(r)
+         or _within(Path(os.path.realpath(there)), r) or _key(there) == _key(r)
+         or _within(there, r)),
+        None,
+    )  # fmt: skip
+    if root is None:
+        raise OutsideLibraryError(
+            f"Films and videos are moved only into your Movies or Videos folder, not {there}."
+        )
+    if any(_within(there, f) or _within(Path(os.path.realpath(there)), f) for f in banned):
+        raise OutsideLibraryError(f"{there} is inside a library or a source folder.")
+    if _key(Path(os.path.realpath(there))) == _key(real.parent):
+        raise UserError(f"{given.name} is there already.")
+    left = real.parent
+    try:
+        there.mkdir(parents=True, exist_ok=True)
+        target = there.resolve() / real.name
+        placeholder = _reserve(target)
+        try:
+            _replace(real, placeholder)
+        except CrossVolumeError:
+            _copy_across(real, placeholder)
+        except BaseException:
+            _unlink_if_empty(placeholder)
+            raise
+    except OSError as exc:
+        raise FileOperationError(
+            f"Couldn't move {given.name} to {there}: {exc.strerror or exc}. "
+            "It's still where it was."
+        ) from exc
+    _sync_folder(placeholder.parent)
+    _sync_folder(left)
+    _prune_media_folders(left, home, roots)
+    log.info("Moved %s to %s, at the owner's word", real.name, placeholder.parent)
+    return there / placeholder.name
+
+
+def _copy_across(real: Path, placeholder: Path) -> None:
+    """`move_media` to another drive: a copy onto the reserved name, then the file it
+    came from to the Trash. Anything wrong, and the copy goes and the file stays."""
+    fd, tmp_name = tempfile.mkstemp(dir=placeholder.parent, prefix=".musicorg-", suffix=".tmp")
+    tmp = Path(tmp_name)
+    try:
+        with os.fdopen(fd, "wb") as out, real.open("rb") as film:
+            while chunk := film.read(4 * 1024 * 1024):
+                out.write(chunk)
+            out.flush()
+            _sync_file(out.fileno())
+        if tmp.stat().st_size != real.stat().st_size:
+            raise FileOperationError(f"The copy of {real.name} came out a different size.")
+        _replace(tmp, placeholder)
+    except BaseException:
+        tmp.unlink(missing_ok=True)
+        _unlink_if_empty(placeholder)
+        raise
+    try:
+        _send_to_trash(real)
+    except Exception as exc:
+        placeholder.unlink(missing_ok=True)
+        raise FileOperationError(
+            f"{real.name} was copied, but couldn't be moved from where it was "
+            f"({_describe(exc)}), so the copy was taken away again."
+        ) from exc
+
+
+def _prune_media_folders(folder: Path, root: Path, roots: list[Path]) -> None:
+    """Take away the folders `move_media` left empty, from `folder` up to `root` (never
+    `root` itself or the other place kept media goes, never one with anything in it)."""
+    current = folder
+    while _inside(current, root) and not any(_key(current) == _key(r) for r in roots):
+        try:
+            current.rmdir()  # only an empty folder can go
+        except OSError:
+            return
+        log.info("Took away the empty folder %s", current.name)
+        current = current.parent
+
+
 # ---- a profile's export (2026-10-12) -----------------------------------------------------
 #
 # The owner's yes to a rule change (rule 2): a copy of the library may be written outside
@@ -2681,6 +2824,27 @@ def forget_cached(path: Path, *, cache: Path) -> None:
             path.unlink()
     except OSError as exc:
         log.warning("Couldn't clear %s from the cache: %s", path.name, exc.strerror or exc)
+
+
+def forget_cached_folder(folder: Path, *, cache: Path) -> None:
+    """Delete one folder in the app's own cache that's finished with, and all that's in
+    it: a video downloaded from a web page (2026-10-17), once it's kept, whose folder
+    yt-dlp filled with its parts. Only a real folder strictly inside `cache`, never the
+    cache itself, never a link (a link inside it is removed, never followed). Deleted
+    outright, as `sweep_cached` deletes: it's the app's cache, which can be made again."""
+    folder = _cache_folder(Path(folder), cache)
+    if _is_link(folder) or not folder.is_dir():
+        raise OutsideLibraryError(f"{folder} isn't a folder in the app's cache.")
+    try:
+        for parent, folders, names in os.walk(folder, topdown=False):
+            for name in names:
+                os.unlink(os.path.join(parent, name))
+            for name in folders:
+                inner = os.path.join(parent, name)
+                os.unlink(inner) if os.path.islink(inner) else os.rmdir(inner)
+        folder.rmdir()
+    except OSError as exc:
+        log.warning("Couldn't clear %s from the cache: %s", folder.name, exc.strerror or exc)
 
 
 def write_cached(path: Path, data: bytes, *, cache: Path) -> Path:

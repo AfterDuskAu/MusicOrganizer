@@ -1564,6 +1564,66 @@ final class AppModel {
         }
     }
 
+    /// A video file's menu, Move To (the owner, 2026-10-17: "it can move to any download
+    /// folder, including the 18+ one, incase there is a problem with detection"): the
+    /// engine moves it into the place chosen (`media.move`), never over another file; where
+    /// it was left goes with it, and the lists look at their folders again.
+    func moveMedia(_ file: VideoFiles.File, to place: KeptPlace) {
+        let path = file.url.path
+        Task {
+            do {
+                let moved = try await ask(
+                    "media.move", ["path": path, "to": place.rawValue], as: MovedFile.self)
+                var places = FilmPositions.saved()
+                places.moved(from: path, to: moved.path)
+                places.save()
+                conversionNotes[path] = nil
+            } catch {
+                notice = error.localizedDescription
+            }
+            keptArrived += 1
+        }
+    }
+
+    // MARK: the URL page (2026-10-17)
+
+    /// The videos on a web page (`page.videos`). Nothing is downloaded.
+    func lookUpPage(_ address: String) async throws -> PageAnswer {
+        try await ask("page.videos", ["url": address], as: PageAnswer.self)
+    }
+
+    /// Download a video chosen on the URL page, in the quality chosen, into `place`: as a
+    /// film is kept, so it's listed in Downloads (or, for 18+, on Videos → 18+ alone),
+    /// carries on if the app is closed first, and is converted if Settings says so.
+    /// Only from the owner's click.
+    /// Returns what the download goes by (`PendingKeeps.Keep.id`).
+    @discardableResult
+    func keepPageVideo(
+        _ video: PageVideo, quality: PageQuality, title: String, place: KeptPlace
+    ) -> String {
+        let convert = UserDefaults.standard.object(forKey: TorrentStatus.convertKey) as? Bool ?? true
+        let keep = PendingKeeps.Keep(
+            page: video, quality: quality, title: title, place: place, convert: convert)
+        guard filmKeeps[keep.id]?.isKeeping != true, filmKeepTasks[keep.id] == nil else {
+            return keep.id
+        }
+        // A video of this page downloaded before and ended (kept, or not): asked afresh.
+        filmKeeps[keep.id] = nil
+        listedKeeps.removeAll { $0.id == keep.id }
+        adultKeeps.removeAll { $0.id == keep.id }
+        var pending = PendingKeeps.load()
+        pending.add(keep)
+        pending.save()
+        follow(keep, quietly: false)
+        return keep.id
+    }
+
+    /// The keep going by `id`, wherever it's listed.
+    func keep(_ id: String) -> PendingKeeps.Keep? {
+        (listedKeeps + adultKeeps).first { $0.id == id }
+            ?? PendingKeeps.load().keeps.first { $0.id == id }
+    }
+
     /// Asked every two seconds while a film is being converted, until it has ended.
     private func watchConversion(_ connection: RPCConnection) {
         conversionWatch?.cancel()
@@ -1658,6 +1718,7 @@ final class AppModel {
     func stopKeepingFilm(_ id: String) {
         let address = id.contains("://")
         let key = address ? id : id.lowercased()
+        let page = keep(key).flatMap { $0.isPage ? $0 : nil }
         var pending = PendingKeeps.load()
         pending.remove(key)
         pending.save()
@@ -1666,6 +1727,11 @@ final class AppModel {
         filmKeeps[key] = nil
         listedKeeps.removeAll { $0.id == key }
         adultKeeps.removeAll { $0.id == key }
+        if let page {
+            // A page's video, said by its page, its place there and its quality.
+            Task { _ = try? await ask(page.stopMethod, page.which, as: Empty.self) }
+            return
+        }
         if address {
             // What arrived stays in the engine's cache for two days: Download carries on.
             Task { _ = try? await ask("stream.stop", ["url": key], as: Empty.self) }

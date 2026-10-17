@@ -9,7 +9,9 @@ import Foundation
 /// error's message. A song's or a channel's name is never changed.
 public enum Wording {
     /// The fields of an engine answer that hold a sentence for the owner.
-    static let sentences: Set<String> = ["message", "note", "why", "kids_note", "reason"]
+    static let sentences: Set<String> = [
+        "message", "note", "why", "kids_note", "reason", "keep_error", "keep_note",
+    ]
 
     /// One sentence in the app's words.
     public static func plain(_ text: String) -> String {

@@ -166,7 +166,7 @@ struct FilmKeeps: View {
             Image(systemName: "popcorn").foregroundStyle(.secondary).frame(width: 20)
             VStack(alignment: .leading, spacing: 2) {
                 Text(keep.name).fontWeight(.medium).lineLimit(1)
-                Text(adult ? "To the 18+ folder in Movies" : "\(keep.kindName) · to Movies")
+                Text(adult ? "To the 18+ folder in Movies" : "\(keep.kindName) · to \(keep.placeName)")
                     .font(.callout).foregroundStyle(.secondary).lineLimit(1)
             }
             .frame(minWidth: 160, maxWidth: 320, alignment: .leading)

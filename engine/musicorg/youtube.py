@@ -44,6 +44,7 @@ Facts from the recorded responses (ytmusicapi 1.12.3), which the code relies on:
 from __future__ import annotations
 
 import hashlib
+import ipaddress
 import json
 import logging
 import os
@@ -57,7 +58,7 @@ from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Protocol, TypeVar
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 from musicorg import tools
 from musicorg.config import app_dirs, ensure_app_dir
@@ -1918,6 +1919,527 @@ def _soundcloud_problem(low: str, detail: str) -> Exception:
     if any(s in low for s in (*_NETWORK, *_REFUSED)):
         return DownloadError(f"SoundCloud couldn't be reached just now: {detail}", network=True)
     return DownloadError(f"The download from SoundCloud didn't work: {detail}")
+
+
+# ---- the videos on any web page (2026-10-17) ----------------------------------------------
+#
+# The owner, 2026-10-17: "Under Media discovery, add in a "URL" which would get the video
+# from the page from any website, shows which videos are on the page, once selected and
+# quality are selected. use yt-dlp engine to download". yt-dlp knows a great many sites,
+# and reads any other page's own players (its "generic" reader). Checked against yt-dlp
+# 2026.09.27 with pages made on this computer:
+#
+# - A page with one video gives that video (`_type` "video", or none): `title`,
+#   `duration`, `thumbnail`, `webpage_url`, `extractor_key` and `formats`, each with
+#   `format_id`, `ext`, `protocol`, `url`, and where the site says them `height`,
+#   `width`, `fps`, `vcodec` and `acodec` ("none": picture only, or sound only),
+#   `filesize` or `filesize_approx`, `tbr` and `format_note`. A plain <video> says no
+#   size, codec or height.
+# - A page with several gives `_type` "playlist" and `entries`. Read flat (`extract_flat`
+#   "in_playlist"), the page's own <video>s come whole, each with its `playlist_index`;
+#   a player from another site comes as a link only (`_type` "url", `url`, `ie_key`), and
+#   nothing of it is asked for until it's chosen. A YouTube player is one of those
+#   (`ie_key` "Youtube").
+# - Asked again with `playlist_items` set to one of those places, the page gives that
+#   video alone; `process_ie_result(info, download=True)` then downloads the answer
+#   already in hand, so where it's from is looked at before anything is fetched.
+#
+# What's from YouTube or SoundCloud is never downloaded here (rule 8: through the queue
+# only): a YouTube video is named with its id, for the app's Download, which queues it.
+
+PAGE_MOST = 50  # videos listed from one page
+PAGE_QUALITIES_MOST = 12
+YOUTUBE_HOSTS = ("youtube.com", "youtu.be", "youtube-nocookie.com", "googlevideo.com", "ytimg.com")
+SOUNDCLOUD_HOSTS = ("soundcloud.com", "sndcdn.com")
+_YOUTUBE_LINK = re.compile(
+    r"(?:[?&]v=|/embed/|/shorts/|/live/|/v/|youtu\.be/)([A-Za-z0-9_-]{11})(?![A-Za-z0-9_-])"
+)
+# A quality as `page_videos` gives it (a format selector of yt-dlp's): checked when it
+# comes back, so nothing else is handed to yt-dlp as one.
+_PAGE_QUALITY = re.compile(r"[A-Za-z0-9_.+\-/\[\]<=>*!?^$~:,]{1,400}")
+_HEIGHT_IN = re.compile(r"(?<![0-9])(2160|1440|1080|720|540|480|360|240|144)[pP](?![0-9A-Za-z])")
+_PLAYLIST_TYPES = ("playlist", "multi_video")
+_LINK_TYPES = ("url", "url_transparent")
+
+
+class PageStopped(DownloadError):
+    """A video's download from a page was stopped (the owner, or the engine closing)."""
+
+
+def _host(url: str) -> str:
+    return (urlsplit(url).hostname or "").lower().rstrip(".")
+
+
+def _one_of(host: str, domains: tuple[str, ...]) -> bool:
+    return any(host == d or host.endswith("." + d) for d in domains)
+
+
+def _on_this_computer(host: str) -> bool:
+    if host == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host.strip("[]")).is_loopback
+    except ValueError:
+        return False
+
+
+def page_address(url: str) -> str:
+    """`url`, if it's a web address (http or https) a page's videos may be read from.
+    YouTubeError otherwise. In replay mode (every test) only an address on this computer,
+    or YouTube's or SoundCloud's (answered from recordings, or not read at all), is
+    taken: ReplayMissError for any other."""
+    address = url.strip() if isinstance(url, str) else ""
+    host = _host(address)
+    if urlsplit(address).scheme not in ("http", "https") or not host:
+        raise YouTubeError(
+            "That isn't a web address. Paste one that starts with http:// or https://."
+        )
+    replay = os.environ.get(REPLAY_ENV)
+    if (
+        replay
+        and not _on_this_computer(host)
+        and not _one_of(host, YOUTUBE_HOSTS + SOUNDCLOUD_HOSTS)
+    ):
+        raise ReplayMissError("Replay mode: only a page on this computer is read.")
+    return address
+
+
+def youtube_id_in(url: str) -> str | None:
+    """The YouTube video an address is of (a watch page, a short link, a player), if it's
+    YouTube's and names one."""
+    if not _one_of(_host(url), YOUTUBE_HOSTS):
+        return None
+    found = _YOUTUBE_LINK.search(url)
+    return found[1] if found else None
+
+
+def _is_service(key: Any, url: Any) -> str | None:
+    """ "youtube" or "soundcloud" for what's theirs (by yt-dlp's reader, or its address)."""
+    name = str(key or "").lower()
+    host = _host(url) if isinstance(url, str) else ""
+    if name.startswith("youtube") or _one_of(host, YOUTUBE_HOSTS):
+        return "youtube"
+    if name.startswith("soundcloud") or _one_of(host, SOUNDCLOUD_HOSTS):
+        return "soundcloud"
+    return None
+
+
+def page_videos(url: str) -> dict[str, Any]:
+    """The videos on a web page, for the owner to choose one: `{"title", "videos", "note"}`.
+    Nothing is downloaded. One request to the page through the shared rate limiter (its
+    next turn: someone is waiting); a player from another site on it isn't asked about
+    until it's chosen (`page_videos` with its address). A YouTube address is one look-up
+    of that video (`_looked_up`), for the queue to download; a SoundCloud one isn't read.
+
+    Each video: `url` (what it's asked for by again), `item` (its place on that page, for
+    one with no address of its own), `title`, `duration_s`, `thumbnail`, `site`,
+    `qualities` (None: not read yet), `service` ("youtube", "soundcloud" or None) and
+    `video_id` (YouTube's)."""
+    address = page_address(url)
+    host = _host(address)
+    if _one_of(host, SOUNDCLOUD_HOSTS):
+        return {"title": None, "videos": [], "note": "SoundCloud's tracks are found and "
+                "downloaded in Music Finder, not here."}  # fmt: skip
+    if _one_of(host, YOUTUBE_HOSTS):
+        video_id = youtube_id_in(address)
+        if video_id is None:
+            return {"title": None, "videos": [], "note": "That's a page of YouTube's, not "
+                    "one video: find what you want in Video Finder."}  # fmt: skip
+        info = _looked_up(video_id, first=True)
+        found = _service_video(info, address, "youtube")
+        found["video_id"] = video_id
+        return {"title": found["title"], "videos": [found], "note": None}
+    raw = _read_page(address)
+    if not isinstance(raw, dict):
+        raise YouTubeError("That page gave nothing that could be read.")
+    return read_page(raw, address)
+
+
+def _read_page(address: str) -> Any:
+    """yt-dlp's flat reading of a page (see above), through the shared limiter. In replay
+    mode, an address on this computer is read for real (a test's own page), and a
+    recording is used if there is one."""
+    replay = os.environ.get(REPLAY_ENV)
+    if replay:
+        recorded = recording_path(Path(replay), "webpage", address)
+        if recorded.is_file():
+            return read_recording(Path(replay), "webpage", address)
+    opts = _page_options()
+    opts.update(extract_flat="in_playlist", playlistend=PAGE_MOST, noplaylist=False,
+                skip_download=True)  # fmt: skip
+    limiter().wait(first=True)
+    try:
+        with _make_page_ydl(opts, address) as ydl:
+            return ydl.sanitize_info(ydl.extract_info(address, download=False))
+    except (ReplayMissError, ToolMissingError):
+        raise
+    except Exception as exc:
+        raise _page_problem(exc, address) from exc
+
+
+def read_page(raw: dict[str, Any], address: str) -> dict[str, Any]:
+    """What `page_videos` gives for yt-dlp's reading of a page at `address`."""
+    videos: list[dict[str, Any]] = []
+    if raw.get("_type") in _PLAYLIST_TYPES:
+        for place, entry in enumerate(raw.get("entries") or [], start=1):
+            if len(videos) >= PAGE_MOST:
+                break
+            if not isinstance(entry, dict):
+                continue
+            if entry.get("_type") in _LINK_TYPES:
+                linked = _linked_video(entry)
+                if linked is not None:
+                    videos.append(linked)
+                continue
+            item = entry.get("playlist_index")
+            item = item if isinstance(item, int) and not isinstance(item, bool) else place
+            videos.append(_whole_video(entry, address, item))
+        title = raw.get("title")
+    elif raw.get("_type") in _LINK_TYPES:
+        linked = _linked_video(raw)
+        videos = [linked] if linked is not None else []
+        title = raw.get("title")
+    else:
+        videos = [_whole_video(raw, address, None)]
+        title = videos[0]["title"]
+    note = None
+    if not videos:
+        note = "No video was found on that page."
+    elif any(v["service"] == "soundcloud" for v in videos):
+        note = "SoundCloud's tracks are found and downloaded in Music Finder, not here."
+    return {"title": title if isinstance(title, str) and title.strip() else None,
+            "videos": videos, "note": note}  # fmt: skip
+
+
+def _text(value: Any) -> str | None:
+    return " ".join(value.split()) if isinstance(value, str) and value.strip() else None
+
+
+def _seconds(value: Any) -> float | None:
+    if isinstance(value, int | float) and not isinstance(value, bool) and value > 0:
+        return float(value)
+    return None
+
+
+def _picture(info: dict[str, Any]) -> str | None:
+    found = _widest_picture(info.get("thumbnails")) or info.get("thumbnail")
+    return found if isinstance(found, str) and found.startswith(("http://", "https://")) else None
+
+
+def _site(info: dict[str, Any], address: str) -> str | None:
+    key = info.get("extractor_key") or info.get("ie_key")
+    if isinstance(key, str) and key and key.lower() not in ("generic", "html5mediaembed"):
+        return key
+    return _host(address).removeprefix("www.") or None
+
+
+def _service_video(info: dict[str, Any], address: str, service: str) -> dict[str, Any]:
+    return {
+        "url": address, "item": None, "title": _text(info.get("title")),
+        "duration_s": _seconds(info.get("duration")), "thumbnail": _picture(info),
+        "site": "YouTube" if service == "youtube" else "SoundCloud", "qualities": None,
+        "service": service, "video_id": None,
+    }  # fmt: skip
+
+
+def _linked_video(entry: dict[str, Any]) -> dict[str, Any] | None:
+    """A player from another site on a page: only its address and what the page said."""
+    link = entry.get("url")
+    if not isinstance(link, str) or urlsplit(link).scheme not in ("http", "https"):
+        return None
+    service = _is_service(entry.get("ie_key"), link)
+    found = {
+        "url": link, "item": None, "title": _text(entry.get("title")),
+        "duration_s": _seconds(entry.get("duration")), "thumbnail": _picture(entry),
+        "site": _site(entry, link), "qualities": None, "service": service, "video_id": None,
+    }  # fmt: skip
+    if service == "youtube":
+        found["site"] = "YouTube"
+        video_id = youtube_id_in(link) or entry.get("id")
+        good = isinstance(video_id, str) and VIDEO_ID.fullmatch(video_id)
+        found["video_id"] = video_id if good else None
+    elif service == "soundcloud":
+        found["site"] = "SoundCloud"
+    return found
+
+
+def _whole_video(info: dict[str, Any], address: str, item: int | None) -> dict[str, Any]:
+    service = _is_service(info.get("extractor_key"), info.get("webpage_url"))
+    if service is not None:
+        found = _service_video(info, info.get("webpage_url") or address, service)
+        video_id = info.get("id")
+        if service == "youtube" and isinstance(video_id, str) and VIDEO_ID.fullmatch(video_id):
+            found["video_id"] = video_id
+        return found
+    return {
+        "url": address, "item": item, "title": _text(info.get("title")),
+        "duration_s": _seconds(info.get("duration")), "thumbnail": _picture(info),
+        "site": _site(info, address), "qualities": page_qualities(info),
+        "service": None, "video_id": None,
+    }  # fmt: skip
+
+
+def page_qualities(info: dict[str, Any]) -> list[dict[str, Any]]:
+    """The sizes a video can be downloaded in, the sharpest first: each `{"id", "label",
+    "height", "size"}`. `id` is what `download_page_video` is given back (a format of
+    yt-dlp's: one with picture and sound, or a picture with the best sound beside it);
+    `size` in bytes where the site says. A picture of a size that isn't known is listed
+    by its own name ("MP4"), never guessed."""
+    formats = [f for f in info.get("formats") or [] if isinstance(f, dict) and f.get("format_id")]
+    if not formats:
+        # One file with no list of formats: as it is.
+        if not info.get("url"):
+            return []
+        return [{"id": "best", "label": "As it is", "height": None, "size": None}]
+    sound_alone = [
+        f for f in formats
+        if f.get("vcodec") == "none" and f.get("acodec") not in (None, "none")
+    ]  # fmt: skip
+    best_sound = max(
+        sound_alone, key=lambda f: float(f.get("tbr") or f.get("abr") or 0), default=None
+    )
+    pictures = [
+        f for f in formats
+        if f.get("vcodec") != "none" and f.get("ext") != "mhtml"
+        and "storyboard" not in str(f.get("format_note") or "").lower()
+    ]  # fmt: skip
+    chosen: dict[tuple[int, bool], dict[str, Any]] = {}
+    unsized: list[dict[str, Any]] = []
+    for f in pictures:
+        height = f.get("height") if isinstance(f.get("height"), int) else _height_named(f)
+        if not height:
+            unsized.append(f)
+            continue
+        key = (height, float(f.get("fps") or 0) > 30)
+        if key not in chosen or _rank(f) > _rank(chosen[key]):
+            chosen[key] = {**f, "height": height}
+    found: list[dict[str, Any]] = []
+    for (height, fast), f in sorted(chosen.items(), reverse=True):
+        found.append({
+            "id": _selector(f, best_sound, height), "label": f"{height}p{'60' if fast else ''}",
+            "height": height, "size": _size(f, best_sound),
+        })  # fmt: skip
+    named: dict[str, int] = {}
+    for f in reversed(unsized):  # yt-dlp lists the best last
+        label = str(f.get("ext") or "video").upper()
+        named[label] = named.get(label, 0) + 1
+        found.append({
+            "id": _selector(f, best_sound, None),
+            "label": label if named[label] == 1 else f"{label} ({named[label]})",
+            "height": None, "size": _size(f, best_sound),
+        })  # fmt: skip
+    return found[:PAGE_QUALITIES_MOST]
+
+
+def _rank(f: dict[str, Any]) -> tuple[bool, float]:
+    """Which of two pictures of one size is listed: one phones play as it is, then the
+    sharper."""
+    return _plays_anywhere(f), float(f.get("tbr") or 0)
+
+
+def _height_named(f: dict[str, Any]) -> int | None:
+    """A picture's height when the site only names it ("hls-720p", "video_1080p.mp4")."""
+    for said in (f.get("format_note"), f.get("format_id"), f.get("format"), f.get("url")):
+        found = _HEIGHT_IN.search(str(said or ""))
+        if found:
+            return int(found[1])
+    return None
+
+
+def _plays_anywhere(f: dict[str, Any]) -> bool:
+    """An H.264 picture in MP4: what phones and tablets play as it is."""
+    return str(f.get("vcodec") or "").startswith(("avc1", "h264")) or (
+        f.get("vcodec") is None and f.get("ext") == "mp4"
+    )
+
+
+def _selector(f: dict[str, Any], best_sound: dict[str, Any] | None, height: int | None) -> str:
+    own = str(f["format_id"])
+    picture_only = f.get("acodec") == "none"
+    chosen = f"{own}+bestaudio/{own}" if picture_only and best_sound is not None else own
+    if height:
+        # Should the site name its sizes differently next time, the same size or the
+        # nearest below it, never a larger one.
+        chosen += f"/bestvideo*[height<={height}]+bestaudio/best[height<={height}]"
+    return chosen if _PAGE_QUALITY.fullmatch(chosen) else "best"
+
+
+def _size(f: dict[str, Any], best_sound: dict[str, Any] | None) -> int | None:
+    def one(x: dict[str, Any]) -> int | None:
+        n = x.get("filesize") or x.get("filesize_approx")
+        return int(n) if isinstance(n, int | float) and not isinstance(n, bool) and n > 0 else None
+
+    picture = one(f)
+    if picture is None or f.get("acodec") != "none" or best_sound is None:
+        return picture
+    sound = one(best_sound)
+    return picture + sound if sound is not None else None
+
+
+def check_page_quality(quality: str) -> str:
+    """A quality given back by the app: one `page_qualities` could have made."""
+    if not isinstance(quality, str) or not _PAGE_QUALITY.fullmatch(quality):
+        raise YouTubeError("That isn't one of the qualities the page offered. Look it up again.")
+    return quality
+
+
+PageProgress = Callable[[int, int | None], None]
+
+
+def download_page_video(
+    url: str,
+    item: int | None,
+    quality: str,
+    dest: Path,
+    *,
+    progress: PageProgress | None = None,
+    should_stop: Callable[[], bool] = lambda: False,
+) -> Path:
+    """Download one video from a web page into `dest`, a folder `fetch` made for it in
+    `fetched/` in the app's cache: yt-dlp writes nowhere else, its parts and anything
+    ffmpeg joins included (CLAUDE.md rule 3). Returns the finished file.
+
+    `item` is the video's place on the page (`page_videos`), for one with no address of
+    its own; `quality` one of its `qualities`' ids. A picture and its sound fetched apart
+    are joined by ffmpeg without converting either (into MP4 where they fit, else MKV).
+    What was fetched before of the same video, in the same folder, is carried on from.
+
+    Never YouTube's or SoundCloud's (YouTubeError: rule 8), never a live stream. It takes
+    one turn of the shared rate limiter, and a failure never pauses the queue: it says
+    nothing of YouTube. `should_stop` is asked as it goes: PageStopped when it says so."""
+    address = page_address(url)
+    if _is_service(None, address):
+        raise YouTubeError("That's a YouTube or SoundCloud address: those are downloaded "
+                           "through Video Finder and Music Finder, not here.")  # fmt: skip
+    quality = check_page_quality(quality)
+    dest = Path(dest)
+    if not dest.is_dir() or dest.parent.name != "fetched":
+        raise ValueError(f"{dest} isn't a folder of fetch's in the app's cache")
+    finished: dict[str, int] = {}  # each file of it that has all arrived: its size
+
+    def hook(status: dict[str, Any]) -> None:
+        if should_stop():
+            import yt_dlp
+
+            raise yt_dlp.utils.DownloadCancelled("stopped")
+        if progress is None or status.get("status") not in ("downloading", "finished"):
+            return
+        name = str(status.get("filename") or "")
+        done = int(status.get("downloaded_bytes") or 0)
+        if status.get("status") == "finished":
+            finished[name] = done
+        info = status.get("info_dict") or {}
+        parts = [p for p in info.get("requested_formats") or [] if isinstance(p, dict)]
+        sizes = [p.get("filesize") or p.get("filesize_approx") for p in parts]
+        if parts and all(isinstance(s, int | float) and s > 0 for s in sizes):
+            whole: int | None = int(sum(sizes))
+        else:
+            total = status.get("total_bytes") or status.get("total_bytes_estimate")
+            whole = int(total) + sum(n for f, n in finished.items() if f != name) if total else None
+        before = sum(n for f, n in finished.items() if f != name)
+        progress(before + done, whole)
+
+    opts = {
+        **_page_options(),
+        "format": quality,
+        "paths": {"home": str(dest), "temp": str(dest)},
+        "outtmpl": {"default": "video.%(ext)s"},
+        "ffmpeg_location": str(tools.require("ffmpeg")),
+        "merge_output_format": "mp4/mkv",
+        "progress_hooks": [hook],
+        "noplaylist": item is None,
+        "continuedl": True,
+        "overwrites": False,
+        "updatetime": False,
+        "retries": 10,
+        "fragment_retries": 10,
+    }
+    if item is not None:
+        if isinstance(item, bool) or not isinstance(item, int) or not 1 <= item <= 10_000:
+            raise YouTubeError("That video's place on the page isn't one it has.")
+        opts["playlist_items"] = str(item)
+
+    limiter().wait(first=True)
+    try:
+        with _make_page_ydl(opts, address) as ydl:
+            info = ydl.extract_info(address, download=False)
+            if isinstance(info, dict) and info.get("_type") in _PLAYLIST_TYPES:
+                entries = [e for e in info.get("entries") or [] if isinstance(e, dict)]
+                if len(entries) != 1:
+                    raise YouTubeError("That video isn't on the page any more. Look it up again.")
+                info = entries[0]
+            if not isinstance(info, dict):
+                raise YouTubeError("That page gave nothing that could be downloaded.")
+            if _is_service(info.get("extractor_key"), info.get("webpage_url")):
+                raise YouTubeError("That video is YouTube's or SoundCloud's: those are "
+                                   "downloaded through Video Finder and Music Finder.")  # fmt: skip
+            if info.get("is_live") or info.get("live_status") in ("is_live", "is_upcoming"):
+                raise YouTubeError("That's a live stream, which goes on without end: it "
+                                   "can't be downloaded.")  # fmt: skip
+            done = ydl.process_ie_result(info, download=True)
+    except (YouTubeError, ReplayMissError, ToolMissingError):
+        raise
+    except Exception as exc:
+        if should_stop() or type(exc).__name__ == "DownloadCancelled":
+            raise PageStopped("The download was stopped.") from None
+        raise _page_problem(exc, address) from exc
+    return _page_file(done, dest)
+
+
+def _page_file(done: Any, dest: Path) -> Path:
+    """The file yt-dlp finished with, inside `dest`."""
+    paths = [
+        Path(d["filepath"]) for d in (done or {}).get("requested_downloads") or []
+        if isinstance(d, dict) and isinstance(d.get("filepath"), str)
+    ]  # fmt: skip
+    if not paths:
+        paths = [p for p in dest.iterdir() if p.is_file() and p.stem == "video"]
+    for path in paths:
+        if path.is_file() and path.resolve().parent == dest.resolve():
+            return path
+    raise DownloadError("The download ended, but no video file came of it.")
+
+
+def _page_options() -> dict[str, Any]:
+    """What a page's reading and downloading share: quiet, our cache folder, no deno (no
+    site but YouTube needs it, and YouTube's videos aren't downloaded here)."""
+    opts = _base_options(deno=False)
+    del opts["format"]
+    return opts
+
+
+def _make_page_ydl(opts: dict[str, Any], address: str) -> Any:
+    """A yt-dlp for a web page. In replay mode (tests) only a page on this computer is
+    ever read: a test's own made-up page, so nothing reaches the network."""
+    if os.environ.get(REPLAY_ENV) and not _on_this_computer(_host(address)):
+        raise ReplayMissError("Replay mode: only a page on this computer is read.")
+    if os.environ.get(REPLAY_ENV):
+        import yt_dlp
+
+        return yt_dlp.YoutubeDL(opts)
+    return _make_ydl(opts)
+
+
+def _page_problem(exc: BaseException, address: str) -> Exception:
+    """The engine's error for what yt-dlp said about a page: plain words, the site named,
+    nothing of its address but its name (an address may carry a key of its own)."""
+    host = _host(address).removeprefix("www.") or "That site"
+    said = re.sub(r"\b[a-z][a-z0-9+.-]*://\S+", "the address", str(exc), flags=re.I)
+    detail = _short_detail(said)
+    low = detail.lower()
+    if "unsupported url" in low or "no video" in low or "unable to extract" in low:
+        return YouTubeError(f"No video was found on that page of {host}.")
+    if any(s in low for s in ("requested format is not available", "format is not available")):
+        return YouTubeError(f"{host} doesn't offer that quality any more. Look the page up again.")
+    if any(s in low for s in ("http error 401", "http error 403", "sign in", "log in", "login",
+                              "private", "cookies")):  # fmt: skip
+        return DownloadError(f"{host} only shows that video to someone signed in, so it can't "
+                             "be downloaded here.")  # fmt: skip
+    if any(s in low for s in ("http error 404", "not found", "has been removed", "unavailable")):
+        return DownloadError(f"{host} doesn't have that video any more.")
+    if any(s in low for s in _NETWORK):
+        return DownloadError(f"{host} couldn't be reached just now: {detail}", network=True)
+    return DownloadError(f"{host}'s video couldn't be read: {detail}")
 
 
 # ---- a video's captions and sound, for timing lyrics to it (v0.2) ------------------------

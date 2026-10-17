@@ -70,6 +70,9 @@ import AppKit
 /// - `trash=<file name>`: that video file in the Movies folder moved to the Trash, as Move
 ///   to Trash… does after the owner's yes (never with a Movies folder that matters: only a
 ///   scratch one, with an engine whose Trash is a stand-in)
+/// - `moveto=<file name>@<place>`: that video file, anywhere in the Movies folder, moved
+///   into `movie`, `series`, `anime`, `video` or `adult`, as Move To does (only ever with a
+///   scratch Movies folder)
 /// - `profile=<id>`: another profile switched to, as Settings → Profile does (only with a
 ///   scratch copy's own profiles)
 /// - `records`: the profile in use, and how much of what's watched and liked it has
@@ -83,9 +86,9 @@ import AppKit
 /// - `wait`: nothing, to see what the app does by itself
 ///
 /// `/<seconds>` after a step waits that long before the next (4 otherwise):
-/// `youtube/10`. The first lines written are `ready` (how long after macOS started the
-/// app its library was showing) and `launch`: how long the app was busy from its start
-/// to its first step.
+/// `youtube/10`, `type=https://example.test/page/6`. The first lines written are `ready`
+/// (how long after macOS started the app its library was showing) and `launch`: how long
+/// the app was busy from its start to its first step.
 @MainActor
 enum Bench {
     struct Step {
@@ -96,9 +99,12 @@ enum Bench {
     static let steps: [Step] = (ProcessInfo.processInfo.environment["MUSICORG_BENCH"] ?? "")
         .split(separator: ",")
         .map { step in
-            let parts = step.split(separator: "/", maxSplits: 1)
-            let wait = parts.count > 1 ? Double(parts[1]) ?? 4 : 4
-            return Step(name: String(parts.first ?? ""), wait: wait)
+            // The wait is after the last "/", when that's a number: a web address typed
+            // (`type=https://…/page/6`) keeps its own.
+            if let slash = step.lastIndex(of: "/"), let wait = Double(step[step.index(after: slash)...]) {
+                return Step(name: String(step[..<slash]), wait: wait)
+            }
+            return Step(name: String(step), wait: 4)
         }
     static var isOn: Bool { !steps.isEmpty }
     private static let meter = BusyMeter()

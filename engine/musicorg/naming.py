@@ -386,6 +386,39 @@ def kept_place(
     return folders, _finish(head + (_EPISODE_TITLE_GAP + own if own else ""))
 
 
+# Kinds a kept file can be moved to by hand (2026-10-17): those, and the videos folder.
+KEPT_VIDEO = "video"
+MOVE_KINDS = (*KEPT_KINDS, KEPT_VIDEO)
+_SHOW_GAPS = re.compile(r"[._]+")
+
+
+def kept_move_place(kind: str, name: str) -> tuple[str, ...]:
+    """The folders a kept file the owner moves by hand goes in (the owner, 2026-10-17:
+    "it can move to any download folder, including the 18+ one, incase there is a
+    problem with detection"), from the Movies folder down (or the videos folder's, for
+    kind `video`). Its name never changes.
+
+        a movie, or a video            (loose)
+        for adults                     18+
+        a series' or an anime's        Series/<Show>/Season 1, when its name says
+                                       "<Show> S01E02"; else loose in Series
+    """
+    if kind not in MOVE_KINDS:
+        raise ValueError(f"not a kind to move to: {kind!r}")
+    top = KEPT_FOLDERS.get(kind)
+    if top is None:
+        return ()
+    if kind in _FLAT_KINDS:
+        return (top,)
+    stem = PurePosixPath(unicodedata.normalize("NFC", name)).stem
+    numbered = _SEASON_EPISODE.search(stem)
+    show = _SHOW_GAPS.sub(" ", stem[: numbered.start()]).strip(" -") if numbered else ""
+    if not numbered or not show:
+        return (top,)
+    season = int(numbered[1])
+    return (top, safe_component(show), SPECIALS_DIR if season == 0 else f"Season {season}")
+
+
 def _kept_name_room(spare: int | None, folders: tuple[str, ...]) -> int:
     """How long a kept file's name may be: the usual length, or on Windows what the
     path has left after its folders."""

@@ -148,7 +148,7 @@ final class AdultDownloadsTests: XCTestCase {
             XCTAssertTrue(SidebarRows.offered(row, isChild: false), row)
             XCTAssertFalse(SidebarRows.offered(row, isChild: true), row)
         }
-        for row in SidebarRows.all.map(\.key) where !SidebarRows.adultRows.contains(row) {
+        for row in SidebarRows.all.map(\.key) where !SidebarRows.notForChildren.contains(row) {
             XCTAssertTrue(SidebarRows.offered(row, isChild: true), row)
         }
         // It can be taken out and put back like the others.

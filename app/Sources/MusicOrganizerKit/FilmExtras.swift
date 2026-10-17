@@ -84,6 +84,13 @@ public struct FilmPositions: Equatable, Sendable {
         }
     }
 
+    /// A file the owner moved to another folder (2026-10-17, its right-click Move To):
+    /// where it was left goes with it. A file is remembered by its path.
+    public mutating func moved(from old: String, to new: String) {
+        guard old != new, let place = places.removeValue(forKey: old) else { return }
+        places[new] = place
+    }
+
     // MARK: kept in the app's settings
 
     public static let key = "filmPositions"
@@ -104,7 +111,8 @@ public struct FilmPositions: Equatable, Sendable {
 /// by the app on this Mac (not in the library), so a keep that was cut off when the app
 /// closed carries on when it's opened again. One is forgotten when its film has been
 /// kept, couldn't be, or the owner stops it. A keep is of a torrent, or (2026-10-17) of
-/// a plugin's plain web address (`url`), which the engine downloads (`stream.keep`).
+/// a plugin's plain web address (`url`), which the engine downloads (`stream.keep`), or
+/// (the same day) of a video on a web page, downloaded by yt-dlp (`page.keep`).
 public struct PendingKeeps: Codable, Equatable, Sendable {
     public struct Keep: Codable, Equatable, Sendable, Identifiable {
         /// The torrent's id; empty for a web address's keep.
@@ -133,8 +141,18 @@ public struct PendingKeeps: Codable, Equatable, Sendable {
         public let show: String?
         public let season: Int?
         public let episode: Int?
-        /// What it goes by: its address, or its torrent's id.
-        public var id: String { url ?? infoHash }
+        /// A video from a web page (the URL page, 2026-10-17): its place on the page, if
+        /// it has no address of its own, and the quality chosen. `url` is the page's.
+        public let item: Int?
+        public let quality: String?
+        /// What it goes by: its address, or its torrent's id; a page's video by its page,
+        /// its place there and its quality.
+        public var id: String {
+            if let quality, let url { return "\(url)#\(item ?? 0)#\(quality)" }
+            return url ?? infoHash
+        }
+        /// Downloaded from a web page by yt-dlp.
+        public var isPage: Bool { quality != nil }
         public var isApart: Bool { apart == true }
         /// Downloaded from a web address, not fetched from a torrent.
         public var isAddress: Bool { url != nil }
@@ -153,24 +171,30 @@ public struct PendingKeeps: Codable, Equatable, Sendable {
             return title.isEmpty ? show : "\(show) - \(title)"
         }
 
-        /// What it is, in a word, where keeps are listed: "Movie", "Series", "Anime" or
-        /// "18+".
+        /// What it is, in a word, where keeps are listed: "Movie", "Series", "Anime",
+        /// "18+" or (a video from a page saved there) "Video".
         public var kindName: String {
             switch keptKind {
             case "series": "Series"
             case "anime": "Anime"
             case "adult": "18+"
+            case "video": "Video"
             default: "Movie"
             }
         }
+
+        /// The folder it's going to, as Downloads says it: "Videos" or "Movies".
+        public var placeName: String { keptKind == "video" ? "Videos" : "Movies" }
 
         public init(
             infoHash: String, trackers: [String], title: String, year: String? = nil,
             fileIndex: Int? = nil, convert: Bool = true, apart: Bool = false,
             kind: String? = nil, show: String? = nil, season: Int? = nil, episode: Int? = nil,
-            url: String? = nil, size: Int? = nil
+            url: String? = nil, size: Int? = nil, item: Int? = nil, quality: String? = nil
         ) {
             self.apart = apart ? true : nil
+            self.item = item
+            self.quality = quality
             self.infoHash = url == nil ? infoHash.lowercased() : ""
             self.url = url
             self.size = size
@@ -229,11 +253,26 @@ public struct PendingKeeps: Codable, Equatable, Sendable {
             }
         }
 
+        /// A video chosen on the URL page, to be saved in `place`.
+        public init(
+            page video: PageVideo, quality: PageQuality, title: String, place: KeptPlace,
+            convert: Bool = true
+        ) {
+            self.init(
+                infoHash: "", trackers: [], title: title, convert: convert,
+                apart: place == .adult, kind: place.rawValue, url: video.url,
+                size: quality.size, item: video.item, quality: quality.id)
+        }
+
         /// What the engine is asked to keep it: `torrent.keep`, or `stream.keep` for a web
-        /// address (`keepMethod`).
+        /// address, or `page.keep` for a page's video (`keepMethod`).
         public var asked: [String: Any] {
             var asked: [String: Any] = ["title": title, "convert": convert]
-            if let url {
+            if let quality, let url {
+                asked["url"] = url
+                asked["quality"] = quality
+                if let item { asked["item"] = item }
+            } else if let url {
                 asked["url"] = url
                 if let size { asked["size"] = size }
             } else {
@@ -250,11 +289,20 @@ public struct PendingKeeps: Codable, Equatable, Sendable {
         }
 
         /// How the engine is asked to keep it, how it's going, and to stop.
-        public var keepMethod: String { isAddress ? "stream.keep" : "torrent.keep" }
+        public var keepMethod: String {
+            isPage ? "page.keep" : isAddress ? "stream.keep" : "torrent.keep"
+        }
         public var statusMethod: String { isAddress ? "stream.status" : "torrent.status" }
         public var stopMethod: String { isAddress ? "stream.stop" : "torrent.stop_keeping" }
         /// What says which it is, for those.
-        public var which: [String: Any] { url.map { ["url": $0] } ?? ["info_hash": infoHash] }
+        public var which: [String: Any] {
+            if let quality, let url {
+                var which: [String: Any] = ["url": url, "quality": quality]
+                if let item { which["item"] = item }
+                return which
+            }
+            return url.map { ["url": $0] } ?? ["info_hash": infoHash]
+        }
     }
 
     public private(set) var keeps: [Keep] = []

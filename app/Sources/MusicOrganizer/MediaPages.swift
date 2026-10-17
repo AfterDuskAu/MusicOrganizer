@@ -648,6 +648,15 @@ struct VideoFileRow: View {
             Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([file.url]) }
             Divider()
             Button("Convert for Phones and Tablets") { model.convertFilm(file.url) }
+            // Into another of the folders kept films are in, should one have gone in the
+            // wrong one (the owner, 2026-10-17). 18+ isn't offered in a child's profile.
+            Menu("Move To") {
+                let now = KeptPlace.of(file.url, movies: model.moviesFolder, videos: model.videosFolder)
+                ForEach(KeptPlace.offered(isChild: model.profiles.current.isChild)) { place in
+                    Button(place.name) { model.moveMedia(file, to: place) }
+                        .disabled(place == now)
+                }
+            }
             Divider()
             // The file itself, to the Trash, once the owner says yes (2026-10-17).
             Button("Move to Trash…", role: .destructive) { model.trashingFile = file }
@@ -1457,8 +1466,8 @@ struct MoviesView: View {
                     }
                     Text(
                         adult
-                            ? "What you've downloaded from the Porn Finder, in the 18+ folder in your Movies "
-                                + "folder. Double-click one to play it: nothing of it is remembered."
+                            ? "What's in the 18+ folder in your Movies folder: downloads from the Porn Finder "
+                                + "and the URL page. Double-click one to play it: nothing of it is remembered."
                             : "The video files in your Movies folder. Double-click one to play it.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
@@ -1476,7 +1485,7 @@ struct MoviesView: View {
             if count == 0 {
                 Text(
                     !looked ? "Looking…"
-                        : adult ? "Nothing has been downloaded from the Porn Finder yet."
+                        : adult ? "Nothing has been downloaded to the 18+ folder yet."
                         : "There are no video files in your Movies folder yet."
                 )
                 .foregroundStyle(.secondary)

@@ -458,11 +458,7 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
         if let keepError { return "Couldn't download it: \(keepError)" }
         if let keptPath {
             let path = keptPath as NSString
-            // One from the Finder for adults is in the Movies folder's own 18+ folder.
-            let place =
-                (path.deletingLastPathComponent as NSString).lastPathComponent == VideoFiles.adultFolderName
-                ? "the 18+ folder in your Movies folder" : "your Movies folder"
-            let kept = "Downloaded to \(place) as “\(path.lastPathComponent)”"
+            let kept = "Downloaded to \(Self.place(of: keptPath)) as “\(path.lastPathComponent)”"
             return keepNote.map { "\(kept). \($0)" } ?? kept
         }
         guard keeping == true else { return nil }
@@ -474,6 +470,19 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
         if state == "checking" { return "Downloading: checking what's here…" }
         let megabytes = String(format: "%.1f", Double(bytesPerSecond) / 1_000_000)
         return "Downloading: \(Int(progress * 100))% here · \(megabytes) MB/s. It carries on while the app is open, and picks up again when it's reopened."
+    }
+
+    /// Where a kept file went, in words: one from the Finder for adults is in the Movies
+    /// folder's own 18+ folder; a video from the URL page may be in the videos folder
+    /// (2026-10-17), or in Series or Anime.
+    static func place(of keptPath: String) -> String {
+        let folders = (keptPath as NSString).deletingLastPathComponent.split(separator: "/").map(String.init)
+        switch folders.last {
+        case VideoFiles.adultFolderName: return "the 18+ folder in your Movies folder"
+        case "Videos": return "your Videos folder"
+        case "Series", "Anime": return "the \(folders.last ?? "") folder in your Movies folder"
+        default: return "your Movies folder"
+        }
     }
 
     /// Still on its way: worth asking about again.

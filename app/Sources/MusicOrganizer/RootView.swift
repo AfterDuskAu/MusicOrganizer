@@ -144,6 +144,9 @@ enum SidebarItem: Hashable {
     /// (the owner, 2026-10-17: "These downloads would move to a new section under videos
     /// called 18+"). Never in a child's profile.
     case adultVideos
+    /// The URL page (the owner, 2026-10-17): a web page's videos, one downloaded with
+    /// yt-dlp. Never in a child's profile.
+    case pageVideos
     /// Settings: a page like the others, opened by the cog wheel or ⌘, (no row of its own).
     case settings
     case playlist(String)
@@ -167,6 +170,7 @@ enum SidebarItem: Hashable {
         case .animeFinder: "animeFinder"
         case .adultFinder: "adultFinder"
         case .adultVideos: "adultVideos"
+        case .pageVideos: "url"
         case .importPlaylists: "import"
         case .youtube: "youtube"
         case .youtubeQueue: "youtubeQueue"
@@ -195,6 +199,7 @@ enum SidebarItem: Hashable {
         case "animeFinder": self = .animeFinder
         case "adultFinder": self = .adultFinder
         case "adultVideos": self = .adultVideos
+        case "url": self = .pageVideos
         case "movieFinder": self = .movieFinder
         case "home": self = .home
         case "seriesFinder": self = .seriesFinder
@@ -253,6 +258,7 @@ enum SidebarItem: Hashable {
         case .animeFinder: "Anime Finder"
         case .adultFinder: "Porn Finder"
         case .adultVideos: "18+"
+        case .pageVideos: "URL"
         case .importPlaylists: "Import Playlists"
         case .youtube: "Music Finder"
         case .youtubeQueue: "Queue"
@@ -286,6 +292,7 @@ enum SidebarItem: Hashable {
         case .animeFinder: "sparkles.tv"
         case .adultFinder: "eye.slash"
         case .adultVideos: "18.circle"
+        case .pageVideos: "link"
         case .importPlaylists: "square.and.arrow.down.on.square"
         case .youtube: "magnifyingglass"
         case .youtubeQueue: "text.append"
@@ -584,7 +591,7 @@ struct MainView: View {
                 ForEach(
                     [
                         SidebarItem.home, .youtube, .videoFinder, .movieFinder, .seriesFinder,
-                        .animeFinder, .adultFinder, .downloads,
+                        .animeFinder, .adultFinder, .pageVideos, .downloads,
                     ].filter { !hiddenRows.contains($0.key) }
                         // Never in a child's profile, whatever the sidebar's choices say.
                         .filter(offered),
@@ -830,6 +837,20 @@ struct MainView: View {
                 } else {
                     Bench.say("BENCH trash: there's no \(name) in the Movies folder")
                 }
+            } else if step.name.hasPrefix("moveto=") {
+                // The video file of this name anywhere in the Movies folder moved into a
+                // place (`KeptPlace`: movie, series, anime, video, adult): what Move To does.
+                // Only ever with a scratch Movies folder.
+                let parts = step.name.dropFirst(7).split(separator: "@").map(String.init)
+                let movies = model.moviesFolder
+                let files = await Task.detached { movies.map(VideoFiles.inside) ?? [] }.value
+                if parts.count == 2, let place = KeptPlace(rawValue: parts[1]),
+                    let file = files.first(where: { $0.url.lastPathComponent == parts[0] })
+                {
+                    model.moveMedia(file, to: place)
+                } else {
+                    Bench.say("BENCH moveto: there's no \(parts.first ?? "") in the Movies folder, or no such place")
+                }
             } else if step.name == "lists" {
                 let media = model.media
                 for (kind, list) in [("movies", media.films), ("series", media.series), ("anime", media.anime)] {
@@ -1060,6 +1081,12 @@ struct PageView: View {
                 Text("This page isn't part of this profile.").foregroundStyle(.secondary)
             } else {
                 MoviesView(isActive: active, adult: true)
+            }
+        case .pageVideos:
+            if model.profiles.current.isChild {
+                Text("This page isn't part of this profile.").foregroundStyle(.secondary)
+            } else {
+                PageVideosView()
             }
         case .movieFinder:
             MovieFinderView(kind: "movie")

@@ -472,7 +472,8 @@ public enum SidebarRows {
         ("home", "Media Discovery"), ("youtube", "Media Discovery"),
         ("videoFinder", "Media Discovery"), ("movieFinder", "Media Discovery"),
         ("seriesFinder", "Media Discovery"), ("animeFinder", "Media Discovery"),
-        ("adultFinder", "Media Discovery"), ("downloads", "Media Discovery"),
+        ("adultFinder", "Media Discovery"), ("url", "Media Discovery"),
+        ("downloads", "Media Discovery"),
         ("import", "Playlists"),
     ]
     public static let key = "sidebarHidden"
@@ -482,9 +483,13 @@ public enum SidebarRows {
     /// and not offered in its Customise Sidebar either.
     public static let adultRows: Set<String> = ["adultFinder", "adultVideos"]
 
+    /// The rows a child's profile never has: those for adults, and (2026-10-17) the URL
+    /// page, from which anything on any website could be downloaded.
+    public static let notForChildren: Set<String> = adultRows.union(["url"])
+
     /// Whether a row may be in the sidebar of this profile at all.
     public static func offered(_ row: String, isChild: Bool) -> Bool {
-        !(isChild && adultRows.contains(row))
+        !(isChild && notForChildren.contains(row))
     }
 
     public static func hidden(_ saved: String?) -> Set<String> {
