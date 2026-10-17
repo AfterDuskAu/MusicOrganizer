@@ -95,7 +95,7 @@ def test_newer_schema_is_refused(state_file: Path) -> None:
     state_file.write_text('{"schema": 99}', encoding="utf-8")
     with pytest.raises(StateError) as caught:
         state.State.load(state_file)
-    assert "newer version of Music Organizer" in caught.value.message
+    assert "newer version of Bear Media" in caught.value.message
 
 
 def test_failed_rename_leaves_the_old_file(

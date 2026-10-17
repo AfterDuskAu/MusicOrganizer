@@ -380,6 +380,6 @@ public enum Imports {
             note += "Your limit of \(limit) downloads in 24 hours has room for \(now) now; the "
                 + "other \(count - now) start by themselves as it frees up."
         }
-        return note + " Leave Music Organizer open: the Mac stays awake while they download."
+        return note + " Leave Bear Media open: the Mac stays awake while they download."
     }
 }

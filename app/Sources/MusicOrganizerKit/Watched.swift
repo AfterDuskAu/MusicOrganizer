@@ -323,11 +323,13 @@ public struct CalendarEntry: Identifiable, Hashable, Sendable {
     public static func episodes(
         of series: MediaItem, _ videos: [MediaDetails.Video], in timeZone: TimeZone = .current
     ) -> [CalendarEntry] {
-        videos.compactMap { video in
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        return videos.compactMap { video in
             guard let when = video.releasedAt else { return nil }
             let about = [video.number, video.title.isEmpty ? nil : video.title].compactMap { $0 }
             return CalendarEntry(
-                id: "\(series.id)|\(video.id)", day: day(of: when, in: timeZone), when: when,
+                id: "\(series.id)|\(video.id)", day: day(of: when, on: calendar), when: when,
                 title: series.name, detail: about.joined(separator: " · "),
                 picture: series.poster, series: series, episodeId: video.id, video: nil)
         }
@@ -362,6 +364,10 @@ public struct CalendarEntry: Identifiable, Hashable, Sendable {
     public static func day(of moment: Date, in timeZone: TimeZone = .current) -> String {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = timeZone
+        return day(of: moment, on: calendar)
+    }
+
+    private static func day(of moment: Date, on calendar: Calendar) -> String {
         let parts = calendar.dateComponents([.year, .month, .day], from: moment)
         return String(format: "%04d-%02d-%02d", parts.year!, parts.month!, parts.day!)
     }

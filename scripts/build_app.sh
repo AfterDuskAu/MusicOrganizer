@@ -1,5 +1,6 @@
 #!/bin/bash
-# Build the Mac app (v0.2) and put it in app/build/ as "Music Organizer.app".
+# Build the Mac app (v0.2) and put it in app/build/ as "Bear Media.app" (the app's name
+# since 2026-10-17, the owner's; it was "Music Organizer.app" before).
 #
 #     scripts/build_app.sh          build it
 #     scripts/build_app.sh --open   build it and open it (if it's open already, it's left
@@ -14,7 +15,10 @@ set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 ENGINE="$REPO/.venv/bin/musicorg"
-APP="$REPO/app/build/Music Organizer.app"
+APP="$REPO/app/build/Bear Media.app"
+# The same app under its old name: taken away once the new one is built, unless it's open.
+OLD_APP="$REPO/app/build/Music Organizer.app"
+ICON="$REPO/app/Resources/AppIcon.icns"
 VERSION="0.2.0"
 
 if [ ! -x "$ENGINE" ]; then
@@ -28,16 +32,19 @@ BINARY="$(swift build --package-path "$REPO/app" -c release --show-bin-path)/Mus
 
 # Only ever this script's own output folder.
 rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BINARY" "$APP/Contents/MacOS/MusicOrganizer"
+# The bear (scripts/make_icon.sh draws it from the app's own drawing).
+cp "$ICON" "$APP/Contents/Resources/AppIcon.icns"
 
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CFBundleName</key><string>Music Organizer</string>
-    <key>CFBundleDisplayName</key><string>Music Organizer</string>
+    <key>CFBundleName</key><string>Bear Media</string>
+    <key>CFBundleDisplayName</key><string>Bear Media</string>
+    <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>CFBundleIdentifier</key><string>org.musicorganizer.app</string>
     <key>CFBundleExecutable</key><string>MusicOrganizer</string>
     <key>CFBundlePackageType</key><string>APPL</string>
@@ -69,6 +76,18 @@ else
 fi
 
 echo "Built: $APP"
+
+# The app's old name, gone so there's one app to open (the settings, the library and
+# everything kept go by the app's id, which hasn't changed). Left while it's open.
+if [ -d "$OLD_APP" ]; then
+    if grep -Fxq "$OLD_APP/Contents/MacOS/MusicOrganizer" <<<"$(ps -axo comm=)"; then
+        echo
+        echo "The app is still open under its old name, Music Organizer. Quit it (⌘Q), open"
+        echo "Bear Media instead, and build again to tidy the old one away."
+    else
+        rm -rf "$OLD_APP"
+    fi
+fi
 if [ "${1:-}" = "--open" ]; then
     # `open` only brings an app that's already open to the front, and that one is the copy
     # from before this build, with nothing on screen to say so. So say so here, and leave
@@ -76,7 +95,7 @@ if [ "${1:-}" = "--open" ]; then
     RUNNING="$(ps -axo comm=)"
     if grep -Fxq "$APP/Contents/MacOS/MusicOrganizer" <<<"$RUNNING"; then
         echo
-        echo "Music Organizer is still open, and that's the copy from BEFORE this build."
+        echo "Bear Media is still open, and that's the copy from BEFORE this build."
         echo "To see the new one, quit it (⌘Q), then open it again:"
         echo "    open \"$APP\""
     else

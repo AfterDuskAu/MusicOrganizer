@@ -65,7 +65,7 @@ def test_an_export_holds_what_was_ticked_and_says_so(
         tick=lambda done, total, name: ticks.append((done, total, name)), today="2026-10-12",
     )  # fmt: skip
     folder = Path(said["folder"])
-    assert folder == drive / "Music Organizer Export D 2026-10-12"
+    assert folder == drive / "Bear Media Export D 2026-10-12"
     assert files_in(folder) == [
         "Movies/A Film (2020).mp4",
         "Movies/Series/A Show/A Show S01E01.mkv",
@@ -90,7 +90,7 @@ def test_an_export_holds_what_was_ticked_and_says_so(
     assert ticks[0][:2] == (0, 6) and ticks[-1] == (6, 6, "")
     # A second export the same day is a second folder: nothing is written into the first.
     again = transfer.export_profile(lib, drive, parts=["records"], profile="D", today="2026-10-12")
-    assert Path(again["folder"]).name == "Music Organizer Export D 2026-10-12 (2)"
+    assert Path(again["folder"]).name == "Bear Media Export D 2026-10-12 (2)"
     assert files_in(Path(again["folder"])) == ["export.json", "records/state.json"]
 
 
@@ -247,10 +247,10 @@ def test_a_library_with_records_of_its_own_keeps_them(
 def test_only_a_whole_export_of_this_kind_is_read(
     exported: Path, tmp_path: Path, lib: Library
 ) -> None:
-    with pytest.raises(UserError, match="isn't a Music Organizer export"):
+    with pytest.raises(UserError, match="isn't a Bear Media export"):
         transfer.import_profile(lib, tmp_path, parts=["music"])
     (exported / "export.json").write_text(json.dumps({"format": 99}))
-    with pytest.raises(UserError, match="newer Music Organizer"):
+    with pytest.raises(UserError, match="newer Bear Media"):
         transfer.import_profile(lib, exported, parts=["music"])
 
 

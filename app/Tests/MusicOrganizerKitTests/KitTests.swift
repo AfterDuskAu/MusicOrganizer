@@ -523,7 +523,7 @@ final class ListeningTimeTests: XCTestCase {
 
 final class EngineLocateTests: XCTestCase {
     func testOrder() {
-        let app = URL(fileURLWithPath: "/work/project/app/build/Music Organizer.app")
+        let app = URL(fileURLWithPath: "/work/project/app/build/Bear Media.app")
         let inProject = "/work/project/.venv/bin/musicorg"
         XCTAssertEqual(
             EngineProcess.locate(

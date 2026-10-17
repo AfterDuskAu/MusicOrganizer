@@ -64,7 +64,7 @@ def read(path: Path, playlist: str | None = None) -> dict[str, Any]:
     kind = path.suffix.lower()
     if kind not in KINDS:
         raise UserError(
-            "That isn't a playlist file Music Organizer reads. Choose a CSV, a text file "
+            "That isn't a playlist file Bear Media reads. Choose a CSV, a text file "
             "(.txt) or an M3U playlist."
         )
     try:

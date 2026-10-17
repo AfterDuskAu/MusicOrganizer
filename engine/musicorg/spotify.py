@@ -199,12 +199,12 @@ class _SignIn:
             return False, "Spotify wasn't given permission, so nothing was signed in to."
         code = (query.get("code") or [""])[0]
         if not code:
-            return False, "Spotify's answer had no code in it. Start again from Music Organizer."
+            return False, "Spotify's answer had no code in it. Start again from Bear Media."
         try:
             _finish(self.client_id, code, self.verifier, redirect_uri(self.port))
         except UserError as exc:
             return False, exc.message
-        return True, "You're signed in. You can close this tab and go back to Music Organizer."
+        return True, "You're signed in. You can close this tab and go back to Bear Media."
 
 
 _pending: _SignIn | None = None
@@ -294,9 +294,7 @@ class _Handler(BaseHTTPRequestHandler):
         attempt = self.server.attempt
         query = parse_qs(url.query)
         if not attempt.is_ours(query):
-            self._page(
-                400, "That answer wasn't for this sign-in. Start again from Music Organizer."
-            )
+            self._page(400, "That answer wasn't for this sign-in. Start again from Bear Media.")
             return
         signed_in, words = attempt.answer(query)
         self._page(200 if signed_in else 400, words)
@@ -307,7 +305,7 @@ class _Handler(BaseHTTPRequestHandler):
 
     def _page(self, code: int, words: str) -> None:
         body = (
-            "<!doctype html><meta charset='utf-8'><title>Music Organizer</title>"
+            "<!doctype html><meta charset='utf-8'><title>Bear Media</title>"
             "<body style='font: 17px -apple-system, sans-serif; margin: 15% auto; "
             f"max-width: 32em; text-align: center'><p>{_escape(words)}</p></body>"
         ).encode()

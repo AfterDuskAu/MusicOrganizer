@@ -178,7 +178,7 @@ def export_profile(
     wanted = _parts(parts)
     forbidden = _forbidden(lib)
     day = today or datetime.now(UTC).strftime("%Y-%m-%d")
-    name = f"Music Organizer Export {' '.join(profile.split()) or 'Profile'} {day}"
+    name = f"Bear Media Export {' '.join(profile.split()) or 'Profile'} {day}"
     found = gather(lib)
     todo: list[tuple[str, Path, PurePosixPath]] = [
         (part, path, rel) for part in ("music", "videos", "movies") if part in wanted
@@ -241,14 +241,14 @@ def read_export(folder: Path) -> dict[str, Any]:
         found = json.loads(mark.read_text(encoding="utf-8"))
     except FileNotFoundError:
         raise UserError(
-            f"{Path(folder).name} isn't a Music Organizer export (or one that didn't "
+            f"{Path(folder).name} isn't a Bear Media export (or one that didn't "
             "finish): it has no export.json. Choose the folder an export made."
         ) from None
     except (OSError, ValueError) as exc:
         raise UserError(f"The export's export.json can't be read: {exc}.") from exc
     if not isinstance(found, dict) or found.get("format") != FORMAT:
         raise UserError(
-            "That export was made by a newer Music Organizer than this one, and can't be "
+            "That export was made by a newer Bear Media than this one, and can't be "
             "read here. Update the app first."
         )
     return found

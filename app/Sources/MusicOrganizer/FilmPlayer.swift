@@ -310,12 +310,20 @@ struct FilmPlayerView: View {
             controlsShown = true
         }
         .task {
-            // The controls go away three seconds after the mouse last moved.
+            // The controls go away five seconds after the mouse last moved, and in full
+            // screen the pointer goes with them, back at the slightest move (the owner,
+            // 2026-10-17: "The mouse should disappear with all the other things on the
+            // screen after 5 seconds when using full screen").
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
-                if Date().timeIntervalSince(lastMove) > 3 { controlsShown = false }
+                guard controlsShown, Date().timeIntervalSince(lastMove) > 5 else { continue }
+                controlsShown = false
+                if !film.paused, film.problem == nil, NSApp.keyWindow?.styleMask.contains(.fullScreen) == true {
+                    NSCursor.setHiddenUntilMouseMoves(true)
+                }
             }
         }
+        .onDisappear { NSCursor.setHiddenUntilMouseMoves(false) }
     }
 
     private func controls(_ film: FilmPlayer) -> some View {

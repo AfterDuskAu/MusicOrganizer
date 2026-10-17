@@ -200,8 +200,8 @@ class Index:
     def _check_version(self, version: int) -> None:
         if version > SCHEMA_VERSION:
             raise LibraryIndexError(
-                f"The library's index ({self.path}) was made by a newer version of Music "
-                "Organizer. Update the engine, or run `musicorg index rebuild`."
+                f"The library's index ({self.path}) was made by a newer version of Bear "
+                "Media. Update the engine, or run `musicorg index rebuild`."
             )
         if version < SCHEMA_VERSION:
             raise LibraryIndexError(
@@ -674,8 +674,8 @@ class QueueStore:
             raise _queue_damaged(self.path, exc) from exc
         if version != QUEUE_SCHEMA_VERSION:
             raise LibraryIndexError(
-                f"The library's queue ({self.path}) was made by a different version of Music "
-                "Organizer. Update the engine to the version that made it."
+                f"The library's queue ({self.path}) was made by a different version of Bear "
+                "Media. Update the engine to the version that made it."
             )
 
     def close(self) -> None:

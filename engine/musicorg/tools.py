@@ -159,7 +159,7 @@ def _stamp(path: Path) -> tuple[int, int] | None:
 def missing_message(info: ToolInfo, platform: str | None = None) -> str:
     """Plain-English explanation of why a tool can't be used, and how to fix it."""
     if info.path is None:
-        first = f"{info.name} isn't installed, or Music Organizer can't find it."
+        first = f"{info.name} isn't installed, or Bear Media can't find it."
     elif info.problem is not None and info.problem.startswith(_TOO_SLOW):
         # It's installed: the computer was too busy to start it. Nothing to install.
         return (

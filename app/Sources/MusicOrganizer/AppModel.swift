@@ -19,6 +19,24 @@ final class AppModel {
     }
 
     private(set) var phase: Phase = .starting
+    /// Bear Media's loading screen, the bear (the owner, 2026-10-17: "the loading screen
+    /// should load whatever is needed for the app to immediately start. Minimum 5
+    /// seconds, it holds it until it's done"): from the app's start until the library is
+    /// read and the first page made under it, or there's something to ask.
+    private(set) var showingBear = true
+    @ObservationIgnored private var bearGoing: Task<Void, Never>?
+    static let bearAtLeast: Double = 5
+
+    /// What the app needs is ready (or it has something to say): the bear goes, once
+    /// it has been there five seconds from the app's start. A timing run doesn't wait.
+    private func bearMayGo() {
+        guard showingBear, bearGoing == nil else { return }
+        let left = Bench.isOn ? 0 : Self.bearAtLeast - Bench.sinceLaunch()
+        bearGoing = Task { [weak self] in
+            if left > 0 { try? await Task.sleep(for: .seconds(left)) }
+            self?.showingBear = false
+        }
+    }
     /// The main library's lists. Without the owner's downloads, if they're kept separate.
     private(set) var library = Library.empty
     /// Every song, wherever it's shown: for favourites, playlists and "is it mine already?".
@@ -279,13 +297,29 @@ final class AppModel {
     /// Watched (the owner, 2026-10-15): a movie played to nine tenths of it ("this 10%
     /// accounts for credits"); a series whose latest episode out has been. An id the
     /// app knows as a series' is a series.
-    func isWatched(_ id: String) -> Bool {
-        seriesProgress.latest(of: id) != nil
-            ? seriesProgress.isWatched(id, finished: finished) : finished.contains(id)
-    }
+    func isWatched(_ id: String) -> Bool { watchedIds.contains(id) }
 
     /// The owner had caught up with this series, and a new episode has come out since.
-    func hasNewEpisode(_ id: String) -> Bool { seriesProgress.hasNewEpisode(id, finished: finished) }
+    func hasNewEpisode(_ id: String) -> Bool { newEpisodeIds.contains(id) }
+
+    /// What's watched by the owner's rule, and the series with a new episode since they
+    /// caught up: worked out once when the records change, not by every card at every
+    /// redraw. With an import's thousands of records, every card on every page (those
+    /// kept out of sight too) worked it out again each time one series' episodes came in,
+    /// and the app slowed down (the owner, 2026-10-17).
+    private(set) var watchedIds: Set<String> = []
+    private(set) var newEpisodeIds: Set<String> = []
+
+    private func recountWatched() {
+        var watched = Set(finished.days.keys)
+        for (id, known) in seriesProgress.series where known.latest != nil {
+            if seriesProgress.isWatched(id, finished: finished) { watched.insert(id) } else { watched.remove(id) }
+        }
+        let fresh = Set(seriesProgress.withNewEpisodes(finished: finished))
+        // Only a real change is a change: each is every card's to draw again.
+        if watched != watchedIds { watchedIds = watched }
+        if fresh != newEpisodeIds { newEpisodeIds = fresh }
+    }
 
     /// A film or episodes marked watched, or not, by the owner (an episode's menu, a
     /// card's). Episodes say their series, which may be caught up by it.
@@ -296,6 +330,7 @@ final class AppModel {
         }
         finished.save()
         seriesProgress.save()
+        recountWatched()
     }
 
     /// What an import from Stremio found, put in this profile (`StremioLibrary.plan`): added
@@ -315,17 +350,30 @@ final class AppModel {
         }
         seriesProgress.save()
         seriesRead += 1
+        recountWatched()
         return added
     }
 
     /// A series' episodes have been read (its page, the next episode looked for, the
     /// Watchlist, the calendar): its latest episode out is noted.
     func learn(_ series: MediaItem, episodes: [MediaDetails.Video]) {
-        guard series.type == "series", !episodes.isEmpty else { return }
-        seriesEpisodes[series.id] = episodes
-        seriesRead += 1
-        seriesProgress.learned(series.id, episodes: episodes, finished: finished)
+        learn([(series, episodes)])
+    }
+
+    /// Several series' episodes read: noted together, saved once, and the pages told once.
+    private func learn(_ read: [(series: MediaItem, episodes: [MediaDetails.Video])]) {
+        let read = read.filter { $0.series.type == "series" && !$0.episodes.isEmpty }
+        guard !read.isEmpty else { return }
+        var episodes = seriesEpisodes
+        var progress = seriesProgress
+        for (series, videos) in read {
+            episodes[series.id] = videos
+            progress.learned(series.id, episodes: videos, finished: finished)
+        }
+        (seriesEpisodes, seriesProgress) = (episodes, progress)
         seriesProgress.save()
+        seriesRead += 1
+        recountWatched()
     }
 
     /// Open an episode on its series' page, with its ways to play showing (the calendar).
@@ -367,6 +415,16 @@ final class AppModel {
 
     /// The watching last given to the engine, by profile, so the same isn't given twice.
     @ObservationIgnored private var watchingGiven: [String: Data] = [:]
+    /// What the open profile's records looked like when its watching was last given: if
+    /// they look the same, it isn't put together again (every ten seconds, it was the
+    /// whole history and everything watched made into the sync's words: 2026-10-17).
+    @ObservationIgnored private var watchingLook: [Int]?
+
+    private var recordsLook: [Int] {
+        [watchlist.items.count, watchlist.takenOff.count, finished.days.count, finished.unmarked.count,
+         history.entries.count, Int(history.entries.lazy.map(\.at.timeIntervalSince1970).max() ?? 0),
+         history.entries.first?.id.hashValue ?? 0]
+    }
 
     /// Give the engine a profile's watching, for a paired video app to have (docs/ENGINE_API.md,
     /// section 3): the open profile's whenever it has changed; with `all`, every profile's
@@ -374,6 +432,8 @@ final class AppModel {
     /// sharing is on: no device can ask otherwise.
     func giveWatching(all: Bool) async {
         guard phase == .ready, sharing?.on == true, engine?.connection != nil else { return }
+        let look = recordsLook
+        if !all, look == watchingLook { return }
         var states = [profiles.currentId: WatchSync.state(watchlist: watchlist, finished: finished, history: history)]
         if all {
             for profile in profiles.profiles where profile.id != profiles.currentId {
@@ -381,11 +441,15 @@ final class AppModel {
             }
         }
         for (id, state) in states {
-            guard let data = try? JSONEncoder().encode(state), watchingGiven[id] != data,
-                let object = try? JSONSerialization.jsonObject(with: data)
-            else { continue }
+            guard let data = try? JSONEncoder().encode(state) else { continue }
+            if watchingGiven[id] == data {
+                if id == profiles.currentId { watchingLook = look }
+                continue
+            }
+            guard let object = try? JSONSerialization.jsonObject(with: data) else { continue }
             if (try? await ask("watching.set", ["profile": id, "watching": object], as: Empty.self)) != nil {
                 watchingGiven[id] = data
+                if id == profiles.currentId { watchingLook = look }
             }
         }
     }
@@ -414,6 +478,7 @@ final class AppModel {
                     seriesProgress.notice(finished)
                     seriesProgress.save()
                     seriesRead += 1
+                    recountWatched()
                 }
             } else if profiles.profile(one.profile) != nil {
                 var records = putAwayWatching(of: one.profile)
@@ -502,14 +567,17 @@ final class AppModel {
         return all.sorted { when($0) > when($1) }
     }
 
-    /// Read these series' episodes where they're due (every six hours, or never read
-    /// while the app's been open), three at a time: their latest episodes, and the
-    /// calendar's. Each is one question to the plugins, not through the gate to YouTube.
-    func readSeries(_ items: [MediaItem], force: Bool = false) async {
+    /// Read these series' episodes where they're due (every six hours; for the calendar,
+    /// `episodes`, also where they haven't been read since the app opened), three at a
+    /// time: their latest episodes, and the calendar's. Each is one question to the
+    /// plugins, not through the gate to YouTube. What comes in is noted every two
+    /// seconds, not series by series: each noting is every page's to draw again.
+    func readSeries(_ items: [MediaItem], force: Bool = false, episodes: Bool = false) async {
         guard !readingSeries else { return }
         let due = items.filter {
             $0.type == "series"
-                && (force || seriesEpisodes[$0.id] == nil || seriesProgress.isDue($0.id, every: 6 * 3600))
+                && (force || (episodes && seriesEpisodes[$0.id] == nil)
+                    || seriesProgress.isDue($0.id, every: 6 * 3600))
         }
         guard !due.isEmpty else { return }
         readingSeries = true
@@ -525,10 +593,17 @@ final class AppModel {
                 }
             }
             for _ in 0..<3 { next() }
+            var read: [(series: MediaItem, episodes: [MediaDetails.Video])] = []
+            var noted = Date()
             for await (series, details) in group {
-                if let details { learn(series, episodes: details.videos) }
+                if let details { read.append((series, details.videos)) }
+                if Date().timeIntervalSince(noted) > 2 {
+                    learn(read)
+                    (read, noted) = ([], Date())
+                }
                 next()
             }
+            learn(read)
         }
     }
 
@@ -827,6 +902,7 @@ final class AppModel {
 
     func start() async {
         Bench.mark("the app's own start")
+        recountWatched()
         installSpaceBar()
         NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification, object: nil, queue: .main
@@ -874,8 +950,9 @@ final class AppModel {
         phase = .starting
         guard let executable = EngineProcess.locate() else {
             phase = .failed(
-                "Music Organizer can't find its engine. Build the app again with "
+                "Bear Media can't find its engine. Build the app again with "
                     + "scripts/build_app.sh from the project folder.")
+            bearMayGo()
             return
         }
         do {
@@ -916,12 +993,14 @@ final class AppModel {
             Bench.mark("the engine answered")
         } catch {
             phase = .failed("The engine didn't start: \(error.localizedDescription)")
+            bearMayGo()
             return
         }
         if let root = libraryToOpen {
             await open(URL(fileURLWithPath: root))
         } else {
             phase = .needsLibrary
+            bearMayGo()
         }
     }
 
@@ -947,6 +1026,7 @@ final class AppModel {
         (sharing, pairingCode) = (nil, nil)
         let detail = closed.lastErrors.split(whereSeparator: \.isNewline).last.map(String.init)
         phase = .failed("The engine stopped unexpectedly." + (detail.map { "\n\($0)" } ?? ""))
+        bearMayGo()
     }
 
     func retry() {
@@ -963,7 +1043,7 @@ final class AppModel {
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
-        panel.message = "Choose your Music Organizer library folder (the one with Music inside)."
+        panel.message = "Choose your Bear Media library folder (the one with Music inside)."
         panel.prompt = "Open Library"
         guard panel.runModal() == .OK, let url = panel.url else { return }
         if let owner = profiles.profiles.first(where: {
@@ -1101,6 +1181,7 @@ final class AppModel {
             finished.save()
             seriesProgress.finished(now.episodeId, of: id)
             seriesProgress.save()
+            recountWatched()
             // Whether the series is watched now goes by its latest episode: read it if
             // it never has been.
             if seriesProgress.latest(of: id) == nil {
@@ -1109,6 +1190,7 @@ final class AppModel {
             }
         } else if finished.played(id, to: seconds, of: length) {
             finished.save()
+            recountWatched()
         }
     }
 
@@ -1860,7 +1942,7 @@ final class AppModel {
         importing.reset()
         artistBrowser.reset()
         stremio.reset()
-        watchingGiven = [:]  // the next engine is given everything afresh
+        (watchingGiven, watchingLook) = ([:], nil)  // the next engine is given everything afresh
         for key in Array(pageChanges.keys) { forgetPageChange(key) }
         keepDownloadsSeparate =
             UserDefaults.standard.object(forKey: "keepDownloadsSeparate") as? Bool ?? true
@@ -1880,6 +1962,7 @@ final class AppModel {
         channelPictures = ChannelPictures.saved()
         (seriesEpisodes, calendarUploads, uploadsRead) = ([:], [], nil)
         seriesRead += 1
+        recountWatched()
     }
 
     private func open(_ folder: URL) async {
@@ -1893,7 +1976,19 @@ final class AppModel {
                 profiles.setCurrentLibrary(folder.path)
                 saveProfiles()
             }
-            _ = try await connection.call("library.open", ["root": folder.path])
+            // The engine of the app's last time may still be stopping, and has the library
+            // till it's gone (twenty seconds at most): waited for, behind the bear, before
+            // it's called a problem (the owner, 2026-10-17, met that screen on reopening).
+            var waited = 0
+            while true {
+                do {
+                    _ = try await connection.call("library.open", ["root": folder.path])
+                    break
+                } catch let error as RPCError where error.code == RPCError.locked && waited < 30 {
+                    waited += 1
+                    try? await Task.sleep(for: .seconds(1))
+                }
+            }
             Bench.mark("the library was opened")
             // Before anything is looked up: a child's profile finds only clean songs.
             await applyKids()
@@ -1924,6 +2019,7 @@ final class AppModel {
         } catch {
             phase = .failed(error.localizedDescription)
         }
+        bearMayGo()
     }
 
     func reload() async {

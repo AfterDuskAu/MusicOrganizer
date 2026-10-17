@@ -265,7 +265,7 @@ def read_lock_info(paths: LibraryPaths) -> dict[str, Any] | None:
 
 
 def describe_lock_holder(holder: dict[str, Any] | None, now: datetime | None = None) -> str:
-    """The message a second writer sees, e.g. "Another Music Organizer process (PID 4412,
+    """The message a second writer sees, e.g. "Another Bear Media process (PID 4412,
     `queue run`, started 14:02) is using this library. ..." Times are local; the date is
     added if it isn't today."""
     details = []
@@ -286,7 +286,7 @@ def describe_lock_holder(holder: dict[str, Any] | None, now: datetime | None = N
         details.append(f"on the computer {host}")
     who = f" ({', '.join(details)})" if details else ""
     return (
-        f"Another Music Organizer process{who} is using this library. "
+        f"Another Bear Media process{who} is using this library. "
         "Wait for it to finish, or stop it, then try again."
     )
 
@@ -322,7 +322,7 @@ def _outside_message(path: PurePath | str, allow: tuple[str, ...]) -> str:
     names = [f"{name}" for name in allow]
     where = names[0] if len(names) == 1 else ", ".join(names[:-1]) + " or " + names[-1]
     return (
-        f"{path} isn't inside the library's {where} folder, so Music Organizer left it "
+        f"{path} isn't inside the library's {where} folder, so Bear Media left it "
         "alone. It only ever changes files inside its own library."
     )
 
@@ -804,7 +804,7 @@ def _fold_name(name: str) -> str:
 def _too_many(target: Path) -> UserError:
     return UserError(
         f"There are already over a thousand files named like {target.name} in "
-        f"{target.parent}, so Music Organizer stopped rather than add another."
+        f"{target.parent}, so Bear Media stopped rather than add another."
     )
 
 
@@ -831,7 +831,7 @@ def _replace(src: Path, dst: Path) -> None:
             ):
                 raise CrossVolumeError(
                     f"Can't move {src.name} from {src.parent} to {dst.parent}: they're on "
-                    "different drives. Music Organizer only moves files within one drive, "
+                    "different drives. Bear Media only moves files within one drive, "
                     "so the library's folders must all be on the same drive."
                 ) from exc
             raise
@@ -924,7 +924,7 @@ def _remove_placeholder(paths: LibraryPaths, path: Path, not_before: float | Non
     except FileNotFoundError:
         return False
     if not stat.S_ISREG(info.st_mode) or info.st_size != 0:
-        log.warning("Left %s alone: it isn't the empty file Music Organizer reserved.", path)
+        log.warning("Left %s alone: it isn't the empty file Bear Media reserved.", path)
         return False
     if not_before is not None and info.st_mtime < not_before - _CLOCK_SLACK_S:
         log.warning("Left %s alone: it's older than the operation that would have made it.", path)
@@ -1315,7 +1315,7 @@ def _write_tags(
     old_id = before.get("musicorg_id")
     if old_id is not None and after.get("musicorg_id") != old_id and undoes is None:
         raise UserError(
-            f"{path.name} already has the Music Organizer id {old_id}. A track's id never "
+            f"{path.name} already has the Bear Media id {old_id}. A track's id never "
             "changes, so its tags were left as they are."
         )
 
@@ -1438,7 +1438,7 @@ def _check_rel(rel_target: PurePath | str) -> PurePath:
     rel = PurePath(rel_target)
     if rel.anchor or not rel.parts or any(part in ("", ".", "..") for part in rel.parts):
         raise OutsideLibraryError(
-            f"{rel_target} isn't a path inside the library, so Music Organizer left it alone.",
+            f"{rel_target} isn't a path inside the library, so Bear Media left it alone.",
             rel_target,
         )
     return rel
@@ -2364,7 +2364,7 @@ def write_export(
         if _within(real, source_path.resolve()) or _within(target, source_path):
             raise UserError(
                 f"{what} can't be saved in {folder}: it's inside the source folder "
-                f"{source_path}, which Music Organizer never writes to. Choose another folder."
+                f"{source_path}, which Bear Media never writes to. Choose another folder."
             )
     try:
         final = _write_new(real, data, _unlink_if_empty)
@@ -2560,7 +2560,7 @@ def _not_forbidden(folder: Path, forbidden: Iterable[Path], what: str) -> None:
         if any(_key(p) == _key(f) or _within(p, f) for p in (folder, real)):
             raise UserError(
                 f"{what} can't go in {folder}: that's inside {f}, one of the library's own "
-                "folders or a folder Music Organizer only ever reads. Choose another place."
+                "folders or a folder Bear Media only ever reads. Choose another place."
             )
 
 

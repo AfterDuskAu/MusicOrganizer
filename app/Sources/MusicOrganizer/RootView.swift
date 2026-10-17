@@ -5,15 +5,33 @@ struct RootView: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
+        ZStack {
+            page
+            // The bear, while the app gets ready (the owner, 2026-10-17); the page is made
+            // under it, so it's there the moment the bear fades.
+            if model.showingBear {
+                BearScene(frameRate: 45)
+                    .overlay(alignment: .bottom) { BearNote() }
+                    .transition(.opacity)
+                    .zIndex(1)
+            }
+        }
+        .animation(.easeOut(duration: 0.6), value: model.showingBear)
+        // Nothing of the window's own over the bear's sky but its three buttons.
+        .toolbar(model.showingBear ? .hidden : .automatic, for: .windowToolbar)
+    }
+
+    @ViewBuilder
+    private var page: some View {
         switch model.phase {
         case .starting:
-            ProgressView("Starting…")
+            if !model.showingBear { ProgressView("Starting…") }
         case .loading:
-            LoadingView()
+            if !model.showingBear { LoadingView() }
         case .needsLibrary:
             Message(
                 symbol: "music.note.house", title: "Where is your library?",
-                text: "Choose the Music Organizer library folder: the one with the Music folder inside."
+                text: "Choose the Bear Media library folder: the one with the Music folder inside."
             ) {
                 Button("Choose Library Folder…") { model.chooseLibrary() }
                     .buttonStyle(.borderedProminent)
@@ -30,6 +48,28 @@ struct RootView: View {
     }
 }
 
+/// Under the bear, if getting ready goes on for long: what may be holding it up.
+private struct BearNote: View {
+    @State private var slow = false
+
+    var body: some View {
+        Text(
+            "Still getting ready. If macOS is asking whether Bear Media may use the folder your "
+                + "library is in, choose Allow.")
+            .font(.callout)
+            .foregroundStyle(.white.opacity(0.7))
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: 460)
+            .padding(.bottom, 28)
+            .opacity(slow ? 1 : 0)
+            .animation(.easeIn(duration: 0.6), value: slow)
+            .task {
+                try? await Task.sleep(for: .seconds(15))
+                slow = true
+            }
+    }
+}
+
 /// "Reading your library…", with a hint if it goes on for long.
 private struct LoadingView: View {
     @State private var slow = false
@@ -39,7 +79,7 @@ private struct LoadingView: View {
             ProgressView("Reading your library…")
             if slow {
                 Text(
-                    "Still waiting. If macOS is asking whether Music Organizer may use the folder "
+                    "Still waiting. If macOS is asking whether Bear Media may use the folder "
                         + "your library is in, choose Allow. New songs are also read once, which "
                         + "can take a minute after a big import.")
                     .font(.callout)

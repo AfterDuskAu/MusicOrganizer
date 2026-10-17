@@ -92,7 +92,7 @@ def build_parser() -> argparse.ArgumentParser:
     common = _global_options(for_subcommand=True)
     parser = _Parser(
         prog="musicorg",
-        description="Music Organizer engine: scans, matches, downloads, tags and protects "
+        description="Bear Media engine: scans, matches, downloads, tags and protects "
         "your music library.",
         parents=[_global_options(for_subcommand=False)],
     )
@@ -326,7 +326,7 @@ def _cmd_init(args: argparse.Namespace) -> int:
         return EXIT_OK
 
     if result.already_library:
-        print(f"{result.root} is already a Music Organizer library.")
+        print(f"{result.root} is already a Bear Media library.")
         if result.created:
             print("Added the missing folders:")
             for folder in result.created:
@@ -350,7 +350,7 @@ def _cmd_status(args: argparse.Namespace) -> int:
         _print_json(result)
         return EXIT_OK
 
-    print(f"Music Organizer engine {result['engine_version']}")
+    print(f"Bear Media engine {result['engine_version']}")
     if root is None:
         print(
             "Library: none chosen yet. Pass --library <folder>, "
@@ -359,7 +359,7 @@ def _cmd_status(args: argparse.Namespace) -> int:
     elif not result["library_exists"]:
         print(f"Library: {root} (this folder doesn't exist)")
     elif not result["is_library"]:
-        print(f"Library: {root} (this folder isn't a Music Organizer library yet)")
+        print(f"Library: {root} (this folder isn't a Bear Media library yet)")
     else:
         print(f"Library: {root}")
         _print_counts(result)
@@ -414,7 +414,7 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
         )
         return code
 
-    print(f"Music Organizer doctor (engine {__version__}, {doctor.describe_platform()})")
+    print(f"Bear Media doctor (engine {__version__}, {doctor.describe_platform()})")
     print()
     for c in checks:
         mark = "✓" if c.ok else "✗"

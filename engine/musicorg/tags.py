@@ -275,7 +275,7 @@ def check_writable(path: PurePath | str) -> None:
     suffix = Path(path).suffix.lower()
     if suffix not in WRITABLE_SUFFIXES:
         raise UserError(
-            f"Music Organizer doesn't write tags to {suffix or 'files without an extension'} "
+            f"Bear Media doesn't write tags to {suffix or 'files without an extension'} "
             f"files ({Path(path).name}). It writes M4A, MP4, MP3, FLAC, Ogg and Opus."
         )
 
@@ -293,7 +293,7 @@ def write_tags(path: PurePath | str, changes: TrackTags) -> None:
         raise UserError(f"Couldn't open {path.name} to write its tags: {exc}") from exc
     backend = _backend(audio)
     if audio is None or backend is None:
-        raise UserError(f"{path.name} isn't a kind of file Music Organizer can write tags to.")
+        raise UserError(f"{path.name} isn't a kind of file Bear Media can write tags to.")
     if audio.tags is None:
         audio.add_tags()
         backend = _backend(audio)

@@ -2912,7 +2912,7 @@ def plan_share(
         raise UserError("The other profile's library folder isn't there.") from None
     music = theirs / naming.MUSIC_DIR
     if not music.is_dir():
-        raise UserError("That folder isn't a Music Organizer library.")
+        raise UserError("That folder isn't a Bear Media library.")
     if theirs == lib.root.resolve():
         raise UserError("Those songs are in this library already.")
     if not rel_paths:

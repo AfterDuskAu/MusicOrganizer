@@ -622,7 +622,7 @@ def _fit_windows_budget(
         f"The library folder's path is too long for Windows ({len(str(root))} characters), "
         f"so song paths inside it can't be kept under Windows' limit of {WINDOWS_MAX_PATH} "
         "characters. Move the library to a folder with a shorter path, such as "
-        "C:\\Music Organizer Library."
+        "C:\\Bear Media Library."
     )
 
 

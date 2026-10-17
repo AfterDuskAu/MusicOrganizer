@@ -13,12 +13,12 @@ public enum Legal {
     }
 
     /// The day these words were last changed.
-    public static let dated = "12 October 2026"
+    public static let dated = "17 October 2026"
 
     public static let terms: [Part] = [
         Part(
             heading: "What this app is",
-            text: "Music Organizer is a tool for finding, playing and keeping media on your own "
+            text: "Bear Media is a tool for finding, playing and keeping media on your own "
                 + "computer. It doesn't host, sell or supply any music, video or film itself: "
                 + "what it plays and downloads comes from services and plugins that other "
                 + "people run."),
@@ -87,7 +87,7 @@ public enum Legal {
 
     /// The words as a Markdown page, for the file kept in `docs/`.
     public static func page(_ title: String, _ parts: [Part]) -> String {
-        var lines = ["# \(title)", "", "Music Organizer. Last changed \(dated).", ""]
+        var lines = ["# \(title)", "", "Bear Media. Last changed \(dated).", ""]
         for part in parts {
             lines += ["## \(part.heading)", "", part.text, ""]
         }

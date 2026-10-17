@@ -137,7 +137,7 @@ def open(root: Path, write: bool, *, command: str | None = None) -> Library:
         )
     if not is_library(paths.root):
         raise UserError(
-            f"{paths.root} isn't a Music Organizer library. Create one with "
+            f"{paths.root} isn't a Bear Media library. Create one with "
             "`musicorg init <folder>`, or pass the right folder with --library."
         )
     return _open_paths(paths, write=write, command=command)
@@ -171,8 +171,8 @@ def _check_can_init(paths: LibraryPaths, already: bool) -> None:
         raise UserError(f"{root} is a file, not a folder. Choose a folder for the library.")
     if root.parent == root or _same_path(root, Path.home()):
         raise UserError(
-            f"Music Organizer won't use {root} itself as a library. Choose a new folder "
-            "for it, such as ~/Music Organizer Library."
+            f"Bear Media won't use {root} itself as a library. Choose a new folder "
+            "for it, such as ~/Bear Media Library."
         )
     if not root.exists() and not root.parent.is_dir():
         raise UserError(
@@ -198,15 +198,15 @@ def _refuse_if_holds_music(root: Path) -> None:
     if found is not None:
         example = found.relative_to(root)
         raise UserError(
-            f"{root} already holds music files (for example {example}). Music Organizer "
+            f"{root} already holds music files (for example {example}). Bear Media "
             "won't set up a library on top of existing music. Choose a new, empty folder "
-            "for the library, such as ~/Music Organizer Library. If this is your rips "
+            "for the library, such as ~/Bear Media Library. If this is your rips "
             "folder, add it as a source later instead; its files are never changed."
         )
     if looked_at >= AUDIO_SEARCH_LIMIT:
         raise UserError(
             f"{root} already holds a great many files. Choose a new, empty folder for the "
-            "library, such as ~/Music Organizer Library."
+            "library, such as ~/Bear Media Library."
         )
 
 
@@ -239,8 +239,8 @@ def _check_same_volume(paths: LibraryPaths) -> None:
     within one drive (contract 6.4)."""
     if _device(paths.music) != _device(paths.staging):
         raise UserError(
-            f"{paths.staging} would be on a different drive from {paths.music}. Music "
-            "Organizer moves finished downloads from _Staging into Music, which only works "
+            f"{paths.staging} would be on a different drive from {paths.music}. Bear "
+            "Media moves finished downloads from _Staging into Music, which only works "
             "on the same drive. Remove whatever puts one of them on another drive (such as "
             "a link), or choose another folder for the library."
         )
@@ -286,13 +286,13 @@ def _mac_cloud_warning(root: Path, home: Path) -> str | None:
         return (
             f"The library is inside iCloud Drive ({root}). With “Optimize Mac Storage” on, "
             "macOS can replace music files with download placeholders. Move the library to "
-            "a folder outside iCloud Drive, such as ~/Music Organizer Library."
+            "a folder outside iCloud Drive, such as ~/Bear Media Library."
         )
     if _is_within(real, (home / "Library" / "CloudStorage").resolve()):
         return (
             f"The library is inside a cloud-synced folder ({root}). Dropbox, OneDrive and "
             "Google Drive can replace files with online-only placeholders. Move the library "
-            "to a folder that isn't synced, such as ~/Music Organizer Library."
+            "to a folder that isn't synced, such as ~/Bear Media Library."
         )
     cloud_docs = mobile_documents / "com~apple~CloudDocs"
     for name in ("Desktop", "Documents"):
@@ -302,7 +302,7 @@ def _mac_cloud_warning(root: Path, home: Path) -> str | None:
                 f"The library is in your {name} folder, which iCloud Drive syncs "
                 "(Desktop & Documents Folders is on). With “Optimize Mac Storage” on, macOS "
                 "can replace music files with download placeholders. Move the library to a "
-                "folder outside Desktop and Documents, such as ~/Music Organizer Library."
+                "folder outside Desktop and Documents, such as ~/Bear Media Library."
             )
     return None
 
@@ -344,7 +344,7 @@ def _onedrive_warning(root: Path) -> str | None:
             return (
                 f"The library is inside OneDrive ({root}). OneDrive can replace files with "
                 "online-only placeholders. Move the library to a folder that isn't synced, "
-                "such as C:\\Music Organizer Library."
+                "such as C:\\Bear Media Library."
             )
     return None
 
@@ -356,7 +356,7 @@ def _long_windows_root_warning(root: Path) -> str | None:
     return (
         f"The library folder's path is {length} characters long. Windows limits a whole "
         "path to 259 characters, so long song titles will be shortened more than usual. "
-        "A shorter path, such as C:\\Music Organizer Library, avoids that."
+        "A shorter path, such as C:\\Bear Media Library, avoids that."
     )
 
 

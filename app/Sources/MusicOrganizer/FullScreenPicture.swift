@@ -174,14 +174,15 @@ struct FullScreenPicture: View {
         .background(.black.opacity(0.55))
     }
 
-    /// Show the controls, and put them away again after three seconds of a still mouse.
+    /// Show the controls, and put them away again, with the pointer, after five seconds
+    /// of a still mouse (the owner, 2026-10-17; three until then).
     private func wake() {
         if !controlsShown {
             withAnimation(.easeOut(duration: 0.15)) { controlsShown = true }
         }
         hiding?.cancel()
         hiding = Task {
-            try? await Task.sleep(for: .seconds(3))
+            try? await Task.sleep(for: .seconds(5))
             guard !Task.isCancelled else { return }
             withAnimation(.easeIn(duration: 0.4)) { controlsShown = false }
             NSCursor.setHiddenUntilMouseMoves(true)

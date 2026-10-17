@@ -14,6 +14,7 @@ import signal
 import subprocess
 import sys
 import threading
+import time
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -524,6 +525,36 @@ def test_sigterm_shuts_down_cleanly(root: Path) -> None:
             process.kill()
     with library.open(root, write=True, command="pytest"):
         pass
+
+
+def test_serve_leaves_in_the_end_whatever_wont_stop(root: Path) -> None:
+    # The owner, 2026-10-17: an engine took nearly five minutes to stop after the app had
+    # quit, and the app opened again found the library taken. A part of stopping that
+    # hangs (here the film player's) doesn't keep the engine, or the lock, past the limit.
+    script = (
+        "import time\n"
+        "from musicorg import rpc\n"
+        "rpc.SHUTDOWN_LIMIT_S = 2.0\n"
+        "rpc.Server._stop_films = lambda self: time.sleep(3600)\n"
+        "raise SystemExit(rpc.serve())\n"
+    )
+    process = subprocess.Popen(
+        [sys.executable, "-c", script], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE, env=dict(os.environ),
+    )  # fmt: skip
+    try:
+        send(process, "engine.hello", client="pytest")
+        assert send(process, "library.open", root=str(root))["result"] == {"status": "open"}
+        assert process.stdin is not None
+        began = time.monotonic()
+        process.stdin.close()
+        assert process.wait(30) == 0
+        assert time.monotonic() - began < 15
+    finally:
+        if process.poll() is None:
+            process.kill()
+    with library.open(root, write=True, command="pytest"):
+        pass  # the lock went with it
 
 
 def test_a_child_process_cant_write_into_the_stream() -> None:

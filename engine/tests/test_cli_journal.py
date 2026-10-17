@@ -108,7 +108,7 @@ def test_undo_of_an_unknown_batch(capsys: pytest.CaptureFixture[str], lib: Libra
 def test_undo_needs_the_lock(capsys: pytest.CaptureFixture[str], lib: Library) -> None:
     code, _, err = run(capsys, "undo", "b_20200101-000000-000000")  # `lib` holds the lock
     assert code == EXIT_LOCKED
-    assert "Another Music Organizer process" in err
+    assert "Another Bear Media process" in err
 
 
 def test_journal_list_needs_no_lock(capsys: pytest.CaptureFixture[str], lib: Library) -> None:

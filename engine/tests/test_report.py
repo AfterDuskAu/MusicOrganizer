@@ -130,7 +130,7 @@ def test_files(lib: Library, filled: Index, tmp_path: Path) -> None:
     files = report.write(lib, filled, now=WHEN)
     assert files.markdown == lib.paths.reports / "report-2026-09-29.md"
     assert files.csv == lib.paths.reports / "report-2026-09-29.csv"
-    assert files.markdown.read_text(encoding="utf-8").startswith("# Music Organizer")
+    assert files.markdown.read_text(encoding="utf-8").startswith("# Bear Media")
     with open(files.csv, encoding="utf-8-sig", newline="") as f:
         rows = list(csv.DictReader(f))
     assert len(rows) == 10

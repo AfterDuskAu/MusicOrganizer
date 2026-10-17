@@ -21,7 +21,8 @@ process and owns its lifetime:
 - **Shutdown:** stdin closing is the signal on both platforms (SIGTERM on macOS does the
   same). No new work is taken; the queue's current job gets 10 seconds to finish
   (otherwise it's queued again when the engine next starts); the lock is released; the
-  process exits 0.
+  process exits 0. Whatever is left undone 20 seconds after stopping began, the process
+  exits then (0), and the lock goes with it.
 
 Errors carry plain English in `message`, suitable to show the user directly.
 """
@@ -106,6 +107,11 @@ log = logging.getLogger(__name__)
 
 PROTOCOL = "2.0"
 SHUTDOWN_GRACE_S = 10.0
+# However stopping goes, the engine is gone this long after it began (the owner, 2026-10-17:
+# an engine took nearly five minutes to stop after the app had quit, and the app opened
+# again found the library still taken). The lock is the operating system's, so it goes
+# with the process; the journal and the index are made to survive a stop at any moment.
+SHUTDOWN_LIMIT_S = 20.0
 PROGRESS_INTERVAL_S = 0.25  # at most 4 job.progress a second per job
 # A queue that stopped until a known time is started again then: the clock is looked at
 # this often, and never sooner than the least wait after it stopped.
@@ -298,6 +304,8 @@ class Server:
         self.lib: library.Library | None = None
         self.greeted = False
         self.stopping = threading.Event()
+        # Called as stopping begins: `serve` makes sure the engine is gone in the end.
+        self.on_stopping: Callable[[], None] | None = None
         self._busy_lock = threading.Lock()
         self._job: _Job | None = None
         self._job_counter = 0
@@ -505,6 +513,8 @@ class Server:
         if self.stopping.is_set() and self.lib is None:
             return
         self.stopping.set()
+        if self.on_stopping is not None:
+            self.on_stopping()
         spotify.cancel_sign_in()  # stop listening for a sign-in nobody finished
         self._stop_sharing()  # first of all: nothing is shared once the app has gone
         self._stop_films()  # and no torrent is left joined (what arrived stays its day)
@@ -1756,5 +1766,19 @@ def serve() -> int:
             raise Stop  # interrupts the read loop, which then shuts down cleanly
 
         signal.signal(signal.SIGTERM, on_term)
+    server.on_stopping = lambda: _leave_after(SHUTDOWN_LIMIT_S)
     log.info("serve: started (engine %s)", __version__)
     return server.run()
+
+
+def _leave_after(seconds: float) -> None:
+    """Once the engine has begun to stop: if it's still here after `seconds` (a part
+    that won't let go, or a thread Python waits for at the end), it leaves anyway."""
+
+    def leave() -> None:
+        time.sleep(seconds)
+        log.warning("serve: stopping took longer than %.0f s, so the engine left anyway", seconds)
+        logging.shutdown()
+        os._exit(0)
+
+    threading.Thread(target=leave, daemon=True, name="leave").start()

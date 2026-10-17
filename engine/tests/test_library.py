@@ -220,7 +220,7 @@ def test_open_a_missing_folder(tmp_path: Path) -> None:
 
 
 def test_open_a_folder_that_is_not_a_library(tmp_path: Path) -> None:
-    with pytest.raises(UserError, match="isn't a Music Organizer library"):
+    with pytest.raises(UserError, match="isn't a Bear Media library"):
         library.open(tmp_path, write=True)
     assert not (tmp_path / ".musicorg").exists()
 
@@ -280,7 +280,7 @@ def test_unreadable_lock_info_gives_a_plain_message(lib_root: Path) -> None:
         (lib_root / ".musicorg" / "lock.info").write_text("{garbage", encoding="utf-8")
         with pytest.raises(LibraryLockedError) as caught:
             library.open(lib_root, write=True)
-    assert caught.value.message.startswith("Another Music Organizer process is using this library.")
+    assert caught.value.message.startswith("Another Bear Media process is using this library.")
     assert caught.value.holder is None
 
 
@@ -310,7 +310,7 @@ def test_describe_lock_holder() -> None:
     holder = {"pid": 4412, "command": "queue run", "started_at": now.isoformat()}
     local = now.astimezone()
     assert fileops.describe_lock_holder(holder, now=now) == (
-        f"Another Music Organizer process (PID 4412, `queue run`, started {local:%H:%M}) "
+        f"Another Bear Media process (PID 4412, `queue run`, started {local:%H:%M}) "
         "is using this library. Wait for it to finish, or stop it, then try again."
     )
 
@@ -324,7 +324,7 @@ def test_describe_lock_holder() -> None:
     assert "on the computer another-mac.local" in fileops.describe_lock_holder(holder)
 
     assert fileops.describe_lock_holder(None).startswith(
-        "Another Music Organizer process is using this library."
+        "Another Bear Media process is using this library."
     )
     assert "PID" not in fileops.describe_lock_holder({"pid": "not a number"})
 

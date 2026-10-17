@@ -244,7 +244,7 @@ def _describe(payload: dict[str, Any]) -> str:
 
 def render_markdown(report: Report) -> str:
     lines = [
-        "# Music Organizer: decision report",
+        "# Bear Media: decision report",
         "",
         f"Library: `{report.root}`  ",
         f"{report.generated:%Y-%m-%d %H:%M} · {report.total:,} items from "

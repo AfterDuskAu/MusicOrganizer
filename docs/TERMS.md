@@ -1,10 +1,10 @@
 # Terms of Use
 
-Music Organizer. Last changed 12 October 2026.
+Bear Media. Last changed 17 October 2026.
 
 ## What this app is
 
-Music Organizer is a tool for finding, playing and keeping media on your own computer. It doesn't host, sell or supply any music, video or film itself: what it plays and downloads comes from services and plugins that other people run.
+Bear Media is a tool for finding, playing and keeping media on your own computer. It doesn't host, sell or supply any music, video or film itself: what it plays and downloads comes from services and plugins that other people run.
 
 ## What you do with it is yours to answer for
 

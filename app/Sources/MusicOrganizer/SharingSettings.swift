@@ -50,7 +50,7 @@ struct SharingSettings: View {
                 }
                 SideNote(
                     "This Mac shares only on the home network, only with devices paired below, "
-                        + "and only while Music Organizer is open. Nothing goes to the internet. "
+                        + "and only while Bear Media is open. Nothing goes to the internet. "
                         + "Kept awake, the Mac may sleep again two minutes after a device "
                         + "has finished; its screen may still turn off. "
                         + "If macOS asks whether to accept incoming connections, choose Allow.")

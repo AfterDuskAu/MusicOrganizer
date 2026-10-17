@@ -18,7 +18,7 @@ struct MusicOrganizerApp: App {
 
     var body: some Scene {
         // The main window comes first: the first scene is the one opened at launch.
-        Window("Music Organizer", id: "main") {
+        Window("Bear Media", id: "main") {
             RootView()
                 .environment(model)
                 .frame(minWidth: 880, minHeight: 540)

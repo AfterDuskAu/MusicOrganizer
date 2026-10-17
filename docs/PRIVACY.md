@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Music Organizer. Last changed 12 October 2026.
+Bear Media. Last changed 17 October 2026.
 
 ## What the developer collects
 

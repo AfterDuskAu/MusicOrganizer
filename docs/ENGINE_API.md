@@ -97,7 +97,7 @@ Exit codes:
 ## 2. JSON-RPC over stdio (`musicorg serve`)
 
 - JSON-RPC 2.0, **one JSON object per line** (`\n`), UTF-8, on stdin/stdout. Nothing else is ever written to stdout.
-- The app starts the engine as a child process and owns its lifetime. The engine exits cleanly when stdin closes.
+- The app starts the engine as a child process and owns its lifetime. The engine exits cleanly when stdin closes, and is gone within 20 seconds of it whatever is left undone (2026-10-17: one took nearly five minutes, and the app opened again found the library taken).
 - **Profiles (v0.2, 2026-10-03).** The app may set `MUSICORG_PROFILE=<id>` (letters, digits, `-` and `_`, at most 40) in the engine's environment: sign-ins (`account.*`) are kept and read for that profile only. Without it the profile is `default`. A profile's library is simply the library the app opens for it; the engine still serves one library.
 - In `serve`, a background worker runs the queue exactly like `queue run`, from `library.open` until `queue.pause`, a YouTube pause, or EOF. A YouTube pause (`paused_by_youtube`) is six hours, or the 30-minute rest after two different downloads in a row were refused (2026-10-10: `queue`'s notes); either way `resume_at` says when it ends.
 - Long operations return `{ "job_id" }` immediately, then report progress through notifications. Only one long operation runs at a time besides the queue worker; another returns error -32007.

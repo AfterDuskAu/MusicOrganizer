@@ -69,7 +69,7 @@ def test_doctor_output_is_utf8_through_a_pipe() -> None:
     env = {k: v for k, v in os.environ.items() if k not in ("PYTHONIOENCODING", "PYTHONUTF8")}
     result = subprocess.run([_installed_script(), "doctor"], capture_output=True, env=env)
     text = result.stdout.decode("utf-8")
-    assert "Music Organizer doctor" in text
+    assert "Bear Media doctor" in text
     assert "✓" in text or "✗" in text
 
 
@@ -200,7 +200,7 @@ def test_init_again_says_so(capsys: pytest.CaptureFixture[str], tmp_path: Path) 
     run(capsys, "init", str(root))
     code, out, _ = run(capsys, "init", str(root))
     assert code == EXIT_OK
-    assert "is already a Music Organizer library" in out
+    assert "is already a Bear Media library" in out
     assert "Nothing needed creating." in out
 
 
@@ -301,7 +301,7 @@ def test_status_folder_that_isnt_a_library(
 ) -> None:
     code, out, _ = run(capsys, "status", "--library", str(tmp_path))
     assert code == EXIT_OK
-    assert "isn't a Music Organizer library" in out
+    assert "isn't a Bear Media library" in out
 
 
 def test_status_with_damaged_config(capsys: pytest.CaptureFixture[str], app_home: Path) -> None:

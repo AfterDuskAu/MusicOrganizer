@@ -1454,7 +1454,8 @@ struct WatchlistView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 8) {
+                    // Lazy: a grid further down isn't made until it's scrolled to.
+                    LazyVStack(alignment: .leading, spacing: 8) {
                         cards("Movies", movies)
                         cards("Series", series)
                         cards("Anime", anime)

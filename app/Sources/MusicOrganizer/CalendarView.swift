@@ -53,8 +53,8 @@ struct CalendarView: View {
         }
         .padding(.horizontal, 12)
         .padding(.bottom, 12)
-        .onChange(of: model.seriesRead, initial: true) { layOut() }
-        .task { await model.readSeries(model.ownSeries) }
+        .task(id: model.seriesRead) { await layOut() }
+        .task { await model.readSeries(model.ownSeries, episodes: true) }
         .task(id: model.followedChannels.map(\.channelId)) { await model.readUploads() }
     }
 
@@ -98,11 +98,15 @@ struct CalendarView: View {
         .padding(.bottom, 18)
     }
 
-    private func layOut() {
-        let all = model.ownSeries.flatMap { series in
-            CalendarEntry.episodes(of: series, model.seriesEpisodes[series.id] ?? [])
-        }
-        episodes = CalendarEntry.byDay(all)
+    /// Every episode put on its day, away from the screen's own work: with hundreds of
+    /// series it was over a second the window couldn't answer (2026-10-17).
+    private func layOut() async {
+        let wanted = model.ownSeries.map { ($0, model.seriesEpisodes[$0.id] ?? []) }
+        let laid = await Task.detached(priority: .userInitiated) {
+            CalendarEntry.byDay(wanted.flatMap { CalendarEntry.episodes(of: $0.0, $0.1) })
+        }.value
+        guard !Task.isCancelled else { return }
+        episodes = laid
     }
 
     private func open(_ entry: CalendarEntry) {

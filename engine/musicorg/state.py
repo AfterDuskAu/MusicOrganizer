@@ -105,8 +105,8 @@ class State:
             raise StateError(_damaged(path, "its schema version is missing"))
         if schema > STATE_SCHEMA:
             raise StateError(
-                f"The library's records in {path} were written by a newer version of Music "
-                f"Organizer (records version {schema}; this engine reads up to "
+                f"The library's records in {path} were written by a newer version of Bear "
+                f"Media (records version {schema}; this engine reads up to "
                 f"{STATE_SCHEMA}). Update the engine, then try again."
             )
         return cls(path, data)

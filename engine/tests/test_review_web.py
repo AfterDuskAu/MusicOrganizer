@@ -97,7 +97,7 @@ def test_it_only_listens_on_this_mac(server: review_web.ReviewServer) -> None:
 
 def test_the_page_needs_the_key(server: review_web.ReviewServer) -> None:
     status, headers, page = call(server, f"/?key={server.key}", key="")
-    assert status == 200 and b"Music Organizer" in page
+    assert status == 200 and b"Bear Media" in page
     assert "Content-Security-Policy" in headers
     assert b"<script src" not in page  # nothing loaded from elsewhere
     assert call(server, "/", key="")[0] == 403

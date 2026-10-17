@@ -385,7 +385,7 @@ private struct MovingSettings: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Imported.").fontWeight(.semibold)
                 ForEach(summary.lines(done: true), id: \.self) { Text($0) }
-                Text("Settings that came with it show once Music Organizer has been reopened.")
+                Text("Settings that came with it show once Bear Media has been reopened.")
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -521,13 +521,13 @@ private struct LayoutSettings: View {
                 }
                 SideNote(
                     "The pages and everything on them are the same in both. The look is for "
-                        + "everyone who uses Music Organizer on this Mac, not one profile.")
+                        + "everyone who uses Bear Media on this Mac, not one profile.")
             }
             if chosen != Theme.current.look {
                 Section {
                     HStack(alignment: .firstTextBaseline) {
                         Text(
-                            "Music Organizer will be in the \(chosen.title) the next time "
+                            "Bear Media will be in the \(chosen.title) the next time "
                                 + "it's opened.")
                         Spacer()
                         if Theme.canReopen {
@@ -537,7 +537,7 @@ private struct LayoutSettings: View {
                     SideNote(
                         Theme.canReopen
                             ? "Reopening takes a few seconds, and stops the music that's playing."
-                            : "Quit Music Organizer and open it again.")
+                            : "Quit Bear Media and open it again.")
                 }
             }
         }
@@ -1249,8 +1249,8 @@ private struct AccountSettings: View {
                 }
             }
             SideNote(
-                "The key and your username are kept on this Mac only, for this profile. Music "
-                    + "Organizer only reads from Last.fm: it never sends what you play here, and "
+                "The key and your username are kept on this Mac only, for this profile. Bear "
+                    + "Media only reads from Last.fm: it never sends what you play here, and "
                     + "your profile there has to be public to be read.")
         }
     }
@@ -1333,8 +1333,8 @@ private struct AccountSettings: View {
                 }
             }
             SideNote(
-                "Your password is typed on Spotify's own page in your browser, never here. Music "
-                    + "Organizer is only allowed to read your playlists and Liked Songs: it can't "
+                "Your password is typed on Spotify's own page in your browser, never here. Bear "
+                    + "Media is only allowed to read your playlists and Liked Songs: it can't "
                     + "change anything, and Spotify's audio is never used.")
         }
     }

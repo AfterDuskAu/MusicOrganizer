@@ -90,7 +90,7 @@ def add_source(lib: Library, index: Index, path: Path) -> dict[str, Any]:
         )
     if naming.is_within(root, real):
         raise UserError(
-            f"{real} contains the library ({root}). Music Organizer never changes a source, "
+            f"{real} contains the library ({root}). Bear Media never changes a source, "
             "so the library can't be inside one. Choose the folder that holds only your rips, "
             "or move the library somewhere else."
         )
