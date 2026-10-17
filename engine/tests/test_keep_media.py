@@ -238,7 +238,7 @@ def test_a_films_details_are_read_even_with_no_time_to_wait(places: dict[str, Pa
     assert joined.ready(0) is False  # not arrived yet: it doesn't wait
     assert joined.ready(0) is True  # arrived: read at once, with no waiting allowed
     assert joined.path == places["cache"] / "Film" / "film.MKV" and joined.index == 1
-    assert handle.priorities == [0, 4]  # only the film is fetched
+    assert handle.priorities == [0, torrents.FILM_PRIORITY]  # only the film is fetched
 
 
 # ---- a film's day in the cache (the owner, 2026-10-08) -----------------------------------

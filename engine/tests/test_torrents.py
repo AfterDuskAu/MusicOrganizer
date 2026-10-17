@@ -5,8 +5,10 @@ from __future__ import annotations
 
 import http.client
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -14,6 +16,7 @@ from musicorg import torrents
 from musicorg.errors import ReplayMissError
 
 HASH = "ab" * 20
+F = torrents.FILM_PRIORITY  # the priority a film is fetched at, under what's asked for first
 
 
 def test_no_torrent_is_joined_in_tests(tmp_path: Path) -> None:
@@ -179,6 +182,12 @@ class StandInHandle:
         self.raised: list[tuple[int, int]] = []
         self.asked: list[int] = []
         self.broken: set[int] = set()
+        # What it was told, in order: ("files", priorities), ("deadline", piece, ms,
+        # whether the file priorities had taken hold by then), ("clear",).
+        self.told: list[tuple] = []
+        self.taking_hold = 0  # how many more looks before new file priorities hold
+        self.missing: set[int] = set()  # pieces not here
+        self.held = True  # the file priorities asked for last have taken hold
 
     def is_valid(self) -> bool:
         return True
@@ -188,15 +197,30 @@ class StandInHandle:
 
     def prioritize_files(self, priorities: list[int]) -> None:
         self.priorities = priorities
+        self.held = False
+        self.told.append(("files", list(priorities)))
+
+    def get_file_priorities(self) -> list[int]:
+        # As libtorrent does, the new priorities hold a moment after they're asked for.
+        if self.taking_hold > 0:
+            self.taking_hold -= 1
+            return [4] * len(FILES)
+        self.held = True
+        return list(self.priorities)
 
     def file_priority(self, index: int, priority: int) -> None:
         self.raised.append((index, priority))
+        if self.priorities:
+            self.priorities[index] = priority
+
+    def clear_piece_deadlines(self) -> None:
+        self.told.append(("clear",))
 
     def set_piece_deadline(self, piece: int, deadline: int) -> None:
-        pass
+        self.told.append(("deadline", piece, deadline, self.held))
 
     def have_piece(self, piece: int) -> bool:
-        return True
+        return piece not in self.missing
 
     def read_piece(self, piece: int) -> None:
         self.asked.append(piece)
@@ -227,7 +251,7 @@ def test_a_films_bytes_are_asked_of_libtorrent_not_read_from_its_file(tmp_path: 
     joined, handle = joined_for(tmp_path, 1)
     # Nothing is on the disk at all: every byte comes as libtorrent holds it.
     assert not (tmp_path / "Show").exists()
-    assert (joined.name, joined.size, handle.priorities) == ("E2.mkv", 500, [0, 4, 0])
+    assert (joined.name, joined.size, handle.priorities) == ("E2.mkv", 500, [0, F, 0])
     # A read never runs past the end of the piece it starts in.
     first = joined.read(0, 1000)
     assert first == WHOLE[300:384]  # the file starts 300 bytes in: 84 bytes to the piece's end
@@ -260,7 +284,7 @@ def test_the_next_episode_of_a_season_in_one_torrent_is_the_next_episode(tmp_pat
     joined.turn_to(1)
     assert joined.ready(1)
     # The torrent is the second episode's now: it alone is fetched.
-    assert (joined.name, joined.size, handle.priorities) == ("E2.mkv", 500, [0, 4, 0])
+    assert (joined.name, joined.size, handle.priorities) == ("E2.mkv", 500, [0, F, 0])
     assert all_of(joined) == WHOLE[300:800]
     # Asked for the one it's on already, or for none in particular: nothing changes.
     joined.turn_to(1)
@@ -276,11 +300,11 @@ def test_an_episode_played_while_another_is_kept_is_fetched_beside_it(tmp_path: 
     second = joined.film(1)
     assert second is not None and (second.name, second.size) == ("E2.mkv", 500)
     assert all_of(second) == WHOLE[300:800]
-    assert handle.raised == [(1, 4)]  # fetched as well, with the first still wanted
+    assert handle.raised == [(1, F)]  # fetched as well, with the first still wanted
     # Then a third: the second isn't fetched any more.
     third = joined.film(2)
     assert third is not None and all_of(third) == WHOLE[800:840]
-    assert handle.raised == [(1, 4), (1, 0), (2, 4)]
+    assert handle.raised == [(1, F), (1, 0), (2, F)]
     # The film itself, by its own number or by none; and no such file.
     for own in (joined.film(0), joined.film(None)):
         assert own is not None and all_of(own) == WHOLE[0:300]
@@ -298,15 +322,139 @@ def test_a_part_way_player_keeps_its_file_when_the_torrent_turns(tmp_path: Path)
     assert start == WHOLE[0:128] and watching.read(128, 1000) == WHOLE[128:256]
 
 
+def test_a_films_start_and_end_are_asked_for_first_once_its_priorities_hold(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # (2026-10-17) libtorrent changes file priorities a moment after it's asked to, and
+    # gives every piece its file's priority again as it does: a piece asked for first
+    # before that moment was one among all the rest after it. The owner's next episode
+    # didn't start until 98% of it was here.
+    monkeypatch.setattr(torrents, "START_BYTES", PIECE)  # two pieces, the least
+    monkeypatch.setattr(torrents, "END_BYTES", PIECE)  # one
+    handle = StandInHandle()
+    handle.taking_hold = 5  # the new priorities hold only on the sixth look
+    joined = torrents._Joined(handle, HASH, 1, tmp_path)
+    joined.through_libtorrent, handle.joined = True, joined
+    assert joined.ready(1)
+    assert handle.told[:2] == [("clear",), ("files", [0, F, 0])]
+    deadlines = [t for t in handle.told if t[0] == "deadline"]
+    # The second episode is pieces 2 to 6: its first two, then its last, in that order.
+    assert [d[1] for d in deadlines] == [2, 3, 6]
+    assert [d[2] for d in deadlines] == sorted(d[2] for d in deadlines)
+    assert all(d[3] for d in deadlines)  # each only once the file priorities held
+
+
+def test_the_next_episode_is_asked_for_from_its_start_and_the_one_before_isnt(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(torrents, "START_BYTES", PIECE)
+    monkeypatch.setattr(torrents, "END_BYTES", PIECE)
+    joined, handle = joined_for(tmp_path, 0)
+    before = joined.film(None)  # the first episode, as its player goes on reading it
+    assert before is not None
+    handle.told.clear()
+    handle.taking_hold = 3
+    joined.turn_to(1)  # Next Episode, in the same torrent
+    assert joined.ready(1)
+    # What was asked for first of the episode before isn't any more; only the next one
+    # is fetched, its start and end first, once that has taken hold.
+    assert handle.told[:2] == [("clear",), ("files", [0, F, 0])]
+    deadlines = [t for t in handle.told if t[0] == "deadline"]
+    assert [d[1] for d in deadlines] == [2, 3, 6] and all(d[3] for d in deadlines)
+    # The first episode's player, still reading: what's here it's given, but nothing of
+    # it is asked for, and it doesn't wait for what isn't here.
+    handle.told.clear()
+    assert before.read(0, 1000) == WHOLE[0:128]
+    handle.missing = {1}
+    started = time.monotonic()
+    assert before.read(128, 1000) is None and time.monotonic() - started < 1
+    assert not [t for t in handle.told if t[0] == "deadline"]
+
+
+def test_what_the_player_reads_next_is_asked_for_first_and_again_while_it_waits(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(torrents, "NUDGE_S", 0.1)
+    joined, handle = joined_for(tmp_path, 1)
+    handle.missing = {4}
+    handle.told.clear()
+
+    def arrives() -> None:
+        time.sleep(0.6)
+        handle.missing = set()
+
+    threading.Thread(target=arrives).start()
+    # Byte 212 of the second episode is in piece 4 (the episode starts 300 bytes in).
+    assert joined.read(212, 10) == WHOLE[512:522]
+    asked = [t[1] for t in handle.told if t[0] == "deadline"]
+    assert asked[:3] == [4, 5, 6]  # what's just ahead, the next first
+    assert asked.count(4) >= 3  # and the piece it waited for, again and again
+
+
+def test_what_comes_after_is_wanted_sooner_than_the_rest_and_moves_on_as_its_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # So the film arrives roughly in order from where it's played, not from all over.
+    monkeypatch.setattr(torrents, "NEXT_BYTES", PIECE)  # two pieces with a deadline
+    monkeypatch.setattr(torrents, "SOON_BYTES", PIECE)  # then one sooner than the rest
+    monkeypatch.setattr(torrents, "LATER_BYTES", PIECE)  # and one a little sooner
+    monkeypatch.setattr(torrents, "STEP_BYTES", 2 * PIECE)
+    monkeypatch.setattr(torrents, "END_BYTES", PIECE)  # the end is asked for apart
+    joined, handle = joined_for(tmp_path, 1)  # the second episode: pieces 2 to 6
+    ordered: list[list[tuple[int, int]]] = []
+    handle.prioritize_pieces = ordered.append  # type: ignore[attr-defined]
+    joined.read(0, 10)  # piece 2: 2 and 3 first, then 4 sooner, then 5; never 6, the end
+    assert ordered == [[(4, torrents.SOON_PRIORITY), (5, torrents.LATER_PRIORITY)]]
+    joined.read(84, 10)  # piece 3, within the step: nothing more is moved
+    assert len(ordered) == 1
+    handle.told.clear()
+    joined.read(212, 10)  # piece 4, a step on: 4 and 5 first, and nothing between them
+    assert [t[1] for t in handle.told if t[0] == "deadline"] == [4, 5]
+    assert len(ordered) == 1  # and the end (asked for apart): nothing more moved
+    joined.read(0, 10)  # back to the start (the player went back): from there again
+    assert ordered[-1] == ordered[0] and len(ordered) == 2
+
+
+def test_a_film_being_checked_says_so() -> None:
+    import libtorrent as lt
+
+    def told(state: object) -> SimpleNamespace:
+        return SimpleNamespace(state=state, progress_ppm=50_000, is_seeding=False)
+
+    assert torrents.checking(told(lt.torrent_status.states.checking_files))
+    assert torrents.checking(told(lt.torrent_status.states.checking_resume_data))
+    assert not torrents.checking(told(lt.torrent_status.states.downloading))
+    assert not torrents.checking(SimpleNamespace())  # a stand-in that says nothing of it
+
+
+def test_a_films_status_while_its_checked_isnt_how_much_is_here(tmp_path: Path) -> None:
+    joined, handle = joined_for(tmp_path, 0)
+    looks = {"state": "checking_files"}
+
+    def status() -> SimpleNamespace:
+        return SimpleNamespace(
+            state=looks["state"], progress_ppm=50_000, is_seeding=False, num_peers=0,
+            num_seeds=0, download_rate=0,
+        )  # fmt: skip
+
+    handle.status = status  # type: ignore[method-assign]
+    assert joined.status()["state"] == "checking"  # the owner's "here: 5%" while it looked
+    looks["state"] = "downloading"
+    assert joined.status()["state"] == "fetching"
+
+
 class StandInSession:
     def __init__(self) -> None:
         self.handle = StandInHandle()
+        self.added: list[object] = []
+        self.removed: list[object] = []
 
     def add_torrent(self, params: object) -> StandInHandle:
+        self.added.append(params)
         return self.handle
 
     def remove_torrent(self, handle: object, *how: object) -> None:
-        pass
+        self.removed.append(handle)
 
 
 def test_each_file_of_a_torrent_has_its_own_address(
