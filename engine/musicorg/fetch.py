@@ -40,6 +40,18 @@ then checked, converted and kept exactly as a film from an address is, into the 
 the owner chose: the Movies folder, one of its folders, or (`to_videos`) the videos
 folder. Never a YouTube or SoundCloud video: those go through the queue.
 
+**A video from Bear Media's browser window** (2026-10-18, the owner: "if the link hits
+this error. It offers a open in browser option, and then if you click yes, it pulls the
+info needed once it opens"): a page that turns yt-dlp away is opened in a real browser
+(the app's window, Apple's WebKit), and that browser fetches the video it plays, in its
+own requests. The engine fetches nothing of it: `browser_start` makes the download,
+`browser_part` takes each piece the window fetched (the picture's, and the sound's when
+it comes apart) and writes it into `fetched/` with `fileops.write_fetched_part`, and
+`browser_done` joins a picture and its sound with ffmpeg (copying, changing neither),
+then checks, converts and keeps it as every film here is kept. A whole file the window
+downloads itself goes in the one place the engine names for it, `fetched/<id>.file`.
+Nothing is taken from a page that's YouTube's or SoundCloud's.
+
 In replay mode (`MUSICORG_REPLAY_DIR`, every test) only an address on this computer is
 ever fetched: any other raises `ReplayMissError`.
 """
@@ -47,6 +59,7 @@ ever fetched: any other raises `ReplayMissError`.
 from __future__ import annotations
 
 import hashlib
+import io
 import ipaddress
 import json
 import logging
@@ -104,8 +117,17 @@ FORMAT_ENDINGS = (
 PLAYLIST_PROTOCOLS = "http,https,tcp,tls,crypto"  # all ffmpeg may open for a playlist
 # What a fetch keeps in `fetched/`, each named `<id><ending>`: what arrived, its note, a
 # playlist's joined film, and a converted copy; and a page's video's own folder.
-ENDINGS = (".part", ".json", ".hls.mp4", ".converting.mp4")
+ENDINGS = (
+    ".part", ".json", ".hls.mp4", ".converting.mp4",
+    # From the browser window (2026-10-18): a whole file it downloaded itself, the
+    # pieces of a stream's picture and of its sound, and the two joined in Matroska when
+    # MP4 can't hold them.
+    ".file", ".video.part", ".audio.part", ".joined.mkv",
+)  # fmt: skip
 PAGE_ENDING = ".page"
+BROWSER_TRACKS = ("video", "audio")
+BROWSER_QUIET_S = 15 * 60  # a window that sends nothing for this long has stopped sending
+BROWSER_PIECE_MOST = 64 * 1024 * 1024  # the largest piece the window may send at once
 
 
 class FetchError(UserError):
@@ -195,6 +217,13 @@ class _Fetch:
     # A video from a web page (`keep_page`): its place on the page and its quality.
     page: tuple[int | None, str] | None = None
     to_videos: bool = False  # kept in the videos folder, not the Movies folder
+    # From the browser window (2026-10-18): what has arrived of each track, how far the
+    # window says it has got, and when it last sent anything.
+    browser: bool = False
+    tracks: dict[str, int] = field(default_factory=dict)
+    told: float | None = None
+    sent_at: float = field(default_factory=time.monotonic)
+    received: bool = False
     no_room: bool = False
     ended: bool = False
     stop: threading.Event = field(default_factory=threading.Event)
@@ -204,6 +233,8 @@ class _Fetch:
     def status(self) -> dict[str, Any]:
         if self.length_s:
             progress = min(self.done_s / self.length_s, 1.0)
+        elif self.browser and self.told is not None and self.state == FETCHING:
+            progress = min(max(self.told, 0.0), 1.0)
         elif self.size:
             progress = min(self.have / self.size, 1.0)
         else:
@@ -372,7 +403,187 @@ class Fetcher:
         job = self._find(which)
         if job is None:
             raise FetchError("That film isn't being downloaded any more.")
+        if (
+            job.browser and not job.received and not job.ended
+            and time.monotonic() - job.sent_at > BROWSER_QUIET_S
+        ):  # fmt: skip
+            # The window was shut, or stopped, without saying: what came is let go.
+            job.keep_error = "The browser window stopped sending it. Open the page and try again."
+            job.ended = True
+            self._let_go(job)
         return job.status()
+
+    # -- a video from the browser window (2026-10-18) --
+
+    def browser_start(
+        self,
+        page_url: str,
+        media_url: str,
+        name: str,
+        *,
+        folder: tuple[str, ...] = (),
+        to_videos: bool = False,
+        convert: bool = False,
+        size: int | None = None,
+    ) -> dict[str, Any]:
+        """A video the browser window is about to fetch from `media_url`, which the page
+        at `page_url` plays: kept as `name`, in `folder` inside the Movies folder, or in
+        the videos folder (`to_videos`). Returns its status, and `file_path`: where the
+        window saves the video if it downloads it whole itself (nowhere else). Asked
+        again while it's under way, it's the same download; one that ended starts afresh,
+        with nothing of the last one."""
+        for address in (page_url, media_url):
+            found = urlsplit(address.strip())
+            host = (found.hostname or "").lower().rstrip(".")
+            if found.scheme not in ("http", "https") or not host:
+                raise FetchError("Only a video from a web page (http or https) can be saved.")
+            if _gated(host):
+                raise FetchError(
+                    "That's YouTube's or SoundCloud's: those are downloaded through Video "
+                    "Finder and Music Finder, not from the browser window."
+                )
+        root = self.videos if to_videos else self.movies
+        if root is None:
+            raise FetchError("There's nowhere set to download videos to on this computer.")
+        if not name.strip():
+            raise FetchError("A video needs a name to be saved under.")
+        made = f"{page_url.strip()}\n{media_url.strip()}\n{name.strip()}"
+        job_id = "b-" + hashlib.sha256(made.encode("utf-8", "surrogatepass")).hexdigest()[:24]
+        with self._lock:
+            job = self._jobs.get(job_id)
+            if job is not None and not job.ended:
+                return {**job.status(), "file_path": str(self._files(job)[".file"])}
+            job = _Fetch(job_id, media_url.strip(), name.strip(), tuple(folder), convert, size,
+                         to_videos=to_videos, browser=True, state=FETCHING)  # fmt: skip
+            self._remember(job)
+        fileops.make_cached_folder(self.folder, cache=self.cache)
+        self._let_go(job)  # nothing of an earlier try is carried on: the window starts afresh
+        if size and not tools.room_for(size, size, self.cache, root):
+            with self._lock:
+                self._jobs.pop(job.id, None)
+            raise FetchError(
+                "There isn't room on this Mac for that video. Make some room, then try again."
+            )
+        log.info("fetch: a video is coming from the browser window")
+        return {**job.status(), "file_path": str(self._files(job)[".file"])}
+
+    def browser_part(self, which: str, track: str, at: int, data: bytes) -> dict[str, Any]:
+        """One piece the browser window fetched of a track (`video`, or `audio` when the
+        sound comes apart), to go at `at` in it: written into the cache as it arrives.
+        A piece sent again goes over what it was; one past the end of what has come is
+        refused, since something before it is missing."""
+        job = self._receiving(which)
+        if track not in BROWSER_TRACKS:
+            raise FetchError("A piece is of the picture (video) or of the sound (audio).")
+        have = job.tracks.get(track, 0)
+        if at < 0 or at > have:
+            raise FetchError("A piece of the video went missing on the way. Try again.")
+        if len(data) > BROWSER_PIECE_MOST:
+            raise FetchError("That piece of the video is too big to take at once.")
+        path = self._files(job)[f".{track}.part"]
+        written = fileops.write_fetched_part(
+            path, at, io.BytesIO(data), len(data), cache=self.cache
+        )
+        job.tracks[track] = at + written
+        job.sent_at = time.monotonic()
+        job.heard(sum(job.tracks.values()))
+        if time.monotonic() - self._swept > SWEEP_EVERY_S:
+            self.sweep()
+        return {"bytes": job.tracks[track]}
+
+    def browser_progress(self, which: str, progress: float, size: int | None = None) -> None:
+        """How far the window says it has got (0 to 1), and how big it thinks the whole is."""
+        job = self._receiving(which)
+        job.told = min(max(float(progress), 0.0), 1.0)
+        job.sent_at = time.monotonic()
+        if size and size > 0:
+            job.size = size
+
+    def browser_done(self, which: str) -> dict[str, Any]:
+        """The window has sent all of it: it's put together, checked, converted if that was
+        asked for, and kept, in a thread of its own. Returns at once with its status."""
+        job = self._receiving(which)
+        job.received = True
+        job.told = 1.0
+        threading.Thread(target=self._run_browser, args=(job,), name="fetch", daemon=True).start()
+        return job.status()
+
+    def _receiving(self, which: str) -> _Fetch:
+        job = self._find(which)
+        if job is None or not job.browser or job.ended or job.received:
+            raise FetchError("That video isn't being downloaded any more.")
+        return job
+
+    def _run_browser(self, job: _Fetch) -> None:
+        try:
+            source = self._browser_source(job)
+            job.state = COMPLETE
+            self._keep(job, source)
+        except _Stopped:
+            log.info("fetch: a video from the browser window was stopped")
+        except MusicOrgError as exc:
+            job.keep_error = exc.message
+            log.warning("fetch: a video from the browser window couldn't be kept: %s", exc.message)
+        except Exception as exc:
+            job.keep_error = "Something went wrong while saving it. Try again later."
+            log.warning("fetch: a video from the browser window failed (%s: %s)",
+                        type(exc).__name__, _without_addresses(str(exc)))  # fmt: skip
+        finally:
+            if job.keep_error:
+                self._let_go(job)
+            job.ended = True
+            job.process = None
+
+    def _browser_source(self, job: _Fetch) -> Path:
+        """What the window sent, as one file: the whole file it downloaded, or its
+        picture's pieces (with its sound's, when they came apart) joined into one."""
+        files = self._files(job)
+        whole = files[".file"]
+        if whole.is_file() and whole.stat().st_size > 0:
+            job.heard(whole.stat().st_size)
+            return whole
+        picture, sound = files[".video.part"], files[".audio.part"]
+        if not picture.is_file() or picture.stat().st_size == 0:
+            raise FetchError("Nothing of the video arrived from the browser window.")
+        has_sound = sound.is_file() and sound.stat().st_size > 0
+        inputs = ["-i", str(picture)] + (["-i", str(sound)] if has_sound else [])
+        maps = ["-map", "0:v?", "-map", "1:a?"] if has_sound else ["-map", "0:v?", "-map", "0:a?"]
+        # ffmpeg writes this one file, in the cache's `fetched/` folder (CLAUDE.md rule 3):
+        # the pieces joined by copying, the picture and the sound changed in no way.
+        for target, kind in ((files[".hls.mp4"], ["-movflags", "+faststart", "-f", "mp4"]),
+                             (files[".joined.mkv"], ["-f", "matroska"])):  # fmt: skip
+            command = [str(tools.require("ffmpeg")), "-nostdin", "-y", "-v", "error",
+                       *inputs, *maps, "-c", "copy", *kind, str(target)]  # fmt: skip
+            said = self._run_ffmpeg(job, command)
+            if said is None and target.is_file() and target.stat().st_size > 0:
+                return target
+            fileops.forget_cached(target, cache=self.cache)
+            log.info("fetch: joining a video as %s didn't work: %s", kind[-1], said)
+        raise FetchError("The pieces the browser window sent couldn't be put together as a video.")
+
+    def _run_ffmpeg(self, job: _Fetch, command: list[str]) -> str | None:
+        """Run ffmpeg for a job; None when it worked, else its last words."""
+        if not self._going_on(job):
+            raise _Stopped
+        try:
+            process = subprocess.Popen(
+                command, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE, text=True, encoding="utf-8", errors="replace",
+            )  # fmt: skip
+        except OSError as exc:
+            raise FetchError(f"ffmpeg couldn't be started: {exc}") from exc
+        job.process = process
+        try:
+            _, said = process.communicate()
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+        if not self._going_on(job):
+            raise _Stopped
+        if process.returncode == 0:
+            return None
+        return _without_addresses((said.strip().splitlines() or ["no details"])[-1])
 
     def stop(self, which: str) -> None:
         """The owner has changed their mind. What arrived stays in the cache for two
@@ -386,6 +597,10 @@ class Fetcher:
             job.process.kill()
         with self._lock:
             self._jobs.pop(job.id, None)
+        if job.browser and not job.received:
+            # The window's pieces can't be carried on without the window: let go of them.
+            job.ended = True
+            self._let_go(job)
 
     def stop_all(self) -> None:
         """The engine is stopping: every fetch stops at once, and what arrived of each is
@@ -768,6 +983,8 @@ class Fetcher:
         # A playlist's parts were joined into an MP4; a file keeps the kind it is.
         if source == self._files(job)[".hls.mp4"]:
             ending = ".mp4"
+        elif source == self._files(job)[".joined.mkv"]:
+            ending = ".mkv"
         else:
             ending = _ending(found, source.name if job.page is not None else job.url)
         made: Path | None = None

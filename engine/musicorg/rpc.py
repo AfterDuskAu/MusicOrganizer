@@ -29,6 +29,8 @@ Errors carry plain English in `message`, suitable to show the user directly.
 
 from __future__ import annotations
 
+import base64
+import binascii
 import json
 import logging
 import os
@@ -414,6 +416,10 @@ class Server:
             "stream.stop": self.stream_stop,
             "page.videos": self.page_videos,
             "page.keep": self.page_keep,
+            "browser.start": self.browser_start,
+            "browser.part": self.browser_part,
+            "browser.progress": self.browser_progress,
+            "browser.done": self.browser_done,
             "profile.contents": self.profile_contents,
             "profile.export": self.profile_export,
             "profile.import": self.profile_import,
@@ -1467,22 +1473,72 @@ class Server:
         self._no_pages_for_a_child()
         url = need(params, "url", str)
         quality = need(params, "quality", str)
+        fetcher = self._fetching()
+        name, folder, to_videos = self._saved_as(params, fetcher)
+        return fetcher.keep_page(
+            url, self._page_item(params), quality, name, folder=folder, to_videos=to_videos,
+            convert=bool(want(params, "convert", bool, False)),
+        )  # fmt: skip
+
+    def _saved_as(
+        self, params: dict[str, Any], fetcher: fetch.Fetcher
+    ) -> tuple[str, tuple[str, ...], bool]:
+        """A video from a page's name, its folders and whether it goes in the videos
+        folder, from `title` and `kind` (filed as `media.move` files one)."""
         title = need(params, "title", str).strip()
         kind = want(params, "kind", str) or naming.KEPT_VIDEO
         if kind not in naming.MOVE_KINDS:
             raise RpcError(INVALID_PARAMS, f"kind should be one of {', '.join(naming.MOVE_KINDS)}.")
         if kind == naming.KEPT_ADULT and self._maybe_child():
             raise RpcError(USER_ERROR, "That isn't part of this profile.")
-        fetcher = self._fetching()
         root = fetcher.videos if kind == naming.KEPT_VIDEO else fetcher.movies
         _, name = naming.kept_place(naming.KEPT_MOVIE, title, root=root)
         if not name:
             raise RpcError(INVALID_PARAMS, "That title can't be made into a file's name.")
-        return fetcher.keep_page(
-            url, self._page_item(params), quality, name,
-            folder=naming.kept_move_place(kind, name), to_videos=kind == naming.KEPT_VIDEO,
-            convert=bool(want(params, "convert", bool, False)),
+        return name, naming.kept_move_place(kind, name), kind == naming.KEPT_VIDEO
+
+    # -- methods: a video from the app's browser window (2026-10-18) --
+
+    def browser_start(self, params: dict[str, Any]) -> dict[str, Any]:
+        """A video the app's browser window is about to fetch, from a page the owner opened
+        there (the owner, 2026-10-18: "It offers a open in browser option, and then if you
+        click yes, it pulls the info needed once it opens"). The window fetches it, as the
+        browser it is; the engine only takes the pieces (`browser.part`), puts them
+        together (`browser.done`) and keeps it where the owner chose, as `page.keep` does.
+        Followed with `stream.status`, stopped with `stream.stop`, by its `id`."""
+        self._no_pages_for_a_child()
+        fetcher = self._fetching()
+        name, folder, to_videos = self._saved_as(params, fetcher)
+        size = want(params, "size", int)
+        return fetcher.browser_start(
+            need(params, "page_url", str), need(params, "media_url", str), name, folder=folder,
+            to_videos=to_videos, convert=bool(want(params, "convert", bool, False)),
+            size=size if size is not None and size > 0 else None,
         )  # fmt: skip
+
+    def browser_part(self, params: dict[str, Any]) -> dict[str, Any]:
+        """One piece the browser window fetched, base64 in `data`, to go at `at` in its
+        `track` (`video`, or `audio` when the sound comes apart)."""
+        at = need(params, "at", int)
+        try:
+            data = base64.b64decode(need(params, "data", str), validate=True)
+        except (binascii.Error, ValueError):
+            raise RpcError(INVALID_PARAMS, "data should be the piece's bytes in base64.") from None
+        return self._fetching().browser_part(
+            need(params, "id", str), need(params, "track", str), at, data
+        )
+
+    def browser_progress(self, params: dict[str, Any]) -> dict[str, Any]:
+        progress = params.get("progress")
+        if isinstance(progress, bool) or not isinstance(progress, int | float):
+            raise RpcError(INVALID_PARAMS, "progress should be a number from 0 to 1.")
+        self._fetching().browser_progress(
+            need(params, "id", str), float(progress), want(params, "size", int)
+        )
+        return {}
+
+    def browser_done(self, params: dict[str, Any]) -> dict[str, Any]:
+        return self._fetching().browser_done(need(params, "id", str))
 
     def stream_status(self, params: dict[str, Any]) -> dict[str, Any]:
         which = self._which_fetch(params)

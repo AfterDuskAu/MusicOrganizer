@@ -149,6 +149,8 @@ struct FilmKeeps: View {
 
     var body: some View {
         let keeps = adult ? model.adultKeeps : model.listedKeeps
+        // What's being saved from a browser window (2026-10-18), above the rest.
+        BrowserSavesList(adult: adult)
         if !keeps.isEmpty {
             VStack(spacing: 0) {
                 ForEach(keeps) { keep in

@@ -837,6 +837,38 @@ struct MainView: View {
                 } else {
                     Bench.say("BENCH trash: there's no \(name) in the Movies folder")
                 }
+            } else if step.name.hasPrefix("browser=") {
+                // A page opened in the browser window, as Open in Browser does.
+                if let url = URL(string: String(step.name.dropFirst(8))) { model.openBrowser(url) }
+            } else if step.name == "browserfound" {
+                // What the newest browser window has found, and what it's saving.
+                guard let browser = model.newestBrowser else {
+                    Bench.say("BENCH browserfound: no browser window is open")
+                    return
+                }
+                Bench.say("BENCH browserfound: \(browser.findings.media.count) found, protected: \(browser.findings.protected), page \(browser.title)")
+                for (at, found) in browser.findings.media.enumerated() {
+                    let offered = browser.choices[found.id]?.map(\.label).joined(separator: " | ") ?? "-"
+                    Bench.say(
+                        "BENCH browserfound \(at): \(found.kindName) \(found.url.path) in [\(found.found.sorted().joined(separator: ", "))] "
+                            + "choices [\(offered)] size \(browser.sizes[found.id].map(String.init) ?? "-") "
+                            + "problem \(browser.problems[found.id] ?? "-") save \(browser.saves[found.id]?.line ?? "-")")
+                }
+            } else if step.name.hasPrefix("browsersave=") {
+                // One of them saved (its number in that list), into a place: as Download does.
+                let parts = step.name.dropFirst(12).split(separator: "@").map(String.init)
+                if let browser = model.newestBrowser, let at = Int(parts.first ?? ""),
+                    browser.findings.media.indices.contains(at)
+                {
+                    if parts.count > 1, let place = KeptPlace(rawValue: parts[1]) { browser.place = place }
+                    browser.save(browser.findings.media[at])
+                } else {
+                    Bench.say("BENCH browsersave: nothing to save there")
+                }
+            } else if step.name == "browsersaves" {
+                for save in model.browserSaves {
+                    Bench.say("BENCH browsersaves: \(save.name) to \(save.place.name): \(save.line)")
+                }
             } else if step.name.hasPrefix("moveto=") {
                 // The video file of this name anywhere in the Movies folder moved into a
                 // place (`KeptPlace`: movie, series, anime, video, adult): what Move To does.

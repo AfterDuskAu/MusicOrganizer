@@ -1624,6 +1624,48 @@ final class AppModel {
             ?? PendingKeeps.load().keeps.first { $0.id == id }
     }
 
+    // MARK: the browser window (2026-10-18)
+
+    /// The browser windows open now (`BrowserWindowController`).
+    @ObservationIgnored private var browserWindows: [BrowserWindowController] = []
+    /// The videos being saved from them, or saved: Downloads lists them (18+ on its own
+    /// page), until each is taken off the list.
+    private(set) var browserSaves: [BrowserSave] = []
+    /// How to stop each of those still under way, by its id.
+    @ObservationIgnored var browserStops: [String: () -> Void] = [:]
+
+    /// Open a page in Bear Media's browser window (the owner, 2026-10-18: "It offers a
+    /// open in browser option"), where the video it plays is looked for and can be saved.
+    /// Never in a child's profile.
+    func openBrowser(_ url: URL) {
+        guard !profiles.current.isChild else { return }
+        let window = BrowserWindowController(model: self, start: url)
+        window.closed = { [weak self, weak window] in
+            self?.browserWindows.removeAll { $0 === window }
+        }
+        browserWindows.append(window)
+        window.show()
+    }
+
+    /// The newest browser window, for the bench.
+    var newestBrowser: PageBrowser? { browserWindows.last?.browser }
+
+    /// A browser window's save, as it is now.
+    func noteBrowserSave(_ save: BrowserSave) {
+        if let at = browserSaves.firstIndex(where: { $0.id == save.id }) {
+            let was = browserSaves[at]
+            browserSaves[at] = save
+            // Kept just now: the lists look at their folders again.
+            if was.running && !save.running && !save.failed { keptArrived += 1 }
+        } else {
+            browserSaves.append(save)
+        }
+    }
+
+    func dismissBrowserSave(_ id: String) {
+        browserSaves.removeAll { $0.id == id && !$0.running }
+    }
+
     /// Asked every two seconds while a film is being converted, until it has ended.
     private func watchConversion(_ connection: RPCConnection) {
         conversionWatch?.cancel()

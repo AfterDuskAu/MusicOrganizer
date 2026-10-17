@@ -21,6 +21,8 @@ struct PageVideosView: View {
     @State private var looked = false
     @State private var looking = false
     @State private var problem: String?
+    /// The page last looked at: what Open in Browser opens.
+    @State private var lookedAt: URL?
     @State private var chosen: PageVideo.ID?
     /// Players from other sites whose qualities are being read, and what went wrong.
     @State private var reading: Set<PageVideo.ID> = []
@@ -64,17 +66,23 @@ struct PageVideosView: View {
             ProgressView("Reading the page…")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let problem {
-            Text(problem)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            VStack(spacing: 14) {
+                Text(problem)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                openInBrowser(prominent: true)
+            }
+            .padding(.horizontal, 40)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if videos.isEmpty {
-            Text(looked ? note ?? "No video was found on that page." : "The videos on the page show up here.")
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            VStack(spacing: 14) {
+                Text(looked ? note ?? "No video was found on that page." : "The videos on the page show up here.")
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                if looked { openInBrowser(prominent: true) }
+            }
+            .padding(.horizontal, 40)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -82,6 +90,7 @@ struct PageVideosView: View {
                     Text(videos.count == 1 ? "1 video" : "\(videos.count) videos")
                         .foregroundStyle(.secondary)
                     Spacer()
+                    openInBrowser(prominent: false)
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 10)
@@ -218,6 +227,34 @@ struct PageVideosView: View {
         }
     }
 
+    /// Open the page in Bear Media's browser window (the owner, 2026-10-18): where a page
+    /// that turned the reader away is shown as in any browser, and its video looked for as
+    /// it plays. Not for the music service's pages or SoundCloud's, which aren't saved there.
+    @ViewBuilder private func openInBrowser(prominent: Bool) -> some View {
+        if let page = lookedAt, !Self.isService(page) {
+            if prominent {
+                VStack(spacing: 6) {
+                    Button("Open in Browser") { model.openBrowser(page) }
+                        .buttonStyle(.borderedProminent)
+                    Text("The page opens in Bear Media's own browser window. Play its video there, and choose it from the list beside the page.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+            } else {
+                Button("Open in Browser") { model.openBrowser(page) }
+                    .help("Not the video you wanted? Open the page in Bear Media's browser window and choose it as it plays.")
+            }
+        }
+    }
+
+    private static func isService(_ url: URL) -> Bool {
+        let host = (url.host() ?? "").lowercased()
+        return ["youtube.com", "youtu.be", "youtube-nocookie.com", "soundcloud.com"].contains {
+            host == $0 || host.hasSuffix("." + $0)
+        }
+    }
+
     // MARK: the workings
 
     /// What's typed, if it's a web address (one without its "https://" is given one).
@@ -234,6 +271,7 @@ struct PageVideosView: View {
         guard let address, !looking else { return }
         looking = true
         problem = nil
+        lookedAt = URL(string: address)
         Task {
             defer { looking = false }
             do {

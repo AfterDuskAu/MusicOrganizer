@@ -70,6 +70,11 @@ import AppKit
 /// - `trash=<file name>`: that video file in the Movies folder moved to the Trash, as Move
 ///   to Trash… does after the owner's yes (never with a Movies folder that matters: only a
 ///   scratch one, with an engine whose Trash is a stand-in)
+/// - `browser=<web address>`: the page opened in the browser window, as Open in Browser
+///   does (unseen in the unseen copy); `browserfound`: what the newest window has found,
+///   its sizes and what's being saved, written out; `browsersave=<number>@<place>`: the one
+///   of that number saved into a place, as its Download does; `browsersaves`: the saves
+///   Downloads lists, written out (only ever with a scratch Movies folder)
 /// - `moveto=<file name>@<place>`: that video file, anywhere in the Movies folder, moved
 ///   into `movie`, `series`, `anime`, `video` or `adult`, as Move To does (only ever with a
 ///   scratch Movies folder)
