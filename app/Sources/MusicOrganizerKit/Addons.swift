@@ -433,6 +433,7 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
                 + "It carries on while the app is open, and picks up again when it's reopened."
         }
         if state == "finding" { return "Downloading: finding the film…" }
+        if state == "checking" { return "Downloading: checking what's here…" }
         let megabytes = String(format: "%.1f", Double(bytesPerSecond) / 1_000_000)
         return "Downloading: \(Int(progress * 100))% here · \(megabytes) MB/s. It carries on while the app is open, and picks up again when it's reopened."
     }
@@ -441,10 +442,12 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
     public var isKeeping: Bool { keeping == true && keptPath == nil && keepError == nil }
 
     /// How far along a keep is, 0 to 1, for a bar: the converting if that's begun (the
-    /// last stretch), else how much has arrived. Nil while the film is still being found.
+    /// last stretch), else how much has arrived. Nil while the film is still being found,
+    /// or what's already here is being checked (then the engine's figure is how far the
+    /// checking has got, not how much is here: 2026-10-17).
     public var keepProgress: Double? {
         if let converting { return min(max(converting, 0), 1) }
-        return state == "finding" ? nil : min(max(progress, 0), 1)
+        return state == "finding" || state == "checking" ? nil : min(max(progress, 0), 1)
     }
 
     /// Who the film is coming from, as the engine counts them: "2 seeds · 4 peers" (seeds
@@ -467,9 +470,12 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
     }
 
     /// One line for the player: "Finding the film…", "2 seeds · 4 peers · 4.6 MB/s · 9% here".
+    /// While the engine looks through what's already here of a film played before, it
+    /// says so, not "5% here" climbing to 100% (the owner saw that, 2026-10-17).
     public var line: String {
         switch state {
         case "finding": return "Finding the film…"
+        case "checking": return "Checking what's here…"
         case "complete": return "All of the film is here"
         default:
             let megabytes = String(format: "%.1f", Double(bytesPerSecond) / 1_000_000)

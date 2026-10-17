@@ -2383,6 +2383,11 @@ final class TorrentStatusTests: XCTestCase {
         XCTAssertEqual(
             TorrentStatus(state: "fetching", peers: 1, bytesPerSecond: 0, progress: 0).line,
             "1 source · 0.0 MB/s · 0% here")
+        // Looking through what's already here: how far it has looked isn't how much is here.
+        let checking = TorrentStatus(state: "checking", peers: 0, bytesPerSecond: 0, progress: 0.05, keeping: true)
+        XCTAssertEqual(checking.line, "Checking what's here…")
+        XCTAssertEqual(checking.keepLine, "Downloading: checking what's here…")
+        XCTAssertNil(checking.keepProgress)
         // The engine's own count of who has the film: seeds have all of it, peers are
         // the others it's connected to.
         XCTAssertEqual(
