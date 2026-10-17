@@ -101,14 +101,22 @@ final class PageBrowser {
     var canGoBack = false
     var canGoForward = false
     var loading = false
-    var findings = PageFindings()
+    var findings = PageFindings() { didSet { rerank() } }
     /// The ways each stream can be saved, by what it's found by (`FoundMedia.id`).
     var choices: [String: [StreamChoice]] = [:]
     var chosen: [String: String] = [:]
-    var problems: [String: String] = [:]
+    var problems: [String: String] = [:] { didSet { rerank() } }
     var sizes: [String: Int] = [:]
     /// How good each is, as far as can be told (2026-10-18): what the list is sorted by.
-    var quality: [String: MediaQuality] = [:]
+    var quality: [String: MediaQuality] = [:] { didSet { rerank() } }
+    /// The videos found, the best first (the sharpest, then the biggest, then the
+    /// longest), those that can't be saved last: worked out once when any of that changes,
+    /// never while the list is drawn (2026-10-18: it was worked out for every row, and
+    /// scrolling the list stuttered).
+    private(set) var ranked: [FoundMedia] = []
+    /// The one marked as the best: the first, when its picture's height is known and it
+    /// can be saved.
+    private(set) var best: String?
     /// What's being saved, or was, by what it's found by.
     var saves: [String: BrowserSave] = [:]
     var name = ""
@@ -121,6 +129,12 @@ final class PageBrowser {
     /// Videos waiting to have their picture size read, one at a time.
     @ObservationIgnored private var toMeasure: [FoundMedia] = []
     @ObservationIgnored private var measuring = false
+    /// How many files of this page have had their size asked, and their picture read: a
+    /// page full of little previews isn't asked about all of them.
+    @ObservationIgnored private var sizesAsked = 0
+    @ObservationIgnored private var measuresAsked = 0
+    static let sizesMost = 24
+    static let measuresMost = 12
     @ObservationIgnored private var tasks: [String: Task<Void, Never>] = [:]
     @ObservationIgnored private var engineIds: [String: String] = [:]
     @ObservationIgnored var downloads: [String: WKDownload] = [:]
@@ -199,6 +213,8 @@ final class PageBrowser {
         sizes = [:]
         quality = [:]
         toMeasure = []
+        sizesAsked = 0
+        measuresAsked = 0
         reading = []
         frames = [:]
         name = ""
@@ -240,9 +256,12 @@ final class PageBrowser {
             case .file:
                 // Its height from its name, until the browser has read it.
                 quality[media.id] = MediaQuality(height: MediaLinks.heightNamed(media.url))
-                if let size = try? await sizeOf(media) {
-                    sizes[media.id] = size
-                    quality[media.id]?.bytes = size
+                if sizesAsked < Self.sizesMost {
+                    sizesAsked += 1
+                    if let size = try? await sizeOf(media) {
+                        sizes[media.id] = size
+                        quality[media.id]?.bytes = size
+                    }
                 }
                 measure(media)
             case .hls:
@@ -283,6 +302,8 @@ final class PageBrowser {
     /// Have the browser read a video's picture size and length, one video at a time (a
     /// page may name many).
     private func measure(_ media: FoundMedia) {
+        guard measuresAsked < Self.measuresMost else { return }
+        measuresAsked += 1
         toMeasure.append(media)
         guard !measuring else { return }
         measuring = true
@@ -305,19 +326,14 @@ final class PageBrowser {
         }
     }
 
-    /// The videos found, the best first (the sharpest, then the biggest, then the
-    /// longest); those that can't be saved last.
-    var ranked: [FoundMedia] {
-        MediaLinks.ranked(findings.media, by: quality, last: Set(problems.keys))
-    }
-
-    /// The one marked as the best: the first, when its picture's height is known and it
-    /// can be saved.
-    var best: String? {
-        guard let first = ranked.first, quality[first.id]?.height != nil, problems[first.id] == nil else {
-            return nil
+    private func rerank() {
+        let now = MediaLinks.ranked(findings.media, by: quality, last: Set(problems.keys))
+        if now != ranked { ranked = now }
+        var top: String?
+        if let first = now.first, quality[first.id]?.height != nil, problems[first.id] == nil {
+            top = first.id
         }
-        return first.id
+        if top != best { best = top }
     }
 
     // MARK: saving
@@ -524,39 +540,66 @@ final class PageBrowser {
         let total: Int?
     }
 
+    /// A piece of a video, fetched by the page. Asked first as the page's own player asks
+    /// (2026-10-18: no cookies to another site, as players do; a site that lets any page
+    /// read its parts refuses them to a page that sends its cookies), then with the
+    /// page's cookies, and a piece of a file then as the whole part, should the site refuse
+    /// a request for a piece. Each way is tried twice, a moment apart.
     private func fetch(_ url: URL, first: Int?, last: Int?, frame: String?) async throws -> Fetched {
+        let ways: [(credentials: String, ranged: Bool)] =
+            first == nil
+            ? [("same-origin", false), ("include", false)]
+            : [("same-origin", true), ("include", true), ("same-origin", false)]
         var lastError: Error = BrowserError.cutOff
-        for attempt in 0..<3 {
-            if attempt > 0 { try await Task.sleep(for: .seconds(Double(attempt * 2))) }
-            do {
-                let said = try await web.callAsyncJavaScript(
-                    BrowserScript.fetchPiece,
-                    arguments: [
-                        "url": url.absoluteString, "first": first.map { $0 as Any } ?? NSNull(),
-                        "last": last.map { $0 as Any } ?? NSNull(), "most": Self.most,
-                    ],
-                    in: frame.flatMap { frames[$0] }, contentWorld: .page)
-                guard let answer = said as? [String: Any] else { throw BrowserError.cutOff }
-                if let failed = answer["failed"] as? String { throw BrowserError.refused(failed) }
-                if answer["tooBig"] as? Bool == true { throw BrowserError.tooBig }
-                let status = (answer["status"] as? NSNumber)?.intValue ?? 0
-                guard status == 200 || status == 206, let data = answer["data"] as? String else {
-                    throw BrowserError.answered(status)
+        for round in 0..<2 {
+            if round > 0 { try await Task.sleep(for: .seconds(2)) }
+            for way in ways {
+                do {
+                    return try await fetchOnce(
+                        url, first: way.ranged ? first : nil, last: way.ranged ? last : nil,
+                        credentials: way.credentials, frame: frame)
+                } catch let error as BrowserError {
+                    switch error {
+                    case .answered(let status) where status >= 400 && status < 500 && ![401, 403, 429].contains(status):
+                        throw error  // the site says it isn't there: no other way changes that
+                    case .tooBig where !way.ranged:
+                        lastError = error
+                    default:
+                        lastError = error
+                    }
+                } catch is CancellationError {
+                    throw CancellationError()
+                } catch {
+                    // The frame it was found in has gone: the page's main frame is asked instead.
+                    if let frame { frames[frame] = nil }
+                    lastError = BrowserError.refused(error.localizedDescription)
                 }
-                let range = answer["range"] as? String
-                let total = range.flatMap { $0.split(separator: "/").last }.flatMap { Int($0) }
-                return Fetched(status: status, data: data, length: (answer["length"] as? NSNumber)?.intValue ?? 0, total: total)
-            } catch let error as BrowserError {
-                if case .answered(let status) = error, status >= 400 && status < 500 && status != 429 { throw error }
-                if case .tooBig = error { throw error }
-                lastError = error
-            } catch {
-                // The frame it was found in has gone: the page's main frame is asked instead.
-                if frame != nil, frames[frame ?? ""] != nil { frames[frame ?? ""] = nil }
-                lastError = error
             }
         }
         throw lastError
+    }
+
+    private func fetchOnce(
+        _ url: URL, first: Int?, last: Int?, credentials: String, frame: String?
+    ) async throws -> Fetched {
+        let said = try await web.callAsyncJavaScript(
+            BrowserScript.fetchPiece,
+            arguments: [
+                "url": url.absoluteString, "first": first.map { $0 as Any } ?? NSNull(),
+                "last": last.map { $0 as Any } ?? NSNull(), "most": Self.most, "credentials": credentials,
+            ],
+            in: frame.flatMap { frames[$0] }, contentWorld: .page)
+        guard let answer = said as? [String: Any] else { throw BrowserError.cutOff }
+        if let failed = answer["failed"] as? String { throw BrowserError.refused(failed) }
+        if answer["tooBig"] as? Bool == true { throw BrowserError.tooBig }
+        let status = (answer["status"] as? NSNumber)?.intValue ?? 0
+        guard status == 200 || status == 206, let data = answer["data"] as? String else {
+            throw BrowserError.answered(status)
+        }
+        let range = answer["range"] as? String
+        let total = range.flatMap { $0.split(separator: "/").last }.flatMap { Int($0) }
+        return Fetched(
+            status: status, data: data, length: (answer["length"] as? NSNumber)?.intValue ?? 0, total: total)
     }
 
     private func text(of url: URL, frame: String?) async throws -> String {
@@ -578,13 +621,18 @@ enum BrowserError: Error, LocalizedError {
     case tooBig
     case refused(String)
     case answered(Int)
+    case notVideo
 
     var errorDescription: String? {
         switch self {
         case .cutOff: "the page stopped sending it"
         case .tooBig: "a part of it was too big to take in one piece"
-        case .refused: "the page wouldn't fetch it (it may only play it)"
+        case .refused(let why): "the site wouldn't let the page fetch it (\(why))"
+        case .answered(let status) where status == 403 || status == 410:
+            "the site refused it (HTTP \(status)): its address for the video may have run out. "
+                + "Play the video on the page again, then Download"
         case .answered(let status): "the site answered with an error (HTTP \(status))"
+        case .notVideo: "the site sent a web page, not the video"
         }
     }
 }
@@ -608,6 +656,8 @@ final class BrowserHelper: NSObject, WKScriptMessageHandler, WKNavigationDelegat
     private var places: [ObjectIdentifier: URL] = [:]
     private var waiting: [ObjectIdentifier: CheckedContinuation<Void, Error>] = [:]
     private var ended: [ObjectIdentifier: Error?] = [:]
+    /// Why a download was turned down before it began, by the download.
+    private var refusals: [ObjectIdentifier: Error] = [:]
 
     func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
         guard let browser, let said = message.body as? [String: Any], let kind = said["kind"] as? String else { return }
@@ -693,13 +743,25 @@ final class BrowserHelper: NSObject, WKScriptMessageHandler, WKNavigationDelegat
     func download(
         _ download: WKDownload, decideDestinationUsing response: URLResponse, suggestedFilename: String
     ) async -> URL? {
-        places[ObjectIdentifier(download)]
+        // An error, or a web page in the video's place (an address that has run out often
+        // answers with one): not saved at all, and said plainly (2026-10-18).
+        let key = ObjectIdentifier(download)
+        if let answer = response as? HTTPURLResponse, answer.statusCode >= 400 {
+            refusals[key] = BrowserError.answered(answer.statusCode)
+            return nil
+        }
+        let kind = (response.mimeType ?? "").lowercased()
+        if kind.hasPrefix("text/html") || kind.hasPrefix("application/xhtml") {
+            refusals[key] = BrowserError.notVideo
+            return nil
+        }
+        return places[key]
     }
 
     func downloadDidFinish(_ download: WKDownload) { end(download, nil) }
 
     func download(_ download: WKDownload, didFailWithError error: Error, resumeData: Data?) {
-        end(download, error)
+        end(download, refusals.removeValue(forKey: ObjectIdentifier(download)) ?? error)
     }
 
     private func end(_ download: WKDownload, _ error: Error?) {
@@ -794,7 +856,7 @@ struct FoundVideosPanel: View {
             }
             Divider()
             ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
+                LazyVStack(alignment: .leading, spacing: 12) {
                     ForEach(media) { found in
                         row(found)
                         Divider()

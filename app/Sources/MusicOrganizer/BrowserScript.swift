@@ -24,7 +24,9 @@ enum BrowserScript {
       if (!handler) return;
       const MEDIA = /\.(m3u8|mpd|mp4|m4v|mov|webm|mkv|flv|ogv)(?:[?#]|$)/i;
       const TYPES = /(^video\/|mpegurl|dash\+xml)/i;
-      const TEXTS = /(json|javascript|text\/plain|text\/html|xml)/i;
+      // Of what the page is answered, only data (JSON) is read for addresses: a player's
+      // own answers. Its scripts and pages are big, many, and read below, more cheaply.
+      const TEXTS = /json/i;
       const LINKS = /https?(?::|%3[aA])(?:\/|\\\/|\\u002[fF]|%2[fF]){2}(?:[^\s"'<>()\\]|\\\/|\\u002[fF])*?\.(?:m3u8|mpd|mp4|m4v|mov|webm|mkv|flv|ogv)(?![A-Za-z0-9])(?:\?(?:[^\s"'<>()\\]|\\\/|\\u0026)*)?/gi;
       const seen = new Set();
       let waiting = [];
@@ -78,7 +80,7 @@ enum BrowserScript {
               const type = answer.headers.get('content-type') || '';
               look(answer.url || asked, type, "the page's requests");
               const length = Number(answer.headers.get('content-length') || 0);
-              if (TEXTS.test(type) && !TYPES.test(type) && length < 3000000) {
+              if (TEXTS.test(type) && !TYPES.test(type) && length < 1000000) {
                 answer.clone().text().then(text => scanText(text, "the page's requests")).catch(() => {});
               }
             } catch (e) {}
@@ -138,7 +140,10 @@ enum BrowserScript {
 
       // The players, the page's details, its links, its code, its player's settings, and
       // everything it has loaded.
-      const scanPage = (deep) => {
+      // `deep`: every element's data- attributes, every link, the page's code; `thorough`
+      // (only when the owner asks: Search Again): the player's settings kept on the window
+      // too, which is the slowest to read.
+      const scanPage = (deep, thorough) => {
         try {
           document.querySelectorAll('video, audio, source').forEach(el => {
             for (const src of [el.currentSrc, el.src, el.getAttribute('src')]) {
@@ -149,9 +154,9 @@ enum BrowserScript {
             look(m.getAttribute('content') || m.getAttribute('href'), null, "the page's details");
           });
           document.querySelectorAll('script[type="application/ld+json"]').forEach(s => scanText(s.textContent, "the page's details"));
-          document.querySelectorAll('a[href]').forEach(a => look(a.href, null, 'a link'));
           performance.getEntriesByType('resource').forEach(e => look(e.name, null, "the page's requests"));
           if (deep) {
+            document.querySelectorAll('a[href]').forEach(a => look(a.href, null, 'a link'));
             document.querySelectorAll('*').forEach(el => {
               if (!el.attributes) return;
               for (const a of el.attributes) {
@@ -163,6 +168,8 @@ enum BrowserScript {
             });
             document.querySelectorAll('script:not([src])').forEach(s => scanText(s.textContent, "the page's code"));
             if (document.documentElement) scanText(document.documentElement.innerHTML, "the page's code");
+          }
+          if (thorough) {
             let looked = 0;
             for (const name of Object.keys(window)) {
               if (++looked > 3000) break;
@@ -187,26 +194,33 @@ enum BrowserScript {
         const el = ev.target;
         if (el && el.currentSrc && !/^blob:/i.test(el.currentSrc)) report(el.currentSrc, 'the player');
       }, true);
-      document.addEventListener('play', () => scanPage(false), true);
-      window.addEventListener('DOMContentLoaded', () => scanPage(true));
-      window.addEventListener('load', () => scanPage(true));
+      // When: a light look as the page comes, as it plays and every five seconds for its
+      // first forty; the deep one once it has loaded and ten seconds later; the thorough
+      // one only on Search Again. (Every three seconds, deep and thorough, slowed pages.)
+      document.addEventListener('play', () => scanPage(false, false), true);
+      window.addEventListener('DOMContentLoaded', () => scanPage(false, false));
+      window.addEventListener('load', () => {
+        setTimeout(() => scanPage(true, false), 1500);
+        setTimeout(() => scanPage(true, false), 10000);
+      });
       let rounds = 0;
-      const again = setInterval(() => { scanPage(rounds % 3 === 0); if (++rounds >= 20) clearInterval(again); }, 3000);
-      Object.defineProperty(window, '__bearMediaSearch', {value: () => { scanPage(true); flush(); }});
+      const again = setInterval(() => { scanPage(false, false); if (++rounds >= 8) clearInterval(again); }, 5000);
+      Object.defineProperty(window, '__bearMediaSearch', {value: () => { scanPage(true, true); flush(); }});
     })();
     """#
 
-    /// One piece of a video, fetched by the page as its own player would (with its
-    /// cookies, from its frame), given back as base64. Arguments: `url`, `first` and
-    /// `last` (a byte range, or null for all of it). An answer bigger than `most` bytes,
-    /// to a request for all of it, isn't read: it's said to be too big.
+    /// One piece of a video, fetched by the page as its own player would (from its frame,
+    /// with `credentials`: "same-origin", as players fetch, or "include", the page's
+    /// cookies too), given back as base64. Arguments: `url`, `first` and `last` (a byte
+    /// range, or null for all of it), `most`. An answer bigger than `most` bytes, to a
+    /// request for all of it, isn't read: it's said to be too big.
     static let fetchPiece = #"""
     const fetcher = window.__bearMediaFetch || window.fetch;
     const headers = {};
     if (first !== null && first !== undefined) headers['Range'] = 'bytes=' + first + '-' + (last === null || last === undefined ? '' : last);
     let answer;
     try {
-      answer = await fetcher(url, {credentials: 'include', headers, cache: 'no-store'});
+      answer = await fetcher(url, {credentials: credentials || 'same-origin', headers});
     } catch (e) {
       return {failed: String((e && e.message) || e)};
     }
