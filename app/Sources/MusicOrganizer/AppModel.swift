@@ -28,10 +28,12 @@ final class AppModel {
     static let bearAtLeast: Double = 5
 
     /// What the app needs is ready (or it has something to say): the bear goes, once
-    /// it has been there five seconds from the app's start. A timing run doesn't wait.
+    /// it has been there five seconds from the app's start. A timing run doesn't wait;
+    /// `MUSICORG_BEAR_SECONDS` holds it longer, for a picture of what's under it.
     private func bearMayGo() {
         guard showingBear, bearGoing == nil else { return }
-        let left = Bench.isOn ? 0 : Self.bearAtLeast - Bench.sinceLaunch()
+        let held = ProcessInfo.processInfo.environment["MUSICORG_BEAR_SECONDS"].flatMap(Double.init)
+        let left = (held ?? (Bench.isOn ? 0 : Self.bearAtLeast)) - Bench.sinceLaunch()
         bearGoing = Task { [weak self] in
             if left > 0 { try? await Task.sleep(for: .seconds(left)) }
             self?.showingBear = false

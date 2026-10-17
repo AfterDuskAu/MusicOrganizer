@@ -11,6 +11,7 @@ struct RootView: View {
             // under it, so it's there the moment the bear fades.
             if model.showingBear {
                 BearLayerScene()
+                    .ignoresSafeArea()  // under the title bar too: the whole window is sky
                     .overlay(alignment: .bottom) { BearNote() }
                     .transition(.opacity)
                     .zIndex(1)
@@ -405,8 +406,11 @@ struct MainView: View {
                 }
             }
             .toolbar(
-                // A film, like the big cover, has the top of the window too.
-                showNowPlaying || model.pictureFullScreen || model.film.isOpen ? .hidden : .automatic,
+                // A film, like the big cover, has the top of the window too; and so does
+                // the bear, while this page is made under it (the owner, 2026-10-17: "that
+                // bar in the top loads through the loading screen").
+                showNowPlaying || model.pictureFullScreen || model.film.isOpen || model.showingBear
+                    ? .hidden : .automatic,
                 for: .windowToolbar)
             // Below the split view, not an inset: the sidebar runs the window's full height
             // and would otherwise sit underneath the bar.
