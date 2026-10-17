@@ -389,6 +389,17 @@ private struct HomeRow: View {
                                             .padding(.top, 172)
                                     }
                                 }
+                                .overlay(alignment: .top) {
+                                    // Its next episode being found, to play (2026-10-18).
+                                    if section.kind == "continue", model.startingEpisode == entry.id {
+                                        ProgressView()
+                                            .controlSize(.small)
+                                            .environment(\.colorScheme, .dark)  // light, on the dark square, in every look
+                                            .padding(10)
+                                            .background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: 8))
+                                            .padding(.top, 70)
+                                    }
+                                }
                         }
                         .buttonStyle(.plain)
                         .help(entry.detail ?? item.name)

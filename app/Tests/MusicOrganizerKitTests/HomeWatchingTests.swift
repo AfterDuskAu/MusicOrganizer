@@ -234,4 +234,30 @@ final class HomeWatchingTests: XCTestCase {
         finished.mark("kitsu:7442:2", watched: true, now: at(0))
         XCTAssertEqual(history.continuing(finished: finished, progress: SeriesProgress()).map(\.id), ["kitsu:7442"])
     }
+
+    func testACardBetweenEpisodesPlaysTheNextTheWayTheLastWasPlayed() {
+        var finished = Finished()
+        // Played to its end here: between episodes.
+        var ended = episode("tt2", 1, 2, seconds: 2950, length: 3000, minute: 0)
+        XCTAssertTrue(ended.isBetweenEpisodes(finished: finished))
+        // Part way: carried on with where it was left, not the next.
+        XCTAssertFalse(episode("tt2", 1, 2, seconds: 600, length: 3000, minute: 0).isBetweenEpisodes(finished: finished))
+        // The next started by itself, not begun yet: it's played, not the one after it.
+        XCTAssertFalse(episode("tt2", 1, 3, minute: 0).isBetweenEpisodes(finished: finished))
+        // Watched to its end elsewhere (a sync), and only begun here: between episodes.
+        let synced = episode("tt2", 1, 4, seconds: 5, length: 3000, minute: 0)
+        XCTAssertFalse(synced.isBetweenEpisodes(finished: finished))
+        finished.mark("tt2:1:4", watched: true)
+        XCTAssertTrue(synced.isBetweenEpisodes(finished: finished))
+        // A film is never between episodes.
+        XCTAssertFalse(film("tt1", seconds: 5900, length: 6000).isBetweenEpisodes(finished: finished))
+
+        // The way the last was played, for the next to be played the same way (`NextEpisode`).
+        XCTAssertNil(ended.played)  // not remembered: its page is opened instead
+        (ended.stream, ended.source) = (way, "torrentio.example")
+        XCTAssertEqual(ended.played, NextEpisode.Played(addonId: "torrentio.example", quality: "1080p"))
+        var movie = film("tt1")
+        (movie.stream, movie.source) = (way, "torrentio.example")
+        XCTAssertNil(movie.played)
+    }
 }

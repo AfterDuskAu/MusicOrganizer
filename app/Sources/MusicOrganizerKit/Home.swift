@@ -249,6 +249,22 @@ public struct WatchHistory: Equatable, Sendable {
 
         /// How far through it is, 0 to 1.
         public var progress: Double { length > 0 ? min(max(seconds / length, 0), 1) : 0 }
+
+        /// A series between episodes: the episode it's at was played to its end (here,
+        /// or as `finished` has it from elsewhere) and isn't being watched again part way.
+        /// Continue Watching plays the episode after it (2026-10-18).
+        public func isBetweenEpisodes(finished: Finished) -> Bool {
+            guard kind == .series, !isUnfinished, let episodeId else { return false }
+            return progress >= Finished.mark || finished.contains(episodeId)
+        }
+
+        /// How its episode was played (the add-on and the quality), for playing the next
+        /// one the same way (`NextEpisode`). Nil when that isn't known: one watched before
+        /// it was remembered, or one from a sync or an import.
+        public var played: NextEpisode.Played? {
+            guard kind == .series, let source, let stream else { return nil }
+            return NextEpisode.Played(addonId: source, quality: stream.quality)
+        }
     }
 
     /// Entries kept at most (1,000 since 2026-10-16: a Stremio import brings a few hundred).

@@ -671,18 +671,12 @@ final class AppModel {
     /// left: `FilmPositions`); one whose way wasn't remembered opens its page instead.
     /// This is the owner's click on that film, as a click on Play on its page is.
     func resume(_ entry: WatchHistory.Entry) {
+        // Another card clicked: a next episode being found from an earlier click isn't wanted.
+        if startingEpisode != entry.id { startingEpisode = nil }
         // A series between episodes, the one it's at played to its end: on to the next
-        // episode, on its series' page with its ways to play showing, not the same one
-        // again (`WatchHistory.continuing`).
-        if entry.kind == .series, !entry.isUnfinished, let item = entry.item, let id = entry.episodeId,
-            entry.progress >= Finished.mark || finished.contains(id)
-        {
-            let today = String(ISO8601DateFormatter().string(from: Date()).prefix(10))
-            if let next = seriesEpisodes[item.id].flatMap({ NextEpisode.after(id, in: $0, today: today) }) {
-                openEpisode(next.id, of: item)
-            } else {
-                open(item)
-            }
+        // episode, not the same one again (`WatchHistory.continuing`).
+        if entry.isBetweenEpisodes(finished: finished), let item = entry.item, let id = entry.episodeId {
+            continueSeries(item, after: id, played: entry.played)
             return
         }
         if entry.kind != .video {
@@ -716,6 +710,46 @@ final class AppModel {
                 }
             }
         }
+    }
+
+    /// The series whose next episode is being found, after a click on its card in Home's
+    /// Continue Watching (the card shows it). A later click, or anything else played
+    /// meanwhile, takes its place, and the episode isn't played.
+    private(set) var startingEpisode: String?
+
+    /// A series between episodes, from its card in Home's Continue Watching (the owner,
+    /// 2026-10-18): its next episode played the way the last one was, by the owner's rule
+    /// (`NextEpisode`), as the player's Next Episode button does. A click, so a torrent is
+    /// joined. One that can't be played that way is opened on its series' page with its
+    /// ways to play showing; with none after it out, the series' page opens.
+    private func continueSeries(_ series: MediaItem, after episodeId: String, played: NextEpisode.Played?) {
+        guard startingEpisode != series.id else { return }
+        guard let played else {
+            // How the last one was played isn't known (it came from a sync or an import):
+            // the next episode's page, for the owner to choose how.
+            let today = String(ISO8601DateFormatter().string(from: Date()).prefix(10))
+            if let next = seriesEpisodes[series.id].flatMap({ NextEpisode.after(episodeId, in: $0, today: today) }) {
+                openEpisode(next.id, of: series)
+            } else {
+                open(series)
+            }
+            return
+        }
+        startingEpisode = series.id
+        let opened = filmsOpened
+        let now = EpisodeNow(
+            series: series, episodeId: episodeId, played: played, episodes: seriesEpisodes[series.id])
+        Task {
+            let done = await playEpisode(after: now, while: { self.isStillWanted(series.id, opened: opened) })
+            if !done, isStillWanted(series.id, opened: opened) { open(series) }
+            if startingEpisode == series.id { startingEpisode = nil }
+        }
+    }
+
+    /// The next episode of a series clicked in Home is still wanted: no other card was
+    /// clicked, nothing else was played and no film was opened since (`opened`).
+    private func isStillWanted(_ series: String, opened: Int) -> Bool {
+        startingEpisode == series && filmsOpened == opened && !film.isOpen
     }
 
     /// Every ten seconds: where the video that's playing has got to (a video played as
@@ -1279,8 +1313,14 @@ final class AppModel {
         findingNextEpisode = true
         Task {
             defer { findingNextEpisode = false }
-            _ = await playEpisode(after: now)
+            _ = await playEpisode(after: now, while: { self.isStillOpen(now) })
         }
+    }
+
+    /// The episode is still the one in the film player: the owner hasn't shut it, or
+    /// started something else, while the next one was looked for.
+    private func isStillOpen(_ now: EpisodeNow) -> Bool {
+        film.isOpen && episodeNow?.episodeId == now.episodeId
     }
 
     /// Where the film about to open was left, by what's been watched (not by the way to
@@ -1325,7 +1365,7 @@ final class AppModel {
         }
         let opened = filmsOpened
         Task {
-            if await playEpisode(after: now) { return }
+            if await playEpisode(after: now, while: { self.isStillOpen(now) }) { return }
             // The last episode out: back to the page, unless the owner has already
             // started something else.
             if film.isOpen, filmsOpened == opened { closeFilm() }
@@ -1333,10 +1373,11 @@ final class AppModel {
     }
 
     /// Play the episode after `now`. False when there's none to play (after the last one
-    /// out), or the owner has moved on meanwhile; true when it's playing, or its page is
-    /// open for the owner to choose how.
+    /// out), or the owner has moved on meanwhile (`wanted` says, once its ways to play
+    /// have been found, whether it's still to be played); true when it's playing, or its
+    /// page is open for the owner to choose how.
     @discardableResult
-    private func playEpisode(after now: EpisodeNow) async -> Bool {
+    private func playEpisode(after now: EpisodeNow, while wanted: () -> Bool) async -> Bool {
         let type = now.series.type
         var episodes = now.episodes
         if episodes == nil {
@@ -1350,13 +1391,13 @@ final class AppModel {
         else { return false }
         let found = try? await ask(
             "addon.streams", ["type": type, "id": next.id, "adult": now.apart], as: StreamsAnswer.self)
-        // Only if that episode is still there at its end: the owner may have shut it,
-        // or started something else, while the next one was looked for.
-        guard film.isOpen, episodeNow?.episodeId == now.episodeId else { return false }
+        // Only if it's still wanted: the owner may have shut the film, or started
+        // something else, while the next one was looked for.
+        guard wanted() else { return false }
         guard let found, let way = NextEpisode.way(in: found, like: now.played) else {
             // Not to be had the way the last one was played: the owner is asked, on
             // the episode's own page.
-            closeFilm()
+            if film.isOpen { closeFilm() }
             episodeToChoose = EpisodeAsk(series: now.series.id, episode: next.id)
             if !now.apart { open(now.series) }
             return true
@@ -1454,6 +1495,8 @@ final class AppModel {
         episode: EpisodeNow? = nil, apart: Bool = false
     ) {
         let remembering = !(apart || episode?.apart == true)
+        // Something else played: a next episode being found from Home isn't wanted now.
+        startingEpisode = nil
         // Remembered as watched, when it's a film or an episode from its page: with the
         // way it was played, so Home's Continue Watching can play it again.
         if stream.kind == "url" || stream.kind == "torrent" {
