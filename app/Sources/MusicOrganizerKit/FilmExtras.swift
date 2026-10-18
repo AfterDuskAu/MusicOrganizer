@@ -46,6 +46,66 @@ public struct FilmTrack: Identifiable, Hashable, Sendable {
     }
 }
 
+/// The language every film, episode and video plays in when it has it (the owner,
+/// 2026-10-18: "Add a standard language in settings that is set to play every episode, for
+/// example English will be the standard from any Video, Series, Etc. Not any other language,
+/// subtitled too"): its sound track in that language, and subtitles only ever in that
+/// language, never another. Chosen in Settings → Player; English unless chosen otherwise.
+/// A film without a sound track in it plays its own; one without subtitles in it shows none.
+/// The film's menus still switch either, for that film.
+public enum FilmLanguage {
+    public static let key = "filmLanguage"
+    public static let standard = "en"
+    /// No language of the owner's: each film plays the sound it marks as its own, with the
+    /// first subtitles it has (how every film played until 2026-10-18).
+    public static let filmsOwn = ""
+
+    /// The languages offered, by their two-letter code, each with every code a film may
+    /// tag its tracks with: ISO 639-1, and ISO 639-2's, both kinds where they differ
+    /// (Matroska files often use the older one: "ger", "fre", "chi").
+    public static let languages: [(code: String, tags: [String])] = [
+        ("ar", ["ar", "ara"]), ("zh", ["zh", "zho", "chi"]), ("cs", ["cs", "ces", "cze"]),
+        ("da", ["da", "dan"]), ("nl", ["nl", "nld", "dut"]), ("en", ["en", "eng"]),
+        ("fi", ["fi", "fin"]), ("fr", ["fr", "fra", "fre"]), ("de", ["de", "deu", "ger"]),
+        ("el", ["el", "ell", "gre"]), ("he", ["he", "heb"]), ("hi", ["hi", "hin"]),
+        ("hu", ["hu", "hun"]), ("id", ["id", "ind"]), ("it", ["it", "ita"]),
+        ("ja", ["ja", "jpn"]), ("ko", ["ko", "kor"]), ("ms", ["ms", "msa", "may"]),
+        ("no", ["no", "nor", "nb", "nob"]), ("pl", ["pl", "pol"]), ("pt", ["pt", "por"]),
+        ("ro", ["ro", "ron", "rum"]), ("ru", ["ru", "rus"]), ("es", ["es", "spa"]),
+        ("sv", ["sv", "swe"]), ("th", ["th", "tha"]), ("tr", ["tr", "tur"]),
+        ("uk", ["uk", "ukr"]), ("vi", ["vi", "vie"]),
+    ]
+
+    /// The language as Settings names it ("English"), or "Each film's own".
+    public static func name(_ code: String) -> String {
+        guard code != filmsOwn else { return "Each film's own" }
+        return Locale(identifier: "en").localizedString(forLanguageCode: code) ?? code
+    }
+
+    /// The languages in the order Settings lists them: by name.
+    public static var listed: [String] {
+        languages.map(\.code).sorted { name($0) < name($1) }
+    }
+
+    /// What the film player (mpv) is told for a language: the sound tracks and subtitles to
+    /// choose, by every code they may be tagged with, and no subtitles in another language
+    /// when there are none in this one (mpv's own way, which the player had until
+    /// 2026-10-18, showed the first subtitles a film had: the owner's series came with
+    /// Turkish sound marked as theirs, and subtitles in seven languages).
+    public static func playerOptions(for code: String) -> [(String, String)] {
+        guard let tags = languages.first(where: { $0.code == code })?.tags else {
+            return [("subs-fallback", "yes")]  // each film's own
+        }
+        let list = tags.joined(separator: ",")
+        return [
+            ("alang", list), ("slang", list),
+            ("subs-fallback", "no"),
+            // Subtitles in it even when the sound is in it too, as they showed before.
+            ("subs-with-matching-audio", "yes"),
+        ]
+    }
+}
+
 /// Where each film was watched up to, so it opens there the next time (the owner,
 /// 2026-10-08: closed at 0:32, it opens at 0:32 a week later). Kept by the app on this
 /// Mac, by the film's file or torrent; nothing of it is in the library.

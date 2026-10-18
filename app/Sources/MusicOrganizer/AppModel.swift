@@ -879,6 +879,15 @@ final class AppModel {
     /// The player's own page is showing (the Visualizer's, or the big cover over the
     /// window): the arrows are the player's there.
     @ObservationIgnored var playerPageShowing = false
+    /// The big cover is over the window (the player page opened from the player bar).
+    var nowPlayingOpen = false
+    /// The window's top bar (the sidebar's button, Customise, the Visualizer and search)
+    /// is away: while the bear is up, while a film plays, while a video or the visualizer
+    /// has the whole screen, and under the big cover. One rule, at the window's outermost
+    /// view (`RootView`): a rule further in was overruled by the bear's own there, and the
+    /// bar showed over every film from 2026-10-17 (the owner, the next day: "when the
+    /// player is on, it shouldn't have the Sidebar, Customize, Search, Visualizer").
+    var topBarAway: Bool { showingBear || film.isOpen || pictureFullScreen || nowPlayingOpen }
     /// The sidebar's last up or down arrow was its own: it's being gone through by key,
     /// and carries on past Home (`ArrowKeys`).
     @ObservationIgnored private var arrowingSidebar = false
@@ -1037,10 +1046,27 @@ final class AppModel {
         // puts the video or the visualizer back in the page as well.
         NotificationCenter.default.addObserver(
             forName: NSWindow.didExitFullScreenNotification, object: nil, queue: .main
-        ) { [weak self] _ in
+        ) { [weak self] note in
+            let window = note.object as? NSWindow
             MainActor.assumeIsolated {
                 self?.tookTheScreen = false
                 self?.pictureFullScreen = false
+                // Out of full screen on the way to the Dock (`minimise`): to the Dock now.
+                if let window, window === self?.minimising {
+                    self?.minimising = nil
+                    window.miniaturize(nil)
+                }
+            }
+        }
+        // The window a film plays in is closed (its red button): the film stops with it,
+        // and isn't left playing where nothing shows it.
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification, object: nil, queue: .main
+        ) { [weak self] note in
+            let window = note.object as? NSWindow
+            MainActor.assumeIsolated {
+                guard let self, self.film.isOpen, let window, window === self.film.surface.window else { return }
+                self.closeFilm()
             }
         }
         // The window is going full screen (the green button, or a double click on a
@@ -1397,18 +1423,19 @@ final class AppModel {
     /// episode of a series, the next episode is played (`NextEpisode` has the owner's
     /// rule for how). Otherwise, or with nothing after it, the player shuts and the page
     /// it was opened from is back (the owner, 2026-10-15: "when a series finishes or a
-    /// movie ends, it moves it back to the previous page. doesn't keep a black screen").
+    /// movie ends, it moves it back to the previous page. doesn't keep a black screen"),
+    /// or for an episode its series' page, as the ✕ does (`leaveFilm`, 2026-10-18).
     private func filmEnded() {
         guard UserDefaults.standard.bool(forKey: NextEpisode.key), let now = episodeNow else {
-            closeFilm()
+            leaveFilm()
             return
         }
         let opened = filmsOpened
         Task {
             if await playEpisode(after: now, while: { self.isStillOpen(now) }) { return }
-            // The last episode out: back to the page, unless the owner has already
-            // started something else.
-            if film.isOpen, filmsOpened == opened { closeFilm() }
+            // The last episode out: back to its series' page, unless the owner has
+            // already started something else.
+            if film.isOpen, filmsOpened == opened { leaveFilm() }
         }
     }
 
@@ -1516,6 +1543,31 @@ final class AppModel {
             window.titlebarAppearsTransparent = true
             plainTitled = nil
         }
+    }
+
+    /// A window that's leaving full screen to be put in the Dock once it's out (`minimise`).
+    @ObservationIgnored private weak var minimising: NSWindow?
+
+    /// A picture's yellow button in full screen (`FullScreenWindowButtons`): out of full
+    /// screen, then into the Dock. macOS's own does nothing in full screen; the owner asked
+    /// for one that minimises (2026-10-18).
+    func minimise(_ window: NSWindow? = nil) {
+        guard let window = window ?? mainWindow else { return }
+        guard window.styleMask.contains(.fullScreen) else {
+            window.miniaturize(nil)
+            return
+        }
+        minimising = window
+        // A picture that took the screen gives it back itself; asked twice, the window
+        // would go back into full screen.
+        let pictureGivesItBack = pictureFullScreen && tookTheScreen
+        if pictureFullScreen { setPictureFullScreen(false) }
+        if !pictureGivesItBack { window.toggleFullScreen(nil) }
+    }
+
+    /// A picture's red button in full screen: the window closes, as macOS's own red does.
+    func closeMainWindow() {
+        mainWindow?.performClose(nil)
     }
 
     /// From the moment full screen begins until it has settled, the strip's window is
@@ -1931,6 +1983,17 @@ final class AppModel {
 
     /// Shut the film player. A film from a torrent is left; what arrived of it stays in
     /// the app's cache for a day, so it starts at once if it's played again by then.
+    /// The film player's ✕, its way back: the film stops, and an episode's series page is
+    /// what's shown, at that episode, whatever it was played from (the owner, 2026-10-18:
+    /// "When playing a show, and pressing back it always takes you to the shows page";
+    /// played from Home's Continue Watching, Back went back to Home). A film, or anything
+    /// from the Finder kept apart, goes back to where it was opened from, as before.
+    func leaveFilm() {
+        let episode = episodeNow
+        closeFilm()
+        if let episode, !episode.apart { openEpisode(episode.episodeId, of: episode.series) }
+    }
+
     func closeFilm() {
         film.close()
         watchingFilm = nil

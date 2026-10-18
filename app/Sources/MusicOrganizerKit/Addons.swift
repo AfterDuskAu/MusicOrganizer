@@ -518,11 +518,13 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
 
     /// One line for the player: "Finding the film…", "2 seeds · 4 peers · 4.6 MB/s · 9% here".
     /// While the engine looks through what's already here of a film played before, it
-    /// says so, not "5% here" climbing to 100% (the owner saw that, 2026-10-17).
+    /// says so, not "5% here" climbing to 100% (the owner saw that, 2026-10-17), and how
+    /// far it has looked, so a long look is seen to move (2026-10-18: the owner saw it
+    /// "stuck" there).
     public var line: String {
         switch state {
         case "finding": return "Finding the film…"
-        case "checking": return "Checking what's here…"
+        case "checking": return "Checking what's here… \(Int(min(max(progress, 0), 1) * 100))% looked through"
         case "complete": return "All of the film is here"
         default:
             let megabytes = String(format: "%.1f", Double(bytesPerSecond) / 1_000_000)

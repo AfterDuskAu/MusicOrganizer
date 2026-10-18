@@ -47,7 +47,11 @@ import AppKit
 ///   across the top of the picture macOS shows while the window grows (with
 ///   `MUSICORG_WINDOW_SHOTS=<folder>`, small pictures of that are saved there)
 /// - `openfilm`, `closefilm`: the film named by `MUSICORG_BENCH_FILM` opened silently (as
-///   one opened with the window in full screen already), and the open film shut
+///   one opened with the window in full screen already), and the open film shut. Several
+///   named, with spaces between them: the next at each `openfilm`; a web address is opened
+///   as a torrent's or a plugin's is
+/// - `sound=<n>`, `subs=<n>`, `subs=off`: the film's nth sound track or subtitles chosen (from
+///   1, in the menu's order), or none, as its menus do
 /// - `picture`: the video or the visualizer given the whole screen, or brought back, as
 ///   its Full Screen button does it
 /// - `mouse=top`, `mouse=middle`: the pointer put at the top of the screen, where macOS

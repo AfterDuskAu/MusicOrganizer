@@ -68,7 +68,7 @@ final class FilmPlayer {
             ("hwdec", "auto-safe"),  // the graphics chip decodes what it can
             ("ytdl", "no"),  // nothing is looked up or fetched by the player itself
             ("input-default-bindings", "no"), ("input-media-keys", "no"),
-            ("subs-fallback", "yes"), ("keep-open", "yes"),
+            ("keep-open", "yes"),
             // Subtitles are drawn on the picture, along its bottom edge, in a window as
             // in full screen. mpv's own way puts them in the black band under the
             // picture when the window is taller than the film: at the very bottom of
@@ -78,7 +78,7 @@ final class FilmPlayer {
             ("sub-use-margins", "no"), ("sub-ass-force-margins", "no"),
             // A film from a torrent may take a while to start arriving.
             ("network-timeout", "180"),
-        ] {
+        ] + FilmLanguage.playerOptions(for: Self.language) {
             mpv_set_option_string(made, name, value)
         }
         mpv_request_log_messages(made, "no")
@@ -110,6 +110,12 @@ final class FilmPlayer {
         clock = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.look() }
         }
+    }
+
+    /// The language films play in (Settings → Player: `FilmLanguage`), read as each opens,
+    /// so a change there holds from the next film or episode on.
+    static var language: String {
+        UserDefaults.standard.string(forKey: FilmLanguage.key) ?? FilmLanguage.standard
     }
 
     func close() {
@@ -273,6 +279,8 @@ struct FilmPlayerView: View {
     @State private var dragging: Double?
     /// How wide the menus and the sound are, on the right of the controls.
     @State private var rightWidth: CGFloat = 0
+    /// The film's window is in macOS's full screen.
+    @State private var fullScreen = false
 
     var body: some View {
         let film = model.film
@@ -294,6 +302,22 @@ struct FilmPlayerView: View {
         .overlay(alignment: .topLeading) {
             if controlsShown || film.paused || film.problem != nil {
                 CornerClose(help: "Stop the film and go back") { close() }
+                    // In full screen, the window's own three buttons above it (2026-10-18),
+                    // in the corner the ✕ is measured from.
+                    .overlay(alignment: .topLeading) {
+                        if fullScreen {
+                            FullScreenWindowButtons(
+                                close: {
+                                    let window = film.surface.window
+                                    close()
+                                    window?.performClose(nil)
+                                },
+                                minimise: { if let window = film.surface.window { model.minimise(window) } },
+                                leave: { film.surface.window?.toggleFullScreen(nil) }
+                            )
+                            .fixedSize()
+                        }
+                    }
             }
         }
         .overlay(alignment: .topTrailing) {
@@ -313,6 +337,17 @@ struct FilmPlayerView: View {
         .onChange(of: model.keyPresses) {
             lastMove = Date()
             controlsShown = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didEnterFullScreenNotification)) { note in
+            if note.object as? NSWindow === film.surface.window { fullScreen = true }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.willExitFullScreenNotification)) { note in
+            if note.object as? NSWindow === film.surface.window { fullScreen = false }
+        }
+        .task {
+            // A film opened in a window that's in full screen already.
+            try? await Task.sleep(for: .milliseconds(100))
+            fullScreen = film.surface.window?.styleMask.contains(.fullScreen) == true
         }
         .task {
             // The controls go away five seconds after the mouse last moved, and in full
@@ -431,7 +466,7 @@ struct FilmPlayerView: View {
     }
 
     private func close() {
-        model.closeFilm()
+        model.leaveFilm()
     }
 
     /// Seconds as a film's clock: 1:02:03, or 2:03 under an hour.
@@ -463,6 +498,55 @@ struct CornerClose: View {
         .help(help)
         .padding(.leading, 20)
         .padding(.top, 56)
+    }
+}
+
+/// The window's three buttons (close, minimise, leave full screen) over a picture that has
+/// the whole screen, where macOS keeps its own out of sight: they come with the controls
+/// when the mouse moves and go with them (the owner, 2026-10-18: "When in fullscreen it
+/// should have the 3 button, exit, minimize, maximise, only when the mouse is moved and
+/// disappears"). macOS shows its own only when the pointer touches the top edge, in the
+/// strip across the top that's kept hidden over a picture (`AppModel.tidyFullScreenTopBar`),
+/// so these are drawn as macOS draws them, in the corner where they'd be.
+struct FullScreenWindowButtons: View {
+    let close: () -> Void
+    let minimise: () -> Void
+    let leave: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        // 20 points from one's middle to the next, as macOS spaces its own (each is 12
+        // across, with 2 more around it to hit).
+        HStack(spacing: 4) {
+            light(Color(red: 1, green: 0.373, blue: 0.341), "xmark", "Close the window", close)
+            light(Color(red: 0.996, green: 0.737, blue: 0.180), "minus", "Minimise the window", minimise)
+            light(
+                Color(red: 0.157, green: 0.784, blue: 0.251), "arrow.down.right.and.arrow.up.left",
+                "Leave full screen", leave)
+        }
+        // Their marks show while the pointer is over any of them, as macOS's do.
+        .onHover { hovering = $0 }
+        .padding(.leading, 20)
+        .padding(.top, 18)
+    }
+
+    private func light(_ colour: Color, _ mark: String, _ name: String, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Circle()
+                .fill(colour)
+                .overlay(Circle().strokeBorder(.black.opacity(0.18), lineWidth: 0.5))
+                .overlay {
+                    Image(systemName: mark)
+                        .font(.system(size: 7, weight: .heavy))
+                        .foregroundStyle(.black.opacity(0.55))
+                        .opacity(hovering ? 1 : 0)
+                }
+                .frame(width: 12, height: 12)
+                .padding(2)  // a little more to hit than to see
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(name)
     }
 }
 

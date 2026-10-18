@@ -18,8 +18,10 @@ struct RootView: View {
             }
         }
         .animation(.easeOut(duration: 0.6), value: model.showingBear)
-        // Nothing of the window's own over the bear's sky but its three buttons.
-        .toolbar(model.showingBear ? .hidden : .automatic, for: .windowToolbar)
+        // Nothing of the window's own over the bear's sky but its three buttons, and none
+        // over a film either (`AppModel.topBarAway`). Here, at the window's outermost view:
+        // this rule overrules any further in.
+        .toolbar(model.topBarAway ? .hidden : .automatic, for: .windowToolbar)
     }
 
     @ViewBuilder
@@ -327,6 +329,8 @@ struct MainView: View {
     /// The rows outside Music the owner has taken out of the sidebar.
     @AppStorage(SidebarRows.key) private var savedHidden = ""
     @State private var customising = false
+    /// How many films `MUSICORG_BENCH`'s `openfilm` has opened (it takes the next each time).
+    @State private var benchFilms = 0
     // Each group of the sidebar folds away, and stays as it was left.
     @AppStorage("openLibrary") private var openLibrary = true
     @AppStorage("openMedia") private var openMedia = true
@@ -420,13 +424,11 @@ struct MainView: View {
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
-            .toolbar(
-                // A film, like the big cover, has the top of the window too; and so does
-                // the bear, while this page is made under it (the owner, 2026-10-17: "that
-                // bar in the top loads through the loading screen").
-                showNowPlaying || model.pictureFullScreen || model.film.isOpen || model.showingBear
-                    ? .hidden : .automatic,
-                for: .windowToolbar)
+            // A film, like the big cover, has the top of the window too; and so does the
+            // bear, while this page is made under it (the owner, 2026-10-17: "that bar in
+            // the top loads through the loading screen"). Said in `RootView`
+            // (`AppModel.topBarAway`): said here, the bear's rule there overruled it.
+            .onChange(of: showNowPlaying, initial: true) { model.nowPlayingOpen = showNowPlaying }
             // Below the split view, not an inset: the sidebar runs the window's full height
             // and would otherwise sit underneath the bar.
             // The lyrics button switches the lyrics of the page that's showing. On the
@@ -445,6 +447,9 @@ struct MainView: View {
         // The Warm Look's glow, behind everything, from the very top of the window: it
         // shows through the title bar and the top of the page (the sidebar covers it).
         .background { CoverWash().environment(model).ignoresSafeArea() }
+        // The page under a film, or a picture with the whole screen, is hidden from macOS
+        // too while it's covered: covered, it still showed its tooltips over the film.
+        .background { PageUnderPicture(hidden: model.film.isOpen || model.pictureFullScreen) }
         // Over everything, the player bar included: the whole screen's own controls take
         // over.
         .overlay {
@@ -902,6 +907,17 @@ struct MainView: View {
                 }
             } else if step.name == "film" {
                 let film = model.film
+                // The window's top bar (its sidebar, Customise, Visualizer and search buttons).
+                let main = NSApp.windows.first(where: \.canBecomeMain)
+                let bar = main?.toolbar
+                let items = bar?.items.map { item in
+                    "\(item.itemIdentifier.rawValue.suffix(24))\(item.view?.isHiddenOrHasHiddenAncestor == true ? " hidden" : "")"
+                } ?? []
+                let pages = main?.contentView.flatMap(PageUnderPicture.outermostSplit(in:))
+                Bench.say(
+                    "BENCH film: the window's top bar is \(bar.map { $0.isVisible ? "showing" : "hidden" } ?? "absent"), "
+                        + "items \(items); the page under it is \(pages.map { $0.isHidden ? "hidden" : "there" } ?? "not found"); "
+                        + "the film's picture is \(film.surface.isHiddenOrHasHiddenAncestor ? "hidden" : "there")")
                 Bench.say(
                     film.isOpen
                         ? String(
@@ -928,10 +944,33 @@ struct MainView: View {
                             ?? "not this page's"))
             } else if step.name == "openfilm" {
                 // The film named by MUSICORG_BENCH_FILM opened now, silently: a film
-                // opened with the window in full screen already.
-                if let path = ProcessInfo.processInfo.environment["MUSICORG_BENCH_FILM"] {
+                // opened with the window in full screen already. Several, with spaces
+                // between them: the next one at each `openfilm`. A web address is opened
+                // as a torrent's or a plugin's is.
+                let named = (ProcessInfo.processInfo.environment["MUSICORG_BENCH_FILM"] ?? "")
+                    .split(separator: " ").map(String.init)
+                if !named.isEmpty {
+                    let what = named[benchFilms % named.count]
+                    benchFilms += 1
                     model.film.volume = 0
-                    model.playFilm(URL(fileURLWithPath: path), title: "Check")
+                    let url = what.hasPrefix("http") ? URL(string: what) : URL(fileURLWithPath: what)
+                    if let url { model.playFilm(url, title: "Check") }
+                }
+            } else if step.name.hasPrefix("sound=") || step.name.hasPrefix("subs=") {
+                // A sound track or subtitles chosen, as the film's menus do: by its place
+                // in the menu, from 1; `subs=off` for none.
+                let film = model.film
+                let sound = step.name.hasPrefix("sound=")
+                let which = String(step.name.drop { $0 != "=" }.dropFirst())
+                let tracks = sound ? film.soundTracks : film.subtitleTracks
+                if let place = Int(which), tracks.indices.contains(place - 1) {
+                    if sound { film.chooseSound(tracks[place - 1]) } else { film.chooseSubtitles(tracks[place - 1]) }
+                    Bench.say("BENCH \(sound ? "sound" : "subs"): \(tracks[place - 1].label)")
+                } else if !sound, which == "off" {
+                    film.chooseSubtitles(nil)
+                    Bench.say("BENCH subs: off")
+                } else {
+                    Bench.say("BENCH \(step.name): no such track, of \(tracks.map(\.label))")
                 }
             } else if step.name.hasPrefix("profile=") {
                 // Another profile switched to, as Settings → Profile does.
@@ -1312,6 +1351,40 @@ private struct StatusFooter: View {
 
 /// Two things about the big player page covering the window, kept out of `RootView`'s
 /// body, which is as much as the compiler will take in one piece.
+/// While a film, or a video or the visualizer, has the whole window, the page under it is
+/// hidden from macOS as well as covered (the owner, 2026-10-18: "for some reason it reads
+/// information behind the video": a Continue Watching card's tooltip, "S1 E1 · First
+/// Period", showed over the film where the pointer rested after the click that played it).
+/// The page is in a view of macOS's own beside the one the film is drawn in, and macOS
+/// shows a view's tooltips wherever it lies, under whatever covers it, until it's hidden.
+/// Hidden, it's also not drawn while the film plays. The sidebar and the page come back
+/// as they were when the film shuts.
+private struct PageUnderPicture: NSViewRepresentable {
+    let hidden: Bool
+
+    func makeNSView(context: Context) -> NSView { NSView() }
+
+    func updateNSView(_ view: NSView, context: Context) {
+        let hidden = hidden
+        // Once it's in its window, and after SwiftUI has put the film over the page.
+        DispatchQueue.main.async {
+            guard let content = view.window?.contentView, let pages = Self.outermostSplit(in: content) else { return }
+            if pages.isHidden != hidden { pages.isHidden = hidden }
+        }
+    }
+
+    /// The sidebar and the page beside it: the window's outermost split view.
+    static func outermostSplit(in root: NSView) -> NSSplitView? {
+        var looking = [root]
+        while !looking.isEmpty {
+            let view = looking.removeFirst()
+            if let split = view as? NSSplitView { return split }
+            looking += view.subviews
+        }
+        return nil
+    }
+}
+
 private struct PlayerPageOpening: ViewModifier {
     @Environment(AppModel.self) private var model
     @Binding var shown: Bool

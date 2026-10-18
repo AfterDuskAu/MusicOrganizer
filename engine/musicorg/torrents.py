@@ -213,6 +213,15 @@ def serve(handler: BaseHTTPRequestHandler, film: Film, *, head: bool = False) ->
     handler.send_header("Content-Length", str(last - first + 1))
     if partial:
         handler.send_header("Content-Range", f"bytes {first}-{last}/{film.size}")
+    # One answer to a connection, and said so (2026-10-18). The film player's FFmpeg (8.1)
+    # asks the next question on the same connection when it has read an answer to its end
+    # and wasn't told the connection closes: after reading a film's last bytes (an MKV's
+    # cues, read at the first jump in it) its next question met a closed connection, it
+    # took the film for ended, and the picture stopped for good. The owner saw it as a
+    # film that froze when its sound track was changed, and one that never started when
+    # opened part way through. And an answer cut short (a piece that didn't come) must
+    # end its connection, or the player waits on it for the rest.
+    handler.send_header("Connection", "close")
     handler.end_headers()
     if head:
         return
@@ -318,6 +327,22 @@ def _pieces_for(length: int, piece_length: int, least: int, most: int | None = N
     """How many pieces `length` bytes take: at least `least`, at most `most`."""
     wanted = max(least, -(-length // max(piece_length, 1)))
     return wanted if most is None else min(wanted, most)
+
+
+def _v1(handle: Any) -> str:
+    """The torrent's id as it was joined by (its v1 info-hash, the magnet link's `btih`).
+
+    Not libtorrent's `info_hash()`: for a torrent made both ways at once (v1 and v2, as
+    newer programs make them) that's the v2 id cut short, so nothing libtorrent said back
+    about such a film was ever matched to it, and it never played: every piece the player
+    asked for went unanswered (found 2026-10-18, with a test torrent made by libtorrent
+    2.1, which makes them both ways)."""
+    hashes = getattr(handle, "info_hashes", None)
+    if hashes is not None:
+        found = hashes()
+        if found.has_v1():
+            return str(found.v1)
+    return str(handle.info_hash())
 
 
 def checking(told: Any) -> bool:
@@ -1231,7 +1256,7 @@ class Player:
                 if kind not in heard:
                     continue
                 try:
-                    info_hash = str(alert.handle.info_hash())
+                    info_hash = _v1(alert.handle)
                 except RuntimeError:
                     continue  # its torrent has been left meanwhile
                 joined = self._joined.get(info_hash) or self._parting.get(info_hash)

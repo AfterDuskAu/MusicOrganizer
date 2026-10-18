@@ -4,6 +4,7 @@ player opens, served from a stand-in film. No torrent is ever joined in tests.""
 from __future__ import annotations
 
 import http.client
+import socket
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -139,6 +140,65 @@ def test_a_film_that_stops_arriving_ends_the_answer_where_it_got_to() -> None:
     film = StandIn(b"y" * 1000, missing=400)
     status, _, body = ask(film, {"Range": "bytes=0-999"})
     assert status == 206 and body == b"y" * 400  # what came; the player asks again
+
+
+def test_each_answer_says_its_connection_closes_and_closes_it() -> None:
+    """The film player's FFmpeg asks its next question on the same connection when it has
+    read an answer to the end and wasn't told the connection closes. It was never told,
+    and the connection was always closed: after reading a film's last bytes, the next
+    question met a closed connection and the film stopped for good (2026-10-18: the
+    owner's films that froze when the sound track was changed)."""
+    data = bytes(range(256)) * 40
+
+    class Handler(BaseHTTPRequestHandler):
+        protocol_version = "HTTP/1.1"  # as the engine's own server
+
+        def log_message(self, format: str, *args: object) -> None:
+            pass
+
+        def do_GET(self) -> None:
+            torrents.serve(self, StandIn(data))
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        with socket.create_connection(server.server_address, timeout=10) as connection:
+            # A player that asks for the film's last bytes, as FFmpeg does, then asks again.
+            question = "GET /film HTTP/1.1\r\nHost: x\r\nRange: bytes={}\r\n\r\n"
+            connection.sendall(question.format(f"{len(data) - 10}-").encode())
+            heard = b""
+            while chunk := connection.recv(65536):
+                heard += chunk
+            head, _, body = heard.partition(b"\r\n\r\n")
+            assert b"\r\nConnection: close" in head
+            assert body == data[-10:]  # and then the connection was closed: recv gave b""
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+class HandleOfBoth:
+    """A torrent made both ways (v1 and v2), joined by its v1 id: libtorrent's own
+    `info_hash()` gives the v2 id cut short."""
+
+    class Hashes:
+        v1 = "6d6a54f111139ede2060fd7aee9d2376fd2ccc24"
+
+        def has_v1(self) -> bool:
+            return True
+
+    def info_hashes(self) -> HandleOfBoth.Hashes:
+        return self.Hashes()
+
+    def info_hash(self) -> str:
+        return "1c91661348d82c09fd56b36c471bb5d50676e8d0"
+
+
+def test_a_torrent_is_known_by_the_v1_id_it_was_joined_by() -> None:
+    """What libtorrent says back about a torrent made both ways is matched to the film
+    by its v1 id, as it was joined: by `info_hash()` it never was, and such a film never
+    played (found 2026-10-18)."""
+    assert torrents._v1(HandleOfBoth()) == HandleOfBoth.Hashes.v1
 
 
 # ---- a joined torrent, with a stand-in for libtorrent (2026-10-14) -------------------------

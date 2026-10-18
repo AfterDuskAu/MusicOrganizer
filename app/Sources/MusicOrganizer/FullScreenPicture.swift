@@ -107,6 +107,14 @@ struct FullScreenPicture: View {
     private func top(_ player: Player) -> some View {
         HStack(alignment: .top, spacing: 14) {
             CornerClose(help: "Back to the app (Esc)") { model.setPictureFullScreen(false) }
+                // The window's own three buttons above it, as over a film (2026-10-18).
+                .overlay(alignment: .topLeading) {
+                    FullScreenWindowButtons(
+                        close: { model.closeMainWindow() }, minimise: { model.minimise() },
+                        leave: { model.setPictureFullScreen(false) }
+                    )
+                    .fixedSize()
+                }
             if let track = player.current {
                 Text("\(track.title) · \(track.artistName)")
                     .font(.headline)

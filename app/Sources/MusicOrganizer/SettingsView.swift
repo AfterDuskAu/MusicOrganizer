@@ -559,10 +559,27 @@ private struct PlaySettings: View {
         CustomVisualizer.standardQuality
     @AppStorage(PageChanges.key) private var changesLast = PageChanges.standard
     @AppStorage(NextEpisode.key) private var playsNextEpisode = false
+    @AppStorage(FilmLanguage.key) private var filmLanguage = FilmLanguage.standard
     @Environment(AppModel.self) private var model
 
     var body: some View {
         Form {
+            Section("Language") {
+                Picker("Standard language", selection: $filmLanguage) {
+                    ForEach(FilmLanguage.listed, id: \.self) { code in
+                        Text(FilmLanguage.name(code)).tag(code)
+                    }
+                    Divider()
+                    Text(FilmLanguage.name(FilmLanguage.filmsOwn)).tag(FilmLanguage.filmsOwn)
+                }
+                SideNote(
+                    "Every movie, episode and video plays its sound in this language when it "
+                        + "has it, and its subtitles are only ever in this language: none in "
+                        + "another. A film without sound in it plays its own. The sound and "
+                        + "subtitles menus beside the volume still change either, for that film. "
+                        + "Each film's own: the sound the film marks as its own, with its first "
+                        + "subtitles.")
+            }
             Section("Series") {
                 Toggle("Play the next episode when one ends", isOn: $playsNextEpisode)
                 SideNote(
