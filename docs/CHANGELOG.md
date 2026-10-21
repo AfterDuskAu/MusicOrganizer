@@ -2466,3 +2466,26 @@ What's still slow, and why, is in `docs/KNOWN-ISSUES.md` ("The speed audit"): th
   - The window's buttons on the real screen by hand.
   - Back from a real episode played from Home (it takes the calendar's way to an episode's page, which works).
   - A tooltip by hand.
+
+2026-10-22. **Bear Media packed to try on another Mac, with an uninstaller; and a slow skip noted** (the owner: "is it possible to wrap up bear media so a friend can try using it in a different country, by downloading, or unloading a zip? of course after hes done testing it, it needs a full uninstall, to delete any trace of it from his computer", and "Even with a film fully loaded, it still gets stuck for about 5 seconds when skipping time").
+
+- **Packaging was on the "Not yet" list.** The owner was asked, and chose "Yes, start it". Their friend has an Apple Silicon Mac. The uninstaller keeps the music and films he downloaded (the owner's choice).
+- **`scripts/package_app.sh`** makes `app/build/package/Bear Media.zip` (176 MB). It holds a folder with three things:
+  - **The app, with everything it needs inside it:** the engine; python.org's Python 3.12 (this Mac's own, made to point inside the app); the .venv's packages, without the test and lint tools; and ffmpeg, ffprobe, fpcalc and deno. Nothing is downloaded to make it. It's built for Intel, so on Apple Silicon all of it runs through Rosetta. The app finds the engine inside itself first (`EngineProcess.packedEngine`). The engine's launcher sets Python's home, its certificate list (certifi's) and a PATH that starts at the app's tools, and nothing is written into the app while it runs. Signed ad hoc, not notarized: that needs a paid Apple developer account.
+  - **The uninstaller** (`scripts/package/Uninstall Bear Media.command`, a copy inside the app too). It closes the app, lists what goes, waits for a typed "yes", then moves to the Trash: every copy of the app, its settings, sign-ins and paired devices, caches, logs, what macOS keeps for it (window places, HTTP and WebKit stores), and in each library it made or opened (found by the engine's settings and the app's profiles) its records (`.musicorg`) and unfinished downloads (`_Staging`). It resets the folder permissions macOS gave it and forgets it among apps. The songs in each library's Music folder, and the films and videos in Movies, stay.
+  - **A Read Me:** opening it the first time (one Terminal line, or System Settings → Privacy & Security → Open Anyway), making a library, and taking it off again.
+- **Nothing of this Mac is in it:** no settings, sign-ins, plugins, libraries or paired devices. The app starts as it would for anyone, with the four plugins it brings. The only trace is the app program's own build folder names (this Mac's user name and the project's public layout), from compiling.
+- **A first start with no library** has **Make a New Library** beside Choose Library Folder… (`AppModel.makeLibrary`): "Bear Media" in the Mac's Music folder, or "Bear Media 2" where a folder of that name isn't a library.
+- **A slow skip** (over two seconds) is noted in macOS's log, saying how long it took, how much of that was waiting for the film's bytes, how the picture was decoded, and where the sound went with its delay. Read it with `log show --predicate 'subsystem == "org.musicorganizer.app"' --last 1d`. The owner's 5 seconds couldn't be made to happen here:
+  - local files skipped in 0.5 s (H.264 1080p) and 0.8 s (HEVC 10-bit 1080p, decoded by the Mac's chip), both with keyframes ten seconds apart;
+  - the same films from a fully arrived torrent skipped in 0.35 s and 1.0 s;
+  - all with the sound going to the Apple TV.
+
+  With mpv's log on, its lines now carry the time.
+- **Checked:**
+  - **The packed engine in an empty environment with a scratch home:** `doctor` found every tool inside the app, and the engine's data and settings went to the scratch home. Every library it loaded came from the app or macOS (`DYLD_PRINT_LIBRARIES`), and secure connections had 121 trusted roots.
+  - **The app with the packed engine in the scratch home and no library:** "Make a New Library" pictured on the first start; pressed, it made the library and opened it.
+  - **The uninstaller in the scratch home, under a made-up app id** (so this Mac's own Bear Media couldn't be reached): what it should take went to the scratch Trash; the songs, a video, Reports and `_Replaced` stayed.
+  - **The zip, unpacked:** the app's signature holds and its engine runs. macOS's Gatekeeper refuses it as expected (not notarized), which the Read Me's first step answers.
+  - `swift build`, `swift test` (248).
+- **Not tried:** an Apple Silicon Mac, and Rosetta; the steps of macOS's own that can't be run here without touching this Mac's own Bear Media, which shares its id (resetting the app's folder permissions, deleting its settings, Spotlight finding the app); a real 5-second skip.

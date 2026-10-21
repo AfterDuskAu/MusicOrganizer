@@ -39,9 +39,13 @@ public final class EngineProcess: @unchecked Sendable {
         connection.close()
     }
 
+    /// Where a packed app keeps its engine, inside it.
+    public static let packedEngine = "Contents/Resources/engine/musicorg"
+
     /// Where the engine is, tried in order: the MUSICORG_ENGINE environment variable,
-    /// a `.venv/bin/musicorg` in a folder above the app (the app built inside the
-    /// project), then the path the build script wrote into the app.
+    /// the engine packed inside the app itself (`scripts/package_app.sh`, 2026-10-22: an
+    /// app to try on another Mac), a `.venv/bin/musicorg` in a folder above the app (the
+    /// app built inside the project), then the path the build script wrote into the app.
     public static func locate(
         environment: [String: String] = ProcessInfo.processInfo.environment,
         appLocation: URL = Bundle.main.bundleURL,
@@ -51,6 +55,8 @@ public final class EngineProcess: @unchecked Sendable {
         if let given = environment["MUSICORG_ENGINE"], exists(given) {
             return URL(fileURLWithPath: given)
         }
+        let packed = appLocation.appendingPathComponent(packedEngine)
+        if exists(packed.path) { return packed }
         var folder = appLocation.standardizedFileURL
         while folder.path != "/" && !folder.path.isEmpty {
             folder = folder.deletingLastPathComponent()

@@ -540,6 +540,12 @@ final class EngineLocateTests: XCTestCase {
         XCTAssertNil(
             EngineProcess.locate(
                 environment: [:], appLocation: app, recorded: nil, exists: { _ in false }))
+        // A packed app (for another Mac) uses the engine inside it, before any other.
+        let packed = "/Applications/Bear Media.app/Contents/Resources/engine/musicorg"
+        XCTAssertEqual(
+            EngineProcess.locate(
+                environment: [:], appLocation: URL(fileURLWithPath: "/Applications/Bear Media.app"),
+                recorded: "/recorded", exists: { $0 == packed || $0 == "/recorded" })?.path, packed)
     }
 }
 

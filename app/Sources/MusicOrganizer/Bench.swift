@@ -50,6 +50,9 @@ import AppKit
 ///   one opened with the window in full screen already), and the open film shut. Several
 ///   named, with spaces between them: the next at each `openfilm`; a web address is opened
 ///   as a torrent's or a plugin's is
+/// - `makelibrary`, as the first step: Make a New Library pressed on a first start with none
+///   (only with a scratch home: `HOME` and `CFFIXED_USER_HOME` set, so it's made in that
+///   Music folder), and once it's open, where it is written out
 /// - `sound=<n>`, `subs=<n>`, `subs=off`: the film's nth sound track or subtitles chosen (from
 ///   1, in the menu's order), or none, as its menus do
 /// - `picture`: the video or the visualizer given the whole screen, or brought back, as

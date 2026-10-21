@@ -3,6 +3,7 @@ import FilmDrawing
 import Libmpv
 import MusicOrganizerKit
 import Observation
+import OSLog
 import SwiftUI
 
 /// The player for films and for any video file: libmpv, which plays nearly every kind
@@ -86,6 +87,7 @@ final class FilmPlayer {
         if ProcessInfo.processInfo.environment["MUSICORG_FILM_LOG"] != nil {
             mpv_set_option_string(made, "terminal", "yes")
             mpv_set_option_string(made, "msg-level", "all=v")
+            mpv_set_option_string(made, "msg-time", "yes")
         }
         guard mpv_initialize(made) >= 0 else {
             problem = "The film player couldn't start."
@@ -176,12 +178,58 @@ final class FilmPlayer {
     }
 
     func seek(to seconds: Double) {
+        skipping = Skipping(from: time, to: seconds)
         time = seconds
         command(["seek", String(seconds), "absolute"])
     }
 
     func skip(_ seconds: Double) {
+        skipping = Skipping(from: time, to: time + seconds)
         command(["seek", String(seconds), "relative"])
+    }
+
+    // MARK: a skip that's slow, noted
+
+    /// A jump along the film (an arrow, a ±10 button, the bar) under way: when it began,
+    /// and how long of it was spent waiting for the film's bytes. A jump that takes more than
+    /// two seconds to play on is noted in macOS's log (subsystem `org.musicorganizer.app`,
+    /// category `film`), with what it was waiting for, so its cause can be read afterwards:
+    /// the owner, 2026-10-22, "it still gets stuck for about 5 seconds when skipping time",
+    /// which couldn't be made to happen on this Mac (0.35 to 1 s, local and from a torrent).
+    private struct Skipping {
+        let began = Date()
+        let from: Double
+        let to: Double
+        var waitingForBytes = 0.0
+    }
+    @ObservationIgnored private var skipping: Skipping?
+    private static let log = Logger(subsystem: "org.musicorganizer.app", category: "film")
+
+    /// Looked at with the rest, four times a second: is the jump over, and was it slow?
+    private func lookAtSkip(waitingForBytes: Bool) {
+        guard var jump = skipping, let mpv else { return }
+        // Waiting for the film's bytes: paused for them, or what has been read of the film
+        // doesn't reach where the jump went yet (mpv doesn't call a jump's wait buffering).
+        var readTo = 0.0
+        let known = mpv_get_property(mpv, "demuxer-cache-time", MPV_FORMAT_DOUBLE, &readTo) >= 0
+        let arriving = waitingForBytes || (known && readTo < jump.to + 0.5)
+        if arriving { jump.waitingForBytes += 0.25 }
+        var seeking: Int32 = 0
+        mpv_get_property(mpv, "seeking", MPV_FORMAT_FLAG, &seeking)
+        var restarting: Int32 = 0
+        mpv_get_property(mpv, "core-idle", MPV_FORMAT_FLAG, &restarting)
+        let took = Date().timeIntervalSince(jump.began)
+        // Over once it's playing again (or paused by the owner, or a minute has gone).
+        guard (seeking == 0 && (restarting == 0 || paused) && !waitingForBytes) || took > 60 else {
+            skipping = jump
+            return
+        }
+        skipping = nil
+        guard took > 2 else { return }
+        let decoding = text("hwdec-current") ?? "?"
+        let sound = SoundOutput.current().map { "\($0.name), \(String(format: "%.2f", $0.delay)) s behind" } ?? "?"
+        Self.log.notice(
+            "A jump from \(Int(jump.from), privacy: .public) s to \(Int(self.time), privacy: .public) s took \(took, format: .fixed(precision: 1), privacy: .public) s: \(jump.waitingForBytes, format: .fixed(precision: 1), privacy: .public) s of it waiting for the film's bytes; decoding: \(decoding, privacy: .public); sound: \(sound, privacy: .public)")
     }
 
     /// One of the player's keys: the space bar, or an arrow (`PlayerKey` in the Kit).
@@ -220,6 +268,7 @@ final class FilmPlayer {
         var idle: Int32 = 0
         mpv_get_property(mpv, "core-idle", MPV_FORMAT_FLAG, &idle)
         buffering = waiting != 0 || (duration == 0 && idle != 0)
+        lookAtSkip(waitingForBytes: waiting != 0)
         // Nothing loaded any more and it never had a length: it couldn't be opened.
         var nothing: Int32 = 0
         mpv_get_property(mpv, "idle-active", MPV_FORMAT_FLAG, &nothing)

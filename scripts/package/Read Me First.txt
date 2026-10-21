@@ -1,0 +1,61 @@
+Bear Media: trying it
+=====================
+
+Bear Media is a music and film app for the Mac: your own library of songs, music
+videos and films, plus finding and playing new ones. This copy is for trying it out.
+Everything it needs is inside the app.
+
+You need macOS 14 (Sonoma) or newer. On a Mac with Apple's own chip (M1 and later),
+macOS asks to install Rosetta the first time: say yes. It's Apple's and takes a minute.
+
+
+Opening it the first time
+-------------------------
+
+1. Drag "Bear Media.app" into your Applications folder.
+
+2. This copy isn't signed by Apple, so macOS stops it the first time. To allow it, do
+   one of these:
+
+   - Open Terminal (in Applications → Utilities), paste this line, and press Return:
+
+         xattr -dr com.apple.quarantine "/Applications/Bear Media.app"
+
+     Then open Bear Media as usual.
+
+   - Or open Bear Media. When macOS says it can't be opened, click Done, then go to
+     System Settings → Privacy & Security, scroll down, and click "Open Anyway" beside
+     Bear Media. Confirm with your password.
+
+3. While it gets ready, Bear Media shows a bear for a few seconds.
+
+4. It asks where your library is. Click "Make a New Library": it makes one called
+   "Bear Media" in your Music folder. If macOS asks whether Bear Media may use your
+   Music, Movies or Downloads folder, choose Allow.
+
+Films and series come from "plugins". Bear Media starts with four free ones (film
+details, a list of channels, films in the public domain, and anime details). You can
+add others in Settings → Plugins.
+
+
+Taking it off your Mac
+----------------------
+
+Double-click "Uninstall Bear Media.command" in this folder. If macOS won't open it,
+right-click it, choose Open, then click Open again. A copy is also inside the app: in
+Terminal, run
+
+    zsh "/Applications/Bear Media.app/Contents/Resources/Uninstall Bear Media.command"
+
+The uninstaller shows a list and waits for you to type yes. Then it moves to the Trash:
+
+- the app
+- its settings, sign-ins and paired devices
+- its caches and logs
+- what macOS keeps for it
+- its own records inside your library
+
+The songs, videos and films you downloaded with it stay where they are: the Music
+folder inside your library, and your Movies folder. Keep or delete them as you like.
+Then drag this folder (with the uninstaller in it) to the Trash too, and empty the
+Trash to finish.

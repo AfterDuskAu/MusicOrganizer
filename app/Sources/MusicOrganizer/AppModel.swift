@@ -1188,6 +1188,34 @@ final class AppModel {
 
     // MARK: the library
 
+    /// A first start with no library at all (a Mac that has never had one): a library is
+    /// made in the Mac's Music folder, "Bear Media" (or "Bear Media 2" where that name is
+    /// taken by a folder that isn't one), and opened.
+    func makeLibrary() {
+        guard let music = Self.musicFolder, let connection = engine?.connection else { return }
+        let parent = URL(fileURLWithPath: music)
+        Task {
+            for number in 1...9 {
+                let root = parent.appendingPathComponent(number == 1 ? "Bear Media" : "Bear Media \(number)").path
+                let there = FileManager.default.fileExists(atPath: root)
+                let isLibrary = FileManager.default.fileExists(atPath: root + "/.musicorg")
+                if there && !isLibrary { continue }
+                do {
+                    _ = try await connection.call("library.init", ["root": root])
+                } catch {
+                    notice = error.localizedDescription
+                    return
+                }
+                profiles.setCurrentLibrary(root)
+                saveProfiles()
+                player.stop()
+                retry()  // an engine serves one library: a new one is started for it
+                return
+            }
+            notice = "There's no free name for a new library in your Music folder. Choose a folder instead."
+        }
+    }
+
     func chooseLibrary() {
         let panel = NSOpenPanel()
         panel.canChooseDirectories = true

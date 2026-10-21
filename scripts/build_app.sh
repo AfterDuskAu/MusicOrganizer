@@ -7,7 +7,8 @@
 #                                   as it is and you're told to quit and reopen it)
 #
 # The app is for this Mac only: it uses the engine in this project's .venv, and isn't
-# signed for other computers (packaging is v0.5). Nothing here touches a music library.
+# signed for other computers. scripts/package_app.sh makes one to try on another Mac, with
+# everything inside it (2026-10-22). Nothing here touches a music library.
 #
 # The first build after the visualizers' package changes fetches it from GitHub (Particle
 # Accelerator, pinned in app/Package.swift), so that one build needs the internet.

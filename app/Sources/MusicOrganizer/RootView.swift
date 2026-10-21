@@ -34,11 +34,19 @@ struct RootView: View {
         case .needsLibrary:
             Message(
                 symbol: "music.note.house", title: "Where is your library?",
-                text: "Choose the Bear Media library folder: the one with the Music folder inside."
+                text: "Make a new library for your music and films, in your Mac's Music folder. "
+                    + "Or, if you have one already, choose the Bear Media library folder: the one "
+                    + "with the Music folder inside."
             ) {
-                Button("Choose Library Folder…") { model.chooseLibrary() }
+                // A first start on a Mac that has never had a library (2026-10-22: the app
+                // packed to try on another Mac).
+                Button("Make a New Library") { model.makeLibrary() }
                     .buttonStyle(.borderedProminent)
+                Button("Choose Library Folder…") { model.chooseLibrary() }
             }
+            // MUSICORG_BENCH starting with `makelibrary`: pressed, as a first start's click
+            // would (the other steps wait for a library, so this one can't).
+            .task { if Bench.steps.first?.name == "makelibrary" { model.makeLibrary() } }
         case .failed(let message):
             Message(symbol: "exclamationmark.triangle", title: "Something's not right", text: message) {
                 Button("Try Again") { model.retry() }
@@ -1001,6 +1009,9 @@ struct MainView: View {
                         + "\(model.toWatch("movie").count) movies, watched \(model.watchedItems("series").count) series "
                         + "\(model.watchedItems("movie").count) movies, continue \(model.continuingSeries.count) "
                         + "series \(model.history.unfinished(.movie).count) movies")
+            } else if step.name == "makelibrary" {
+                // Pressed on the first start's screen (`RootView`); here, where it was made.
+                Bench.say("BENCH makelibrary: the library is \(model.profiles.current.libraryRoot ?? "none")")
             } else if step.name == "closefilm" {
                 model.closeFilm()
             } else if step.name == "picture" {
