@@ -19,16 +19,18 @@ final class AppModel {
     }
 
     private(set) var phase: Phase = .starting
-    /// Bear Media's loading screen, the bear (the owner, 2026-10-17: "the loading screen
-    /// should load whatever is needed for the app to immediately start. Minimum 5
-    /// seconds, it holds it until it's done"): from the app's start until the library is
-    /// read and the first page made under it, or there's something to ask.
+    /// Bear Media's loading screen (the owner, 2026-10-17: "the loading screen should
+    /// load whatever is needed for the app to immediately start ... it holds it until
+    /// it's done"): from the app's start until the library is read and the first page
+    /// made under it, or there's something to ask. Since 2026-11-05 it's a three-second
+    /// film (`OpeningFilm`), held for one whole play at least ("make it 3 seconds like
+    /// the other opening screens"; five before), and played again until the app is ready.
     private(set) var showingBear = true
     @ObservationIgnored private var bearGoing: Task<Void, Never>?
-    static let bearAtLeast: Double = 5
+    static let bearAtLeast: Double = 3
 
     /// What the app needs is ready (or it has something to say): the bear goes, once
-    /// it has been there five seconds from the app's start. A timing run doesn't wait;
+    /// it has been there three seconds from the app's start. A timing run doesn't wait;
     /// `MUSICORG_BEAR_SECONDS` holds it longer, for a picture of what's under it.
     private func bearMayGo() {
         guard showingBear, bearGoing == nil else { return }

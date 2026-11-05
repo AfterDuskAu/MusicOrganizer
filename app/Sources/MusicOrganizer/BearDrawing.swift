@@ -89,48 +89,6 @@ enum BearDrawing {
         drawPaw(in: held, x: 183.5, inward: -1)
     }
 
-    // MARK: one part at a time
-
-    /// The bear's parts, each drawn on its own and still, for the loading screen to move
-    /// each in the window server (`BearLayers`): the same shapes as above.
-    enum Part: CaseIterable {
-        case body, leftEar, rightEar, head, eyes, lids, ticket, sheen, disc, leftPaw, rightPaw
-    }
-
-    /// Where a part is, in the picture's points, with room for its shadow or softness.
-    static func area(of part: Part) -> CGRect {
-        switch part {
-        case .body: CGRect(x: 50, y: 155, width: 156, height: 166)
-        case .leftEar: CGRect(x: 60, y: 38, width: 48, height: 48)
-        case .rightEar: CGRect(x: 148, y: 38, width: 48, height: 48)
-        case .head: CGRect(x: 60, y: 42, width: 136, height: 118)
-        case .eyes, .lids: CGRect(x: 94, y: 86, width: 68, height: 20)
-        case .ticket: CGRect(x: 62, y: 140, width: 132, height: 100)
-        case .sheen: CGRect(x: ticketTile.minX - 30, y: ticketTile.minY, width: 52, height: ticketTile.height)
-        case .disc: CGRect(x: 104, y: 164, width: 48, height: 50)
-        case .leftPaw: CGRect(x: 53, y: 167, width: 40, height: 48)
-        case .rightPaw: CGRect(x: 163, y: 167, width: 40, height: 48)
-        }
-    }
-
-    /// One part, still, in the picture's points: the eyes open, the lids shut, the sheen
-    /// at the start of its pass.
-    static func draw(_ part: Part, in context: GraphicsContext) {
-        switch part {
-        case .body: drawBody(in: context)
-        case .leftEar: drawEar(in: context, x: 84, inner: 82, tilt: 0)
-        case .rightEar: drawEar(in: context, x: 172, inner: 174, tilt: 0)
-        case .head: drawFace(in: context)
-        case .eyes: for x in [105.0, 151.0] { drawEye(in: context, x: x, look: .zero, blink: 0) }
-        case .lids: for x in [105.0, 151.0] { drawEye(in: context, x: x, look: .zero, blink: 1) }
-        case .ticket: drawTicket(in: context)
-        case .sheen: drawBand(in: context, at: area(of: .sheen).minX + 30)
-        case .disc: drawPlayButton(in: context, centre: discCentre, spin: 0)
-        case .leftPaw: drawPaw(in: context, x: 72.5, inward: 1)
-        case .rightPaw: drawPaw(in: context, x: 183.5, inward: -1)
-        }
-    }
-
     // MARK: the parts
 
     private static func drawBody(in context: GraphicsContext) {
@@ -319,7 +277,8 @@ enum BearDrawing {
 }
 
 /// The bear on its night sky with its stars, alive, filling whatever room it's given:
-/// Bear Media's loading screen. The sky's colours can be another app's own. Given a
+/// Bear Media's loading screen until 2026-11-05 (now a film: `OpeningFilm`), and the
+/// icon's picture still. The sky's colours can be another app's own. Given a
 /// `moment`, it's that moment only, not moving (a picture of it); `still` is the logo.
 struct BearScene: View {
     var skyTop = BearDrawing.skyTop

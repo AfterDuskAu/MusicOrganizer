@@ -7,10 +7,10 @@ struct RootView: View {
     var body: some View {
         ZStack {
             page
-            // The bear, while the app gets ready (the owner, 2026-10-17); the page is made
-            // under it, so it's there the moment the bear fades.
+            // The loading film, while the app gets ready (the owner, 2026-10-17; the film
+            // since 2026-11-05); the page is made under it, so it's there the moment it fades.
             if model.showingBear {
-                BearLayerScene()
+                OpeningFilm()
                     .ignoresSafeArea()  // under the title bar too: the whole window is sky
                     .overlay(alignment: .bottom) { BearNote() }
                     .transition(.opacity)
