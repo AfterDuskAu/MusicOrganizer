@@ -370,6 +370,8 @@ public struct CalendarEntry: Identifiable, Hashable, Sendable {
     public let episodeId: String?
     /// A channel's video, to play it.
     public let video: VideoHit?
+    /// A film or series from TMDB, on the calendar's General (2026-11-05), to open its page.
+    public var release: TMDBRelease?
 
     /// Every episode of a series that has a time, each on its day.
     public static func episodes(
@@ -395,6 +397,19 @@ public struct CalendarEntry: Identifiable, Hashable, Sendable {
                 id: "video|\(video.videoId)", day: String(published.prefix(10)), when: nil,
                 title: video.title, detail: video.channel ?? "", picture: video.thumbnail,
                 series: nil, episodeId: nil, video: video)
+        }
+    }
+
+    /// The month's releases from TMDB (the calendar's General, 2026-11-05), each on its day:
+    /// "Film" or "New series" under its name.
+    public static func releases(_ found: [TMDBRelease]) -> [CalendarEntry] {
+        found.map { one in
+            var entry = CalendarEntry(
+                id: "tmdb|\(one.type)|\(one.id)", day: one.day, when: nil, title: one.name,
+                detail: one.type == "series" ? "New series" : "Film", picture: one.poster, series: nil,
+                episodeId: nil, video: nil)
+            entry.release = one
+            return entry
         }
     }
 

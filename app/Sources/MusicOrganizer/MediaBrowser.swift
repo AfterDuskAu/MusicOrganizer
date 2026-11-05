@@ -65,7 +65,13 @@ final class MediaList {
         if both { asked["also"] = [also] }
         let answer: Result<CatalogAnswer, Error>
         do {
-            answer = .success(try await model.ask("addon.catalog", asked, as: CatalogAnswer.self))
+            if TMDB.isTMDB(addon) {
+                // One of TMDB's lists (2026-11-05): a page at a time, no genre.
+                let page: [String: Any] = ["type": catalog.type, "list": catalog.id, "skip": adding ? cursor : 0]
+                answer = .success(try await model.ask("tmdb.catalog", page, as: CatalogAnswer.self))
+            } else {
+                answer = .success(try await model.ask("addon.catalog", asked, as: CatalogAnswer.self))
+            }
         } catch {
             answer = .failure(error)
         }
@@ -155,6 +161,8 @@ final class MediaBrowser {
     let anime = MediaList()
     /// The lists of add-ons for adults only: one Finder's, and nothing else's.
     let adult = MediaList()
+    /// The computer has a TMDB key: its lists are offered with the plugins' (2026-11-05).
+    var tmdb = false
 
     /// Another profile is in use now: its add-ons are read afresh (a child's profile
     /// isn't given the ones for adults only), and nothing the last one had open stays.
@@ -192,9 +200,12 @@ final class MediaBrowser {
     /// Never from an add-on for adults only: those lists are kept to their own Finder
     /// (`adultCatalogs`), out of Home and every other page.
     func catalogs(of type: String) -> [(addon: Addon, catalog: Addon.Catalog)] {
-        addons.filter { !$0.isAdult }.flatMap { addon in
+        let plugins = addons.filter { !$0.isAdult }.flatMap { addon in
             addon.catalogs.filter { $0.type == type && $0.canBeBrowsed }.map { (addon, $0) }
         }
+        // TMDB's Popular, Top Rated and Upcoming, after the plugins' lists.
+        guard tmdb, !plugins.isEmpty else { return plugins }
+        return plugins + TMDB.addon.catalogs.filter { $0.type == type }.map { (TMDB.addon, $0) }
     }
 
     /// Every list, of whatever kind, from the add-ons for adults only.

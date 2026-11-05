@@ -20,6 +20,10 @@ public struct Profile: Codable, Identifiable, Equatable, Sendable {
     public var isChild: Bool
     /// In a child's profile: a song with no clean version may be shown as it is.
     public var allowsExplicit: Bool
+    /// In a child's profile (2026-11-05): the Australian ratings its films and series may
+    /// have (`AustralianRating`), or nil for any. Kept to these, a title with no rating known
+    /// isn't shown. Needs the computer's TMDB key; without it nothing is kept out.
+    public var allowedRatings: [String]?
 
     public init(
         id: String, name: String, libraryRoot: String? = nil, isNew: Bool = false,
@@ -31,10 +35,17 @@ public struct Profile: Codable, Identifiable, Equatable, Sendable {
         self.isNew = isNew
         self.isChild = isChild
         self.allowsExplicit = allowsExplicit
+        self.allowedRatings = nil
+    }
+
+    /// The ratings a child's profile is kept to, or nil when it isn't kept to any.
+    public var ratingsKept: Set<String>? {
+        guard isChild, let allowedRatings else { return nil }
+        return Set(allowedRatings)
     }
 
     private enum Keys: String, CodingKey {
-        case id, name, libraryRoot, isNew, isChild, allowsExplicit
+        case id, name, libraryRoot, isNew, isChild, allowsExplicit, allowedRatings
     }
 
     /// A list saved before there was a child's mark reads as nobody's being a child's.
@@ -46,6 +57,7 @@ public struct Profile: Codable, Identifiable, Equatable, Sendable {
         isNew = try saved.decodeIfPresent(Bool.self, forKey: .isNew) ?? false
         isChild = try saved.decodeIfPresent(Bool.self, forKey: .isChild) ?? false
         allowsExplicit = try saved.decodeIfPresent(Bool.self, forKey: .allowsExplicit) ?? false
+        allowedRatings = try saved.decodeIfPresent([String].self, forKey: .allowedRatings)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -56,6 +68,7 @@ public struct Profile: Codable, Identifiable, Equatable, Sendable {
         try saved.encode(isNew, forKey: .isNew)
         try saved.encode(isChild, forKey: .isChild)
         try saved.encode(allowsExplicit, forKey: .allowsExplicit)
+        try saved.encodeIfPresent(allowedRatings, forKey: .allowedRatings)
     }
 }
 
@@ -155,6 +168,22 @@ public struct ProfileList: Codable, Equatable, Sendable {
     public mutating func setAllowsExplicit(_ id: String, _ allows: Bool) {
         guard let index = profiles.firstIndex(where: { $0.id == id }) else { return }
         profiles[index].allowsExplicit = allows
+    }
+
+    /// A rating ticked for a child's profile, or unticked (2026-11-05). The first one ticked
+    /// keeps the profile to it; unticking the last leaves it kept to none, so any rating.
+    public mutating func setRating(_ id: String, _ rating: String, allowed: Bool) {
+        guard let index = profiles.firstIndex(where: { $0.id == id }), AustralianRating.offered.contains(rating)
+        else { return }
+        var kept = Set(profiles[index].allowedRatings ?? [])
+        if allowed { kept.insert(rating) } else { kept.remove(rating) }
+        profiles[index].allowedRatings = kept.isEmpty ? nil : AustralianRating.offered.filter(kept.contains)
+    }
+
+    /// A child's profile shown any rating again.
+    public mutating func allowAnyRating(_ id: String) {
+        guard let index = profiles.firstIndex(where: { $0.id == id }) else { return }
+        profiles[index].allowedRatings = nil
     }
 
     public mutating func switchTo(_ id: String) {

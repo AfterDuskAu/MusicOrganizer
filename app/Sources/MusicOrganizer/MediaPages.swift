@@ -120,30 +120,56 @@ struct MediaCard: View {
     }
 }
 
-/// A grid of films or channels, with the list's own messages and Show More.
+/// A grid of films or channels, with the list's own messages and Show More. With `keep`,
+/// only what it keeps is shown (TMDB's original language, a child's ratings: 2026-11-05),
+/// and while none of what's come is kept, more of the list is asked for by itself.
 struct MediaGrid: View {
     let list: MediaList
     let width: CGFloat
+    var keep: ((MediaItem) -> Bool)?
+    /// TMDB hasn't answered for some of the list yet: `keep` can't say.
+    var waiting = false
+    /// Said when nothing of the list is kept.
+    var noneKept = ""
     let open: (MediaItem) -> Void
     let showMore: () -> Void
 
     var body: some View {
+        let items = keep.map { list.items.filter($0) } ?? list.items
         if let problem = list.problem, list.items.isEmpty {
             Text(problem)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if list.items.isEmpty {
             ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if items.isEmpty {
+            if waiting || list.working || list.more {
+                VStack(spacing: 10) {
+                    ProgressView()
+                    Text("Looking through the list…").foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                // Nothing kept of what's come: the next page, once TMDB has answered.
+                .task(id: "\(list.items.count)|\(waiting)") {
+                    if !waiting, list.more, !list.working { showMore() }
+                }
+            } else {
+                Text(noneKept)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(40)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
         } else {
             ScrollView {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: width), spacing: 22)], spacing: 22) {
-                    ForEach(list.items) { item in
+                    ForEach(items) { item in
                         Button { open(item) } label: { MediaCard(item: item) }
                             .buttonStyle(.plain)
                     }
                 }
                 .padding(20)
-                if list.working {
+                if list.working || waiting {
                     ProgressView().padding(.bottom, 20)
                 } else if list.more {
                     Button("Show More", action: showMore).padding(.bottom, 20)
@@ -698,6 +724,8 @@ struct MovieFinderView: View {
     @AppStorage private var genre: String
     /// A second genre: only films tagged with both are listed.
     @AppStorage private var also: String
+    /// Settings → Plugins → TMDB's original language: "" for all.
+    @AppStorage(OriginalLanguage.key) private var originalLanguage = OriginalLanguage.all
 
     init(kind: String) {
         self.kind = kind
@@ -899,15 +927,7 @@ struct MovieFinderView: View {
                                 : "Nothing on your Watchlist yet. Open \(isSeries ? "a series" : "a movie") "
                                     + "and click Add to Watchlist.")
                     } else {
-                        // What's opened from a list of anime is marked as anime, so that what's
-                        // kept of it goes in the Movies folder's Anime folder.
-                        MediaGrid(list: list, width: 140, open: { opened = isAnime ? $0.asAnime : $0 }) {
-                            Task {
-                                await list.load(
-                                    model, addon: chosen.addon, catalog: chosen.catalog, genre: wanted,
-                                    search: search, also: second, adding: true)
-                            }
-                        }
+                        filmGrid(list, chosen, genre: wanted, also: second)
                         .task(id: "\(Self.key(chosen))|\(wanted ?? "")|\(search)|\(second)|\(everywhere)") {
                             if everywhere {
                                 await list.search(model, type: chosen.catalog.type, words: search)
@@ -980,6 +1000,41 @@ struct MovieFinderView: View {
             }
         }
         .task(id: model.phase) { await media.load(model) }
+    }
+
+    /// The list's cards. What's opened from a list of anime is marked as anime, so that
+    /// what's kept of it goes in the Movies folder's Anime folder. With a TMDB key, Movie
+    /// Finder and Series Finder show only what was first made in the language chosen in
+    /// Settings (2026-11-05), and a child's profile only what's rated as it's allowed; what
+    /// TMDB hasn't said is asked for as the list shows it.
+    private func filmGrid(
+        _ list: MediaList, _ chosen: (addon: Addon, catalog: Addon.Catalog), genre: String?, also: String
+    ) -> some View {
+        let rules = model.titleRules(language: originalLanguage)
+        let languageToo = !apart
+        let filtering = !isAdult && !rules.wanted(languageToo: languageToo).isEmpty
+        let titles = model.titles
+        let keep: ((MediaItem) -> Bool)? = filtering ? { titles.shows($0, rules, languageToo: languageToo) } : nil
+        let waiting = filtering && titles.isWaiting(list.items, rules, languageToo: languageToo)
+        let none =
+            titles.trouble.map { "\($0) What TMDB hasn't said is left out." }
+            ?? (rules.ratings != nil
+                ? "Nothing here is rated for this profile."
+                : "Nothing here was first made in \(OriginalLanguage.name(rules.language)), as TMDB has it. "
+                    + "The choice is in Settings → Plugins → TMDB.")
+        return MediaGrid(
+            list: list, width: 140, keep: keep, waiting: waiting, noneKept: none,
+            open: { opened = isAnime ? $0.asAnime : $0 }
+        ) {
+            Task {
+                await list.load(
+                    model, addon: chosen.addon, catalog: chosen.catalog, genre: genre, search: search, also: also,
+                    adding: true)
+            }
+        }
+        .task(id: "\(list.items.count)|\(rules.wanted(languageToo: languageToo))") {
+            if filtering { titles.look(list.items, rules, languageToo: languageToo, model: model) }
+        }
     }
 
     /// A list chosen in the list menu, `shown` being the one showing: the search is put
@@ -1089,6 +1144,10 @@ struct MovieView: View {
     /// A series: the season showing, and the episode whose ways to play are showing.
     @State private var season: Int?
     @State private var episode: MediaDetails.Video?
+    /// From TMDB, with the computer's key (2026-11-05): the cast's photos, a film's money.
+    @State private var extras: TMDBDetails?
+    /// Someone from the cast whose page is open over this one.
+    @State private var person: TMDBCast?
 
     private var isSeries: Bool { film.type == "series" }
     /// What's played or kept: the film, or the episode chosen ("East of Eden S01E02").
@@ -1153,8 +1212,13 @@ struct MovieView: View {
                         }
                     }
                     .font(.title3.weight(.semibold))
+                    money
                     chips("Genres", details?.genres ?? film.genres)
-                    chips("Cast", details?.cast ?? [])
+                    if let cast = extras?.cast, !cast.isEmpty {
+                        CastRow(cast: cast) { person = $0 }
+                    } else {
+                        chips("Cast", details?.cast ?? [])
+                    }
                     chips("Directors", details?.directors ?? [])
                     if let summary = details?.description {
                         part("Summary") { Text(summary).frame(maxWidth: 760, alignment: .leading) }
@@ -1174,8 +1238,19 @@ struct MovieView: View {
                 .padding(32)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .opacity(person == nil ? 1 : 0)
+            .allowsHitTesting(person == nil)
+            if let person {
+                PersonView(cast: person) { self.person = nil }
+                    .id(person.personId)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .task(id: "\(film.id)|\(model.tmdbHasKey)") {
+            // A plugin for adults is never asked about, and nor is TMDB for its titles.
+            guard model.tmdbHasKey, !apart else { return }
+            extras = try? await model.ask("tmdb.details", ["type": film.type, "id": film.id], as: TMDBDetails.self)
+        }
         .background {
             Color.black
                 .overlay {
@@ -1207,6 +1282,20 @@ struct MovieView: View {
             } else {
                 streams = try? await model.ask("addon.streams", asked, as: StreamsAnswer.self)
             }
+        }
+    }
+
+    /// A film's budget and revenue from TMDB, in US dollars, where it knows them.
+    @ViewBuilder
+    private var money: some View {
+        if extras?.budget != nil || extras?.revenue != nil {
+            HStack(spacing: 28) {
+                if let budget = extras?.budget { Text("Budget \(Money.dollars(budget))") }
+                if let revenue = extras?.revenue { Text("Revenue \(Money.dollars(revenue))") }
+            }
+            .font(.callout.weight(.medium))
+            .foregroundStyle(.secondary)
+            .help("From TMDB, in US dollars")
         }
     }
 

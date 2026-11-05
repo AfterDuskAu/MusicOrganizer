@@ -43,7 +43,7 @@ struct SettingsView: View {
         ]),
         Group(id: "player", title: "Player", parts: [Part(id: "play")]),
         Group(id: "plugins", title: "Plugins", parts: [
-            Part(id: "addons"), Part(id: "downloads", title: "Downloads"),
+            Part(id: "addons"), Part(id: "tmdb", title: "TMDB"), Part(id: "downloads", title: "Downloads"),
         ]),
         Group(id: "sync", title: "Sync", parts: [Part(id: "sharing"), Part(id: "lyrics", title: "Lyrics")]),
         Group(id: "general", title: "General", parts: [
@@ -246,6 +246,7 @@ private struct SettingsPart: View {
         case "lyrics": LyricsSettings()
         case "sharing": SharingSettings()
         case "addons": AddonSettings()
+        case "tmdb": TMDBSettings()
         case "deleted": DeletedItemsSettings()
         case "moving": MovingSettings()
         case "look":
@@ -1004,6 +1005,27 @@ private struct ProfileSettingsTab: View {
                             isOn: Binding(
                                 get: { profile.allowsExplicit },
                                 set: { model.setAllowsExplicit(profile.id, $0) }))
+                        // Films and series kept to some Australian ratings (2026-11-05).
+                        Menu("Films and Series Rated") {
+                            Toggle(
+                                "Any Rating",
+                                isOn: Binding(
+                                    get: { profile.allowedRatings == nil },
+                                    set: { if $0 { model.allowAnyRating(profile.id) } }))
+                            Divider()
+                            ForEach(AustralianRating.offered, id: \.self) { rating in
+                                Toggle(
+                                    "\(rating) · \(AustralianRating.about(rating))",
+                                    isOn: Binding(
+                                        get: { profile.allowedRatings?.contains(rating) == true },
+                                        set: { model.setRating(profile.id, rating, allowed: $0) }))
+                            }
+                            Divider()
+                            Text(
+                                model.tmdbHasKey
+                                    ? "A title with no Australian rating known isn't shown."
+                                    : "Needs a TMDB key: Settings → Plugins → TMDB.")
+                        }
                     }
                     Button("Remove from the List…") { removing = profile }
                         .disabled(inUse || model.profiles.profiles.count < 2)
@@ -1018,7 +1040,7 @@ private struct ProfileSettingsTab: View {
             HStack(spacing: 6) {
                 Text(profile.name).fontWeight(inUse ? .semibold : .regular)
                 if profile.isChild {
-                    Text("Child")
+                    Text(profile.allowedRatings.map { "Child · \(AustralianRating.shown(Set($0)))" } ?? "Child")
                         .font(.caption.weight(.medium))
                         .padding(.horizontal, 6)
                         .padding(.vertical, 1)

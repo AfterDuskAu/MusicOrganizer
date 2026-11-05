@@ -451,7 +451,13 @@ private struct HomeRow: View {
             // genres, closest to their taste first, without what they've seen or listed.
             let list = lists.list(section.id)
             let seen = isRecommended ? Set(taste.map(\.id)) : []
-            let items = seen.isEmpty ? list.items : list.items.filter { !seen.contains($0.id) }
+            // In a child's profile kept to some ratings (2026-11-05), only what's rated so.
+            let rules = model.titleRules(language: OriginalLanguage.all)
+            let rated = rules.ratings != nil
+            let items = list.items.filter {
+                !seen.contains($0.id)
+                    && (!rated || $0.type == "channel" || model.titles.shows($0, rules, languageToo: false))
+            }
             if isRecommended, recommending == nil {
                 note(
                     model.media.loaded
@@ -459,13 +465,22 @@ private struct HomeRow: View {
                             + "suggestions like them show up here."
                         : "Loading…")
             } else if items.isEmpty {
-                note(list.problem ?? "Loading…")
+                note(
+                    list.problem
+                        ?? (rated && !list.items.isEmpty && !model.titles.isWaiting(list.items, rules, languageToo: false)
+                            ? "Nothing here is rated for this profile." : "Loading…"))
+                    .task(id: "\(list.items.count)|\(rated)") {
+                        if rated { model.titles.look(list.items, rules, languageToo: false, model: model) }
+                    }
             } else {
                 PagedCards(
                     items: items, width: 122, height: 250, canLoadMore: list.more,
                     loadingMore: list.working, loadMore: { Task { await load(adding: true) } },
                     open: { model.open(isAnime ? $0.asAnime : $0) }
                 ) { filmCard($0) }
+                .task(id: "\(list.items.count)|\(rated)") {
+                    if rated { model.titles.look(list.items, rules, languageToo: false, model: model) }
+                }
             }
         }
     }

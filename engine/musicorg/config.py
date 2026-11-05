@@ -317,17 +317,64 @@ def accounts_path() -> Path:
     return app_dirs().config / ACCOUNTS_FILE_NAME
 
 
-def _all_accounts() -> dict[str, dict[str, Any]]:
-    """Every profile's sign-ins. A missing or damaged file reads as none: the owner
-    just signs in again."""
+def _accounts_file() -> dict[str, Any]:
+    """The whole of accounts.json. A missing or damaged file reads as empty."""
     try:
         loaded = json.loads(accounts_path().read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {}
-    profiles = loaded.get("profiles") if isinstance(loaded, dict) else None
+    return loaded if isinstance(loaded, dict) else {}
+
+
+def _all_accounts() -> dict[str, dict[str, Any]]:
+    """Every profile's sign-ins. A missing or damaged file reads as none: the owner
+    just signs in again."""
+    profiles = _accounts_file().get("profiles")
     if not isinstance(profiles, dict):
         return {}
     return {k: dict(v) for k, v in profiles.items() if isinstance(k, str) and isinstance(v, dict)}
+
+
+def _computer_accounts() -> dict[str, dict[str, Any]]:
+    """The computer's own keys, the same whichever profile is open (2026-11-05: TMDB's)."""
+    computer = _accounts_file().get("computer")
+    if not isinstance(computer, dict):
+        return {}
+    return {k: dict(v) for k, v in computer.items() if isinstance(k, str) and isinstance(v, dict)}
+
+
+def _write_accounts(profiles: dict[str, Any], computer: dict[str, Any]) -> None:
+    """accounts.json written whole: every profile's sign-ins and the computer's keys.
+    Atomically, and readable by this user only (the temp file it's written through is
+    made that way)."""
+    path = accounts_path()
+    ensure_app_dir(path.parent)
+    whole: dict[str, Any] = {"profiles": profiles}
+    if computer:
+        whole["computer"] = computer
+    text = json.dumps(whole, indent=2, ensure_ascii=False) + "\n"
+    try:
+        _write_atomic(path, text)
+    except OSError as exc:
+        raise ConfigError(
+            f"Couldn't save the sign-in on this computer: {exc.strerror or exc}."
+        ) from exc
+
+
+def load_computer_account(service: str) -> dict[str, Any]:
+    """One of the computer's own keys (`service`), or empty: a key that belongs to the
+    Mac rather than a person, so every profile (a child's too) is served by it."""
+    return _computer_accounts().get(service) or {}
+
+
+def save_computer_account(service: str, account: dict[str, Any] | None) -> None:
+    """Save one of the computer's own keys, or remove it (`None`)."""
+    computer = _computer_accounts()
+    if account is None:
+        computer.pop(service, None)
+    else:
+        computer[service] = dict(account)
+    _write_accounts(_all_accounts(), computer)
 
 
 def load_accounts() -> dict[str, dict[str, Any]]:
@@ -351,15 +398,7 @@ def save_account(service: str, account: dict[str, Any] | None) -> None:
         everyone[current_profile()] = mine
     else:
         everyone.pop(current_profile(), None)
-    path = accounts_path()
-    ensure_app_dir(path.parent)
-    text = json.dumps({"profiles": everyone}, indent=2, ensure_ascii=False) + "\n"
-    try:
-        _write_atomic(path, text)
-    except OSError as exc:
-        raise ConfigError(
-            f"Couldn't save the sign-in on this computer: {exc.strerror or exc}."
-        ) from exc
+    _write_accounts(everyone, _computer_accounts())
 
 
 # ---- devices paired for sharing (2026-10-04) -----------------------------------------------

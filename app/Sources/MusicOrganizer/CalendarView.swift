@@ -13,13 +13,36 @@ struct CalendarView: View {
     @State private var month = MonthGrid(containing: Date())
     /// Every episode of the owner's series, by day: laid out again when more are read.
     @State private var episodes: [String: [CalendarEntry]] = [:]
+    /// "watchlisted" (the owner's series and channels, as before) or "general" (2026-11-05:
+    /// everything coming out, from TMDB, with the computer's key).
+    @AppStorage("calendarShows") private var shows = "watchlisted"
+    /// TMDB's releases, by month ("2026-11"), and why a month's couldn't be had.
+    @State private var releases: [String: [TMDBRelease]] = [:]
+    @State private var releasesProblem: String?
+
+    private var general: Bool { shows == "general" && model.tmdbHasKey }
+    private var monthKey: String { String(format: "%04d-%02d", month.year, month.month) }
 
     var body: some View {
-        let uploads = CalendarEntry.byDay(CalendarEntry.uploads(model.calendarUploads))
+        let uploads = general ? [:] : CalendarEntry.byDay(CalendarEntry.uploads(model.calendarUploads))
         let today = CalendarEntry.day(of: Date())
+        let shown = general ? generalDays : episodes
         VStack(spacing: 0) {
+            if model.tmdbHasKey {
+                Picker("Show", selection: $shows) {
+                    Text("Watchlisted").tag("watchlisted")
+                    Text("General").tag("general")
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .fixedSize()
+                .padding(.top, 12)
+                .help("Watchlisted: your series and channels. General: every film coming out in Australia, and new series, from TMDB.")
+            }
             header
-            if model.ownSeries.isEmpty, model.followedChannels.isEmpty {
+            if general, let releasesProblem {
+                Text(releasesProblem).foregroundStyle(.secondary).padding(.bottom, 10)
+            } else if !general, model.ownSeries.isEmpty, model.followedChannels.isEmpty {
                 Text(
                     "Give a series a heart, put one on your Watchlist, or follow a channel, and its new "
                         + "episodes and videos show here on the day they come out.")
@@ -43,7 +66,7 @@ struct CalendarView: View {
                             let day = number.map(month.day)
                             DayCell(
                                 number: number, isToday: day == today,
-                                entries: day.map { (episodes[$0] ?? []) + (uploads[$0] ?? []) } ?? [],
+                                entries: day.map { (shown[$0] ?? []) + (uploads[$0] ?? []) } ?? [],
                                 open: open)
                         }
                     }
@@ -54,6 +77,7 @@ struct CalendarView: View {
         .padding(.horizontal, 12)
         .padding(.bottom, 12)
         .task(id: model.seriesRead) { await layOut() }
+        .task(id: "\(monthKey)|\(general)") { if general { await readReleases() } }
         .task { await model.readSeries(model.ownSeries, episodes: true) }
         .task(id: model.followedChannels.map(\.channelId)) { await model.readUploads() }
     }
@@ -76,7 +100,7 @@ struct CalendarView: View {
             .onTapGesture(count: 2) { month = MonthGrid(containing: Date()) }
             .help("Double-click for this month")
             Spacer()
-            if model.readingSeries || model.readingUploads {
+            if model.readingSeries || model.readingUploads || (general && releases[monthKey] == nil && releasesProblem == nil) {
                 ProgressView().controlSize(.small)
                     .help("Looking at your series and channels")
             }
@@ -109,8 +133,36 @@ struct CalendarView: View {
         episodes = laid
     }
 
+    /// The month's releases from TMDB, each on its day; in a child's profile kept to some
+    /// ratings, only those rated so.
+    private var generalDays: [String: [CalendarEntry]] {
+        let rules = model.titleRules(language: OriginalLanguage.all)
+        let found = (releases[monthKey] ?? []).filter { model.titles.shows($0.item, rules, languageToo: false) }
+        return CalendarEntry.byDay(CalendarEntry.releases(found))
+    }
+
+    private func readReleases() async {
+        let key = monthKey
+        // Another month's trouble isn't this one's.
+        releasesProblem = nil
+        guard releases[key] == nil else { return }
+        do {
+            let found = try await model.ask(
+                "tmdb.calendar", ["year": month.year, "month": month.month], as: TMDBReleases.self
+            ).releases
+            releases[key] = found
+            releasesProblem = nil
+            let rules = model.titleRules(language: OriginalLanguage.all)
+            model.titles.look(found.map(\.item), rules, languageToo: false, model: model)
+        } catch {
+            releasesProblem = error.localizedDescription
+        }
+    }
+
     private func open(_ entry: CalendarEntry) {
-        if let series = entry.series, let episode = entry.episodeId {
+        if let release = entry.release {
+            Task { await model.openFromTMDB(release.item) }
+        } else if let series = entry.series, let episode = entry.episodeId {
             model.openEpisode(episode, of: series)
         } else if let video = entry.video {
             model.playVideos([video.result], startAt: 0, channels: VideoHit.channels(of: [video]))
@@ -129,6 +181,8 @@ private struct DayCell: View {
     @State private var showsAll = false
 
     private static let rowHeight: CGFloat = 36
+    /// The "+n more" line under the rows: smaller than a row.
+    private static let moreHeight: CGFloat = 18
 
     var body: some View {
         Rectangle()
@@ -137,7 +191,9 @@ private struct DayCell: View {
                 if let number {
                     GeometryReader { room in
                         let fits = max(Int((room.size.height - 44) / Self.rowHeight), 0)
-                        let shown = entries.count > fits ? max(fits - 1, 0) : entries.count
+                        // With more than fit, as many as leave room for the "+n more" line.
+                        let fitsWithMore = max(Int((room.size.height - 44 - Self.moreHeight) / Self.rowHeight), 0)
+                        let shown = entries.count > fits ? fitsWithMore : entries.count
                         VStack(alignment: .leading, spacing: 4) {
                             Text("\(number)")
                                 .font(.title3)
@@ -209,6 +265,8 @@ private struct EntryRow: View {
         .buttonStyle(.plain)
         .help(
             "\(entry.title) · \(entry.detail)"
-                + (isVideo ? ". Click to play it." : ". Click to open it on the series' page."))
+                + (isVideo
+                    ? ". Click to play it."
+                    : entry.release != nil ? ". Click to open its page." : ". Click to open it on the series' page."))
     }
 }

@@ -2274,6 +2274,74 @@ final class AppModel {
         }
     }
 
+    // MARK: TMDB (2026-11-05)
+
+    /// Whether the computer has a TMDB key (Settings → Plugins → TMDB). Without one,
+    /// everything is as it was before TMDB: no TMDB list, no filter, no cast's photos.
+    private(set) var tmdbHasKey = false {
+        didSet { media.tmdb = tmdbHasKey }
+    }
+    /// What TMDB said of the titles the pages list.
+    let titles = TitleFilter()
+
+    /// What a page shows of its titles: by the original language chosen (Movie Finder and
+    /// Series Finder), and in a child's profile by the ratings allowed. Nothing, without a key.
+    func titleRules(language: String) -> TitleRules {
+        guard tmdbHasKey else { return TitleRules() }
+        return TitleRules(language: language, ratings: profiles.current.ratingsKept)
+    }
+
+    /// Whether the computer has a TMDB key: asked each time the engine opens.
+    func readTMDB() async {
+        tmdbHasKey = (try? await ask("tmdb.status", [:], as: TMDBStatus.self))?.hasKey ?? false
+    }
+
+    /// Save the owner's TMDB key, once TMDB has taken it. Nil when it's saved; else why not.
+    func connectTMDB(_ key: String) async -> String? {
+        do {
+            tmdbHasKey = try await ask("tmdb.connect", ["key": key], as: TMDBStatus.self).hasKey
+            return nil
+        } catch {
+            return error.localizedDescription
+        }
+    }
+
+    func forgetTMDB() async {
+        tmdbHasKey = (try? await ask("tmdb.forget", [:], as: TMDBStatus.self))?.hasKey ?? false
+    }
+
+    /// A rating ticked, or unticked, for a child's profile.
+    func setRating(_ id: String, _ rating: String, allowed: Bool) {
+        profiles.setRating(id, rating, allowed: allowed)
+        saveProfiles()
+    }
+
+    func allowAnyRating(_ id: String) {
+        profiles.allowAnyRating(id)
+        saveProfiles()
+    }
+
+    /// A title TMDB gave by its own id ("tmdb:550": a person's film, the calendar's General)
+    /// opened on its page in its Finder, by its IMDb id, which the plugins know it by.
+    func openFromTMDB(_ item: MediaItem) async {
+        if item.id.hasPrefix("tt") {
+            open(item)
+            return
+        }
+        do {
+            let found = try await ask("tmdb.imdb", ["type": item.type, "id": item.id], as: TMDBOpened.self)
+            guard let id = found.id else {
+                notice = "TMDB doesn't know \(item.name) by the id the plugins use, so its page can't be opened."
+                return
+            }
+            open(MediaItem(
+                id: id, type: item.type, name: item.name, poster: item.poster, posterShape: item.posterShape,
+                year: item.year, rating: item.rating, genres: item.genres))
+        } catch {
+            notice = error.localizedDescription
+        }
+    }
+
     /// The Mac's own Music folder, where a new profile's library goes.
     static var musicFolder: String? {
         FileManager.default.urls(for: .musicDirectory, in: .userDomainMask).first?.path
@@ -2394,6 +2462,7 @@ final class AppModel {
             // Before anything is looked up: a child's profile finds only clean songs.
             await applyKids()
             Bench.mark("the profile's kind was told")
+            await readTMDB()
             await loadFollowedChannels()
             Bench.mark("the followed channels were read")
             try await load()

@@ -75,6 +75,7 @@ from musicorg import (
     state,
     status,
     tags,
+    tmdb,
     torrents,
     transfer,
     videolyrics,
@@ -137,7 +138,10 @@ SLOW_METHODS = frozenset(
      "media.convert", "torrent.stop_keeping",  # reads the film with ffprobe first
      "page.videos",  # reads a web page (2026-10-17)
      "media.move",  # to another drive, a film is copied
-     "profile.contents", "profile.import"}  # walk the library; a dry run reads every tag
+     "profile.contents", "profile.import",  # walk the library; a dry run reads every tag
+     # TMDB (2026-11-05): a question for each title asked about, four at a time.
+     "tmdb.connect", "tmdb.facts", "tmdb.catalog", "tmdb.details", "tmdb.person", "tmdb.imdb",
+     "tmdb.calendar"}
 )  # fmt: skip
 MAX_EXCLUDE = 5000  # songs already on screen that Show More leaves out
 RPC_DECISIONS = ("accept", "candidate", "url", "only_copy", "skip", "reject")
@@ -437,6 +441,15 @@ class Server:
             "watching.set": self.watching_set,
             "watching.sent": self.watching_sent,
             "watching.done": self.watching_done,
+            "tmdb.status": self.tmdb_status,
+            "tmdb.connect": self.tmdb_connect,
+            "tmdb.forget": self.tmdb_forget,
+            "tmdb.facts": self.tmdb_facts,
+            "tmdb.catalog": self.tmdb_catalog,
+            "tmdb.details": self.tmdb_details,
+            "tmdb.person": self.tmdb_person,
+            "tmdb.imdb": self.tmdb_imdb,
+            "tmdb.calendar": self.tmdb_calendar,
         }
 
     # -- the loop --
@@ -1553,6 +1566,44 @@ class Server:
         if self._fetcher is not None:
             self._fetcher.stop(which)
         return {}
+
+    # -- methods: TMDB, with the owner's own key (2026-11-05) --
+
+    def tmdb_status(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Whether a TMDB key is saved for this computer. Never the key."""
+        return tmdb.status()
+
+    def tmdb_connect(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Save the owner's TMDB key, once TMDB has accepted it."""
+        return tmdb.connect(need(params, "key", str))
+
+    def tmdb_forget(self, params: dict[str, Any]) -> dict[str, Any]:
+        return tmdb.forget()
+
+    def tmdb_facts(self, params: dict[str, Any]) -> dict[str, Any]:
+        titles = need(params, "titles", list)
+        wanted = [w for w in want(params, "want", list, ["language"]) or [] if isinstance(w, str)]
+        found = tmdb.facts([t for t in titles if isinstance(t, dict)], wanted)
+        # A list, not a dictionary by id: an id is never a JSON key the app might rewrite.
+        return {"facts": [{"id": title_id, **said} for title_id, said in found.items()]}
+
+    def tmdb_catalog(self, params: dict[str, Any]) -> dict[str, Any]:
+        skip = want(params, "skip", int, 0) or 0
+        if skip < 0:
+            raise RpcError(INVALID_PARAMS, "skip can't be less than 0.")
+        return tmdb.catalog(need(params, "type", str), need(params, "list", str), skip)
+
+    def tmdb_details(self, params: dict[str, Any]) -> dict[str, Any]:
+        return tmdb.details(need(params, "type", str), need(params, "id", str))
+
+    def tmdb_person(self, params: dict[str, Any]) -> dict[str, Any]:
+        return tmdb.person(need(params, "person_id", int))
+
+    def tmdb_imdb(self, params: dict[str, Any]) -> dict[str, Any]:
+        return {"id": tmdb.imdb_id(need(params, "type", str), need(params, "id", str))}
+
+    def tmdb_calendar(self, params: dict[str, Any]) -> dict[str, Any]:
+        return tmdb.releases(need(params, "year", int), need(params, "month", int))
 
     # -- methods: a child's profile (2026-10-07) --
 
