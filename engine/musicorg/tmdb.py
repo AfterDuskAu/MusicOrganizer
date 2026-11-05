@@ -21,7 +21,10 @@ it): `accounts.json` in the app's settings folder, under the computer's own keys
 by this user only, never in the repo or the library. TMDB's "API Read Access Token" goes in
 a header; the shorter "API Key" can only go in the address, so `_http` never passes on the
 words of a network error, which hold the address. Neither is ever logged, given out over
-RPC, or put in an error.
+RPC, or put in an error. **The one place it goes** (the owner, 2026-11-05: "pass over to
+any synced apps ... They all connect to D's inputted api key"): a device paired with this
+computer for sharing, of any profile, may ask for it on the home network (`for_devices`,
+`sharing`'s `GET /sync/v1/tmdb`), so its own TMDB features use the same key.
 
 What TMDB answers is kept in memory while the engine runs (a film's original language and
 rating don't change); nothing is written. At most `TOGETHER` questions are asked at once.
@@ -181,6 +184,13 @@ def _saved() -> str:
     if not isinstance(key, str) or not key:
         raise TmdbError(f"TMDB isn't set up yet. Paste your TMDB key in {WHERE}.")
     return key
+
+
+def for_devices() -> str | None:
+    """The key, for a paired device that asks for it (`sharing`), or None when there's
+    none. Never logged."""
+    key = config.load_computer_account(SERVICE).get("key")
+    return key if isinstance(key, str) and key else None
 
 
 def status() -> dict[str, Any]:

@@ -84,7 +84,9 @@ public enum Legal {
                 + "internet for it. A video app you've paired also sends what you've watched "
                 + "on it (your Watchlist, what you've watched and where you got to), which is "
                 + "added to your profile here, and can copy its downloaded films into your "
-                + "Movies folder; all of it over your home network only."),
+                + "Movies folder; all of it over your home network only. If you've given "
+                + "Bear Media your TMDB key, a device you've paired is given it too, over your "
+                + "home network, so its own TMDB features use your key."),
         Part(
             heading: "Other people's services",
             text: "Every service and plugin the app reaches has a privacy policy of its own, "

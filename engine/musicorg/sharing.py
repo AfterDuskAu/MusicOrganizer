@@ -63,9 +63,16 @@ What the owner was promised, and where each promise is kept:
   while the films switch is on and the profile open in the app isn't a child's; and its
   files are given only to the device whose list named them. Never to a video app (the
   films list and its files leave them out), and a device can't send one.
+- **The computer's TMDB key, for a paired device that asks** (2026-11-05, the owner:
+  "make the TMDB api ... pass over to any synced apps ... This will account for all
+  accounts ... They all connect to D's inputted api key"). `GET /sync/v1/tmdb` answers a
+  device paired with any profile with `{"key": ...}` (null when none is saved), so its
+  TMDB features use the owner's key; the key is never logged. It's the only secret ever
+  given to a device, and only to a paired one.
 
 **Privacy.** No address, computer name, pairing code or key is ever logged or put in an
-error, and no key is given out over RPC. Every id in the list is a hash: a phone never
+error, and no key is given out over RPC (the TMDB key goes to a paired device only, as
+above). Every id in the list is a hash: a phone never
 sees the library's own ids, a path, or where a song came from. The one thing it's told
 is `discovered`: that a song is a download the owner hasn't moved into their main
 library, which a phone lists apart from the owner's own songs.
@@ -100,7 +107,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, unquote, urlsplit
 
-from musicorg import browse, config, fileops, listening, naming, tags, tools
+from musicorg import browse, config, fileops, listening, naming, tags, tmdb, tools
 from musicorg import state as state_file
 from musicorg.errors import MusicOrgError, NotFoundError, UserError
 from musicorg.index import open_index
@@ -1866,8 +1873,11 @@ class Share:
 
 def _for_any_profile(path: str) -> bool:
     """Whether a device paired with another profile may ask for this (2026-10-16): its
-    profile's watching, the films, and a film's file (`do_GET` checks it's a film's)."""
-    return path in (PREFIX + "watching", PREFIX + "films") or path.startswith(PREFIX + "files/")
+    profile's watching, the films, a film's file (`do_GET` checks it's a film's), and
+    the computer's TMDB key (2026-11-05)."""
+    return path in (PREFIX + "watching", PREFIX + "films", PREFIX + "tmdb") or path.startswith(
+        PREFIX + "files/"
+    )
 
 
 def _listen(share: Share, host: str, port: int) -> _Listener:
@@ -1966,6 +1976,12 @@ class _Handler(BaseHTTPRequestHandler):
             return
         if path == PREFIX + "films":
             self._films()
+            return
+        if path == PREFIX + "tmdb":
+            key = tmdb.for_devices()
+            said = "given" if key else "none saved"
+            log.info("sharing: a device asked for the TMDB key (%s)", said)
+            self._answer(200, {"key": key})
             return
         if path == PREFIX + "library" and device is not None:  # this profile's devices only
             # The films for adults only when asked for, exactly so (2026-10-17).
