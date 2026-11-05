@@ -217,7 +217,7 @@ def test_it_listens_on_this_computer_only_in_tests(share: sharing.Share) -> None
 def test_hello_needs_no_key(share: sharing.Share, filled: Library) -> None:
     status, hello = ask(share, "/sync/v1/hello")
     assert status == 200
-    takes = ["changes", "favourites", "plays", "playlists", "watching", "forget"]
+    takes = ["changes", "favourites", "plays", "playlists", "watching", "watching_wait", "forget"]
     assert hello == {"format": 1, "library": share.info, "paired": False, "known": False,
                      "accepts": takes}  # fmt: skip
     assert hello["library"]["name"] == filled.root.name
@@ -1644,7 +1644,9 @@ def test_an_engine_without_the_librarys_lock_takes_nothing(
         try:
             # Nothing of the library's is taken; a device may still say it has forgotten it.
             # (What's watched is kept for the app, not in the library: 2026-10-16.)
-            assert ask(again, "/sync/v1/hello")[1]["accepts"] == ["watching", "forget"]
+            assert ask(again, "/sync/v1/hello")[1]["accepts"] == [
+                "watching", "watching_wait", "forget"
+            ]  # fmt: skip
             sent = {"changes": [did("playlist_new", playlist=its_own(), name="Driving")]}
             status, answer = ask(again, "/sync/v1/changes", key=key, body=sent)
             assert (status, answer["error"]) == (404, "not_found")
@@ -1780,7 +1782,9 @@ def test_the_app_is_told_what_a_phone_changed(
     shown = result(opened, "sharing.pair")
     key = ask(share, "/sync/v1/pair", body={"code": shown["code"], "device": "iPhone"})[1]["key"]
     said = ask(share, "/sync/v1/hello", key=key)[1]["accepts"]
-    assert said == ["changes", "favourites", "plays", "playlists", "watching", "forget"]
+    assert said == [
+        "changes", "favourites", "plays", "playlists", "watching", "watching_wait", "forget"
+    ]  # fmt: skip
 
     made = did("playlist_new", playlist=its_own(), name="Driving")
     assert tell(share, key, made) == ids(made)

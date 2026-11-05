@@ -86,6 +86,7 @@ import math
 import os
 import re
 import secrets
+import select
 import socket
 import stat
 import threading
@@ -174,6 +175,15 @@ _DEVICE_KIND = re.compile(r"[A-Za-z0-9 ]{1,20}")
 # every share, and `films` while the films switch is on. Both before `forget`.
 WATCHING = "watching"
 FILMS = "films"
+# Waiting for a change (2026-11-05): a video app that asks for its profile's watching
+# `?after=<the revision it has>` is answered as soon as that watching changes, or after
+# `WATCHING_WAIT_S` with 304 and nothing else, so a change on one device reaches the
+# others that are open within moments. Said in `hello` as `watching_wait`, after `watching`.
+WATCHING_WAIT = "watching_wait"
+WAIT_QUERY = "after"
+WATCHING_WAIT_S = 50.0
+MOST_WAITING = 8  # requests waiting at once; one more is answered at once, with 304
+WAIT_CHECK_S = 1.0  # how often a waiting request looks whether its device is still there
 MAX_WATCHING_BODY = 8 * 1024 * 1024  # 8 MB: a device's whole watching
 MOST_TITLES = 5000  # on a Watchlist
 MOST_WATCHED = 50_000  # films and episodes watched
@@ -818,6 +828,9 @@ def _mark(kind: str, key: str) -> str:
 
 WATCHING_LISTS = ("watchlist", "watched", "progress")
 _watching_lock = threading.Lock()
+# Told whenever a profile's watching is given afresh, or sharing is switched off: a
+# request waiting for a change (`wait_for_watching`) looks again.
+_watching_changed = threading.Condition(_watching_lock)
 
 
 class WatchingError(UserError):
@@ -1027,7 +1040,36 @@ def set_watching(profile: str, sent: object) -> str:
         kept = config.load_watching()
         kept["given"][profile] = {"revision": revision, **checked}
         config.save_watching(kept)
+        _watching_changed.notify_all()
     return revision
+
+
+def wait_for_watching(profile: str, after: str, *, most: float, gone: Callable[[], bool]) -> bool:
+    """Wait while a profile's watching is still at revision `after` (2026-11-05): True as
+    soon as it isn't (the app gave a new one, or there's none to compare), False once `most`
+    seconds have gone by or `gone()` comes true (sharing switched off, the device hung up).
+    `gone` is asked about once every `WAIT_CHECK_S`; the watching file is read again only
+    when the app gives a new one."""
+    until = time.monotonic() + most
+    with _watching_changed:
+        current = _given_revision(profile)
+        while current == after:
+            left = until - time.monotonic()
+            if left <= 0 or gone():
+                return False
+            if _watching_changed.wait(min(left, WAIT_CHECK_S)):
+                current = _given_revision(profile)
+        return True
+
+
+def _given_revision(profile: str) -> str | None:
+    """The revision of a profile's watching as the app last gave it; None if it never has
+    or it can't be read. Called with `_watching_lock` held."""
+    try:
+        found = config.load_watching()["given"].get(profile)
+    except (MusicOrgError, OSError):
+        return None
+    return str(found.get("revision") or "") if isinstance(found, dict) else None
 
 
 def given_watching(profile: str) -> dict[str, Any] | None:
@@ -1301,6 +1343,7 @@ class Share:
         self._awake_until = 0.0  # a paired device asked for something: awake until then
         self._awake: threading.Thread | None = None
         self._off = threading.Event()  # sharing was switched off: awake no longer
+        self._waiting = 0  # requests waiting for a profile's watching to change
 
     # -- on and off --
 
@@ -1334,6 +1377,8 @@ class Share:
             self._code = None
             awake = self._awake
         self._off.set()
+        with _watching_changed:
+            _watching_changed.notify_all()  # a request waiting for a change stops waiting
         if awake is not None:
             awake.join(timeout=10)
         if listener is None:
@@ -1478,7 +1523,20 @@ class Share:
         has forgotten the library is taken by any share: that changes the list of paired
         devices, not the library."""
         films = (FILMS,) if self.films else ()
-        return [*(ACCEPTS if self.lib.writable else ()), WATCHING, *films, FORGET]
+        return [*(ACCEPTS if self.lib.writable else ()), WATCHING, WATCHING_WAIT, *films, FORGET]
+
+    def start_waiting(self) -> bool:
+        """A request will wait for its profile's watching to change: False when
+        `MOST_WAITING` are waiting already (it's answered at once instead)."""
+        with self._lock:
+            if self._waiting >= MOST_WAITING:
+                return False
+            self._waiting += 1
+            return True
+
+    def stop_waiting(self) -> None:
+        with self._lock:
+            self._waiting = max(self._waiting - 1, 0)
 
     def forgotten_by(self, device: dict[str, Any], profile: str | None = None) -> None:
         """A paired device says it has forgotten this library: it's unpaired, as the
@@ -1897,6 +1955,11 @@ class _Handler(BaseHTTPRequestHandler):
         if owner is None or (device is None and not _for_any_profile(path)):
             self._answer(401, refusal("not_paired", "This device isn't paired with the computer."))
             return
+        after = parse_qs(asked.query).get(WAIT_QUERY) if path == PREFIX + "watching" else None
+        if after:
+            # Waiting for a change isn't syncing: it doesn't keep the computer awake.
+            self._watching_waited(owner, after[0])
+            return
         share.busy()  # a paired device is syncing: the computer stays awake for it
         if path == PREFIX + "watching":
             self._watching_given(owner)
@@ -2051,6 +2114,49 @@ class _Handler(BaseHTTPRequestHandler):
             ))  # fmt: skip
             return
         self._answer(200, found)
+
+    def _watching_waited(self, owner: tuple[str, dict[str, Any]], after: str) -> None:
+        """A video app waiting for its profile's watching to change from the revision it
+        has (2026-11-05): answered with it as soon as it changes, or after `WATCHING_WAIT_S`
+        with 304 and nothing else; at once when it isn't at that revision (or there's none
+        yet, which is 500 as without waiting). Waiting keeps the computer awake no longer
+        than it would have been; an answer with a change does, as any sync does. With
+        `MOST_WAITING` waiting already, it's 304 at once. Switching sharing off, or the
+        device hanging up, ends the wait without an answer."""
+        share = self.server.share
+        if not share.start_waiting():
+            self._unchanged()
+            return
+        try:
+            changed = wait_for_watching(
+                owner[0], after[:MOST_ID], most=WATCHING_WAIT_S,
+                gone=lambda: not share.listening or self._hung_up(),
+            )  # fmt: skip
+        finally:
+            share.stop_waiting()
+        if not share.listening:
+            self.close_connection = True
+            return
+        if not changed:
+            self._unchanged()
+            return
+        share.busy()
+        self._watching_given(owner)
+
+    def _hung_up(self) -> bool:
+        """Whether the device has closed its end of the connection (it went to the
+        background, or left the Wi-Fi): a request waiting for it stops."""
+        try:
+            ready, _, _ = select.select([self.connection], [], [], 0)
+            return bool(ready) and self.connection.recv(1, socket.MSG_PEEK) == b""
+        except (OSError, ValueError):
+            return True
+
+    def _unchanged(self) -> None:
+        """304: nothing has changed since what the device has. No body."""
+        self.send_response(304)
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
 
     def _watching_sent(self) -> None:
         """A device's own watching. The body is read before anything is answered."""
