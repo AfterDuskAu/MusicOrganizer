@@ -643,7 +643,7 @@ struct ChannelsView: View {
     }
 }
 
-/// One video file in a list (Videos → Movies, and the downloaded videos under Videos →
+/// One video file in a list (a series not found on Videos → Movies/Series, Videos → 18+, and the downloaded videos under Videos →
 /// Channel): double-click plays it in the film player.
 struct VideoFileRow: View {
     let file: VideoFiles.File
@@ -1134,6 +1134,9 @@ struct MovieView: View {
     /// Opened from the Finder for adults: it has no heart, and playing it isn't
     /// remembered, so nothing of it reaches Home.
     var apart = false
+    /// Opened from Videos → Movies/Series: a series opens at the first season with an
+    /// episode on this Mac.
+    var startsAtDownloaded = false
     let back: () -> Void
     @Environment(AppModel.self) private var model
     @State private var details: MediaDetails?
@@ -1150,6 +1153,15 @@ struct MovieView: View {
     @State private var person: TMDBCast?
 
     private var isSeries: Bool { film.type == "series" }
+    /// What's of it on this Mac (Videos → Movies/Series, 2026-11-05): a film's file, or the
+    /// episodes of a series that are here. Nothing of the Finder kept apart.
+    private var here: KeptShelf.Card? { apart ? nil : model.keptShelf.card(for: film) }
+    /// The film's file, or the chosen episode's, when it's on this Mac.
+    private var hereNow: KeptFile? {
+        guard let here else { return nil }
+        if isSeries { return episode.flatMap { here.file(season: $0.season, episode: $0.episode) } }
+        return here.files.first
+    }
     /// What's played or kept: the film, or the episode chosen ("East of Eden S01E02").
     private var playName: String { episode?.name(in: film.name) ?? film.name }
     /// What Home remembers of it once it's played: the film, or the series with the
@@ -1204,6 +1216,7 @@ struct MovieView: View {
                                 ? "It's on your Watchlist (in the sidebar, under Videos). Click to take it off."
                                 : "Put it on your Watchlist, to find it again and watch it later")
                     }
+                    if let here { downloadedBadge(here) }
                     HStack(spacing: 28) {
                         if let minutes = details?.runtimeMin { Text("\(minutes) min") }
                         if let year = details?.year ?? film.year { Text(year) }
@@ -1233,6 +1246,7 @@ struct MovieView: View {
                     }
                     if let problem { Text(problem).foregroundStyle(.secondary) }
                     if isSeries { episodes }
+                    onThisMac
                     sources
                 }
                 .padding(32)
@@ -1264,18 +1278,33 @@ struct MovieView: View {
         .environment(\.colorScheme, .dark)
         .onChange(of: model.episodeToChoose) { showAskedEpisode() }
         .task(id: film.id) {
+            // What's of it on this Mac, for its Downloaded marks.
+            if !apart, !model.keptShelfLooked { await model.lookAtKeptFilms() }
             // `adult`: which side of the fence answers. A title from the Finder for
             // adults is asked of those add-ons only, and any other title never of them.
             let asked: [String: Any] = ["type": film.type, "id": film.id, "adult": apart]
             do {
-                details = try await model.ask("addon.details", asked, as: MediaDetails.self)
+                let read = try await model.ask("addon.details", asked, as: MediaDetails.self)
+                details = read
+                // A little of it kept on this Mac, for when its plugins can't be reached.
+                if let here { model.keepDetails(read, of: here) }
             } catch {
-                problem = error.localizedDescription
+                // Out of reach: a series that's here shows the episodes that are, with
+                // what was kept of it (as Bear Media II's Downloaded page does offline).
+                if let here, let kept = here.offline(model.keptTitle(here)) {
+                    details = kept
+                    problem = "Your plugins can't be reached just now, so only the episodes on this Mac are shown."
+                } else {
+                    problem = error.localizedDescription
+                }
             }
             if isSeries {
-                // A series is played an episode at a time: the first season shows, and
-                // an episode's ways to play are asked for when it's clicked.
-                season = details?.seasons.first
+                // A series is played an episode at a time: the first season shows (from
+                // Movies/Series, the first with an episode here), and an episode's ways to
+                // play are asked for when it's clicked.
+                let downloaded = startsAtDownloaded ? here?.firstSeason : nil
+                season = downloaded.flatMap { details?.seasons.contains($0) == true ? $0 : nil }
+                    ?? details?.seasons.first
                 showAskedEpisode()
                 // Its latest episode, for whether it's been watched.
                 if !apart, let details { model.learn(film, episodes: details.videos) }
@@ -1305,8 +1334,13 @@ struct MovieView: View {
         if let details, !details.seasons.isEmpty {
             let showing = season ?? details.seasons[0]
             part("Episodes") {
+                let counts = here?.perSeason ?? [:]
                 Picker("Season", selection: Binding(get: { showing }, set: { season = $0 })) {
-                    ForEach(details.seasons, id: \.self) { Text(MediaDetails.seasonName($0)).tag($0) }
+                    ForEach(details.seasons, id: \.self) { number in
+                        // How many of its episodes are on this Mac, for a series with many seasons.
+                        Text(MediaDetails.seasonName(number) + (counts[number].map { " · \($0) downloaded" } ?? ""))
+                            .tag(number)
+                    }
                 }
                 .labelsHidden()
                 .fixedSize()
@@ -1318,6 +1352,9 @@ struct MovieView: View {
                 LazyVStack(alignment: .leading, spacing: 10) {
                     ForEach(details.episodes(in: showing)) { one in
                         let seen = !apart && model.finished.contains(one.id)
+                        // On this Mac: marked so it can't be missed (Bear Media II's
+                        // Downloaded capsule, 2026-11-04: "very noticeable").
+                        let downloaded = here?.file(season: one.season, episode: one.episode) != nil
                         Button { choose(one) } label: {
                             HStack(alignment: .top, spacing: 14) {
                                 // A check before each episode that's been watched (the
@@ -1345,13 +1382,21 @@ struct MovieView: View {
                                     }
                                 }
                                 Spacer()
+                                if downloaded { DownloadedCapsule() }
                                 Text(one.day).foregroundStyle(.secondary).monospacedDigit()
                             }
                             .padding(.vertical, 6)
                             .padding(.horizontal, 10)
                             .background(
-                                episode == one ? AnyShapeStyle(.white.opacity(0.14)) : AnyShapeStyle(.clear),
+                                episode == one
+                                    ? AnyShapeStyle(.white.opacity(0.14))
+                                    : downloaded ? AnyShapeStyle(Color.accentColor.opacity(0.14)) : AnyShapeStyle(.clear),
                                 in: RoundedRectangle(cornerRadius: 8))
+                            .overlay {
+                                if downloaded {
+                                    RoundedRectangle(cornerRadius: 8).strokeBorder(Color.accentColor, lineWidth: 1.5)
+                                }
+                            }
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
@@ -1404,6 +1449,57 @@ struct MovieView: View {
                 "addon.streams", ["type": film.type, "id": one.id, "adult": apart],
                 as: StreamsAnswer.self)
             if episode == one { streams = found ?? StreamsAnswer(sources: [], problems: []) }
+        }
+    }
+
+    /// Under the Watchlist button: that it's on this Mac, and for a series how much of it.
+    private func downloadedBadge(_ here: KeptShelf.Card) -> some View {
+        Label(
+            here.isShow ? "\(here.line) on this Mac" : "Downloaded to this Mac",
+            systemImage: "arrow.down.circle.fill"
+        )
+        .font(.body.weight(.semibold))
+        .padding(.horizontal, 14)
+        .frame(height: 32)
+        .background(Color.accentColor, in: Capsule())
+        .help(
+            here.isShow
+                ? "These episodes are in your Movies folder (Videos → Movies/Series): they're marked Downloaded below"
+                : "It's in your Movies folder (Videos → Movies/Series): On This Mac plays it from there")
+    }
+
+    /// The film's file, or the chosen episode's, when it's on this Mac: a bar of its own
+    /// above the plugins' ways, which plays it from the Movies folder.
+    @ViewBuilder
+    private var onThisMac: some View {
+        if let file = hereNow, let here {
+            part(episode.flatMap(\.number).map { "\($0) on This Mac" } ?? "On This Mac") {
+                HStack(spacing: WayToPlayColumns.gap) {
+                    Text("Your Movies folder")
+                        .lineLimit(1)
+                        .frame(width: WayToPlayColumns.source, alignment: .leading)
+                    Text(file.file.kind).fontWeight(.semibold)
+                        .frame(width: WayToPlayColumns.quality, alignment: .leading)
+                    Text(ByteCountFormatter.string(fromByteCount: file.file.bytes, countStyle: .file))
+                        .monospacedDigit()
+                        .frame(width: WayToPlayColumns.size, alignment: .leading)
+                    Spacer(minLength: 0)
+                    Button("Play", systemImage: "play.fill") {
+                        model.playKept(file, of: here, episode: episode, episodes: details?.videos)
+                    }
+                    .help("Play it from this Mac: nothing is fetched")
+                    Button("Show in Finder", systemImage: "folder") {
+                        NSWorkspace.shared.activateFileViewerSelecting([file.file.url])
+                    }
+                    .labelStyle(.iconOnly)
+                    .help("Show “\(file.file.url.lastPathComponent)” in the Finder")
+                }
+                .padding(.vertical, 6)
+                .padding(.horizontal, 10)
+                .background(Color.accentColor.opacity(0.14), in: RoundedRectangle(cornerRadius: 8))
+                .overlay { RoundedRectangle(cornerRadius: 8).strokeBorder(Color.accentColor, lineWidth: 1.5) }
+            }
+            .frame(maxWidth: 760, alignment: .leading)
         }
     }
 
@@ -1580,13 +1676,28 @@ struct MovieView: View {
     }
 }
 
-/// Videos → Movies: the video files in this Mac's Movies folder, and any other file the
-/// owner opens. Double-click plays one in the film player. Nothing here is changed.
+/// An episode on this Mac, on its series' page: "Downloaded" in the accent colour.
+struct DownloadedCapsule: View {
+    var body: some View {
+        Label("Downloaded", systemImage: "arrow.down.circle.fill")
+            .font(.caption.weight(.bold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(Color.accentColor, in: Capsule())
+            .help("It's in your Movies folder: choose it, then Play under On This Mac")
+            .accessibilityLabel("Downloaded")
+    }
+}
+
+/// A list of video files in the Movies folder: double-click plays one in the film player.
+/// Nothing here is changed. Videos → Movies was this page until 2026-11-05, when it became
+/// Videos → Movies/Series (`MoviesSeriesView`).
 ///
-/// With `adult`, Videos → 18+ (2026-10-17): the same page for the Movies folder's 18+
-/// folder alone, what's downloaded from the Finder for adults, which Videos → Movies
-/// leaves out; with those downloads still under way at its top (they're not listed in
-/// Downloads), and nothing remembered of what's played there.
+/// With `adult`, Videos → 18+ (2026-10-17): the Movies folder's 18+ folder alone, what's
+/// downloaded from the Finder for adults, which Videos → Movies/Series leaves out; with
+/// those downloads still under way at its top (they're not listed in Downloads), and
+/// nothing remembered of what's played there.
 struct MoviesView: View {
     /// False while another page is showing (`PageHost`): the folder isn't looked at then.
     var isActive = true
@@ -1647,25 +1758,6 @@ struct MoviesView: View {
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             if isActive { backInFront += 1 }
         }
-        .task {
-            // For checking the player without a click: MUSICORG_FILM=<file> plays it once,
-            // silently; MUSICORG_FILM=torrent:<info-hash>:<file number> plays that torrent.
-            if !adult, let what = ProcessInfo.processInfo.environment["MUSICORG_FILM"], !model.film.isOpen {
-                model.film.volume = 0
-                let parts = what.split(separator: ":").map(String.init)
-                if parts.count == 3, parts[0] == "torrent" {
-                    let said = #"{"kind":"torrent","info_hash":"\#(parts[1])","file_index":\#(parts[2]),"trackers":[]}"#
-                    let decoder = JSONDecoder()
-                    decoder.keyDecodingStrategy = .convertFromSnakeCase
-                    if let stream = try? decoder.decode(MediaStream.self, from: Data(said.utf8)) {
-                        model.play(stream, title: "Check")
-                    }
-                } else {
-                    let url = URL(fileURLWithPath: what)
-                    model.playFilm(url, title: url.deletingPathExtension().lastPathComponent)
-                }
-            }
-        }
     }
 
     /// Off the main thread: a big folder takes a moment to walk.
@@ -1692,6 +1784,254 @@ struct MoviesView: View {
         panel.allowsOtherFileTypes = true
         if panel.runModal() == .OK, let url = panel.url {
             model.playFilm(url, title: url.deletingPathExtension().lastPathComponent)
+        }
+    }
+}
+
+/// Videos → Movies/Series (the owner, 2026-11-05: "add the changes that were made to Bear
+/// Media II last night, involving sorting movies/series in downloaded"): what's in the
+/// Movies folder as Bear Media II's Downloaded page shows a tablet's (2026-11-04: "Movies
+/// first, then Series"): a poster card a film, which plays it; then a card a series,
+/// which opens its page, the Finder's own, where the episodes on this Mac are marked
+/// Downloaded; then Anime the same way. Which title each card is comes from its page when
+/// it was downloaded, or is found once by its name (`KeptTitles`); a series not found is
+/// opened as a list of its files. The videos folder and the 18+ folder have pages of
+/// their own. Nothing here is changed but by a right-click: Move To, Move to Trash….
+struct MoviesSeriesView: View {
+    /// False while another page is showing (`PageHost`): the folder isn't looked at then.
+    var isActive = true
+    @Environment(AppModel.self) private var model
+    /// The series whose page is open, by its card.
+    @State private var openedKey: String?
+    /// Goes up when the app comes back to the front: the Finder may have changed the folder.
+    @State private var backInFront = 0
+
+    var body: some View {
+        let shelf = model.keptShelf
+        let opened = openedKey.flatMap { key in shelf.all.first { $0.key == key } }
+        Group {
+            if let opened, let item = opened.item {
+                MovieView(film: item, startsAtDownloaded: true) { openedKey = nil }
+                    .id(item.id)
+            } else if let opened {
+                KeptFolderView(card: opened) { openedKey = nil }
+            } else {
+                shelfPage(shelf)
+            }
+        }
+        // Looked at again whenever a film has just been kept, moved or binned, each time
+        // the page is shown, and when the app comes back to the front (a film deleted in
+        // the Finder mustn't stay listed: the owner, 2026-10-17).
+        .task(id: "\(model.keptArrived) \(model.moviesFolder?.path ?? "") \(isActive) \(backInFront)") {
+            if isActive { await model.lookAtKeptFilms() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            if isActive { backInFront += 1 }
+        }
+        // An episode's ✕ comes back to its series' page here, while this page shows.
+        .onChange(of: "\(isActive)|\(opened?.item?.id ?? "")", initial: true) {
+            model.keptPageSeries = isActive ? opened?.item?.id : nil
+        }
+        .onChange(of: model.episodeToChoose) {
+            // Asked to show an episode of a series here (its ✕): its page is opened.
+            if let asked = model.episodeToChoose, let card = shelf.all.first(where: { $0.item?.id == asked.series }) {
+                openedKey = card.key
+            }
+        }
+        .task {
+            // For checking the player without a click: MUSICORG_FILM=<file> plays it once,
+            // silently; MUSICORG_FILM=torrent:<info-hash>:<file number> plays that torrent.
+            if let what = ProcessInfo.processInfo.environment["MUSICORG_FILM"], !model.film.isOpen {
+                model.film.volume = 0
+                let parts = what.split(separator: ":").map(String.init)
+                if parts.count == 3, parts[0] == "torrent" {
+                    let said = #"{"kind":"torrent","info_hash":"\#(parts[1])","file_index":\#(parts[2]),"trackers":[]}"#
+                    let decoder = JSONDecoder()
+                    decoder.keyDecodingStrategy = .convertFromSnakeCase
+                    if let stream = try? decoder.decode(MediaStream.self, from: Data(said.utf8)) {
+                        model.play(stream, title: "Check")
+                    }
+                } else {
+                    let url = URL(fileURLWithPath: what)
+                    model.playFilm(url, title: url.deletingPathExtension().lastPathComponent)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func shelfPage(_ shelf: KeptShelf) -> some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text("Movies/Series").font(.title2.weight(.semibold)).heading()
+                        Text(Self.counted(shelf)).foregroundStyle(.secondary)
+                    }
+                    Text(
+                        "What's in your Movies folder. A movie plays when it's clicked; a series opens "
+                            + "its page, where the episodes on this Mac are marked Downloaded.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button("Open File…", systemImage: "folder") { openFile() }
+                    .help("Play a video file from anywhere on this Mac")
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            Divider()
+            if shelf.isEmpty {
+                Text(
+                    model.keptShelfLooked
+                        ? "There are no movies or series in your Movies folder yet. Download one from "
+                            + "its page in Movie Finder or Series Finder, and it shows up here."
+                        : "Looking…"
+                )
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(40)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView {
+                    // Lazy: a grid further down isn't made until it's scrolled to.
+                    LazyVStack(alignment: .leading, spacing: 8) {
+                        cards("Movies", shelf.movies)
+                        cards("Series", shelf.series)
+                        cards("Anime", shelf.anime)
+                    }
+                    .padding(.vertical, 14)
+                }
+            }
+        }
+    }
+
+    /// "12 movies · 2 series".
+    private static func counted(_ shelf: KeptShelf) -> String {
+        func many(_ count: Int, _ one: String, _ more: String) -> String? {
+            count == 0 ? nil : "\(count) \(count == 1 ? one : more)"
+        }
+        let parts = [
+            many(shelf.movies.count, "movie", "movies"), many(shelf.series.count, "series", "series"),
+            many(shelf.anime.count, "anime", "anime"),
+        ]
+        return parts.compactMap { $0 }.joined(separator: " · ")
+    }
+
+    @ViewBuilder
+    private func cards(_ title: String, _ cards: [KeptShelf.Card]) -> some View {
+        if !cards.isEmpty {
+            Text(title).font(.title3.weight(.semibold)).heading().padding(.horizontal, 20)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 22)], spacing: 22) {
+                ForEach(cards) { card in
+                    Button { open(card) } label: { KeptCard(card: card) }
+                        .buttonStyle(.plain)
+                        .help(card.isShow ? "Open its page" : "Play it")
+                        .contextMenu { menu(card) }
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 14)
+        }
+    }
+
+    private func open(_ card: KeptShelf.Card) {
+        if card.isShow {
+            openedKey = card.key
+        } else if let file = card.files.first {
+            model.playKept(file, of: card)
+        }
+    }
+
+    @ViewBuilder
+    private func menu(_ card: KeptShelf.Card) -> some View {
+        if card.isShow {
+            Button("Open") { openedKey = card.key }
+        } else if let file = card.files.first {
+            Button("Play") { model.playKept(file, of: card) }
+            if let item = card.item {
+                Button("Open Its Page") { model.open(item) }
+            }
+        }
+        Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting(card.files.map(\.file.url)) }
+        if !card.isShow, let file = card.files.first {
+            Divider()
+            Button("Convert for Phones and Tablets") { model.convertFilm(file.file.url) }
+            // Into another of the folders kept films are in, should one have gone in the
+            // wrong one (the owner, 2026-10-17). 18+ isn't offered in a child's profile.
+            Menu("Move To") {
+                let now = KeptPlace.of(file.file.url, movies: model.moviesFolder, videos: model.videosFolder)
+                ForEach(KeptPlace.offered(isChild: model.profiles.current.isChild)) { place in
+                    Button(place.name) { model.moveMedia(file.file, to: place) }
+                        .disabled(place == now)
+                }
+            }
+        }
+        Divider()
+        // Its files themselves, to the Trash, once the owner says yes.
+        Button("Move to Trash…", role: .destructive) { model.trashingCard = card }
+    }
+
+    private func openFile() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.allowedContentTypes = [.movie, .video, .audiovisualContent]
+        panel.allowsOtherFileTypes = true
+        if panel.runModal() == .OK, let url = panel.url {
+            model.playFilm(url, title: url.deletingPathExtension().lastPathComponent)
+        }
+    }
+}
+
+/// One card of Videos → Movies/Series: its poster (the plugin's, when its title is known),
+/// its name, and under it a film's size or how many episodes of a series are here.
+struct KeptCard: View {
+    let card: KeptShelf.Card
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        VStack(spacing: 2) {
+            MediaCard(
+                item: card.item
+                    ?? MediaItem(
+                        id: "", type: card.type, name: card.name, poster: nil, posterShape: "poster",
+                        year: card.year, rating: nil, genres: []))
+            let note = card.files.first.flatMap { model.conversionNotes[$0.file.url.path] }
+            Text(note ?? card.line)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .monospacedDigit()
+        }
+    }
+}
+
+/// A series in the Movies folder whose plugin title isn't known (none of the plugins has
+/// one of its name): its files, as a list, to play.
+struct KeptFolderView: View {
+    let card: KeptShelf.Card
+    let back: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 10) {
+                BackButton(help: "Back to Movies/Series", action: back)
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(card.name).font(.title2.weight(.semibold)).heading()
+                    Text(card.line).foregroundStyle(.secondary)
+                }
+                Text(
+                    "None of your plugins has a series of this name, so its page can't be shown. "
+                        + "Here are its files: double-click one to play it.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            Divider()
+            List(card.files.map(\.file)) { VideoFileRow(file: $0) }
+                .scrollContentBackground(Theme.current.listBackground)
         }
     }
 }

@@ -1,12 +1,19 @@
 import Foundation
 
-/// Video files on this Mac that the film player can open: what Videos → Movies lists
+/// Video files on this Mac that the film player can open: what Videos → Movies/Series and Videos → 18+ list
 /// from the Movies folder. Only looked at, never changed.
 public enum VideoFiles {
     public struct File: Identifiable, Hashable, Sendable {
         public let url: URL
         public let bytes: Int64
+        /// When it came to this Mac (the file's creation date: a kept film is a copy made
+        /// then), for Videos → Movies/Series' newest first. Nil when the disk doesn't say.
+        public let added: Date?
         public var id: URL { url }
+
+        public init(url: URL, bytes: Int64, added: Date? = nil) {
+            (self.url, self.bytes, self.added) = (url, bytes, added)
+        }
         /// The file's name without its ending: what the list shows.
         public var name: String { url.deletingPathExtension().lastPathComponent }
         public var kind: String { url.pathExtension.uppercased() }
@@ -24,7 +31,7 @@ public enum VideoFiles {
 
     /// The Movies folder's own folder for what's downloaded from the Finder for adults
     /// (2026-10-17, the engine's kind "adult"). Listed on its own page, Videos → 18+, and
-    /// on no other: Videos → Movies leaves it out.
+    /// on no other: Videos → Movies/Series leaves it out.
     public static let adultFolderName = "18+"
 
     public static func adultFolder(in movies: URL) -> URL {
@@ -46,7 +53,7 @@ public enum VideoFiles {
     public static func inside(_ folder: URL, leavingOut others: [URL]) -> [File] {
         let top = folder.standardizedFileURL.path
         let skipped = Set(others.map { $0.standardizedFileURL.path }.filter { $0 != top })
-        let keys: [URLResourceKey] = [.isRegularFileKey, .fileSizeKey]
+        let keys: [URLResourceKey] = [.isRegularFileKey, .fileSizeKey, .creationDateKey]
         guard
             let walker = FileManager.default.enumerator(
                 at: folder, includingPropertiesForKeys: keys,
@@ -61,7 +68,7 @@ public enum VideoFiles {
             guard isVideo(url) else { continue }
             let values = try? url.resourceValues(forKeys: Set(keys))
             guard values?.isRegularFile == true else { continue }
-            found.append(File(url: url, bytes: Int64(values?.fileSize ?? 0)))
+            found.append(File(url: url, bytes: Int64(values?.fileSize ?? 0), added: values?.creationDate))
         }
         return found.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }

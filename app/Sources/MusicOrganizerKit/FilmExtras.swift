@@ -205,6 +205,10 @@ public struct PendingKeeps: Codable, Equatable, Sendable {
         /// it has no address of its own, and the quality chosen. `url` is the page's.
         public let item: Int?
         public let quality: String?
+        /// The film or series it was downloaded from the page of, so Videos → Movies/Series
+        /// knows its file as that title once it's kept (2026-11-05: `KeptTitles`). Nil for
+        /// one from the Finder for adults, a page's video, and every keep before then.
+        public let film: MediaItem?
         /// What it goes by: its address, or its torrent's id; a page's video by its page,
         /// its place there and its quality.
         public var id: String {
@@ -250,9 +254,11 @@ public struct PendingKeeps: Codable, Equatable, Sendable {
             infoHash: String, trackers: [String], title: String, year: String? = nil,
             fileIndex: Int? = nil, convert: Bool = true, apart: Bool = false,
             kind: String? = nil, show: String? = nil, season: Int? = nil, episode: Int? = nil,
-            url: String? = nil, size: Int? = nil, item: Int? = nil, quality: String? = nil
+            url: String? = nil, size: Int? = nil, item: Int? = nil, quality: String? = nil,
+            film: MediaItem? = nil
         ) {
             self.apart = apart ? true : nil
+            self.film = apart ? nil : film
             self.item = item
             self.quality = quality
             self.infoHash = url == nil ? infoHash.lowercased() : ""
@@ -285,13 +291,13 @@ public struct PendingKeeps: Codable, Equatable, Sendable {
                     title: part?.name(in: item.name) ?? item.name,
                     year: part == nil ? year.map { String($0.prefix(4)) } : nil,
                     fileIndex: fileIndex, convert: convert, apart: apart, kind: kind,
-                    url: url, size: size)
+                    url: url, size: size, film: item)
                 return
             }
             self.init(
                 infoHash: infoHash, trackers: trackers, title: part.title, fileIndex: fileIndex,
                 convert: convert, apart: apart, kind: kind, show: item.name,
-                season: part.season, episode: part.episode, url: url, size: size)
+                season: part.season, episode: part.episode, url: url, size: size, film: item)
         }
 
         /// A way to play's keep, from its page: a torrent's, or a web address's. Nil for

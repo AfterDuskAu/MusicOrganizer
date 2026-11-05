@@ -181,10 +181,26 @@ final class AppModel {
     /// and nowhere else (2026-10-17).
     private(set) var adultKeeps: [PendingKeeps.Keep] = []
     /// Goes up each time a film or a video has been kept, or moved to the Trash, so
-    /// Videos → Movies looks at its folders again.
+    /// Videos → Movies/Series looks at its folders again.
     private(set) var keptArrived = 0
     /// A video file the owner asked to move to the Trash, waiting for their yes.
     var trashingFile: VideoFiles.File?
+    /// A card of Videos → Movies/Series the owner asked to move to the Trash (a film and
+    /// any copy of it, or every episode of a series that's here), waiting for their yes.
+    var trashingCard: KeptShelf.Card?
+    /// Videos → Movies/Series (2026-11-05): what's in the Movies folder, a card a film or a
+    /// series (`KeptShelf`), each with its plugin title where that's known. Looked at when
+    /// that page shows, when a film's page first needs it, and when a film has arrived.
+    private(set) var keptShelf = KeptShelf()
+    private(set) var keptShelfLooked = false
+    @ObservationIgnored private var keptTitles = KeptTitles.load()
+    @ObservationIgnored private var keptFiles: [KeptFile] = []
+    @ObservationIgnored private var lookingUpKept = false
+    /// How many looks at the Movies folder have begun: only the latest one's files are kept.
+    @ObservationIgnored private var keptLooks = 0
+    /// The series open on Videos → Movies/Series while that page is showing: an episode's
+    /// ✕ goes back to it there rather than to Series Finder.
+    var keptPageSeries: String?
     /// What a video file's row says about being converted for phones and tablets, by the
     /// file's path: "Converting… 42%", "Converted", or why it wasn't.
     private(set) var conversionNotes: [String: String] = [:]
@@ -1495,6 +1511,20 @@ final class AppModel {
         _ next: MediaDetails.Video, of series: MediaItem, like played: NextEpisode.Played, apart: Bool,
         episodes: [MediaDetails.Video], while wanted: () -> Bool
     ) async -> Bool {
+        // On this Mac already (Videos → Movies/Series): played from its file, with no
+        // plugin asked, so a downloaded season plays on without the internet.
+        if !apart, let here = keptShelf.card(for: series)?.file(season: next.season, episode: next.episode) {
+            guard wanted() else { return false }
+            if let old = filmTorrent {
+                (filmTorrent, filmStatus) = (nil, nil)
+                _ = try? await ask("torrent.stop", ["info_hash": old], as: Empty.self)
+            }
+            startsAfresh = true
+            play(
+                .file(here.file.url), title: next.name(in: series.name), watching: .watching(series, episode: next),
+                episode: EpisodeNow(series: series, episodeId: next.id, played: played, episodes: episodes))
+            return true
+        }
         let found = try? await ask(
             "addon.streams", ["type": series.type, "id": next.id, "adult": apart], as: StreamsAnswer.self)
         // Only if it's still wanted: the owner may have shut the film, or started
@@ -1742,6 +1772,133 @@ final class AppModel {
         }
     }
 
+    // MARK: Videos → Movies/Series
+
+    /// Look at the Movies folder again (not its videos folder or its 18+ folder, which
+    /// have pages of their own), then find, one at a time, the plugin title of each card
+    /// that isn't known yet.
+    func lookAtKeptFilms() async {
+        let movies = moviesFolder
+        let videos = videosFolder
+        keptLooks += 1
+        let look = keptLooks
+        let files = await Task.detached { () -> [KeptFile] in
+            guard let movies else { return [] }
+            let apart = VideoFiles.adultFolder(in: movies)
+            return VideoFiles.inside(movies, leavingOut: [videos, apart].compactMap { $0 })
+                .map { KeptFile($0, in: movies) }
+        }.value
+        // Only the latest look counts: one begun earlier (of the folder before the engine's
+        // settings came, say) may end after it, and would put back what's gone.
+        guard look == keptLooks else { return }
+        keptFiles = files
+        keptShelf = KeptShelf(files, titles: keptTitles)
+        keptShelfLooked = true
+        Task { await lookUpKeptTitles() }
+    }
+
+    /// The plugin title of each card not known yet, looked for by its name (`addon.search`,
+    /// which asks every plugin, one card at a time): kept once found; one none of them has
+    /// is looked for again a week later. A search that couldn't be asked is asked next time.
+    /// Cards that come while it's looking (the folder looked at again) are looked for too.
+    private func lookUpKeptTitles() async {
+        guard !lookingUpKept else { return }
+        lookingUpKept = true
+        defer { lookingUpKept = false }
+        var asked: Set<String> = []
+        while let card = keptShelf.all.first(where: {
+            $0.item == nil && !asked.contains($0.key) && keptTitles.shouldLookUp($0.key)
+        }) {
+            asked.insert(card.key)
+            guard
+                let found = try? await ask(
+                    "addon.search", ["type": card.type, "query": card.searchWords], as: MediaSearchAnswer.self)
+            else { continue }
+            if let item = KeptTitles.match(found.items, for: card) {
+                keptTitles.note(card.kind == "anime" ? item.asAnime : item, for: card.key)
+            } else if found.problems.isEmpty || !found.items.isEmpty {
+                // Every plugin answered (or some did), and none has it by that name.
+                keptTitles.notFound(card.key)
+            } else {
+                continue
+            }
+            keptTitles.save()
+            keptShelf = KeptShelf(keptFiles, titles: keptTitles)
+        }
+    }
+
+    /// What's kept on this Mac of a card's title, for its page when its plugins can't be
+    /// reached.
+    func keptTitle(_ card: KeptShelf.Card) -> KeptTitles.Title? { keptTitles.title(card.key) }
+
+    /// A page of a title that's here has read its details: a little of them is kept for
+    /// when its plugins can't be reached (saved only when something changed).
+    func keepDetails(_ details: MediaDetails, of card: KeptShelf.Card) {
+        if keptTitles.keep(details, here: card) { keptTitles.save() }
+    }
+
+    /// A film or an episode downloaded from its page has been kept at `path`: its card is
+    /// that title from now on.
+    private func noteKept(_ film: MediaItem, at path: String) {
+        guard let movies = moviesFolder else { return }
+        let kept = KeptFile(VideoFiles.File(url: URL(fileURLWithPath: path), bytes: 0), in: movies)
+        keptTitles.note(film, for: kept.key)
+        keptTitles.save()
+    }
+
+    /// The next episode after one played from its file, when it isn't here too: there's no
+    /// plugin or quality to match, so its page opens for the owner to choose.
+    static let playedFromFile = NextEpisode.Played(addonId: "", quality: "file")
+
+    /// Play a film or an episode that's on this Mac, from its file: as its title when
+    /// that's known (so it counts as watched, and Continue Watching has it), otherwise as
+    /// a plain file. An episode leads on to the next as from its page.
+    func playKept(
+        _ file: KeptFile, of card: KeptShelf.Card, episode: MediaDetails.Video? = nil,
+        episodes: [MediaDetails.Video]? = nil
+    ) {
+        guard let item = card.item else {
+            playFilm(file.file.url, title: file.file.name)
+            return
+        }
+        let stream = MediaStream.file(file.file.url)
+        guard card.isShow else {
+            play(stream, title: item.name, watching: .watching(item))
+            return
+        }
+        let video =
+            episode
+            ?? card.offline(keptTitles.title(card.key))?.videos.first {
+                $0.episode == file.episode && ($0.season ?? 1) == (file.seasonOrFirst ?? 1)
+            }
+        guard let video else {
+            playFilm(file.file.url, title: file.file.name)
+            return
+        }
+        play(
+            stream, title: video.name(in: item.name), watching: .watching(item, episode: video),
+            episode: EpisodeNow(series: item, episodeId: video.id, played: Self.playedFromFile, episodes: episodes))
+    }
+
+    /// A card's files to the Trash, after the owner's yes: a film and any copy of it, or
+    /// every episode of a series that's here. Each by the engine (`media.trash`), as one
+    /// file is from its row.
+    func trashKept(_ card: KeptShelf.Card) {
+        let paths = card.files.map(\.file.url.path)
+        Task {
+            for path in paths {
+                do {
+                    _ = try await ask("media.trash", ["path": path], as: Empty.self)
+                    conversionNotes[path] = nil
+                } catch {
+                    notice = error.localizedDescription
+                    break
+                }
+            }
+            keptArrived += 1
+        }
+    }
+
     /// A video file's menu, after the owner's yes: the file goes to the Trash, from
     /// Videos → Movies or the downloaded videos under Videos → Channel (the owner,
     /// 2026-10-17: "should be able to right click and delete source material"). The
@@ -1933,6 +2090,8 @@ final class AppModel {
                 var pending = PendingKeeps.load()
                 pending.remove(id)
                 pending.save()
+                // Known from now on as the title it was downloaded from the page of.
+                if let path = filmKeeps[id]?.keptPath, let film = keep.film { noteKept(film, at: path) }
                 keptArrived += 1
             } catch {
                 if !quietly, !Task.isCancelled { notice = error.localizedDescription }
@@ -2019,7 +2178,14 @@ final class AppModel {
     func leaveFilm() {
         let episode = episodeNow
         closeFilm()
-        if let episode, !episode.apart { openEpisode(episode.episodeId, of: episode.series) }
+        guard let episode, !episode.apart else { return }
+        // Played from its page on Videos → Movies/Series: back there, at that episode.
+        if keptPageSeries == episode.series.id {
+            episodeToChoose = EpisodeAsk(series: episode.series.id, episode: episode.episodeId)
+            goTo = .movies
+            return
+        }
+        openEpisode(episode.episodeId, of: episode.series)
     }
 
     func closeFilm() {

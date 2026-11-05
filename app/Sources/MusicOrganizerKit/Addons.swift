@@ -136,7 +136,7 @@ public struct CatalogAnswer: Decodable, Sendable {
 
 /// A film's or a channel's details (the engine's Details).
 public struct MediaDetails: Decodable, Sendable {
-    public struct Video: Decodable, Identifiable, Hashable, Sendable {
+    public struct Video: Codable, Identifiable, Hashable, Sendable {
         public let id: String
         public let title: String
         public let thumbnail: String?
@@ -756,4 +756,44 @@ public enum VideoSort: String, CaseIterable, Sendable {
         case .shortest: return by(\.durationS, descending: false)
         }
     }
+}
+
+extension MediaDetails.Video {
+    /// An episode made here rather than read from a plugin's answer: one on this Mac whose
+    /// series' plugins can't be reached (`KeptShelf.Card.offline`).
+    public init(
+        id: String, title: String, season: Int?, episode: Int?, released: String? = nil,
+        thumbnail: String? = nil, overview: String? = nil
+    ) {
+        self.init(
+            id: id, title: title, thumbnail: thumbnail, released: released, videoId: nil,
+            season: season, episode: episode, overview: overview)
+    }
+}
+
+extension MediaDetails {
+    /// A title's details made here: what's kept on this Mac of a series whose plugins
+    /// can't be reached (`KeptShelf.Card.offline`).
+    public init(
+        id: String, type: String, name: String, poster: String?, year: String?, rating: Double?,
+        genres: [String], description: String?, cast: [String], videos: [Video]
+    ) {
+        self.init(
+            id: id, type: type, name: name, poster: poster, year: year, rating: rating, genres: genres,
+            description: description, background: nil, logo: nil, runtimeMin: nil, cast: cast,
+            directors: [], trailerVideoId: nil, videos: videos)
+    }
+}
+
+extension MediaStream {
+    /// A film or an episode on this Mac, played as a plain address (`file://`): how a
+    /// downloaded one is played from its page, and from Home's Continue Watching after.
+    public static func file(_ url: URL) -> MediaStream {
+        MediaStream(
+            kind: "url", name: nil, title: nil, quality: nil, size: nil, url: url.absoluteString,
+            videoId: nil, infoHash: nil, fileIndex: nil, trackers: [])
+    }
+
+    /// One on this Mac (`file(_:)`).
+    public var isFile: Bool { url?.hasPrefix("file://") == true }
 }

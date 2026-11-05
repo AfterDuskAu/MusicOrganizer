@@ -258,7 +258,7 @@ enum SidebarItem: Hashable {
         case .musicExplore, .videoExplore: "Explore"
         case .settings: "Settings"
         case .channels: "Channel"
-        case .movies: "Movies"
+        case .movies: "Movies/Series"
         case .watchlist: "Watchlist"
         case .calendar: "Calendar"
         case .videoFinder: "Video Finder"
@@ -1185,7 +1185,7 @@ struct PageView: View {
         case .channels:
             ChannelsView(isActive: active)
         case .movies:
-            MoviesView(isActive: active)
+            MoviesSeriesView(isActive: active)
         case .watchlist:
             WatchlistView()
         case .calendar:
@@ -1535,6 +1535,23 @@ private struct DeletingQuestions: ViewModifier {
                     "The file itself goes to the Trash, and leaves the app's lists. The Finder can "
                         + "put it back from the Trash.")
             }
+            // A card of Videos → Movies/Series: a film (and any copy of it), or every episode
+            // of a series that's here, to the Trash one file at a time (2026-11-05).
+            .confirmationDialog(
+                Self.trashQuestion(model.trashingCard),
+                isPresented: Binding(
+                    get: { model.trashingCard != nil },
+                    set: { if !$0 { model.trashingCard = nil } })
+            ) {
+                Button("Move to Trash", role: .destructive) {
+                    if let card = model.trashingCard { model.trashKept(card) }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text(
+                    "The files themselves go to the Trash, and leave the app's lists. The Finder can "
+                        + "put them back from the Trash.")
+            }
             .confirmationDialog(
                 Self.question(model.removingDownloads ?? [], fromLibrary: true),
                 isPresented: Binding(
@@ -1553,6 +1570,18 @@ private struct DeletingQuestions: ViewModifier {
                         + "Mac, with its lyrics: set aside in the library folder's “_Replaced” "
                         + "folder, where nothing is ever deleted for you.")
             }
+    }
+
+    /// "Move the 3 episodes of “Silo” to the Trash?", "Move “Nosferatu” to the Trash?"
+    private static func trashQuestion(_ card: KeptShelf.Card?) -> String {
+        guard let card else { return "" }
+        let count = card.files.count
+        if card.isShow {
+            return count == 1
+                ? "Move the episode of “\(card.name)” to the Trash?"
+                : "Move the \(count) episodes of “\(card.name)” to the Trash?"
+        }
+        return count == 1 ? "Move “\(card.name)” to the Trash?" : "Move “\(card.name)” and its copy to the Trash?"
     }
 
     private static func question(_ tracks: [Track], fromLibrary: Bool = false) -> String {
