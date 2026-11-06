@@ -23,8 +23,9 @@ final class AppModel {
     /// load whatever is needed for the app to immediately start ... it holds it until
     /// it's done"): from the app's start until the library is read and the first page
     /// made under it, or there's something to ask. Since 2026-11-05 it's a three-second
-    /// film (`OpeningFilm`), held for one whole play at least ("make it 3 seconds like
-    /// the other opening screens"; five before), and played again until the app is ready.
+    /// film (`OpeningFilm`, the name in particles since 2026-11-06), three seconds at least
+    /// ("make it 3 seconds like the other opening screens"; five before), its last picture
+    /// held until the app is ready; `RootView` also keeps it up until it has played through.
     private(set) var showingBear = true
     @ObservationIgnored private var bearGoing: Task<Void, Never>?
     static let bearAtLeast: Double = 3

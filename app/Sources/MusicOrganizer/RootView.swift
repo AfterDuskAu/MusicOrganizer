@@ -3,25 +3,31 @@ import SwiftUI
 
 struct RootView: View {
     @Environment(AppModel.self) private var model
+    /// The loading film has played through to the name (2026-11-06): the screen goes only
+    /// then, and once the app is ready (`AppModel.showingBear`). A timing run doesn't wait.
+    @State private var filmEnded = Bench.isOn
+
+    private var loading: Bool { model.showingBear || !filmEnded }
 
     var body: some View {
         ZStack {
             page
             // The loading film, while the app gets ready (the owner, 2026-10-17; the film
-            // since 2026-11-05); the page is made under it, so it's there the moment it fades.
-            if model.showingBear {
-                OpeningFilm()
+            // since 2026-11-05, the name in particles since 2026-11-06); the page is made
+            // under it, so it's there the moment it fades.
+            if loading {
+                OpeningFilm(ended: { filmEnded = true })
                     .ignoresSafeArea()  // under the title bar too: the whole window is sky
                     .overlay(alignment: .bottom) { BearNote() }
                     .transition(.opacity)
                     .zIndex(1)
             }
         }
-        .animation(.easeOut(duration: 0.6), value: model.showingBear)
-        // Nothing of the window's own over the bear's sky but its three buttons, and none
-        // over a film either (`AppModel.topBarAway`). Here, at the window's outermost view:
-        // this rule overrules any further in.
-        .toolbar(model.topBarAway ? .hidden : .automatic, for: .windowToolbar)
+        .animation(.easeOut(duration: 0.6), value: loading)
+        // Nothing of the window's own over the loading film's sky but its three buttons, and
+        // none over a film either (`AppModel.topBarAway`). Here, at the window's outermost
+        // view: this rule overrules any further in.
+        .toolbar(model.topBarAway || loading ? .hidden : .automatic, for: .windowToolbar)
     }
 
     @ViewBuilder

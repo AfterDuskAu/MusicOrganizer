@@ -1,8 +1,8 @@
 #!/bin/bash
-# Make Bear Media's loading film (the owner, 2026-11-05) from its code,
-# scripts/loading_video/render.swift: three seconds at 4K, every movement repeating
-# exactly, so it loops with no seam. It goes in app/Resources as Opening.mp4, with its
-# first picture as Opening.jpg; scripts/build_app.sh puts both in the app.
+# Make Bear Media's loading film (the owner, 2026-11-06: the name in particles) from its
+# code, scripts/loading_video/render.swift: three seconds at 4K, played once, its last
+# picture (the name) held until the app is ready. It goes in app/Resources as Opening.mp4,
+# with its first picture as Opening.jpg; scripts/build_app.sh puts both in the app.
 #
 #     scripts/make_loading_video.sh            the Mac's film (3840×2160)
 #     scripts/make_loading_video.sh --upright  also a 2160×3840 one for a screen held
