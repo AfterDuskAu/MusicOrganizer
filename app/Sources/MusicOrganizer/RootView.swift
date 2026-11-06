@@ -4,8 +4,10 @@ import SwiftUI
 struct RootView: View {
     @Environment(AppModel.self) private var model
     /// The loading film has played through to the name (2026-11-06): the screen goes only
-    /// then, and once the app is ready (`AppModel.showingBear`). A timing run doesn't wait.
-    @State private var filmEnded = Bench.isOn
+    /// then, and once the app is ready (`AppModel.showingBear`). A timing run doesn't wait,
+    /// nor does the unseen copy (`Snapshot`): its window is never drawn, so the film never
+    /// plays to its end there, and every picture said "Still getting ready".
+    @State private var filmEnded = Bench.isOn || Snapshot.isOn
 
     private var loading: Bool { model.showingBear || !filmEnded }
 
