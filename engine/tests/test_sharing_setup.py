@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import logging
 import uuid
+from collections.abc import Iterator
 from typing import Any
 
 import pytest
@@ -320,6 +321,74 @@ def test_the_app_asks_for_a_set_up_code(
 
 
 def test_hello_says_a_device_can_be_set_up(share: sharing.Share) -> None:
-    assert ask(share, "/sync/v1/hello")[1]["accepts"][-2:] == ["setup", "forget"]
+    assert ask(share, "/sync/v1/hello")[1]["accepts"][-3:] == ["setup", "plugins", "forget"]
     # Asked, not told: a GET there is answered as any other without a key.
     assert ask(share, "/sync/v1/setup")[0] == 401
+
+
+# ---- the plugins at every sync (2026-11-06, later) ------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def no_profiles_known() -> Iterator[None]:
+    """Every test starts with the app having given no profiles (they're kept in memory)."""
+    sharing._profile_names = None
+    yield
+    sharing._profile_names = None
+
+
+def test_a_paired_device_of_any_profile_is_given_the_plugins(
+    share: sharing.Share, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config.save_addons([PLAIN, ADULT, OWN, ODD])
+    answer = set_up(share, code_for(share))[1]
+    mine = by_pass(share, answer["setup"], sharing.profile_name(OWNER))[1]["key"]
+    kids = by_pass(share, answer["setup"], sharing.profile_name(KID))[1]["key"]
+    for key in (mine, kids):  # the open profile's device and another's (a child's too)
+        status, given = ask(share, "/sync/v1/plugins", key=key)
+        assert status == 200, given
+        assert given["plugins"] == answer["plugins"]  # exactly a set-up's: never adults only
+        assert "profiles" not in given  # the app hasn't said which profiles there are
+        assert len(given["revision"]) == 16
+    # Nobody else.
+    for key in (None, "not-a-key-" + "x" * 30):
+        assert ask(share, "/sync/v1/plugins", key=key)[0] == 401
+
+
+def test_the_revision_follows_the_plugins_and_the_profiles(share: sharing.Share) -> None:
+    config.save_addons([PLAIN])
+    key = paired(share, "iPad")
+    first = ask(share, "/sync/v1/plugins", key=key)[1]
+    assert ask(share, "/sync/v1/plugins", key=key)[1]["revision"] == first["revision"]
+    config.save_addons([PLAIN, OWN])  # a plugin added on the computer
+    second = ask(share, "/sync/v1/plugins", key=key)[1]
+    assert second["revision"] != first["revision"]
+    assert [p["name"] for p in second["plugins"]] == [PLAIN["name"], OWN["name"]]
+    # The app says which profiles there are: only their hashes are told, in its order.
+    assert sharing.set_profiles(sharing.setup_profiles(PROFILES)) == 3
+    third = ask(share, "/sync/v1/plugins", key=key)[1]
+    assert third["profiles"] == [sharing.profile_name(p) for p in (OWNER, OTHER, KID)]
+    assert third["revision"] != second["revision"]
+    assert "Made-up Kid" not in str(third) and OWNER not in str(third["profiles"])
+
+
+def test_the_app_gives_the_profiles(
+    opened: rpc.Server,  # noqa: F811
+) -> None:
+    # Works with sharing off; a list that can't be read is refused, as for a set-up code.
+    assert result(opened, "sharing.profiles", profiles=PROFILES) == {"profiles": 3}
+    assert sharing._profile_names == [sharing.profile_name(p) for p in (OWNER, OTHER, KID)]
+    for odd in ({}, {"profiles": []}, {"profiles": [{"id": "x y", "name": "D"}]}):
+        assert code(opened, "sharing.profiles", **odd) == rpc.INVALID_PARAMS
+    assert sharing.set_profiles([]) == 0
+
+
+def test_asking_for_the_plugins_is_logged_without_them(
+    share: sharing.Share, caplog: pytest.LogCaptureFixture
+) -> None:
+    config.save_addons([OWN])
+    key = paired(share, "iPad")
+    with caplog.at_level(logging.DEBUG):
+        assert ask(share, "/sync/v1/plugins", key=key)[0] == 200
+    assert "asked for the plugins (1)" in caplog.text
+    assert SET_UP not in caplog.text and key not in caplog.text

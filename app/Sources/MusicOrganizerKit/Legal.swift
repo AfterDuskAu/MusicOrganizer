@@ -92,7 +92,10 @@ public enum Legal {
                 + "each, and is given your plugins' names and addresses, with the set-up an "
                 + "address holds, which can include a key of yours; never a plugin for adults "
                 + "only. It's told nothing else of a profile: not its library or its sign-ins; "
-                + "each account's watching then syncs as any paired device's does."),
+                + "each account's watching then syncs as any paired device's does. A video app "
+                + "you've paired is also given your plugins' names and addresses each time it "
+                + "syncs, the same way, so it can keep its plugins in step with yours, with a "
+                + "code for each profile here from which nothing about it can be read."),
         Part(
             heading: "Other people's services",
             text: "Every service and plugin the app reaches has a privacy policy of its own, "

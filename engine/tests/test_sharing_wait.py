@@ -64,10 +64,10 @@ def later(seconds: float, do: Any) -> threading.Thread:
 
 def test_hello_says_a_video_app_may_wait_for_a_change(share: sharing.Share) -> None:
     accepts = ask(share, "/sync/v1/hello")[1]["accepts"]
-    assert accepts[-4:] == ["watching", "watching_wait", "setup", "forget"]
+    assert accepts[-5:] == ["watching", "watching_wait", "setup", "plugins", "forget"]
     share.films = True
-    assert ask(share, "/sync/v1/hello")[1]["accepts"][-5:] == [
-        "watching", "watching_wait", "films", "setup", "forget",
+    assert ask(share, "/sync/v1/hello")[1]["accepts"][-6:] == [
+        "watching", "watching_wait", "films", "setup", "plugins", "forget",
     ]  # fmt: skip
 
 

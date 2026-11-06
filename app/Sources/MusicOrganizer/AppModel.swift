@@ -2410,6 +2410,17 @@ final class AppModel {
         if let data = try? JSONEncoder().encode(profiles) {
             UserDefaults.standard.set(data, forKey: Self.profilesKey)
         }
+        giveProfiles()
+    }
+
+    /// Every profile, for the engine (2026-11-06): a paired video app is told their hashes
+    /// with the plugins at each sync, and says when there's one it hasn't been set up with.
+    /// Given when sharing is switched on and whenever the profiles change. An engine from
+    /// before it doesn't know the method; nothing else depends on it.
+    private func giveProfiles() {
+        guard let connection = engine?.connection else { return }
+        let profiles = DeviceSetup.profiles(self.profiles)
+        Task { _ = try? await connection.call("sharing.profiles", ["profiles": profiles]) }
     }
 
     /// Make a profile with a library folder of its own, and switch to it. The engine
@@ -3667,7 +3678,10 @@ final class AppModel {
         let before = sharing
         sharing = status
         // Just switched on: a paired video app can ask for any profile's watching now.
-        if status.on, before?.on != true { Task { await giveWatching(all: true) } }
+        if status.on, before?.on != true {
+            Task { await giveWatching(all: true) }
+            giveProfiles()
+        }
         if status.on, let port = status.port {
             if !announcer.start(type: status.service, port: port) {
                 sharingNote =

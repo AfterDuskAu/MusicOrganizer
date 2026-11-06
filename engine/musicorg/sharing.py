@@ -79,6 +79,11 @@ What the owner was promised, and where each promise is kept:
   one for adults only) and a pass good for five minutes, and pairs each of its accounts
   with its profile by that pass (`POST /sync/v1/pair`), one key each, as by hand. Nothing
   is paired without a code, and the profiles are kept only in memory, with the code.
+- **The plugins at every sync** (the same day, later; the owner: "you can do all the worth
+  fixing or adding"): a device paired with any profile may ask for the same plugins
+  whenever it syncs (`GET /sync/v1/plugins`), with the hashes of the computer's profiles
+  (`set_profiles`, from the app; never a name, mark or rating), so it keeps its plugins in
+  step and can say when the computer has a profile it hasn't been set up with.
 
 **Privacy.** No address, computer name, pairing code or key is ever logged or put in an
 error, and no key is given out over RPC (the TMDB key goes to a paired device only, as
@@ -159,6 +164,9 @@ FORGET = "forget"
 # Said in `hello` by any share, just before `forget` (2026-11-06): a video app may be set up
 # with every profile by one code (`POST /sync/v1/setup`).
 SETUP = "setup"
+# Said in `hello` by any share, between `setup` and `forget` (2026-11-06, later): a paired
+# device may ask for the computer's plugins at every sync (`GET /sync/v1/plugins`).
+PLUGINS = "plugins"
 SETUP_PASS_S = 300  # a set-up pass is good for five minutes from when it's given
 MOST_PROFILES = 50  # profiles the app may give with a set-up code
 MOST_PROFILE_NAME = 100  # characters of a profile's name, as a device is told it
@@ -1362,6 +1370,35 @@ def setup_plugins() -> list[dict[str, str]]:
     return given
 
 
+# Every profile on the computer, as a device is told it (`profile_name`), in the app's order,
+# as the app last gave them (`sharing.profiles`); None until it has. In memory only.
+_profiles_lock = threading.Lock()
+_profile_names: list[str] | None = None
+
+
+def set_profiles(profiles: list[tuple[str, dict[str, Any]]]) -> int:
+    """Every profile on the computer (`setup_profiles`), from the app (2026-11-06, later).
+    Only what a device is called them by is kept: their hashes."""
+    global _profile_names
+    with _profiles_lock:
+        _profile_names = [told["profile"] for _, told in profiles]
+        return len(_profile_names)
+
+
+def plugins_now() -> dict[str, Any]:
+    """`GET /sync/v1/plugins`' answer: the plugins a set-up gives, and the hashes of the
+    computer's profiles (left out until the app has given them), with a revision that
+    changes whenever either does."""
+    with _profiles_lock:
+        names = None if _profile_names is None else list(_profile_names)
+    answer: dict[str, Any] = {"format": FORMAT, "plugins": setup_plugins()}
+    if names is not None:
+        answer["profiles"] = names
+    body = json.dumps(answer, sort_keys=True, ensure_ascii=False)
+    answer["revision"] = hashlib.sha256(body.encode("utf-8", "surrogatepass")).hexdigest()[:16]
+    return answer
+
+
 def refusal(error: str, message: str) -> dict[str, str]:
     return {"error": error, "message": message}
 
@@ -1742,7 +1779,7 @@ class Share:
         devices, not the library."""
         films = (FILMS,) if self.films else ()
         writes = ACCEPTS if self.lib.writable else ()
-        return [*writes, WATCHING, WATCHING_WAIT, *films, SETUP, FORGET]
+        return [*writes, WATCHING, WATCHING_WAIT, *films, SETUP, PLUGINS, FORGET]
 
     def start_waiting(self) -> bool:
         """A request will wait for its profile's watching to change: False when
@@ -2085,11 +2122,10 @@ class Share:
 
 def _for_any_profile(path: str) -> bool:
     """Whether a device paired with another profile may ask for this (2026-10-16): its
-    profile's watching, the films, a film's file (`do_GET` checks it's a film's), and
-    the computer's TMDB key (2026-11-05)."""
-    return path in (PREFIX + "watching", PREFIX + "films", PREFIX + "tmdb") or path.startswith(
-        PREFIX + "files/"
-    )
+    profile's watching, the films, a film's file (`do_GET` checks it's a film's), the
+    computer's TMDB key (2026-11-05), and its plugins (2026-11-06)."""
+    anyones = (PREFIX + "watching", PREFIX + "films", PREFIX + "tmdb", PREFIX + "plugins")
+    return path in anyones or path.startswith(PREFIX + "files/")
 
 
 def _listen(share: Share, host: str, port: int) -> _Listener:
@@ -2188,6 +2224,11 @@ class _Handler(BaseHTTPRequestHandler):
             return
         if path == PREFIX + "films":
             self._films()
+            return
+        if path == PREFIX + "plugins":
+            given = plugins_now()
+            log.info("sharing: a device asked for the plugins (%d)", len(given["plugins"]))
+            self._answer(200, given)
             return
         if path == PREFIX + "tmdb":
             key = tmdb.for_devices()

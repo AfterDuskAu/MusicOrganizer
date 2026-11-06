@@ -437,6 +437,7 @@ class Server:
             "sharing.set": self.sharing_set,
             "sharing.pair": self.sharing_pair,
             "sharing.setup": self.sharing_setup,
+            "sharing.profiles": self.sharing_profiles,
             "sharing.stop_pairing": self.sharing_stop_pairing,
             "sharing.forget": self.sharing_forget,
             "watching.set": self.watching_set,
@@ -1692,6 +1693,16 @@ class Server:
         if self._share is None:
             raise RpcError(USER_ERROR, "Switch sharing on first, then add a device.")
         return self._share.new_setup_code(profiles)
+
+    def sharing_profiles(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Every profile on the computer, from the app (2026-11-06, later), so a paired
+        device can see when there's one it hasn't been set up with. Only their hashes are
+        kept, in memory; works with sharing off too."""
+        try:
+            profiles = sharing.setup_profiles(params.get("profiles"))
+        except ValueError as exc:
+            raise RpcError(INVALID_PARAMS, str(exc)) from None
+        return {"profiles": sharing.set_profiles(profiles)}
 
     def sharing_stop_pairing(self, params: dict[str, Any]) -> dict[str, Any]:
         if self._share is not None:

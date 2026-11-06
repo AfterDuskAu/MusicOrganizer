@@ -116,11 +116,11 @@ def test_hello_says_what_a_video_app_may_ask_and_whether_a_device_is_known(
 ) -> None:
     hello = ask(share, "/sync/v1/hello")[1]
     assert hello["accepts"] == ["changes", "favourites", "plays", "playlists", "watching",
-                                "watching_wait", "setup", "forget"]  # fmt: skip
+                                "watching_wait", "setup", "plugins", "forget"]  # fmt: skip
     assert (hello["paired"], hello["known"]) == (False, False)
     share.films = True
     accepts = ask(share, "/sync/v1/hello")[1]["accepts"]
-    assert accepts[-4:] == ["watching_wait", "films", "setup", "forget"]
+    assert accepts[-5:] == ["watching_wait", "films", "setup", "plugins", "forget"]
 
     mine, theirs = paired(share), paired_with(share, monkeypatch, KID)
     for key, paired_here in ((mine, True), (theirs, False)):
