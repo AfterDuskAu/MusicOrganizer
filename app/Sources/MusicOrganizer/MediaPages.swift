@@ -1151,6 +1151,12 @@ struct MovieView: View {
     @State private var extras: TMDBDetails?
     /// Someone from the cast whose page is open over this one.
     @State private var person: TMDBCast?
+    /// Download Season (2026-11-06): its first episode's ways being asked for, and then the
+    /// owner's choice of quality for the season.
+    @State private var askingSeason = false
+    @State private var seasonAsk: SeasonAsk?
+    /// The plugins couldn't be reached, and the page shows what was kept of it on this Mac.
+    @State private var offline = false
 
     private var isSeries: Bool { film.type == "series" }
     /// What's of it on this Mac (Videos → Movies/Series, 2026-11-05): a film's file, or the
@@ -1293,6 +1299,7 @@ struct MovieView: View {
                 // what was kept of it (as Bear Media II's Downloaded page does offline).
                 if let here, let kept = here.offline(model.keptTitle(here)) {
                     details = kept
+                    offline = true
                     problem = "Your plugins can't be reached just now, so only the episodes on this Mac are shown."
                 } else {
                     problem = error.localizedDescription
@@ -1335,15 +1342,43 @@ struct MovieView: View {
             let showing = season ?? details.seasons[0]
             part("Episodes") {
                 let counts = here?.perSeason ?? [:]
-                Picker("Season", selection: Binding(get: { showing }, set: { season = $0 })) {
-                    ForEach(details.seasons, id: \.self) { number in
-                        // How many of its episodes are on this Mac, for a series with many seasons.
-                        Text(MediaDetails.seasonName(number) + (counts[number].map { " · \($0) downloaded" } ?? ""))
-                            .tag(number)
+                HStack(spacing: 14) {
+                    Picker("Season", selection: Binding(get: { showing }, set: { season = $0 })) {
+                        ForEach(details.seasons, id: \.self) { number in
+                            // How many of its episodes are on this Mac, for a series with many seasons.
+                            Text(MediaDetails.seasonName(number) + (counts[number].map { " · \($0) downloaded" } ?? ""))
+                                .tag(number)
+                        }
                     }
+                    .labelsHidden()
+                    .fixedSize()
+                    // Not in the Finder kept apart, and not while only what's on this Mac shows.
+                    if !apart, !offline { seasonDownload(details, season: showing) }
                 }
-                .labelsHidden()
-                .fixedSize()
+                .confirmationDialog(
+                    seasonAsk.map {
+                        "Download \($0.episodes.count == 1 ? "1 episode" : "\($0.episodes.count) episodes") of "
+                            + MediaDetails.seasonName($0.season)
+                    } ?? "",
+                    isPresented: Binding(get: { seasonAsk != nil }, set: { if !$0 { seasonAsk = nil } }),
+                    titleVisibility: .visible, presenting: seasonAsk
+                ) { ask in
+                    ForEach(ask.choices) { way in
+                        Button("\(way.stream.qualityLabel) · \(way.addon)") {
+                            model.downloadSeason(
+                                ask.episodes, of: film, season: ask.season,
+                                like: NextEpisode.Played(addonId: way.addonId, quality: way.stream.quality),
+                                first: (ask.first, ask.ways), year: details.year ?? film.year)
+                        }
+                    }
+                    Button("Cancel", role: .cancel) {}
+                } message: { _ in
+                    Text(
+                        "Each episode is downloaded in that quality from that plugin; if it hasn't one, from the "
+                            + "next plugin in your list that has; if none has, that episode is left and you're told "
+                            + "which. They go in your Movies folder's Series or Anime folder, and carry on if Bear "
+                            + "Media is closed and opened again.")
+                }
                 // Only the episodes on screen are made. A series that has gone on for
                 // years lists a thousand or more in one season, and made all at once
                 // they held the app for three seconds as the page opened, and a second
@@ -1417,6 +1452,75 @@ struct MovieView: View {
                 }
             }
             .frame(maxWidth: 760, alignment: .leading)
+        }
+    }
+
+    // MARK: Download Season
+
+    /// Download Season (2026-11-06, as the tablet app has it): every episode of the season
+    /// showing that's out and isn't on this Mac or on its way, each by the next-episode
+    /// rule, in the quality chosen once.
+    @ViewBuilder
+    private func seasonDownload(_ details: MediaDetails, season: Int) -> some View {
+        let today = String(ISO8601DateFormatter().string(from: Date()).prefix(10))
+        let out = details.episodes(in: season).filter { $0.day.isEmpty || $0.day <= today }
+        let wanted = SeasonDownload.wanted(out, of: film, here: here, coming: model.keepsComing, today: today)
+        if let finding = model.seasonFinding[AppModel.seasonKey(film, season)] {
+            HStack(spacing: 8) {
+                ProgressView().controlSize(.small)
+                Text("Finding \(min(finding.done + 1, finding.of)) of \(finding.of)…")
+                    .font(.callout).foregroundStyle(.secondary)
+            }
+        } else if askingSeason {
+            HStack(spacing: 8) {
+                ProgressView().controlSize(.small)
+                Text("Asking your plugins…").font(.callout).foregroundStyle(.secondary)
+            }
+        } else if !wanted.isEmpty {
+            Button {
+                askSeason(wanted, season: season)
+            } label: {
+                Label("Download Season", systemImage: "arrow.down.circle")
+                    .font(.body.weight(.semibold))
+                    .padding(.horizontal, 14)
+                    .frame(height: 32)
+                    .background(.white.opacity(0.14), in: Capsule())
+                    .overlay { Capsule().strokeBorder(.white.opacity(0.4)) }
+                    .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .help(
+                "Download every episode of \(MediaDetails.seasonName(season)) that's out and not on this Mac "
+                    + "(\(wanted.count == 1 ? "1 episode" : "\(wanted.count) episodes")), in a quality you choose")
+        } else if !out.isEmpty {
+            Label("All of it is on this Mac or on its way", systemImage: "checkmark.circle")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    /// The season's first episode to download is asked where it can be played from, and
+    /// the owner chooses the quality (and with it the plugin) from its ways.
+    private func askSeason(_ wanted: [MediaDetails.Video], season: Int) {
+        guard let first = wanted.first else { return }
+        askingSeason = true
+        Task {
+            defer { askingSeason = false }
+            var answer = episode == first ? streams : nil
+            if answer == nil {
+                answer = try? await model.ask(
+                    "addon.streams", ["type": film.type, "id": first.id, "adult": false], as: StreamsAnswer.self)
+            }
+            guard let answer else {
+                model.notice = "Your plugins couldn't be asked just now. Try again in a moment."
+                return
+            }
+            let choices = SeasonDownload.choices(in: answer)
+            guard !choices.isEmpty else {
+                model.notice = "None of your plugins has a way to download \(first.name(in: film.name))."
+                return
+            }
+            seasonAsk = SeasonAsk(season: season, episodes: wanted, first: first.id, ways: answer, choices: choices)
         }
     }
 
@@ -2144,4 +2248,14 @@ struct WatchlistView: View {
             .padding(.bottom, 14)
         }
     }
+}
+
+/// Download Season's question (2026-11-06): the season, its episodes still to download, the
+/// ways to play the first of them, and the qualities to choose from.
+private struct SeasonAsk {
+    let season: Int
+    let episodes: [MediaDetails.Video]
+    let first: String
+    let ways: StreamsAnswer
+    let choices: [StreamsAnswer.Way]
 }

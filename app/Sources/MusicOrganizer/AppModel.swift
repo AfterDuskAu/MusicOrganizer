@@ -2066,12 +2066,123 @@ final class AppModel {
             let keep = PendingKeeps.Keep(
                 stream, convert: convert, apart: apart, of: film, part: episode, year: year)
         else { return }
-        // Remembered until it's in the Movies folder, so it carries on if the app is
-        // closed first.
+        startKeep(keep)
+    }
+
+    /// A keep asked for: remembered until it's in the Movies folder, so it carries on if
+    /// the app is closed first, and followed.
+    private func startKeep(_ keep: PendingKeeps.Keep) {
         var pending = PendingKeeps.load()
         pending.add(keep)
         pending.save()
         follow(keep, quietly: false)
+    }
+
+    // MARK: Download Season (2026-11-06)
+
+    /// A season being downloaded from a series' page: its episodes' ways being found, by
+    /// "<series id>|<season>" (`seasonKey`).
+    private(set) var seasonFinding: [String: SeasonFinding] = [:]
+
+    struct SeasonFinding: Equatable {
+        var done: Int
+        var of: Int
+    }
+
+    /// The episodes waiting for another episode of the same torrent to be kept first
+    /// (`SeasonQueue`, kept on this Mac), for Downloads to list.
+    private(set) var seasonWaiting: [PendingKeeps.Keep] = SeasonQueue.load().waiting
+
+    static func seasonKey(_ series: MediaItem, _ season: Int) -> String { "\(series.id)|\(season)" }
+
+    /// What's on its way, for which episodes a season still wants: the keeps being fetched
+    /// (or not heard from yet), and the episodes waiting their turn.
+    var keepsComing: [PendingKeeps.Keep] {
+        listedKeeps.filter { filmKeeps[$0.id]?.isKeeping ?? true } + seasonWaiting
+    }
+
+    /// Download Season (2026-11-06): each of these episodes by the next-episode rule
+    /// (`SeasonDownload.way`): the quality and plugin chosen once (`chosen`), else the next
+    /// plugin in the owner's list with that quality, else that episode is left and the
+    /// notice names it. Each is kept as Download on its page keeps it; one whose torrent is
+    /// already being kept waits its turn (`SeasonQueue`). `first` is the episode the choice
+    /// was made from, with its ways, so they aren't asked for twice.
+    func downloadSeason(
+        _ episodes: [MediaDetails.Video], of series: MediaItem, season: Int, like chosen: NextEpisode.Played,
+        first: (episode: String, ways: StreamsAnswer)?, year: String?
+    ) {
+        let key = Self.seasonKey(series, season)
+        guard seasonFinding[key] == nil, !episodes.isEmpty else { return }
+        seasonFinding[key] = SeasonFinding(done: 0, of: episodes.count)
+        // Settings → Downloads: made into a file phones and tablets play, unless switched off.
+        let convert = UserDefaults.standard.object(forKey: TorrentStatus.convertKey) as? Bool ?? true
+        Task {
+            var (started, waiting, missing) = (0, 0, [MediaDetails.Video]())
+            for (place, one) in episodes.enumerated() {
+                var ways = first?.episode == one.id ? first?.ways : nil
+                if ways == nil {
+                    ways = try? await ask(
+                        "addon.streams", ["type": series.type, "id": one.id, "adult": false], as: StreamsAnswer.self)
+                }
+                if let ways, let way = SeasonDownload.way(in: ways, like: chosen),
+                    let keep = PendingKeeps.Keep(way.stream, convert: convert, of: series, part: one, year: year)
+                {
+                    let hash = keep.infoHash
+                    if !keep.isAddress, torrentUnderWay(hash) || seasonWaiting.contains(where: { $0.infoHash == hash }) {
+                        var queue = SeasonQueue.load()
+                        queue.add(keep)
+                        queue.save()
+                        seasonWaiting = queue.waiting
+                        waiting += 1
+                    } else {
+                        startKeep(keep)
+                    }
+                    started += 1
+                } else {
+                    missing.append(one)
+                }
+                seasonFinding[key] = SeasonFinding(done: place + 1, of: episodes.count)
+            }
+            seasonFinding[key] = nil
+            let said = SeasonDownload.said(
+                started: started, waiting: waiting, missing: missing, season: season, quality: chosen.quality)
+            // Good news is said as such; "That didn't work" only when nothing could be.
+            if started > 0 { info = Info(title: "Download Season", text: said) } else { notice = said }
+        }
+    }
+
+    /// Whether a film of this torrent is being kept, or is remembered as being kept.
+    private func torrentUnderWay(_ hash: String) -> Bool {
+        let hash = hash.lowercased()
+        return filmKeepTasks[hash] != nil || filmKeeps[hash]?.isKeeping == true
+            || PendingKeeps.load().keeps.contains { !$0.isAddress && $0.infoHash == hash }
+    }
+
+    /// The next episode waiting for this torrent (`SeasonQueue`) is asked for, once nothing
+    /// of the torrent is being kept and the film player isn't playing it. The torrent is
+    /// left first, so its next file starts clean: the engine keeps one film of a torrent at
+    /// a time.
+    private func keepNextWaiting(of hash: String) {
+        let hash = hash.lowercased()
+        guard seasonWaiting.contains(where: { $0.infoHash == hash }), !torrentUnderWay(hash),
+            filmTorrent?.lowercased() != hash
+        else { return }
+        var queue = SeasonQueue.load()
+        guard let next = queue.next(of: hash) else { return }
+        queue.save()
+        seasonWaiting = queue.waiting
+        Task {
+            _ = try? await ask("torrent.stop", ["info_hash": hash], as: Empty.self)
+            startKeep(next)
+        }
+    }
+
+    /// An episode waiting its turn is taken off (its ✕ in Downloads): it isn't fetched.
+    func dropWaiting(_ keep: PendingKeeps.Keep) {
+        var queue = SeasonQueue.load()
+        queue.remove(slot: SeasonQueue.slot(keep))
+        queue.save()
+        seasonWaiting = queue.waiting
     }
 
     /// Ask the engine to keep a film, and follow it until it's kept, can't be, or is
@@ -2101,6 +2212,9 @@ final class AppModel {
                 // Known from now on as the title it was downloaded from the page of.
                 if let path = filmKeeps[id]?.keptPath, let film = keep.film { noteKept(film, at: path) }
                 keptArrived += 1
+                // Another episode of the same torrent waiting its turn (Download Season),
+                // asked for once this follow-up has ended and the torrent is free.
+                if !keep.isAddress { Task { keepNextWaiting(of: keep.infoHash) } }
             } catch {
                 if !quietly, !Task.isCancelled { notice = error.localizedDescription }
             }
@@ -2147,6 +2261,7 @@ final class AppModel {
         Task {
             _ = try? await ask(
                 "torrent.stop_keeping", ["info_hash": key, "playing": playing], as: Empty.self)
+            keepNextWaiting(of: key)  // another episode of it waiting its turn
         }
     }
 
@@ -2154,7 +2269,7 @@ final class AppModel {
     /// way (songs, videos, and movies being kept).
     var downloadsBadge: Int {
         let keeping = listedKeeps.filter { filmKeeps[$0.id]?.isKeeping ?? true }.count
-        return downloaded.count + pending.filter(\.isActive).count + keeping
+        return downloaded.count + pending.filter(\.isActive).count + keeping + seasonWaiting.count
     }
 
     /// Downloads' ✕ on a film that's been kept, or couldn't be: off the list. (One still
@@ -2174,6 +2289,8 @@ final class AppModel {
         for keep in PendingKeeps.load().keeps where !(child && keep.isApart) {
             follow(keep, quietly: true)
         }
+        // Episodes of a season waiting for a torrent that nothing is keeping any more.
+        for hash in SeasonQueue.load().torrents { keepNextWaiting(of: hash) }
     }
 
     /// Shut the film player. A film from a torrent is left; what arrived of it stays in
@@ -2204,7 +2321,10 @@ final class AppModel {
         tidyFullScreenTopBar()
         if let hash = filmTorrent {
             (filmTorrent, filmStatus) = (nil, nil)
-            Task { _ = try? await ask("torrent.stop", ["info_hash": hash], as: Empty.self) }
+            Task {
+                _ = try? await ask("torrent.stop", ["info_hash": hash], as: Empty.self)
+                keepNextWaiting(of: hash)  // an episode that waited while its torrent played
+            }
         }
     }
 

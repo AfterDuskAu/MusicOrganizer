@@ -149,17 +149,52 @@ struct FilmKeeps: View {
 
     var body: some View {
         let keeps = adult ? model.adultKeeps : model.listedKeeps
+        // Episodes of a season waiting for the one before them, from the same torrent
+        // (Download Season, 2026-11-06). Never from the Finder for adults.
+        let waiting = adult ? [] : model.seasonWaiting
         // What's being saved from a browser window (2026-10-18), above the rest.
         BrowserSavesList(adult: adult)
-        if !keeps.isEmpty {
+        if !keeps.isEmpty || !waiting.isEmpty {
             VStack(spacing: 0) {
                 ForEach(keeps) { keep in
                     row(keep, model.filmKeeps[keep.id])
                     Divider()
                 }
+                ForEach(waiting, id: \.waitingSlot) { keep in
+                    waitingRow(keep)
+                    Divider()
+                }
             }
             .background(Theme.current.panel)
         }
+    }
+
+    /// An episode waiting its turn: its torrent is keeping another episode first.
+    private func waitingRow(_ keep: PendingKeeps.Keep) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "popcorn").foregroundStyle(.secondary).frame(width: 20)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(keep.name).fontWeight(.medium).lineLimit(1)
+                Text("\(keep.kindName) · to \(keep.placeName)")
+                    .font(.callout).foregroundStyle(.secondary).lineLimit(1)
+            }
+            .frame(minWidth: 160, maxWidth: 320, alignment: .leading)
+            Text("Waiting for the episode before it, which comes in the same torrent")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Button {
+                model.dropWaiting(keep)
+            } label: {
+                Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .takesFirstClick(false)
+            .help("Don't download this episode")
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
     }
 
     private func row(_ keep: PendingKeeps.Keep, _ status: TorrentStatus?) -> some View {
