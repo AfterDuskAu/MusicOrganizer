@@ -850,6 +850,11 @@ final class AppModel {
     private(set) var pairingUntil: Date?
     /// The kind of device the last code was used by ("iPhone"), to say so.
     private(set) var justPaired: String?
+    /// The code showing for setting up a video app with every profile (2026-11-06: Add a
+    /// Device), and when it stops working; and whether one was just used.
+    private(set) var setupCode: PairingCode?
+    private(set) var setupUntil: Date?
+    private(set) var justSetUp = false
     /// Why Last.fm couldn't be set up, in plain words.
     private(set) var lastfmNote: String?
 
@@ -2569,6 +2574,7 @@ final class AppModel {
         (queueStatus, accounts, accountNote, signingIn) = (nil, nil, nil, false)
         (connectingLastfm, lastfmNote) = (false, nil)
         (sharing, sharingNote, pairingCode, justPaired) = (nil, nil, nil, nil)
+        (setupCode, justSetUp) = (nil, false)
         (auto, batch, deletingDownloads, removingDownloads, lastAuto) = (nil, nil, nil, nil, nil)
         (removedLog, puttingBack, removedAsked) = ([], [], false)
         (youtubeQuery, youtubeResults, youtubeProblem, searchText) = ("", [], nil, "")
@@ -3669,12 +3675,37 @@ final class AppModel {
             }
         } else {
             announcer.stop()
-            justPaired = nil
+            (justPaired, justSetUp) = (nil, false)
         }
         // A code that has been used comes off the screen, and Settings says who used it.
         if pairingCode != nil, !status.pairing {
             if let device = status.newDevices(since: before).last { justPaired = device.device }
             pairingCode = nil
+        }
+        // A set-up code that has been used too: the device pairs each of its accounts next.
+        // One that ran out just goes.
+        if setupCode != nil, status.settingUp != true {
+            justSetUp = (setupUntil ?? .distantPast) > Date()
+            setupCode = nil
+        }
+    }
+
+    /// Show a six-digit code for setting up a video app with every profile at once
+    /// (2026-11-06): the engine is given each profile's name, child mark and ratings with
+    /// it, which it tells the device that types the code. It works once, for a few minutes.
+    func addDevice() {
+        guard let connection = engine?.connection else { return }
+        (justPaired, justSetUp) = (nil, false)
+        let profiles = DeviceSetup.profiles(self.profiles)
+        Task {
+            do {
+                let code = try await connection.call(
+                    "sharing.setup", ["profiles": profiles], as: PairingCode.self)
+                setupUntil = Date().addingTimeInterval(Double(code.seconds))
+                setupCode = code
+            } catch {
+                sharingNote = error.localizedDescription
+            }
         }
     }
 
@@ -3693,9 +3724,9 @@ final class AppModel {
         }
     }
 
-    /// The code's window was closed: the code stops working.
+    /// The code's window was closed: the code stops working (a set-up code too).
     func stopPairing() {
-        pairingCode = nil
+        (pairingCode, setupCode) = (nil, nil)
         guard let connection = engine?.connection else { return }
         Task {
             if let found = try? await connection.call(

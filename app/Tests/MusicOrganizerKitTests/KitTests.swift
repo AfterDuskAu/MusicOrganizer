@@ -1682,6 +1682,42 @@ final class SharingTests: XCTestCase {
         XCTAssertNil(off.whereToFind)
     }
 
+    func testASetUpCodeIsReadAndAnOlderEngineSaysNothing() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let json = """
+            {"on": true, "port": 40000, "address": null, "name": "A Library", "service": "s",
+             "devices": [], "pairing": false, "pairing_seconds_left": 0,
+             "setting_up": true, "setting_up_seconds_left": 280}
+            """
+        XCTAssertEqual(try decoder.decode(SharingStatus.self, from: Data(json.utf8)).settingUp, true)
+        let older = """
+            {"on": true, "port": 40000, "address": null, "name": "A Library", "service": "s",
+             "devices": [], "pairing": false, "pairing_seconds_left": 0}
+            """
+        XCTAssertNil(try decoder.decode(SharingStatus.self, from: Data(older.utf8)).settingUp)
+    }
+
+    /// What the engine is given of each profile with a set-up code (2026-11-06): its id,
+    /// its name, its child mark, and a child's ratings when it's kept to some.
+    func testEveryProfileIsGivenForASetUp() throws {
+        var list = ProfileList(firstNamed: "D", libraryRoot: "/made/up/D")
+        let other = try list.add(name: "C", libraryRoot: "/made/up/C") { "c-profile" }
+        let kid = try list.add(name: "Made-up Kid", libraryRoot: "/made/up/Kid", isChild: true) { "kid" }
+        let free = try list.add(name: "Older Kid", libraryRoot: "/made/up/Older", isChild: true) { "older" }
+        list.setRating(kid.id, "PG", allowed: true)
+        list.setRating(kid.id, "G", allowed: true)
+        list.setRating(other.id, "M", allowed: true)  // not a child's: nothing is kept to it
+        let given = DeviceSetup.profiles(list)
+        XCTAssertEqual(given.map { $0["id"] as? String }, [Profile.firstId, "c-profile", "kid", "older"])
+        XCTAssertEqual(given.map { $0["name"] as? String }, ["D", "C", "Made-up Kid", "Older Kid"])
+        XCTAssertEqual(given.map { $0["child"] as? Bool }, [false, false, true, true])
+        XCTAssertEqual(given[2]["ratings"] as? [String], ["G", "PG"])
+        XCTAssertNil(given[1]["ratings"])
+        XCTAssertNil(given[3]["ratings"], "\(free.name) is kept to no ratings")
+        XCTAssertNoThrow(try JSONSerialization.data(withJSONObject: ["profiles": given]))
+    }
+
     func testTheAddressIsOnlyShownWhenThereIsOne() {
         XCTAssertNil(SharingStatus(on: true, port: 40000, address: nil).whereToFind)
         XCTAssertNil(SharingStatus(on: false, port: 40000, address: address).whereToFind)

@@ -67,8 +67,18 @@ What the owner was promised, and where each promise is kept:
   "make the TMDB api ... pass over to any synced apps ... This will account for all
   accounts ... They all connect to D's inputted api key"). `GET /sync/v1/tmdb` answers a
   device paired with any profile with `{"key": ...}` (null when none is saved), so its
-  TMDB features use the owner's key; the key is never logged. It's the only secret ever
-  given to a device, and only to a paired one.
+  TMDB features use the owner's key; the key is never logged. With the plugins' addresses
+  a set-up gives (below), it's the only secret ever given to a device.
+- **A video app set up with every profile by one code** (2026-11-06, the owner: "Is there
+  a way to automatically pair the accounts to any new devices? So that i dont have to pair
+  every new device to each account, and it grabs the plugins, etc from that account?";
+  asked, they chose that it still takes a code, and that every plugin is copied, one set
+  up by its own address too). The app shows a set-up code (`Share.new_setup_code`, with
+  its profiles); a device that sends it (`POST /sync/v1/setup`) is told each profile's
+  name, child mark and Australian ratings, given the add-ons' names and addresses (never
+  one for adults only) and a pass good for five minutes, and pairs each of its accounts
+  with its profile by that pass (`POST /sync/v1/pair`), one key each, as by hand. Nothing
+  is paired without a code, and the profiles are kept only in memory, with the code.
 
 **Privacy.** No address, computer name, pairing code or key is ever logged or put in an
 error, and no key is given out over RPC (the TMDB key goes to a paired device only, as
@@ -146,6 +156,14 @@ MAX_BODY = 4096  # a pairing request is a few dozen bytes
 ACCEPTS = ("changes", "favourites", "plays", "playlists")
 # Also said in `hello`, by any share: a device may say it has forgotten this library.
 FORGET = "forget"
+# Said in `hello` by any share, just before `forget` (2026-11-06): a video app may be set up
+# with every profile by one code (`POST /sync/v1/setup`).
+SETUP = "setup"
+SETUP_PASS_S = 300  # a set-up pass is good for five minutes from when it's given
+MOST_PROFILES = 50  # profiles the app may give with a set-up code
+MOST_PROFILE_NAME = 100  # characters of a profile's name, as a device is told it
+# The Australian ratings a child's profile may be kept to (the app's `AustralianRating`).
+RATINGS = ("G", "PG", "M", "MA15+", "R18+")
 PLAYLIST_EDITS = frozenset(
     {"playlist_remove", "playlist_rename", "playlist_order", "playlist_delete"}
 )
@@ -323,14 +341,14 @@ def _digest(key: str) -> str:
     return hashlib.sha256(key.encode("utf-8", "replace")).hexdigest()
 
 
-def _device_with(header: str | None) -> dict[str, Any] | None:
-    """The device paired with this profile whose key an `Authorization` header carries,
-    if any. The music's requests answer only these."""
+def _device_with(header: str | None, profile: str | None = None) -> dict[str, Any] | None:
+    """The device paired with this profile (or with `profile`) whose key an
+    `Authorization` header carries, if any. The music's requests answer only these."""
     if not header or not header.startswith("Bearer "):
         return None
     given = _digest(header[len("Bearer ") :].strip())
     found = None
-    for device in _saved():  # every one is compared, however early a match comes
+    for device in _saved(profile):  # every one is compared, however early a match comes
         if hmac.compare_digest(given, device[KEY_FIELD]):
             found = device
     return found
@@ -352,9 +370,12 @@ def _any_device_with(header: str | None) -> tuple[str, dict[str, Any]] | None:
     return found
 
 
-def _add_device(kind: str, *, header: str | None = None, its_id: object = None) -> tuple[str, bool]:
-    """Pair a device, and return its key (the only time the key exists in full here)
-    and whether it was paired before.
+def _add_device(
+    kind: str, *, header: str | None = None, its_id: object = None, profile: str | None = None
+) -> tuple[str, bool]:
+    """Pair a device with this profile (or with `profile`: a set-up, 2026-11-06), and
+    return its key (the only time the key exists in full here) and whether it was paired
+    before.
 
     **A device that was paired before takes its old place, not a second one**
     (2026-10-11: a phone that forgot the library and paired again was listed twice).
@@ -371,8 +392,8 @@ def _add_device(kind: str, *, header: str | None = None, its_id: object = None) 
     key = secrets.token_urlsafe(32)
     mark = _digest(its_id) if isinstance(its_id, str) and 0 < len(its_id) <= MAX_ITS_ID else None
     with _devices_lock:
-        saved = _saved()
-        holder = _device_with(header)
+        saved = _saved(profile)
+        holder = _device_with(header, profile)
         before = [
             d for d in saved
             if (holder is not None and d["id"] == holder["id"])
@@ -394,7 +415,7 @@ def _add_device(kind: str, *, header: str | None = None, its_id: object = None) 
             saved = [entry if d["id"] == entry["id"] else d for d in saved if d["id"] not in twice]
         else:
             saved.append(entry)
-        config.save_devices(saved)
+        config.save_devices(saved, profile=profile)
     return key, bool(before)
 
 
@@ -1283,6 +1304,64 @@ def _why_not_kept(exc: BaseException) -> str:
 # ---- sharing, switched on ----------------------------------------------------------------
 
 
+def profile_name(profile_id: str) -> str:
+    """What a device is told a profile is called by (2026-11-06): a hash of its id, the
+    same every time, so a device knows a profile it set up before."""
+    digest = hashlib.sha256(f"profile\n{profile_id}".encode("utf-8", "surrogatepass")).hexdigest()
+    return f"pr-{digest[:16]}"
+
+
+def setup_profiles(given: object) -> list[tuple[str, dict[str, Any]]]:
+    """The profiles the app gives with a set-up code (`sharing.setup`), checked: each
+    profile's id, and what a device is told of it (`profile`, `name`, `child`, and for a
+    child's kept to them, `ratings`). ValueError, saying what's wrong, for a list that
+    can't be read."""
+    if not isinstance(given, list) or not 0 < len(given) <= MOST_PROFILES:
+        raise ValueError(f"profiles should be a list of 1 to {MOST_PROFILES} profiles.")
+    checked: list[tuple[str, dict[str, Any]]] = []
+    for one in given:
+        if not isinstance(one, dict):
+            raise ValueError("Each profile should be an object with its id and name.")
+        profile_id = one.get("id")
+        if not config.is_profile_id(profile_id) or any(profile_id == had for had, _ in checked):
+            raise ValueError("Each profile needs an id of its own, one of the app's profile ids.")
+        name = _text(one.get("name"), MOST_PROFILE_NAME)
+        if name is None:
+            raise ValueError("Each profile needs a name.")
+        child = one.get("child")
+        if child is not None and not isinstance(child, bool):
+            raise ValueError("A profile's child should be true or false.")
+        told: dict[str, Any] = {
+            "profile": profile_name(profile_id),
+            "name": " ".join(name.split()),
+            "child": child is True,
+        }
+        ratings = one.get("ratings")
+        if child is True and isinstance(ratings, list):
+            kept = [rating for rating in RATINGS if rating in ratings]
+            if kept:
+                told["ratings"] = kept
+        checked.append((profile_id, told))
+    return checked
+
+
+def setup_plugins() -> list[dict[str, str]]:
+    """The computer's add-ons as a set-up gives them (2026-11-06): each one's name and
+    the address it's read at, in the owner's order, the set-up an address holds included
+    (the owner's choice). Never one for adults only, by its own word or the owner's mark:
+    a video app shows none, and a child's account on it mustn't have one. Only what's
+    kept is read: nothing is fetched."""
+    given: list[dict[str, str]] = []
+    for one in config.load_addons() or []:
+        address, name = one.get("address"), one.get("name")
+        if one.get("adult") is True or not isinstance(address, str) or not isinstance(name, str):
+            continue
+        if urlsplit(address).scheme not in ("http", "https") or len(address) > 2000:
+            continue
+        given.append({"name": name, "address": address})
+    return given
+
+
 def refusal(error: str, message: str) -> dict[str, str]:
     return {"error": error, "message": message}
 
@@ -1291,7 +1370,8 @@ def status_off(lib: Library) -> dict[str, Any]:
     """What the app's Settings shows while sharing is off."""
     return {"on": False, "port": None, "address": None, "name": lib.root.name,
             "service": SERVICE_TYPE, "devices": devices(), "pairing": False,
-            "pairing_seconds_left": 0, "films": False, "awake": True}  # fmt: skip
+            "pairing_seconds_left": 0, "setting_up": False, "setting_up_seconds_left": 0,
+            "films": False, "awake": True}  # fmt: skip
 
 
 class Share:
@@ -1334,6 +1414,16 @@ class Share:
         self._http: _Listener | None = None
         self._code: str | None = None
         self._code_until = 0.0
+        # Setting up a video app with every profile (2026-11-06): the code on the screen
+        # and the profiles the app gave with it; once it's used, the pass that pairs each
+        # of those profiles once, and the ones not yet paired by it (by what a device is
+        # told a profile is called, to its id). In memory only.
+        self._setup_code: str | None = None
+        self._setup_until = 0.0
+        self._setup_profiles: list[tuple[str, dict[str, Any]]] = []
+        self._pass: str | None = None
+        self._pass_until = 0.0
+        self._pass_left: dict[str, str] = {}
         self._wrong = 0
         self._locked_until = 0.0
         self._files: dict[str, SharedFile] = {}
@@ -1382,6 +1472,7 @@ class Share:
         with self._lock:
             listener, self._http = self._http, None
             self._code = None
+            self._end_setup()
             awake = self._awake
         self._off.set()
         with _watching_changed:
@@ -1396,7 +1487,9 @@ class Share:
 
     def status(self) -> dict[str, Any]:
         with self._lock:
-            left = self._code_until - self._clock() if self._code else 0.0
+            now = self._clock()
+            left = self._code_until - now if self._code else 0.0
+            setting_up = self._setup_until - now if self._setup_code else 0.0
         on = self.listening
         return {
             "on": on,
@@ -1407,6 +1500,8 @@ class Share:
             "devices": devices(),
             "pairing": left > 0,
             "pairing_seconds_left": max(0, round(left)),
+            "setting_up": setting_up > 0,
+            "setting_up_seconds_left": max(0, round(setting_up)),
             "films": self.films,
             "awake": self.awake,
         }
@@ -1424,9 +1519,121 @@ class Share:
             return {"code": self._code, "seconds": CODE_LIFE_S}
 
     def stop_pairing(self) -> None:
-        """The code is taken off the screen: it no longer works."""
+        """The code is taken off the screen: it no longer works. A set-up code too, and
+        a set-up pass not yet used up (2026-11-06)."""
         with self._lock:
             self._code = None
+            self._end_setup()
+
+    def new_setup_code(self, profiles: list[tuple[str, dict[str, Any]]]) -> dict[str, Any]:
+        """A fresh six-digit code for setting up a video app with every profile at once
+        (2026-11-06), and the profiles (`setup_profiles`) it's for. A set-up code before
+        it stops working; a pairing code doesn't: they're apart."""
+        if not self.listening:
+            raise UserError("Switch sharing on first, then add a device.")
+        with self._lock:
+            self._setup_code = f"{secrets.randbelow(1_000_000):06d}"
+            self._setup_until = self._clock() + CODE_LIFE_S
+            self._setup_profiles = list(profiles)
+            return {"code": self._setup_code, "seconds": CODE_LIFE_S}
+
+    def _end_setup(self) -> None:
+        """No set-up code showing, and no pass working. Called holding `_lock`."""
+        self._setup_code, self._setup_profiles = None, []
+        self._pass, self._pass_left = None, {}
+
+    def _wrong_try(self, now: float) -> None:
+        """A wrong code, of either kind, or a wrong pass. Called holding `_lock`."""
+        self._wrong += 1
+        if self._wrong >= WRONG_TRIES:
+            self._wrong = 0
+            self._locked_until = now + LOCK_S
+
+    def setup(self, code: str, device: object) -> tuple[int, dict[str, Any]]:
+        """A device has sent a set-up code (2026-11-06): (the HTTP status, the answer's
+        body). Right, it's told every profile the app gave with the code, the add-ons, and
+        a pass for pairing each profile once; nothing is paired yet. Wrong, it counts
+        with the pairing codes' wrong tries."""
+        with self._lock:
+            now = self._clock()
+            if now < self._locked_until:
+                return 429, refusal(
+                    "too_many_tries", "Too many wrong codes. Wait a minute, then try again."
+                )
+            showing = self._setup_code if self._setup_code and now < self._setup_until else None
+            if showing is None or not hmac.compare_digest(code.encode(), showing.encode()):
+                self._wrong_try(now)
+                pairing = self._code if self._code and now < self._code_until else None
+                if pairing is not None and hmac.compare_digest(code.encode(), pairing.encode()):
+                    return 403, refusal(
+                        "wrong_code",
+                        "That's a code for pairing one account. To set up this device with "
+                        "every account, choose Add a Device on the computer, and type the code it "
+                        "shows.",
+                    )
+                if showing is None:
+                    return 403, refusal(
+                        "wrong_code",
+                        "The computer isn't showing a code for setting up a device now. Choose "
+                        "Add a Device there, then type the code it shows.",
+                    )
+                return 403, refusal(
+                    "wrong_code", "That code isn't the one on the computer's screen."
+                )
+            self._wrong = 0
+            profiles = self._setup_profiles
+            self._setup_code, self._setup_profiles = None, []  # a code works once
+            self._pass = secrets.token_urlsafe(32)
+            self._pass_until = now + SETUP_PASS_S
+            self._pass_left = {told["profile"]: profile_id for profile_id, told in profiles}
+            given = self._pass
+        kind, many = _device_kind(device), len(profiles)
+        log.info("sharing: a device is being set up (%s, %d profiles)", kind, many)
+        self._tell()
+        return 200, {
+            "format": FORMAT,
+            "setup": given,
+            "seconds": SETUP_PASS_S,
+            "profiles": [dict(told) for _, told in profiles],
+            "plugins": setup_plugins(),
+        }
+
+    def pair_by_pass(
+        self,
+        given: str,
+        profile: object,
+        device: object,
+        *,
+        header: str | None = None,
+        its_id: object = None,
+    ) -> tuple[int, dict[str, Any]]:
+        """One account of a device being set up pairs with its profile, by the pass
+        (2026-11-06): as `pair`, but with that profile, whichever is open."""
+        wrong = refusal(
+            "wrong_code",
+            "That set-up has run out, or this account was set up already. Start again: "
+            "choose Add a Device on the computer.",
+        )
+        with self._lock:
+            now = self._clock()
+            if now < self._locked_until:
+                return 429, refusal(
+                    "too_many_tries", "Too many wrong codes. Wait a minute, then try again."
+                )
+            working = self._pass if self._pass and now < self._pass_until else None
+            if working is None or not hmac.compare_digest(given.encode(), working.encode()):
+                self._wrong_try(now)
+                return 403, wrong
+            profile_id = self._pass_left.pop(profile, None) if isinstance(profile, str) else None
+            if profile_id is None:
+                self._wrong_try(now)
+                return 403, wrong
+            self._wrong = 0
+        kind = _device_kind(device)
+        key, again = _add_device(kind, header=header, its_id=its_id, profile=profile_id)
+        log.info("sharing: a device was paired by a set-up%s (%s)", " again" if again else "", kind)
+        self._tell()
+        return 200, {"key": key}
 
     def pair(
         self, code: str, device: object, *, header: str | None = None, its_id: object = None
@@ -1442,10 +1649,14 @@ class Share:
                 )
             showing = self._code if self._code and now < self._code_until else None
             if showing is None or not hmac.compare_digest(code.encode(), showing.encode()):
-                self._wrong += 1
-                if self._wrong >= WRONG_TRIES:
-                    self._wrong = 0
-                    self._locked_until = now + LOCK_S
+                self._wrong_try(now)
+                other = self._setup_code if now < self._setup_until else None
+                if other is not None and hmac.compare_digest(code.encode(), other.encode()):
+                    return 403, refusal(
+                        "wrong_code",
+                        "That's a code for setting up a device with every account. To pair just "
+                        "this one, choose Pair a Device on the computer.",
+                    )
                 if showing is None:
                     return 403, refusal(
                         "wrong_code",
@@ -1530,7 +1741,8 @@ class Share:
         has forgotten the library is taken by any share: that changes the list of paired
         devices, not the library."""
         films = (FILMS,) if self.films else ()
-        return [*(ACCEPTS if self.lib.writable else ()), WATCHING, WATCHING_WAIT, *films, FORGET]
+        writes = ACCEPTS if self.lib.writable else ()
+        return [*writes, WATCHING, WATCHING_WAIT, *films, SETUP, FORGET]
 
     def start_waiting(self) -> bool:
         """A request will wait for its profile's watching to change: False when
@@ -2034,7 +2246,7 @@ class _Handler(BaseHTTPRequestHandler):
         if path == PREFIX + "uploads":
             self._upload_start()
             return
-        if path != PREFIX + "pair":
+        if path not in (PREFIX + "pair", PREFIX + "setup"):
             self._answer(404, refusal("not_found", "There's nothing at that address."))
             return
         wrong = refusal("wrong_code", "That code isn't the one on the computer's screen.")
@@ -2045,12 +2257,22 @@ class _Handler(BaseHTTPRequestHandler):
             length = max(0, min(int(self.headers.get("Content-Length") or 0), MAX_BODY))
             asked = json.loads(self.rfile.read(length) or b"{}")
             code, device, its_id = str(asked.get("code", "")), asked.get("device"), asked.get("id")
+            given = asked.get("setup")
         except (ValueError, AttributeError):
             self._answer(403, wrong)
             return
-        status, body = self.server.share.pair(
-            code, device, header=self.headers.get("Authorization"), its_id=its_id
-        )
+        share = self.server.share
+        if path == PREFIX + "setup":
+            status, body = share.setup(code, device)
+        elif isinstance(given, str):  # an account of a device being set up (2026-11-06)
+            status, body = share.pair_by_pass(
+                given, asked.get("profile"), device,
+                header=self.headers.get("Authorization"), its_id=its_id,
+            )  # fmt: skip
+        else:
+            status, body = share.pair(
+                code, device, header=self.headers.get("Authorization"), its_id=its_id
+            )
         self._answer(status, body)
 
     def do_PUT(self) -> None:

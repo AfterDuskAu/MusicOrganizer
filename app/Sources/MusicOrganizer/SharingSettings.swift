@@ -64,13 +64,26 @@ struct SharingSettings: View {
                 if let kind = model.justPaired {
                     Label("\(kind) is paired, and can sync now.", systemImage: "checkmark.circle")
                 }
-                Button("Pair a Device…", systemImage: "plus") { model.pairDevice() }
-                    .disabled(status?.on != true)
+                if model.justSetUp {
+                    Label(
+                        "The device has every profile, and is pairing an account for each.",
+                        systemImage: "checkmark.circle")
+                }
+                HStack {
+                    Button("Add a Device…", systemImage: "plus.rectangle.on.rectangle") { model.addDevice() }
+                    Button("Pair a Device…", systemImage: "plus") { model.pairDevice() }
+                }
+                .disabled(status?.on != true)
                 SideNote(
-                    "A device is paired once, with a six-digit code shown here, and belongs to "
-                        + "the profile that's open when it's paired: pair someone's tablet with their "
-                        + "profile open. A video app then syncs their watching whichever profile is "
-                        + "open here. Removing a device stops it syncing; what's already on it stays there.")
+                    "Add a Device sets up a new video app with every profile at once: one code, and "
+                        + "each profile becomes an account there, paired with its own. It's told each "
+                        + "profile's name, whether it's a child's and the ratings a child's may see, and "
+                        + "copies your plugins (not one for adults only), with the set-up an address holds.")
+                SideNote(
+                    "Pair a Device pairs one account, or a phone player, with the profile that's open: "
+                        + "pair someone's tablet with their profile open. A video app then syncs their "
+                        + "watching whichever profile is open here. Removing a device stops it syncing; "
+                        + "what's already on it stays there.")
             }
         }
         .formStyle(.grouped)
@@ -81,6 +94,12 @@ struct SharingSettings: View {
                 get: { model.pairingCode != nil }, set: { if !$0 { model.stopPairing() } })
         ) {
             PairDeviceSheet().environment(model).dressed()
+        }
+        .sheet(
+            isPresented: Binding(
+                get: { model.setupCode != nil }, set: { if !$0 { model.stopPairing() } })
+        ) {
+            AddDeviceSheet().environment(model).dressed()
         }
         .confirmationDialog(
             "Remove this \(removing?.device ?? "device")?",
@@ -120,6 +139,57 @@ struct SharingSettings: View {
             Label(device.device, systemImage: device.device == "iPad" ? "ipad" : "iphone")
             Text(device.about())
         }
+    }
+}
+
+/// The six-digit code a new video app types to be set up with every profile (2026-11-06).
+/// Closing this takes the code away.
+private struct AddDeviceSheet: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        VStack(spacing: 14) {
+            Text("Add a Device").font(.title3.weight(.semibold)).heading()
+            Text(
+                "On the new tablet or TV, open the video app's Settings → Sync, choose Set Up From "
+                    + "Your Mac, and choose this Mac. Then type this code:"
+            )
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            TimelineView(.periodic(from: .now, by: 1)) { moment in
+                let left = Int(
+                    (model.setupUntil ?? .distantPast).timeIntervalSince(moment.date).rounded(.up))
+                VStack(spacing: 6) {
+                    if let code = model.setupCode, left > 0 {
+                        Text(code.spaced)
+                            .font(.system(size: 46, weight: .semibold))
+                            .monospacedDigit()
+                            .textSelection(.enabled)
+                        Text("It works once, for the next \(PairingCode.clock(left)).")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text("That code has run out.").foregroundStyle(.secondary)
+                    }
+                }
+            }
+            Text(
+                "Every profile here becomes an account on it, each paired with its own, and your "
+                    + "plugins are copied to it."
+            )
+            .font(.callout)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            HStack {
+                Button("New Code") { model.addDevice() }
+                Spacer()
+                Button("Done") { model.stopPairing() }
+                    .keyboardShortcut(.defaultAction)
+            }
+            .padding(.top, 6)
+        }
+        .padding(24)
+        .frame(width: 400)
     }
 }
 

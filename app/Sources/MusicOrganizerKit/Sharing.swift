@@ -57,11 +57,14 @@ public struct SharingStatus: Decodable, Equatable, Sendable {
     /// Whether kept movies and downloaded videos are shared too. Nil from an engine
     /// that doesn't say.
     public let films: Bool?
+    /// Whether a code for setting up a video app with every profile is showing and still
+    /// works (2026-11-06: Add a Device). Nil from an engine from before it.
+    public let settingUp: Bool?
 
     public init(
         on: Bool, port: Int? = nil, address: String? = nil, name: String = "",
         service: String = "", devices: [Device] = [], pairing: Bool = false,
-        pairingSecondsLeft: Int = 0, films: Bool? = nil
+        pairingSecondsLeft: Int = 0, films: Bool? = nil, settingUp: Bool? = nil
     ) {
         self.on = on
         self.port = port
@@ -72,6 +75,7 @@ public struct SharingStatus: Decodable, Equatable, Sendable {
         self.pairing = pairing
         self.pairingSecondsLeft = pairingSecondsLeft
         self.films = films
+        self.settingUp = settingUp
     }
 
     /// What to type into a phone that can't find this Mac by itself: the address and the
@@ -90,6 +94,22 @@ public struct SharingStatus: Decodable, Equatable, Sendable {
     static func date(_ text: String?) -> Date? {
         guard let text else { return nil }
         return ISO8601DateFormatter().date(from: text)
+    }
+}
+
+/// Setting up a video app with every profile by one code (2026-11-06, the owner: "Is there a
+/// way to automatically pair the accounts to any new devices? So that i dont have to pair
+/// every new device to each account, and it grabs the plugins, etc from that account?").
+/// What the engine is given of each profile with the code (`sharing.setup`): its id, its
+/// name, whether it's a child's, and the Australian ratings a child's is kept to. The
+/// engine tells a device only the name, the mark and the ratings, and keeps none of it.
+public enum DeviceSetup {
+    public static func profiles(_ list: ProfileList) -> [[String: Any]] {
+        list.profiles.map { profile in
+            var told: [String: Any] = ["id": profile.id, "name": profile.name, "child": profile.isChild]
+            if profile.isChild, let ratings = profile.allowedRatings, !ratings.isEmpty { told["ratings"] = ratings }
+            return told
+        }
     }
 }
 

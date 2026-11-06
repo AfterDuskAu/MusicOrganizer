@@ -13,7 +13,7 @@ public enum Legal {
     }
 
     /// The day these words were last changed.
-    public static let dated = "17 October 2026"
+    public static let dated = "6 November 2026"
 
     public static let terms: [Part] = [
         Part(
@@ -86,7 +86,13 @@ public enum Legal {
                 + "added to your profile here, and can copy its downloaded films into your "
                 + "Movies folder; all of it over your home network only. If you've given "
                 + "Bear Media your TMDB key, a device you've paired is given it too, over your "
-                + "home network, so its own TMDB features use your key."),
+                + "home network, so its own TMDB features use your key. A video app you set up "
+                + "with the code Add a Device shows is told each profile's name, whether it's a "
+                + "child's and the ratings a child's may see, so that it makes an account for "
+                + "each, and is given your plugins' names and addresses, with the set-up an "
+                + "address holds, which can include a key of yours; never a plugin for adults "
+                + "only. It's told nothing else of a profile: not its library or its sign-ins; "
+                + "each account's watching then syncs as any paired device's does."),
         Part(
             heading: "Other people's services",
             text: "Every service and plugin the app reaches has a privacy policy of its own, "

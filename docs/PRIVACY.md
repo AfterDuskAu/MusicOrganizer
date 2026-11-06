@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Bear Media. Last changed 17 October 2026.
+Bear Media. Last changed 6 November 2026.
 
 ## What the developer collects
 
@@ -16,7 +16,7 @@ Only what it takes to do what you ask. A search, a song or video played or downl
 
 ## Sync with your devices
 
-Off until you switch it on. Then a device you've paired with a code can copy your library over your home network, and nothing is sent to the internet for it. A video app you've paired also sends what you've watched on it (your Watchlist, what you've watched and where you got to), which is added to your profile here, and can copy its downloaded films into your Movies folder; all of it over your home network only. If you've given Bear Media your TMDB key, a device you've paired is given it too, over your home network, so its own TMDB features use your key.
+Off until you switch it on. Then a device you've paired with a code can copy your library over your home network, and nothing is sent to the internet for it. A video app you've paired also sends what you've watched on it (your Watchlist, what you've watched and where you got to), which is added to your profile here, and can copy its downloaded films into your Movies folder; all of it over your home network only. If you've given Bear Media your TMDB key, a device you've paired is given it too, over your home network, so its own TMDB features use your key. A video app you set up with the code Add a Device shows is told each profile's name, whether it's a child's and the ratings a child's may see, so that it makes an account for each, and is given your plugins' names and addresses, with the set-up an address holds, which can include a key of yours; never a plugin for adults only. It's told nothing else of a profile: not its library or its sign-ins; each account's watching then syncs as any paired device's does.
 
 ## Other people's services
 

@@ -217,7 +217,8 @@ def test_it_listens_on_this_computer_only_in_tests(share: sharing.Share) -> None
 def test_hello_needs_no_key(share: sharing.Share, filled: Library) -> None:
     status, hello = ask(share, "/sync/v1/hello")
     assert status == 200
-    takes = ["changes", "favourites", "plays", "playlists", "watching", "watching_wait", "forget"]
+    takes = ["changes", "favourites", "plays", "playlists", "watching", "watching_wait", "setup",
+             "forget"]  # fmt: skip
     assert hello == {"format": 1, "library": share.info, "paired": False, "known": False,
                      "accepts": takes}  # fmt: skip
     assert hello["library"]["name"] == filled.root.name
@@ -836,7 +837,8 @@ def test_sharing_is_off_until_its_switched_on(
     status = result(opened, "sharing.status")
     assert status == {"on": False, "port": None, "address": None, "name": "Library",
                       "service": "_homemusicsync._tcp", "devices": [], "pairing": False,
-                      "pairing_seconds_left": 0, "films": False, "awake": True}  # fmt: skip
+                      "pairing_seconds_left": 0, "setting_up": False,
+                      "setting_up_seconds_left": 0, "films": False, "awake": True}  # fmt: skip
     assert code(opened, "sharing.pair") == rpc.USER_ERROR  # no code while it's off
     assert code(opened, "sharing.set") == rpc.INVALID_PARAMS
     assert code(opened, "sharing.forget", device_id="d_nobody") == rpc.NOT_FOUND
@@ -1645,7 +1647,7 @@ def test_an_engine_without_the_librarys_lock_takes_nothing(
             # Nothing of the library's is taken; a device may still say it has forgotten it.
             # (What's watched is kept for the app, not in the library: 2026-10-16.)
             assert ask(again, "/sync/v1/hello")[1]["accepts"] == [
-                "watching", "watching_wait", "forget"
+                "watching", "watching_wait", "setup", "forget"
             ]  # fmt: skip
             sent = {"changes": [did("playlist_new", playlist=its_own(), name="Driving")]}
             status, answer = ask(again, "/sync/v1/changes", key=key, body=sent)
@@ -1783,7 +1785,8 @@ def test_the_app_is_told_what_a_phone_changed(
     key = ask(share, "/sync/v1/pair", body={"code": shown["code"], "device": "iPhone"})[1]["key"]
     said = ask(share, "/sync/v1/hello", key=key)[1]["accepts"]
     assert said == [
-        "changes", "favourites", "plays", "playlists", "watching", "watching_wait", "forget"
+        "changes", "favourites", "plays", "playlists", "watching", "watching_wait", "setup",
+        "forget",
     ]  # fmt: skip
 
     made = did("playlist_new", playlist=its_own(), name="Driving")
