@@ -120,9 +120,14 @@ struct MediaCard: View {
     }
 }
 
-/// A grid of films or channels, with the list's own messages and Show More. With `keep`,
-/// only what it keeps is shown (TMDB's original language, a child's ratings: 2026-11-05),
-/// and while none of what's come is kept, more of the list is asked for by itself.
+/// A grid of films or channels, with the list's own messages. More of the list is asked for
+/// by itself (the owner, 2026-11-07, as in the iPad's and the TV's Finders: "Instead of having to
+/// press show more, it automatically loads to fill the page. if the person is scrolling and hits
+/// the bottom, it automatically loads another set"): whenever its last cards are in sight or
+/// nearly, so a page that isn't full fills, and scrolling to the end brings the next set. No Show
+/// More; a set that couldn't be had says so, with Try Again. With `keep`, only what it keeps is
+/// shown (TMDB's original language, a child's ratings: 2026-11-05), and more of the list is asked
+/// for until enough is kept to fill the page.
 struct MediaGrid: View {
     let list: MediaList
     let width: CGFloat
@@ -133,6 +138,12 @@ struct MediaGrid: View {
     var noneKept = ""
     let open: (MediaItem) -> Void
     let showMore: () -> Void
+
+    /// The cards in sight (a lazy grid makes a card as it comes near the window, and lets it go
+    /// once it's well away), to know when the end is.
+    @State private var inSight: Set<String> = []
+    /// How far ahead of the end the next set is asked for, in cards.
+    private static let ahead = 12
 
     var body: some View {
         let items = keep.map { list.items.filter($0) } ?? list.items
@@ -161,21 +172,31 @@ struct MediaGrid: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         } else {
+            let nearEnd = items.suffix(Self.ahead).contains { inSight.contains($0.id) }
             ScrollView {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: width), spacing: 22)], spacing: 22) {
                     ForEach(items) { item in
                         Button { open(item) } label: { MediaCard(item: item) }
                             .buttonStyle(.plain)
+                            .onAppear { inSight.insert(item.id) }
+                            .onDisappear { inSight.remove(item.id) }
                     }
                 }
                 .padding(20)
                 if list.working || waiting {
                     ProgressView().padding(.bottom, 20)
-                } else if list.more {
-                    Button("Show More", action: showMore).padding(.bottom, 20)
                 } else if let problem = list.problem {
-                    Text(problem).foregroundStyle(.secondary).padding(.bottom, 20)
+                    VStack(spacing: 8) {
+                        Text(problem).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                        if list.more { Button("Try Again", action: showMore) }
+                    }
+                    .padding(.bottom, 20)
                 }
+            }
+            // Asked again whenever a set arrives (even one whose titles are all left out) while
+            // the end is still in sight.
+            .task(id: "\(nearEnd)|\(list.items.count)|\(list.working)|\(waiting)|\(list.problem ?? "")") {
+                if nearEnd, list.more, !list.working, !waiting, list.problem == nil { showMore() }
             }
         }
     }
