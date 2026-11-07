@@ -3,8 +3,15 @@ import Observation
 import SwiftUI
 
 /// What TMDB said of the titles the pages list (original language, Australian rating),
-/// asked of the engine as they're shown (`tmdb.facts`, fifty at a time), and kept while
+/// asked of the engine as they're shown (`tmdb.facts`, ten at a time), and kept while
 /// the app is open. A page decides by `TitleRules` what of it to show.
+///
+/// Ten at a time since 2026-11-07 (the owner: a child's Movie Finder "is extremely slow to find
+/// movies"): fifty at a time, nothing of a page showed until all fifty were answered. And a page
+/// asks its plugin for more while few are still waiting (`waitingCount`, `lookingAhead`), so the
+/// next page is being asked about while this one's are answered. The engine asks TMDB eight at a
+/// time and keeps what it said in its cache folder, so a title is asked about once (CLAUDE.md,
+/// `tmdb`).
 @MainActor
 @Observable
 final class TitleFilter {
@@ -16,7 +23,9 @@ final class TitleFilter {
     /// like the facts, so a page waiting on an answer is drawn again when it comes.
     private var asked: [String: Set<String>] = [:]
 
-    static let together = 50
+    static let together = 10
+    /// Fewer than this many of a list's titles waiting, and the list asks for its next page.
+    static let lookingAhead = 40
 
     /// What's known of a title for these rules, or nil while it hasn't been asked.
     private func known(_ id: String, _ wanted: [String]) -> TitleFacts? {
@@ -34,6 +43,11 @@ final class TitleFilter {
 
     func isWaiting(_ items: [MediaItem], _ rules: TitleRules, languageToo: Bool) -> Bool {
         items.contains { decide($0, rules, languageToo: languageToo) == .waiting }
+    }
+
+    /// How many of these are still waiting for TMDB's word.
+    func waitingCount(_ items: [MediaItem], _ rules: TitleRules, languageToo: Bool) -> Int {
+        items.reduce(0) { $0 + (decide($1, rules, languageToo: languageToo) == .waiting ? 1 : 0) }
     }
 
     /// Ask TMDB, through the engine, what these rules need of these titles and isn't known.

@@ -26,8 +26,14 @@ any synced apps ... They all connect to D's inputted api key"): a device paired 
 computer for sharing, of any profile, may ask for it on the home network (`for_devices`,
 `sharing`'s `GET /sync/v1/tmdb`), so its own TMDB features use the same key.
 
-What TMDB answers is kept in memory while the engine runs (a film's original language and
-rating don't change); nothing is written. At most `TOGETHER` questions are asked at once.
+What TMDB says of a title's facts (its TMDB id, original language and Australian rating) is
+kept in the app's cache folder, `tmdb/facts.json`, written only by `fileops.write_cached`, so a
+title is asked about once, not again each time the app opens (the owner's yes, 2026-11-07, after
+a child's Movie Finder was "extremely slow to find movies"; until then it was kept in memory
+only). TMDB having no rating for a title, or not knowing it, is believed for `UNRATED_FOR_S` and
+then asked again: a new film is often rated in Australia a few weeks after it's listed. The rest
+(lists, a title's page, people, the calendar) is kept in memory while the engine runs. At most
+`TOGETHER` questions are asked at once.
 In replay mode (`MUSICORG_REPLAY_DIR`, every test) the network is never reached.
 
 Checked against TMDB's documentation on 2026-11-05 (v3: `authentication`, `find`,
@@ -41,17 +47,20 @@ with HTTP 401. No answer with a key has been recorded: the owner's key is theirs
 from __future__ import annotations
 
 import calendar as month_days
+import json
 import logging
 import os
 import re
 import threading
+import time
 from collections.abc import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
+from pathlib import Path
 from typing import Any
 
-from musicorg import config
-from musicorg.errors import ReplayMissError, UserError
+from musicorg import config, fileops
+from musicorg.errors import MusicOrgError, ReplayMissError, UserError
 
 log = logging.getLogger(__name__)
 
@@ -60,7 +69,11 @@ API = "https://api.themoviedb.org/3"
 IMAGES = "https://image.tmdb.org/t/p/"
 USER_AGENT = "MusicOrganizer (a personal media library app)"
 TIMEOUT_S = 15
-TOGETHER = 4  # questions asked at once
+TOGETHER = 8  # questions asked at once (four until 2026-11-07, the owner's yes)
+UNRATED_FOR_S = 14 * 24 * 3600  # "no Australian rating", or "not known", believed this long
+FACTS_FOLDER = "tmdb"  # in the app's cache folder
+FACTS_FILE = "facts.json"
+FACTS_FORMAT = 1
 REGION = "AU"  # the owner's choice, 2026-11-05: Australian ratings and release dates
 REPLAY_ENV = "MUSICORG_REPLAY_DIR"
 # For a check only: TMDB's address in place of the real one (a stand-in on this computer),
@@ -225,12 +238,107 @@ _ratings: dict[tuple[int, str], str | None] = {}
 _imdb: dict[tuple[int, str], str | None] = {}
 _au_dates: dict[int, list[tuple[str, int]]] = {}  # a film's Australian (day, kind) releases
 _genres: dict[str, dict[int, str]] = {}
+# When TMDB was found not to know an IMDb id, or to have no Australian rating for a title.
+_missing_at: dict[str, float] = {}
+_unrated_at: dict[tuple[int, str], float] = {}
+# The facts file: read once, and written after a question that learned something.
+_facts_read = False
+_facts_changed = False
 
 
 def _forget_answers() -> None:
+    global _facts_read, _facts_changed
     with _lock:
         for kept in (_found, _languages, _ratings, _imdb, _au_dates, _genres):
             kept.clear()
+        _missing_at.clear()
+        _unrated_at.clear()
+        _facts_read = _facts_changed = False
+
+
+def _facts_path() -> tuple[Path, Path]:
+    """(the facts file, the app's cache folder)."""
+    cache = config.app_dirs().cache
+    return cache / FACTS_FOLDER / FACTS_FILE, cache
+
+
+def _fresh(when: float | None) -> bool:
+    return when is not None and time.time() - when < UNRATED_FOR_S
+
+
+def _read_facts() -> None:
+    """The facts kept from before, once, the first time any is wanted (the lock is held).
+    A file that can't be read is as none: it's only what TMDB would say again."""
+    global _facts_read
+    if _facts_read:
+        return
+    _facts_read = True
+    path, _ = _facts_path()
+    try:
+        kept = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return
+    if not isinstance(kept, dict) or kept.get("format") != FACTS_FORMAT:
+        return
+
+    def title(key: Any) -> tuple[int, str] | None:
+        media, _, number = str(key).partition(":")
+        return (int(number), media) if media in ("movie", "tv") and number.isdigit() else None
+
+    for imdb_id, found in (kept.get("found") or {}).items():
+        if not IMDB_ID.fullmatch(str(imdb_id)):
+            continue
+        whole = isinstance(found, list) and len(found) == 3
+        if whole and isinstance(found[0], int) and found[1] in ("movie", "tv"):
+            language = found[2] if isinstance(found[2], str) else None
+            _found.setdefault(imdb_id, (found[0], found[1], language))
+            _imdb.setdefault((found[0], found[1]), imdb_id)
+    for imdb_id, when in (kept.get("missing") or {}).items():
+        if IMDB_ID.fullmatch(str(imdb_id)) and isinstance(when, (int, float)) and _fresh(when):
+            _found.setdefault(imdb_id, None)
+            _missing_at.setdefault(imdb_id, float(when))
+    for key, language in (kept.get("languages") or {}).items():
+        made = title(key)
+        if made and (language is None or isinstance(language, str)):
+            _languages.setdefault(made, language)
+    for key, said in (kept.get("ratings") or {}).items():
+        made = title(key)
+        if made and isinstance(said, str):
+            _ratings.setdefault(made, said)
+    for key, when in (kept.get("unrated") or {}).items():
+        made = title(key)
+        if made and isinstance(when, (int, float)) and _fresh(when):
+            _ratings.setdefault(made, None)
+            _unrated_at.setdefault(made, float(when))
+
+
+def _write_facts() -> None:
+    """The facts kept, if anything was learned since they last were. Never fails a question:
+    a file that can't be written is only asked about again."""
+    global _facts_changed
+    with _lock:
+        if not _facts_changed:
+            return
+        _facts_changed = False
+        kept = {
+            "format": FACTS_FORMAT,
+            "found": {k: [v[0], v[1], v[2]] for k, v in _found.items() if v is not None},
+            "missing": {k: when for k, when in _missing_at.items() if _found.get(k, 0) is None},
+            "languages": {f"{m}:{n}": lang for (n, m), lang in _languages.items()},
+            "ratings": {f"{m}:{n}": said for (n, m), said in _ratings.items() if said is not None},
+            "unrated": {
+                f"{m}:{n}": when
+                for (n, m), when in _unrated_at.items()
+                if _ratings.get((n, m), "") is None
+            },
+        }
+    path, cache = _facts_path()
+    try:
+        fileops.make_cached_folder(path.parent, cache=cache)
+        written = json.dumps(kept, separators=(",", ":")).encode("utf-8")
+        fileops.write_cached(path, written, cache=cache)
+    except (MusicOrgError, OSError, ValueError) as exc:
+        log.warning("TMDB: what it said couldn't be kept: %s", exc)
 
 
 def _each(work: Callable[[Any], Any], things: Iterable[Any]) -> list[Any]:
@@ -261,9 +369,13 @@ def _media(kind: str) -> str:
 
 def _find(imdb_id: str, kind: str) -> tuple[int, str, str | None] | None:
     """A title by its IMDb id: (TMDB's id, its kind there, its original language)."""
+    global _facts_changed
     with _lock:
+        _read_facts()
         if imdb_id in _found:
-            return _found[imdb_id]
+            known = _found[imdb_id]
+            if known is not None or _fresh(_missing_at.get(imdb_id)):
+                return known
     body = _ask(f"/find/{imdb_id}", external_source="imdb_id")
     order = ["tv_results", "movie_results"] if kind == "series" else ["movie_results", "tv_results"]
     found: tuple[int, str, str | None] | None = None
@@ -280,6 +392,10 @@ def _find(imdb_id: str, kind: str) -> tuple[int, str, str | None] | None:
         if found:
             _languages[(found[0], found[1])] = found[2]
             _imdb[(found[0], found[1])] = imdb_id
+            _missing_at.pop(imdb_id, None)
+        else:
+            _missing_at[imdb_id] = time.time()
+        _facts_changed = True
     return found
 
 
@@ -335,7 +451,10 @@ def facts(titles: list[dict[str, Any]], want: Iterable[str]) -> dict[str, dict[s
             said["rating"] = _rating_of(*found)
         return said
 
-    answers = _each(one, asked)
+    try:
+        answers = _each(one, asked)
+    finally:
+        _write_facts()
     return {
         pair[0]: answer if answer else {"language": None, "rating": None}
         for pair, answer in zip(asked, answers, strict=True)
@@ -343,24 +462,36 @@ def facts(titles: list[dict[str, Any]], want: Iterable[str]) -> dict[str, dict[s
 
 
 def _language_of(tmdb_id: int, media: str) -> str | None:
+    global _facts_changed
     with _lock:
+        _read_facts()
         if (tmdb_id, media) in _languages:
             return _languages[(tmdb_id, media)]
     body = _ask(f"/{media}/{tmdb_id}")
     language = _language(body.get("original_language"))
     with _lock:
         _languages[(tmdb_id, media)] = language
+        _facts_changed = True
     return language
 
 
 def _rating_of(tmdb_id: int, media: str) -> str | None:
+    global _facts_changed
     with _lock:
+        _read_facts()
         if (tmdb_id, media) in _ratings:
-            return _ratings[(tmdb_id, media)]
+            said = _ratings[(tmdb_id, media)]
+            if said is not None or _fresh(_unrated_at.get((tmdb_id, media))):
+                return said
+            # None for a fortnight: asked again, with the film's releases.
+            _au_dates.pop(tmdb_id, None)
     if media == "movie":
         _film_releases(tmdb_id)
         with _lock:
-            return _ratings.get((tmdb_id, media))
+            said = _ratings.get((tmdb_id, media))
+            _note_rating((tmdb_id, media), said)
+            _facts_changed = True
+            return said
     body = _ask(f"/tv/{tmdb_id}/content_ratings")
     found: str | None = None
     for entry in body.get("results") or []:
@@ -369,7 +500,17 @@ def _rating_of(tmdb_id: int, media: str) -> str | None:
             break
     with _lock:
         _ratings[(tmdb_id, media)] = found
+        _note_rating((tmdb_id, media), found)
+        _facts_changed = True
     return found
+
+
+def _note_rating(key: tuple[int, str], said: str | None) -> None:
+    """When TMDB had no rating for a title, noted (the lock is held)."""
+    if said is None:
+        _unrated_at[key] = time.time()
+    else:
+        _unrated_at.pop(key, None)
 
 
 def _film_releases(tmdb_id: int) -> list[tuple[str, int]]:

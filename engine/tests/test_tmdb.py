@@ -176,11 +176,50 @@ def test_original_language_and_australian_rating_by_imdb_id(fake: FakeTmdb) -> N
     before = len(fake.asked)
     assert tmdb.facts(asked[:2], ["language", "rating"])["tt6751668"]["language"] == "ko"
     assert len(fake.asked) == before
-    # Only the language: no rating is asked for.
+    # Only the language: no rating is asked for (what was kept forgotten too).
     tmdb._forget_answers()
+    tmdb._facts_path()[0].unlink()
     fake.asked.clear()
     assert tmdb.facts(asked[:1], ["language"]) == {"tt6751668": {"language": "ko", "rating": None}}
     assert fake.paths() == ["/find/tt6751668"]
+
+
+def test_facts_are_kept_in_the_cache_and_no_rating_is_asked_again_after_two_weeks(
+    fake: FakeTmdb, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """2026-11-07, the owner's yes: what TMDB said of a title is kept (the app's cache folder,
+    through fileops), so the engine started again asks nothing; "no rating" and "not known"
+    are believed for two weeks, then asked again."""
+    set_up()
+    fake.answers["/find/tt0000001"] = film_found(101, "en")
+    fake.answers["/movie/101/release_dates"] = au_releases(("2026-01-01", 3, "PG"))
+    fake.answers["/find/tt0000002"] = film_found(102, "en")
+    fake.answers["/movie/102/release_dates"] = {"results": []}  # no Australian rating yet
+    asked = [{"id": "tt0000001", "type": "movie"}, {"id": "tt0000002", "type": "movie"}]
+    now = 1_800_000_000.0
+    monkeypatch.setattr(tmdb.time, "time", lambda: now)
+    assert tmdb.facts(asked, ["language", "rating"]) == {
+        "tt0000001": {"language": "en", "rating": "PG"},
+        "tt0000002": {"language": "en", "rating": None},
+    }
+    assert tmdb._facts_path()[0].is_file()
+    # The engine started again: nothing is asked of TMDB.
+    tmdb._forget_answers()
+    fake.asked.clear()
+    assert tmdb.facts(asked, ["language", "rating"])["tt0000001"]["rating"] == "PG"
+    assert fake.paths() == []
+    # Two weeks on: the film with no rating is asked about again, and is rated now.
+    now += 15 * 24 * 3600
+    fake.answers["/movie/102/release_dates"] = au_releases(("2026-02-01", 3, "G"))
+    tmdb._forget_answers()
+    assert tmdb.facts(asked, ["language", "rating"])["tt0000002"]["rating"] == "G"
+    assert fake.paths() == ["/movie/102/release_dates"]
+    # A kept file that can't be read is as none: asked again, and kept anew.
+    tmdb._facts_path()[0].write_text("not json")
+    tmdb._forget_answers()
+    fake.asked.clear()
+    assert tmdb.facts(asked[:1], ["language"])["tt0000001"]["language"] == "en"
+    assert fake.paths() == ["/find/tt0000001"]
 
 
 def test_a_tmdb_id_is_asked_directly_and_ratings_are_tidied(fake: FakeTmdb) -> None:

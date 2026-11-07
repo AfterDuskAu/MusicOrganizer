@@ -160,6 +160,9 @@ struct MediaGrid: View {
     var keep: ((MediaItem) -> Bool)?
     /// TMDB hasn't answered for some of the list yet: `keep` can't say.
     var waiting = false
+    /// The list may ask its plugin for more meanwhile: few of its titles are still waiting for
+    /// TMDB (`TitleFilter.lookingAhead`), so asking runs on across pages.
+    var mayAskMore = true
     /// Said when nothing of the list is kept.
     var noneKept = ""
     let open: (MediaItem) -> Void
@@ -187,8 +190,8 @@ struct MediaGrid: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 // Nothing kept of what's come: the next page, once TMDB has answered.
-                .task(id: "\(list.items.count)|\(waiting)") {
-                    if !waiting, list.more, !list.working { showMore() }
+                .task(id: "\(list.items.count)|\(mayAskMore)") {
+                    if mayAskMore, list.more, !list.working { showMore() }
                 }
             } else {
                 Text(noneKept)
@@ -221,8 +224,8 @@ struct MediaGrid: View {
             }
             // Asked again whenever a set arrives (even one whose titles are all left out) while
             // the end is still in sight.
-            .task(id: "\(nearEnd)|\(list.items.count)|\(list.working)|\(waiting)|\(list.problem ?? "")") {
-                if nearEnd, list.more, !list.working, !waiting, list.problem == nil { showMore() }
+            .task(id: "\(nearEnd)|\(list.items.count)|\(list.working)|\(mayAskMore)|\(list.problem ?? "")") {
+                if nearEnd, list.more, !list.working, mayAskMore, list.problem == nil { showMore() }
             }
         }
     }
@@ -1063,6 +1066,7 @@ struct MovieFinderView: View {
         let titles = model.titles
         let keep: ((MediaItem) -> Bool)? = filtering ? { titles.shows($0, rules, languageToo: languageToo) } : nil
         let waiting = filtering && titles.isWaiting(list.items, rules, languageToo: languageToo)
+        let ahead = !filtering || titles.waitingCount(list.items, rules, languageToo: languageToo) < TitleFilter.lookingAhead
         let none =
             titles.trouble.map { "\($0) What TMDB hasn't said is left out." }
             ?? (rules.ratings != nil
@@ -1070,7 +1074,7 @@ struct MovieFinderView: View {
                 : "Nothing here was first made in \(OriginalLanguage.name(rules.language)), as TMDB has it. "
                     + "The choice is in Settings → Plugins → TMDB.")
         return MediaGrid(
-            list: list, width: 140, keep: keep, waiting: waiting, noneKept: none,
+            list: list, width: 140, keep: keep, waiting: waiting, mayAskMore: ahead, noneKept: none,
             open: { opened = isAnime ? $0.asAnime : $0 }
         ) {
             Task {

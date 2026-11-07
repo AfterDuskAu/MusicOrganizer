@@ -2850,7 +2850,9 @@ def forget_cached_folder(folder: Path, *, cache: Path) -> None:
 def write_cached(path: Path, data: bytes, *, cache: Path) -> Path:
     """Save one small file the engine keeps for itself in its own cache folder: what
     libtorrent knows of a film it has fetched (`torrents/.<hash>.resume`, 2026-10-17),
-    so the film is all there at once when it's played again, not checked from 0%.
+    so the film is all there at once when it's played again, not checked from 0%; and what
+    TMDB said of the titles the Finders listed (`tmdb/facts.json`, 2026-11-07), so each is
+    asked about once.
 
     - Only directly in a real folder strictly inside `cache`, the app's cache folder:
       never a link, never anywhere else, never anything of a library's.
