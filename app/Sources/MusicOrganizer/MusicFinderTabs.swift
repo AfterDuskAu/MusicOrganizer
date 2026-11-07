@@ -123,7 +123,10 @@ struct FoundPlaylistsView: View {
             // frame) spilled over the next card when it sized the card itself.
             Color.clear
                 .aspectRatio(1, contentMode: .fit)
-                .overlay { WebPicture(address: playlist.thumbnail, symbol: "music.note.list") }
+                .overlay {
+                    WebPicture(
+                        address: playlist.thumbnail, symbol: "music.note.list", size: CGSize(width: 220, height: 220))
+                }
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .shadow(color: .black.opacity(0.18), radius: 5, y: 2)
             Text(playlist.title).fontWeight(.medium).lineLimit(1)

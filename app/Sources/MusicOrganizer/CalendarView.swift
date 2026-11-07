@@ -248,7 +248,8 @@ private struct EntryRow: View {
         Button(action: open) {
             HStack(spacing: 7) {
                 WebPicture(
-                    address: WebPictures.sized(entry.picture, points: 60), symbol: isVideo ? "play.tv" : "film")
+                    address: WebPictures.sized(entry.picture, points: 60), symbol: isVideo ? "play.tv" : "film",
+                    size: CGSize(width: isVideo ? 42 : 21, height: 28))
                     .frame(width: isVideo ? 42 : 21, height: 28)
                     .clipShape(RoundedRectangle(cornerRadius: 3))
                 VStack(alignment: .leading, spacing: 0) {

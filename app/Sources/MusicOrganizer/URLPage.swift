@@ -118,7 +118,7 @@ struct PageVideosView: View {
                 .frame(width: 128, height: 72)
                 .overlay {
                     if video.thumbnail != nil {
-                        WebPicture(address: video.thumbnail)
+                        WebPicture(address: video.thumbnail, size: CGSize(width: 128, height: 72))
                     } else {
                         Image(systemName: "film").font(.title2).foregroundStyle(.secondary)
                     }

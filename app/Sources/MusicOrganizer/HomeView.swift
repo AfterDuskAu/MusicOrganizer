@@ -832,7 +832,9 @@ private struct VideoCard: View {
             Button(action: play) {
                 Color.clear
                     .frame(width: 208, height: 117)
-                    .overlay { WebPicture(address: picture, symbol: "play.rectangle") }
+                    .overlay {
+                        WebPicture(address: picture, symbol: "play.rectangle", size: CGSize(width: 208, height: 117))
+                    }
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                     .overlay {
                         Image(systemName: "play.circle.fill")

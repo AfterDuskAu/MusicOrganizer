@@ -86,7 +86,8 @@ struct CastRow: View {
                     ForEach(cast) { person in
                         Button { open(person) } label: {
                             VStack(spacing: 6) {
-                                WebPicture(address: person.photo, symbol: "person.fill")
+                                WebPicture(
+                                    address: person.photo, symbol: "person.fill", size: CGSize(width: 84, height: 84))
                                     .frame(width: 84, height: 84)
                                     .clipShape(Circle())
                                     .overlay(Circle().strokeBorder(.white.opacity(0.25)))
@@ -127,7 +128,9 @@ struct PersonView: View {
             VStack(alignment: .leading, spacing: 22) {
                 BackButton(help: "Back to the film", action: back)
                 HStack(alignment: .top, spacing: 26) {
-                    WebPicture(address: person?.photo ?? cast.photo, symbol: "person.fill")
+                    WebPicture(
+                        address: person?.photo ?? cast.photo, symbol: "person.fill",
+                        size: CGSize(width: 180, height: 270))
                         .frame(width: 180, height: 270)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     VStack(alignment: .leading, spacing: 10) {

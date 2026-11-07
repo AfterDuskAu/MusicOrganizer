@@ -20,19 +20,43 @@ struct ComingPage: View {
 }
 
 /// A picture from the web, cut to fill its frame, with a plain tile until it arrives.
+///
+/// Kept ready to show (2026-11-07, the owner: smoother, as on the iPad): each picture is decoded
+/// once, off the main thread, at the size it's drawn, and kept in memory while there's room
+/// (`Pictures`), so a card scrolled back into a list shows its picture at once. Until then it was
+/// AsyncImage, which fetched and decoded a picture again, at its full size, every time its card
+/// came back into view. Never `AsyncImage` in a list.
 struct WebPicture: View {
     let address: String?
     var symbol = "play.rectangle"
+    /// The frame it's drawn in, in points (at its largest, where that changes with the window),
+    /// so it's decoded no bigger. Nil for a page's background: no bigger than the screen.
+    var size: CGSize?
     /// Told when the picture can't be had: its address has gone, or there was none.
     var failed: (() -> Void)?
 
+    /// What was loaded, and for which address and size (a page's picture can change address: a
+    /// film's background arrives after its poster).
+    @State private var loaded: (key: String, image: NSImage)?
+
     var body: some View {
-        if let url = address.flatMap(URL.init(string:)) {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .success(let image): image.resizable().scaledToFill()
-                case .failure: placeholder.onAppear { failed?() }
-                default: placeholder
+        if let address, let url = URL(string: address) {
+            let key = Pictures.key(address, size: size)
+            let image = loaded?.key == key ? loaded?.image : Pictures.ready(address, size: size)
+            ZStack {
+                if let image {
+                    Image(nsImage: image).resizable().scaledToFill()
+                } else {
+                    placeholder
+                }
+            }
+            .task(id: key) {
+                // Held by the card too (a picture that was ready at once included), so one the
+                // store lets go of while it's in sight stays.
+                if let image = await Pictures.load(url, address: address, size: size) {
+                    if loaded?.key != key || loaded?.image !== image { loaded = (key, image) }
+                } else if !Task.isCancelled {
+                    failed?()
                 }
             }
         } else {
@@ -86,6 +110,8 @@ struct MediaCard: View {
                     WebPicture(
                         address: WebPictures.sized(picture, points: 200),
                         symbol: square ? "play.tv" : "film",
+                        // At its widest: a card is about 110 to 200 points wide, by the page and the window.
+                        size: CGSize(width: 200, height: square ? 200 : 300),
                         failed: channelId.map { id in { model?.wantPicture(of: id) } })
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 10))
@@ -312,7 +338,7 @@ struct VideoRow: View {
         HStack(spacing: 14) {
             Color.clear
                 .frame(width: 128, height: 72)
-                .overlay { WebPicture(address: video.thumbnail) }
+                .overlay { WebPicture(address: video.thumbnail, size: CGSize(width: 128, height: 72)) }
                 .clipShape(RoundedRectangle(cornerRadius: 6))
                 .overlay(alignment: .bottomTrailing) {
                     if !video.length.isEmpty {
@@ -373,7 +399,7 @@ struct ChannelView: View {
                 BackButton(action: back)
                 WebPicture(
                     address: WebPictures.sized(page?.thumbnail ?? channel.thumbnail, points: 56),
-                    symbol: "play.tv"
+                    symbol: "play.tv", size: CGSize(width: 56, height: 56)
                 )
                     .frame(width: 56, height: 56)
                     .clipShape(Circle())
