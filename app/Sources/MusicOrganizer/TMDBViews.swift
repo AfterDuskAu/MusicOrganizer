@@ -3,27 +3,38 @@ import Observation
 import SwiftUI
 
 /// What TMDB said of the titles the pages list (original language, Australian rating),
-/// asked of the engine as they're shown (`tmdb.facts`, ten at a time), and kept while
-/// the app is open. A page decides by `TitleRules` what of it to show.
+/// asked of the engine as they're shown (`tmdb.facts`), and kept while the app is open. A page
+/// decides by `TitleRules` what of it to show.
 ///
-/// Ten at a time since 2026-11-07 (the owner: a child's Movie Finder "is extremely slow to find
-/// movies"): fifty at a time, nothing of a page showed until all fifty were answered. And a page
-/// asks its plugin for more while few are still waiting (`waitingCount`, `lookingAhead`), so the
-/// next page is being asked about while this one's are answered. The engine asks TMDB eight at a
-/// time and keeps what it said in its cache folder, so a title is asked about once (CLAUDE.md,
-/// `tmdb`).
+/// Asked steadily since 2026-11-09 (as the tablet app since 2026-11-07): `together` questions
+/// out at once, a title each, each taken up as soon as another is answered (`FactsQueue`), and
+/// what's answered shown a few times a second. Before, the titles went in tens (fifty before
+/// 2026-11-07), each ten waiting for its slowest, and a question that failed hid its title as
+/// "not rated" until the app was opened again: a profile being changed restarts the engine, and
+/// a child's lists were nearly empty after it (the owner: "it may record them, but they dont
+/// show up"). Now a question that fails is asked again. A page asks its plugin for more while
+/// few are still waiting (`waitingCount`, `lookingAhead`). The engine asks TMDB eight at a time
+/// over connections kept open, and keeps what it said in its cache folder (CLAUDE.md, `tmdb`).
 @MainActor
 @Observable
 final class TitleFilter {
     private(set) var facts: [String: TitleFacts] = [:]
-    private(set) var asking: Set<String> = []
     /// Why the last answers didn't come, for the pages.
     private(set) var trouble: String?
     /// Which of a title's facts have been asked for: a fact not asked isn't known. Watched
     /// like the facts, so a page waiting on an answer is drawn again when it comes.
     private var asked: [String: Set<String>] = [:]
 
-    static let together = 10
+    @ObservationIgnored private var line = FactsQueue()
+    @ObservationIgnored private var askers = 0
+    /// Answers come, to be shown together (`show`): each one shown alone redrew a page of
+    /// cards thirty times a second.
+    @ObservationIgnored private var heard: [(said: TitleFacts?, ask: FactsQueue.Ask)] = []
+    @ObservationIgnored private var showing = false
+    @ObservationIgnored private weak var model: AppModel?
+
+    /// Questions out at once: the engine asks TMDB `TOGETHER` (eight) at a time.
+    static let together = 8
     /// Fewer than this many of a list's titles waiting, and the list asks for its next page.
     static let lookingAhead = 40
 
@@ -50,39 +61,76 @@ final class TitleFilter {
         items.reduce(0) { $0 + (decide($1, rules, languageToo: languageToo) == .waiting ? 1 : 0) }
     }
 
-    /// Ask TMDB, through the engine, what these rules need of these titles and isn't known.
+    /// Ask TMDB, through the engine, what these rules need of these titles and isn't known:
+    /// put in line, in the list's order, and asked steadily.
     func look(_ items: [MediaItem], _ rules: TitleRules, languageToo: Bool, model: AppModel) {
-        let wanted = rules.wanted(languageToo: languageToo)
+        let wanted = Set(rules.wanted(languageToo: languageToo))
         guard !wanted.isEmpty else { return }
-        var seen = Set<String>()
-        let needed = items.filter {
-            seen.insert($0.id).inserted && !asking.contains($0.id) && !(asked[$0.id] ?? []).isSuperset(of: wanted)
+        self.model = model
+        for item in items where !(asked[item.id] ?? []).isSuperset(of: wanted) {
+            // What was asked of it before too, so an answer is whole.
+            line.add(item.id, type: item.type, fields: wanted.union(asked[item.id] ?? []))
         }
-        guard !needed.isEmpty else { return }
-        asking.formUnion(needed.map(\.id))
-        Task {
-            for start in stride(from: 0, to: needed.count, by: Self.together) {
-                let part = Array(needed[start..<min(start + Self.together, needed.count)])
-                // What was asked of them before, with what's wanted now, so an answer is whole.
-                let fields = part.reduce(Set(wanted)) { $0.union(asked[$1.id] ?? []) }
-                do {
-                    let answer = try await model.ask(
-                        "tmdb.facts",
-                        ["titles": part.map { ["id": $0.id, "type": $0.type] }, "want": Array(fields)],
-                        as: FactsAnswer.self)
-                    for said in answer.facts { facts[said.id] = said }
-                    trouble = nil
-                } catch {
-                    // Not known: left out, as an unknown always is. Asked again next time
-                    // the app opens.
-                    trouble = error.localizedDescription
+        while askers < Self.together, line.hasWaiting {
+            askers += 1
+            Task { await ask() }
+        }
+    }
+
+    /// One of the questions out at once: the next title in line, until there's none.
+    private func ask() async {
+        defer { askers -= 1 }
+        while let one = line.next() {
+            guard let model else {
+                _ = line.failed(one, counts: false)
+                return
+            }
+            do {
+                let answer = try await model.ask(
+                    "tmdb.facts",
+                    ["titles": [["id": one.id, "type": one.type]], "want": Array(one.fields)],
+                    as: FactsAnswer.self)
+                if trouble != nil { trouble = nil }
+                if let said = answer.facts.first(where: { $0.id == one.id }) {
+                    line.answered(one)
+                    hear(said, one)
+                } else {
+                    // TMDB couldn't be asked about it just now: again in a while.
+                    if !line.failed(one, counts: true) { hear(nil, one) }
+                    try? await Task.sleep(for: .seconds(3))
                 }
-                for item in part {
-                    asked[item.id, default: []].formUnion(fields)
-                    asking.remove(item.id)
-                }
+            } catch {
+                let words = error.localizedDescription
+                if trouble != words { trouble = words }
+                // The engine stopped or isn't there yet (a profile being changed): its turn
+                // again once it's back, counted against nothing. An error the engine gave
+                // (the key turned away) counts.
+                let away = (error as? RPCError)?.code == RPCError.closed
+                if !line.failed(one, counts: !away) { hear(nil, one) }
+                try? await Task.sleep(for: .seconds(away ? 2 : 5))
             }
         }
+    }
+
+    /// An answer, or a title given up on (nil: not known, so not shown), shown with the others
+    /// that come in the next moment.
+    private func hear(_ said: TitleFacts?, _ ask: FactsQueue.Ask) {
+        heard.append((said, ask))
+        guard !showing else { return }
+        showing = true
+        Task {
+            try? await Task.sleep(for: .milliseconds(200))
+            show()
+        }
+    }
+
+    private func show() {
+        for (said, ask) in heard {
+            if let said { facts[ask.id] = FactsQueue.merged(facts[ask.id], said, fields: ask.fields) }
+            asked[ask.id, default: []].formUnion(ask.fields)
+        }
+        heard.removeAll()
+        showing = false
     }
 }
 

@@ -354,10 +354,13 @@ def catalog(
     if not isinstance(metas, list):
         raise AddonError(f"{addon.get('name', 'The add-on')} gave a list that can't be read.")
     items = [item for item in (_item(meta, kind) for meta in metas) if item is not None]
-    # An add-on that says so is believed; otherwise a page with something on it may
-    # have another after it, if the list has pages at all.
+    # An add-on saying there's more is believed. One saying there's no more isn't taken at its
+    # word (2026-11-09: Cinemeta's Popular said so on its first page of 48, with more pages
+    # after it saying "more", and every Finder's Popular ended there; a child saw the three
+    # G and PG films among the 48): a page with something on it may have another after it, if
+    # the list has pages at all, and the app stops at a page with nothing new on it.
     said = raw.get("hasMore")
-    more = said if isinstance(said, bool) else bool(items) and "skip" in takes
+    more = True if said is True else bool(items) and "skip" in takes
     return {"items": items, "more": more, "next_skip": skip + len(metas)}
 
 

@@ -565,6 +565,7 @@ class Server:
         if self._relay is not None:
             self._relay.stop()  # nor any long video's playlist left to be read
             self._relay = None
+        tmdb.flush()  # what TMDB said in the last moments, kept
         deadline = time.monotonic() + SHUTDOWN_GRACE_S
         for thread in (self._queue_thread, self._job.thread if self._job else None):
             if thread is not None and thread.is_alive():

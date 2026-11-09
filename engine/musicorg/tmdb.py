@@ -12,8 +12,11 @@ asks questions:
 - **people**: an actor's photo, biography and every film and series they're in;
 - **the calendar**: the month's films released in Australia and new series, by popularity.
 
-A title is known to the add-ons by its IMDb id ("tt0111161"), and asked of TMDB by it
-(`/find`); TMDB's own ids ("tmdb:550") are asked directly. What TMDB lists by its own id
+A title is known to the add-ons by its IMDb id ("tt0111161"), and asked of TMDB by it: a
+film's rating in one question, `/movie/<IMDb id>` with its releases appended (2026-11-09: TMDB
+takes a film's IMDb id there, checked with the owner's key; until then `/find`, then the
+releases, two questions in a row), and a series by `/find`, then its ratings; TMDB's own ids
+("tmdb:550") are asked directly. What TMDB lists by its own id
 is given as "tmdb:<number>", and `imdb_id` turns one into the IMDb id its page is opened by.
 
 **The key** is the computer's, not a person's (every profile, a child's too, is served by
@@ -33,7 +36,11 @@ a child's Movie Finder was "extremely slow to find movies"; until then it was ke
 only). TMDB having no rating for a title, or not knowing it, is believed for `UNRATED_FOR_S` and
 then asked again: a new film is often rated in Australia a few weeks after it's listed. The rest
 (lists, a title's page, people, the calendar) is kept in memory while the engine runs. At most
-`TOGETHER` questions are asked at once.
+`TOGETHER` questions are asked at once, whoever asks (`_gate`), over connections kept open
+(`_session`, 2026-11-09: a question on a new connection took about 600 ms from the owner's
+Mac, 230 ms on one kept open). What's learned is written at most every `WRITE_EVERY_S` while
+answers come, and that long after the last (`_write_soon`): the app asks steadily, a title a
+question.
 In replay mode (`MUSICORG_REPLAY_DIR`, every test) the network is never reached.
 
 Checked against TMDB's documentation on 2026-11-05 (v3: `authentication`, `find`,
@@ -71,6 +78,7 @@ USER_AGENT = "MusicOrganizer (a personal media library app)"
 TIMEOUT_S = 15
 TOGETHER = 8  # questions asked at once (four until 2026-11-07, the owner's yes)
 UNRATED_FOR_S = 14 * 24 * 3600  # "no Australian rating", or "not known", believed this long
+WRITE_EVERY_S = 2.0  # what's learned is written at most this often, and this long after
 FACTS_FOLDER = "tmdb"  # in the app's cache folder
 FACTS_FILE = "facts.json"
 FACTS_FORMAT = 1
@@ -135,9 +143,13 @@ def _http(path: str, params: dict[str, Any], key: str) -> tuple[int, Any]:
         headers["Authorization"] = f"Bearer {key}"
     else:
         asked["api_key"] = key
+    address = (os.environ.get(API_ENV) or API) + path
     try:
-        address = (os.environ.get(API_ENV) or API) + path
-        response = requests.get(address, params=asked, headers=headers, timeout=TIMEOUT_S)
+        try:
+            response = _session().get(address, params=asked, headers=headers, timeout=TIMEOUT_S)
+        except requests.exceptions.ConnectionError:
+            # A connection kept open that TMDB has since closed: asked once more, afresh.
+            response = _session().get(address, params=asked, headers=headers, timeout=TIMEOUT_S)
     except requests.exceptions.RequestException:
         # Not the exception's own words: they hold the address, and the key may be in it.
         raise TmdbError(
@@ -150,9 +162,31 @@ def _http(path: str, params: dict[str, Any], key: str) -> tuple[int, Any]:
     return response.status_code, body
 
 
+_sessions_lock = threading.Lock()
+_kept_session: Any = None
+# However many ask at once (the app's steady questions, a list, a page), `TOGETHER` at most.
+_gate = threading.BoundedSemaphore(TOGETHER)
+
+
+def _session() -> Any:
+    """The connections to TMDB, kept open between questions (made the first time)."""
+    global _kept_session
+    with _sessions_lock:
+        if _kept_session is None:
+            import requests
+            from requests.adapters import HTTPAdapter
+
+            made = requests.Session()
+            made.mount("https://", HTTPAdapter(pool_connections=2, pool_maxsize=TOGETHER * 2))
+            made.mount("http://", HTTPAdapter(pool_connections=2, pool_maxsize=TOGETHER * 2))
+            _kept_session = made
+        return _kept_session
+
+
 def _ask(path: str, key: str | None = None, **params: Any) -> dict[str, Any]:
     """A question with the key saved (or `key`), its answer read, or a TmdbError."""
-    status_code, body = _http(path, params, key or _saved())
+    with _gate:
+        status_code, body = _http(path, params, key or _saved())
     if status_code == 200 and isinstance(body, dict):
         return body
     said = body.get("status_message") if isinstance(body, dict) else None
@@ -241,14 +275,21 @@ _genres: dict[str, dict[int, str]] = {}
 # When TMDB was found not to know an IMDb id, or to have no Australian rating for a title.
 _missing_at: dict[str, float] = {}
 _unrated_at: dict[tuple[int, str], float] = {}
-# The facts file: read once, and written after a question that learned something.
+# The facts file: read once, and written after a question that learned something, at most
+# every WRITE_EVERY_S (`_write_soon`).
 _facts_read = False
 _facts_changed = False
+_written_at = 0.0  # time.monotonic() of the last writing
+_write_timer: threading.Timer | None = None
 
 
 def _forget_answers() -> None:
-    global _facts_read, _facts_changed
+    global _facts_read, _facts_changed, _write_timer, _written_at
     with _lock:
+        if _write_timer is not None:
+            _write_timer.cancel()
+            _write_timer = None
+        _written_at = 0.0
         for kept in (_found, _languages, _ratings, _imdb, _au_dates, _genres):
             kept.clear()
         _missing_at.clear()
@@ -312,14 +353,49 @@ def _read_facts() -> None:
             _unrated_at.setdefault(made, float(when))
 
 
+def _write_soon() -> None:
+    """What was learned written now, or `WRITE_EVERY_S` after it last was when that's later:
+    at most that often while answers come, and never put off for ever (the tablet app's
+    lesson, 2026-11-07: put off at every answer, it was never written)."""
+    global _write_timer
+    with _lock:
+        if not _facts_changed or _write_timer is not None:
+            return
+        wait = _written_at + WRITE_EVERY_S - time.monotonic()
+        if wait > 0:
+            _write_timer = threading.Timer(wait, _timed_write)
+            _write_timer.daemon = True
+            _write_timer.start()
+            return
+    _write_facts()
+
+
+def _timed_write() -> None:
+    global _write_timer
+    with _lock:
+        _write_timer = None
+    _write_facts()
+
+
+def flush() -> None:
+    """Whatever was learned and not yet written, written now (the engine stopping)."""
+    global _write_timer
+    with _lock:
+        if _write_timer is not None:
+            _write_timer.cancel()
+            _write_timer = None
+    _write_facts()
+
+
 def _write_facts() -> None:
     """The facts kept, if anything was learned since they last were. Never fails a question:
     a file that can't be written is only asked about again."""
-    global _facts_changed
+    global _facts_changed, _written_at
     with _lock:
         if not _facts_changed:
             return
         _facts_changed = False
+        _written_at = time.monotonic()
         kept = {
             "format": FACTS_FORMAT,
             "found": {k: [v[0], v[1], v[2]] for k, v in _found.items() if v is not None},
@@ -354,7 +430,7 @@ def _each(work: Callable[[Any], Any], things: Iterable[Any]) -> list[Any]:
         except _NotFound:
             return None
         except TmdbError as exc:
-            if "didn't accept the key" in str(exc):
+            if _refused(exc):
                 raise
             return None
 
@@ -430,7 +506,10 @@ def rating(value: Any) -> str | None:
 def facts(titles: list[dict[str, Any]], want: Iterable[str]) -> dict[str, dict[str, str | None]]:
     """Each title's original language and Australian rating (as `want` asks), by its id:
     `{id: {"language", "rating"}}`, a value None when TMDB doesn't say. A title TMDB
-    can't be asked about (an id of another kind) has both None."""
+    can't be asked about (an id of another kind) has both None. A title TMDB couldn't be
+    asked about just now (no connection, TMDB busy or failing) is left out, to be asked
+    again (2026-11-09: given as None, it was hidden from a child as "not rated" until the
+    app was opened again)."""
     wanted = set(want) & {"language", "rating"}
     _saved()  # not set up: said once, not for every title
     asked = [
@@ -439,26 +518,72 @@ def facts(titles: list[dict[str, Any]], want: Iterable[str]) -> dict[str, dict[s
         if isinstance(t, dict) and isinstance(t.get("id"), str)
     ]
 
-    def one(pair: tuple[str, str]) -> dict[str, str | None]:
+    def one(pair: tuple[str, str]) -> dict[str, str | None] | None:
         title_id, kind = pair
-        found = _tmdb_of(title_id, kind)
-        if not found:
-            return {"language": None, "rating": None}
         said: dict[str, str | None] = {"language": None, "rating": None}
-        if "language" in wanted:
-            said["language"] = _language_of(*found)
-        if "rating" in wanted:
-            said["rating"] = _rating_of(*found)
+        try:
+            if "rating" in wanted and kind != "series" and IMDB_ID.fullmatch(title_id):
+                _film_at_once(title_id)
+            found = _tmdb_of(title_id, kind)
+            if not found:
+                return said
+            if "language" in wanted:
+                said["language"] = _language_of(*found)
+            if "rating" in wanted:
+                said["rating"] = _rating_of(*found)
+        except _NotFound:
+            return {"language": None, "rating": None}
+        except TmdbError as exc:
+            if _refused(exc):
+                raise
+            return None  # not known now: left out, and asked again
         return said
 
     try:
         answers = _each(one, asked)
     finally:
-        _write_facts()
+        _write_soon()
     return {
-        pair[0]: answer if answer else {"language": None, "rating": None}
-        for pair, answer in zip(asked, answers, strict=True)
+        pair[0]: answer for pair, answer in zip(asked, answers, strict=True) if answer is not None
     }
+
+
+def _refused(exc: TmdbError) -> bool:
+    """The key itself was turned away: every question stops."""
+    return "didn't accept the key" in str(exc)
+
+
+def _film_at_once(imdb_id: str) -> None:
+    """A film not known yet, asked by its IMDb id with its releases in the same answer: its
+    TMDB id, original language and Australian rating in one question, kept as `_find` and
+    `_film_releases` keep them. Nothing is asked of one known already, or known not to be
+    known; one TMDB has no film for (a series, or nothing) is left to `_find`."""
+    global _facts_changed
+    with _lock:
+        _read_facts()
+        if imdb_id in _found:
+            known = _found[imdb_id]
+            if known is not None or _fresh(_missing_at.get(imdb_id)):
+                return
+    try:
+        body = _ask(f"/movie/{imdb_id}", append_to_response="release_dates")
+    except _NotFound:
+        return
+    tmdb_id = body.get("id")
+    if not isinstance(tmdb_id, int):
+        return
+    language = _language(body.get("original_language"))
+    with _lock:
+        _found[imdb_id] = (tmdb_id, "movie", language)
+        _languages[(tmdb_id, "movie")] = language
+        _imdb[(tmdb_id, "movie")] = imdb_id
+        _missing_at.pop(imdb_id, None)
+        _facts_changed = True
+    releases = body.get("release_dates")
+    if isinstance(releases, dict):
+        _keep_releases(tmdb_id, releases)
+        with _lock:
+            _note_rating((tmdb_id, "movie"), _ratings.get((tmdb_id, "movie")))
 
 
 def _language_of(tmdb_id: int, media: str) -> str | None:
@@ -519,7 +644,11 @@ def _film_releases(tmdb_id: int) -> list[tuple[str, int]]:
     with _lock:
         if tmdb_id in _au_dates:
             return _au_dates[tmdb_id]
-    body = _ask(f"/movie/{tmdb_id}/release_dates")
+    return _keep_releases(tmdb_id, _ask(f"/movie/{tmdb_id}/release_dates"))
+
+
+def _keep_releases(tmdb_id: int, body: dict[str, Any]) -> list[tuple[str, int]]:
+    """A film's `release_dates` answer read: its Australian releases kept, and its rating."""
     releases: list[tuple[str, int]] = []
     ratings: list[tuple[int, str]] = []
     for country in body.get("results") or []:

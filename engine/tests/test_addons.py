@@ -158,6 +158,26 @@ def test_a_list_of_films(asked: list[str]) -> None:
     assert page["more"] is True  # it has pages, and this one wasn't empty
 
 
+def test_a_list_saying_no_more_on_a_page_with_films_is_asked_for_the_next(
+    asked: list[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """2026-11-09: Cinemeta's Popular said "hasMore": false on its first page of 48, with
+    more pages after it, and every Finder's Popular ended at 48 films. "More" is believed;
+    "no more" isn't taken at its word while a page has films on it."""
+    films = addons.load(f"{FILMS}/manifest.json")
+    answers = iter(
+        [
+            {**titles(("tt1", "One"), ("tt2", "Two")), "hasMore": False},
+            {**titles(("tt3", "Three")), "hasMore": True},
+            {**titles(), "hasMore": False},
+        ]
+    )
+    monkeypatch.setattr(addons, "_http", lambda url: next(answers))
+    assert addons.catalog(films, "movie", "publicdomainmovies")["more"] is True
+    assert addons.catalog(films, "movie", "publicdomainmovies", skip=2)["more"] is True
+    assert addons.catalog(films, "movie", "publicdomainmovies", skip=3)["more"] is False
+
+
 def test_a_channels_details_and_its_videos(asked: list[str]) -> None:
     channels = addons.load(f"{CHANNELS}/manifest.json")
     found = addons.meta(channels, "channel", "yt_id:UCX6OQ3DkcsbYNE6H8uQQuVA")

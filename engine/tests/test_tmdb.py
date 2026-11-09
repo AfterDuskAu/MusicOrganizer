@@ -222,6 +222,104 @@ def test_facts_are_kept_in_the_cache_and_no_rating_is_asked_again_after_two_week
     assert fake.paths() == ["/find/tt0000001"]
 
 
+def test_a_film_is_asked_by_its_imdb_id_in_one_question(fake: FakeTmdb) -> None:
+    """2026-11-09: TMDB takes a film's IMDb id in `/movie/{id}`, with its releases appended,
+    so a film's id, language and Australian rating come in one question, not two in a row."""
+    set_up()
+
+    def film(params: dict[str, Any]) -> dict[str, Any] | None:
+        if params.get("append_to_response") != "release_dates":
+            return None
+        return {
+            "id": 103,
+            "original_language": "fr",
+            "release_dates": au_releases(("2026-03-01", 3, "PG")),
+        }
+
+    fake.answers["/movie/tt0000003"] = film
+    asked = [{"id": "tt0000003", "type": "movie"}]
+    assert tmdb.facts(asked, ["language", "rating"]) == {
+        "tt0000003": {"language": "fr", "rating": "PG"}
+    }
+    assert fake.paths() == ["/movie/tt0000003"]
+    # Known now, the language and rating each by itself: nothing more is asked.
+    assert tmdb.facts(asked, ["rating"])["tt0000003"]["rating"] == "PG"
+    assert tmdb.facts(asked, ["language"])["tt0000003"]["language"] == "fr"
+    assert fake.paths() == ["/movie/tt0000003"]
+    # The calendar's Australian day for it was kept from the same answer.
+    assert tmdb._film_releases(103) == [("2026-03-01", 3)]
+    assert fake.paths() == ["/movie/tt0000003"]
+
+
+def test_a_title_tmdb_couldnt_answer_just_now_is_left_out_and_asked_again(
+    fake: FakeTmdb, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """2026-11-09: a question that failed (no connection, TMDB busy) isn't an answer. Given as
+    "no rating", it hid the title from a child until the app was opened again."""
+    set_up()
+    fake.answers["/movie/tt0000004"] = {
+        "id": 104,
+        "original_language": "en",
+        "release_dates": au_releases(("2026-04-01", 3, "G")),
+    }
+    asked = [{"id": "tt0000004", "type": "movie"}, {"id": "tt404", "type": "movie"}]
+    answered = fake
+
+    def busy(path: str, params: dict[str, Any], key: str) -> tuple[int, Any]:
+        if path == "/movie/tt0000004":
+            return 429, {"status_message": "Your request count is over the allowed limit."}
+        return answered(path, params, key)
+
+    monkeypatch.setattr(tmdb, "_http", busy)
+    # tt404 isn't known to TMDB: that is an answer. tt0000004 couldn't be asked: left out.
+    assert tmdb.facts(asked, ["rating"]) == {"tt404": {"language": None, "rating": None}}
+    monkeypatch.setattr(tmdb, "_http", answered)
+    assert tmdb.facts(asked, ["rating"])["tt0000004"] == {"language": None, "rating": "G"}
+
+
+def test_whats_learned_is_written_at_most_every_two_seconds_and_never_put_off(
+    fake: FakeTmdb, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    set_up()
+    for number in (5, 6):
+        fake.answers[f"/movie/tt000000{number}"] = {
+            "id": 100 + number,
+            "original_language": "en",
+            "release_dates": au_releases(("2026-05-01", 3, "PG")),
+        }
+    timers: list[Any] = []
+
+    class Timer:
+        """Stands in for threading.Timer: started, but run only when the test says."""
+
+        def __init__(self, wait: float, then: Any) -> None:
+            self.wait, self.then, self.daemon = wait, then, False
+            timers.append(self)
+
+        def start(self) -> None:
+            pass
+
+        def cancel(self) -> None:
+            timers.remove(self)
+
+    monkeypatch.setattr(tmdb.threading, "Timer", Timer)
+    path = tmdb._facts_path()[0]
+    tmdb.facts([{"id": "tt0000005", "type": "movie"}], ["rating"])
+    assert "tt0000005" in path.read_text()  # the first is written at once
+    tmdb.facts([{"id": "tt0000006", "type": "movie"}], ["rating"])
+    assert "tt0000006" not in path.read_text()  # the next waits its two seconds
+    assert len(timers) == 1 and 0 < timers[0].wait <= tmdb.WRITE_EVERY_S
+    tmdb.facts([{"id": "tt0000006", "type": "movie"}], ["rating"])
+    assert len(timers) == 1  # and isn't put off by more answers
+    timers.pop().then()
+    assert "tt0000006" in path.read_text()
+    # The engine stopping writes what's waiting at once.
+    fake.answers["/movie/tt0000007"] = {"id": 107, "original_language": "en", "release_dates": {}}
+    tmdb.facts([{"id": "tt0000007", "type": "movie"}], ["rating"])
+    tmdb.flush()
+    assert "tt0000007" in path.read_text() and not timers
+
+
 def test_a_tmdb_id_is_asked_directly_and_ratings_are_tidied(fake: FakeTmdb) -> None:
     set_up()
     fake.answers["/movie/550"] = {"id": 550, "original_language": "en"}
@@ -254,13 +352,23 @@ def test_a_token_goes_in_a_header_and_an_api_key_in_the_address(
         def json() -> dict[str, Any]:
             return {"success": True}
 
-    def get(url: str, **kwargs: Any) -> Answer:
-        seen.append({"url": url, **kwargs})
-        return Answer()
+    dropped = [1]  # the first question meets a connection TMDB has closed
+
+    class Kept:
+        """Stands in for the connections kept open (`tmdb._session`)."""
+
+        @staticmethod
+        def get(url: str, **kwargs: Any) -> Answer:
+            if dropped[0]:
+                dropped[0] -= 1
+                raise requests.exceptions.ConnectionError("closed by the other end")
+            seen.append({"url": url, **kwargs})
+            return Answer()
 
     monkeypatch.delenv("MUSICORG_REPLAY_DIR", raising=False)
-    monkeypatch.setattr(requests, "get", get)
-    tmdb._http("/authentication", {}, TOKEN)
+    monkeypatch.setattr(tmdb, "_session", lambda: Kept)
+    # Asked once more, afresh, after a kept connection had gone.
+    assert tmdb._http("/authentication", {}, TOKEN)[0] == 200
     tmdb._http("/authentication", {}, API_KEY)
     assert (
         seen[0]["headers"]["Authorization"] == f"Bearer {TOKEN}"
