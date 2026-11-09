@@ -22,9 +22,13 @@ public enum SeasonDownload {
     /// What a season can be downloaded in, from one episode's ways to play: each quality
     /// once, best first, by the first way of it in the owner's order of plugins. Only what
     /// can be downloaded (a torrent, or a plain web address).
-    public static func choices(in answer: StreamsAnswer) -> [StreamsAnswer.Way] {
+    /// With `playing` (Play All, 2026-11-09, as the tablet has it): what can be played, not only
+    /// what can be downloaded.
+    public static func choices(in answer: StreamsAnswer, playing: Bool = false) -> [StreamsAnswer.Way] {
         var seen = Set<String>()
-        let first = answer.ways.filter { $0.stream.canDownload && seen.insert($0.stream.quality ?? "").inserted }
+        let first = answer.ways.filter {
+            (playing ? $0.stream.canPlay : $0.stream.canDownload) && seen.insert($0.stream.quality ?? "").inserted
+        }
         return first.enumerated()
             .sorted { (place($0.element.stream.quality), $0.offset) < (place($1.element.stream.quality), $1.offset) }
             .map(\.element)

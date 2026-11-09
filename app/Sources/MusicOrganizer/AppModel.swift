@@ -353,6 +353,24 @@ final class AppModel {
     /// app knows as a series' is a series.
     func isWatched(_ id: String) -> Bool { watchedIds.contains(id) }
 
+    /// How far each film and episode begun got, on this Mac (`PartWatched`, a profile's).
+    private(set) var begun = PartWatched.saved()
+
+    /// How far a movie, or an episode of `series`, got while it's begun and not watched (0 to
+    /// 1), for the orange tick with its percentage (2026-11-09, as the tablet has it since
+    /// 2026-11-07): on a series' list of episodes and a movie's page only, never on a card
+    /// (the owner there: "only shows up in series, when looking at the list of episodes ...
+    /// and looking at a movies title page. not in home, Watchlist, or movie/series finder").
+    /// What this Mac noted (`begun`), else the Continue Watching place, which paired devices
+    /// share: a movie's own, or its series' episode last played.
+    func howFar(_ id: String, series: String? = nil) -> Double? {
+        guard !finished.contains(id) else { return nil }
+        if let part = begun.progress(of: id) { return part }
+        guard let entry = history.entries.first(where: { $0.id == (series ?? id) }) else { return nil }
+        if series != nil, entry.episodeId != id { return nil }
+        return entry.isUnfinished ? entry.progress : nil
+    }
+
     /// The owner had caught up with this series, and a new episode has come out since.
     func hasNewEpisode(_ id: String) -> Bool { newEpisodeIds.contains(id) }
 
@@ -975,6 +993,14 @@ final class AppModel {
         film.onPlace = { [weak self] seconds, length in
             guard let self, let id = self.watchingFilm else { return }
             self.noteFinished(id, at: seconds, of: length)
+            // How far it got, by the episode's own id when it's an episode (the orange tick).
+            let part = self.episodeNow.flatMap { $0.series.id == id ? $0.episodeId : nil } ?? id
+            var noted = self.begun
+            noted.noted(part, at: seconds, of: length)
+            if noted != self.begun {
+                self.begun = noted
+                self.begun.save()
+            }
             // Not onto the next episode: the one ending says where it got to as it shuts,
             // when the next is already what's remembered of the series (`play`).
             guard self.history.entries.first(where: { $0.id == id })?.episodeId == self.episodeNow?.episodeId
@@ -983,6 +1009,7 @@ final class AppModel {
             self.history.save()
         }
         film.onEnded = { [weak self] in self?.filmEnded() }
+        film.onCredits = { [weak self] in self?.creditsReached() }
         Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.notePlace()
@@ -1478,7 +1505,7 @@ final class AppModel {
     /// movie ends, it moves it back to the previous page. doesn't keep a black screen"),
     /// or for an episode its series' page, as the ✕ does (`leaveFilm`, 2026-10-18).
     private func filmEnded() {
-        guard UserDefaults.standard.bool(forKey: NextEpisode.key), let now = episodeNow else {
+        guard let now = episodeNow, goesOn(now) else {
             leaveFilm()
             return
         }
@@ -1489,6 +1516,53 @@ final class AppModel {
             // already started something else.
             if film.isOpen, filmsOpened == opened { leaveFilm() }
         }
+    }
+
+    /// The next episode follows this one by itself: Settings → Player's switch, or Play All.
+    private func goesOn(_ now: EpisodeNow) -> Bool {
+        UserDefaults.standard.bool(forKey: NextEpisode.key) || playingAll == now.series.id
+    }
+
+    /// An episode's last 45 seconds, its closing credits (`FilmPlayer.onCredits`): with the
+    /// switch on, or Play All, the next episode out is played now (2026-11-09, as the tablet
+    /// has it since 2026-11-07; the owner there: "skip to the next show automatically, With 45
+    /// seconds left to the show? to skip closing credits"). After the last one out, nothing: it
+    /// plays to its end and shuts, as it always has.
+    private func creditsReached() {
+        guard let now = episodeNow, goesOn(now), nextEpisode != nil else { return }
+        // Its credits are skipped, so it's been watched: on an episode under seven and a half
+        // minutes, 45 seconds from its end is short of the nine tenths that otherwise say so.
+        if let id = watchingFilm, film.duration > 0 { noteFinished(id, at: film.duration, of: film.duration) }
+        var noted = begun
+        noted.noted(now.episodeId, at: film.duration, of: film.duration)
+        if noted != begun {
+            begun = noted
+            begun.save()
+        }
+        let opened = filmsOpened
+        Task { await playEpisode(after: now, while: { self.isStillOpen(now) && self.filmsOpened == opened }) }
+    }
+
+    /// Play All (2026-11-09, as the tablet has it since 2026-11-07; the owner there: "next to
+    /// download all, add a play all, which would play the whole series starting from 1+. And you
+    /// can select the quality you want, just like download all"): the series whose episodes are
+    /// played one after another, each by the next-episode rule in the quality chosen, whatever
+    /// Settings' switch says, until the player is shut or something else is played.
+    private(set) var playingAll: String?
+
+    /// Play All's start: `first` from its beginning, by `way`; the rest follow by themselves.
+    func playAll(_ series: MediaItem, from first: MediaDetails.Video, by way: StreamsAnswer.Way, episodes: [MediaDetails.Video]?) {
+        if let old = filmTorrent, old.lowercased() != way.stream.infoHash?.lowercased() {
+            (filmTorrent, filmStatus) = (nil, nil)
+            Task { _ = try? await ask("torrent.stop", ["info_hash": old], as: Empty.self) }
+        }
+        startsAfresh = true
+        play(
+            way.stream, title: first.name(in: series.name), watching: .watching(series, episode: first),
+            episode: EpisodeNow(
+                series: series, episodeId: first.id,
+                played: NextEpisode.Played(addonId: way.addonId, quality: way.stream.quality), episodes: episodes))
+        playingAll = series.id
     }
 
     /// Play the episode after `now`. False when there's none to play (after the last one
@@ -1662,6 +1736,8 @@ final class AppModel {
         episode: EpisodeNow? = nil, apart: Bool = false
     ) {
         let remembering = !(apart || episode?.apart == true)
+        // Another series, or a film: Play All is over.
+        if episode?.series.id != playingAll { playingAll = nil }
         // Something else played: a next episode being found from Home isn't wanted now.
         startingEpisode = nil
         // Remembered as watched, when it's a film or an episode from its page: with the
@@ -2316,7 +2392,7 @@ final class AppModel {
     func closeFilm() {
         film.close()
         watchingFilm = nil
-        (episodeNow, episodeToBe) = (nil, nil)
+        (episodeNow, episodeToBe, playingAll) = (nil, nil, nil)
         nextEpisode = nil
         tidyFullScreenTopBar()
         if let hash = filmTorrent {
@@ -2734,6 +2810,7 @@ final class AppModel {
         watchlist = Watchlist.saved()
         finished = Self.keptFinished()
         seriesProgress = SeriesProgress.saved()
+        begun = PartWatched.saved()
         channelPictures = ChannelPictures.saved()
         (seriesEpisodes, calendarUploads, uploadsRead) = ([:], [], nil)
         seriesRead += 1
@@ -3006,6 +3083,7 @@ final class AppModel {
         watchlist = Watchlist.saved()
         finished = Self.keptFinished()
         seriesProgress = SeriesProgress.saved()
+        begun = PartWatched.saved()
     }
 
     private func engineSaid(_ method: String) async {

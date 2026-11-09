@@ -1205,6 +1205,8 @@ struct MovieView: View {
     /// Download Season (2026-11-06): its first episode's ways being asked for, and then the
     /// owner's choice of quality for the season.
     @State private var askingSeason = false
+    /// Play All: the first episode's ways being asked, before the quality is chosen.
+    @State private var askingPlayAll = false
     @State private var seasonAsk: SeasonAsk?
     /// The plugins couldn't be reached, and the page shows what was kept of it on this Mac.
     @State private var offline = false
@@ -1275,6 +1277,10 @@ struct MovieView: View {
                     }
                     if let here { downloadedBadge(here) }
                     HStack(spacing: 28) {
+                        // Begun and not watched: how far it got (2026-11-09, as on the tablet).
+                        if film.type != "series", !apart, let part = model.howFar(film.id) {
+                            PartTick(progress: part)
+                        }
                         if let minutes = details?.runtimeMin { Text("\(minutes) min") }
                         if let year = details?.year ?? film.year { Text(year) }
                         if let rating = details?.rating ?? film.rating {
@@ -1404,31 +1410,46 @@ struct MovieView: View {
                     .labelsHidden()
                     .fixedSize()
                     // Not in the Finder kept apart, and not while only what's on this Mac shows.
-                    if !apart, !offline { seasonDownload(details, season: showing) }
+                    if !apart, !offline {
+                        playAllButton(details, season: showing)
+                        seasonDownload(details, season: showing)
+                    }
                 }
                 .confirmationDialog(
-                    seasonAsk.map {
-                        "Download \($0.episodes.count == 1 ? "1 episode" : "\($0.episodes.count) episodes") of "
-                            + MediaDetails.seasonName($0.season)
+                    seasonAsk.map { ask in
+                        ask.play
+                            ? "Play All from \(ask.episodes.first?.name(in: film.name) ?? MediaDetails.seasonName(ask.season))"
+                            : "Download \(ask.episodes.count == 1 ? "1 episode" : "\(ask.episodes.count) episodes") of "
+                                + MediaDetails.seasonName(ask.season)
                     } ?? "",
                     isPresented: Binding(get: { seasonAsk != nil }, set: { if !$0 { seasonAsk = nil } }),
                     titleVisibility: .visible, presenting: seasonAsk
                 ) { ask in
                     ForEach(ask.choices) { way in
                         Button("\(way.stream.qualityLabel) · \(way.addon)") {
-                            model.downloadSeason(
-                                ask.episodes, of: film, season: ask.season,
-                                like: NextEpisode.Played(addonId: way.addonId, quality: way.stream.quality),
-                                first: (ask.first, ask.ways), year: details.year ?? film.year)
+                            if ask.play {
+                                if let first = ask.episodes.first {
+                                    model.playAll(film, from: first, by: way, episodes: details.videos)
+                                }
+                            } else {
+                                model.downloadSeason(
+                                    ask.episodes, of: film, season: ask.season,
+                                    like: NextEpisode.Played(addonId: way.addonId, quality: way.stream.quality),
+                                    first: (ask.first, ask.ways), year: details.year ?? film.year)
+                            }
                         }
                     }
                     Button("Cancel", role: .cancel) {}
-                } message: { _ in
+                } message: { ask in
                     Text(
-                        "Each episode is downloaded in that quality from that plugin; if it hasn't one, from the "
-                            + "next plugin in your list that has; if none has, that episode is left and you're told "
-                            + "which. They go in your Movies folder's Series or Anime folder, and carry on if Bear "
-                            + "Media is closed and opened again.")
+                        ask.play
+                            ? "Each episode plays after the one before, on into the next season, in that quality "
+                                + "from that plugin; if it hasn't one, from the next plugin in your list that has. "
+                                + "Its closing credits are skipped. It goes on until you close the player."
+                            : "Each episode is downloaded in that quality from that plugin; if it hasn't one, from "
+                                + "the next plugin in your list that has; if none has, that episode is left and "
+                                + "you're told which. They go in your Movies folder's Series or Anime folder, and "
+                                + "carry on if Bear Media is closed and opened again.")
                 }
                 // Only the episodes on screen are made. A series that has gone on for
                 // years lists a thousand or more in one season, and made all at once
@@ -1458,8 +1479,15 @@ struct MovieView: View {
                                     .frame(width: 28, alignment: .trailing)
                                     .foregroundStyle(.secondary)
                                 VStack(alignment: .leading, spacing: 3) {
-                                    Text(one.title.isEmpty ? "Episode \(one.episode ?? 0)" : one.title)
-                                        .fontWeight(.medium)
+                                    HStack(spacing: 8) {
+                                        Text(one.title.isEmpty ? "Episode \(one.episode ?? 0)" : one.title)
+                                            .fontWeight(.medium)
+                                        // Begun and not watched: how far it got (2026-11-09,
+                                        // as on the tablet).
+                                        if !seen, !apart, let part = model.howFar(one.id, series: film.id) {
+                                            PartTick(progress: part)
+                                        }
+                                    }
                                     if episode == one, let overview = one.overview {
                                         Text(overview)
                                             .font(.callout)
@@ -1550,13 +1578,45 @@ struct MovieView: View {
         }
     }
 
-    /// The season's first episode to download is asked where it can be played from, and
-    /// the owner chooses the quality (and with it the plugin) from its ways.
-    private func askSeason(_ wanted: [MediaDetails.Video], season: Int) {
+    /// Play All (2026-11-09, as the tablet has it since 2026-11-07; the owner there: "next to
+    /// download all, add a play all, which would play the whole series starting from 1+. And you
+    /// can select the quality you want, just like download all"): from the first episode out of
+    /// the season showing, on through the series, in a quality chosen once (`AppModel.playAll`).
+    @ViewBuilder
+    private func playAllButton(_ details: MediaDetails, season: Int) -> some View {
+        let today = String(ISO8601DateFormatter().string(from: Date()).prefix(10))
+        let out = details.episodes(in: season).filter { $0.day.isEmpty || $0.day <= today }
+        if askingPlayAll {
+            HStack(spacing: 8) {
+                ProgressView().controlSize(.small)
+                Text("Asking your plugins…").font(.callout).foregroundStyle(.secondary)
+            }
+        } else if !out.isEmpty {
+            Button {
+                askSeason(out, season: season, play: true)
+            } label: {
+                Label("Play All", systemImage: "play.fill")
+                    .font(.body.weight(.semibold))
+                    .padding(.horizontal, 14)
+                    .frame(height: 32)
+                    .background(.white.opacity(0.14), in: Capsule())
+                    .overlay { Capsule().strokeBorder(.white.opacity(0.4)) }
+                    .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .help(
+                "Play \(MediaDetails.seasonName(season)) from its first episode, each after the one before "
+                    + "and on into the next season, in a quality you choose, skipping the closing credits")
+        }
+    }
+
+    /// The season's first episode to download (or, for Play All, to play) is asked where it can
+    /// be played from, and the owner chooses the quality (and with it the plugin) from its ways.
+    private func askSeason(_ wanted: [MediaDetails.Video], season: Int, play: Bool = false) {
         guard let first = wanted.first else { return }
-        askingSeason = true
+        if play { askingPlayAll = true } else { askingSeason = true }
         Task {
-            defer { askingSeason = false }
+            defer { if play { askingPlayAll = false } else { askingSeason = false } }
             var answer = episode == first ? streams : nil
             if answer == nil {
                 answer = try? await model.ask(
@@ -1566,12 +1626,13 @@ struct MovieView: View {
                 model.notice = "Your plugins couldn't be asked just now. Try again in a moment."
                 return
             }
-            let choices = SeasonDownload.choices(in: answer)
+            let choices = SeasonDownload.choices(in: answer, playing: play)
             guard !choices.isEmpty else {
-                model.notice = "None of your plugins has a way to download \(first.name(in: film.name))."
+                model.notice = "None of your plugins has a way to \(play ? "play" : "download") \(first.name(in: film.name))."
                 return
             }
-            seasonAsk = SeasonAsk(season: season, episodes: wanted, first: first.id, ways: answer, choices: choices)
+            seasonAsk = SeasonAsk(
+                season: season, episodes: wanted, first: first.id, ways: answer, choices: choices, play: play)
         }
     }
 
@@ -1842,6 +1903,29 @@ struct DownloadedCapsule: View {
             .background(Color.accentColor, in: Capsule())
             .help("It's in your Movies folder: choose it, then Play under On This Mac")
             .accessibilityLabel("Downloaded")
+    }
+}
+
+/// The tick with how far a film or an episode begun got, "✓ 56%" (2026-11-09, as the tablet
+/// has it since 2026-11-07; the owner there: "Green check is done, orange check if partially
+/// watched"), black on orange in every look, as the watched check is always green: on a
+/// series' list of episodes and a movie's page only, never on a card (`AppModel.howFar`).
+struct PartTick: View {
+    let progress: Double
+
+    var body: some View {
+        let percent = min(max(Int(progress * 100), 1), 99)
+        HStack(spacing: 2) {
+            Image(systemName: "checkmark").font(.caption.weight(.heavy))
+            Text("\(percent)%").font(.caption.weight(.bold)).monospacedDigit()
+        }
+        .foregroundStyle(.black)
+        .padding(.horizontal, 7)
+        .padding(.vertical, 3)
+        .background(Color.orange, in: Capsule())
+        .help("Watched \(percent)% of it")
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Watched \(percent)%")
     }
 }
 
@@ -2309,4 +2393,6 @@ private struct SeasonAsk {
     let first: String
     let ways: StreamsAnswer
     let choices: [StreamsAnswer.Way]
+    /// Play All's question, not Download Season's.
+    var play = false
 }

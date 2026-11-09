@@ -53,6 +53,12 @@ final class SeasonDownloadTests: XCTestCase {
         XCTAssertEqual(SeasonDownload.choices(in: ways).map(\.stream.quality), ["720p"])
     }
 
+    /// Play All (2026-11-09): what can be played is offered, not only what can be downloaded.
+    func testPlayAllOffersWhatCanBePlayed() throws {
+        let ways = try answer([("A", [stream("1080p", hash: nil), stream("720p", kind: "url", hash: nil)])])
+        XCTAssertEqual(SeasonDownload.choices(in: ways, playing: true).map(\.stream.quality), ["1080p", "720p"])
+    }
+
     // MARK: each episode's way
 
     func testTheSameQualityFromTheSamePluginElseTheNextPluginElseNone() throws {

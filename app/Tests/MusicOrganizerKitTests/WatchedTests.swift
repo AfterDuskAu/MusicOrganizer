@@ -340,4 +340,32 @@ final class WatchedTests: XCTestCase {
         XCTAssertEqual(
             NextEpisode.toCarryOn(from: nil, in: all, fresh: ["s:1:3"], finished: none, today: today)?.id, "s:1:3")
     }
+
+    /// How far each film and episode begun got (2026-11-09, as on the tablet): the orange tick.
+    func testHowFarEachFilmAndEpisodeGot() {
+        var begun = PartWatched()
+        begun.noted("s1:1:3", at: 10, of: 1500)  // hardly begun: nothing noted
+        XCTAssertNil(begun.progress(of: "s1:1:3"))
+        begun.noted("s1:1:3", at: 300, of: 1500)
+        XCTAssertEqual(begun.progress(of: "s1:1:3")!, 0.2, accuracy: 0.0001)
+        begun.noted("s1:1:3", at: 5, of: 1500)  // opened again from the start: kept as it was
+        XCTAssertEqual(begun.progress(of: "s1:1:3")!, 0.2, accuracy: 0.0001)
+        begun.noted("s1:1:4", at: 840, of: 1500)
+        XCTAssertEqual(begun.progress(of: "s1:1:4")!, 0.56, accuracy: 0.0001)
+        begun.noted("s1:1:3", at: 1360, of: 1500)  // past nine tenths: watched, not part way
+        XCTAssertNil(begun.progress(of: "s1:1:3"))
+        // The one watched longest ago goes first, past the most kept.
+        var many = PartWatched()
+        let start = Date(timeIntervalSince1970: 1_000_000)
+        for n in 0...PartWatched.most {
+            many.noted("m\(n)", at: 100, of: 1000, now: start.addingTimeInterval(Double(n)))
+        }
+        XCTAssertEqual(many.parts.count, PartWatched.most)
+        XCTAssertNil(many.progress(of: "m0"))
+        XCTAssertNotNil(many.progress(of: "m\(PartWatched.most)"))
+        // Kept in the settings, and read back the same.
+        let defaults = UserDefaults(suiteName: "PartWatchedTests-\(UUID().uuidString)")!
+        begun.save(in: defaults)
+        XCTAssertEqual(PartWatched.saved(in: defaults), begun)
+    }
 }

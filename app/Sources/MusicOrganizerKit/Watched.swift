@@ -439,3 +439,54 @@ public struct CalendarEntry: Identifiable, Hashable, Sendable {
         return String(format: "%04d-%02d-%02d", parts.year!, parts.month!, parts.day!)
     }
 }
+
+/// How far each film and episode begun has been watched, by its id (the owner, 2026-11-07, as on
+/// the tablet: an orange tick with how far, "✓ 56%", on a series' list of episodes and on a
+/// movie's page, and nowhere else: not on cards). Kept by the app on this Mac, in the profile's
+/// settings; watched is `Finished`.
+public struct PartWatched: Equatable, Sendable {
+    public struct Part: Codable, Equatable, Sendable {
+        public let progress: Double
+        public let at: Date
+    }
+
+    /// Films and episodes remembered at most: the one watched longest ago is forgotten first.
+    public static let most = 500
+
+    public private(set) var parts: [String: Part]
+
+    public init(_ parts: [String: Part] = [:]) { self.parts = parts }
+
+    /// How far it got, 0 to 1, while it's begun and not past nine tenths; nil otherwise.
+    public func progress(of id: String) -> Double? { parts[id]?.progress }
+
+    /// It was at `seconds` of `length`. Hardly begun (`FilmPositions.startS`), what was noted
+    /// before stays; past nine tenths (`Finished.mark`) it's forgotten, being watched.
+    public mutating func noted(_ id: String, at seconds: Double, of length: Double, now: Date = Date()) {
+        guard length > 0, seconds >= FilmPositions.startS else { return }
+        let progress = min(seconds / length, 1)
+        if progress >= Finished.mark {
+            parts[id] = nil
+            return
+        }
+        parts[id] = Part(progress: progress, at: now)
+        while parts.count > Self.most, let oldest = parts.min(by: { $0.value.at < $1.value.at }) {
+            parts[oldest.key] = nil
+        }
+    }
+
+    // MARK: kept in the app's settings (a profile's, like the rest of its records)
+
+    public static let key = "partWatched"
+
+    public static func saved(in defaults: UserDefaults = .standard) -> PartWatched {
+        guard let data = defaults.data(forKey: key),
+            let parts = try? JSONDecoder().decode([String: Part].self, from: data)
+        else { return PartWatched() }
+        return PartWatched(parts)
+    }
+
+    public func save(in defaults: UserDefaults = .standard) {
+        if let data = try? JSONEncoder().encode(parts) { defaults.set(data, forKey: Self.key) }
+    }
+}
