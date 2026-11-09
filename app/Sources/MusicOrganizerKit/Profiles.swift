@@ -22,7 +22,7 @@ public struct Profile: Codable, Identifiable, Equatable, Sendable {
     public var allowsExplicit: Bool
     /// In a child's profile (2026-11-05): the Australian ratings its films and series may
     /// have (`AustralianRating`), or nil for any. Kept to these, a title with no rating known
-    /// isn't shown. Needs the computer's TMDB key; without it nothing is kept out.
+    /// (Australia's, else the UK's, else the US's: the engine's) isn't shown. Needs the computer's TMDB key; without it nothing is kept out.
     public var allowedRatings: [String]?
 
     public init(

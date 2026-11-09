@@ -1024,7 +1024,7 @@ private struct ProfileSettingsTab: View {
                             Divider()
                             Text(
                                 model.tmdbHasKey
-                                    ? "A title with no Australian rating known isn't shown."
+                                    ? "Australia's rating; where it has none, the UK's, then the US's. A title with none of the three isn't shown."
                                     : "Needs a TMDB key: Settings → Plugins → TMDB.")
                         }
                     }

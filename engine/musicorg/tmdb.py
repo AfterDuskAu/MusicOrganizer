@@ -4,8 +4,9 @@ asks questions:
 
 - **facts**: a title's original language (`original_language`) and its Australian rating
   (the owner chose Australia: a film's certification in `release_dates`, a series' rating
-  in `content_ratings`), for Movie Finder's and Series Finder's language filter and for a
-  child's profile's ratings;
+  in `content_ratings`; where Australia has none, the UK's, then the US's, counted as the
+  Australian class each is closest to: 2026-11-10), for Movie Finder's and Series Finder's
+  language filter and for a child's profile's ratings;
 - **lists**: TMDB's Popular, Top Rated and Upcoming films and series, for the Finders'
   list menus (`catalog`, in the shape of `addon.catalog`);
 - **details**: a title's cast with their photos, and a film's budget and revenue;
@@ -118,6 +119,26 @@ LIST_NAMES = {
 RATINGS = ("G", "PG", "M", "MA15+", "R18+")
 SAME_AS = {"P": "G", "C": "G", "AV15+": "MA15+", "MA 15+": "MA15+", "R 18+": "R18+"}
 NOT_A_RATING = {"", "E", "CTC", "NR"}
+
+# Where Australia has no rating for a title, the UK's, and where the UK has none either, the
+# US's (the owner, 2026-11-10: "Australia primary, UK secondary, US tertiary"), each counted
+# as the Australian class it's closest to. A film's and a series' (TV) ratings are both here.
+# Anything else these two give (E, TBC, NR) is no rating, and the next country is asked.
+FALLBACK = ("GB", "US")
+AS_AUSTRALIAN = {
+    "GB": {
+        "U": "G", "UC": "G", "PG": "PG", "12A": "M", "12": "M", "15": "MA15+",
+        "18": "R18+", "R18": "R18+",
+    },
+    "US": {
+        "G": "G", "TV-Y": "G", "TV-G": "G",
+        "PG": "PG", "TV-Y7": "PG", "TV-Y7-FV": "PG", "TV-PG": "PG",
+        "PG-13": "M", "TV-14": "M", "R": "MA15+", "TV-MA": "MA15+", "NC-17": "R18+",
+    },
+}  # fmt: skip
+# Which rule the facts file's "no rating" were found by: one found by an older rule (before
+# the UK and the US were asked) is forgotten, so the title is asked about again.
+RATING_RULE = 2
 
 
 class TmdbError(UserError):
@@ -346,7 +367,8 @@ def _read_facts() -> None:
         made = title(key)
         if made and isinstance(said, str):
             _ratings.setdefault(made, said)
-    for key, when in (kept.get("unrated") or {}).items():
+    older_rule = kept.get("rule") != RATING_RULE
+    for key, when in ({} if older_rule else kept.get("unrated") or {}).items():
         made = title(key)
         if made and isinstance(when, (int, float)) and _fresh(when):
             _ratings.setdefault(made, None)
@@ -398,6 +420,7 @@ def _write_facts() -> None:
         _written_at = time.monotonic()
         kept = {
             "format": FACTS_FORMAT,
+            "rule": RATING_RULE,
             "found": {k: [v[0], v[1], v[2]] for k, v in _found.items() if v is not None},
             "missing": {k: when for k, when in _missing_at.items() if _found.get(k, 0) is None},
             "languages": {f"{m}:{n}": lang for (n, m), lang in _languages.items()},
@@ -498,6 +521,34 @@ def rating(value: Any) -> str | None:
     if said in NOT_A_RATING:
         return None
     return SAME_AS.get(said, said)
+
+
+def _as_australian(country: str, value: Any) -> str | None:
+    """A country's rating as an Australian class: Australia's own, tidied, or the UK's or
+    the US's counted as the class it's closest to (`AS_AUSTRALIAN`); None for none."""
+    if country == REGION:
+        return rating(value)
+    if not isinstance(value, str):
+        return None
+    return AS_AUSTRALIAN.get(country, {}).get(value.strip().upper())
+
+
+def _strictest(classes: Iterable[str]) -> str:
+    """The strictest of some Australian classes (one the app doesn't offer, such as X18+,
+    stricter than all)."""
+    return max(classes, key=lambda one: RATINGS.index(one) if one in RATINGS else len(RATINGS))
+
+
+def _first_country(said: dict[str, list[tuple[bool, str]]]) -> str | None:
+    """A title's rating by the owner's order, Australia's, else the UK's, else the US's:
+    `said` is each country's classes, (in cinemas, class). Within a country its cinema
+    releases count first, and of those that count, the strictest."""
+    for country in (REGION, *FALLBACK):
+        classes = said.get(country) or []
+        counted = [one for cinema, one in classes if cinema] or [one for _, one in classes]
+        if counted:
+            return _strictest(counted)
+    return None
 
 
 # ---- facts: original language and Australian rating -------------------------------------
@@ -618,11 +669,15 @@ def _rating_of(tmdb_id: int, media: str) -> str | None:
             _facts_changed = True
             return said
     body = _ask(f"/tv/{tmdb_id}/content_ratings")
-    found: str | None = None
+    said: dict[str, list[tuple[bool, str]]] = {}
     for entry in body.get("results") or []:
-        if isinstance(entry, dict) and entry.get("iso_3166_1") == REGION:
-            found = rating(entry.get("rating"))
-            break
+        if not isinstance(entry, dict):
+            continue
+        country = entry.get("iso_3166_1")
+        one = _as_australian(country, entry.get("rating")) if isinstance(country, str) else None
+        if one:
+            said.setdefault(country, []).append((True, one))
+    found = _first_country(said)
     with _lock:
         _ratings[(tmdb_id, media)] = found
         _note_rating((tmdb_id, media), found)
@@ -648,23 +703,25 @@ def _film_releases(tmdb_id: int) -> list[tuple[str, int]]:
 
 
 def _keep_releases(tmdb_id: int, body: dict[str, Any]) -> list[tuple[str, int]]:
-    """A film's `release_dates` answer read: its Australian releases kept, and its rating."""
+    """A film's `release_dates` answer read: its Australian releases kept, and its rating
+    (Australia's, else the UK's, else the US's: `_first_country`)."""
     releases: list[tuple[str, int]] = []
-    ratings: list[tuple[int, str]] = []
+    said: dict[str, list[tuple[bool, str]]] = {}
     for country in body.get("results") or []:
-        if not isinstance(country, dict) or country.get("iso_3166_1") != REGION:
+        where = country.get("iso_3166_1") if isinstance(country, dict) else None
+        if where not in (REGION, *FALLBACK):
             continue
         for one in country.get("release_dates") or []:
             if not isinstance(one, dict):
                 continue
             kind = one.get("type") if isinstance(one.get("type"), int) else 0
             day = one.get("release_date")
-            if isinstance(day, str) and len(day) >= 10:
+            if where == REGION and isinstance(day, str) and len(day) >= 10:
                 releases.append((day[:10], kind))
-            said = rating(one.get("certification"))
-            if said:
-                ratings.append((0 if kind == 3 else 1, said))
-    found = min(ratings)[1] if ratings else None
+            rated = _as_australian(where, one.get("certification"))
+            if rated:
+                said.setdefault(where, []).append((kind == 3, rated))
+    found = _first_country(said)
     with _lock:
         _au_dates[tmdb_id] = releases
         _ratings[(tmdb_id, "movie")] = found

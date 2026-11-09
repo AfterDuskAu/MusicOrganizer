@@ -8,6 +8,7 @@ a key. The keys here are made up while the tests run, so the file holds none.
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 import pytest
@@ -330,6 +331,109 @@ def test_a_tmdb_id_is_asked_directly_and_ratings_are_tidied(fake: FakeTmdb) -> N
     assert tmdb.rating("P") == "G" and tmdb.rating("C") == "G" and tmdb.rating(" m ") == "M"
     assert tmdb.rating("E") is None and tmdb.rating("") is None and tmdb.rating(None) is None
     assert tmdb.rating("X18+") == "X18+"  # kept, and never one the app lets be ticked
+
+
+def releases(**countries: list[tuple[int, str]]) -> dict[str, Any]:
+    """`/movie/{id}/release_dates` with each country's releases: (kind, certification)."""
+    return {
+        "results": [
+            {
+                "iso_3166_1": country,
+                "release_dates": [
+                    {"certification": cert, "release_date": "2026-01-01T00:00:00.000Z", "type": t}
+                    for t, cert in entries
+                ],
+            }
+            for country, entries in countries.items()
+        ]
+    }
+
+
+def test_where_australia_has_no_rating_the_uks_then_the_uss_is_taken(fake: FakeTmdb) -> None:
+    """2026-11-10, the owner: "Australia primary, UK secondary, US tertiary. If 1 doesnt have,
+    move onto the second, and then the third if second doesnt have it." Each counted as the
+    Australian class it's closest to; within a country, its cinema release first, and of
+    those, the strictest."""
+    set_up()
+    films = {
+        1: (releases(AU=[(3, "PG")], GB=[(3, "15")], US=[(3, "R")]), "PG"),  # Australia's
+        2: (releases(AU=[(3, "E"), (4, "")], GB=[(3, "12A")], US=[(3, "PG")]), "M"),  # UK's
+        3: (releases(GB=[(3, "")], US=[(3, "PG-13")]), "M"),  # the US's
+        4: (releases(GB=[(3, "U")]), "G"),
+        5: (releases(GB=[(3, "PG")]), "PG"),
+        6: (releases(GB=[(3, "12")]), "M"),
+        7: (releases(GB=[(3, "18")]), "R18+"),
+        8: (releases(US=[(3, "G")]), "G"),
+        9: (releases(US=[(3, "R")]), "MA15+"),
+        10: (releases(US=[(3, "NC-17")]), "R18+"),
+        11: (releases(FR=[(3, "TP")], DE=[(3, "6")]), None),  # none of the three
+        12: (releases(GB=[(3, "TBC")], US=[(3, "NR")]), None),
+        13: (releases(AU=[(3, "PG"), (4, "M")]), "PG"),  # the cinema release first
+        14: (releases(AU=[(4, "PG"), (4, "M")]), "M"),  # the strictest
+        15: (releases(AU=[(3, ""), (4, "G")]), "G"),  # a cinema release with none: the rest
+    }
+    for number, (answer, _) in films.items():
+        fake.answers[f"/movie/{number}/release_dates"] = answer
+    asked = [{"id": f"tmdb:{n}", "type": "movie"} for n in films]
+    found = tmdb.facts(asked, ["rating"])
+    assert {k: v["rating"] for k, v in found.items()} == {
+        f"tmdb:{n}": rated for n, (_, rated) in films.items()
+    }
+    assert tmdb._film_releases(2) == [("2026-01-01", 3), ("2026-01-01", 4)]  # Australia's days
+    assert tmdb._film_releases(3) == []
+
+    # A series: its one rating in each country, by the same order.
+    shows = {
+        20: ([("US", "TV-MA"), ("GB", "12")], "M"),
+        21: ([("US", "TV-Y7")], "PG"),
+        22: ([("US", "TV-G")], "G"),
+        23: ([("US", "TV-14")], "M"),
+        24: ([("US", "TV-MA")], "MA15+"),
+        25: ([("DE", "12"), ("US", "NR")], None),
+        26: ([("GB", "15"), ("AU", "M")], "M"),
+    }
+    for number, (said, _) in shows.items():
+        fake.answers[f"/tv/{number}/content_ratings"] = {
+            "results": [{"iso_3166_1": c, "rating": r} for c, r in said]
+        }
+    asked = [{"id": f"tmdb:{n}", "type": "series"} for n in shows]
+    found = tmdb.facts(asked, ["rating"])
+    assert {k: v["rating"] for k, v in found.items()} == {
+        f"tmdb:{n}": rated for n, (_, rated) in shows.items()
+    }
+
+
+def test_no_rating_found_by_the_rule_before_is_asked_again(fake: FakeTmdb) -> None:
+    """A title kept as having no rating before the UK and the US were asked (a facts file
+    with no `rule`) is asked about again; a rating kept is believed as it was."""
+    set_up()
+    path = tmdb._facts_path()[0]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    now = tmdb.time.time()
+    kept = {
+        "format": tmdb.FACTS_FORMAT,
+        "found": {},
+        "missing": {},
+        "languages": {},
+        "ratings": {"movie:31": "PG"},
+        "unrated": {"movie:32": now},
+    }
+    path.write_text(json.dumps(kept), encoding="utf-8")
+    fake.answers["/movie/32/release_dates"] = releases(GB=[(3, "PG")])
+    asked = [{"id": "tmdb:31", "type": "movie"}, {"id": "tmdb:32", "type": "movie"}]
+    found = tmdb.facts(asked, ["rating"])
+    assert found == {
+        "tmdb:31": {"language": None, "rating": "PG"},
+        "tmdb:32": {"language": None, "rating": "PG"},
+    }
+    assert fake.paths() == ["/movie/32/release_dates"]
+    assert json.loads(path.read_text(encoding="utf-8"))["rule"] == tmdb.RATING_RULE
+    # Kept by this rule, "no rating" is believed for its two weeks, as before.
+    path.write_text(json.dumps({**kept, "rule": tmdb.RATING_RULE}), encoding="utf-8")
+    tmdb._forget_answers()
+    fake.asked.clear()
+    assert tmdb.facts(asked[1:], ["rating"]) == {"tmdb:32": {"language": None, "rating": None}}
+    assert fake.paths() == []
 
 
 def test_the_key_being_refused_stops_every_question(fake: FakeTmdb) -> None:
