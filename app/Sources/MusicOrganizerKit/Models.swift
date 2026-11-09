@@ -831,9 +831,18 @@ public struct DailyUse: Equatable, Sendable {
 /// parts of a second.
 public func engineDate(_ text: String?) -> Date? {
     guard let text, !text.isEmpty else { return nil }
-    let parts = ISO8601DateFormatter()
-    parts.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-    return parts.date(from: text) ?? ISO8601DateFormatter().date(from: text)
+    return EngineDates.withParts.date(from: text) ?? EngineDates.whole.date(from: text)
+}
+
+/// The readers of the engine's times, made once: a reader is slow to make, and lists read
+/// hundreds of times.
+private enum EngineDates {
+    static let withParts: ISO8601DateFormatter = {
+        let format = ISO8601DateFormatter()
+        format.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return format
+    }()
+    static let whole = ISO8601DateFormatter()
 }
 
 /// Which of the downloads on their way the Downloads page lists. A few are all shown;

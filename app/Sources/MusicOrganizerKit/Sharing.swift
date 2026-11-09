@@ -93,8 +93,11 @@ public struct SharingStatus: Decodable, Equatable, Sendable {
 
     static func date(_ text: String?) -> Date? {
         guard let text else { return nil }
-        return ISO8601DateFormatter().date(from: text)
+        return reader.date(from: text)
     }
+
+    /// Made once: a reader is slow to make.
+    private static let reader = ISO8601DateFormatter()
 }
 
 /// Setting up a video app with every profile by one code (2026-11-06, the owner: "Is there a

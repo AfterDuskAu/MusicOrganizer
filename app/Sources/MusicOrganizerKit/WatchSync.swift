@@ -91,11 +91,17 @@ public enum WatchSync {
         for one in sent.watched where !finished.contains(one.id) && !finished.unmarked.contains(one.id) {
             finished.mark(one.id, watched: true, now: Released.date(one.at) ?? Date())
         }
+        // Each title as it's known here, by its id, looked up at once (not the whole history
+        // searched for each line).
+        var known: [String: MediaItem] = [:]
+        for entry in history.entries where known[entry.id] == nil {
+            if let item = entry.item { known[entry.id] = item }
+        }
         let entries = sent.progress.compactMap { line -> WatchHistory.Entry? in
             guard let at = Released.date(line.at) else { return nil }
             // The title as sent with it; else as it's known here; else made from the line,
             // so the place is never one without a title (nothing to open, nothing to send).
-            let item = line.title?.item ?? history.entries.first { $0.id == line.id }?.item
+            let item = line.title?.item ?? known[line.id]
                 ?? MediaItem(
                     id: line.id, type: line.type == "movie" ? "movie" : "series", name: line.name,
                     poster: line.poster, posterShape: "poster", year: nil, rating: nil, genres: [])
@@ -112,8 +118,17 @@ public enum WatchSync {
 
     /// A moment as the sync writes it: "2026-10-16T05:30:00Z".
     public static func stamp(_ moment: Date) -> String {
+        stamper.string(from: moment)
+    }
+
+    /// Made once (2026-11-09): one made for every moment written was most of the work of
+    /// giving the engine a profile's watching, two thousand of them for a profile with a long
+    /// history, seconds on the main thread at each of a paired device's syncs (a profile
+    /// switch then waited behind it: the owner's "swapping between C and Zion to D, takes 19
+    /// seconds"). The formatter is safe to share between threads.
+    private static let stamper: ISO8601DateFormatter = {
         let format = ISO8601DateFormatter()
         format.formatOptions = [.withInternetDateTime]
-        return format.string(from: moment)
-    }
+        return format
+    }()
 }

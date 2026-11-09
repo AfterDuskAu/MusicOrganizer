@@ -506,14 +506,23 @@ final class AppModel {
         guard phase == .ready, sharing?.on == true, engine?.connection != nil else { return }
         let look = recordsLook
         if !all, look == watchingLook { return }
-        var states = [profiles.currentId: WatchSync.state(watchlist: watchlist, finished: finished, history: history)]
+        // The records as they are now; written out and encoded off the main thread (2026-11-09:
+        // for a profile with two thousand titles watched, a few seconds at each of a paired
+        // device's syncs, the window unable to answer meanwhile).
+        var records = [profiles.currentId: (watchlist, finished, history)]
         if all {
             for profile in profiles.profiles where profile.id != profiles.currentId {
-                states[profile.id] = putAwayWatching(of: profile.id).state
+                let away = putAwayWatching(of: profile.id)
+                records[profile.id] = (away.watchlist, away.finished, away.history)
             }
         }
-        for (id, state) in states {
-            guard let data = try? JSONEncoder().encode(state) else { continue }
+        let given = records
+        let encoded = await Task.detached(priority: .utility) {
+            given.compactMapValues { record -> Data? in
+                try? JSONEncoder().encode(WatchSync.state(watchlist: record.0, finished: record.1, history: record.2))
+            }
+        }.value
+        for (id, data) in encoded {
             if watchingGiven[id] == data {
                 if id == profiles.currentId { watchingLook = look }
                 continue
