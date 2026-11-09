@@ -1437,11 +1437,14 @@ final class AppModel {
     /// The episode after the one that's opened, once it's known to be out: what the
     /// player's Next Episode button plays (the owner, 2026-10-15). Nil for a film.
     private(set) var nextEpisode: MediaDetails.Video?
-    /// Next Episode was pressed, and the next one's ways to play are being looked for.
+    /// The episode before the one that's opened: the player's Previous Episode (the owner,
+    /// 2026-11-09, for every app: "A previous episode and after button").
+    private(set) var previousEpisode: MediaDetails.Video?
+    /// Next Episode (or Previous Episode) was pressed, and that one's ways to play are being looked for.
     private(set) var findingNextEpisode = false
 
     private func lookForNextEpisode() {
-        nextEpisode = nil
+        (nextEpisode, previousEpisode) = (nil, nil)
         guard let now = episodeNow else { return }
         Task {
             var episodes = now.episodes
@@ -1455,6 +1458,7 @@ final class AppModel {
             if !now.apart { learn(now.series, episodes: episodes) }
             let today = ISO8601DateFormatter().string(from: Date()).prefix(10)
             nextEpisode = NextEpisode.after(now.episodeId, in: episodes, today: String(today))
+            previousEpisode = NextEpisode.before(now.episodeId, in: episodes)
         }
     }
 
@@ -1467,6 +1471,26 @@ final class AppModel {
         Task {
             defer { findingNextEpisode = false }
             _ = await playEpisode(after: now, while: { self.isStillOpen(now) })
+        }
+    }
+
+    /// The player's Previous Episode: the episode before, by the same rule as Next Episode (the
+    /// same quality from the same plugin, else the next in the list with it, else its page).
+    func playPreviousEpisode() {
+        guard let now = episodeNow, !findingNextEpisode else { return }
+        findingNextEpisode = true
+        Task {
+            defer { findingNextEpisode = false }
+            var episodes = now.episodes
+            if episodes == nil {
+                episodes = (try? await ask(
+                    "addon.details", ["type": now.series.type, "id": now.series.id, "adult": now.apart],
+                    as: MediaDetails.self))?.videos
+            }
+            guard let episodes, let previous = NextEpisode.before(now.episodeId, in: episodes) else { return }
+            _ = await playEpisode(
+                previous, of: now.series, like: now.played, apart: now.apart, episodes: episodes,
+                while: { self.isStillOpen(now) })
         }
     }
 
@@ -2383,7 +2407,7 @@ final class AppModel {
         film.close()
         watchingFilm = nil
         (episodeNow, episodeToBe, playingAll) = (nil, nil, nil)
-        nextEpisode = nil
+        (nextEpisode, previousEpisode) = (nil, nil)
         tidyFullScreenTopBar()
         if let hash = filmTorrent {
             (filmTorrent, filmStatus) = (nil, nil)

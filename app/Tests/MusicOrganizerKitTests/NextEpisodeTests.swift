@@ -90,6 +90,22 @@ final class NextEpisodeTests: XCTestCase {
         XCTAssertNil(way?.stream.quality)
         XCTAssertNotNil(way)
     }
+
+    func testTheEpisodeBefore() throws {
+        let all = try videos([(0, 1, "2020-01-01"), (1, 1, "2020-01-02"), (1, 2, "2020-01-09"), (2, 1, "2021-01-01")])
+        XCTAssertEqual(NextEpisode.before("s:1:2", in: all)?.id, "s:1:1")
+        XCTAssertEqual(NextEpisode.before("s:2:1", in: all)?.id, "s:1:2")  // the last of the season before
+        XCTAssertNil(NextEpisode.before("s:1:1", in: all))  // the first: never the special
+        XCTAssertNil(NextEpisode.before("s:0:1", in: all))  // a special leads nowhere
+        XCTAssertNil(NextEpisode.before("unknown", in: all))
+    }
+
+    func testOfferedAtNinetyFivePercent() {
+        XCTAssertFalse(NextEpisode.isOffered(time: 1300, duration: 1440))  // 90%
+        XCTAssertTrue(NextEpisode.isOffered(time: 1368, duration: 1440))  // 95%
+        XCTAssertTrue(NextEpisode.isOffered(time: 1440, duration: 1440))
+        XCTAssertFalse(NextEpisode.isOffered(time: 30, duration: 0))  // its length not known yet
+    }
 }
 
 final class SoundCloudTests: XCTestCase {
@@ -109,10 +125,4 @@ final class SoundCloudTests: XCTestCase {
         XCTAssertEqual(MusicSearchSource.allCases.map(\.title), ["Music Service", "SoundCloud"])
     }
 
-    func testOfferedAtNinetyFivePercent() {
-        XCTAssertFalse(NextEpisode.isOffered(time: 1300, duration: 1440))  // 90%
-        XCTAssertTrue(NextEpisode.isOffered(time: 1368, duration: 1440))  // 95%
-        XCTAssertTrue(NextEpisode.isOffered(time: 1440, duration: 1440))
-        XCTAssertFalse(NextEpisode.isOffered(time: 30, duration: 0))  // its length not known yet
-    }
 }

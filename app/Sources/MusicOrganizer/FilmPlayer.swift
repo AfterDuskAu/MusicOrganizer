@@ -445,12 +445,27 @@ struct FilmPlayerView: View {
             HStack(spacing: 18) {
                 Color.clear.frame(maxWidth: rightWidth, maxHeight: 1)
                 Spacer(minLength: 0)
+                // An episode's Previous Episode and Next Episode (the owner, 2026-11-09, for
+                // every app: "There should always be a button to skip to the next episode. incase
+                // it was loaded incorrectly ... This button is not considering the time of the
+                // show. A previous episode and after button"): whenever the controls show, each
+                // by the next-episode rule. Next Episode's own button from 95% stays as it is.
+                if model.previousEpisode != nil {
+                    Button("Previous Episode", systemImage: "backward.end.fill") { model.playPreviousEpisode() }
+                        .help("Previous Episode")
+                        .disabled(model.findingNextEpisode)
+                }
                 Button("Back 10 Seconds", systemImage: "gobackward.10") { film.skip(-10) }
                 Button(film.paused ? "Play" : "Pause", systemImage: film.paused ? "play.fill" : "pause.fill") {
                     film.togglePause()
                 }
                 .font(.title)
                 Button("Forward 30 Seconds", systemImage: "goforward.30") { film.skip(30) }
+                if model.nextEpisode != nil {
+                    Button("Next Episode", systemImage: "forward.end.fill") { model.playNextEpisode() }
+                        .help("Next Episode")
+                        .disabled(model.findingNextEpisode)
+                }
                 Spacer(minLength: 0)
                 HStack(spacing: 18) {
                 // Each menu is there only when the film has something to choose between

@@ -39,6 +39,22 @@ public enum NextEpisode {
     /// season there is. Nil after the last one, for a special (season 0, which leads
     /// nowhere), and for one that isn't out yet (`today` is the day, "2026-10-12", as
     /// the add-on writes an episode's own day).
+    /// The episode before `id` (the owner, 2026-11-09, for every app: "A previous episode and
+    /// after button"): the one before it in its season, or the last of the season before;
+    /// never a special (season 0). Nil for the first episode, and for a special.
+    public static func before(_ id: String, in videos: [MediaDetails.Video]) -> MediaDetails.Video? {
+        guard let now = videos.first(where: { $0.id == id }), let season = now.season, season > 0,
+            let episode = now.episode
+        else { return nil }
+        let earlier = videos.compactMap { video -> (MediaDetails.Video, Int, Int)? in
+            guard let itsSeason = video.season, itsSeason > 0, let itsEpisode = video.episode,
+                itsSeason < season || (itsSeason == season && itsEpisode < episode)
+            else { return nil }
+            return (video, itsSeason, itsEpisode)
+        }
+        return earlier.max { ($0.1, $0.2) < ($1.1, $1.2) }?.0
+    }
+
     public static func after(
         _ id: String, in videos: [MediaDetails.Video], today: String? = nil
     ) -> MediaDetails.Video? {
