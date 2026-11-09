@@ -344,7 +344,10 @@ struct FilmPlayerView: View {
             if controlsShown || film.paused || film.problem != nil {
                 controls(film)
             }
+            if model.askingStillWatching { stillWatching }
         }
+        // A click anywhere in the player: the owner is there ("Are you still watching?" counts again).
+        .simultaneousGesture(TapGesture().onEnded { model.ownerIsHere() })
         // The ✕ is in the top left corner (the owner, 2026-10-12), with the controls; and
         // an episode's Next Episode in the top right, opposite it (2026-10-15), once the
         // next one is known to be out.
@@ -372,7 +375,9 @@ struct FilmPlayerView: View {
         .overlay(alignment: .topTrailing) {
             // From 95% of an episode, on its own whether the controls show or not (the owner,
             // 2026-11-09: "At 95% of runtime, it offers the play next episode").
-            if let next = model.nextEpisode, NextEpisode.isOffered(time: film.time, duration: film.duration) {
+            if let next = model.nextEpisode, NextEpisode.isOffered(time: film.time, duration: film.duration),
+                !model.askingStillWatching
+            {
                 NextEpisodeButton(next: next, finding: model.findingNextEpisode) { model.playNextEpisode() }
             }
         }
@@ -388,6 +393,7 @@ struct FilmPlayerView: View {
         .onChange(of: model.keyPresses) {
             lastMove = Date()
             controlsShown = true
+            model.ownerIsHere()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didEnterFullScreenNotification)) { note in
             if note.object as? NSWindow === film.surface.window { fullScreen = true }
@@ -415,6 +421,30 @@ struct FilmPlayerView: View {
             }
         }
         .onDisappear { NSCursor.setHiddenUntilMouseMoves(false) }
+    }
+
+    /// "Are you still watching?" over the last picture (the owner, 2026-11-09, for every app: "add
+    /// are you still watching on all apps, after 3 episodes"): Continue Watching (Return) plays the
+    /// next one, as Next Episode does; Stop shuts the player.
+    private var stillWatching: some View {
+        ZStack {
+            Color.black.opacity(0.6)
+            VStack(spacing: 14) {
+                Text("Are you still watching?").font(.largeTitle.weight(.bold))
+                if let next = model.nextEpisode {
+                    Text("Next: " + [next.number, next.title.isEmpty ? nil : next.title].compactMap { $0 }.joined(separator: " · "))
+                        .foregroundStyle(.secondary)
+                }
+                HStack(spacing: 14) {
+                    Button("Stop") { model.stopWatching() }
+                    Button("Continue Watching") { model.keepWatching() }
+                        .keyboardShortcut(.defaultAction)
+                }
+                .controlSize(.large)
+                .padding(.top, 8)
+            }
+            .padding(24)
+        }
     }
 
     private func controls(_ film: FilmPlayer) -> some View {

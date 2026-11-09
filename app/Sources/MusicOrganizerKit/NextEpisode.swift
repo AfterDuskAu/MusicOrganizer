@@ -115,3 +115,15 @@ public enum NextEpisode {
         return alike.first { $0.addonId == played.addonId } ?? alike.first
     }
 }
+
+/// "Are you still watching?" (the owner, 2026-11-09, for every app: "add are you still watching on
+/// all apps, after 3 episodes"): once three episodes in a row have started by themselves (the
+/// next-episode switch, or Play All) with nothing pressed, the next one waits for the owner's
+/// answer. A press in the player, or anything started by hand, starts the count again.
+public enum StillWatching {
+    /// Episodes started by themselves in a row before the question.
+    public static let after = 3
+
+    /// Whether the next episode waits for the question's answer.
+    public static func asks(_ startedByThemselves: Int) -> Bool { startedByThemselves >= after }
+}

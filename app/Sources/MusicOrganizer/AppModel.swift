@@ -1543,13 +1543,47 @@ final class AppModel {
             leaveFilm()
             return
         }
+        // Three started by themselves in a row with nothing pressed: the next one waits for the
+        // owner's answer, over the last picture (`StillWatching`, `keepWatching`, `stopWatching`).
+        if StillWatching.asks(startedByThemselves), nextEpisode != nil {
+            askingStillWatching = true
+            return
+        }
         let opened = filmsOpened
+        let count = startedByThemselves
         Task {
-            if await playEpisode(after: now, while: { self.isStillOpen(now) }) { return }
+            if await playEpisode(after: now, while: { self.isStillOpen(now) }) {
+                if episodeNow?.episodeId != now.episodeId, film.isOpen { startedByThemselves = count + 1 }
+                return
+            }
             // The last episode out: back to its series' page, unless the owner has
             // already started something else.
             if film.isOpen, filmsOpened == opened { leaveFilm() }
         }
+    }
+
+    /// Episodes in a row that started by themselves, with nothing pressed in the player since:
+    /// at `StillWatching.after`, the next one asks "Are you still watching?" first (the owner,
+    /// 2026-11-09, for every app: "add are you still watching on all apps, after 3 episodes").
+    @ObservationIgnored private var startedByThemselves = 0
+    /// "Are you still watching?" is over the last picture, waiting for the owner's answer.
+    private(set) var askingStillWatching = false
+
+    /// A click or a key in the player: the owner is there, and the count starts again.
+    func ownerIsHere() {
+        startedByThemselves = 0
+    }
+
+    /// "Are you still watching?" answered yes: the next episode, as Next Episode plays it.
+    func keepWatching() {
+        (askingStillWatching, startedByThemselves) = (false, 0)
+        playNextEpisode()
+    }
+
+    /// "Are you still watching?" answered no: the player shuts, as at any episode's end.
+    func stopWatching() {
+        askingStillWatching = false
+        leaveFilm()
     }
 
     /// The next episode follows this one by itself: Settings → Player's switch, or Play All.
@@ -1752,6 +1786,8 @@ final class AppModel {
         let remembering = !(apart || episode?.apart == true)
         // Another series, or a film: Play All is over.
         if episode?.series.id != playingAll { playingAll = nil }
+        // Started by hand (one started by itself sets its own count after: `filmEnded`).
+        (startedByThemselves, askingStillWatching) = (0, false)
         // Something else played: a next episode being found from Home isn't wanted now.
         startingEpisode = nil
         // Remembered as watched, when it's a film or an episode from its page: with the
@@ -2407,6 +2443,7 @@ final class AppModel {
         film.close()
         watchingFilm = nil
         (episodeNow, episodeToBe, playingAll) = (nil, nil, nil)
+        (startedByThemselves, askingStillWatching) = (0, false)
         (nextEpisode, previousEpisode) = (nil, nil)
         tidyFullScreenTopBar()
         if let hash = filmTorrent {

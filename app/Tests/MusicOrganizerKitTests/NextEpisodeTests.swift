@@ -106,6 +106,12 @@ final class NextEpisodeTests: XCTestCase {
         XCTAssertTrue(NextEpisode.isOffered(time: 1440, duration: 1440))
         XCTAssertFalse(NextEpisode.isOffered(time: 30, duration: 0))  // its length not known yet
     }
+
+    func testStillWatchingIsAskedAfterThree() {
+        XCTAssertFalse(StillWatching.asks(0))
+        XCTAssertFalse(StillWatching.asks(2))
+        XCTAssertTrue(StillWatching.asks(3))
+    }
 }
 
 final class SoundCloudTests: XCTestCase {
