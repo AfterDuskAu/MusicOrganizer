@@ -1445,7 +1445,8 @@ struct MovieView: View {
                         ask.play
                             ? "Each episode plays after the one before, on into the next season, in that quality "
                                 + "from that plugin; if it hasn't one, from the next plugin in your list that has. "
-                                + "Its closing credits are skipped. It goes on until you close the player."
+                                + "Near the end of each, Next Episode plays the next one sooner. It goes on until you "
+                                + "close the player."
                             : "Each episode is downloaded in that quality from that plugin; if it hasn't one, from "
                                 + "the next plugin in your list that has; if none has, that episode is left and "
                                 + "you're told which. They go in your Movies folder's Series or Anime folder, and "
@@ -1606,7 +1607,7 @@ struct MovieView: View {
             .buttonStyle(.plain)
             .help(
                 "Play \(MediaDetails.seasonName(season)) from its first episode, each after the one before "
-                    + "and on into the next season, in a quality you choose, skipping the closing credits")
+                    + "and on into the next season, in a quality you choose")
         }
     }
 

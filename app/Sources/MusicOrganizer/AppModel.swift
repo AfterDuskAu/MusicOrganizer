@@ -1009,7 +1009,6 @@ final class AppModel {
             self.history.save()
         }
         film.onEnded = { [weak self] in self?.filmEnded() }
-        film.onCredits = { [weak self] in self?.creditsReached() }
         Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.notePlace()
@@ -1498,9 +1497,11 @@ final class AppModel {
         var episodes: [MediaDetails.Video]?
     }
 
-    /// A film played to its end. With Settings → Player's switch on, and the film an
-    /// episode of a series, the next episode is played (`NextEpisode` has the owner's
-    /// rule for how). Otherwise, or with nothing after it, the player shuts and the page
+    /// A film played to its end. With Settings → Player's switch on, or Play All, and the film
+    /// an episode of a series, the next episode is played (`NextEpisode` has the owner's rule
+    /// for how): only at the very end (the owner, 2026-11-09: "It doesnt move automatically to
+    /// the next episode before the film ends"; the closing credits were skipped earlier that
+    /// day); before it, from 95%, Next Episode is offered, one click. Otherwise, or with nothing after it, the player shuts and the page
     /// it was opened from is back (the owner, 2026-10-15: "when a series finishes or a
     /// movie ends, it moves it back to the previous page. doesn't keep a black screen"),
     /// or for an episode its series' page, as the ✕ does (`leaveFilm`, 2026-10-18).
@@ -1521,26 +1522,6 @@ final class AppModel {
     /// The next episode follows this one by itself: Settings → Player's switch, or Play All.
     private func goesOn(_ now: EpisodeNow) -> Bool {
         UserDefaults.standard.bool(forKey: NextEpisode.key) || playingAll == now.series.id
-    }
-
-    /// An episode's last 45 seconds, its closing credits (`FilmPlayer.onCredits`): with the
-    /// switch on, or Play All, the next episode out is played now (2026-11-09, as the tablet
-    /// has it since 2026-11-07; the owner there: "skip to the next show automatically, With 45
-    /// seconds left to the show? to skip closing credits"). After the last one out, nothing: it
-    /// plays to its end and shuts, as it always has.
-    private func creditsReached() {
-        guard let now = episodeNow, goesOn(now), nextEpisode != nil else { return }
-        // Its credits are skipped, so it's been watched: on an episode under seven and a half
-        // minutes, 45 seconds from its end is short of the nine tenths that otherwise say so.
-        if let id = watchingFilm, film.duration > 0 { noteFinished(id, at: film.duration, of: film.duration) }
-        var noted = begun
-        noted.noted(now.episodeId, at: film.duration, of: film.duration)
-        if noted != begun {
-            begun = noted
-            begun.save()
-        }
-        let opened = filmsOpened
-        Task { await playEpisode(after: now, while: { self.isStillOpen(now) && self.filmsOpened == opened }) }
     }
 
     /// Play All (2026-11-09, as the tablet has it since 2026-11-07; the owner there: "next to

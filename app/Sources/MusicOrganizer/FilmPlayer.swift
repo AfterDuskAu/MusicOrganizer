@@ -37,16 +37,9 @@ final class FilmPlayer {
     /// Hears where the film is (seconds, of how many) whenever that's noted.
     @ObservationIgnored var onPlace: ((Double, Double) -> Void)?
     /// Hears that the film has played to its end: once for each film opened. The app
-    /// shuts the player then, or plays the next episode (`AppModel.filmEnded`).
+    /// shuts the player then (`AppModel.filmEnded`).
     @ObservationIgnored var onEnded: (() -> Void)?
     @ObservationIgnored private var ended = false
-    /// Told once a film longer than `creditsAfter` is in its last `creditsSeconds` while it
-    /// plays: an episode's closing credits, which the app may skip to the next one (the owner,
-    /// 2026-11-07, on the tablet: "With 45 seconds left to the show? to skip closing credits").
-    @ObservationIgnored var onCredits: (() -> Void)?
-    @ObservationIgnored private var creditsTold = false
-    static let creditsSeconds = 45.0
-    static let creditsAfter = 300.0
 
     var isOpen: Bool { title != nil }
     var soundTracks: [FilmTrack] { tracks.filter { $0.kind == .sound } }
@@ -64,7 +57,7 @@ final class FilmPlayer {
         close()
         self.title = title
         remembered = remembering ? key ?? (address.isFileURL ? address.path : address.absoluteString) : nil
-        (tracks, looks, ended, creditsTold) = ([], 0, false, false)
+        (tracks, looks, ended) = ([], 0, false)
         (paused, time, duration, buffering, problem) = (false, 0, 0, true, nil)
         guard let made = mpv_create() else {
             problem = "The film player couldn't start."
@@ -283,13 +276,6 @@ final class FilmPlayer {
             problem = "This film couldn't be opened."
             buffering = false
         }
-        // Its last 45 seconds, playing (not a jump past them while paused or loading).
-        if !ended, !creditsTold, !paused, !buffering, duration > Self.creditsAfter,
-            duration - time <= Self.creditsSeconds
-        {
-            creditsTold = true
-            onCredits?()
-        }
         // The film has played to its end (it stays on its last frame: `keep-open`). Only
         // near its real end (its last minute or so, and never more than its last tenth):
         // a film whose stream stopped part way is left where it stopped, not taken for
@@ -384,7 +370,9 @@ struct FilmPlayerView: View {
             }
         }
         .overlay(alignment: .topTrailing) {
-            if controlsShown || film.paused || film.problem != nil, let next = model.nextEpisode {
+            // From 95% of an episode, on its own whether the controls show or not (the owner,
+            // 2026-11-09: "At 95% of runtime, it offers the play next episode").
+            if let next = model.nextEpisode, NextEpisode.isOffered(time: film.time, duration: film.duration) {
                 NextEpisodeButton(next: next, finding: model.findingNextEpisode) { model.playNextEpisode() }
             }
         }

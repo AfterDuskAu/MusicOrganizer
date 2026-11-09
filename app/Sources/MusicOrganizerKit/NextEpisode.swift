@@ -12,6 +12,18 @@ public enum NextEpisode {
     /// The switch's saved name. Off as standard.
     public static let key = "playsNextEpisode"
 
+    /// How far through an episode Next Episode is offered (the owner, 2026-11-09, for every
+    /// app: "At 95% of runtime, it offers the play next episode"; until then it was there the
+    /// whole episode). The next one still starts by itself at the very end with the switch on, or
+    /// Play All; never before the end ("It doesnt move automatically to the next episode before
+    /// the film ends": the closing-credits skip went the same day).
+    public static let offeredAt = 0.95
+
+    /// Next Episode is offered: this far through an episode whose length is known.
+    public static func isOffered(time: Double, duration: Double) -> Bool {
+        duration > 0 && time >= duration * offeredAt
+    }
+
     /// How the episode that ended was played: by which add-on's way, at what quality.
     public struct Played: Codable, Hashable, Sendable {
         public let addonId: String

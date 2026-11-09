@@ -108,4 +108,11 @@ final class SoundCloudTests: XCTestCase {
         // The music service is never named on screen; SoundCloud is its own name.
         XCTAssertEqual(MusicSearchSource.allCases.map(\.title), ["Music Service", "SoundCloud"])
     }
+
+    func testOfferedAtNinetyFivePercent() {
+        XCTAssertFalse(NextEpisode.isOffered(time: 1300, duration: 1440))  // 90%
+        XCTAssertTrue(NextEpisode.isOffered(time: 1368, duration: 1440))  // 95%
+        XCTAssertTrue(NextEpisode.isOffered(time: 1440, duration: 1440))
+        XCTAssertFalse(NextEpisode.isOffered(time: 30, duration: 0))  // its length not known yet
+    }
 }

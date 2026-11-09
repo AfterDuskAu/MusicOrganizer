@@ -584,7 +584,8 @@ private struct PlaySettings: View {
             Section("Series") {
                 Toggle("Play the next episode when one ends", isOn: $playsNextEpisode)
                 SideNote(
-                    "On: when an episode ends, the next one starts by itself, in the same "
+                    "From 95% of an episode, Next Episode is offered in the top right corner. "
+                        + "On: when an episode ends, the next one starts by itself, in the same "
                         + "quality from the same plugin. If that plugin doesn't have it in that "
                         + "quality, it's played from the next plugin in your list that does; "
                         + "and if none does, the episode's page opens for you to choose. "
