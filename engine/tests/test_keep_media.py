@@ -109,6 +109,26 @@ def test_a_copy_that_fails_leaves_nothing_behind(
     assert list(places["movies"].iterdir()) == []
 
 
+def test_a_film_has_no_name_in_the_folder_until_its_copied_whole(
+    places: dict[str, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """2026-11-10: the name was reserved first, as an empty file, and a copy cut off minutes
+    into a big film (the engine stopped) left that empty file looking like the film."""
+    seen: list[list[str]] = []
+    real_sync = fileops._sync_file
+
+    def looking(fd: int) -> None:  # called once the copy is written, before it's named
+        seen.append(sorted(p.name for p in places["movies"].iterdir()))
+        real_sync(fd)
+
+    monkeypatch.setattr(fileops, "_sync_file", looking)
+    saved = keep(places)
+    assert seen and all(not name.startswith("The Kid") for name in seen[0])
+    assert all(name.startswith(".musicorg-") for name in seen[0])  # only the hidden copy
+    assert saved.read_bytes() == places["film"].read_bytes()
+    assert [p.name for p in places["movies"].iterdir()] == ["The Kid (1921).mkv"]
+
+
 def test_the_places_are_inside_the_tests_own_folder() -> None:
     home = config.app_dirs().config.parent
     assert config.media_folders() == {

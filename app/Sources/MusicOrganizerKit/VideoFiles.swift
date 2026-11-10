@@ -38,8 +38,8 @@ public enum VideoFiles {
         movies.appendingPathComponent(adultFolderName, isDirectory: true)
     }
 
-    /// The video files in a folder and the folders inside it, by name. Hidden files,
-    /// and what's inside a package (a Final Cut library, say), are left alone.
+    /// The video files in a folder and the folders inside it, by name. Hidden files, empty
+    /// ones, and what's inside a package (a Final Cut library, say), are left alone.
     public static func inside(_ folder: URL) -> [File] { inside(folder, leavingOut: []) }
 
     /// The same, without what's in one folder inside it (Videos, in Movies, which has a
@@ -68,7 +68,10 @@ public enum VideoFiles {
             guard isVideo(url) else { continue }
             let values = try? url.resourceValues(forKeys: Set(keys))
             guard values?.isRegularFile == true else { continue }
-            found.append(File(url: url, bytes: Int64(values?.fileSize ?? 0), added: values?.creationDate))
+            // An empty file isn't a film (2026-11-10: one left by a copy cut off part way
+            // was listed as the film, at 0 KB).
+            guard let bytes = values?.fileSize, bytes > 0 else { continue }
+            found.append(File(url: url, bytes: Int64(bytes), added: values?.creationDate))
         }
         return found.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }

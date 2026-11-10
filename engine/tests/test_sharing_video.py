@@ -483,6 +483,24 @@ def test_a_film_arrives_in_parts_and_is_kept_in_the_movies_folder(
     assert not any(filled.root.rglob("*.mkv"))
 
 
+def test_an_empty_file_of_the_films_name_isnt_the_film(
+    share: sharing.Share, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """2026-11-10: a copy cut off part way left an empty file with the film's name, and a
+    device sending the film again was told the computer had it already, so it never did."""
+    share.films = True
+    theirs = paired_with(share, monkeypatch, KID)
+    movies().mkdir(parents=True, exist_ok=True)
+    (movies() / "A Made-up Film (2021).mkv").write_bytes(b"")
+    status, began = start(share, theirs)
+    assert status == 200 and began["already"] is False
+    # Nor is it a film to list.
+    assert all(m["title"] != "A Made-up Film (2021)" for m in share.films_list()["movies"])
+    # A film with something in it is.
+    (movies() / "A Made-up Film (2021).mkv").write_bytes(FILM[:10])
+    assert start(share, theirs)[1]["already"] is True
+
+
 def test_episodes_and_anime_go_in_their_folders_never_over_a_file(
     share: sharing.Share, monkeypatch: pytest.MonkeyPatch
 ) -> None:

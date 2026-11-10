@@ -2363,6 +2363,8 @@ final class VideoFilesTests: XCTestCase {
         for name in ["b film.MKV", "notes.txt", ".hidden.mp4", "Old Films/a film.avi"] {
             try Data("x".utf8).write(to: folder.appendingPathComponent(name))
         }
+        // An empty file isn't a film: one left by a copy cut off part way (2026-11-10).
+        try Data().write(to: folder.appendingPathComponent("c film (2026).mkv"))
         let found = VideoFiles.inside(folder)
         XCTAssertEqual(found.map(\.name), ["a film", "b film"])
         XCTAssertEqual(found.map(\.kind), ["AVI", "MKV"])

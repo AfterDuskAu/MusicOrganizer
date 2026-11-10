@@ -1282,10 +1282,12 @@ def _arrived(uploads: Path, upload_id: str, note: dict[str, Any] | None) -> int:
 
 def _named_already(folder: Path, name: str) -> bool:
     """Whether `folder` has a film called `name` already, with any of a film's endings
-    (and in any capitals). Only looked at."""
+    (and in any capitals). Only looked at. An empty file isn't a film (2026-11-10: one
+    left by a copy cut off part way was taken for the film, and the device sending it
+    was told the computer had it, so it never sent it again)."""
     try:
         with os.scandir(folder) as entries:
-            names = [entry.name for entry in entries]
+            names = [entry.name for entry in entries if _has_something(entry)]
     except OSError:
         return False
     wanted = unicodedata.normalize("NFC", naming.safe_component(name)).casefold()
@@ -1295,6 +1297,17 @@ def _named_already(folder: Path, name: str) -> bool:
             if unicodedata.normalize("NFC", stem).casefold() == wanted:
                 return True
     return False
+
+
+def _has_something(entry: os.DirEntry[str]) -> bool:
+    """Whether a file found in a folder has anything in it (or is a folder): an empty
+    file is never taken for a film."""
+    try:
+        if not entry.is_file(follow_symlinks=False):
+            return True
+        return entry.stat(follow_symlinks=False).st_size > 0
+    except OSError:
+        return False
 
 
 def _why_not_kept(exc: BaseException) -> str:

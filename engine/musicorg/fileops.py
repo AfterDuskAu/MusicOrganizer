@@ -2408,8 +2408,11 @@ def keep_media(
       the folder it sits in exists).
     - Never inside `forbidden` (a library's folders, a source folder).
     - Never overwrites: ` (2)`, ` (3)` ... if the name is taken. The file appears
-      complete or not at all: it's copied to a temp file beside it, flushed, and
-      renamed onto the reserved name.
+      complete or not at all: it's copied whole to a hidden temp file beside it,
+      flushed, and only then given a name, reserved and renamed onto in one go
+      (2026-11-10: the name was reserved first, as an empty file, and a copy cut off
+      by the engine stopping, minutes into a big film, left that empty file behind,
+      which a device sending the film again was told was the film).
     - Not journaled, and needs no library lock: no library file is touched.
     """
     source, cache = Path(source), Path(cache)
@@ -2437,19 +2440,21 @@ def keep_media(
             root.mkdir()  # its own parent must exist: Movies, or Downloads
         folder.mkdir(parents=True, exist_ok=True)
         target = folder.resolve() / clean
-        placeholder = _reserve(target)
         fd, tmp_name = tempfile.mkstemp(dir=target.parent, prefix=".musicorg-", suffix=".tmp")
         tmp = Path(tmp_name)
+        placeholder: Path | None = None
         try:
             with os.fdopen(fd, "wb") as out, source.open("rb") as film:
                 while chunk := film.read(4 * 1024 * 1024):
                     out.write(chunk)
                 out.flush()
                 _sync_file(out.fileno())
+            placeholder = _reserve(target)
             _replace(tmp, placeholder)
         except BaseException:
             tmp.unlink(missing_ok=True)
-            _unlink_if_empty(placeholder)
+            if placeholder is not None:
+                _unlink_if_empty(placeholder)
             raise
     except OSError as exc:
         raise FileOperationError(
