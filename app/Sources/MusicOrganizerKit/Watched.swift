@@ -134,25 +134,50 @@ public struct SeriesProgress: Equatable, Sendable {
 
     /// A series' episodes have been read.
     public mutating func learned(
-        _ id: String, episodes: [MediaDetails.Video], finished: Finished, now: Date = Date()
+        _ id: String, episodes: [MediaDetails.Video], finished: Finished, now: Date = Date(), listed: Bool = false
     ) {
         let out = Self.out(in: episodes, now: now)
         let latest = out.last?.id
         let isNew = series[id] == nil
         var known = series[id] ?? Known(latest: nil, caughtUp: nil, read: now)
-        // Kept from before there was `seen`: new is what came after the owner caught up.
-        if known.seen == nil { known.seen = isNew ? latest ?? "" : known.caughtUp ?? known.latest ?? "" }
+        // The latest episode out when the owner last watched any of it, in the last
+        // `followingFor` (one left long ago isn't being followed): what came out since is new.
+        let lastWatched = episodes.compactMap { finished.day(of: $0.id) }.max()
+            .flatMap { now.timeIntervalSince($0) <= Self.followingFor ? $0 : nil }
+        let watchedSeen = lastWatched.flatMap { watched in
+            out.last { video in video.releasedAt.map { $0 <= watched } ?? true }?.id
+        }
+        // Kept from before there was `seen`: new is what came after the owner caught up. Read for
+        // the first time: what was out when it was last watched, else everything out now.
+        if known.seen == nil { known.seen = isNew ? watchedSeen ?? latest ?? "" : known.caughtUp ?? known.latest ?? "" }
+        // Never later than that, however long ago it was first read (2026-11-10: a profile's
+        // series read before its watching came took every episode out as seen).
+        if let watchedSeen, let watchedAt = out.firstIndex(where: { $0.id == watchedSeen }),
+            let seenAt = out.firstIndex(where: { $0.id == known.seen }), seenAt > watchedAt
+        {
+            known.seen = watchedSeen
+        }
         (known.latest, known.read) = (latest, now)
         if let latest, finished.contains(latest) { known.caughtUp = latest }
         // What's out after the last one seen; with none of it left to watch, everything
         // out now has been seen. (One seen that's gone from the list is the same.)
         let seen = known.seen ?? ""
         let after = seen.isEmpty ? out[...] : out.firstIndex { $0.id == seen }.map { out[($0 + 1)...] } ?? []
-        if after.allSatisfy({ finished.contains($0.id) }) {
-            (known.seen, known.fresh, known.freshAt) = (latest ?? seen, nil, nil)
+        if after.allSatisfy({ finished.contains($0.id) }) { known.seen = latest ?? seen }
+        // On the Watchlist (`listed`; the owner, 2026-11-10, for every app: "New Episodes, should
+        // only follow watchlisted series ... Any unwatched episodes show up at +N", "it shouldnt
+        // matter based on dates"): every episode out after the last one watched, whenever it
+        // came out. One not begun has none. Off the Watchlist, what's above: what came out
+        // since it was seen ("It can keep the 60 day new episode for just generally watched
+        // series").
+        let shown: ArraySlice<MediaDetails.Video> = listed
+            ? out.lastIndex { finished.contains($0.id) }.map { out[($0 + 1)...] } ?? []
+            : after
+        if shown.allSatisfy({ finished.contains($0.id) }) {
+            (known.fresh, known.freshAt) = (nil, nil)
         } else {
-            known.fresh = after.map(\.id)
-            known.freshAt = after.compactMap(\.releasedAt).max() ?? known.freshAt ?? now
+            known.fresh = shown.map(\.id)
+            known.freshAt = shown.compactMap(\.releasedAt).max() ?? known.freshAt ?? now
         }
         series[id] = known
     }
@@ -214,15 +239,32 @@ public struct SeriesProgress: Equatable, Sendable {
 
     public static let key = "seriesProgress"
 
+    /// A series watched in this long is being followed: read for the first time, what came out
+    /// since is new (the owner's choice, 2026-11-10, as the video apps have it).
+    public static let followingFor: TimeInterval = 60 * 86_400
+
+    /// The rule the progress was kept by: 3 since a series on the Watchlist has every episode
+    /// after the last one watched as new, and one off it what came out after its last watch in
+    /// 60 days (2026-11-10, as the video apps count it). One kept before has every series read
+    /// again at once, instead of in up to six hours. Kept per profile, as every setting is.
+    public static let ruleKey = "seriesProgressRule"
+    public static let ruleNow = 3
+
     public static func saved(in defaults: UserDefaults = .standard) -> SeriesProgress {
         guard let data = defaults.data(forKey: key),
             let series = try? JSONDecoder().decode([String: Known].self, from: data)
         else { return SeriesProgress() }
-        return SeriesProgress(series)
+        if defaults.integer(forKey: ruleKey) == ruleNow { return SeriesProgress(series) }
+        return SeriesProgress(series.mapValues { known in
+            var known = known
+            known.read = .distantPast
+            return known
+        })
     }
 
     public func save(in defaults: UserDefaults = .standard) {
         if let data = try? JSONEncoder().encode(series) { defaults.set(data, forKey: Self.key) }
+        defaults.set(Self.ruleNow, forKey: Self.ruleKey)
     }
 }
 

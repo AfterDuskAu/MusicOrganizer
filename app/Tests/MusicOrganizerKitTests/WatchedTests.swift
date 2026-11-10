@@ -275,6 +275,82 @@ final class WatchedTests: XCTestCase {
         XCTAssertFalse(progress.hasNewEpisode("s", finished: done))
     }
 
+    func testFirstReadWhatCameOutSinceItWasLastWatchedIsNew() throws {
+        // An account filled by a sync: episode 1 watched on 2 October, the series read for the
+        // first time on the 20th. What came out since the 2nd is new; what was out then isn't.
+        let all = try episodes([(1, 1, "2026-10-01"), (1, 2, "2026-10-08"), (1, 3, "2026-10-15")])
+        var done = Finished()
+        done.mark("s:1:1", watched: true, now: day("2026-10-02"))
+        var progress = SeriesProgress()
+        progress.learned("s", episodes: all, finished: done, now: day("2026-10-20"))
+        XCTAssertEqual(progress.newEpisodes("s", finished: done), ["s:1:2", "s:1:3"])
+        // Never watched: nothing out when first read is new.
+        var other = SeriesProgress()
+        other.learned("s", episodes: all, finished: Finished(), now: day("2026-10-20"))
+        XCTAssertEqual(other.newEpisodes("s", finished: Finished()), [])
+        // Watched after the last came out: caught up, nothing new.
+        var late = Finished()
+        late.mark("s:1:3", watched: true, now: day("2026-10-16"))
+        var caught = SeriesProgress()
+        caught.learned("s", episodes: all, finished: late, now: day("2026-10-20"))
+        XCTAssertEqual(caught.newEpisodes("s", finished: late), [])
+        // Watched more than 60 days before it's first read (the owner's choice): not followed, nothing new.
+        var long = Finished()
+        long.mark("s:1:1", watched: true, now: day("2026-08-01"))
+        var left = SeriesProgress()
+        left.learned("s", episodes: all, finished: long, now: day("2026-10-20"))
+        XCTAssertEqual(left.newEpisodes("s", finished: long), [])
+    }
+
+    func testReadBeforeItsWatchingCameWhatCameOutSinceIsNew() throws {
+        // Read on the 20th with nothing watched here (all of it taken as seen); a sync then brings
+        // episode 1, watched on the 2nd: read again, what came out since the 2nd is new.
+        let all = try episodes([(1, 1, "2026-10-01"), (1, 2, "2026-10-08"), (1, 3, "2026-10-15")])
+        var progress = SeriesProgress()
+        progress.learned("s", episodes: all, finished: Finished(), now: day("2026-10-20"))
+        var done = Finished()
+        done.mark("s:1:1", watched: true, now: day("2026-10-02"))
+        progress.learned("s", episodes: all, finished: done, now: day("2026-10-21"))
+        XCTAssertEqual(progress.newEpisodes("s", finished: done), ["s:1:2", "s:1:3"])
+    }
+
+    func testOnTheWatchlistEveryEpisodeAfterTheLastWatchedIsNew() throws {
+        // Watched to episode 2 in January, read in November: on the Watchlist, episodes 3 to 5
+        // are +3 whenever they came out; off it, nothing (watched more than 60 days before).
+        let all = try episodes([(1, 1, "2026-01-01"), (1, 2, "2026-01-08"), (1, 3, "2026-01-15"), (1, 4, "2026-02-01"), (1, 5, "2026-03-01")])
+        var done = Finished()
+        done.mark("s:1:1", watched: true, now: day("2026-01-02"))
+        done.mark("s:1:2", watched: true, now: day("2026-01-09"))
+        var listed = SeriesProgress()
+        listed.learned("s", episodes: all, finished: done, now: day("2026-11-10"), listed: true)
+        XCTAssertEqual(listed.newEpisodes("s", finished: done), ["s:1:3", "s:1:4", "s:1:5"])
+        done.mark("s:1:3", watched: true)
+        XCTAssertEqual(listed.newEpisodes("s", finished: done), ["s:1:4", "s:1:5"])
+        var off = SeriesProgress()
+        off.learned("s", episodes: all, finished: done, now: day("2026-11-10"))
+        XCTAssertEqual(off.newEpisodes("s", finished: done), [])
+        // On the Watchlist and not begun: nothing new.
+        var unbegun = SeriesProgress()
+        unbegun.learned("s", episodes: all, finished: Finished(), now: day("2026-11-10"), listed: true)
+        XCTAssertEqual(unbegun.newEpisodes("s", finished: Finished()), [])
+    }
+
+    func testProgressKeptBeforeTheWatchlistRuleIsReadAgain() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "SeriesProgressRuleTests"))
+        defaults.removePersistentDomain(forName: "SeriesProgressRuleTests")
+        defer { defaults.removePersistentDomain(forName: "SeriesProgressRuleTests") }
+        let all = try episodes([(1, 1, "2026-10-01")])
+        var progress = SeriesProgress()
+        progress.learned("s", episodes: all, finished: Finished(), now: day("2026-10-20"))
+        // Kept by the rule before (no mark): every series is due at once.
+        defaults.set(try JSONEncoder().encode(progress.series), forKey: SeriesProgress.key)
+        XCTAssertTrue(SeriesProgress.saved(in: defaults).isDue("s", every: 6 * 3600, now: day("2026-10-20")))
+        // Kept by this one: as it was.
+        progress.save(in: defaults)
+        XCTAssertEqual(defaults.integer(forKey: SeriesProgress.ruleKey), SeriesProgress.ruleNow)
+        XCTAssertFalse(SeriesProgress.saved(in: defaults).isDue("s", every: 6 * 3600, now: day("2026-10-20")))
+    }
+
     func testASeriesWithNothingOutYetHasItsFirstEpisodeAsNew() throws {
         let all = try episodes([(1, 1, "2026-10-20"), (1, 2, "2026-10-20")])
         var progress = SeriesProgress()

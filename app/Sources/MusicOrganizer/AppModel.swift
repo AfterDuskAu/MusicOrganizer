@@ -325,6 +325,9 @@ final class AppModel {
     func toggleWatchlist(_ item: MediaItem) {
         watchlist.toggle(item)
         watchlist.save()
+        // Its new episodes go by whether it's on the Watchlist (2026-11-10): worked out again
+        // from its episodes, when they've been read.
+        if let episodes = seriesEpisodes[item.id] { learn(item, episodes: episodes) }
     }
 
     // MARK: what's been watched to its end (the owner, 2026-10-15)
@@ -418,7 +421,8 @@ final class AppModel {
         history.save()
         for (id, found) in details where found.type == "series" && !found.videos.isEmpty {
             seriesEpisodes[id] = found.videos
-            seriesProgress.learned(id, episodes: found.videos, finished: finished)
+            seriesProgress.learned(
+                id, episodes: found.videos, finished: finished, listed: watchlist.items.contains { $0.id == id })
         }
         seriesProgress.save()
         seriesRead += 1
@@ -440,7 +444,9 @@ final class AppModel {
         var progress = seriesProgress
         for (series, videos) in read {
             episodes[series.id] = videos
-            progress.learned(series.id, episodes: videos, finished: finished)
+            // On the Watchlist: every unwatched episode after the last one watched is new
+            // (the owner, 2026-11-10, for every app).
+            progress.learned(series.id, episodes: videos, finished: finished, listed: watchlist.contains(series))
         }
         (seriesEpisodes, seriesProgress) = (episodes, progress)
         seriesProgress.save()
