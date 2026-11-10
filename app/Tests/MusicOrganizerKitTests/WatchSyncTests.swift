@@ -114,4 +114,45 @@ final class WatchSyncTests: XCTestCase {
         // And it's sent on from here.
         XCTAssertEqual(WatchSync.state(watchlist: list, finished: done, history: history).progress.map(\.id), ["tt3"])
     }
+
+    /// 2026-11-10: each series' new episodes are sent with the watching, so a device set up
+    /// later shows the same New Episodes (it takes everything out as seen when it first
+    /// reads a series).
+    func testNewEpisodesAreSentWithTheWatching() throws {
+        let many = (1...250).map { "tt9:2:\($0)" }
+        let progress = SeriesProgress([
+            "tt5": .init(latest: "tt5:1:4", caughtUp: nil, read: at(30), seen: "tt5:1:2",
+                         fresh: ["tt5:1:3", "tt5:1:4"], freshAt: at(30)),
+            "tt6": .init(latest: "tt6:1:2", caughtUp: nil, read: at(50), seen: "tt6:1:1",
+                         fresh: ["tt6:1:2"], freshAt: at(50)),
+            "tt7": .init(latest: "tt7:1:1", caughtUp: nil, read: at(10), seen: "", fresh: ["tt7:1:1"], freshAt: at(10)),
+            "tt8": .init(latest: "tt8:1:1", caughtUp: "tt8:1:1", read: at(10), seen: "tt8:1:1"),
+            "tt9": .init(latest: "tt9:2:250", caughtUp: nil, read: at(5), seen: "tt9:1:9", fresh: many, freshAt: at(5)),
+        ])
+        var done = Finished()
+        done.mark("tt5:1:3", watched: true, now: at(40))
+        done.mark("tt7:1:1", watched: true, now: at(40))
+        let sent = WatchSync.state(watchlist: Watchlist(), finished: done, history: WatchHistory(), series: progress)
+        // Only what isn't watched, the series whose latest came out last first, and no more
+        // than the computer takes of one series.
+        XCTAssertEqual(sent.series, [
+            .init(id: "tt6", fresh: ["tt6:1:2"], freshAt: WatchSync.stamp(at(50))),
+            .init(id: "tt5", fresh: ["tt5:1:4"], freshAt: WatchSync.stamp(at(30))),
+            .init(id: "tt9", fresh: Array(many.prefix(WatchSync.mostFresh)), freshAt: WatchSync.stamp(at(5))),
+        ])
+        // Without the series, none is said (as a side from before it).
+        let without = WatchSync.state(watchlist: Watchlist(), finished: done, history: WatchHistory())
+        XCTAssertNil(without.series)
+        let written = String(decoding: try JSONEncoder().encode(without), as: UTF8.self)
+        XCTAssertFalse(written.contains("series"))
+        // Read either way; and taking a device's changes nothing here.
+        let old = try JSONDecoder().decode(WatchSync.State.self, from: Data(#"{"watchlist":[],"watched":[],"progress":[]}"#.utf8))
+        XCTAssertNil(old.series)
+        let back = try JSONDecoder().decode(WatchSync.State.self, from: try JSONEncoder().encode(sent))
+        XCTAssertEqual(back.series, sent.series)
+        var list = Watchlist()
+        var finished = done
+        var history = WatchHistory()
+        XCTAssertFalse(WatchSync.merge(back, into: &list, finished: &finished, history: &history))
+    }
 }

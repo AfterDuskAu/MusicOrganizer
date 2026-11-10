@@ -4,8 +4,9 @@ import Foundation
 /// watched (the owner, 2026-10-16: "This sync only brings in watchlist, watched, progress
 /// of the shows ... It adds information, doesn't remove it"): the Watchlist, every film and
 /// episode watched, and where each title was got to. The shape is the home sync's
-/// (docs/ENGINE_API.md, section 3: Title, Watched, Progress). Each side adds what the
-/// other sent to its own: nothing is ever taken away.
+/// (docs/ENGINE_API.md, section 3: Title, Watched, Progress, and since 2026-11-10 Series,
+/// from the computer). Each side adds what the other sent to its own: nothing is ever taken
+/// away. A device's Series is read and left: this side reads its series itself.
 public enum WatchSync {
     /// A film or series, as a list has it.
     public struct Title: Codable, Equatable, Sendable {
@@ -51,20 +52,46 @@ public enum WatchSync {
         public var title: Title?
     }
 
+    /// A series' episodes that are new to the owner and not watched yet, in order, and when
+    /// the latest of them came out (2026-11-10): Home's New Episodes as this side has it.
+    /// A device that reads a series for the first time takes every episode out as seen, so
+    /// one set up later had none of them until the computer said which they are.
+    public struct Series: Codable, Equatable, Sendable {
+        public var id: String
+        public var fresh: [String]
+        public var freshAt: String?
+
+        public init(id: String, fresh: [String], freshAt: String? = nil) {
+            (self.id, self.fresh, self.freshAt) = (id, fresh, freshAt)
+        }
+    }
+
     public struct State: Codable, Equatable, Sendable {
         public var format: Int?
         public var revision: String?
         public var watchlist: [Title]
         public var watched: [Watched]
         public var progress: [Progress]
+        /// Nil from a side from before it was sent.
+        public var series: [Series]?
 
-        public init(watchlist: [Title] = [], watched: [Watched] = [], progress: [Progress] = []) {
-            (self.watchlist, self.watched, self.progress) = (watchlist, watched, progress)
+        public init(
+            watchlist: [Title] = [], watched: [Watched] = [], progress: [Progress] = [], series: [Series]? = nil
+        ) {
+            (self.watchlist, self.watched, self.progress, self.series) = (watchlist, watched, progress, series)
         }
     }
 
-    /// A profile's (or an account's) watching, to send.
-    public static func state(watchlist: Watchlist, finished: Finished, history: WatchHistory) -> State {
+    /// The most series with new episodes sent, and the most new episodes of one: what the
+    /// computer takes (docs/ENGINE_API.md, section 3).
+    public static let mostSeries = 500
+    public static let mostFresh = 200
+
+    /// A profile's (or an account's) watching, to send; with `series` (its New Episodes),
+    /// the series with new episodes too, the one whose latest came out last first.
+    public static func state(
+        watchlist: Watchlist, finished: Finished, history: WatchHistory, series: SeriesProgress? = nil
+    ) -> State {
         let watched = finished.days.sorted { $0.key < $1.key }.map { Watched(id: $0.key, at: stamp($0.value)) }
         let progress = history.entries.compactMap { entry -> Progress? in
             guard entry.kind != .video, let item = entry.item else { return nil }
@@ -73,7 +100,14 @@ public enum WatchSync {
                 poster: entry.picture, episode: entry.episodeId, detail: entry.detail,
                 seconds: entry.seconds, length: entry.length, at: stamp(entry.at), title: Title(item))
         }
-        return State(watchlist: watchlist.items.map(Title.init), watched: watched, progress: progress)
+        let fresh = series.map { known in
+            known.withFreshEpisodes(finished: finished).prefix(mostSeries).map { id in
+                Series(
+                    id: id, fresh: Array(known.newEpisodes(id, finished: finished).prefix(mostFresh)),
+                    freshAt: known.series[id]?.freshAt.map(stamp))
+            }
+        }
+        return State(watchlist: watchlist.items.map(Title.init), watched: watched, progress: progress, series: fresh)
     }
 
     /// What the other side sent, added to these records: a title not on the Watchlist goes

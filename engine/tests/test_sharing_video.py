@@ -65,6 +65,8 @@ WATCHING = {
     "progress": [{"id": "tt0000002", "type": "series", "name": "A Made-up Show",
                   "episode": "tt0000002:1:2", "detail": "S1 E2 · Its Title", "seconds": 600,
                   "length": 2400.5, "at": "2025-10-15T21:00:00Z"}],
+    "series": [{"id": "tt0000002", "fresh": ["tt0000002:1:3", "tt0000002:1:4"],
+                "freshAt": "2025-10-20T09:00:00Z"}],
 }  # fmt: skip
 
 
@@ -244,7 +246,7 @@ def test_only_the_agreements_fields_are_kept_checked_and_cut() -> None:
         "somethingElse": ["never kept"],
     }  # fmt: skip
     checked = sharing.check_watching(sent, now=now)
-    assert set(checked) == {"watchlist", "watched", "progress"}
+    assert set(checked) == {"watchlist", "watched", "progress", "series"}
 
     first, second, anime, cut = checked["watchlist"]
     genres = [(f"Genre {n}" * 10)[:50].rstrip() for n in range(20)]  # 20, of 50 characters
@@ -307,7 +309,8 @@ def test_a_devices_watching_is_checked_before_any_is_kept(
         assert (status, answer["error"]) == (400, "bad_request"), data[:20]
     for too_many in ({"watchlist": [title(1)] * (sharing.MOST_TITLES + 1)},
                      {"progress": [{}] * (sharing.MOST_PROGRESS + 1)},
-                     {"watched": [{}] * (sharing.MOST_WATCHED + 1)}):  # fmt: skip
+                     {"watched": [{}] * (sharing.MOST_WATCHED + 1)},
+                     {"series": [{}] * (sharing.MOST_SERIES + 1)}):  # fmt: skip
         status, answer = send_watching(share, theirs, too_many)
         assert (status, answer["error"]) == (413, "bad_request")
         assert "at most" in answer["message"]
@@ -321,7 +324,7 @@ def test_a_devices_watching_is_checked_before_any_is_kept(
     assert (status, answer["error"]) == (401, "not_paired")
     assert raw(share, "POST", "/sync/v1/watching", b"", sent)[0] == 200
     (empty,) = sharing.sent_watching()
-    assert empty["watching"] == {"watchlist": [], "watched": [], "progress": []}
+    assert empty["watching"] == {"watchlist": [], "watched": [], "progress": [], "series": []}
 
 
 def test_a_profiles_watching_is_given_as_the_app_last_gave_it(
@@ -338,6 +341,35 @@ def test_a_profiles_watching_is_given_as_the_app_last_gave_it(
     # Its revision changes when it does, and only then.
     assert sharing.set_watching(KID, WATCHING) == revision
     assert sharing.set_watching(KID, {**WATCHING, "watched": []}) != revision
+
+
+def test_a_series_new_episodes_are_checked_and_cut() -> None:
+    """2026-11-10: the episodes of each series that are new to the owner, as the app's New
+    Episodes has them, so a device set up later shows the same. Kept as sent, in order,
+    each once; an id that isn't one is left out, and so is a series with none left."""
+    now = datetime(2026, 11, 10, 8, 0, tzinfo=UTC)
+    many = [f"tt0000003:2:{number}" for number in range(1, sharing.MOST_FRESH + 50)]
+    sent = {"series": [
+        {"id": "tt0000002", "fresh": ["tt0000002:1:3", "tt0000002:1:3", " tt0000002:1:4",
+                                      7, "tt0000002:1:5"], "freshAt": "2027-01-01T00:00:00Z"},
+        {"id": "tt0000002", "fresh": ["tt0000002:1:9"]},  # the same series again: the first wins
+        {"id": "tt0000003", "fresh": many, "freshAt": "not a time"},
+        {"id": "tt0000004", "fresh": []},
+        {"id": "tt0000005", "fresh": [" "]},
+        {"id": "x" * (sharing.MOST_ID + 1), "fresh": ["tt0000006:1:1"]},
+        {"id": "tt0000007", "fresh": "tt0000007:1:1"},
+        "not a series",
+    ]}  # fmt: skip
+    kept = sharing.check_watching(sent, now=now)["series"]
+    assert kept == [
+        {"id": "tt0000002", "fresh": ["tt0000002:1:3", "tt0000002:1:5"],
+         "freshAt": "2026-11-10T08:00:00Z"},  # a time later than now counts as now
+        {"id": "tt0000003", "fresh": many[: sharing.MOST_FRESH]},
+    ]  # fmt: skip
+    # A watching from before there was a series list has an empty one.
+    assert sharing.check_watching({"watched": []})["series"] == []
+    # One kept before it was read has an empty one too.
+    assert sharing._lists({"watchlist": []})["series"] == []
 
 
 def test_what_was_sent_waits_across_a_restart(
@@ -393,7 +425,9 @@ def test_the_app_gives_and_takes_watching(
     (sent,) = result(opened, "watching.sent")["sent"]
     assert set(sent) == {"id", "profile", "device", "kind", "at", "watching"}
     assert (sent["profile"], sent["device"], sent["kind"]) == (KID, device["id"], "iPad")
-    assert sent["watching"] == {"watchlist": [title(5)], "watched": [], "progress": []}
+    assert sent["watching"] == {
+        "watchlist": [title(5)], "watched": [], "progress": [], "series": []
+    }  # fmt: skip
     assert code(opened, "watching.done", ids=[1]) == rpc.INVALID_PARAMS
     assert result(opened, "watching.done", ids=[sent["id"], "w_not_there"]) == {"left": 0}
     assert result(opened, "watching.sent") == {"sent": []}
