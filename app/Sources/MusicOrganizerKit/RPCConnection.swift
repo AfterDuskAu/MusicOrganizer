@@ -26,7 +26,15 @@ public final class RPCConnection: @unchecked Sendable {
 
     private let input: FileHandle  // we write requests here
     private let output: FileHandle  // and read answers here
+    /// Who is waiting for which answer. Held only for a moment, never while writing.
     private let lock = NSLock()
+    /// One request written at a time, so two never mix on the line. Never the lock above
+    /// (2026-11-10): a request is written while the engine may be busy writing an answer,
+    /// and the engine reads the next request only once that answer has been read. Writing
+    /// a long request (a profile's watching) under the lock the reader needs to hand an
+    /// answer over kept both sides waiting for each other for good, the app on its loading
+    /// screen (the owner: "doesn't open past loading screen").
+    private let writing = NSLock()
     private var nextID = 0
     private var waiting: [Int: CheckedContinuation<Data, Error>] = [:]
     private var closed = false
@@ -66,8 +74,8 @@ public final class RPCConnection: @unchecked Sendable {
             do {
                 var line = try JSONSerialization.data(withJSONObject: request)
                 line.append(0x0A)
-                lock.lock()
-                defer { lock.unlock() }
+                writing.lock()
+                defer { writing.unlock() }
                 try input.write(contentsOf: line)
             } catch {
                 if let waiter = take(id) { waiter.resume(throwing: Self.closedError) }
@@ -91,14 +99,20 @@ public final class RPCConnection: @unchecked Sendable {
     /// before the engine stops.
     public func tell(_ method: String, _ params: [String: Any] = [:]) {
         lock.lock()
-        defer { lock.unlock() }
-        guard !closed else { return }
+        guard !closed else {
+            lock.unlock()
+            return
+        }
         nextID += 1
+        let id = nextID
+        lock.unlock()
         let request: [String: Any] = [
-            "jsonrpc": "2.0", "id": nextID, "method": method, "params": params,
+            "jsonrpc": "2.0", "id": id, "method": method, "params": params,
         ]
         guard var line = try? JSONSerialization.data(withJSONObject: request) else { return }
         line.append(0x0A)
+        writing.lock()
+        defer { writing.unlock() }
         try? input.write(contentsOf: line)
     }
 

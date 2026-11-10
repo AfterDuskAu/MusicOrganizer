@@ -373,6 +373,43 @@ final class RPCConnectionTests: XCTestCase {
         return try XCTUnwrap(JSONSerialization.jsonObject(with: line) as? [String: Any])
     }
 
+    /// 2026-11-10: a long request written while the engine writes long answers, as when the
+    /// app gives a profile's watching while the list of songs comes in. The request was
+    /// written under the lock the reader needs to hand an answer over: the engine waited for
+    /// its answer to be read, the reader for the lock, the request for the engine, for good,
+    /// and the app stayed on its loading screen.
+    func testALongRequestAndLongAnswersDontWaitForEachOther() async throws {
+        let (connection, toEngine, fromEngine) = makePair()
+        connection.start()
+        let long = String(repeating: "x", count: 2_000_000)  // far more than a pipe holds
+        let first = Task { try await connection.call("first") }
+        let idA = try XCTUnwrap(try readRequest(toEngine)["id"] as? Int)
+        let second = Task { try await connection.call("second") }
+        let idB = try XCTUnwrap(try readRequest(toEngine)["id"] as? Int)
+        let third = Task { try await connection.call("long", ["text": long]) }
+        // The engine, on its own thread: it answers the first two (the second at length)
+        // before it reads the long request, which meanwhile can't all be written.
+        DispatchQueue.global().async {
+            Thread.sleep(forTimeInterval: 0.3)
+            fromEngine.write(Data("{\"jsonrpc\":\"2.0\",\"id\":\(idA),\"result\":1}\n".utf8))
+            fromEngine.write(Data("{\"jsonrpc\":\"2.0\",\"id\":\(idB),\"result\":\"\(long)\"}\n".utf8))
+            var line = Data()
+            while line.last != 0x0A { line.append(toEngine.availableData) }
+            let asked = (try? JSONSerialization.jsonObject(with: line)) as? [String: Any]
+            let idC = asked?["id"] as? Int ?? 0
+            fromEngine.write(Data("{\"jsonrpc\":\"2.0\",\"id\":\(idC),\"result\":3}\n".utf8))
+        }
+        let answered = expectation(description: "all three answered")
+        Task {
+            let got = try await [first.value, second.value, third.value]
+            XCTAssertEqual(got[0], Data("1".utf8))
+            XCTAssertEqual(got[1].count, long.count + 2)  // the text, in its quotes
+            XCTAssertEqual(got[2], Data("3".utf8))
+            answered.fulfill()
+        }
+        await fulfillment(of: [answered], timeout: 30)
+    }
+
     func testCallAnswerErrorAndNotification() async throws {
         let (connection, toEngine, fromEngine) = makePair()
         let noted = expectation(description: "notification")
