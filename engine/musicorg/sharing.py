@@ -2010,9 +2010,9 @@ class Share:
     ) -> tuple[int, dict[str, Any]]:
         """A device says which films it has downloaded (`POST /sync/v1/device-films`):
         (the HTTP status, the answer's body), the answer saying which of them the owner
-        asked for. Its list replaces the one it said before; one asked for that has
-        arrived, or that it no longer has, isn't asked for any more. WatchingError when
-        the list can't be taken."""
+        asked for, under this account or another of the same device. Its list replaces
+        the one it said before; one asked for that has arrived, or that it no longer has,
+        isn't asked for any more. WatchingError when the list can't be taken."""
         if not self.films:
             return 403, refusal("not_shared", NOT_SHARED)
         films = check_device_films(asked)
@@ -2020,12 +2020,17 @@ class Share:
         movies = config.media_folders()["movies"]
         with _device_films_lock:
             kept = config.load_device_films()
-            before = next((e for e in kept if _same_device(e, profile, device["id"])), {})
             by_id = {film["id"]: film for film in films}
-            wanted = [
-                w for w in before.get("wanted") or []
-                if w in by_id and not _film_here(by_id[w], movies)
-            ]  # fmt: skip
+            # Asked for under any account of this device (each account is paired on its own,
+            # and only the one open there says its films): the one saying now sends it.
+            asked: list[str] = []
+            for entry in kept:
+                if (
+                    _same_device(entry, profile, device["id"])
+                    or entry.get("kind") == device["device"]
+                ):
+                    asked += [w for w in entry.get("wanted") or [] if w not in asked]
+            wanted = [w for w in asked if w in by_id and not _film_here(by_id[w], movies)]
             entry = {"device": device["id"], "profile": profile, "kind": device["device"],
                      "at": _now(), "films": films, "wanted": wanted}  # fmt: skip
             kept = [e for e in kept if not _same_device(e, profile, device["id"])]

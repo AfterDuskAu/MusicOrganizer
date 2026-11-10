@@ -95,38 +95,29 @@ public struct DeviceFilms: Decodable, Sendable, Equatable {
         public var id: String { kind + "/" + film.id }
     }
 
-    /// The films on devices that aren't on this Mac, grouped by the kind of device, in the
-    /// order the devices said them: each film once. One asked for, or arriving, counts as
-    /// asked for if any pairing says so.
+    /// The films on devices that aren't on this Mac, grouped by the kind of device, each film
+    /// once. A device says its films from the account open on it, so the list said last by
+    /// any of its accounts is what it has now (an older one, under another account's key,
+    /// may name a film since deleted there). Asked for, or arriving, under any of its
+    /// accounts counts.
     public var waiting: [(kind: String, films: [Waiting])] {
         var order: [String] = []
-        var byKind: [String: [String: (film: Film, from: [Device])]] = [:]
-        var filmOrder: [String: [String]] = [:]
+        var byKind: [String: [Device]] = [:]
         for device in devices {
-            for film in device.films where !film.here {
-                if byKind[device.kind] == nil {
-                    order.append(device.kind)
-                    byKind[device.kind] = [:]
-                }
-                if var had = byKind[device.kind]?[film.id] {
-                    had.from.append(device)
-                    // Asked for, or arriving, by any of its pairings: shown so.
-                    if (film.wanted && !had.film.wanted) || (film.arriving != nil && had.film.arriving == nil) {
-                        had.film = film
-                    }
-                    byKind[device.kind]?[film.id] = had
-                } else {
-                    byKind[device.kind]?[film.id] = (film, [device])
-                    filmOrder[device.kind, default: []].append(film.id)
-                }
-            }
+            if byKind[device.kind] == nil { order.append(device.kind) }
+            byKind[device.kind, default: []].append(device)
         }
-        return order.map { kind in
-            let films = (filmOrder[kind] ?? []).compactMap { id -> Waiting? in
-                guard let found = byKind[kind]?[id] else { return nil }
-                return Waiting(kind: kind, film: found.film, from: found.from)
+        return order.compactMap { kind -> (kind: String, films: [Waiting])? in
+            let pairings = byKind[kind] ?? []
+            guard let newest = pairings.max(by: { ($0.at ?? "") < ($1.at ?? "") }) else { return nil }
+            let films = newest.films.filter { !$0.here }.map { film -> Waiting in
+                let from = pairings.filter { $0.films.contains { $0.id == film.id } }
+                let said = from.flatMap { $0.films.filter { $0.id == film.id } }
+                // Arriving under any pairing, else asked for under any: shown so.
+                let shown = said.first { $0.arriving != nil } ?? said.first { $0.wanted } ?? film
+                return Waiting(kind: kind, film: shown, from: from)
             }
-            return (kind, films)
+            return films.isEmpty ? nil : (kind, films)
         }
     }
 

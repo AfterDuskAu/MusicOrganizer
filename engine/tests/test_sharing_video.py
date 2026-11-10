@@ -553,6 +553,22 @@ def test_a_device_says_its_films_and_sends_the_ones_asked_for(
     assert sharing.device_films() == []
 
 
+def test_a_film_asked_for_is_sent_by_whichever_account_of_the_device_says_its_films(
+    share: sharing.Share, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A set-up device has a key for each account, and only the account open on it says its
+    films: one asked for under another account is still sent."""
+    share.films = True
+    first = paired_with(share, monkeypatch, KID)
+    second = paired_with(share, monkeypatch, "p_other")
+    (one,) = config.load_devices(KID)
+    films = [device_film("dl-1")]
+    assert its_films(share, first, films)[1]["wanted"] == []
+    assert sharing.want_device_film(KID, one["id"], "dl-1")
+    # The other account is the one open now: it's told.
+    assert its_films(share, second, films)[1]["wanted"] == ["dl-1"]
+
+
 def test_a_devices_list_of_films_is_checked(
     share: sharing.Share, monkeypatch: pytest.MonkeyPatch
 ) -> None:

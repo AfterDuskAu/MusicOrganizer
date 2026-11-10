@@ -36,16 +36,18 @@ final class DeviceFilmsTests: XCTestCase {
         let film = DeviceFilms.Film(id: "dl-1", title: "A Film", year: "2021", size: 10)
         let asked = DeviceFilms.Film(id: "dl-1", title: "A Film", year: "2021", size: 10, wanted: true)
         let other = DeviceFilms.Film(id: "dl-9", title: "Another", size: 10)
+        let gone = DeviceFilms.Film(id: "dl-0", title: "Deleted There", size: 10)
         let found = DeviceFilms(devices: [
-            .init(device: "tv-d", profile: "default", kind: "Android TV", films: [film]),
-            .init(device: "tv-c", profile: "p_c", kind: "Android TV", films: [asked, other]),
-            .init(device: "ipad", profile: "default", kind: "iPad", films: [film]),
+            .init(device: "tv-d", profile: "default", kind: "Android TV", at: "2026-11-09T08:00:00Z", films: [asked, gone]),
+            .init(device: "tv-c", profile: "p_c", kind: "Android TV", at: "2026-11-10T08:00:00Z", films: [film, other]),
+            .init(device: "ipad", profile: "default", kind: "iPad", at: "2026-11-10T09:00:00Z", films: [film]),
         ])
         let waiting = found.waiting
         XCTAssertEqual(waiting.map(\.kind), ["Android TV", "iPad"])
+        // The list said last is what the device has: not the film an older list named.
         let tv = waiting[0].films
         XCTAssertEqual(tv.map(\.film.id), ["dl-1", "dl-9"])
-        // Asked for by one of its pairings: shown as asked for, and every pairing is asked.
+        // Asked for under another of its accounts: shown as asked for, and each is asked.
         XCTAssertTrue(tv[0].film.wanted)
         XCTAssertEqual(tv[0].from.map(\.device), ["tv-d", "tv-c"])
         XCTAssertEqual(found.waitingCount, 3)
