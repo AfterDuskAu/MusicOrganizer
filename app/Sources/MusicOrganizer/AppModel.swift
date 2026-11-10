@@ -495,26 +495,13 @@ final class AppModel {
     private var recordsLook: [Int] {
         [watchlist.items.count, watchlist.takenOff.count, finished.days.count, finished.unmarked.count,
          history.entries.count, Int(history.entries.lazy.map(\.at.timeIntervalSince1970).max() ?? 0),
-         history.entries.first?.id.hashValue ?? 0, freshLook]
-    }
-
-    /// The series with new episodes, as one number that changes when they do (2026-11-10:
-    /// they're given with the watching). The same whatever order the series are kept in.
-    private var freshLook: Int {
-        seriesProgress.series.reduce(0) { sum, entry in
-            guard let fresh = entry.value.fresh, !fresh.isEmpty else { return sum }
-            var one = Hasher()
-            one.combine(entry.key)
-            one.combine(fresh)
-            one.combine(entry.value.freshAt)
-            return sum &+ one.finalize()
-        }
+         history.entries.first?.id.hashValue ?? 0]
     }
 
     /// Give the engine a profile's watching, for a paired video app to have (docs/ENGINE_API.md,
-    /// section 3), its New Episodes with it: the open profile's whenever it has changed; with
-    /// `all`, every profile's (the others' from where they're put away), as when the app
-    /// opens. Only while sharing is on: no device can ask otherwise.
+    /// section 3): the open profile's whenever it has changed; with `all`, every profile's
+    /// (the others' from where they're put away), as when the app opens. Only while
+    /// sharing is on: no device can ask otherwise.
     func giveWatching(all: Bool) async {
         guard phase == .ready, sharing?.on == true, engine?.connection != nil else { return }
         let look = recordsLook
@@ -522,19 +509,17 @@ final class AppModel {
         // The records as they are now; written out and encoded off the main thread (2026-11-09:
         // for a profile with two thousand titles watched, a few seconds at each of a paired
         // device's syncs, the window unable to answer meanwhile).
-        // With each profile's New Episodes (2026-11-10), so a device set up later has the same.
-        var records = [profiles.currentId: (watchlist, finished, history, seriesProgress)]
+        var records = [profiles.currentId: (watchlist, finished, history)]
         if all {
             for profile in profiles.profiles where profile.id != profiles.currentId {
                 let away = putAwayWatching(of: profile.id)
-                records[profile.id] = (away.watchlist, away.finished, away.history, away.progress)
+                records[profile.id] = (away.watchlist, away.finished, away.history)
             }
         }
         let given = records
         let encoded = await Task.detached(priority: .utility) {
             given.compactMapValues { record -> Data? in
-                try? JSONEncoder().encode(
-                    WatchSync.state(watchlist: record.0, finished: record.1, history: record.2, series: record.3))
+                try? JSONEncoder().encode(WatchSync.state(watchlist: record.0, finished: record.1, history: record.2))
             }
         }.value
         for (id, data) in encoded {
@@ -596,9 +581,7 @@ final class AppModel {
         var finished: Finished
         var history: WatchHistory
         var progress: SeriesProgress
-        var state: WatchSync.State {
-            WatchSync.state(watchlist: watchlist, finished: finished, history: history, series: progress)
-        }
+        var state: WatchSync.State { WatchSync.state(watchlist: watchlist, finished: finished, history: history) }
     }
 
     private func putAwayWatching(of id: String) -> PutAwayWatching {

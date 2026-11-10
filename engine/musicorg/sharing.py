@@ -222,8 +222,6 @@ MOST_TITLES = 5000  # on a Watchlist
 MOST_WATCHED = 50_000  # films and episodes watched
 MOST_PROGRESS = 5000  # places got to
 MOST_ID = 100  # characters of a plugin's id for a title or an episode
-MOST_SERIES = 500  # series with new episodes (2026-11-10)
-MOST_FRESH = 200  # new episodes of one series kept
 MOST_NAME = 300  # characters of a title's name (and of an episode's `detail`)
 MOST_POSTER = 1000  # characters of a poster's address
 MOST_GENRES = 20
@@ -857,17 +855,14 @@ def _mark(kind: str, key: str) -> str:
 
 # ---- what's watched, for a video app (2026-10-16) -------------------------------------------
 #
-# A profile's watching is four lists (docs/ENGINE_API.md section 3): the titles on its
-# Watchlist, what has been watched, where each title was got to, and (2026-11-10) the
-# episodes of each series that are new to the owner, as the app's New Episodes has them,
-# so a device set up later shows the same (a series it reads for the first time otherwise
-# takes every episode out as seen). The app gives the engine each profile's
-# (`watching.set`) for a paired device to have; a device sends its
+# A profile's watching is three lists (docs/ENGINE_API.md section 3): the titles on its
+# Watchlist, what has been watched, and where each title was got to. The app gives the
+# engine each profile's (`watching.set`) for a paired device to have; a device sends its
 # own, which waits here until the app takes it (`watching.sent`, `watching.done`) and adds
 # it to the profile's records. Both are kept in watching.json, by `config`. The engine
 # never merges them itself, and never touches the library or state.json for them.
 
-WATCHING_LISTS = ("watchlist", "watched", "progress", "series")
+WATCHING_LISTS = ("watchlist", "watched", "progress")
 _watching_lock = threading.Lock()
 # Told whenever a profile's watching is given afresh, or sharing is switched off: a
 # request waiting for a change (`wait_for_watching`) looks again.
@@ -897,8 +892,7 @@ def check_watching(sent: object, *, now: datetime | None = None) -> dict[str, li
         raise WatchingError(400, "That isn't a list of what's been watched.")
     most = {"watchlist": (MOST_TITLES, "titles on a Watchlist"),
             "watched": (MOST_WATCHED, "films and episodes watched"),
-            "progress": (MOST_PROGRESS, "places got to"),
-            "series": (MOST_SERIES, "series with new episodes")}  # fmt: skip
+            "progress": (MOST_PROGRESS, "places got to")}  # fmt: skip
     lists: dict[str, list[Any]] = {}
     for field in WATCHING_LISTS:
         given = sent.get(field)
@@ -932,13 +926,8 @@ def check_watching(sent: object, *, now: datetime | None = None) -> dict[str, li
             line["id"] not in progress or line["at"] > progress[line["id"]]["at"]
         ):
             progress[line["id"]] = line
-    series: dict[str, dict[str, Any]] = {}
-    for one in lists["series"]:
-        fresh = _fresh(one, moment)
-        if fresh is not None and fresh["id"] not in series:
-            series[fresh["id"]] = fresh
     return {"watchlist": list(watchlist.values()), "watched": list(watched.values()),
-            "progress": list(progress.values()), "series": list(series.values())}  # fmt: skip
+            "progress": list(progress.values())}  # fmt: skip
 
 
 def _title(one: object) -> dict[str, Any] | None:
@@ -996,30 +985,6 @@ def _progress(one: object, moment: str) -> dict[str, Any] | None:
                          ("title", title)):  # fmt: skip
         if value is not None:
             line[field] = value
-    return line
-
-
-def _fresh(one: object, moment: str) -> dict[str, Any] | None:
-    """A series' new episodes (a Series line, 2026-11-10), or None: the series' id, the
-    episodes out that haven't been watched, in order, each once and the first MOST_FRESH
-    of them only, and when the latest of them came out (`freshAt`). One with none left is
-    left out."""
-    if not isinstance(one, dict):
-        return None
-    series_id, given = _an_id(one.get("id")), one.get("fresh")
-    if series_id is None or not isinstance(given, list):
-        return None
-    fresh: list[str] = []
-    for episode in given[:MOST_FRESH]:
-        found = _an_id(episode)
-        if found is not None and found not in fresh:
-            fresh.append(found)
-    if not fresh:
-        return None
-    line: dict[str, Any] = {"id": series_id, "fresh": fresh}
-    at = _moment(one.get("freshAt"), moment)
-    if at is not None:
-        line["freshAt"] = at
     return line
 
 
@@ -1205,8 +1170,7 @@ def done_watching(ids: Iterable[str]) -> int:
 
 
 def _lists(found: object) -> dict[str, list[dict[str, Any]]]:
-    """The lists of a kept watching, each always a list (`series` empty for one kept
-    before there was a series list)."""
+    """The three lists of a kept watching, each always a list."""
     found = found if isinstance(found, dict) else {}
     return {
         field: [one for one in found.get(field) or [] if isinstance(one, dict)]
