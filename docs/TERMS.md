@@ -1,6 +1,6 @@
 # Terms of Use
 
-Bear Media. Last changed 6 November 2026.
+Bear Media. Last changed 10 November 2026.
 
 ## What this app is
 

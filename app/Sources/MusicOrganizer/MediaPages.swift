@@ -2063,8 +2063,13 @@ struct MoviesSeriesView: View {
         // the page is shown, and when the app comes back to the front (a film deleted in
         // the Finder mustn't stay listed: the owner, 2026-10-17).
         .task(id: "\(model.keptArrived) \(model.moviesFolder?.path ?? "") \(isActive) \(backInFront)") {
-            if isActive { await model.lookAtKeptFilms() }
+            if isActive {
+                await model.lookAtKeptFilms()
+                await model.lookAtDeviceFilms()
+            }
         }
+        // While it shows, a device's sync has its films looked at again (Get It's progress).
+        .onChange(of: isActive, initial: true) { model.deviceFilmsShown = isActive }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             if isActive { backInFront += 1 }
         }
@@ -2121,7 +2126,7 @@ struct MoviesSeriesView: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
             Divider()
-            if shelf.isEmpty {
+            if shelf.isEmpty && model.deviceFilms.waitingCount == 0 {
                 Text(
                     model.keptShelfLooked
                         ? "There are no movies or series in your Movies folder yet. Download one from "
@@ -2139,9 +2144,40 @@ struct MoviesSeriesView: View {
                         cards("Movies", shelf.movies)
                         cards("Series", shelf.series)
                         cards("Anime", shelf.anime)
+                        onDevices(model.deviceFilms.waiting)
                     }
                     .padding(.vertical, 14)
                 }
+            }
+        }
+    }
+
+    /// The films downloaded on paired devices that aren't on this Mac (the owner, 2026-11-10:
+    /// "when a movie is downloaded on any of the devices. On bear media mac. it offers the
+    /// ability to download from that device"), by the kind of device. The layout is mine,
+    /// made of the page's own pieces, until the owner draws it.
+    @ViewBuilder
+    private func onDevices(_ groups: [(kind: String, films: [DeviceFilms.Waiting])]) -> some View {
+        if !groups.isEmpty {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("On Your Devices").font(.title3.weight(.semibold)).heading()
+                Text(
+                    "Downloaded on a device and not on this Mac yet. Choose Get It, and the device "
+                        + "sends it here the next time the app is open on it.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 20)
+            ForEach(groups, id: \.kind) { group in
+                Text("On your \(group.kind)")
+                    .font(.headline)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 6)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 22)], spacing: 22) {
+                    ForEach(group.films) { DeviceFilmCard(waiting: $0) }
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 14)
             }
         }
     }
@@ -2243,6 +2279,52 @@ struct KeptCard: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .monospacedDigit()
+        }
+    }
+}
+
+/// A film downloaded on a paired device that isn't on this Mac (2026-11-10): Get It has the
+/// device send it at its next sync, while the app is open on it; then how much has arrived.
+struct DeviceFilmCard: View {
+    let waiting: DeviceFilms.Waiting
+    @Environment(AppModel.self) private var model
+    @State private var asking = false
+
+    var body: some View {
+        let film = waiting.film
+        VStack(spacing: 4) {
+            MediaCard(item: film.card)
+            Text(ByteCountFormatter.string(fromByteCount: film.size, countStyle: .file))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+            if let arriving = film.arriving {
+                ProgressView(value: arriving)
+                    .frame(width: 120)
+                Text("Arriving \(Int((arriving * 100).rounded(.down)))%")
+                    .font(.caption)
+                    .monospacedDigit()
+            } else if film.wanted {
+                Text("Waiting for your \(waiting.kind)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .help(
+                        "It comes over the next time the app is open on your \(waiting.kind), on the "
+                            + "same network as this Mac.")
+            } else {
+                Button("Get It") {
+                    asking = true
+                    Task {
+                        await model.getFromDevice(waiting)
+                        asking = false
+                    }
+                }
+                .controlSize(.small)
+                .disabled(asking)
+                .help("Have your \(waiting.kind) send it to this Mac's Movies folder")
+            }
         }
     }
 }

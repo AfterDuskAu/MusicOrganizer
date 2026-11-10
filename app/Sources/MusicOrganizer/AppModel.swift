@@ -195,6 +195,11 @@ final class AppModel {
     /// series (`KeptShelf`), each with its plugin title where that's known. Looked at when
     /// that page shows, when a film's page first needs it, and when a film has arrived.
     private(set) var keptShelf = KeptShelf()
+    /// The films downloaded on paired video apps (2026-11-10): Movies/Series offers the ones
+    /// that aren't on this Mac, to get from the device.
+    private(set) var deviceFilms = DeviceFilms()
+    /// Whether Movies/Series is showing: a device's sync then looks at its films again.
+    @ObservationIgnored var deviceFilmsShown = false
     private(set) var keptShelfLooked = false
     @ObservationIgnored private var keptTitles = KeptTitles.load()
     @ObservationIgnored private var keptFiles: [KeptFile] = []
@@ -1917,6 +1922,28 @@ final class AppModel {
     /// Look at the Movies folder again (not its videos folder or its 18+ folder, which
     /// have pages of their own), then find, one at a time, the plugin title of each card
     /// that isn't known yet.
+    /// What the paired video apps last said they have downloaded (`sharing.device_films`).
+    /// One that has just arrived in the Movies folder has the folder looked at again.
+    func lookAtDeviceFilms() async {
+        guard let found = try? await ask("sharing.device_films", [:], as: DeviceFilms.self) else { return }
+        let arrived = found.devices.flatMap(\.films).filter(\.here).count
+            > deviceFilms.devices.flatMap(\.films).filter(\.here).count
+        if found != deviceFilms { deviceFilms = found }
+        if arrived { await lookAtKeptFilms() }
+    }
+
+    /// Ask for a film on a device (Get It): the device sends it at its next sync, while the app
+    /// is open on it. Every account of the device that has it is asked, since the one open
+    /// there is the one that sends.
+    func getFromDevice(_ waiting: DeviceFilms.Waiting) async {
+        var latest: DeviceFilms?
+        for device in waiting.from {
+            let asked: [String: Any] = ["profile": device.profile, "device": device.device, "film": waiting.film.id]
+            if let found = try? await ask("sharing.want", asked, as: DeviceFilms.self) { latest = found }
+        }
+        if let latest { deviceFilms = latest }
+    }
+
     func lookAtKeptFilms() async {
         let movies = moviesFolder
         let videos = videosFolder
@@ -3150,7 +3177,9 @@ final class AppModel {
             // The queue's worker started or stopped: at the daily limit, say.
             await refreshQueueStatus()
             await refreshDownloads()
-        case "sharing.changed": loadSharing()  // a device was paired, or has synced
+        case "sharing.changed":  // a device was paired, or has synced
+            loadSharing()
+            if deviceFilmsShown { await lookAtDeviceFilms() }
         case "listening.changed": await reloadListening()  // what was done on a phone
         case "watching.changed": await takeWatching()  // what a video app sent
         case "review.changed":

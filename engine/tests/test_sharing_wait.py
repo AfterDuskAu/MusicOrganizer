@@ -66,8 +66,8 @@ def test_hello_says_a_video_app_may_wait_for_a_change(share: sharing.Share) -> N
     accepts = ask(share, "/sync/v1/hello")[1]["accepts"]
     assert accepts[-5:] == ["watching", "watching_wait", "setup", "plugins", "forget"]
     share.films = True
-    assert ask(share, "/sync/v1/hello")[1]["accepts"][-6:] == [
-        "watching", "watching_wait", "films", "setup", "plugins", "forget",
+    assert ask(share, "/sync/v1/hello")[1]["accepts"][-7:] == [
+        "watching", "watching_wait", "films", "device_films", "setup", "plugins", "forget",
     ]  # fmt: skip
 
 

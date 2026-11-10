@@ -440,6 +440,8 @@ class Server:
             "sharing.profiles": self.sharing_profiles,
             "sharing.stop_pairing": self.sharing_stop_pairing,
             "sharing.forget": self.sharing_forget,
+            "sharing.device_films": self.sharing_device_films,
+            "sharing.want": self.sharing_want,
             "watching.set": self.watching_set,
             "watching.sent": self.watching_sent,
             "watching.done": self.watching_done,
@@ -1714,6 +1716,23 @@ class Server:
         self._library()
         sharing.forget(need(params, "device_id", str))
         return self.sharing_status({})
+
+    def sharing_device_films(self, params: dict[str, Any]) -> dict[str, Any]:
+        """The films each paired video app said it has downloaded (2026-11-10, section 3),
+        with whether each is here already, asked for, or arriving. Read from what the
+        devices said: works with sharing off too."""
+        return {"devices": sharing.device_films()}
+
+    def sharing_want(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Ask for a film a paired video app has (or no longer want it): the device sends
+        it at its next sync, while its app is open (2026-11-10)."""
+        profile, device = need(params, "profile", str), need(params, "device", str)
+        film, want = need(params, "film", str), params.get("want", True)
+        if not isinstance(want, bool):
+            raise RpcError(INVALID_PARAMS, "want must be true or false")
+        if not sharing.want_device_film(profile, device, film, want):
+            raise RpcError(USER_ERROR, "That device hasn't said it has that film.")
+        return {"devices": sharing.device_films()}
 
     # -- methods: what's watched, for a paired video app (2026-10-16) --
 

@@ -218,6 +218,11 @@ WATCHING_WAIT_S = 50.0
 MOST_WAITING = 8  # requests waiting at once; one more is answered at once, with 304
 WAIT_CHECK_S = 1.0  # how often a waiting request looks whether its device is still there
 MAX_WATCHING_BODY = 8 * 1024 * 1024  # 8 MB: a device's whole watching
+# Said in `hello` while the films switch is on (2026-11-10): a video app may say which films it
+# has downloaded (`POST /sync/v1/device-films`), and is told which of them the owner asked for.
+DEVICE_FILMS = "device_films"
+MOST_DEVICE_FILMS = 2000  # films one device says it has
+MAX_DEVICE_FILMS_BODY = 2 * 1024 * 1024  # 2 MB: a device's whole list of films
 MOST_TITLES = 5000  # on a Watchlist
 MOST_WATCHED = 50_000  # films and episodes watched
 MOST_PROGRESS = 5000  # places got to
@@ -1280,6 +1285,19 @@ def _arrived(uploads: Path, upload_id: str, note: dict[str, Any] | None) -> int:
     return min(int(note["have"]), about.st_size)
 
 
+def _upload_id(
+    profile: str,
+    device_id: str,
+    folder: tuple[str, ...] | list[str],
+    name: str,
+    ending: str,
+    size: int,
+) -> str:
+    """The id of a film a device sends: the same film from the same device is the same
+    upload, so a retry carries on from where it got to."""
+    return _name("u", "\n".join((profile, device_id, *folder, name, ending, str(size))))
+
+
 def _named_already(folder: Path, name: str) -> bool:
     """Whether `folder` has a film called `name` already, with any of a film's endings
     (and in any capitals). Only looked at. An empty file isn't a film (2026-11-10: one
@@ -1410,6 +1428,131 @@ def plugins_now() -> dict[str, Any]:
     body = json.dumps(answer, sort_keys=True, ensure_ascii=False)
     answer["revision"] = hashlib.sha256(body.encode("utf-8", "surrogatepass")).hexdigest()[:16]
     return answer
+
+
+# ---- the films on a paired device (2026-11-10) ------------------------------------------------
+#
+# The owner, 2026-11-10: "when a movie is downloaded on any of the devices. On bear media mac.
+# it offers the ability to download from that device." A video app says which films it has
+# downloaded (`POST /sync/v1/device-films`), all of them at each sync, and is told which of
+# them the owner asked for on the computer (`wanted`). It sends those the usual way (an
+# upload), even one it took to be here already. The computer never fetches from a device: a
+# device sends. Kept in devicefilms.json, by `config`, for the app (`sharing.device_films`,
+# `sharing.want`). The engine never merges them into anything.
+
+_device_films_lock = threading.Lock()
+
+
+def check_device_films(asked: object) -> list[dict[str, Any]]:
+    """A device's list of its films, checked: each film's own id on the device, what a film
+    sent is named by (`_upload_details`, as an upload's), and a poster (`https`) and the
+    plugin's id for the title when it says. A film that can't be read is left out, and a
+    second with the same id. WatchingError when it isn't a list of films (400), or has more
+    than MOST_DEVICE_FILMS (413): then nothing of it is kept."""
+    films = asked.get("films") if isinstance(asked, dict) else None
+    if not isinstance(films, list):
+        raise WatchingError(400, "That isn't a list of films.")
+    if len(films) > MOST_DEVICE_FILMS:
+        most = f"{MOST_DEVICE_FILMS:,} films at most"
+        raise WatchingError(413, f"That's more than the computer takes at once: {most}.")
+    kept: dict[str, dict[str, Any]] = {}
+    for one in films:
+        if not isinstance(one, dict):
+            continue
+        film_id = _an_id(one.get("id"))
+        if film_id is None or film_id in kept:
+            continue
+        try:
+            about = _upload_details(one)
+        except WatchingError:
+            continue
+        film: dict[str, Any] = {"id": film_id, **about}
+        poster, item = _poster(one.get("poster")), _an_id(one.get("item"))
+        if poster is not None:
+            film["poster"] = poster
+        if item is not None:
+            film["item"] = item
+        kept[film_id] = film
+    return list(kept.values())
+
+
+def _film_place(film: dict[str, Any], movies: Path) -> tuple[tuple[str, ...], str]:
+    """Where a device's film goes in the Movies folder, as an upload of it would be kept."""
+    folder, name = naming.kept_place(
+        film["kind"], film["title"], year=film.get("year"), show=film.get("show") or "",
+        season=film.get("season"), episode=film.get("episode"), root=movies,
+    )  # fmt: skip
+    return tuple(folder), name
+
+
+def _film_here(film: dict[str, Any], movies: Path) -> bool:
+    folder, name = _film_place(film, movies)
+    return bool(name) and _named_already(movies.joinpath(*folder), name)
+
+
+def _same_device(entry: dict[str, Any], profile: str, device_id: str) -> bool:
+    return entry.get("profile") == profile and entry.get("device") == device_id
+
+
+def device_films() -> list[dict[str, Any]]:
+    """Each paired device's films as it last said them, for the app (`sharing.device_films`),
+    each with whether it's in the Movies folder already (`here`), whether the owner asked
+    for it (`wanted`), and how much of it has arrived while it's being sent (`arriving`,
+    0 to 1). Only devices still paired. Only looked at."""
+    movies = config.media_folders()["movies"]
+    uploads = config.app_dirs().cache / fileops.UPLOADS_DIR
+    paired = {
+        (profile, device["id"])
+        for profile, listed in config.load_all_devices().items()
+        for device in listed if _whole(device)
+    }  # fmt: skip
+    with _device_films_lock:
+        kept = config.load_device_films()
+    answer: list[dict[str, Any]] = []
+    for entry in kept:
+        profile, device_id = entry.get("profile"), entry.get("device")
+        if (profile, device_id) not in paired:
+            continue
+        assert isinstance(profile, str) and isinstance(device_id, str)
+        wanted = set(entry.get("wanted") or [])
+        films: list[dict[str, Any]] = []
+        for film in entry.get("films") or []:
+            if not isinstance(film, dict) or not isinstance(film.get("id"), str):
+                continue
+            try:
+                folder, name = _film_place(film, movies)
+            except (KeyError, TypeError, ValueError):
+                continue
+            shown = dict(film)
+            shown["here"] = bool(name) and _named_already(movies.joinpath(*folder), name)
+            shown["wanted"] = film["id"] in wanted and not shown["here"]
+            upload = _upload_id(profile, device_id, folder, name, film["type"], film["size"])
+            note = _read_note(uploads, upload)
+            if note is not None and not shown["here"]:
+                shown["arriving"] = min(_arrived(uploads, upload, note) / film["size"], 1.0)
+            films.append(shown)
+        answer.append({"device": device_id, "profile": profile,
+                       "kind": entry.get("kind") or "Device", "at": entry.get("at"),
+                       "films": films})  # fmt: skip
+    return answer
+
+
+def want_device_film(profile: str, device_id: str, film_id: str, want: bool = True) -> bool:
+    """The owner asked for a device's film (or no longer wants it): the device is told at
+    its next sync, and sends it. False when that device hasn't said it has that film."""
+    with _device_films_lock:
+        kept = config.load_device_films()
+        entry = next((e for e in kept if _same_device(e, profile, device_id)), None)
+        films = entry.get("films") if entry is not None else None
+        if not isinstance(films, list) or not any(
+            isinstance(f, dict) and f.get("id") == film_id for f in films
+        ):
+            return False
+        assert entry is not None
+        wanted = [w for w in entry.get("wanted") or [] if w != film_id]
+        entry["wanted"] = [*wanted, film_id] if want else wanted
+        config.save_device_films(kept)
+    return True
 
 
 def refusal(error: str, message: str) -> dict[str, str]:
@@ -1790,7 +1933,7 @@ class Share:
         the films switch is on: neither is the library's (2026-10-16). A device saying it
         has forgotten the library is taken by any share: that changes the list of paired
         devices, not the library."""
-        films = (FILMS,) if self.films else ()
+        films = (FILMS, DEVICE_FILMS) if self.films else ()
         writes = ACCEPTS if self.lib.writable else ()
         return [*writes, WATCHING, WATCHING_WAIT, *films, SETUP, PLUGINS, FORGET]
 
@@ -1862,6 +2005,35 @@ class Share:
         if self._watched is not None:
             self._watched(profile)
 
+    def take_device_films(
+        self, owner: tuple[str, dict[str, Any]], asked: object
+    ) -> tuple[int, dict[str, Any]]:
+        """A device says which films it has downloaded (`POST /sync/v1/device-films`):
+        (the HTTP status, the answer's body), the answer saying which of them the owner
+        asked for. Its list replaces the one it said before; one asked for that has
+        arrived, or that it no longer has, isn't asked for any more. WatchingError when
+        the list can't be taken."""
+        if not self.films:
+            return 403, refusal("not_shared", NOT_SHARED)
+        films = check_device_films(asked)
+        profile, device = owner
+        movies = config.media_folders()["movies"]
+        with _device_films_lock:
+            kept = config.load_device_films()
+            before = next((e for e in kept if _same_device(e, profile, device["id"])), {})
+            by_id = {film["id"]: film for film in films}
+            wanted = [
+                w for w in before.get("wanted") or []
+                if w in by_id and not _film_here(by_id[w], movies)
+            ]  # fmt: skip
+            entry = {"device": device["id"], "profile": profile, "kind": device["device"],
+                     "at": _now(), "films": films, "wanted": wanted}  # fmt: skip
+            kept = [e for e in kept if not _same_device(e, profile, device["id"])]
+            config.save_device_films([*kept, entry])
+        log.info("sharing: a device said which films it has (%d)", len(films))
+        self._tell()
+        return 200, {"format": FORMAT, "wanted": wanted}
+
     def films_list(self) -> dict[str, Any]:
         """The films and episodes in the Movies folder, as the list's `movies` names them,
         without the videos folder's. The files it names are remembered, to be given out
@@ -1912,10 +2084,7 @@ class Share:
             raise WatchingError(400, "That title can't be made into a file's name.")
         profile, device = owner
         # The same film from the same device is the same upload, so a retry carries on.
-        made_of = "\n".join(
-            (profile, device["id"], *folder, name, about["type"], str(about["size"]))
-        )
-        upload_id = _name("u", made_of)
+        upload_id = _upload_id(profile, device["id"], folder, name, about["type"], about["size"])
         cache = config.app_dirs().cache
         uploads = cache / fileops.UPLOADS_DIR
         with self._lock:
@@ -2300,6 +2469,9 @@ class _Handler(BaseHTTPRequestHandler):
         if path == PREFIX + "uploads":
             self._upload_start()
             return
+        if path == PREFIX + "device-films":
+            self._device_films()
+            return
         if path not in (PREFIX + "pair", PREFIX + "setup"):
             self._answer(404, refusal("not_found", "There's nothing at that address."))
             return
@@ -2497,6 +2669,39 @@ class _Handler(BaseHTTPRequestHandler):
             return
         log.info("sharing: a device was given the list of films (%d)", len(found["movies"]))
         self._answer(200, found)
+
+    def _device_films(self) -> None:
+        """Which films a device has downloaded (2026-11-10). The body is read before
+        anything is answered."""
+        share = self.server.share
+        body = self._body(MAX_DEVICE_FILMS_BODY)
+        owner = _any_device_with(self.headers.get("Authorization"))
+        if owner is None:
+            self._answer(401, refusal("not_paired", "This device isn't paired with the computer."))
+            return
+        share.busy()
+        if body is None:
+            self._answer(413, refusal(
+                "bad_request", "That's more than the computer takes at once."
+            ))  # fmt: skip
+            return
+        try:
+            asked = json.loads(body or b"{}")
+        except (ValueError, RecursionError):
+            self._answer(400, refusal("bad_request", "That isn't a list of films."))
+            return
+        try:
+            status, answer = share.take_device_films(owner, asked)
+        except WatchingError as exc:
+            self._answer(exc.status, refusal("bad_request", exc.message))
+            return
+        except (MusicOrgError, OSError) as exc:
+            log.warning("sharing: a device's list of films couldn't be kept: %s", exc)
+            self._answer(500, refusal(
+                "unavailable", "The computer couldn't keep that just now. Try again."
+            ))  # fmt: skip
+            return
+        self._answer(status, answer)
 
     def _upload_start(self) -> None:
         share = self.server.share

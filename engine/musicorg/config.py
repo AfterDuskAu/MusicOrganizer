@@ -515,6 +515,43 @@ def save_watching(kept: dict[str, Any]) -> None:
         ) from exc
 
 
+# ---- the films on paired devices (2026-11-10) ---------------------------------------------------
+
+DEVICE_FILMS_FILE_NAME = "devicefilms.json"
+
+
+def device_films_path() -> Path:
+    """Where the home share keeps the films each paired video app said it has, and which of
+    them the owner asked for (`sharing`): beside config.json, in the app's own settings
+    folder. Never in the library and never in the repo. No key is in it."""
+    return app_dirs().config / DEVICE_FILMS_FILE_NAME
+
+
+def load_device_films() -> list[dict[str, Any]]:
+    """`[{"device", "profile", "kind", "at", "films": [...], "wanted": [...]}]`, one for each
+    device that has said. A missing or damaged file reads as none: each device says
+    again at its next sync (what the owner asked for is asked again)."""
+    try:
+        loaded = json.loads(device_films_path().read_text(encoding="utf-8"))
+    except (OSError, ValueError, RecursionError):
+        return []
+    found = loaded.get("devices") if isinstance(loaded, dict) else None
+    return [dict(one) for one in found if isinstance(one, dict)] if isinstance(found, list) else []
+
+
+def save_device_films(devices: list[dict[str, Any]]) -> None:
+    """Replace devicefilms.json. Written atomically, and readable by this user only."""
+    path = device_films_path()
+    ensure_app_dir(path.parent)
+    text = json.dumps({"devices": devices}, ensure_ascii=False, separators=(",", ":")) + "\n"
+    try:
+        _write_atomic(path, text)
+    except OSError as exc:
+        raise ConfigError(
+            f"Couldn't save the films on your devices: {exc.strerror or exc}."
+        ) from exc
+
+
 # ---- add-ons: where movies and channels are listed -----------------------------------------
 
 ADDONS_FILE_NAME = "addons.json"

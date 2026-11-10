@@ -120,7 +120,7 @@ def test_hello_says_what_a_video_app_may_ask_and_whether_a_device_is_known(
     assert (hello["paired"], hello["known"]) == (False, False)
     share.films = True
     accepts = ask(share, "/sync/v1/hello")[1]["accepts"]
-    assert accepts[-5:] == ["watching_wait", "films", "setup", "plugins", "forget"]
+    assert accepts[-6:] == ["watching_wait", "films", "device_films", "setup", "plugins", "forget"]
 
     mine, theirs = paired(share), paired_with(share, monkeypatch, KID)
     for key, paired_here in ((mine, True), (theirs, False)):
@@ -481,6 +481,130 @@ def test_a_film_arrives_in_parts_and_is_kept_in_the_movies_folder(
     assert start(share, theirs, type="mp4")[1]["already"] is True  # any ending
     # And nothing of the library's was touched.
     assert not any(filled.root.rglob("*.mkv"))
+
+
+# ---- the films on a device (2026-11-10) ---------------------------------------------------
+
+
+def its_films(share: sharing.Share, key: str, films: Any) -> tuple[int, Any]:
+    return ask(share, "/sync/v1/device-films", key=key, body={"films": films})
+
+
+def device_film(film_id: str, **more: Any) -> dict[str, Any]:
+    return {"id": film_id, "kind": "movie", "title": "A Made-up Film", "year": 2021,
+            "type": "mkv", "size": len(FILM), **more}  # fmt: skip
+
+
+def test_a_device_says_its_films_and_sends_the_ones_asked_for(
+    share: sharing.Share, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """2026-11-10, the owner: "when a movie is downloaded on any of the devices. On bear
+    media mac. it offers the ability to download from that device"."""
+    theirs = paired_with(share, monkeypatch, KID)
+    (device,) = config.load_devices(KID)
+    films = [
+        device_film("dl-1", poster="https://pictures.example/1.jpg", item="tt0000001"),
+        device_film("dl-2", kind="series", title="Pilot", show="A Made-up Show", season=1,
+                    episode=1, year=None, size=2000),
+    ]  # fmt: skip
+    status, answer = its_films(share, theirs, films)
+    assert (status, answer["error"]) == (403, "not_shared")  # not while films aren't shared
+    share.films = True
+    assert its_films(share, theirs, films) == (200, {"format": 1, "wanted": []})
+    (said,) = sharing.device_films()
+    assert (said["device"], said["profile"], said["kind"]) == (device["id"], KID, "iPad")
+    first, second = said["films"]
+    assert (first["id"], first["poster"], first["item"]) == (
+        "dl-1",
+        "https://pictures.example/1.jpg",
+        "tt0000001",
+    )
+    assert (first["here"], first["wanted"], "arriving" in first) == (False, False, False)
+    assert (second["show"], second["season"], second["episode"]) == ("A Made-up Show", 1, 1)
+
+    # The owner asks for one on the computer: the device is told at its next sync.
+    assert sharing.want_device_film(KID, device["id"], "dl-1")
+    assert not sharing.want_device_film(KID, device["id"], "not-its")
+    assert not sharing.want_device_film("default", device["id"], "dl-1")
+    assert [f["wanted"] for f in sharing.device_films()[0]["films"]] == [True, False]
+    assert its_films(share, theirs, films)[1]["wanted"] == ["dl-1"]
+
+    # It sends it the usual way; while it arrives, the app sees how far.
+    upload = start(share, theirs)[1]["upload"]
+    assert put(share, theirs, upload, 0, FILM[:100])[0] == 200
+    arriving = sharing.device_films()[0]["films"][0]["arriving"]
+    assert arriving == pytest.approx(100 / len(FILM))
+    assert put(share, theirs, upload, 100, FILM[100:]) == (
+        200, {"have": len(FILM), "kept": True}
+    )  # fmt: skip
+    kept = sharing.device_films()[0]["films"][0]
+    assert (kept["here"], kept["wanted"], "arriving" in kept) == (True, False, False)
+    assert its_films(share, theirs, films)[1]["wanted"] == []
+
+    # Asked for, then no longer: not asked for.
+    assert sharing.want_device_film(KID, device["id"], "dl-2")
+    assert sharing.want_device_film(KID, device["id"], "dl-2", want=False)
+    assert its_films(share, theirs, films)[1]["wanted"] == []
+    # One the device no longer has isn't asked for.
+    assert sharing.want_device_film(KID, device["id"], "dl-2")
+    assert its_films(share, theirs, films[:1])[1]["wanted"] == []
+    # A device that's unpaired isn't listed.
+    sharing.forget(device["id"], profile=KID)
+    assert sharing.device_films() == []
+
+
+def test_a_devices_list_of_films_is_checked(
+    share: sharing.Share, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    share.films = True
+    theirs = paired_with(share, monkeypatch, KID)
+    for wrong in ("all", {"id": "x"}, None):
+        status, answer = ask(share, "/sync/v1/device-films", key=theirs, body={"films": wrong})
+        assert (status, answer["error"]) == (400, "bad_request")
+    many = [device_film(f"dl-{n}") for n in range(sharing.MOST_DEVICE_FILMS + 1)]
+    status, answer = its_films(share, theirs, many)
+    assert (status, answer["error"]) == (413, "bad_request")
+    films = [
+        device_film("ok", poster="http://pictures.example/1.jpg", item=" tt1"),
+        device_film("ok", title="Another"),  # the same id again: the first is kept
+        device_film("adult", kind="adult"),
+        device_film("no-type", type="exe"),
+        device_film(""),
+        "not a film",
+    ]
+    assert its_films(share, theirs, films)[0] == 200
+    (only,) = sharing.device_films()[0]["films"]
+    assert only["id"] == "ok" and only["title"] == "A Made-up Film"
+    assert "poster" not in only and "item" not in only  # not https; spaces at its ends
+    status, answer = its_films(share, "not-a-key-" + "x" * 20, films)
+    assert (status, answer["error"]) == (401, "not_paired")
+
+
+def test_the_app_asks_for_a_devices_film(
+    opened: rpc.Server,  # noqa: F811
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    assert result(opened, "sharing.device_films") == {"devices": []}
+    result(opened, "sharing.set", on=True, films=True)
+    share = opened._share
+    assert share is not None
+    monkeypatch.setenv(config.PROFILE_ENV, KID)
+    shown = result(opened, "sharing.pair")["code"]
+    key = ask(share, "/sync/v1/pair", body={"code": shown, "device": "Android TV"})[1]["key"]
+    (device,) = result(opened, "sharing.status")["devices"]
+    monkeypatch.delenv(config.PROFILE_ENV)
+    assert its_films(share, key, [device_film("dl-1")])[0] == 200
+    (said,) = result(opened, "sharing.device_films")["devices"]
+    assert (said["kind"], [f["id"] for f in said["films"]]) == ("Android TV", ["dl-1"])
+    asked = dict(profile=KID, device=device["id"], film="dl-1")
+    assert result(opened, "sharing.want", **asked)["devices"][0]["films"][0]["wanted"] is True
+    assert code(opened, "sharing.want", **{**asked, "film": "nope"}) == rpc.USER_ERROR
+    assert code(opened, "sharing.want", **{**asked, "want": "yes"}) == rpc.INVALID_PARAMS
+    assert code(opened, "sharing.want", profile=KID) == rpc.INVALID_PARAMS
+    assert its_films(share, key, [device_film("dl-1")])[1]["wanted"] == ["dl-1"]
+    # Kept by `config`, beside the other settings: nothing of a key in it.
+    text = config.device_films_path().read_text(encoding="utf-8")
+    assert key not in text
 
 
 def test_an_empty_file_of_the_films_name_isnt_the_film(

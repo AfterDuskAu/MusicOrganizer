@@ -13,7 +13,7 @@ public enum Legal {
     }
 
     /// The day these words were last changed.
-    public static let dated = "6 November 2026"
+    public static let dated = "10 November 2026"
 
     public static let terms: [Part] = [
         Part(
@@ -84,7 +84,9 @@ public enum Legal {
                 + "internet for it. A video app you've paired also sends what you've watched "
                 + "on it (your Watchlist, what you've watched and where you got to), which is "
                 + "added to your profile here, and can copy its downloaded films into your "
-                + "Movies folder; all of it over your home network only. If you've given "
+                + "Movies folder. It tells this Mac which films are downloaded on it (their names, "
+                + "sizes and posters), so that you can ask for one here; all of it over your home "
+                + "network only. If you've given "
                 + "Bear Media your TMDB key, a device you've paired is given it too, over your "
                 + "home network, so its own TMDB features use your key. A video app you set up "
                 + "with the code Add a Device shows is told each profile's name, whether it's a "
