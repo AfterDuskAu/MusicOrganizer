@@ -362,6 +362,48 @@ final class HomeWatchingTests: XCTestCase {
         XCTAssertFalse(progress.isWatched("tt9", finished: finished))
     }
 
+    /// 2026-11-11 (the owner, on a video app: a series rewatched "not showing up as 1st option on
+    /// continue watching"; the Mac has the same rule): every episode of it marked watched, the
+    /// finale too, then played again from season 7. A series watched to its latest episode was
+    /// left out of Continue Watching between episodes, so a rewatch never showed there.
+    func testASeriesBeingRewatchedIsFirstInContinueWatching() throws {
+        var history = WatchHistory()
+        var finished = Finished()
+        var progress = SeriesProgress()
+        // Two seasons of three; every episode marked watched at minute 0.
+        let videos = try episodes("tt8", 3) + (1...3).map { try video("tt8", 2, $0, released: at(-1000)) }
+        for one in videos { finished.mark(one.id, watched: true, now: at(0)) }
+        progress.learned("tt8", episodes: videos, finished: finished, now: at(1))
+        // Another series watched an hour later, left part way.
+        history.watched(episode("tt1", 1, 2, seconds: 600, length: 3000, minute: 60))
+        progress.learned("tt1", episodes: try episodes("tt1", 8), finished: finished, now: at(60))
+        // Played again: season 1 episode 2 to its end, at minute 100 (as a paired device sends it).
+        history.watched(episode("tt8", 1, 2, seconds: 1258, length: 1318, minute: 100))
+        let entry = try XCTUnwrap(history.entries.first { $0.id == "tt8" })
+        XCTAssertTrue(progress.isRewatching(entry, finished: finished))
+        XCTAssertEqual(history.continuing(finished: finished, progress: progress).map(\.id), ["tt8", "tt1"])
+        XCTAssertEqual(
+            NextEpisode.toCarryOn(entry, in: videos, progress: progress, finished: finished)?.id, "tt8:1:3")
+        // Its season's last: the next season's first.
+        history.watched(episode("tt8", 1, 3, seconds: 1300, length: 1318, minute: 120))
+        let third = try XCTUnwrap(history.entries.first)
+        XCTAssertEqual(NextEpisode.toCarryOn(third, in: videos, progress: progress, finished: finished)?.id, "tt8:2:1")
+        XCTAssertEqual(NextEpisode.seasonReached(third, in: videos, progress: progress, finished: finished), 2)
+        // Nothing new, still watched; rewatched to the finale: out of the row.
+        XCTAssertTrue(progress.newEpisodes("tt8", finished: finished).isEmpty)
+        XCTAssertTrue(progress.isWatched("tt8", finished: finished))
+        history.watched(episode("tt8", 2, 3, seconds: 1300, length: 1318, minute: 160))
+        XCTAssertEqual(history.continuing(finished: finished, progress: progress).map(\.id), ["tt1"])
+        // One last played before Mark as Watched stays out.
+        var marked = Finished()
+        var other = SeriesProgress()
+        var before = WatchHistory()
+        before.watched(episode("tt8", 1, 2, seconds: 1300, length: 1318, minute: 10))
+        other.marked(videos.map(\.id), watched: true, of: "tt8", in: &marked, now: at(20))
+        other.learned("tt8", episodes: videos, finished: marked, now: at(20))
+        XCTAssertTrue(before.continuing(finished: marked, progress: other).isEmpty)
+    }
+
     /// A film marked watched after it was left part way isn't carried on with (2026-11-11).
     func testAFilmMarkedWatchedLeavesContinueWatching() {
         var history = WatchHistory()

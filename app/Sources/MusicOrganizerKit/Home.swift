@@ -389,8 +389,11 @@ public struct WatchHistory: Equatable, Sendable {
             {
                 return false
             }
+            // Watched to its latest episode, and played again since: being rewatched (2026-11-11).
             return entry.isPartWay(finished: finished)
-                || (begun.contains(entry.id) && !progress.isWatched(entry.id, finished: finished))
+                || (begun.contains(entry.id)
+                    && (!progress.isWatched(entry.id, finished: finished)
+                        || progress.isRewatching(entry, finished: finished)))
         }
     }
 

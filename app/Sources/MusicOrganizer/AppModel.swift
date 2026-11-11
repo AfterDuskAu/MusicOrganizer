@@ -916,11 +916,18 @@ final class AppModel {
             }
             guard isStillWanted(series.id, opened: opened) else { return }
             let today = String(ISO8601DateFormatter().string(from: Date()).prefix(10))
-            guard let episodes,
-                let next = NextEpisode.toCarryOn(
-                    from: entry?.episodeId, in: episodes,
-                    fresh: seriesProgress.newEpisodes(series.id, finished: finished), finished: finished, today: today)
-            else {
+            // A series being watched again carries on with the one after, watched before or not.
+            let next: MediaDetails.Video? =
+                if let episodes, let entry {
+                    NextEpisode.toCarryOn(entry, in: episodes, progress: seriesProgress, finished: finished, today: today)
+                } else if let episodes {
+                    NextEpisode.toCarryOn(
+                        from: nil, in: episodes, fresh: seriesProgress.newEpisodes(series.id, finished: finished),
+                        finished: finished, today: today)
+                } else {
+                    nil
+                }
+            guard let episodes, let next else {
                 open(series)
                 return
             }
@@ -941,8 +948,8 @@ final class AppModel {
     func seasonReached(_ id: String, in episodes: [MediaDetails.Video]) -> Int? {
         let today = String(ISO8601DateFormatter().string(from: Date()).prefix(10))
         return NextEpisode.seasonReached(
-            from: history.entries.first { $0.id == id }?.episodeId, in: episodes,
-            fresh: seriesProgress.newEpisodes(id, finished: finished), finished: finished, today: today)
+            history.entries.first { $0.id == id }, in: episodes, progress: seriesProgress, finished: finished,
+            today: today)
     }
 
     /// The next episode of a series clicked in Home is still wanted: no other card was

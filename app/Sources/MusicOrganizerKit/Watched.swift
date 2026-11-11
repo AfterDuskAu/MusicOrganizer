@@ -222,6 +222,18 @@ public struct SeriesProgress: Equatable, Sendable {
         series[id]?.latest.map(finished.contains) ?? false
     }
 
+    /// Being watched again (2026-11-11: every episode of a series marked watched, then played
+    /// again from its seventh season, and it wasn't in Continue Watching): its latest episode
+    /// out has been watched, and the series has been played since, at an episode before it. One
+    /// last played before it was finished, or before Mark as Watched, isn't; nor one played at
+    /// its latest episode, which is watched to its end again.
+    public func isRewatching(_ entry: WatchHistory.Entry, finished: Finished) -> Bool {
+        guard entry.kind == .series, let latest = series[entry.id]?.latest, let episode = entry.episodeId,
+            episode != latest, let done = finished.day(of: latest)
+        else { return false }
+        return entry.at > done
+    }
+
     /// The episodes out since the owner last had none new to watch, that they haven't
     /// watched, in order: a card's "+1, +2" and Home's New Episodes (2026-10-18).
     public func newEpisodes(_ id: String, finished: Finished) -> [String] {

@@ -103,6 +103,38 @@ public enum NextEpisode {
         return toWatch(after: last, in: videos, fresh: fresh, finished: finished, today: today)
     }
 
+    /// The episode a series' card in Continue Watching carries on with: `toCarryOn`; or for a
+    /// series being watched again (`SeriesProgress.isRewatching`, 2026-11-11), the episode it's
+    /// at when that wasn't played to its end, else the one after it, watched before or not
+    /// (every episode had been marked watched, and the one after the one being watched was
+    /// skipped for that).
+    public static func toCarryOn(
+        _ entry: WatchHistory.Entry, in videos: [MediaDetails.Video], progress: SeriesProgress, finished: Finished,
+        today: String? = nil
+    ) -> MediaDetails.Video? {
+        if progress.isRewatching(entry, finished: finished), let last = entry.episodeId {
+            if entry.progress < Finished.mark, let it = videos.first(where: { $0.id == last }) {
+                return it
+            }
+            return after(last, in: videos, today: today)
+        }
+        return toCarryOn(
+            from: entry.episodeId, in: videos, fresh: progress.newEpisodes(entry.id, finished: finished),
+            finished: finished, today: today)
+    }
+
+    /// The season a series' page opens at, from where its history is (`toCarryOn` above, so a
+    /// series being watched again opens at the season it's being watched at); nil for a series
+    /// never played.
+    public static func seasonReached(
+        _ entry: WatchHistory.Entry?, in videos: [MediaDetails.Video], progress: SeriesProgress, finished: Finished,
+        today: String? = nil
+    ) -> Int? {
+        guard let entry, let last = entry.episodeId else { return nil }
+        let next = toCarryOn(entry, in: videos, progress: progress, finished: finished, today: today)
+        return (next ?? videos.first { $0.id == last })?.season
+    }
+
     /// The season a series' page opens at (2026-11-11: the page showed the first season, not
     /// how far the owner had got): the one with the episode to carry on with (`toCarryOn`),
     /// else the one with the episode last played. Nil for a series never played (the page
