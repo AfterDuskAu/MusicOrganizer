@@ -206,9 +206,6 @@ final class AppModel {
     @ObservationIgnored private var lookingUpKept = false
     /// How many looks at the Movies folder have begun: only the latest one's files are kept.
     @ObservationIgnored private var keptLooks = 0
-    /// The series open on Videos → Movies/Series while that page is showing: an episode's
-    /// ✕ goes back to it there rather than to Series Finder.
-    var keptPageSeries: String?
     /// What a video file's row says about being converted for phones and tablets, by the
     /// file's path: "Converting… 42%", "Converted", or why it wasn't.
     private(set) var conversionNotes: [String: String] = [:]
@@ -251,6 +248,16 @@ final class AppModel {
     /// A page to open in the sidebar, asked for from somewhere else in the app (Artist
     /// Info on a song). The main view opens it and clears this.
     var goTo: SidebarItem?
+    /// The page of the sidebar that's showing (the main view says): what a film's or a
+    /// series' page is opened over.
+    @ObservationIgnored var pageShowing: SidebarItem = .songs
+    /// What's open over each page of the sidebar, the last opened on top, for Back to go to
+    /// the page that was showing before (`BackTrail`; the owner, 2026-11-11: "Back should
+    /// always go to the page it was on previously and in the same spot in the scroll").
+    private(set) var trail = BackTrail<SidebarItem, OverPage>()
+    /// The page an artist was opened from (Artist Info on a song, an artist on Home): the
+    /// Artists page's Back goes there again once there's no artist before it to go to.
+    @ObservationIgnored private var artistCameFrom: SidebarItem?
     /// How many times each page's row in the sidebar has been clicked, each page's count
     /// on its own, so a click tells only the page clicked.
     @ObservationIgnored private var sidebarClicks: [SidebarItem: SidebarClicks] = [:]
@@ -261,8 +268,29 @@ final class AppModel {
     /// it back to series finder, it stays on the searched platform until it's manually
     /// erased"). Whether its page was showing or not: a page kept out of the window
     /// (`PageHost`) is as it was left, search and all, until it's told.
+    /// Whatever was open over the page (a film, a series, a channel) is put away too: the
+    /// row is a way to the page itself, as a Finder's was before.
     func clickedInSidebar(_ entry: SidebarItem) {
         clicks(on: entry).count += 1
+        trail.clear(entry)
+        artistCameFrom = nil
+    }
+
+    /// A page opened over the page that's showing (or over `base`): Back comes back to it,
+    /// as it was left.
+    func openOver(_ page: OverPage, on base: SidebarItem? = nil) {
+        trail.open(page, on: base ?? pageShowing)
+    }
+
+    /// Another page shown, as itself (Home's View More): nothing left open over it.
+    func show(_ page: SidebarItem) {
+        trail.clear(page)
+        goTo = page
+    }
+
+    /// Back, from the page on top of `base`'s trail: the one under it shows again.
+    func goBack(on base: SidebarItem) {
+        trail.back(on: base)
     }
 
     /// The clicks on one page's row, for that page to watch.
@@ -300,10 +328,6 @@ final class AppModel {
     private(set) var history = WatchHistory.saved()
     /// The movies and series marked with the heart.
     private(set) var mediaFavourites = MediaFavourites.saved()
-    /// A channel for Videos → Channel to open, and a film or series for its Finder to
-    /// open: set by a click on Home, taken by the page when it shows.
-    var channelToOpen: ChannelRef?
-    var filmToOpen: MediaItem?
     /// An episode whose ways to play its series' page is to show: the next one, when it
     /// couldn't be played by itself the way the last one was (`playEpisode(after:)`).
     struct EpisodeAsk: Equatable {
@@ -460,6 +484,7 @@ final class AppModel {
     }
 
     /// Open an episode on its series' page, with its ways to play showing (the calendar).
+    /// The series' page on top already (the film player's ✕) is shown at that episode.
     func openEpisode(_ episodeId: String, of series: MediaItem) {
         episodeToChoose = EpisodeAsk(series: series.id, episode: episodeId)
         open(series)
@@ -716,16 +741,17 @@ final class AppModel {
         history.save()
     }
 
-    /// Open a channel's page under Videos → Channel.
+    /// Open a channel's page over the page that's showing (Home's channels).
     func open(_ channel: ChannelRef) {
-        channelToOpen = channel
-        goTo = .channels
+        openOver(.channel(channel))
     }
 
-    /// Open a film's or a series' page in its Finder.
-    func open(_ item: MediaItem) {
-        filmToOpen = item
-        goTo = item.type == "series" ? .seriesFinder : .movieFinder
+    /// Open a film's or a series' page over the page that's showing (or over `base`), for
+    /// Back to come back to it, scrolled where it was (the owner, 2026-11-11: until then
+    /// it was opened in its Finder, and Back left it there: "in watchlist, when clicking on
+    /// a show and then pressing back it always goes to series finder").
+    func open(_ item: MediaItem, on base: SidebarItem? = nil) {
+        openOver(.title(item), on: base)
     }
 
     /// Play a video from Home's history, from where it was left. A film or an episode
@@ -2456,19 +2482,16 @@ final class AppModel {
     /// the app's cache for a day, so it starts at once if it's played again by then.
     /// The film player's ✕, its way back: the film stops, and an episode's series page is
     /// what's shown, at that episode, whatever it was played from (the owner, 2026-10-18:
-    /// "When playing a show, and pressing back it always takes you to the shows page";
-    /// played from Home's Continue Watching, Back went back to Home). A film, or anything
-    /// from the Finder kept apart, goes back to where it was opened from, as before.
+    /// "When playing a show, and pressing back it always takes you to the shows page").
+    /// It's the page the film was played from, on the page of the sidebar it was opened
+    /// over; played from somewhere else (Home's Continue Watching), the series' page is
+    /// opened over that page, so its Back goes there (the owner, 2026-11-11: "Back should
+    /// always go to the page it was on previously"). A film, or anything from the Finder
+    /// kept apart, goes back to where it was opened from, as before.
     func leaveFilm() {
         let episode = episodeNow
         closeFilm()
         guard let episode, !episode.apart else { return }
-        // Played from its page on Videos → Movies/Series: back there, at that episode.
-        if keptPageSeries == episode.series.id {
-            episodeToChoose = EpisodeAsk(series: episode.series.id, episode: episode.episodeId)
-            goTo = .movies
-            return
-        }
         openEpisode(episode.episodeId, of: episode.series)
     }
 
@@ -2789,8 +2812,10 @@ final class AppModel {
     /// A title TMDB gave by its own id ("tmdb:550": a person's film, the calendar's General)
     /// opened on its page in its Finder, by its IMDb id, which the plugins know it by.
     func openFromTMDB(_ item: MediaItem) async {
+        // Over the page it was clicked on, even if another is showing by the time TMDB answers.
+        let base = pageShowing
         if item.id.hasPrefix("tt") {
-            open(item)
+            open(item, on: base)
             return
         }
         do {
@@ -2799,9 +2824,11 @@ final class AppModel {
                 notice = "TMDB doesn't know \(item.name) by the id the plugins use, so its page can't be opened."
                 return
             }
-            open(MediaItem(
-                id: id, type: item.type, name: item.name, poster: item.poster, posterShape: item.posterShape,
-                year: item.year, rating: item.rating, genres: item.genres))
+            open(
+                MediaItem(
+                    id: id, type: item.type, name: item.name, poster: item.poster, posterShape: item.posterShape,
+                    year: item.year, rating: item.rating, genres: item.genres),
+                on: base)
         } catch {
             notice = error.localizedDescription
         }
@@ -2876,6 +2903,8 @@ final class AppModel {
         closePlaylist()
         importing.reset()
         artistBrowser.reset()
+        trail.clearAll()
+        artistCameFrom = nil
         stremio.reset()
         (watchingGiven, watchingLook) = ([:], nil)  // the next engine is given everything afresh
         for key in Array(pageChanges.keys) { forgetPageChange(key) }
@@ -3637,10 +3666,30 @@ final class AppModel {
 
     /// Open the Artists page on this artist (a song's, by name): what the owner has of
     /// theirs on one side, their page on YouTube Music on the other.
+    /// Its Back goes to the page it was asked for from (2026-11-11), once there's no artist
+    /// before it on the Artists page.
     func showArtist(_ name: String) {
         guard !name.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        if pageShowing != .artists { artistCameFrom = pageShowing }
         artistBrowser.open(name: name)
         goTo = .artists
+    }
+
+    /// The Artists page's Back: the artist before, or the lists, or (an artist asked for
+    /// from another page) that page again.
+    func artistBack() {
+        let last = !artistBrowser.canGoBack
+        artistBrowser.back()
+        if last, let page = artistCameFrom {
+            artistCameFrom = nil
+            goTo = page
+        }
+    }
+
+    /// Where the Artists page's Back goes, for its tooltip.
+    var artistBackName: String {
+        if artistBrowser.canGoBack { return artistBrowser.before.last?.name ?? "the artist before" }
+        return artistCameFrom?.title ?? "the lists"
     }
 
     /// Download a song from an artist's page. The engine is handed the song back as it

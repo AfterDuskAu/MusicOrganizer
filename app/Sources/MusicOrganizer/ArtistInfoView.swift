@@ -68,11 +68,7 @@ struct ArtistsPage: View {
         return HStack(spacing: 12) {
             HStack(spacing: 10) {
                 if page.opened != nil {
-                    BackButton(
-                        help: page.canGoBack
-                            ? "Back to \(page.before.last?.name ?? "the artist before")"
-                            : "Back to the lists"
-                    ) { page.back() }
+                    BackButton(help: "Back to \(model.artistBackName)") { model.artistBack() }
                     .keyboardShortcut(.cancelAction)
                 }
                 Text("Mine").font(.title2.weight(.semibold)).heading()

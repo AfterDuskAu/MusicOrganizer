@@ -111,7 +111,8 @@ final class HomeWatchingTests: XCTestCase {
         list.save(in: kept)
         XCTAssertEqual(Watchlist.saved(in: kept), list)
         XCTAssertTrue(SettingsCarrier.records.contains(Watchlist.key))
-        XCTAssertTrue(SidebarRows.all.contains { $0.key == "watchlist" && $0.group == "Videos" })
+        // Under Home since 2026-11-11 (the owner's order), where the owner can move it from.
+        XCTAssertTrue(SidebarRows.all.contains { $0.key == "watchlist" && $0.group == "Media Discovery" })
     }
 
     // MARK: Continue Watching Series (the owner, 2026-10-18: "It should always be the one that was last watched")

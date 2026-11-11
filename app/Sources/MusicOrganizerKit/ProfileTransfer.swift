@@ -138,6 +138,7 @@ public enum SettingsCarrier {
         "customVisualizerQuality", "playSongWhileVideoLoads", "alwaysBestVideo", "playOpensVisualizer",
         "visualizerLyrics", "fullScreenLyrics", "alwaysBestVideoDownload", "convertKeptFilms",
         "torrentUploadSpeed", NextEpisode.key, MusicSearchSource.key, "musicFinderTab", "sidebarHidden",
+        SidebarLayout.key,
         HomeLayout.key, "songColumnOrder",
     ]
     /// What the app remembers of what's been watched and liked.

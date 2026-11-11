@@ -236,54 +236,48 @@ struct MediaGrid: View {
 struct VideoExploreView: View {
     @Environment(AppModel.self) private var model
     @AppStorage("videoExploreSection") private var sectionName = "Channels"
-    @State private var opened: ChannelRef?
 
     var body: some View {
         let media = model.media
         let source = media.catalogs(of: "channel").first
         let sections = VideoExplore.sections(for: source?.catalog.genres ?? [])
         let section = sections.first { $0.name == sectionName } ?? sections[0]
+        // A channel opens over the page (`OverPages`), which stays scrolled where it was.
         VStack(spacing: 0) {
-            if let opened {
-                ChannelView(channel: opened) { self.opened = nil }
-            } else {
-                HStack(spacing: 12) {
-                    Text("Explore").font(.title2.weight(.semibold)).heading()
-                    Picker("Section", selection: $sectionName) {
-                        ForEach(sections) { Text($0.name).tag($0.name) }
-                    }
-                    .labelsHidden()
-                    .fixedSize()
-                    Spacer()
+            HStack(spacing: 12) {
+                Text("Explore").font(.title2.weight(.semibold)).heading()
+                Picker("Section", selection: $sectionName) {
+                    ForEach(sections) { Text($0.name).tag($0.name) }
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
-                Divider()
-                if let words = section.search {
-                    // A section the list has no genre for: channels found by a search.
-                    ChannelSearchGrid(words: words) { opened = $0 }
-                } else if let source {
-                    MediaGrid(list: media.channels, width: 150, open: { opened = ChannelRef(item: $0) }) {
-                        Task {
-                            await media.channels.load(
-                                model, addon: source.addon, catalog: source.catalog,
-                                genre: section.genre, adding: true)
-                        }
-                    }
-                    .task(id: section) {
+                .labelsHidden()
+                .fixedSize()
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            Divider()
+            if let words = section.search {
+                // A section the list has no genre for: channels found by a search.
+                ChannelSearchGrid(words: words) { model.open($0) }
+            } else if let source {
+                MediaGrid(list: media.channels, width: 150, open: { if let channel = ChannelRef(item: $0) { model.open(channel) } }) {
+                    Task {
                         await media.channels.load(
-                            model, addon: source.addon, catalog: source.catalog, genre: section.genre)
+                            model, addon: source.addon, catalog: source.catalog,
+                            genre: section.genre, adding: true)
                     }
-                } else {
-                    Text(media.problem ?? "Loading…")
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
+                .task(id: section) {
+                    await media.channels.load(
+                        model, addon: source.addon, catalog: source.catalog, genre: section.genre)
+                }
+            } else {
+                Text(media.problem ?? "Loading…")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .task(id: model.phase) { await media.load(model) }
-        // Video Finder's row clicked in the sidebar: back to the sections (2026-10-17).
-        .onChange(of: model.clicks(on: .videoFinder).count) { opened = nil }
     }
 }
 
@@ -390,6 +384,8 @@ struct VideoRow: View {
 /// read afresh each time. Follow keeps the channel under Videos → Channel.
 struct ChannelView: View {
     let channel: ChannelRef
+    /// Where Back goes ("Back to Home"), for its tooltip.
+    var backHelp = "Back"
     let back: () -> Void
     @Environment(AppModel.self) private var model
     @State private var page: ChannelPage?
@@ -399,7 +395,7 @@ struct ChannelView: View {
         let followed = model.followedChannels.contains { $0.channelId == channel.channelId }
         VStack(spacing: 0) {
             HStack(spacing: 14) {
-                BackButton(action: back)
+                BackButton(help: backHelp, action: back)
                 WebPicture(
                     address: WebPictures.sized(page?.thumbnail ?? channel.thumbnail, points: 56),
                     symbol: "play.tv", size: CGSize(width: 56, height: 56)
@@ -484,85 +480,73 @@ struct VideoFinderView: View {
     @State private var videos: [VideoHit] = []
     @State private var working = false
     @State private var problem: String?
-    @State private var opened: ChannelRef?
     @State private var sort = VideoSort.bestMatch
 
     var body: some View {
         let shown = sort.arranged(videos)
-        ZStack {
-            VStack(spacing: 0) {
-                HStack(spacing: 12) {
-                    Text("Video Finder").font(.title2.weight(.semibold)).heading()
-                    TextField("Search for a video", text: $typed)
-                        .textFieldStyle(.roundedBorder)
-                        .onSubmit { search() }
-                    Picker("Sort", selection: $sort) {
-                        ForEach(VideoSort.allCases, id: \.self) { Text($0.title).tag($0) }
-                    }
-                    .labelsHidden()
-                    .fixedSize()
-                    .disabled(videos.isEmpty)
-                    .help("How the videos found are arranged")
-                    if working {
-                        ProgressView().controlSize(.small)
-                    } else {
-                        Button("Search") { search() }
-                            .disabled(typed.trimmingCharacters(in: .whitespaces).isEmpty)
-                    }
-                    if !videos.isEmpty || problem != nil {
-                        Button("Back to Explore", systemImage: "xmark") { typed = "" }
-                            .help("Put the search away")
-                    }
+        // A channel opens over the page (`OverPages`), which stays as it was.
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                Text("Video Finder").font(.title2.weight(.semibold)).heading()
+                TextField("Search for a video", text: $typed)
+                    .textFieldStyle(.roundedBorder)
+                    .onSubmit { search() }
+                Picker("Sort", selection: $sort) {
+                    ForEach(VideoSort.allCases, id: \.self) { Text($0.title).tag($0) }
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
-                // The search box emptied: the search is put away, and Explore is back.
-                .onChange(of: typed) { _, now in
-                    if now.isEmpty { (videos, problem, asked) = ([], nil, "") }
-                }
-                Divider()
-                if let problem {
-                    Text(problem)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if videos.isEmpty, working {
-                    Text("Searching…")
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if videos.isEmpty {
-                    // Nothing searched for: the page is Explore (channels by section),
-                    // which was a row of its own under Video Finder until 2026-10-08.
-                    VideoExploreView()
+                .labelsHidden()
+                .fixedSize()
+                .disabled(videos.isEmpty)
+                .help("How the videos found are arranged")
+                if working {
+                    ProgressView().controlSize(.small)
                 } else {
-                    List(shown) { video in
-                        VideoRow(video: video, openChannel: { opened = $0 }) {
-                            if let start = shown.firstIndex(of: video) {
-                                model.playVideos(
-                                    shown.map(\.result), startAt: start,
-                                    channels: VideoHit.channels(of: shown))
-                            }
+                    Button("Search") { search() }
+                        .disabled(typed.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+                if !videos.isEmpty || problem != nil {
+                    Button("Back to Explore", systemImage: "xmark") { typed = "" }
+                        .help("Put the search away")
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            // The search box emptied: the search is put away, and Explore is back.
+            .onChange(of: typed) { _, now in
+                if now.isEmpty { (videos, problem, asked) = ([], nil, "") }
+            }
+            Divider()
+            if let problem {
+                Text(problem)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if videos.isEmpty, working {
+                Text("Searching…")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if videos.isEmpty {
+                // Nothing searched for: the page is Explore (channels by section),
+                // which was a row of its own under Video Finder until 2026-10-08.
+                VideoExploreView()
+            } else {
+                List(shown) { video in
+                    VideoRow(video: video, openChannel: { model.open($0) }) {
+                        if let start = shown.firstIndex(of: video) {
+                            model.playVideos(
+                                shown.map(\.result), startAt: start,
+                                channels: VideoHit.channels(of: shown))
                         }
                     }
-                    .scrollContentBackground(Theme.current.listBackground)
                 }
+                .scrollContentBackground(Theme.current.listBackground)
             }
-            // Out of sight and out of reach while a channel is open over it.
-            .opacity(opened == nil ? 1 : 0)
-            .allowsHitTesting(opened == nil)
-            if let opened {
-                ChannelView(channel: opened) { self.opened = nil }
-                    .dressed()
-            }
-        }
-        .onChange(of: opened) { _, channel in
-            if channel != nil { NSApp.keyWindow?.makeFirstResponder(nil) }
         }
         // A click on Video Finder's row in the sidebar: the search put away, and Explore
-        // back, as the other Finders' lists are (2026-10-17).
+        // back, as the other Finders' lists are (2026-10-17). A channel open over it goes
+        // too (`AppModel.clickedInSidebar`).
         .onChange(of: model.clicks(on: .videoFinder).count) {
             typed = ""
             (videos, problem, asked) = ([], nil, "")
-            opened = nil
         }
     }
 
@@ -596,7 +580,6 @@ struct ChannelsView: View {
     /// False while another page is showing (`PageHost`): the folder isn't looked at then.
     var isActive = true
     @Environment(AppModel.self) private var model
-    @State private var opened: ChannelRef?
     /// The videos downloaded from channels and Video Finder: the Videos folder
     /// (`AppModel.videosFolder`).
     @State private var kept: [VideoFiles.File] = []
@@ -606,76 +589,66 @@ struct ChannelsView: View {
 
     var body: some View {
         let channels = model.followedChannels
+        // A channel opens over the page (`OverPages`), which stays scrolled where it was.
         VStack(spacing: 0) {
-            if let opened {
-                ChannelView(channel: opened) { self.opened = nil }
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("Channels").font(.title2.weight(.semibold)).heading()
+                Text(channels.count == 1 ? "1 channel" : "\(channels.count) channels")
+                    .foregroundStyle(.secondary)
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            Divider()
+            // The channels followed: one row, which slides sideways when there are
+            // more than fit (the owner, 2026-10-08).
+            if channels.isEmpty {
+                Text(
+                    "Channels you follow show up here. Find one under Video Finder, or its "
+                        + "Explore, open it, and click Follow.")
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 28)
+                    .padding(.horizontal, 20)
             } else {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text("Channels").font(.title2.weight(.semibold)).heading()
-                    Text(channels.count == 1 ? "1 channel" : "\(channels.count) channels")
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
-                Divider()
-                // The channels followed: one row, which slides sideways when there are
-                // more than fit (the owner, 2026-10-08).
-                if channels.isEmpty {
-                    Text(
-                        "Channels you follow show up here. Find one under Video Finder, or its "
-                            + "Explore, open it, and click Follow.")
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 28)
-                        .padding(.horizontal, 20)
-                } else {
-                    ScrollView(.horizontal) {
-                        LazyHStack(alignment: .top, spacing: 18) {
-                            ForEach(channels) { channel in
-                                Button { opened = channel } label: {
-                                    MediaCard(channel: channel).frame(width: 120)
-                                }
-                                .buttonStyle(.plain)
-                                .contextMenu {
-                                    Button("Stop Following") { model.follow(channel, on: false) }
-                                }
+                ScrollView(.horizontal) {
+                    LazyHStack(alignment: .top, spacing: 18) {
+                        ForEach(channels) { channel in
+                            Button { model.open(channel) } label: {
+                                MediaCard(channel: channel).frame(width: 120)
+                            }
+                            .buttonStyle(.plain)
+                            .contextMenu {
+                                Button("Stop Following") { model.follow(channel, on: false) }
                             }
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 14)
                     }
-                    .frame(height: 196)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 14)
                 }
-                Divider()
-                // Under them: only the videos that have been downloaded.
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text("Downloaded Videos").font(.headline)
-                    Text(kept.count == 1 ? "1 video" : "\(kept.count) videos")
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 10)
-                if kept.isEmpty {
-                    Text(
-                        looked
-                            ? "Videos you download show up here. Right-click a video and choose Download."
-                            : "Looking…")
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    List(kept) { VideoFileRow(file: $0) }
-                        .scrollContentBackground(Theme.current.listBackground)
-                }
+                .frame(height: 196)
             }
-        }
-        // A channel clicked on Home opens here.
-        .onChange(of: model.channelToOpen, initial: true) { _, wanted in
-            if let wanted {
-                opened = wanted
-                model.channelToOpen = nil
+            Divider()
+            // Under them: only the videos that have been downloaded.
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("Downloaded Videos").font(.headline)
+                Text(kept.count == 1 ? "1 video" : "\(kept.count) videos")
+                    .foregroundStyle(.secondary)
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 10)
+            if kept.isEmpty {
+                Text(
+                    looked
+                        ? "Videos you download show up here. Right-click a video and choose Download."
+                        : "Looking…")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List(kept) { VideoFileRow(file: $0) }
+                    .scrollContentBackground(Theme.current.listBackground)
             }
         }
         // Looked at again whenever a video has just arrived or been binned, each time
@@ -805,7 +778,6 @@ struct MovieFinderView: View {
     @State private var search = ""
     /// Goes up to empty the search box.
     @State private var clears = 0
-    @State private var opened: MediaItem?
 
     // MARK: the top of the page
 
@@ -917,138 +889,112 @@ struct MovieFinderView: View {
         let media = model.media
         let lists = isAdult ? media.adultCatalogs() : media.catalogs(of: kind)
         let chosen = lists.first { Self.key($0) == listKey } ?? lists.first
-        ZStack {
-            VStack(spacing: 0) {
-                // The top of the page in one row when it fits, else the search on a row
-                // of its own, else the genres too: a plugin's long list and genre names
-                // (the Porn Finder's) made one row wider than the window, and with it
-                // the page and a film's page opened over it, which slid under the
-                // sidebar (the owner, 2026-10-18).
-                ViewThatFits(in: .horizontal) {
+        // A film's page opens over the list (`OverPages`), which stays as it was left,
+        // scrolled to the same place.
+        VStack(spacing: 0) {
+            // The top of the page in one row when it fits, else the search on a row
+            // of its own, else the genres too: a plugin's long list and genre names
+            // (the Porn Finder's) made one row wider than the window, and with it
+            // the page and a film's page opened over it, which slid under the
+            // sidebar (the owner, 2026-10-18).
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 12) {
+                    titleAndList(lists, chosen)
+                    genreChoices(chosen)
+                    Spacer()
+                    searchBox(chosen)
+                }
+                VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 12) {
                         titleAndList(lists, chosen)
                         genreChoices(chosen)
-                        Spacer()
-                        searchBox(chosen)
                     }
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack(spacing: 12) {
-                            titleAndList(lists, chosen)
-                            genreChoices(chosen)
-                        }
-                        searchBox(chosen)
-                    }
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack(spacing: 12) { titleAndList(lists, chosen) }
-                        HStack(spacing: 12) { genreChoices(chosen) }
-                        searchBox(chosen)
-                    }
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack(spacing: 12) { titleAndList(lists, chosen) }
-                        genreChoices(chosen)
-                        searchBox(chosen)
-                    }
+                    searchBox(chosen)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
-                Divider()
-                if let chosen {
-                    let wanted = chosen.catalog.genre(chosen: genre)
-                    // A second genre counts only with a first, and not the same one, on a
-                    // list by genre (a list by year's "genres" are its years).
-                    let second =
-                        wanted != nil && also != wanted && chosen.catalog.id != "year"
-                            && chosen.catalog.genres.contains(also) ? also : ""
-                    let list =
-                        isSeries ? media.series : isAnime ? media.anime
-                        : isAdult ? media.adult : media.films
-                    let everywhere = searchesEverything && !search.isEmpty
-                    if let ownList, !everywhere {
-                        grid(
-                            of: ownList == Self.watchedKey
-                                ? model.watchedItems(isSeries ? "series" : "movie")
-                                : model.watchlist.of(type: isSeries ? "series" : "movie"),
-                            empty: ownList == Self.watchedKey
-                                ? (isSeries
-                                    ? "Nothing watched yet. A series whose latest episode you've watched shows "
-                                    : "Nothing watched yet. A movie you've watched nine tenths of shows ")
-                                    + "up here, and has a green check on its picture in every list."
-                                : "Nothing on your Watchlist yet. Open \(isSeries ? "a series" : "a movie") "
-                                    + "and click Add to Watchlist.")
-                    } else {
-                        filmGrid(list, chosen, genre: wanted, also: second)
-                        .task(id: "\(Self.key(chosen))|\(wanted ?? "")|\(search)|\(second)|\(everywhere)") {
-                            if everywhere {
-                                await list.search(model, type: chosen.catalog.type, words: search)
-                            } else {
-                                await list.load(
-                                    model, addon: chosen.addon, catalog: chosen.catalog, genre: wanted,
-                                    search: search, also: second)
-                            }
-                        }
-                    }
-                } else if apart, media.loaded {
-                    Message(
-                        symbol: isAdult ? "eye.slash" : "sparkles.tv",
-                        title: isAdult ? "No plugin for adults yet" : "No list of anime yet",
-                        text: isAdult
-                            ? "The app doesn't come with one. Add one by its address in Settings → "
-                                + "Plugins: if it doesn't say itself that it's for adults only, "
-                                + "mark it there. Its lists show up here and nowhere else: not on "
-                                + "Home, not in the other Finders, and never in a child's profile."
-                            : "None of your plugins lists anime. Add one that does in Settings → "
-                                + "Plugins, and its lists show up here."
-                    ) {
-                        OpenSettings { Text("Open Settings…") }
-                            .simultaneousGesture(
-                                TapGesture().onEnded {
-                                    UserDefaults.standard.set("addons", forKey: SettingsView.tabKey)
-                                })
-                    }
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 12) { titleAndList(lists, chosen) }
+                    HStack(spacing: 12) { genreChoices(chosen) }
+                    searchBox(chosen)
+                }
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 12) { titleAndList(lists, chosen) }
+                    genreChoices(chosen)
+                    searchBox(chosen)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            Divider()
+            if let chosen {
+                let wanted = chosen.catalog.genre(chosen: genre)
+                // A second genre counts only with a first, and not the same one, on a
+                // list by genre (a list by year's "genres" are its years).
+                let second =
+                    wanted != nil && also != wanted && chosen.catalog.id != "year"
+                        && chosen.catalog.genres.contains(also) ? also : ""
+                let list =
+                    isSeries ? media.series : isAnime ? media.anime
+                    : isAdult ? media.adult : media.films
+                let everywhere = searchesEverything && !search.isEmpty
+                if let ownList, !everywhere {
+                    grid(
+                        of: ownList == Self.watchedKey
+                            ? model.watchedItems(isSeries ? "series" : "movie")
+                            : model.watchlist.of(type: isSeries ? "series" : "movie"),
+                        empty: ownList == Self.watchedKey
+                            ? (isSeries
+                                ? "Nothing watched yet. A series whose latest episode you've watched shows "
+                                : "Nothing watched yet. A movie you've watched nine tenths of shows ")
+                                + "up here, and has a green check on its picture in every list."
+                            : "Nothing on your Watchlist yet. Open \(isSeries ? "a series" : "a movie") "
+                                + "and click Add to Watchlist.")
                 } else {
-                    Text(media.problem ?? "Loading…")
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    filmGrid(list, chosen, genre: wanted, also: second)
+                    .task(id: "\(Self.key(chosen))|\(wanted ?? "")|\(search)|\(second)|\(everywhere)") {
+                        if everywhere {
+                            await list.search(model, type: chosen.catalog.type, words: search)
+                        } else {
+                            await list.load(
+                                model, addon: chosen.addon, catalog: chosen.catalog, genre: wanted,
+                                search: search, also: second)
+                        }
+                    }
                 }
-            }
-            // Never wider than the room it's given, whatever is in it: what doesn't fit is
-            // cut off at the right, and the page (and a film's page over it) stays the
-            // window's width.
-            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .topLeading)
-            .clipped()
-            // The list stays as it was left (scrolled to the same place) while a film is
-            // open over it, but out of sight and out of reach: its search box showed
-            // through the film's page.
-            .opacity(opened == nil ? 1 : 0)
-            .allowsHitTesting(opened == nil)
-            if let opened {
-                // A page of its own for each film: opened over another (from Home, or the
-                // Watchlist) it kept that one's trailer, episode and ways to play until
-                // its own details came, and Play could play the other one (2026-10-15).
-                MovieView(film: opened, apart: isAdult) { self.opened = nil }
-                    .id(opened.id)
+            } else if apart, media.loaded {
+                Message(
+                    symbol: isAdult ? "eye.slash" : "sparkles.tv",
+                    title: isAdult ? "No plugin for adults yet" : "No list of anime yet",
+                    text: isAdult
+                        ? "The app doesn't come with one. Add one by its address in Settings → "
+                            + "Plugins: if it doesn't say itself that it's for adults only, "
+                            + "mark it there. Its lists show up here and nowhere else: not on "
+                            + "Home, not in the other Finders, and never in a child's profile."
+                        : "None of your plugins lists anime. Add one that does in Settings → "
+                            + "Plugins, and its lists show up here."
+                ) {
+                    OpenSettings { Text("Open Settings…") }
+                        .simultaneousGesture(
+                            TapGesture().onEnded {
+                                UserDefaults.standard.set("addons", forKey: SettingsView.tabKey)
+                            })
+                }
+            } else {
+                Text(media.problem ?? "Loading…")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .onChange(of: opened) { _, film in
-            // Let go of the search box, so its ring isn't drawn and typing goes nowhere.
-            if film != nil { NSApp.keyWindow?.makeFirstResponder(nil) }
-        }
+        // Never wider than the room it's given, whatever is in it: what doesn't fit is
+        // cut off at the right, and the page (and a film's page over it) stays the
+        // window's width.
+        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .topLeading)
+        .clipped()
         // A click on this Finder's row in the sidebar, whether it was showing or not:
         // its lists again, at the genres chosen before, with no search and no film open
         // over them (the owner, 2026-10-17: "clicking Series Finder after a search should
-        // move it back to series finder").
-        .onChange(of: model.clicks(on: page).count) {
-            clearSearch()
-            opened = nil
-        }
-        // A film or series clicked on Home opens here.
-        .onChange(of: model.filmToOpen, initial: true) { _, wanted in
-            if let wanted, !apart, (wanted.type == "series") == isSeries {
-                opened = wanted
-                model.filmToOpen = nil
-            }
-        }
+        // move it back to series finder"; the film goes in `AppModel.clickedInSidebar`).
+        .onChange(of: model.clicks(on: page).count) { clearSearch() }
         .task(id: model.phase) { await media.load(model) }
     }
 
@@ -1075,7 +1021,7 @@ struct MovieFinderView: View {
                     + "The choice is in Settings → Plugins → TMDB.")
         return MediaGrid(
             list: list, width: 140, keep: keep, waiting: waiting, mayAskMore: ahead, noneKept: none,
-            open: { opened = isAnime ? $0.asAnime : $0 }
+            open: { open(isAnime ? $0.asAnime : $0) }
         ) {
             Task {
                 await list.load(
@@ -1086,6 +1032,12 @@ struct MovieFinderView: View {
         .task(id: "\(list.items.count)|\(rules.wanted(languageToo: languageToo))") {
             if filtering { titles.look(list.items, rules, languageToo: languageToo, model: model) }
         }
+    }
+
+    /// A film's or a series' page, opened over this Finder. Nothing opened from the Finder
+    /// kept apart is remembered for Home.
+    private func open(_ item: MediaItem) {
+        model.openOver(.title(item, apart: isAdult), on: page)
     }
 
     /// A list chosen in the list menu, `shown` being the one showing: the search is put
@@ -1153,7 +1105,7 @@ struct MovieFinderView: View {
             ScrollView {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 22)], spacing: 22) {
                     ForEach(items) { item in
-                        Button { opened = item } label: { MediaCard(item: item) }
+                        Button { open(item) } label: { MediaCard(item: item) }
                             .buttonStyle(.plain)
                     }
                 }
@@ -1188,6 +1140,12 @@ struct MovieView: View {
     /// Opened from Videos → Movies/Series: a series opens at the first season with an
     /// episode on this Mac.
     var startsAtDownloaded = false
+    /// The page showing, on top of the page of the sidebar that's showing: only it takes
+    /// an episode asked for (`AppModel.episodeToChoose`), not one of the same series
+    /// further down a trail or on a page out of sight.
+    var active = true
+    /// Where Back goes ("Back to Watchlist"), for its tooltip.
+    var backHelp = "Back"
     let back: () -> Void
     @Environment(AppModel.self) private var model
     @State private var details: MediaDetails?
@@ -1234,7 +1192,7 @@ struct MovieView: View {
         ZStack(alignment: .topLeading) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    BackButton(help: "Back to the list", action: back)
+                    BackButton(help: backHelp, action: back)
                     HStack(alignment: .firstTextBaseline, spacing: 16) {
                         Text(film.name).font(.system(size: 40, weight: .bold)).heading()
                         let loved = model.mediaFavourites.contains(film)
@@ -1340,6 +1298,7 @@ struct MovieView: View {
         .foregroundStyle(.white)
         .environment(\.colorScheme, .dark)
         .onChange(of: model.episodeToChoose) { showAskedEpisode() }
+        .onChange(of: active) { showAskedEpisode() }
         .task(id: film.id) {
             // What's of it on this Mac, for its Downloaded marks.
             if !apart, !model.keptShelfLooked { await model.lookAtKeptFilms() }
@@ -1649,7 +1608,7 @@ struct MovieView: View {
     /// The next episode couldn't be played by itself the way the last one was: its ways
     /// to play are shown here, for the owner to choose (`AppModel.playEpisode(after:)`).
     private func showAskedEpisode() {
-        guard let asked = model.episodeToChoose, asked.series == film.id,
+        guard active, let asked = model.episodeToChoose, asked.series == film.id,
             let one = details?.videos.first(where: { $0.id == asked.episode })
         else { return }
         model.episodeToChoose = nil
@@ -2041,24 +2000,14 @@ struct MoviesSeriesView: View {
     /// False while another page is showing (`PageHost`): the folder isn't looked at then.
     var isActive = true
     @Environment(AppModel.self) private var model
-    /// The series whose page is open, by its card.
-    @State private var openedKey: String?
     /// Goes up when the app comes back to the front: the Finder may have changed the folder.
     @State private var backInFront = 0
 
     var body: some View {
         let shelf = model.keptShelf
-        let opened = openedKey.flatMap { key in shelf.all.first { $0.key == key } }
-        Group {
-            if let opened, let item = opened.item {
-                MovieView(film: item, startsAtDownloaded: true) { openedKey = nil }
-                    .id(item.id)
-            } else if let opened {
-                KeptFolderView(card: opened) { openedKey = nil }
-            } else {
-                shelfPage(shelf)
-            }
-        }
+        // A series' page opens over the shelf (`OverPages`), which stays scrolled where it
+        // was; an episode's ✕ comes back to the series' page there.
+        shelfPage(shelf)
         // Looked at again whenever a film has just been kept, moved or binned, each time
         // the page is shown, and when the app comes back to the front (a film deleted in
         // the Finder mustn't stay listed: the owner, 2026-10-17).
@@ -2072,16 +2021,6 @@ struct MoviesSeriesView: View {
         .onChange(of: isActive, initial: true) { model.deviceFilmsShown = isActive }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             if isActive { backInFront += 1 }
-        }
-        // An episode's ✕ comes back to its series' page here, while this page shows.
-        .onChange(of: "\(isActive)|\(opened?.item?.id ?? "")", initial: true) {
-            model.keptPageSeries = isActive ? opened?.item?.id : nil
-        }
-        .onChange(of: model.episodeToChoose) {
-            // Asked to show an episode of a series here (its ✕): its page is opened.
-            if let asked = model.episodeToChoose, let card = shelf.all.first(where: { $0.item?.id == asked.series }) {
-                openedKey = card.key
-            }
         }
         .task {
             // For checking the player without a click: MUSICORG_FILM=<file> plays it once,
@@ -2213,16 +2152,26 @@ struct MoviesSeriesView: View {
 
     private func open(_ card: KeptShelf.Card) {
         if card.isShow {
-            openedKey = card.key
+            openPage(card)
         } else if let file = card.files.first {
             model.playKept(file, of: card)
+        }
+    }
+
+    /// A series' page over the shelf: its plugin's, or a list of its files when no plugin
+    /// knows it.
+    private func openPage(_ card: KeptShelf.Card) {
+        if let item = card.item {
+            model.openOver(.title(item, fromShelf: true), on: .movies)
+        } else {
+            model.openOver(.keptFolder(card.key), on: .movies)
         }
     }
 
     @ViewBuilder
     private func menu(_ card: KeptShelf.Card) -> some View {
         if card.isShow {
-            Button("Open") { openedKey = card.key }
+            Button("Open") { openPage(card) }
         } else if let file = card.files.first {
             Button("Play") { model.playKept(file, of: card) }
             if let item = card.item {
@@ -2333,12 +2282,13 @@ struct DeviceFilmCard: View {
 /// one of its name): its files, as a list, to play.
 struct KeptFolderView: View {
     let card: KeptShelf.Card
+    var backHelp = "Back to Movies/Series"
     let back: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 10) {
-                BackButton(help: "Back to Movies/Series", action: back)
+                BackButton(help: backHelp, action: back)
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(card.name).font(.title2.weight(.semibold)).heading()
                     Text(card.line).foregroundStyle(.secondary)
@@ -2361,7 +2311,8 @@ struct KeptFolderView: View {
 /// Videos → Watchlist (the owner, 2026-10-14): To Watch, the movies and series put on the
 /// Watchlist from their pages that haven't been watched yet, with a series caught up with
 /// that has a new episode; and Watched (both by the owner's rule of 2026-10-15). A click
-/// opens one's page, in its Finder; a right-click takes it off the list, or marks a movie.
+/// opens one's page over this one (Back comes back here, scrolled where it was: 2026-11-11);
+/// a right-click takes it off the list, or marks a movie.
 struct WatchlistView: View {
     @Environment(AppModel.self) private var model
     @AppStorage("watchlistShows") private var shows = "towatch"

@@ -464,18 +464,12 @@ public struct FoundPlaylistsAnswer: Decodable, Sendable {
 /// The rows of the sidebar that aren't Music's own entries (those are `SidebarChoice`),
 /// and which of them the owner has taken out (Customise Sidebar, 2026-10-08).
 public enum SidebarRows {
-    /// The rows that can be hidden, by the name each is saved under, in the sidebar's
-    /// order, with the group each is in.
-    public static let all: [(key: String, group: String)] = [
-        ("channels", "Videos"), ("movies", "Videos"), ("watchlist", "Videos"), ("calendar", "Videos"),
-        ("adultVideos", "Videos"),
-        ("home", "Media Discovery"), ("youtube", "Media Discovery"),
-        ("videoFinder", "Media Discovery"), ("movieFinder", "Media Discovery"),
-        ("seriesFinder", "Media Discovery"), ("animeFinder", "Media Discovery"),
-        ("adultFinder", "Media Discovery"), ("url", "Media Discovery"),
-        ("downloads", "Media Discovery"),
-        ("import", "Playlists"),
-    ]
+    /// The rows that can be hidden, by the name each is saved under, in the standard
+    /// sidebar's order, with the section each is in there. Since 2026-11-11 the owner can
+    /// move any row into any section (`SidebarLayout`, which says where each one is now).
+    public static let all: [(key: String, group: String)] = SidebarLayout.standard.sections.flatMap { section in
+        section.rows.filter { !SidebarChoice.all.contains($0) }.map { (key: $0, group: section.name) }
+    }
     public static let key = "sidebarHidden"
 
     /// The rows for adults: the Finder kept apart, and (2026-10-17) Videos → 18+, what's

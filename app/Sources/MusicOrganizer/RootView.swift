@@ -344,6 +344,8 @@ struct MainView: View {
     @AppStorage("sidebarSeen") private var seenEntries: String?
     /// The rows outside Music the owner has taken out of the sidebar.
     @AppStorage(SidebarRows.key) private var savedHidden = ""
+    /// Which section each row is in, and the sections' order (`SidebarLayout`, 2026-11-11).
+    @AppStorage(SidebarLayout.key) private var savedLayout = ""
     @State private var customising = false
     /// How many films `MUSICORG_BENCH`'s `openfilm` has opened (it takes the next each time).
     @State private var benchFilms = 0
@@ -526,172 +528,184 @@ struct MainView: View {
         }
     }
 
+    /// The sidebar, as the owner has laid it out (`SidebarLayout`, Customise Sidebar): any
+    /// row in any section, the sections in any order (2026-11-11).
     private var sidebar: some View {
         let shown = SidebarChoice.read(savedEntries)
-        let hidden = SidebarChoice.hidden(shown)
-        let waiting = model.library.unconfirmed.count
+        let layout = SidebarLayout.read(savedLayout)
         // The rows are SidebarItems themselves, so a click selects one. (Looping over
         // their saved names instead made every Library row unclickable.)
-        // Music Videos is one of these entries too, but its row is under Videos.
-        let entries = shown.compactMap(SidebarItem.init(libraryEntry:))
-            .filter { $0 != .unconfirmed || waiting > 0 }  // nothing waiting: nothing to show
-            .filter { $0 != .videos }
         return List(selection: $item) {
-            Section(isExpanded: $openLibrary) {
-                ForEach(entries, id: \.self) { entry in
-                    row(entry)
-                        .badge(entry == .unconfirmed ? waiting : 0)
-                        // A download dragged here moves into the main library.
-                        .dropDestination(for: String.self) { ids, _ in
-                            model.moveDownloads(DraggedSongs.ids(in: ids), toLibrary: true)
-                            return true
-                        }
-                        .contextMenu {
-                            Button("Remove from Sidebar") { remove(entry, from: shown) }
-                                .disabled(shown.count <= 1)
-                        }
-                }
-            } header: {
-                header("Music") {
-                    Menu {
-                        ForEach(hidden.filter { $0 != "videos" }, id: \.self) { name in
-                            if let entry = SidebarItem(libraryEntry: name) {
-                                Button(entry.title) {
-                                    savedEntries = SidebarChoice.write(
-                                        SidebarChoice.adding(name, to: shown))
-                                }
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "plus")
+            ForEach(layout.sections, id: \.name) { section in
+                Section(isExpanded: expanded(section.name)) {
+                    // The owner's own playlists are always at the top of Playlists.
+                    if section.name == SidebarLayout.playlists { ownPlaylists }
+                    ForEach(rows(of: section, shown: shown), id: \.self) { entry in
+                        sidebarRow(entry, shown: shown, layout: layout)
                     }
-                    .menuStyle(.borderlessButton)
-                    .menuIndicator(.hidden)
-                    .fixedSize()
-                    .disabled(hidden.allSatisfy { $0 == "videos" })
-                    .help(
-                        hidden.allSatisfy { $0 == "videos" }
-                            ? "Everything is already shown" : "Add an entry to the sidebar")
-                }
-            }
-            Section(isExpanded: $openMedia) {
-                ForEach(
-                    [SidebarItem.channels, .movies, .watchlist, .calendar, .adultVideos]
-                        .filter { !hiddenRows.contains($0.key) && offered($0) },
-                    id: \.self
-                ) {
-                    entry in
-                    row(entry)
-                        .contextMenu { Button("Remove from Sidebar") { hide(entry) } }
-                }
-                if shown.contains("videos") {
-                    row(.videos)
-                        .tag(SidebarItem.videos)
-                        .contextMenu {
-                            Button("Remove from Sidebar") { remove(.videos, from: shown) }
-                        }
-                }
-            } header: {
-                header("Videos") {
-                    Button {
-                        savedEntries = SidebarChoice.write(SidebarChoice.adding("videos", to: shown))
-                    } label: {
-                        Image(systemName: "plus")
-                    }
-                    .buttonStyle(.borderless)
-                    .disabled(shown.contains("videos"))
-                    .help(
-                        shown.contains("videos")
-                            ? "Everything is already shown" : "Add Music Videos to the sidebar")
-                }
-            }
-            Section("Media Discovery", isExpanded: $openDiscover) {
-                // In the owner's order. Each Explore was a row under its Finder until
-                // 2026-10-08: it's what the Finder shows now when nothing is searched for.
-                // (The Visualizer has a button in the top bar instead of a row.)
-                ForEach(
-                    [
-                        SidebarItem.home, .youtube, .videoFinder, .movieFinder, .seriesFinder,
-                        .animeFinder, .adultFinder, .pageVideos, .downloads,
-                    ].filter { !hiddenRows.contains($0.key) }
-                        // Never in a child's profile, whatever the sidebar's choices say.
-                        .filter(offered),
-                    id: \.self
-                ) {
-                    entry in
-                    if entry == .downloads {
-                        row(entry)
-                            .badge(model.downloadsBadge)
-                            // Dragged back here, a download leaves the main library's lists.
-                            .dropDestination(for: String.self) { ids, _ in
-                                model.moveDownloads(DraggedSongs.ids(in: ids), toLibrary: false)
-                                return true
-                            }
-                            .contextMenu { Button("Remove from Sidebar") { hide(entry) } }
-                    } else {
-                        row(entry)
-                            .contextMenu { Button("Remove from Sidebar") { hide(entry) } }
-                        if entry == .youtube, !model.youtubeQueue.isEmpty {
-                            // Shown while anything is queued with Up Next.
-                            row(.youtubeQueue, inset: 18)
-                            .badge(model.youtubeQueue.count)
-                            .tag(SidebarItem.youtubeQueue)
-                        }
-                    }
-                }
-            }
-            Section(isExpanded: $openPlaylists) {
-                ForEach(model.listening.playlists.map { SidebarItem.playlist($0.id) }, id: \.self) {
-                    entry in
-                    if case .playlist(let id) = entry, let playlist = model.playlist(id) {
-                        row(entry, named: playlist.name)
-                            .contextMenu {
-                                Button("Rename…") { model.rename(playlist) }
-                                Button(
-                                    playlist.duplicates > 0
-                                        ? "Remove \(playlist.duplicates) "
-                                            + (playlist.duplicates == 1 ? "Duplicate" : "Duplicates")
-                                        : "Remove Duplicates"
-                                ) { model.removeDuplicates(from: playlist) }
-                                .disabled(playlist.duplicates == 0)
-                                let others = model.profiles.profiles.filter {
-                                    $0.id != model.profiles.currentId
-                                }
-                                if !others.isEmpty {
-                                    Menu("Copy to Profile") {
-                                        ForEach(others) { profile in
-                                            Button(profile.name) {
-                                                model.copyPlaylist(playlist, to: profile.id)
-                                            }
-                                        }
-                                    }
-                                }
-                                Button("Export Playlist…") { model.export(playlist) }
-                                    .disabled(playlist.trackIds.isEmpty)
-                                Button("Delete…", role: .destructive) { deleting = playlist }
-                            }
-                    }
-                }
-                Button { model.newPlaylist() } label: {
-                    Label("New Playlist…", systemImage: "plus")
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
-                if !hiddenRows.contains(SidebarItem.importPlaylists.key) {
-                    row(.importPlaylists)
-                    .tag(SidebarItem.importPlaylists)
-                    .contextMenu { Button("Remove from Sidebar") { hide(.importPlaylists) } }
-                }
-            } header: {
-                header("Playlists") {
-                    Button { model.newPlaylist() } label: { Image(systemName: "plus") }
-                        .buttonStyle(.borderless)
-                        .help("New playlist")
+                } header: {
+                    sectionHeader(section, shown: shown)
                 }
             }
         }
         .listStyle(.sidebar)
         .scrollContentBackground(Theme.current.listBackground)
+    }
+
+    /// Each section of the sidebar folds away, and stays as it was left.
+    private func expanded(_ section: String) -> Binding<Bool> {
+        switch section {
+        case SidebarLayout.music: $openLibrary
+        case SidebarLayout.playlists: $openPlaylists
+        case SidebarLayout.videos: $openMedia
+        default: $openDiscover
+        }
+    }
+
+    /// A section's rows that are shown, in the owner's order.
+    private func rows(of section: SidebarLayout.Section, shown: [String]) -> [SidebarItem] {
+        section.rows.filter { isShown($0, shown: shown) }.map(SidebarItem.init(key:))
+            // Never in a child's profile, whatever the sidebar's choices say.
+            .filter(offered)
+            // Nothing waiting to be identified: nothing to show.
+            .filter { $0 != .unconfirmed || model.library.unconfirmed.count > 0 }
+    }
+
+    /// Whether a row is shown: Music's own entries are `SidebarChoice`'s, the rest `SidebarRows`'.
+    private func isShown(_ key: String, shown: [String]) -> Bool {
+        SidebarChoice.all.contains(key) ? shown.contains(key) : !hiddenRows.contains(key)
+    }
+
+    /// One row, with what it does wherever it's put: a count, a place to drop a download, and
+    /// (right-click) Move To and Remove from Sidebar.
+    @ViewBuilder
+    private func sidebarRow(_ entry: SidebarItem, shown: [String], layout: SidebarLayout) -> some View {
+        let plain = row(entry)
+            .badge(entry == .unconfirmed ? model.library.unconfirmed.count : entry == .downloads ? model.downloadsBadge : 0)
+            .contextMenu { rowMenu(entry, shown: shown, layout: layout) }
+        if entry == .downloads {
+            // Dragged back here, a download leaves the main library's lists.
+            plain.dropDestination(for: String.self) { ids, _ in
+                model.moveDownloads(DraggedSongs.ids(in: ids), toLibrary: false)
+                return true
+            }
+        } else if entry.libraryName != nil, entry != .videos {
+            // A download dragged onto one of Music's own lists moves into the main library.
+            plain.dropDestination(for: String.self) { ids, _ in
+                model.moveDownloads(DraggedSongs.ids(in: ids), toLibrary: true)
+                return true
+            }
+        } else {
+            plain
+        }
+        if entry == .youtube, !model.youtubeQueue.isEmpty {
+            // Shown while anything is queued with Up Next.
+            row(.youtubeQueue, inset: 18)
+                .badge(model.youtubeQueue.count)
+                .tag(SidebarItem.youtubeQueue)
+        }
+    }
+
+    /// A row's right-click: into another section, or out of the sidebar.
+    @ViewBuilder
+    private func rowMenu(_ entry: SidebarItem, shown: [String], layout: SidebarLayout) -> some View {
+        Menu("Move To") {
+            ForEach(layout.sections.map(\.name).filter { $0 != layout.section(of: entry.key) }, id: \.self) { name in
+                Button(name) { moveRow(entry.key, to: name) }
+            }
+        }
+        if entry.libraryName != nil {
+            // The sidebar keeps at least one of Music's own entries.
+            Button("Remove from Sidebar") { remove(entry, from: shown) }
+                .disabled(shown.count <= 1)
+        } else {
+            Button("Remove from Sidebar") { hide(entry) }
+        }
+    }
+
+    private func moveRow(_ key: String, to section: String) {
+        var layout = SidebarLayout.read(savedLayout)
+        layout.move(key, to: section)
+        savedLayout = layout == .standard ? "" : layout.write()
+    }
+
+    /// A section's name, with its "+": Playlists' makes a new playlist; any other's puts a
+    /// row of that section taken out of the sidebar back.
+    @ViewBuilder
+    private func sectionHeader(_ section: SidebarLayout.Section, shown: [String]) -> some View {
+        if section.name == SidebarLayout.playlists {
+            header(section.name) {
+                Button { model.newPlaylist() } label: { Image(systemName: "plus") }
+                    .buttonStyle(.borderless)
+                    .help("New playlist")
+            }
+        } else {
+            let hidden = section.rows.filter { !isShown($0, shown: shown) }.map(SidebarItem.init(key:)).filter(offered)
+            header(section.name) {
+                Menu {
+                    ForEach(hidden, id: \.self) { entry in
+                        Button(entry.title) { showRow(entry.key, shown: shown) }
+                    }
+                } label: {
+                    Image(systemName: "plus")
+                }
+                .menuStyle(.borderlessButton)
+                .menuIndicator(.hidden)
+                .fixedSize()
+                .disabled(hidden.isEmpty)
+                .help(hidden.isEmpty ? "Everything is already shown" : "Add an entry to the sidebar")
+            }
+        }
+    }
+
+    /// A row taken out of the sidebar put back, where it was.
+    private func showRow(_ key: String, shown: [String]) {
+        if SidebarChoice.all.contains(key) {
+            savedEntries = SidebarChoice.write(SidebarChoice.adding(key, to: shown))
+        } else {
+            savedHidden = SidebarRows.write(savedHidden, key, shown: true)
+        }
+    }
+
+    /// The owner's own playlists, and New Playlist….
+    @ViewBuilder
+    private var ownPlaylists: some View {
+        ForEach(model.listening.playlists.map { SidebarItem.playlist($0.id) }, id: \.self) {
+            entry in
+            if case .playlist(let id) = entry, let playlist = model.playlist(id) {
+                row(entry, named: playlist.name)
+                    .contextMenu {
+                        Button("Rename…") { model.rename(playlist) }
+                        Button(
+                            playlist.duplicates > 0
+                                ? "Remove \(playlist.duplicates) "
+                                    + (playlist.duplicates == 1 ? "Duplicate" : "Duplicates")
+                                : "Remove Duplicates"
+                        ) { model.removeDuplicates(from: playlist) }
+                        .disabled(playlist.duplicates == 0)
+                        let others = model.profiles.profiles.filter {
+                            $0.id != model.profiles.currentId
+                        }
+                        if !others.isEmpty {
+                            Menu("Copy to Profile") {
+                                ForEach(others) { profile in
+                                    Button(profile.name) {
+                                        model.copyPlaylist(playlist, to: profile.id)
+                                    }
+                                }
+                            }
+                        }
+                        Button("Export Playlist…") { model.export(playlist) }
+                            .disabled(playlist.trackIds.isEmpty)
+                        Button("Delete…", role: .destructive) { deleting = playlist }
+                    }
+            }
+        }
+        Button { model.newPlaylist() } label: {
+            Label("New Playlist…", systemImage: "plus")
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.secondary)
     }
 
     /// A row of the sidebar: a page's name and picture, opened by a click even when
@@ -790,10 +804,10 @@ struct MainView: View {
         }
         .help("Customise Sidebar: choose what the sidebar shows")
         .sheet(isPresented: $customising) {
-            CustomiseSidebar(savedEntries: $savedEntries, savedHidden: $savedHidden)
+            CustomiseSidebar(savedEntries: $savedEntries, savedHidden: $savedHidden, savedLayout: $savedLayout)
                 .environment(model)
                 .dressed()
-                .frame(width: 420, height: 640)  // tall enough for every row without scrolling
+                .frame(width: 460, height: 680)  // tall enough for every row without scrolling
         }
     }
 
@@ -1022,6 +1036,51 @@ struct MainView: View {
                 Bench.say("BENCH makelibrary: the library is \(model.profiles.current.libraryRoot ?? "none")")
             } else if step.name == "closefilm" {
                 model.closeFilm()
+            } else if step.name.hasPrefix("open=") {
+                // A film's or a series' page opened over the page showing, as a click on its
+                // card does: `open=series:tt0000001:Name`.
+                let parts = step.name.dropFirst(5).split(separator: ":", maxSplits: 2).map(String.init)
+                if parts.count == 3 {
+                    model.open(
+                        MediaItem(
+                            id: parts[1], type: parts[0], name: parts[2], poster: nil, posterShape: "poster",
+                            year: nil, rating: nil, genres: []))
+                }
+            } else if step.name.hasPrefix("openepisode=") {
+                // An episode's series opened at that episode, as the film player's ✕ does:
+                // `openepisode=<series id>|<episode id>|<name>` (an episode id has colons in it).
+                let parts = step.name.dropFirst(12).split(separator: "|", maxSplits: 2).map(String.init)
+                if parts.count == 3 {
+                    model.openEpisode(
+                        parts[1],
+                        of: MediaItem(
+                            id: parts[0], type: "series", name: parts[2], poster: nil, posterShape: "poster",
+                            year: nil, rating: nil, genres: []))
+                }
+            } else if step.name == "back" {
+                // Back, as the page on top's Back button does.
+                model.goBack(on: current)
+            } else if step.name == "trail" {
+                // What's open over each page visited, and the page showing.
+                Bench.say(
+                    "BENCH trail: showing \(current.key); "
+                        + visited.map { page in
+                            "\(page.key) [\(model.trail.pages(on: page).map(\.id).joined(separator: ", "))]"
+                        }.joined(separator: "; "))
+            } else if step.name == "customise" {
+                // Customise Sidebar opened, as its button in the top bar does.
+                customising = true
+            } else if step.name.hasPrefix("moverow=") {
+                // A row moved into another section, as its right-click Move To does:
+                // `moverow=calendar@Music`.
+                let parts = step.name.dropFirst(8).split(separator: "@").map(String.init)
+                if parts.count == 2 { moveRow(parts[0], to: parts[1]) }
+            } else if step.name == "sidebar" {
+                // The sidebar's sections and rows, in order.
+                let layout = SidebarLayout.read(savedLayout)
+                Bench.say(
+                    "BENCH sidebar: "
+                        + layout.sections.map { "\($0.name): \($0.rows.joined(separator: ","))" }.joined(separator: " | "))
             } else if step.name == "picture" {
                 // The video or the visualizer given the whole screen, or brought back.
                 model.setPictureFullScreen(!model.pictureFullScreen)
@@ -1044,6 +1103,8 @@ struct MainView: View {
 
     private func opened(_ entry: SidebarItem) {
         if !visited.contains(entry) { visited.append(entry) }
+        // A film or a series opened from here opens over this page (`AppModel.trail`).
+        model.pageShowing = entry
         UserDefaults.standard.set(entry.key, forKey: "lastSection")
     }
 
@@ -1093,7 +1154,8 @@ struct MainView: View {
     }
 }
 
-/// One page of the app: what a row of the sidebar opens.
+/// One page of the app: what a row of the sidebar opens, with whatever has been opened over
+/// it (a film's or a series' page, a channel's) on top, for Back (`OverPages`).
 struct PageView: View {
     let entry: SidebarItem
     /// False while another page is showing: a song list keeps its place but does no work.
@@ -1101,6 +1163,14 @@ struct PageView: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
+        OverPages(entry: entry, active: active) { page }
+    }
+
+    /// Whether this page is the one looked at: showing, with nothing opened over it.
+    private var looked: Bool { active && !model.trail.isCovered(entry) }
+
+    @ViewBuilder
+    private var page: some View {
         switch entry {
         case .songs:
             SongList(source: .all, title: "Songs", empty: "No songs in the library yet.", isActive: active)
@@ -1187,7 +1257,8 @@ struct PageView: View {
         case .seriesFinder:
             MovieFinderView(kind: "series")
         case .home:
-            HomeView(isActive: active)
+            // The arrows aren't Home's while a page is open over it.
+            HomeView(isActive: looked)
         case .videoFinder:
             VideoFinderView()
         case .channels:
@@ -1432,62 +1503,76 @@ private struct PlayerPageOpening: ViewModifier {
 
 /// Customise Sidebar (the owner, 2026-10-08): which rows the sidebar shows. A row taken
 /// out is only out of the sidebar: nothing of its page is lost, and it comes back here.
+/// Since 2026-11-11 also where each row is (the owner: "allow all the options in the
+/// sidebar to be customized ... Moving to different subcategories, and mixing and matching
+/// outside of their predetermined spot"): a row is dragged to another place in its section,
+/// or moved up, down or into another section from its menu, and the sections are put in
+/// order with their arrows. The layout of this sheet is mine, until the owner draws it.
 private struct CustomiseSidebar: View {
     @Binding var savedEntries: String
     @Binding var savedHidden: String
+    @Binding var savedLayout: String
     @Environment(\.dismiss) private var dismiss
     @Environment(AppModel.self) private var model
 
     var body: some View {
         let shown = SidebarChoice.read(savedEntries)
+        let layout = SidebarLayout.read(savedLayout)
         VStack(spacing: 0) {
             HStack {
                 Text("Customise Sidebar").font(.title2.weight(.semibold)).heading()
                 Spacer()
+                Button("Standard Order") { savedLayout = "" }
+                    .disabled(layout == .standard)
+                    .help("Every row back in the section and place it started in. What's shown stays as it is.")
                 Button("Done") { dismiss() }.keyboardShortcut(.defaultAction)
             }
             .padding(16)
             Divider()
             List {
-                Section("Music") {
-                    ForEach(SidebarChoice.all.filter { $0 != "videos" }, id: \.self) { name in
-                        if let entry = SidebarItem(libraryEntry: name) {
-                            Toggle(
-                                isOn: Binding(
-                                    get: { shown.contains(name) },
-                                    set: { library(name, $0, shown) })
-                            ) { Label(entry.title, systemImage: entry.symbol) }
-                            // The sidebar keeps at least one of Music's rows.
-                            .disabled(shown == [name])
+                ForEach(Array(layout.sections.enumerated()), id: \.element.name) { place, section in
+                    let keys = section.rows.filter(offered)
+                    Section {
+                        if keys.isEmpty {
+                            Text(
+                                section.name == SidebarLayout.playlists
+                                    ? "Your playlists" : "Nothing here. Move a row in from its menu.")
+                                .foregroundStyle(.secondary)
                         }
-                    }
-                }
-                ForEach(["Videos", "Media Discovery", "Playlists"], id: \.self) { group in
-                    Section(group) {
-                        ForEach(
-                            SidebarRows.all.filter { $0.group == group }
-                                .filter { SidebarRows.offered($0.key, isChild: model.profiles.current.isChild) },
-                            id: \.key
-                        ) { row in
-                            let entry = SidebarItem(key: row.key)
-                            Toggle(
-                                isOn: Binding(
-                                    get: { !SidebarRows.hidden(savedHidden).contains(row.key) },
-                                    set: { savedHidden = SidebarRows.write(savedHidden, row.key, shown: $0) })
-                            ) { Label(entry.title, systemImage: entry.symbol) }
+                        ForEach(keys, id: \.self) { key in
+                            row(key, in: section, layout: layout, shown: shown)
                         }
-                        if group == "Videos" {
-                            Toggle(
-                                isOn: Binding(
-                                    get: { shown.contains("videos") },
-                                    set: { library("videos", $0, shown) })
-                            ) { Label(SidebarItem.videos.title, systemImage: SidebarItem.videos.symbol) }
+                        .onMove { from, to in
+                            // Places among the rows shown here, as places in the whole section.
+                            let all = section.rows
+                            let offsets = from.compactMap { all.firstIndex(of: keys[$0]) }
+                            let destination = to < keys.count ? all.firstIndex(of: keys[to]) ?? all.count : all.count
+                            change { $0.move(in: section.name, from: offsets, to: destination) }
                         }
+                    } header: {
+                        HStack {
+                            Text(section.name)
+                            Spacer()
+                            Button { change { $0.nudgeSection(section.name, by: -1) } } label: {
+                                Image(systemName: "chevron.up")
+                            }
+                            .disabled(place == 0)
+                            .help("Move \(section.name) up")
+                            Button { change { $0.nudgeSection(section.name, by: 1) } } label: {
+                                Image(systemName: "chevron.down")
+                            }
+                            .disabled(place == layout.sections.count - 1)
+                            .help("Move \(section.name) down")
+                        }
+                        .buttonStyle(.borderless)
                     }
                 }
             }
             .scrollContentBackground(Theme.current.listBackground)
-            Text("Your own playlists are always listed. Settings and the Visualizer are in the top bar and beside your name.")
+            Text(
+                "Drag a row to another place in its section, or use its menu to move it to another "
+                    + "section. Your own playlists are always at the top of Playlists. Settings and the "
+                    + "Visualizer are in the top bar and beside your name.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -1495,9 +1580,57 @@ private struct CustomiseSidebar: View {
         }
     }
 
-    private func library(_ name: String, _ on: Bool, _ shown: [String]) {
-        savedEntries = SidebarChoice.write(
-            on ? SidebarChoice.adding(name, to: shown) : shown.filter { $0 != name })
+    /// One row: shown or not, and its menu (up, down, into another section).
+    private func row(_ key: String, in section: SidebarLayout.Section, layout: SidebarLayout, shown: [String])
+        -> some View
+    {
+        let entry = SidebarItem(key: key)
+        let library = SidebarChoice.all.contains(key)
+        let index = section.rows.firstIndex(of: key) ?? 0
+        return HStack {
+            Toggle(
+                isOn: Binding(
+                    get: { library ? shown.contains(key) : !SidebarRows.hidden(savedHidden).contains(key) },
+                    set: { on in
+                        if library {
+                            savedEntries = SidebarChoice.write(
+                                on ? SidebarChoice.adding(key, to: shown) : shown.filter { $0 != key })
+                        } else {
+                            savedHidden = SidebarRows.write(savedHidden, key, shown: on)
+                        }
+                    })
+            ) { Label(entry.title, systemImage: entry.symbol) }
+            // The sidebar keeps at least one of Music's own entries.
+            .disabled(library && shown == [key])
+            Spacer()
+            Menu {
+                Button("Move Up") { change { $0.nudge(key, by: -1) } }
+                    .disabled(index == 0)
+                Button("Move Down") { change { $0.nudge(key, by: 1) } }
+                    .disabled(index == section.rows.count - 1)
+                Divider()
+                ForEach(layout.sections.map(\.name).filter { $0 != section.name }, id: \.self) { name in
+                    Button("Move to \(name)") { change { $0.move(key, to: name) } }
+                }
+            } label: {
+                Image(systemName: "ellipsis.circle")
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .help("Move \(entry.title) up, down or to another section")
+        }
+    }
+
+    /// The rows this profile may have at all (none for adults in a child's).
+    private func offered(_ key: String) -> Bool {
+        SidebarRows.offered(key, isChild: model.profiles.current.isChild)
+    }
+
+    private func change(_ edit: (inout SidebarLayout) -> Void) {
+        var layout = SidebarLayout.read(savedLayout)
+        edit(&layout)
+        savedLayout = layout == .standard ? "" : layout.write()
     }
 }
 
