@@ -103,6 +103,19 @@ public enum NextEpisode {
         return toWatch(after: last, in: videos, fresh: fresh, finished: finished, today: today)
     }
 
+    /// The season a series' page opens at (2026-11-11: the page showed the first season, not
+    /// how far the owner had got): the one with the episode to carry on with (`toCarryOn`),
+    /// else the one with the episode last played. Nil for a series never played (the page
+    /// opens at its first season, as before).
+    public static func seasonReached(
+        from last: String?, in videos: [MediaDetails.Video], fresh: [String], finished: Finished,
+        today: String? = nil
+    ) -> Int? {
+        guard let last else { return nil }
+        let next = toCarryOn(from: last, in: videos, fresh: fresh, finished: finished, today: today)
+        return (next ?? videos.first { $0.id == last })?.season
+    }
+
     /// The owner's rule for how the next episode is played: **the same quality from the
     /// same source**; failing that, **the next source that has that quality** (in the
     /// owner's order of add-ons); and failing that nothing, and the app opens the

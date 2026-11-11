@@ -277,14 +277,64 @@ final class HomeWatchingTests: XCTestCase {
         history.watched(episode("tt5", 1, 2, seconds: 600, length: 3000, minute: 10))
         progress.learned("tt5", episodes: outBy(2), finished: finished, now: at(20))
         XCTAssertEqual(history.continuing(finished: finished, progress: progress).map(\.id), ["tt5"])
-        // A third comes out: "+1", and it's in New Episodes instead.
-        progress.learned("tt5", episodes: outBy(3), finished: finished, now: at(30))
+        // A third comes out, after the owner last watched (minute 10): "+1", and it's in New
+        // Episodes instead.
+        progress.learned("tt5", episodes: outBy(2) + [try video("tt5", 1, 3, released: at(25))], finished: finished, now: at(30))
         XCTAssertEqual(progress.newEpisodes("tt5", finished: finished), ["tt5:1:3"])
         XCTAssertTrue(history.continuing(finished: finished, progress: progress).isEmpty)
         XCTAssertEqual(progress.withFreshEpisodes(finished: finished), ["tt5"])
         // Watched: back where it was.
         finished.mark("tt5:1:3", watched: true, now: at(40))
         XCTAssertEqual(history.continuing(finished: finished, progress: progress).map(\.id), ["tt5"])
+    }
+
+    /// One episode, out at `released`.
+    private func video(_ series: String, _ season: Int, _ number: Int, released: Date) throws -> MediaDetails.Video {
+        let day = ISO8601DateFormatter().string(from: released)
+        let json = #"{"id":"\#(series):\#(season):\#(number)","title":"E\#(number)","season":\#(season),"episode":\#(number),"released":"\#(day)"}"#
+        return try JSONDecoder().decode(MediaDetails.Video.self, from: Data(json.utf8))
+    }
+
+    /// 2026-11-11 (the owner, on a video app; the Mac has the same rule): "Watched a show ...
+    /// continue watching didnt show that show first". The show was on the Watchlist, so every
+    /// episode after the last one watched counted as new (2026-11-10), and a series with new
+    /// episodes was left out of Continue Watching: the one being watched through left the row.
+    func testASeriesOnTheWatchlistBeingWatchedThroughIsFirstInContinueWatching() throws {
+        var history = WatchHistory()
+        var finished = Finished()
+        var progress = SeriesProgress()
+        // Another series, left part way an hour before.
+        history.watched(episode("tt1", 1, 2, seconds: 600, length: 3000, minute: -60))
+        progress.learned("tt1", episodes: try episodes("tt1", 8), finished: finished, now: at(-60))
+        // The one on the Watchlist: three episodes out long ago, the first watched, the second
+        // part way, watched just now.
+        finished.mark("tt9:1:1", watched: true, now: at(0))
+        history.watched(episode("tt9", 1, 2, seconds: 700, length: 2335, minute: 10))
+        progress.learned("tt9", episodes: try episodes("tt9", 3), finished: finished, now: at(5), listed: true)
+        XCTAssertEqual(progress.newEpisodes("tt9", finished: finished), ["tt9:1:2", "tt9:1:3"])
+        XCTAssertEqual(history.continuing(finished: finished, progress: progress).map(\.id), ["tt9", "tt1"])
+        // Between episodes, the second played to its end: still first.
+        finished.mark("tt9:1:2", watched: true, now: at(40))
+        history.place("tt9", seconds: 2300, length: 2335, now: at(40))
+        XCTAssertEqual(history.continuing(finished: finished, progress: progress).map(\.id), ["tt9", "tt1"])
+    }
+
+    /// The page opens at the season with the episode to carry on with (2026-11-11).
+    func testASeriesPageOpensAtTheSeasonReached() throws {
+        let videos = try episodes("tt9", 3) + [try video("tt9", 2, 1, released: at(-100))]
+        var finished = Finished()
+        // Never played: its first season, as before.
+        XCTAssertNil(NextEpisode.seasonReached(from: nil, in: videos, fresh: [], finished: finished))
+        // Part way through episode 2: season 1.
+        finished.mark("tt9:1:1", watched: true)
+        XCTAssertEqual(NextEpisode.seasonReached(from: "tt9:1:2", in: videos, fresh: [], finished: finished), 1)
+        // The season's last one watched: the next season.
+        finished.mark("tt9:1:2", watched: true)
+        finished.mark("tt9:1:3", watched: true)
+        XCTAssertEqual(NextEpisode.seasonReached(from: "tt9:1:3", in: videos, fresh: [], finished: finished), 2)
+        // Caught up: the season it was at.
+        finished.mark("tt9:2:1", watched: true)
+        XCTAssertEqual(NextEpisode.seasonReached(from: "tt9:2:1", in: videos, fresh: [], finished: finished), 2)
     }
 
     func testNewEpisodesIsPutOnHomeOnceBeforeTheFilmsContinueWatching() {

@@ -869,6 +869,16 @@ final class AppModel {
         }
     }
 
+    /// The season a series' page opens at: the one with the episode to carry on with, else
+    /// the one last played (`NextEpisode.seasonReached`, 2026-11-11); nil for a series never
+    /// played, which opens at its first season as before.
+    func seasonReached(_ id: String, in episodes: [MediaDetails.Video]) -> Int? {
+        let today = String(ISO8601DateFormatter().string(from: Date()).prefix(10))
+        return NextEpisode.seasonReached(
+            from: history.entries.first { $0.id == id }?.episodeId, in: episodes,
+            fresh: seriesProgress.newEpisodes(id, finished: finished), finished: finished, today: today)
+    }
+
     /// The next episode of a series clicked in Home is still wanted: no other card was
     /// clicked, nothing else was played and no film was opened since (`opened`).
     private func isStillWanted(_ series: String, opened: Int) -> Bool {

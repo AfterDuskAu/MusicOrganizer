@@ -1322,11 +1322,13 @@ struct MovieView: View {
                 }
             }
             if isSeries {
-                // A series is played an episode at a time: the first season shows (from
+                // A series is played an episode at a time: the season with the episode to
+                // carry on with shows (2026-11-11; the first for one never played; from
                 // Movies/Series, the first with an episode here), and an episode's ways to
                 // play are asked for when it's clicked.
                 let downloaded = startsAtDownloaded ? here?.firstSeason : nil
-                season = downloaded.flatMap { details?.seasons.contains($0) == true ? $0 : nil }
+                let reached = apart ? nil : details.flatMap { model.seasonReached(film.id, in: $0.videos) }
+                season = (downloaded ?? reached).flatMap { details?.seasons.contains($0) == true ? $0 : nil }
                     ?? details?.seasons.first
                 showAskedEpisode()
                 // Its latest episode, for whether it's been watched.

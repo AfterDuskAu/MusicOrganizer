@@ -356,7 +356,11 @@ public struct WatchHistory: Equatable, Sendable {
     /// yet. Before this a series between episodes left the row, so the one being watched
     /// an episode after another, the next starting by itself, was hardly ever in it.
     /// A series with new episodes ("+1, +2": `SeriesProgress.newEpisodes`) is in Home's
-    /// New Episodes instead (the owner, 2026-10-18), not here.
+    /// New Episodes instead (the owner, 2026-10-18), not here; unless it has been watched
+    /// since the newest of them came out: then it's being watched through, and it's here too
+    /// (2026-11-11: a series on the Watchlist has every episode after the last one watched as
+    /// new, so the one being watched left this row, and the owner found "continue watching
+    /// didnt show that show first").
     public func continuing(finished: Finished, progress: SeriesProgress) -> [Entry] {
         // The series with an episode played to its end. An episode's id is its series'
         // and then its season and number ("tt0944947:1:2"; Kitsu's "kitsu:7442:2"), so
@@ -370,7 +374,11 @@ public struct WatchHistory: Equatable, Sendable {
             }
         }
         return recent(.series).filter { entry in
-            guard progress.newEpisodes(entry.id, finished: finished).isEmpty else { return false }
+            if !progress.newEpisodes(entry.id, finished: finished).isEmpty,
+                entry.at <= progress.newSince(entry.id) ?? .distantFuture
+            {
+                return false
+            }
             return entry.isUnfinished
                 || (begun.contains(entry.id) && !progress.isWatched(entry.id, finished: finished))
         }

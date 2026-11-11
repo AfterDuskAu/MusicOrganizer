@@ -224,6 +224,9 @@ public struct SeriesProgress: Equatable, Sendable {
         return caughtUp != latest && !finished.contains(latest)
     }
 
+    /// When the latest new episode of a series came out.
+    public func newSince(_ id: String) -> Date? { series[id]?.freshAt }
+
     /// The series the owner had caught up with that have a new episode now.
     public func withNewEpisodes(finished: Finished) -> [String] {
         series.keys.filter { hasNewEpisode($0, finished: finished) }.sorted()
