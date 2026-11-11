@@ -128,6 +128,14 @@ final class FilmPlayer {
         shut()
     }
 
+    /// The film won't start (`FilmStart`): the player lets it go and says why. Its title stays,
+    /// so the player stays on screen with the words until the owner chooses another way or Back.
+    func giveUp(_ words: String) {
+        problem = words
+        buffering = false
+        shut()
+    }
+
     /// Play this sound track.
     func chooseSound(_ track: FilmTrack) {
         if let mpv { mpv_set_property_string(mpv, "aid", String(track.id)) }
@@ -336,12 +344,18 @@ struct FilmPlayerView: View {
         ZStack(alignment: .bottom) {
             Color.black
             FilmSurface(view: film.surface)
-            if let problem = film.problem {
+            if let stuck = model.stuck {
+                wontStart(stuck).frame(maxHeight: .infinity)
+            } else if let problem = film.problem {
                 Text(problem).foregroundStyle(.white).frame(maxHeight: .infinity)
             } else if film.buffering {
-                ProgressView().controlSize(.large).frame(maxHeight: .infinity)
+                VStack(spacing: 12) {
+                    ProgressView().controlSize(.large)
+                    startingLine
+                }
+                .frame(maxHeight: .infinity)
             }
-            if controlsShown || film.paused || film.problem != nil {
+            if controlsShown || film.paused || film.problem != nil, model.stuck == nil {
                 controls(film)
             }
             if model.askingStillWatching { stillWatching }
@@ -421,6 +435,60 @@ struct FilmPlayerView: View {
             }
         }
         .onDisappear { NSCursor.setHiddenUntilMouseMoves(false) }
+    }
+
+    /// Under the spinner, before a torrent's film has started: how long it's been looking and
+    /// who's been found (`FilmStart.line`, the owner, 2026-11-11: "finding film" for minutes with
+    /// nothing to say why), once a second.
+    @ViewBuilder private var startingLine: some View {
+        if model.startingSince != nil, model.filmTorrent != nil {
+            Text(FilmStart.line(model.filmStatus, waited: model.startingWaited))
+                .font(.callout).monospacedDigit().foregroundStyle(.white.opacity(0.8))
+        }
+    }
+
+    /// A film that won't start (`FilmStart`): said plainly, with another way to play it, once
+    /// one is found, and Back (the ✕'s own way: its series' page at that episode, or where it
+    /// was opened from).
+    private func wontStart(_ stuck: AppModel.Stuck) -> some View {
+        VStack(spacing: 14) {
+            Text(stuck.words).font(.title3.weight(.semibold)).multilineTextAlignment(.center)
+            if stuck.trying || stuck.looking {
+                HStack(spacing: 10) {
+                    ProgressView().controlSize(.small)
+                    Text(stuck.trying ? "Trying another way…" : "Looking for another way to play it…")
+                }
+                .foregroundStyle(.white.opacity(0.8))
+            } else if stuck.another == nil {
+                Text("No other way to play it was found.").foregroundStyle(.white.opacity(0.8))
+            }
+            HStack(spacing: 18) {
+                if let another = stuck.another, !stuck.trying {
+                    Button { model.tryAnotherWay() } label: {
+                        VStack(spacing: 2) {
+                            Text("Try Another Way").font(.body.weight(.semibold))
+                            Text(FilmStart.describe(another)).font(.caption).opacity(0.8)
+                        }
+                        .padding(.horizontal, 22)
+                        .padding(.vertical, 6)
+                        .frame(minHeight: 44)
+                    }
+                    .buttonStyle(SolidPictureButtonStyle())
+                    .help("Play it this way instead")
+                }
+                Button { close() } label: {
+                    Text("Back").font(.body.weight(.semibold)).padding(.horizontal, 22).frame(height: 44)
+                }
+                .buttonStyle(SolidPictureButtonStyle())
+                .help("Stop the film and go back")
+            }
+            .padding(.top, 4)
+        }
+        .foregroundStyle(.white)
+        .padding(24)
+        .frame(maxWidth: 560)
+        .background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: 14))
+        .padding(24)
     }
 
     /// "Are you still watching?" over the last picture (the owner, 2026-11-09, for every app: "add

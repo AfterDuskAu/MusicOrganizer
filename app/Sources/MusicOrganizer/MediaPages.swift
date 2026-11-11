@@ -1752,7 +1752,7 @@ struct MovieView: View {
                                 }
                                 model.play(
                                     stream, title: playName, watching: apart ? nil : watched, episode: now,
-                                    apart: apart)
+                                    apart: apart, item: film)
                             }
                             .disabled(!stream.canPlay)
                             .help(stream.canPlay ? "Play it now" : "This one can't be played in the app yet")

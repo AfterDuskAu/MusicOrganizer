@@ -213,6 +213,40 @@ final class AppModel {
     /// The torrent the film player is playing from, if it is, and how that's going.
     private(set) var filmTorrent: String?
     private(set) var filmStatus: TorrentStatus?
+    /// A film or episode that didn't start (`FilmStart`, the owner, 2026-11-11: "finding film"
+    /// for minutes, then "a film couldn't be opened"): what the player says, and the other way
+    /// to play it that it offers, once found.
+    struct Stuck {
+        let words: String
+        /// Another way is being looked for.
+        var looking = true
+        var another: StreamsAnswer.Way?
+        /// Try Another Way was clicked, and that way is being opened.
+        var trying = false
+    }
+
+    private(set) var stuck: Stuck?
+    /// Since when the film in the player has been starting (nil once it has, and for a file on
+    /// this Mac), and for how many seconds: the player's clock under its spinner.
+    private(set) var startingSince: Date?
+    private(set) var startingWaited = 0.0
+    /// What the player was last given from a film's or an episode's ways to play, to try it
+    /// another way if it doesn't start.
+    private struct Started {
+        let stream: MediaStream
+        let title: String
+        let entry: WatchHistory.Entry?
+        let episode: EpisodeNow?
+        /// From the Finder kept apart: its other ways are asked of the plugins for adults only.
+        let apart: Bool
+        /// The film or series, when its page said.
+        let item: MediaItem?
+    }
+
+    @ObservationIgnored private var started: Started?
+    /// The ways tried for the film or episode in the player (`MediaStream.key`): another way
+    /// is never one of these.
+    @ObservationIgnored private var tried: (what: String, keys: Set<String>) = ("", [])
     /// Who has a torrent, by its id, from the owner's click on Count (kept while the app
     /// is open), and the ones being counted just now.
     private(set) var swarmCounts: [String: TorrentCount] = [:]
@@ -1449,6 +1483,9 @@ final class AppModel {
             address, title: title, key: key, fromStart: startsAfresh,
             otherwiseAt: startsAfresh || !remembering ? nil : leftAt(episode: episodeToBe?.episodeId),
             remembering: remembering)
+        // A film opened: one that didn't start before it is over with. Its start is watched
+        // by `watchStart`, for one from the web or a torrent.
+        (stuck, startingSince, startingWaited) = (nil, nil, 0)
         startsAfresh = false
         filmsOpened += 1
         // An episode of a series, or (a file, a film) nothing that leads to another.
@@ -1825,10 +1862,11 @@ final class AppModel {
 
     /// Play one of a film's streams: a web address or a torrent in the film player, a
     /// video by its id in the app's own player. `apart`: from the Finder for adults, where
-    /// nothing of it is remembered, not even where it was got to.
+    /// nothing of it is remembered, not even where it was got to. `item`: the film or series
+    /// it's of, when its page says: its other ways to play are looked for if it doesn't start.
     func play(
         _ stream: MediaStream, title: String, watching entry: WatchHistory.Entry? = nil,
-        episode: EpisodeNow? = nil, apart: Bool = false
+        episode: EpisodeNow? = nil, apart: Bool = false, item: MediaItem? = nil
     ) {
         let remembering = !(apart || episode?.apart == true)
         // Another series, or a film: Play All is over.
@@ -1837,9 +1875,15 @@ final class AppModel {
         (startedByThemselves, askingStillWatching) = (0, false)
         // Something else played: a next episode being found from Home isn't wanted now.
         startingEpisode = nil
-        // Remembered as watched, when it's a film or an episode from its page: with the
-        // way it was played, so Home's Continue Watching can play it again.
         if stream.kind == "url" || stream.kind == "torrent" {
+            // What it is, and the ways tried for it, in case it doesn't start (`FilmStart`).
+            let what = episode?.episodeId ?? entry.map { $0.episodeId ?? $0.id } ?? item?.id ?? stream.key
+            if tried.what != what { tried = (what, []) }
+            tried.keys.insert(stream.key)
+            started = Started(
+                stream: stream, title: title, entry: entry, episode: episode, apart: !remembering, item: item)
+            // Remembered as watched, when it's a film or an episode from its page: with the
+            // way it was played, so Home's Continue Watching can play it again.
             if var entry {
                 (entry.stream, entry.playName) = (stream, title)
                 (entry.episodeId, entry.source) = (episode?.episodeId, episode?.played.addonId)
@@ -1860,6 +1904,8 @@ final class AppModel {
         case "url":
             if let url = stream.url.flatMap(URL.init(string:)) {
                 playFilm(url, title: title, remembering: remembering)
+                // From the web: watched until it starts. (A file on this Mac opens at once.)
+                if !stream.isFile { watchStart(torrent: false) }
             }
         case "youtube":
             if let id = stream.videoId {
@@ -1912,7 +1958,10 @@ final class AppModel {
         if let index = stream.fileIndex { asked["file_index"] = index }
         do {
             let playing = try await ask("torrent.play", asked, as: TorrentPlaying.self)
-            guard let url = URL(string: playing.url) else { return }
+            guard let url = URL(string: playing.url) else {
+                stuck?.trying = false
+                return
+            }
             // Remembered by the torrent and the file in it: its address here is new each time.
             playFilm(
                 url, title: title,
@@ -1920,14 +1969,101 @@ final class AppModel {
                 remembering: remembering)
             filmTorrent = playing.infoHash
             let mine = filmsOpened
+            watchStart(torrent: true)
             while film.isOpen, filmTorrent == playing.infoHash, filmsOpened == mine {
-                filmStatus = try? await ask(
+                let said = try? await ask(
                     "torrent.status", ["info_hash": playing.infoHash], as: TorrentStatus.self)
+                // Only while it's still this film's: an answer that comes after it was left
+                // isn't the next one's (whether a film is starting goes by it: `FilmStart`).
+                if filmTorrent == playing.infoHash, filmsOpened == mine { filmStatus = said }
                 try? await Task.sleep(for: .seconds(2))
             }
         } catch {
+            // Try Another Way's torrent couldn't be joined: the button is back.
+            stuck?.trying = false
             notice = error.localizedDescription
         }
+    }
+
+    /// Until the film from the web or a torrent has started: once a second, is it worth waiting
+    /// for (`FilmStart`)? When it isn't, or the player couldn't open it, it's let go of and the
+    /// owner is told, with another way to play it (`giveUp`). Only before it has started: once
+    /// it's playing, a part that hasn't come yet is waited for as long as the film is open.
+    private func watchStart(torrent: Bool) {
+        let mine = filmsOpened
+        (startingSince, startingWaited) = (Date(), 0)
+        Task {
+            while isStarting(mine) {
+                try? await Task.sleep(for: .seconds(1))
+                guard isStarting(mine) else { break }
+                startingWaited += 1
+                if let problem = film.problem {
+                    giveUp(problem)
+                    return
+                }
+                let verdict = torrent
+                    ? FilmStart.verdict(torrent: filmStatus, waited: startingWaited)
+                    : FilmStart.verdict(address: startingWaited)
+                if case .stuck(let words) = verdict {
+                    giveUp(words)
+                    return
+                }
+            }
+            if filmsOpened == mine { startingSince = nil }
+        }
+    }
+
+    /// The film opened `mine`th is still in the player and hasn't started: it has no length
+    /// yet, and hasn't begun to play (one from the web may play with no length).
+    private func isStarting(_ mine: Int) -> Bool {
+        film.isOpen && filmsOpened == mine && stuck == nil && film.duration == 0 && film.time == 0
+    }
+
+    /// The film won't start: the torrent is left, the player lets it go and says why, and
+    /// another way to play it is looked for among its ways (`FilmStart.another`: the owner's
+    /// rule for the next episode first, then any other), never one tried already.
+    private func giveUp(_ words: String) {
+        let mine = filmsOpened
+        leaveTorrent()
+        film.giveUp(words)
+        startingSince = nil
+        stuck = Stuck(words: words)
+        // The episode, or the film, whose ways to play are asked for.
+        let what = started?.episode?.series ?? started?.item ?? started?.entry?.item
+            ?? started?.entry.flatMap { knownItem($0.id) }
+        let id = started?.episode?.episodeId ?? started?.entry.map { $0.episodeId ?? $0.id } ?? started?.item?.id
+        guard let started, let type = what?.type, let id else {
+            stuck?.looking = false
+            return
+        }
+        let like = NextEpisode.Played(addonId: started.episode?.played.addonId ?? "", quality: started.stream.quality)
+        let tried = tried.keys
+        Task {
+            // Asked as its page asks: of the plugins for adults only for one from the Finder
+            // kept apart, and of the others for anything else.
+            let ways = try? await ask(
+                "addon.streams", ["type": type, "id": id, "adult": started.apart], as: StreamsAnswer.self)
+            let another = ways.flatMap { FilmStart.another(in: $0, tried: tried, like: like) }
+            guard filmsOpened == mine, stuck != nil else { return }
+            stuck?.another = another
+            stuck?.looking = false
+        }
+    }
+
+    /// The player's Try Another Way, after a film that didn't start: that way, as a click on
+    /// Play beside it on the film's page would play it.
+    func tryAnotherWay() {
+        guard let started, let now = stuck, let way = now.another, !now.trying else { return }
+        stuck?.trying = true
+        let episode = started.episode.map {
+            EpisodeNow(
+                series: $0.series, episodeId: $0.episodeId,
+                played: NextEpisode.Played(addonId: way.addonId, quality: way.stream.quality), apart: $0.apart,
+                episodes: $0.episodes)
+        }
+        play(
+            way.stream, title: started.title, watching: started.entry, episode: episode, apart: started.apart,
+            item: started.item)
     }
 
     /// Keep a film in the Movies folder: the engine fetches all of it, then saves it.
@@ -2511,13 +2647,19 @@ final class AppModel {
         (episodeNow, episodeToBe, playingAll) = (nil, nil, nil)
         (startedByThemselves, askingStillWatching) = (0, false)
         (nextEpisode, previousEpisode) = (nil, nil)
+        (stuck, started, startingSince) = (nil, nil, nil)
         tidyFullScreenTopBar()
-        if let hash = filmTorrent {
-            (filmTorrent, filmStatus) = (nil, nil)
-            Task {
-                _ = try? await ask("torrent.stop", ["info_hash": hash], as: Empty.self)
-                keepNextWaiting(of: hash)  // an episode that waited while its torrent played
-            }
+        leaveTorrent()
+    }
+
+    /// The film player's torrent is left (what arrived of it stays its day in the app's
+    /// cache): when the player shuts, and when its film won't start (`giveUp`).
+    private func leaveTorrent() {
+        guard let hash = filmTorrent else { return }
+        (filmTorrent, filmStatus) = (nil, nil)
+        Task {
+            _ = try? await ask("torrent.stop", ["info_hash": hash], as: Empty.self)
+            keepNextWaiting(of: hash)  // an episode that waited while its torrent played
         }
     }
 
