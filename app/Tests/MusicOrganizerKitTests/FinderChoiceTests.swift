@@ -52,4 +52,51 @@ final class FinderChoiceTests: XCTestCase {
         XCTAssertFalse(askings.isAsking)
         XCTAssertNil(askings.asking)
     }
+
+    /// What a list by two genres says when an answer has nothing with both (2026-11-11).
+    func testTwoGenresWithNothingSayWhereTheyLooked() throws {
+        let none = try XCTUnwrap(
+            TwoGenresNote.after(
+                type: "series", genre: "Thriller", also: "Documentary", more: false, listEmpty: true, skip: 0,
+                nextSkip: 976))
+        XCTAssertEqual(none.problem, "None of these series is both Thriller and Documentary.")
+        XCTAssertFalse(none.further)  // the lists' end: nothing to look further for
+        // At the end with something on the list: it just ends.
+        XCTAssertNil(
+            TwoGenresNote.after(
+                type: "movie", genre: "Crime", also: "War", more: false, listEmpty: false, skip: 50, nextSkip: 100))
+        let first = try XCTUnwrap(
+            TwoGenresNote.after(
+                type: "series", genre: "Thriller", also: "Documentary", more: true, listEmpty: true, skip: 0,
+                nextSkip: 400))
+        XCTAssertEqual(first.problem, "None of the first 400 series is both Thriller and Documentary.")
+        XCTAssertTrue(first.further)
+        let next = try XCTUnwrap(
+            TwoGenresNote.after(
+                type: "movie", genre: "Crime", also: "Documentary", more: true, listEmpty: false, skip: 150,
+                nextSkip: 550))
+        XCTAssertEqual(next.problem, "No more movies that are both Crime and Documentary in the next 400.")
+        XCTAssertTrue(next.further)
+        XCTAssertEqual(TwoGenresNote.plural("anime"), "anime")
+        XCTAssertEqual(TwoGenresNote.plural("channel"), "titles")
+    }
+
+    /// An answer by two genres carries where it's reading; one from a list by one genre, or
+    /// from an engine before 2026-11-11, has none.
+    func testAnAnswerByTwoGenresSaysWhichListItsReading() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let two = try decoder.decode(
+            CatalogAnswer.self,
+            from: Data(#"{"items": [], "more": true, "next_skip": 400, "reading": {"genre": null, "step": 50}}"#.utf8))
+        XCTAssertEqual(two.reading, GenreReading(genre: nil, step: 50))
+        XCTAssertEqual(two.reading?.asked as? [String: Int], ["step": 50])
+        let chosen = GenreReading(genre: "Documentary", step: 50).asked
+        XCTAssertEqual(chosen["genre"] as? String, "Documentary")
+        let old = try decoder.decode(CatalogAnswer.self, from: Data(#"{"items": [], "more": false, "next_skip": 3}"#.utf8))
+        XCTAssertNil(old.reading)
+        let one = try decoder.decode(
+            CatalogAnswer.self, from: Data(#"{"items": [], "more": false, "next_skip": 3, "reading": null}"#.utf8))
+        XCTAssertNil(one.reading)
+    }
 }

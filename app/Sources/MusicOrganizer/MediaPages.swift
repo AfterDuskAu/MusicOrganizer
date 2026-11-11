@@ -151,7 +151,8 @@ struct MediaCard: View {
 /// press show more, it automatically loads to fill the page. if the person is scrolling and hits
 /// the bottom, it automatically loads another set"): whenever its last cards are in sight or
 /// nearly, so a page that isn't full fills, and scrolling to the end brings the next set. No Show
-/// More; a set that couldn't be had says so, with Try Again. With `keep`, only what it keeps is
+/// More; a set that couldn't be had says so, with Try Again, and nothing with both of two genres
+/// for a while says so, with Look Further (2026-11-11). With `keep`, only what it keeps is
 /// shown (TMDB's original language, a child's ratings: 2026-11-05), and more of the list is asked
 /// for until enough is kept to fill the page.
 struct MediaGrid: View {
@@ -174,25 +175,41 @@ struct MediaGrid: View {
     /// How far ahead of the end the next set is asked for, in cards.
     private static let ahead = 12
 
+    /// A list's problem, with the button under it while there's more to ask: Look Further after
+    /// nothing with both genres for a while (`MediaList.further`), Try Again after a set that
+    /// couldn't be had.
+    private func problemNote(_ problem: String) -> some View {
+        VStack(spacing: 8) {
+            Text(problem).foregroundStyle(.secondary).multilineTextAlignment(.center)
+            if list.more { Button(list.further ? "Look Further" : "Try Again", action: showMore) }
+        }
+    }
+
     var body: some View {
         let items = keep.map { list.items.filter($0) } ?? list.items
-        if let problem = list.problem, list.items.isEmpty {
-            Text(problem)
-                .foregroundStyle(.secondary)
+        if let problem = list.problem, list.items.isEmpty, !list.working {
+            problemNote(problem)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if list.items.isEmpty {
             ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if items.isEmpty {
-            if waiting || list.working || list.more {
+            if waiting || list.working || (list.more && list.problem == nil) {
                 VStack(spacing: 10) {
                     ProgressView()
                     Text("Looking through the list…").foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                // Nothing kept of what's come: the next page, once TMDB has answered.
-                .task(id: "\(list.items.count)|\(mayAskMore)") {
-                    if mayAskMore, list.more, !list.working { showMore() }
+                // Nothing kept of what's come: the next page, once TMDB has answered, and
+                // again each time a set has come.
+                .task(id: "\(list.items.count)|\(mayAskMore)|\(list.working)|\(list.problem ?? "")") {
+                    if mayAskMore, list.more, !list.working, list.problem == nil { showMore() }
                 }
+            } else if let problem = list.problem {
+                // A set that couldn't be had, or nothing with both genres for a while: said, with
+                // its button (until 2026-11-11 this was "Looking through the list…" for ever).
+                problemNote(problem)
+                    .padding(40)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 Text(noneKept)
                     .foregroundStyle(.secondary)
@@ -212,14 +229,14 @@ struct MediaGrid: View {
                     }
                 }
                 .padding(20)
-                if list.working || waiting {
+                // A problem shows while TMDB is still sorting what's here (2026-11-11: it was
+                // hidden behind the spinner, with nothing asking for more).
+                if list.working {
                     ProgressView().padding(.bottom, 20)
-                } else if let problem = list.problem {
-                    VStack(spacing: 8) {
-                        Text(problem).foregroundStyle(.secondary).multilineTextAlignment(.center)
-                        if list.more { Button("Try Again", action: showMore) }
-                    }
-                    .padding(.bottom, 20)
+                } else if let problem = list.problem, list.more {
+                    problemNote(problem).padding(.bottom, 20)
+                } else if waiting {
+                    ProgressView().padding(.bottom, 20)
                 }
             }
             // Asked again whenever a set arrives (even one whose titles are all left out) while

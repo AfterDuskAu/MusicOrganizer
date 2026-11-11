@@ -132,6 +132,31 @@ public struct CatalogAnswer: Decodable, Sendable {
     /// Where the page after this one begins. (With two genres asked for, the engine
     /// reads past films it leaves out, so it isn't how many items came back.)
     public let nextSkip: Int?
+    /// With two genres (2026-11-11): which genre's list is being read, to be given back with
+    /// `nextSkip` for the page after this one. Nil for a list by one genre (and from an
+    /// engine before this).
+    public let reading: GenreReading?
+}
+
+/// A list by two genres is read through one genre's own list, keeping what has the other
+/// too (`addon.catalog`'s `reading`, 2026-11-11): this is which genre's list (nil while none
+/// has had anything with both, and each genre's list is still read side by side), and how
+/// many titles its plugin gives a page (Cinemeta: 50), so the pages after it can be asked
+/// for all at once.
+public struct GenreReading: Decodable, Sendable, Equatable {
+    public let genre: String?
+    public let step: Int
+
+    public init(genre: String?, step: Int) {
+        (self.genre, self.step) = (genre, step)
+    }
+
+    /// As it's sent back to the engine.
+    public var asked: [String: Any] {
+        var asked: [String: Any] = ["step": step]
+        if let genre { asked["genre"] = genre }
+        return asked
+    }
 }
 
 /// A film's or a channel's details (the engine's Details).

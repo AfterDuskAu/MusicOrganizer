@@ -286,6 +286,21 @@ def want(
     return value
 
 
+def _genre_reading(value: Any) -> dict[str, Any] | None:
+    """`addon.catalog`'s `reading` (2026-11-11), as the last page's answer gave it: which
+    genre's list a list by two genres is being read through (or none yet) and how many
+    titles a page. Anything else is taken as no reading at all, so the list is read from
+    each genre's side again, which is never wrong, only slower."""
+    if not isinstance(value, dict):
+        return None
+    genre, step = value.get("genre"), value.get("step")
+    if genre is not None and not (isinstance(genre, str) and genre.strip()):
+        return None
+    if isinstance(step, bool) or not isinstance(step, int) or step < 1:
+        return None
+    return {"genre": genre.strip() if genre else None, "step": step}
+
+
 # ---- the server ------------------------------------------------------------------------
 
 
@@ -1106,6 +1121,7 @@ class Server:
             genre=want(params, "genre", str),
             skip=skip,
             also=[g for g in want(params, "also", list, []) or [] if isinstance(g, str)][:4],
+            reading=_genre_reading(params.get("reading")),
         )
 
     def addon_search(self, params: dict[str, Any]) -> dict[str, Any]:

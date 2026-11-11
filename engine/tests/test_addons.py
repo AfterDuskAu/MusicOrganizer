@@ -4,6 +4,7 @@ recorded on 2026-10-07 and trimmed, are replayed: the network is never reached."
 from __future__ import annotations
 
 import json
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -410,47 +411,155 @@ def test_a_starting_add_on_that_cant_be_reached_is_tried_again_next_time(
     assert config.load_addons() is None  # not kept short: the next time asks again
 
 
+# ---- a list by two genres (2026-10-08; read side by side and at once since 2026-11-11) -------
+
+# A made-up add-on whose list comes a few titles a page, by genre.
+BY_GENRE: dict[str, Any] = {
+    "name": "Films", "base": "https://example.invalid", "types": ["movie"],
+    "resources": [{"name": "catalog", "types": ["movie"], "id_prefixes": []}],
+    "catalogs": [{"type": "movie", "id": "top", "name": None, "extra": [
+        {"name": "genre", "required": False, "options": ["Crime", "Documentary", "War"]},
+        {"name": "skip", "required": False, "options": []}]}],
+}  # fmt: skip
+
+
+def film(number: int, *genres: str) -> dict[str, object]:
+    return {"id": f"tt{number}", "name": f"Film {number}", "genres": list(genres)}
+
+
+def page(genre: str, skip: int = 0) -> str:
+    """The address of a page of one genre's list of the made-up add-on."""
+    skipped = f"&skip={skip}" if skip else ""
+    return f"https://example.invalid/catalog/movie/top/genre={genre}{skipped}.json"
+
+
+@pytest.fixture
+def pages(monkeypatch: pytest.MonkeyPatch) -> tuple[dict[str, Any], list[str]]:
+    """Stand in for the network with made-up pages: (the answers by address, the addresses
+    asked). Pages are asked several at once now, so what's asked is noted under a lock. A
+    page that fails is asked again at once, not after half a second."""
+    answers: dict[str, Any] = {}
+    seen: list[str] = []
+    noting = threading.Lock()
+
+    def answer(url: str) -> Any:
+        with noting:
+            seen.append(url)
+        if url not in answers:
+            raise addons.AddonError(f"Not recorded: {url}")
+        return answers[url]
+
+    monkeypatch.setattr(addons, "_http", answer)
+    monkeypatch.setattr(addons, "ALSO_RETRY_S", 0)
+    return answers, seen
+
+
 def test_a_list_by_two_genres_keeps_only_what_has_both(
-    monkeypatch: pytest.MonkeyPatch, asked: list[str]
+    pages: tuple[dict[str, Any], list[str]],
 ) -> None:
-    def film(number: int, *genres: str) -> dict[str, object]:
-        return {"id": f"tt{number}", "name": f"Film {number}", "genres": list(genres)}
-
-    pages = {
-        0: [film(1, "Documentary"), film(2, "Documentary", "Crime"), film(3, "Documentary")],
-        3: [film(4, "Documentary", "crime", "History"), film(5, "Documentary", "War")],
-        5: [],
-    }
-    seen: list[int] = []
-
-    def http(url: str) -> dict[str, object]:
-        skip = int(url.split("skip=")[1].split(".")[0].split("&")[0]) if "skip=" in url else 0
-        assert "genre=Documentary" in url and "Crime" not in url  # asked for one genre only
-        seen.append(skip)
-        return {"metas": pages[skip]}
-
-    addon = {
-        "name": "Films", "base": "https://example.invalid", "types": ["movie"],
-        "resources": [{"name": "catalog", "types": ["movie"], "id_prefixes": []}],
-        "catalogs": [{"type": "movie", "id": "top", "name": None, "extra": [
-            {"name": "genre", "required": False, "options": []},
-            {"name": "skip", "required": False, "options": []}]}],
-    }  # fmt: skip
-    monkeypatch.setattr(addons, "_http", http)
-    page = addons.catalog(addon, "movie", "top", genre="Documentary", also=["Crime"])
-    assert [item["id"] for item in page["items"]] == ["tt2", "tt4"]
-    assert (page["more"], page["next_skip"], seen) == (False, 5, [0, 3, 5])
+    answers, seen = pages
+    answers.update({
+        # The Crime list has nothing with Documentary near its top; the Documentary list has.
+        page("Crime"): {"metas": [film(7, "Crime"), film(8, "Crime", "Drama"), film(9, "Crime")]},
+        page("Documentary"): {"metas": [
+            film(1, "Documentary"), film(2, "Documentary", "Crime"), film(3, "Documentary")]},
+        # In a genre's list counts as that genre, said or not (Cinemeta does this).
+        page("Documentary", 3): {"metas": [
+            film(4, "crime", "History"), film(5, "Documentary", "War")]},
+        page("Documentary", 6): {"metas": []},
+    })  # fmt: skip
+    # Whichever genre is first: the Documentary list is the one with both near its top.
+    for first, second in (("Crime", "Documentary"), ("Documentary", "Crime")):
+        found = addons.catalog(BY_GENRE, "movie", "top", genre=first, also=[second])
+        assert [item["id"] for item in found["items"]] == ["tt2"], first
+        assert (found["more"], found["next_skip"]) == (True, 3)
+        assert found["reading"] == {"genre": "Documentary", "step": 3}
+        # The two first pages were asked at once, and nothing else.
+        assert set(seen[-2:]) == {page("Crime"), page("Documentary")}
+    seen.clear()
+    after = addons.catalog(
+        BY_GENRE, "movie", "top", genre="Crime", skip=3, also=["Documentary"],
+        reading={"genre": "Documentary", "step": 3},
+    )  # fmt: skip
+    assert [item["id"] for item in after["items"]] == ["tt4"]
+    assert after["more"] is False  # the list ended
+    # Only the Documentary list, eight pages at once, three apart.
+    assert set(seen) == {page("Documentary", n * 3) for n in range(1, 9)}
 
     # One genre, as before: one page, and where the next begins.
-    plain = addons.catalog(addon, "movie", "top", genre="Documentary")
+    plain = addons.catalog(BY_GENRE, "movie", "top", genre="Documentary")
     assert len(plain["items"]) == 3 and plain["next_skip"] == 3
+    assert plain["reading"] is None
     # A second genre needs a first.
     with pytest.raises(addons.AddonError):
-        addons.catalog(addon, "movie", "top", also=["Crime"])
-    # It stops reading after so many pages and says there's more.
-    monkeypatch.setattr(addons, "_http", lambda url: {"metas": [film(9, "Documentary")]})
-    long = addons.catalog(addon, "movie", "top", genre="Documentary", also=["Crime"])
-    assert long == {"items": [], "more": True, "next_skip": addons.ALSO_PAGES}
+        addons.catalog(BY_GENRE, "movie", "top", also=["Crime"])
+
+
+def test_two_genres_with_nothing_for_a_while_say_no_more_or_look_further(
+    pages: tuple[dict[str, Any], list[str]],
+) -> None:
+    answers, seen = pages
+    # Nothing with both in either list, for longer than one answer reads.
+    for genre in ("Crime", "War"):
+        for n in range(30):
+            answers[page(genre, n * 3)] = {"metas": [film(n * 10 + k, genre) for k in (1, 2, 3)]}
+    dry = addons.catalog(BY_GENRE, "movie", "top", genre="Crime", also=["War"])
+    assert dry["items"] == []
+    assert dry["more"] is True  # nothing for a while: there may be further down
+    # Eight pages of each list, side by side; still neither chosen.
+    assert len(seen) == 16
+    assert dry["next_skip"] == 24
+    assert dry["reading"] == {"genre": None, "step": 3}
+    # Looked further: from where both got to, both again.
+    seen.clear()
+    further = addons.catalog(
+        BY_GENRE, "movie", "top", genre="Crime", skip=dry["next_skip"], also=["War"],
+        reading=dry["reading"],
+    )  # fmt: skip
+    assert len(seen) == 16
+    assert page("War", 24) in seen and page("Crime", 45) in seen
+    assert further["next_skip"] == 48
+
+    # Both lists at their end with nothing: no more, so it's said there's none. (The engine
+    # doesn't believe an add-on's "no more" on a page with something on it, 2026-11-09: the
+    # War list's end is the empty page after it.)
+    answers.clear()
+    answers.update({
+        page("Crime"): {"metas": [film(1, "Crime")]},
+        page("War"): {"metas": [film(2, "War")], "hasMore": False},
+        page("Crime", 1): {"metas": []},
+        page("War", 1): {"metas": []},
+    })  # fmt: skip
+    none = addons.catalog(BY_GENRE, "movie", "top", genre="Crime", also=["War"])
+    assert none["items"] == []
+    assert none["more"] is False
+
+
+def test_two_genres_keep_what_was_found_when_a_page_fails(
+    pages: tuple[dict[str, Any], list[str]],
+) -> None:
+    answers, seen = pages
+    answers.update({
+        page("Crime"): {"metas": [film(1, "Crime"), film(2, "Crime")]},
+        page("War"): {"metas": [film(3, "War"), film(4, "War")]},
+    })  # fmt: skip
+    for n in (2, 4, 8):
+        answers[page("Crime", n)] = {"metas": [film(10 + n, "Crime"), film(11 + n, "Crime")]}
+    answers[page("Crime", 4)] = {"metas": [film(20, "Crime", "War"), film(21, "Crime")]}
+    # Crime's page at 6 can't be had (twice): what came before it is kept, and the next
+    # answer begins there.
+    first = addons.catalog(BY_GENRE, "movie", "top", genre="Crime", also=["War"])
+    assert [item["id"] for item in first["items"]] == ["tt20"]
+    assert (first["more"], first["next_skip"]) == (True, 6)
+    assert first["reading"]["genre"] == "Crime"
+    assert seen.count(page("Crime", 6)) == 2  # asked a second time
+
+    # Nothing found, and a page failed: that's said, not "nothing with both".
+    with pytest.raises(addons.AddonError, match="Not recorded"):
+        addons.catalog(
+            BY_GENRE, "movie", "top", genre="Crime", skip=6, also=["War"],
+            reading={"genre": "Crime", "step": 2},
+        )  # fmt: skip
 
 
 # ---- a search of every add-on (the owner, 2026-10-13) ---------------------------------------

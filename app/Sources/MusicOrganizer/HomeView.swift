@@ -473,8 +473,11 @@ private struct HomeRow: View {
                         if rated { model.titles.look(list.items, rules, languageToo: false, model: model) }
                     }
             } else {
+                // A row by two genres stops where nothing more with both turned up for a while,
+                // or a set couldn't be had (2026-11-11), rather than reading on and on.
+                let stopped = !(section.also ?? "").isEmpty && list.problem != nil
                 PagedCards(
-                    items: items, width: 122, height: 250, canLoadMore: list.more,
+                    items: items, width: 122, height: 250, canLoadMore: list.more && !stopped,
                     loadingMore: list.working, loadMore: { Task { await load(adding: true) } },
                     open: { model.open(isAnime ? $0.asAnime : $0) }
                 ) { filmCard($0) }

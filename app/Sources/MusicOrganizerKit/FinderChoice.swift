@@ -31,6 +31,35 @@ public struct GenreChoice: Equatable, Sendable {
     }
 }
 
+/// What a list by two genres says when an answer brings nothing with both (2026-11-11). The
+/// engine reads up to 8 pages of each genre's list for one answer (`addon.catalog`'s
+/// `reading`) and answers as soon as it has anything; when it has nothing, the list stops
+/// there and says so, and its button looks further down (Look Further), instead of reading
+/// on and on by itself as it did, or giving up with "Try another pair".
+public enum TwoGenresNote {
+    /// "series", "movies" or "anime", for what's said about a list of that type.
+    public static func plural(_ type: String) -> String {
+        ["series": "series", "movie": "movies", "anime": "anime"][type] ?? "titles"
+    }
+
+    /// What's said after an answer with nothing with both in it, and whether the button
+    /// under it looks further (else it tries again); nil when there's nothing to say: the
+    /// list has things on it and has come to its end. `skip` is where the answer was asked
+    /// from, `nextSkip` where the next would be.
+    public static func after(
+        type: String, genre: String, also: String, more: Bool, listEmpty: Bool, skip: Int, nextSkip: Int
+    ) -> (problem: String, further: Bool)? {
+        let kind = plural(type)
+        if !more {
+            return listEmpty ? ("None of these \(kind) is both \(genre) and \(also).", false) : nil
+        }
+        if listEmpty {
+            return ("None of the first \(nextSkip) \(kind) is both \(genre) and \(also).", true)
+        }
+        return ("No more \(kind) that are both \(genre) and \(also) in the next \(nextSkip - skip).", true)
+    }
+}
+
 /// The newest of a page's askings for its list. A search typed and then cleared before
 /// its answer came, or a genre changed while the list before it was still arriving: the
 /// later asking is the one wanted, and the earlier one's answer, whenever it comes, is

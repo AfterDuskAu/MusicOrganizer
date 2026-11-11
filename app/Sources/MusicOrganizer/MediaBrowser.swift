@@ -11,10 +11,17 @@ final class MediaList {
     private(set) var more = false
     private(set) var working = false
     private(set) var problem: String?
+    /// The problem is only that nothing with both genres turned up for a while
+    /// (`TwoGenresNote`, 2026-11-11): the list waits there, and its button looks further
+    /// down (Look Further) rather than trying again.
+    private(set) var further = false
     /// What the items on show were asked with, so the same thing isn't asked twice.
     private(set) var shownFor: String?
     /// Where the next page begins, as the engine said.
     private var cursor = 0
+    /// With two genres: which genre's list the engine is reading, for the next page
+    /// (`GenreReading`, 2026-11-11). Asked afresh, the list starts with none.
+    private var reading: GenreReading?
     /// The newest asking, and what it's for: an answer that comes after a later asking
     /// began is left unshown (`Askings`).
     @ObservationIgnored private var askings = Askings()
@@ -22,6 +29,7 @@ final class MediaList {
     /// Back to nothing: another profile is in use now.
     func reset() {
         (items, more, working, problem, shownFor, cursor) = ([], false, false, nil, nil, 0)
+        (further, reading) = (false, nil)
         askings = Askings()
     }
 
@@ -35,6 +43,7 @@ final class MediaList {
         }
         working = true
         problem = nil
+        further = false
         return askings.begin(wanted)
     }
 
@@ -55,14 +64,17 @@ final class MediaList {
     ) async {
         let wanted = "\(addon.id)|\(catalog.type)|\(catalog.id)|\(genre ?? "")|\(search)|\(also)"
         guard let ticket = begin(wanted, adding: adding) else { return }
-        if !adding { (items, cursor, more) = ([], 0, false) }
+        if !adding { (items, cursor, more, reading) = ([], 0, false, nil) }
+        let skip = cursor
         var asked: [String: Any] = ["addon_id": addon.id, "type": catalog.type, "id": catalog.id]
         if let genre { asked["genre"] = genre }
         if !search.isEmpty { asked["search"] = search }
-        if adding { asked["skip"] = cursor }
-        // A second genre: only what's tagged with both (the engine does the sifting).
+        if adding { asked["skip"] = skip }
+        // A second genre: only what's tagged with both (the engine does the sifting), and on
+        // from the genre's list it's reading.
         let both = genre != nil && !also.isEmpty
         if both { asked["also"] = [also] }
+        if both, adding, let reading { asked["reading"] = reading.asked }
         let answer: Result<CatalogAnswer, Error>
         do {
             if TMDB.isTMDB(addon) {
@@ -82,13 +94,20 @@ final class MediaList {
             let fresh = found.items.filter { !known.contains($0.id) }
             items += fresh
             cursor = found.nextSkip ?? items.count
+            reading = found.reading
             // A page with nothing new on it means the list has run out, whatever it says.
             // (Not with two genres: a stretch of the list can have nothing with both.)
             more = found.more && (both || !fresh.isEmpty) && catalog.takes("skip")
-            if items.isEmpty {
-                problem = more
-                    ? "Nothing with both genres near the top of the list. Try another pair."
-                    : "Nothing was found."
+            if both, let genre, found.items.isEmpty {
+                // Nothing with both in this stretch (the engine read up to 8 pages of each
+                // genre's list): said, and the list waits for Look Further, instead of reading
+                // on and on by itself (2026-11-11).
+                let note = TwoGenresNote.after(
+                    type: catalog.type, genre: genre, also: also, more: more, listEmpty: items.isEmpty,
+                    skip: skip, nextSkip: cursor)
+                (problem, further) = (note?.problem, note?.further ?? false)
+            } else if items.isEmpty {
+                problem = "Nothing was found."
             }
         case .failure(let error):
             problem = error.localizedDescription
@@ -114,7 +133,7 @@ final class MediaList {
         guard end(ticket, showing: wanted) else { return }
         let ranked = Recommending.rank(found, taste: taste, seen: Set(taste.map(\.id)))
         items = anime ? ranked.map(\.asAnime) : ranked
-        (more, cursor) = (false, items.count)
+        (more, cursor, reading) = (false, items.count, nil)
         if items.isEmpty {
             problem = found.isEmpty ? "The plugins couldn't be reached just now." : "Nothing new to suggest just now."
         }
@@ -125,7 +144,7 @@ final class MediaList {
     func search(_ model: AppModel, type: String, words: String) async {
         let wanted = "search|\(type)|\(words)"
         guard let ticket = begin(wanted) else { return }
-        (items, cursor, more) = ([], 0, false)
+        (items, cursor, more, reading) = ([], 0, false, nil)
         let answer: Result<MediaSearchAnswer, Error>
         do {
             answer = .success(

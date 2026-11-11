@@ -941,3 +941,29 @@ def test_a_childs_engine_hides_adults_only_add_ons(opened: rpc.Server) -> None:
     assert code(opened, "addon.mark", addon_id="a.b", adult=True) == rpc.USER_ERROR
     result(opened, "kids.set", on=False)
     assert len(result(opened, "addon.list")["addons"]) == 2
+
+
+def test_a_list_by_two_genres_is_asked_on_with_its_reading(
+    opened: rpc.Server, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`addon.catalog`'s `reading` (2026-11-11) is handed to the add-on reader as the last
+    answer gave it, and anything that isn't one is taken as none."""
+    from musicorg import addons
+
+    given: list[Any] = []
+
+    def catalog(addon: Any, kind: str, catalog_id: str, **asked: Any) -> dict[str, Any]:
+        given.append(asked["reading"])
+        return {"items": [], "more": True, "next_skip": 24, "reading": {"genre": None, "step": 3}}
+
+    monkeypatch.setattr(addons, "named", lambda addon_id: {"id": addon_id})
+    monkeypatch.setattr(addons, "catalog", catalog)
+    asked = {"addon_id": "a.b", "type": "movie", "id": "top", "genre": "Crime", "also": ["War"]}
+    answer = result(opened, "addon.catalog", **asked, skip=24, reading={"genre": None, "step": 3})
+    assert answer["reading"] == {"genre": None, "step": 3}
+    result(opened, "addon.catalog", **asked, reading={"genre": "War", "step": 50})
+    result(opened, "addon.catalog", **asked)
+    for wrong in ({"genre": 3, "step": 50}, {"genre": "War", "step": 0}, {"genre": "War"},
+                  {"step": True}, "War", [50]):  # fmt: skip
+        result(opened, "addon.catalog", **asked, reading=wrong)
+    assert given == [{"genre": None, "step": 3}, {"genre": "War", "step": 50}] + [None] * 7

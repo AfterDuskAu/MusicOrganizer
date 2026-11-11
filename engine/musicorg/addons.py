@@ -61,6 +61,10 @@ import hashlib
 import logging
 import os
 import re
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import quote, urlsplit
 
@@ -108,10 +112,17 @@ def _http(url: str) -> Any:
     import requests
 
     host = urlsplit(url).hostname or "the add-on"
+    # Named for what it is: some add-ons turn away a program that doesn't say
+    # (Anime Kitsu answered 403 to the library's own name, 2026-10-08).
+    headers = {"User-Agent": USER_AGENT}
     try:
-        # Named for what it is: some add-ons turn away a program that doesn't say
-        # (Anime Kitsu answered 403 to the library's own name, 2026-10-08).
-        response = requests.get(url, timeout=TIMEOUT_S, headers={"User-Agent": USER_AGENT})
+        try:
+            response = _session().get(url, timeout=TIMEOUT_S, headers=headers)
+        except requests.exceptions.ConnectionError as exc:
+            if isinstance(exc, requests.exceptions.Timeout):
+                raise
+            # A connection kept open that the add-on has since closed: asked once more, afresh.
+            response = _session().get(url, timeout=TIMEOUT_S, headers=headers)
     except requests.exceptions.Timeout:
         raise AddonError(f"{host} took too long to answer.") from None
     except requests.exceptions.RequestException:
@@ -122,6 +133,33 @@ def _http(url: str) -> Any:
         return response.json()
     except ValueError:
         raise AddonError(f"{host} gave an answer that can't be read.") from None
+
+
+_kept_lock = threading.Lock()
+_kept_session: Any = None
+
+
+def _session() -> Any:
+    """The connections to add-ons, kept open between questions (made the first time;
+    2026-11-11: a list by two genres asks an add-on for eight pages at once, a batch after a
+    batch, and a new connection each time costs a few tenths of a second, as TMDB's did).
+    No cookie is kept or sent: none ever was from one question to the next."""
+    global _kept_session
+    with _kept_lock:
+        if _kept_session is None:
+            from http.cookiejar import DefaultCookiePolicy
+
+            import requests
+            from requests.adapters import HTTPAdapter
+
+            made = requests.Session()
+            made.cookies.set_policy(DefaultCookiePolicy(allowed_domains=[]))
+            # Room for a batch of pages of one add-on, and a few add-ons asked about a film.
+            kept = HTTPAdapter(pool_connections=8, pool_maxsize=ALSO_AT_ONCE * 2)
+            made.mount("https://", kept)
+            made.mount("http://", kept)
+            _kept_session = made
+        return _kept_session
 
 
 # ---- the manifest ------------------------------------------------------------------------
@@ -290,8 +328,13 @@ def _catalog_named(addon: dict[str, Any], kind: str, catalog_id: str) -> dict[st
     raise AddonError(f"{addon.get('name', 'That add-on')} has no such list.")
 
 
-ALSO_PAGES = 8  # pages of a genre's list read at most for one page of two genres
-ALSO_ENOUGH = 24  # films with both genres that make a screenful
+# A list by two genres (2026-11-11): pages of EACH genre's list read at most for one answer
+# (400 titles at Cinemeta's 50 a page), how many pages are asked for at once (a batch takes
+# about as long as its slowest page: two to four seconds from Cinemeta for one it hasn't been
+# asked for lately), and how long to wait before asking a page that failed a second time.
+ALSO_PAGES = 8
+ALSO_AT_ONCE = 8
+ALSO_RETRY_S = 0.5
 
 
 def catalog(
@@ -303,34 +346,24 @@ def catalog(
     genre: str | None = None,
     skip: int = 0,
     also: list[str] | None = None,
+    reading: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """One page of a list: `{items: [Item], more, next_skip}`. `search`, `genre` and
-    `skip` are sent only when the catalog says it takes them; asking for one it doesn't
+    """One page of a list: `{items: [Item], more, next_skip, reading}`. `search`, `genre`
+    and `skip` are sent only when the catalog says it takes them; asking for one it doesn't
     take is the caller's mistake and is refused, not quietly dropped. `next_skip` is the
     `skip` that gives the page after this one.
 
     `also` (the owner, 2026-10-08: "documentary and crime") keeps only what's tagged
-    with every one of those genres as well. An add-on can be asked for one genre at a
-    time, so the list for `genre` is read a page after a page (up to `ALSO_PAGES`) and
-    what doesn't have the others is left out, until there's a screenful."""
-    wanted_too = [g.strip().casefold() for g in also or [] if isinstance(g, str) and g.strip()]
+    with every one of those genres as well (`_by_genres`). The page after is asked with
+    the answer's `next_skip` and `reading`; a list by one genre answers `reading: None`."""
+    wanted_too = [g.strip() for g in also or [] if isinstance(g, str) and g.strip()]
     if wanted_too:
         if not genre:
             raise AddonError("Choose a first genre before adding another.")
-        found: list[dict[str, Any]] = []
-        cursor, more = skip, True
-        for _ in range(ALSO_PAGES):
-            page = catalog(addon, kind, catalog_id, search=search, genre=genre, skip=cursor)
-            cursor = page["next_skip"]
-            found += [
-                item
-                for item in page["items"]
-                if all(g in {have.casefold() for have in item["genres"]} for g in wanted_too)
-            ]
-            more = page["more"] and bool(page["items"])
-            if not more or len(found) >= ALSO_ENOUGH:
-                break
-        return {"items": found, "more": more, "next_skip": cursor}
+        genres = [genre, *wanted_too]
+        return _by_genres(
+            addon, kind, catalog_id, search=search, genres=genres, skip=skip, reading=reading
+        )
     if not supports(addon, "catalog", kind):
         raise AddonError(f"{addon.get('name', 'That add-on')} has no lists of that kind.")
     wanted = _catalog_named(addon, kind, catalog_id)
@@ -361,7 +394,181 @@ def catalog(
     # the list has pages at all, and the app stops at a page with nothing new on it.
     said = raw.get("hasMore")
     more = True if said is True else bool(items) and "skip" in takes
-    return {"items": items, "more": more, "next_skip": skip + len(metas)}
+    return {"items": items, "more": more, "next_skip": skip + len(metas), "reading": None}
+
+
+@dataclass
+class _Lane:
+    """One genre's list as it's read for a list by two genres, during one answer."""
+
+    genre: str
+    next: int  # the next page not read yet
+    step: int  # titles a page (nought until a page has come)
+    found: list[dict[str, Any]] = field(default_factory=list)
+    seen: set[str] = field(default_factory=set)
+    read: int = 0
+    ended: bool = False
+    failure: AddonError | None = None
+
+
+def _by_genres(
+    addon: dict[str, Any],
+    kind: str,
+    catalog_id: str,
+    *,
+    search: str | None,
+    genres: list[str],
+    skip: int,
+    reading: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """A list by two genres or more (the owner, 2026-10-08: "documentary and crime"; made
+    quick 2026-11-11, after Crime + Documentary in Series took 10 to 40 seconds to show its
+    first few, and stopped for good when one page was slower than the add-on's time limit).
+    An add-on can be asked for one genre at a time, so one genre's list is read and only
+    what has every other genre too is kept.
+
+    - Which list: the one with the pair near its top. Cinemeta's Crime list had no
+      documentary in its first 200 series, while its Documentary list's first page had ten
+      crime series. So at first each genre's list is read side by side, and once one has
+      something with every genre, only that one is read (`reading` says which, for the
+      pages after).
+    - Pages are asked for `ALSO_AT_ONCE` at a time, `step` apart, not one after another
+      (a page Cinemeta hasn't been asked for lately takes two to four seconds).
+    - What's found is answered as soon as there's any, not after a screenful.
+    - A page that fails is asked again once; if it fails again, what's found so far is
+      still answered, and the next answer begins at that page. (One page slower than the
+      add-on's time limit used to lose the whole answer.) Nothing found and a page failed:
+      that failure is raised.
+    - `ALSO_PAGES` of each list read with nothing in them: answered empty, with `more`
+      (the app stops there and offers to look further down). The lists' end: `more` is
+      false, so a pair with nothing says so instead of looking for ever."""
+    if not supports(addon, "catalog", kind):
+        raise AddonError(f"{addon.get('name', 'That add-on')} has no lists of that kind.")
+    listing = _catalog_named(addon, kind, catalog_id)
+    takes = {one["name"]: one for one in listing["extra"]}
+    if "genre" not in takes:
+        raise AddonError("That list can't be asked by genre.")
+    paged = "skip" in takes
+    offered = {name.casefold() for name in takes["genre"].get("options") or []}
+    wanted = {name.casefold() for name in genres}
+    step = reading["step"] if reading else 0
+    if reading and reading.get("genre"):
+        lanes = [_Lane(reading["genre"], skip, step)]
+    else:
+        # The first genre's own list, and each other genre's that the list offers.
+        names: list[str] = []
+        for name in genres:
+            if any(had.casefold() == name.casefold() for had in names):
+                continue
+            if not names or not offered or name.casefold() in offered:
+                names.append(name)
+        lanes = [_Lane(name, skip, step) for name in names]
+
+    with ThreadPoolExecutor(max_workers=ALSO_AT_ONCE) as pool:
+        while not any(lane.found for lane in lanes):
+            # The pages to ask now: one of a list until its page size is known, then up to
+            # `ALSO_AT_ONCE`, taken in turn from each list still being read.
+            asks: list[tuple[int, int]] = []  # (which list, its skip)
+            planned = [(lane.next, 0) for lane in lanes]
+            adding = True
+            while adding and len(asks) < ALSO_AT_ONCE:
+                adding = False
+                for index, lane in enumerate(lanes):
+                    if len(asks) >= ALSO_AT_ONCE:
+                        break
+                    at, count = planned[index]
+                    if (
+                        lane.ended
+                        or lane.failure is not None
+                        or lane.read + count >= ALSO_PAGES
+                        or (count > 0 and not (lane.step > 0 and paged))
+                        or (lane.read > 0 and not paged)
+                    ):
+                        continue
+                    asks.append((index, at))
+                    planned[index] = (at + lane.step, count + 1)
+                    adding = True
+            if not asks:
+                break
+            asked = [
+                pool.submit(_page_tried, addon, kind, catalog_id, search, lanes[index].genre, at)
+                for index, at in asks
+            ]
+            answers = [one.result() for one in asked]
+            # Every list of one add-on's catalog has the same page size: the biggest page seen.
+            biggest = max(
+                [lane.step for lane in lanes]
+                + [
+                    answer["next_skip"] - at
+                    for (_, at), answer in zip(asks, answers, strict=True)
+                    if not isinstance(answer, AddonError)
+                ]
+            )
+            for index, lane in enumerate(lanes):
+                for (which, at), answer in zip(asks, answers, strict=True):
+                    if which != index:
+                        continue
+                    if lane.ended or lane.failure is not None:
+                        break
+                    if isinstance(answer, AddonError):
+                        lane.failure = answer
+                        continue
+                    lane.read += 1
+                    lane.step = max(biggest, 1)
+                    lane.next = at + lane.step
+                    # In a genre's own list counts as that genre (the add-on put it there,
+                    # though it may not say so in its genres); every other genre is looked for.
+                    others = wanted - {lane.genre.casefold()}
+                    for item in answer["items"]:
+                        if item["id"] in lane.seen:
+                            continue
+                        lane.seen.add(item["id"])
+                        if others <= {have.casefold() for have in item["genres"]}:
+                            lane.found.append(item)
+                    if not answer["items"] or not answer["more"]:
+                        lane.ended = True
+
+    # Something found: the list with the most (the first genre's, if they're even) is the one
+    # read from now on.
+    kept = max(lanes, key=lambda lane: len(lane.found))  # (max keeps the first of equals)
+    if kept.found:
+        return {
+            "items": kept.found,
+            "more": not kept.ended,
+            "next_skip": kept.next,
+            "reading": {"genre": kept.genre, "step": kept.step},
+        }
+    failed = next((lane.failure for lane in lanes if lane.failure is not None), None)
+    if failed is not None:
+        raise failed
+    # Nothing yet: the lists not at their end are read further down by the next answer, side
+    # by side while there are two. (They're the same catalog, read as far.)
+    going = [lane for lane in lanes if not lane.ended]
+    if not going:
+        return {"items": [], "more": False, "next_skip": lanes[0].next, "reading": None}
+    first = going[0]
+    return {
+        "items": [],
+        "more": True,
+        "next_skip": first.next,
+        "reading": {"genre": first.genre if len(going) == 1 else None, "step": first.step},
+    }
+
+
+def _page_tried(
+    addon: dict[str, Any], kind: str, catalog_id: str, search: str | None, genre: str, skip: int
+) -> dict[str, Any] | AddonError:
+    """One page of one genre's list, asked a second time if the first fails: the page, or
+    what went wrong the second time. (Anything but an add-on's failure is a fault here, and
+    is raised as it is.)"""
+    try:
+        return catalog(addon, kind, catalog_id, search=search, genre=genre, skip=skip)
+    except AddonError:
+        time.sleep(ALSO_RETRY_S)
+    try:
+        return catalog(addon, kind, catalog_id, search=search, genre=genre, skip=skip)
+    except AddonError as exc:
+        return exc
 
 
 SEARCH_PAGES = 3  # of one add-on's answer to a search, when it has pages
