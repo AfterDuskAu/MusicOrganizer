@@ -319,6 +319,64 @@ final class HomeWatchingTests: XCTestCase {
         XCTAssertEqual(history.continuing(finished: finished, progress: progress).map(\.id), ["tt9", "tt1"])
     }
 
+    /// 2026-11-11, the owner, for every app: "when i hold down on a series, it has add to
+    /// watchlist, add to favourites, Add a new option as mark as watched, this would include every
+    /// episode in it". On the Mac, a series' card's right-click menu.
+    func testMarkingAWholeSeriesWatched() throws {
+        var history = WatchHistory()
+        var finished = Finished()
+        var progress = SeriesProgress()
+        // On the Watchlist, three episodes and a special out, one coming; the first watched, the
+        // second left part way.
+        let episodes = try self.episodes("tt9", 3) + [
+            try video("tt9", 0, 1, released: at(-500)), try video("tt9", 1, 4, released: at(10_000)),
+        ]
+        finished.mark("tt9:1:1", watched: true, now: at(0))
+        history.watched(episode("tt9", 1, 2, seconds: 700, length: 2335, minute: 10))
+        progress.learned("tt9", episodes: episodes, finished: finished, now: at(20), listed: true)
+        XCTAssertEqual(history.continuing(finished: finished, progress: progress).map(\.id), ["tt9"])
+        XCTAssertFalse(progress.isWatched("tt9", finished: finished))
+        // Mark as Watched: every episode out, not the special, not the one still to come.
+        let every = SeriesProgress.everyOut(in: episodes, now: at(30))
+        XCTAssertEqual(every, ["tt9:1:1", "tt9:1:2", "tt9:1:3"])
+        progress.marked(every, watched: true, of: "tt9", in: &finished, now: at(30))
+        progress.learned("tt9", episodes: episodes, finished: finished, now: at(30), listed: true)
+        // Watched, nothing new, nothing to carry on with (episode 2 was left part way before it
+        // was marked).
+        XCTAssertTrue(progress.isWatched("tt9", finished: finished))
+        XCTAssertTrue(progress.newEpisodes("tt9", finished: finished).isEmpty)
+        XCTAssertTrue(history.continuing(finished: finished, progress: progress).isEmpty)
+        // A paired device is given it with the rest of what's watched.
+        let given = WatchSync.state(watchlist: Watchlist(), finished: finished, history: history)
+        XCTAssertEqual(Set(given.watched.map(\.id)), Set(every))
+        // Played again part way afterwards: carried on with again.
+        history.place("tt9", seconds: 900, length: 2335, now: at(40))
+        XCTAssertEqual(history.continuing(finished: finished, progress: progress).map(\.id), ["tt9"])
+        // Mark as Not Watched: every one of them, and a device that still has them watched
+        // doesn't mark them again.
+        progress.marked(every, watched: false, of: "tt9", in: &finished, now: at(50))
+        XCTAssertTrue(every.allSatisfy { !finished.contains($0) && finished.unmarked.contains($0) })
+        var list = Watchlist()
+        WatchSync.merge(given, into: &list, finished: &finished, history: &history)
+        XCTAssertTrue(every.allSatisfy { !finished.contains($0) })
+        XCTAssertFalse(progress.isWatched("tt9", finished: finished))
+    }
+
+    /// A film marked watched after it was left part way isn't carried on with (2026-11-11).
+    func testAFilmMarkedWatchedLeavesContinueWatching() {
+        var history = WatchHistory()
+        var finished = Finished()
+        var film = self.film("tt7", seconds: 1800, length: 6000)
+        film.at = at(0)
+        history.watched(film)
+        XCTAssertTrue(history.entries[0].isPartWay(finished: finished))
+        finished.mark("tt7", watched: true, now: at(10))
+        XCTAssertFalse(history.entries[0].isPartWay(finished: finished))
+        // Watched again part way: carried on with.
+        history.place("tt7", seconds: 600, length: 6000, now: at(20))
+        XCTAssertTrue(history.entries[0].isPartWay(finished: finished))
+    }
+
     /// The page opens at the season with the episode to carry on with (2026-11-11).
     func testASeriesPageOpensAtTheSeasonReached() throws {
         let videos = try episodes("tt9", 3) + [try video("tt9", 2, 1, released: at(-100))]

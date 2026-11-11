@@ -357,8 +357,12 @@ private struct HomeRow: View {
         switch section.kind {
         case "continue", "recent":
             // A series is carried on with between episodes too, the one watched last first
-            // (`WatchHistory.continuing`); a film only part way through.
-            let continuing = historyKind == .series ? model.continuingSeries : model.history.unfinished(historyKind)
+            // (`WatchHistory.continuing`); a film only part way through, and not marked watched
+            // since (2026-11-11).
+            let continuing =
+                historyKind == .series
+                ? model.continuingSeries
+                : model.history.recent(historyKind).filter { $0.isPartWay(finished: model.finished) }
             let entries = (section.kind == "continue" ? continuing : model.history.recent(historyKind))
                 .filter { $0.item != nil }
             if entries.isEmpty {
@@ -492,6 +496,7 @@ private struct HomeRow: View {
         // What's opened from a list of anime is marked as anime, as in Anime Finder.
         Button { model.open(isAnime ? item.asAnime : item) } label: { MediaCard(item: item) }
             .buttonStyle(.plain)
+            .titleMenu(item, model: model)
     }
 
     private func note(_ text: String) -> some View {

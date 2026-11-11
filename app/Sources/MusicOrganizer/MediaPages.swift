@@ -72,6 +72,48 @@ struct WebPicture: View {
     }
 }
 
+/// A film's or a series' card's right-click items (2026-11-11, as the video apps' long press
+/// has them): the Watchlist, favourites, and watched or not; for a series, every episode of it
+/// that's out (`AppModel.markSeriesWatched`). Never in the Finder kept apart, where nothing is
+/// remembered. The model is handed over: a menu doesn't always have the window's environment.
+struct TitleMenuItems: View {
+    let item: MediaItem
+    let model: AppModel
+
+    var body: some View {
+        if model.watchlist.contains(item) {
+            Button("Remove From Watchlist") { model.toggleWatchlist(item) }
+        } else {
+            Button("Add to Watchlist") { model.toggleWatchlist(item) }
+        }
+        Button(model.mediaFavourites.contains(item) ? "Remove From Favourites" : "Add to Favourites") {
+            model.toggleFavourite(item)
+        }
+        let seen = model.isWatched(item.id)
+        Button(seen ? "Mark as Not Watched" : "Mark as Watched") {
+            if item.type == "series" {
+                model.markSeriesWatched(item, !seen)
+            } else {
+                model.markWatched([item.id], !seen)
+            }
+        }
+        .disabled(model.markingSeries.contains(item.id))
+    }
+}
+
+extension View {
+    /// A film's or a series' card with its right-click menu (`TitleMenuItems`); anything else
+    /// (a channel) as it is.
+    @ViewBuilder
+    func titleMenu(_ item: MediaItem, model: AppModel, shown: Bool = true) -> some View {
+        if shown, item.type == "movie" || item.type == "series" {
+            contextMenu { TitleMenuItems(item: item, model: model) }
+        } else {
+            self
+        }
+    }
+}
+
 /// One film or channel in a grid: its picture, and its name under it.
 struct MediaCard: View {
     let name: String
@@ -166,8 +208,12 @@ struct MediaGrid: View {
     var mayAskMore = true
     /// Said when nothing of the list is kept.
     var noneKept = ""
+    /// A film's or a series' card has its right-click menu (`TitleMenuItems`): not in the
+    /// Finder kept apart.
+    var menu = false
     let open: (MediaItem) -> Void
     let showMore: () -> Void
+    @Environment(AppModel.self) private var model
 
     /// The cards in sight (a lazy grid makes a card as it comes near the window, and lets it go
     /// once it's well away), to know when the end is.
@@ -224,6 +270,7 @@ struct MediaGrid: View {
                     ForEach(items) { item in
                         Button { open(item) } label: { MediaCard(item: item) }
                             .buttonStyle(.plain)
+                            .titleMenu(item, model: model, shown: menu)
                             .onAppear { inSight.insert(item.id) }
                             .onDisappear { inSight.remove(item.id) }
                     }
@@ -1037,7 +1084,7 @@ struct MovieFinderView: View {
                 : "Nothing here was first made in \(OriginalLanguage.name(rules.language)), as TMDB has it. "
                     + "The choice is in Settings → Plugins → TMDB.")
         return MediaGrid(
-            list: list, width: 140, keep: keep, waiting: waiting, mayAskMore: ahead, noneKept: none,
+            list: list, width: 140, keep: keep, waiting: waiting, mayAskMore: ahead, noneKept: none, menu: !isAdult,
             open: { open(isAnime ? $0.asAnime : $0) }
         ) {
             Task {
@@ -2422,13 +2469,17 @@ struct WatchlistView: View {
                         } else {
                             Button("Add to Watchlist") { model.toggleWatchlist(item) }
                         }
-                        // A movie by the owner's word; a series' episodes are marked on its page.
-                        if item.type != "series" {
-                            let seen = model.isWatched(item.id)
-                            Button(seen ? "Mark as Not Watched" : "Mark as Watched") {
+                        // A movie by the owner's word; a series, every episode of it that's
+                        // out (2026-11-11; each one can still be marked on its page).
+                        let seen = model.isWatched(item.id)
+                        Button(seen ? "Mark as Not Watched" : "Mark as Watched") {
+                            if item.type == "series" {
+                                model.markSeriesWatched(item, !seen)
+                            } else {
                                 model.markWatched([item.id], !seen)
                             }
                         }
+                        .disabled(model.markingSeries.contains(item.id))
                     }
                 }
             }

@@ -182,6 +182,26 @@ public struct SeriesProgress: Equatable, Sendable {
         series[id] = known
     }
 
+    /// Films or episodes marked watched, or not, by the owner, from a menu: one, every episode
+    /// before one, or every episode of a series that's out (a series' card, 2026-11-11: "Add a
+    /// new option as mark as watched, this would include every episode in it"). Episodes say
+    /// their series, which may be caught up by them. Marked not watched, each is kept as the
+    /// owner's word (`Finished.unmarked`), so a paired device's sync doesn't mark it again.
+    public mutating func marked(
+        _ ids: [String], watched: Bool, of series: String?, in done: inout Finished, now: Date = Date()
+    ) {
+        for id in ids {
+            done.mark(id, watched: watched, now: now)
+            if watched, let series { finished(id, of: series) }
+        }
+    }
+
+    /// Every episode of a series that's out, by season and number, specials left out: what a
+    /// series' card's Mark as Watched marks.
+    public static func everyOut(in videos: [MediaDetails.Video], now: Date = Date()) -> [String] {
+        out(in: videos, now: now).map(\.id)
+    }
+
     /// An episode has been finished: if it's the series' latest, the owner is caught up.
     public mutating func finished(_ episodeId: String, of id: String) {
         guard series[id]?.latest == episodeId else { return }

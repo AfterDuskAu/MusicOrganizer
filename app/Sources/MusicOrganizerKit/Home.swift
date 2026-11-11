@@ -269,11 +269,21 @@ public struct WatchHistory: Equatable, Sendable {
         /// How far through it is, 0 to 1.
         public var progress: Double { length > 0 ? min(max(seconds / length, 0), 1) : 0 }
 
+        /// Left part way, for Continue Watching: part way through (`isUnfinished`), and not
+        /// marked watched since it was last played (2026-11-11: a film, or a whole series from
+        /// its card, marked watched by the owner, here or on a paired device, isn't carried on
+        /// with). One watched again part way after it was marked still is.
+        public func isPartWay(finished: Finished) -> Bool {
+            guard isUnfinished else { return false }
+            guard let own = kind == .series ? episodeId : id, let marked = finished.day(of: own) else { return true }
+            return marked <= at
+        }
+
         /// A series between episodes: the episode it's at was played to its end (here,
         /// or as `finished` has it from elsewhere) and isn't being watched again part way.
         /// Continue Watching plays the episode after it (2026-10-18).
         public func isBetweenEpisodes(finished: Finished) -> Bool {
-            guard kind == .series, !isUnfinished, let episodeId else { return false }
+            guard kind == .series, !isPartWay(finished: finished), let episodeId else { return false }
             return progress >= Finished.mark || finished.contains(episodeId)
         }
 
@@ -379,7 +389,7 @@ public struct WatchHistory: Equatable, Sendable {
             {
                 return false
             }
-            return entry.isUnfinished
+            return entry.isPartWay(finished: finished)
                 || (begun.contains(entry.id) && !progress.isWatched(entry.id, finished: finished))
         }
     }

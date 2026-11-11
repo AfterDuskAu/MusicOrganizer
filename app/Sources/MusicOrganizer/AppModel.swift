@@ -462,13 +462,45 @@ final class AppModel {
     /// A film or episodes marked watched, or not, by the owner (an episode's menu, a
     /// card's). Episodes say their series, which may be caught up by it.
     func markWatched(_ ids: [String], _ watched: Bool, of series: MediaItem? = nil) {
-        for id in ids {
-            finished.mark(id, watched: watched)
-            if watched, let series { seriesProgress.finished(id, of: series.id) }
-        }
+        // Changed on copies and put back whole (`@Observable`'s properties aren't changed in place).
+        var (done, progress) = (finished, seriesProgress)
+        progress.marked(ids, watched: watched, of: series?.id, in: &done)
+        (finished, seriesProgress) = (done, progress)
         finished.save()
         seriesProgress.save()
         recountWatched()
+    }
+
+    /// The series whose episodes are being found for Mark as Watched on its card.
+    private(set) var markingSeries: Set<String> = []
+
+    /// Mark as Watched in a series' card's right-click menu (the owner, 2026-11-11, for every
+    /// app: "Add a new option as mark as watched, this would include every episode in it"):
+    /// every episode of it that's out (`SeriesProgress.everyOut`), read from its add-on when it
+    /// hasn't been. Not watched: every one of them is marked not watched, as the owner's word.
+    /// A paired video app is given it with the rest of the profile's watching.
+    func markSeriesWatched(_ series: MediaItem, _ watched: Bool) {
+        guard series.type == "series", !markingSeries.contains(series.id) else { return }
+        markingSeries.insert(series.id)
+        Task {
+            defer { markingSeries.remove(series.id) }
+            var episodes = seriesEpisodes[series.id]
+            if episodes == nil {
+                episodes = (try? await ask(
+                    "addon.details", ["type": series.type, "id": series.id, "adult": false], as: MediaDetails.self))?
+                    .videos
+            }
+            guard let episodes, !episodes.isEmpty else {
+                notice = "\(series.name)'s episodes couldn't be found just now, so nothing was marked. Try again in a moment."
+                return
+            }
+            markWatched(SeriesProgress.everyOut(in: episodes), watched, of: series)
+            // Its latest episode and its new ones, worked out again with these marks.
+            learn(series, episodes: episodes)
+            notice = watched
+                ? "Marked every episode of \(series.name) as watched."
+                : "Marked every episode of \(series.name) as not watched."
+        }
     }
 
     /// What an import from Stremio found, put in this profile (`StremioLibrary.plan`): added
@@ -854,7 +886,7 @@ final class AppModel {
     func carryOn(_ series: MediaItem) {
         if startingEpisode != series.id { startingEpisode = nil }
         let entry = history.entries.first { $0.id == series.id }
-        if let entry, entry.isUnfinished {
+        if let entry, entry.isPartWay(finished: finished) {
             resume(entry)
         } else {
             continueSeries(series, entry: entry)
