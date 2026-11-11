@@ -1,5 +1,6 @@
 import AppKit
 import ImageIO
+import MusicOrganizerKit
 
 /// Pictures from the web (films' and series' posters, channels' pictures, videos' frames, people's
 /// photos), decoded once and kept ready to show (`WebPicture`). The owner, 2026-11-07, as on the
@@ -56,12 +57,19 @@ enum Pictures {
         return image
     }
 
-    /// The picture's bytes, or nil when they can't be had: no answer, or an answer that isn't one
-    /// (the address has gone).
+    /// Pictures are asked for with a shorter wait than URLSession's minute: a server that stalls
+    /// a request is given up on after 20 seconds of silence and asked again (`PictureFetch`).
+    /// The same cache as before (`URLCache.shared`).
+    private static let session: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 20
+        return URLSession(configuration: config)
+    }()
+
+    /// The picture's bytes, or nil when they can't be had: gone (the address has gone), or no
+    /// answer after a few tries (`PictureFetch`).
     private static func fetched(_ url: URL) async -> Data? {
-        guard let (data, answer) = try? await URLSession.shared.data(from: url) else { return nil }
-        if let http = answer as? HTTPURLResponse, !(200..<300).contains(http.statusCode) { return nil }
-        return data
+        await PictureFetch.data { try await session.data(from: url) }
     }
 
     /// The longest side of the largest screen, in pixels: a picture with no frame of its own (a
