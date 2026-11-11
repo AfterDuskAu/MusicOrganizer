@@ -1014,14 +1014,16 @@ struct MovieFinderView: View {
                             : "Nothing on your Watchlist yet. Open \(isSeries ? "a series" : "a movie") "
                                 + "and click Add to Watchlist.")
                 } else {
+                    // TMDB's lists are asked in the original language chosen (2026-11-11).
+                    let language = listLanguage
                     filmGrid(list, chosen, genre: wanted, also: second)
-                    .task(id: "\(Self.key(chosen))|\(wanted ?? "")|\(search)|\(second)|\(everywhere)") {
+                    .task(id: "\(Self.key(chosen))|\(wanted ?? "")|\(search)|\(second)|\(everywhere)|\(language)") {
                         if everywhere {
                             await list.search(model, type: chosen.catalog.type, words: search)
                         } else {
                             await list.load(
                                 model, addon: chosen.addon, catalog: chosen.catalog, genre: wanted,
-                                search: search, also: second)
+                                search: search, also: second, language: language)
                         }
                     }
                 }
@@ -1090,7 +1092,7 @@ struct MovieFinderView: View {
             Task {
                 await list.load(
                     model, addon: chosen.addon, catalog: chosen.catalog, genre: genre, search: search, also: also,
-                    adding: true)
+                    language: listLanguage, adding: true)
             }
         }
         .task(id: "\(list.items.count)|\(rules.wanted(languageToo: languageToo))") {
@@ -1147,6 +1149,13 @@ struct MovieFinderView: View {
     }
     /// Every plugin is searched at once, except in the Finder kept apart.
     private var searchesEverything: Bool { !isAdult }
+
+    /// The original language TMDB's lists are asked in (2026-11-11, TMDB the standard plugin):
+    /// the one chosen in Settings → Plugins → TMDB, with a key, in Movie Finder and Series
+    /// Finder; "" for all.
+    private var listLanguage: String {
+        apart ? OriginalLanguage.all : model.titleRules(language: originalLanguage).language
+    }
 
     private static func plural(_ kind: String) -> String {
         switch kind {
@@ -1220,7 +1229,8 @@ struct MovieView: View {
     /// A series: the season showing, and the episode whose ways to play are showing.
     @State private var season: Int?
     @State private var episode: MediaDetails.Video?
-    /// From TMDB, with the computer's key (2026-11-05): the cast's photos, a film's money.
+    /// From TMDB, with the computer's key (2026-11-05): the cast's photos, a film's money; and
+    /// since 2026-11-11 (TMDB the standard plugin) the page as TMDB has it, shown first.
     @State private var extras: TMDBDetails?
     /// Someone from the cast whose page is open over this one.
     @State private var person: TMDBCast?
@@ -1345,11 +1355,6 @@ struct MovieView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .task(id: "\(film.id)|\(model.tmdbHasKey)") {
-            // A plugin for adults is never asked about, and nor is TMDB for its titles.
-            guard model.tmdbHasKey, !apart else { return }
-            extras = try? await model.ask("tmdb.details", ["type": film.type, "id": film.id], as: TMDBDetails.self)
-        }
         .background {
             Color.black
                 .overlay {
@@ -1363,27 +1368,62 @@ struct MovieView: View {
         .environment(\.colorScheme, .dark)
         .onChange(of: model.episodeToChoose) { showAskedEpisode() }
         .onChange(of: active) { showAskedEpisode() }
-        .task(id: film.id) {
+        .task(id: "\(film.id)|\(model.tmdbHasKey)") {
+            // Read afresh (a TMDB key saved or removed while the page is open): nothing of the
+            // last reading's trouble stays.
+            (problem, offline) = (nil, false)
             // What's of it on this Mac, for its Downloaded marks.
             if !apart, !model.keptShelfLooked { await model.lookAtKeptFilms() }
             // `adult`: which side of the fence answers. A title from the Finder for
             // adults is asked of those add-ons only, and any other title never of them.
             let asked: [String: Any] = ["type": film.type, "id": film.id, "adult": apart]
+            // The standard plugin TMDB (the owner, 2026-11-11: "Anything it cant get will come
+            // from other plugins"), with a key, asked at once with the plugins: its details
+            // first and theirs for the rest (`MediaDetails.tmdbFirst`), and from the same answer
+            // the cast's photos and a film's money (2026-11-05). A plugin for adults is never
+            // asked about, and nor is TMDB for its titles.
+            let asksTMDB = model.tmdbHasKey && !apart
+            async let fromTMDB: TMDBDetails? = asksTMDB
+                ? (try? await model.ask("tmdb.details", ["type": film.type, "id": film.id], as: TMDBDetails.self))
+                : nil
+            let read: Result<MediaDetails, Error>
             do {
-                let read = try await model.ask("addon.details", asked, as: MediaDetails.self)
-                details = read
-                // A little of it kept on this Mac, for when its plugins can't be reached.
-                if let here { model.keepDetails(read, of: here) }
+                read = .success(try await model.ask("addon.details", asked, as: MediaDetails.self))
             } catch {
+                read = .failure(error)
+            }
+            extras = await fromTMDB
+            let tmdbPage = extras?.page(id: film.id, type: film.type)
+            switch read {
+            case .success(let theirs):
+                let shown = MediaDetails.tmdbFirst(tmdbPage, theirs)
+                details = shown
+                // A little of it kept on this Mac, for when its plugins can't be reached.
+                if let here, let shown { model.keepDetails(shown, of: here) }
+            case .failure(let error):
                 // Out of reach: a series that's here shows the episodes that are, with
                 // what was kept of it (as Bear Media II's Downloaded page does offline).
                 if let here, let kept = here.offline(model.keptTitle(here)) {
-                    details = kept
+                    details = MediaDetails.tmdbFirst(tmdbPage, kept)
                     offline = true
                     problem = "Your plugins can't be reached just now, so only the episodes on this Mac are shown."
+                } else if let tmdbPage {
+                    // No plugin had it, or none could be asked: TMDB's page.
+                    details = tmdbPage
                 } else {
                     problem = error.localizedDescription
                 }
+            }
+            // A series no plugin has episodes of: TMDB's (2026-11-11), each by its IMDb id,
+            // season and number, as the plugins give theirs, so its ways to play are asked of
+            // them as any episode's are. A series a plugin has episodes of keeps the plugin's:
+            // TMDB's numbering differs for some series.
+            if isSeries, asksTMDB, !offline, let shown = details, shown.videos.isEmpty,
+                let found = try? await model.ask(
+                    "tmdb.episodes", ["type": film.type, "id": film.id], as: TMDBEpisodes.self),
+                !found.videos.isEmpty
+            {
+                details = shown.withEpisodes(found.videos)
             }
             if isSeries {
                 // A series is played an episode at a time: the season with the episode to

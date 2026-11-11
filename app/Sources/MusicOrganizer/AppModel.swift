@@ -2966,12 +2966,15 @@ final class AppModel {
     /// Whether the computer has a TMDB key: asked each time the engine opens.
     func readTMDB() async {
         tmdbHasKey = (try? await ask("tmdb.status", [:], as: TMDBStatus.self))?.hasKey ?? false
+        // TMDB's genres, for its lists' menus (2026-11-11, TMDB the standard plugin).
+        await media.readTMDBGenres(self)
     }
 
     /// Save the owner's TMDB key, once TMDB has taken it. Nil when it's saved; else why not.
     func connectTMDB(_ key: String) async -> String? {
         do {
             tmdbHasKey = try await ask("tmdb.connect", ["key": key], as: TMDBStatus.self).hasKey
+            await media.readTMDBGenres(self)
             return nil
         } catch {
             return error.localizedDescription

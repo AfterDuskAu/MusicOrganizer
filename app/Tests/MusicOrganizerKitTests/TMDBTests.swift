@@ -71,11 +71,100 @@ final class TMDBTests: XCTestCase {
     }
 
     func testTmdbsListsAreOfferedLikeAPluginsInTheFinders() {
-        let names = TMDB.addon.catalogs.filter { $0.type == "movie" }.map(\.name)
-        XCTAssertTrue(names == ["TMDB – Popular", "TMDB – Top Rated", "TMDB – Upcoming"])
-        XCTAssertTrue(TMDB.addon.catalogs.filter { $0.type == "series" }.map(\.id) == ["popular", "top_rated", "upcoming"])
-        XCTAssertTrue(TMDB.addon.catalogs.allSatisfy { $0.canBeBrowsed && $0.takes("skip") && $0.genres.isEmpty })
-        XCTAssertTrue(TMDB.isTMDB(TMDB.addon) && !TMDB.addon.isAdult)
+        let plain = TMDB.addon()
+        let names = plain.catalogs.filter { $0.type == "movie" }.map(\.name)
+        XCTAssertTrue(names == ["TMDB – Popular", "TMDB – Top Rated", "TMDB – Upcoming", "TMDB – Trending"])
+        XCTAssertTrue(plain.catalogs.filter { $0.type == "series" }.map(\.id) == ["popular", "top_rated", "upcoming", "trending"])
+        // Before TMDB's genres have come, its lists have no genre menu.
+        XCTAssertTrue(plain.catalogs.allSatisfy { $0.canBeBrowsed && $0.takes("skip") && $0.genres.isEmpty })
+        XCTAssertTrue(TMDB.isTMDB(plain) && !plain.isAdult)
+    }
+
+    func testTheStandardPluginsListsByTmdbsOwnGenresButTrending() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let found = try decoder.decode(TMDBGenres.self, from: Data(#"""
+            {"genres": {"movie": ["Comedy", "Horror"], "series": ["Action & Adventure", "Crime", "Documentary"]}}
+            """#.utf8))
+        let addon = TMDB.addon(genres: found.genres)
+        let popular = try XCTUnwrap(addon.catalogs.first { $0.type == "series" && $0.id == "popular" })
+        XCTAssertTrue(popular.genres == ["Action & Adventure", "Crime", "Documentary"])
+        XCTAssertTrue(popular.offersEveryGenre && popular.genre(chosen: "Crime") == "Crime")
+        XCTAssertTrue(popular.genre(chosen: "Sci-Fi") == nil)  // another plugin's genre: none here
+        XCTAssertTrue(addon.catalogs.first { $0.type == "movie" && $0.id == "top_rated" }?.genres == ["Comedy", "Horror"])
+        // Trending is the week's, by no genre.
+        XCTAssertTrue(addon.catalogs.filter { $0.id == "trending" }.allSatisfy { $0.genres.isEmpty && $0.takes("skip") })
+        XCTAssertTrue(addon.catalogs.allSatisfy(\.canBeBrowsed))
+    }
+
+    func testATitlesPageFromTMDBWithThePluginsForTheRest() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let answer = try decoder.decode(TMDBDetails.self, from: Data(#"""
+            {"tmdb_id": 1, "budget": null, "revenue": null,
+             "cast": [{"person_id": 5, "name": "Robert Durst", "character": null, "photo": null}],
+             "name": "The Jinx", "poster": "https://image.tmdb.org/t/p/w500/p.jpg",
+             "background": "https://image.tmdb.org/t/p/w1280/b.jpg", "year": "2015", "rating": 8.0,
+             "genres": ["Documentary", "Crime"], "description": "Robert Durst.", "runtime_min": 45,
+             "directors": ["Andrew Jarecki"], "trailer_video_id": "x2"}
+            """#.utf8))
+        let tmdb = try XCTUnwrap(answer.page(id: "tt4299972", type: "series"))
+        XCTAssertTrue(tmdb.name == "The Jinx" && tmdb.runtimeMin == 45 && tmdb.trailerVideoId == "x2")
+        XCTAssertTrue(tmdb.cast == ["Robert Durst"] && tmdb.directors == ["Andrew Jarecki"] && tmdb.videos.isEmpty)
+        // The plugin's page fills in what TMDB hasn't (its logo), and its episodes are kept:
+        // their numbering is the one the ways to play go by.
+        let plugin = MediaDetails(
+            id: "tt4299972", type: "series", name: "The Jinx: The Life and Deaths of Robert Durst", poster: "plugin.jpg",
+            year: "2015", rating: 7.9, genres: ["Crime"], description: nil, background: nil, logo: "logo.png",
+            runtimeMin: nil, cast: ["Someone"], directors: [], trailerVideoId: "old",
+            videos: [MediaDetails.Video(id: "tt4299972:1:1", title: "Chapter 1", season: 1, episode: 1)])
+        let shown = try XCTUnwrap(MediaDetails.tmdbFirst(tmdb, plugin))
+        XCTAssertTrue(shown.id == "tt4299972" && shown.name == "The Jinx")
+        XCTAssertTrue(shown.poster == tmdb.poster && shown.background == tmdb.background)
+        XCTAssertTrue(shown.description == "Robert Durst." && shown.rating == 8.0)
+        XCTAssertTrue(shown.genres == ["Documentary", "Crime"] && shown.cast == ["Robert Durst"])
+        XCTAssertTrue(shown.logo == "logo.png" && shown.trailerVideoId == "x2")
+        XCTAssertTrue(shown.videos.map(\.id) == ["tt4299972:1:1"])
+        XCTAssertTrue(MediaDetails.tmdbFirst(nil, plugin)?.name == plugin.name)
+        XCTAssertTrue(MediaDetails.tmdbFirst(tmdb, nil)?.name == "The Jinx")
+        XCTAssertTrue(MediaDetails.tmdbFirst(nil, nil) == nil)
+        // What TMDB hasn't is the plugin's, field by field.
+        let bare = try decoder.decode(TMDBDetails.self, from: Data(#"""
+            {"tmdb_id": 1, "cast": [], "budget": null, "revenue": null, "name": "The Jinx", "poster": null,
+             "background": null, "year": null, "rating": null, "genres": [], "description": null,
+             "runtime_min": null, "directors": [], "trailer_video_id": null}
+            """#.utf8))
+        let filled = try XCTUnwrap(MediaDetails.tmdbFirst(bare.page(id: "tt4299972", type: "series"), plugin))
+        XCTAssertTrue(filled.poster == "plugin.jpg" && filled.year == "2015" && filled.rating == 7.9)
+        XCTAssertTrue(filled.genres == ["Crime"] && filled.cast == ["Someone"] && filled.trailerVideoId == "old")
+        // TMDB not knowing the title, or an engine from before: no page of TMDB's.
+        let older = try decoder.decode(TMDBDetails.self, from: Data(#"{"tmdb_id": null, "cast": [], "budget": null, "revenue": null}"#.utf8))
+        XCTAssertTrue(older.page(id: "tt1", type: "movie") == nil)
+    }
+
+    func testASeriesNoPluginHasEpisodesOfTakesTmdbs() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let found = try decoder.decode(TMDBEpisodes.self, from: Data(#"""
+            {"videos": [
+              {"id": "tt4299972:1:1", "title": "Chapter 1", "thumbnail": "https://image.tmdb.org/t/p/w300/s.jpg",
+               "released": "2015-02-08", "video_id": null, "season": 1, "episode": 1, "overview": "First."},
+              {"id": "tt4299972:1:2", "title": "Episode 2", "thumbnail": null, "released": null, "video_id": null,
+               "season": 1, "episode": 2, "overview": null}]}
+            """#.utf8))
+        let tmdbOnly = MediaDetails(
+            id: "tt4299972", type: "series", name: "The Jinx", poster: nil, year: nil, rating: nil, genres: [],
+            description: nil, cast: [], videos: [])
+        let shown = tmdbOnly.withEpisodes(found.videos)
+        XCTAssertTrue(shown.seasons == [1] && shown.episodes(in: 1).map(\.number) == ["S1 E1", "S1 E2"])
+        XCTAssertTrue(shown.videos.first?.day == "2015-02-08" && shown.videos.first?.videoId == nil)
+        // A page with episodes of its own keeps them.
+        XCTAssertTrue(shown.withEpisodes([]).videos.count == 2)
+        let search = try decoder.decode(TMDBFound.self, from: Data(#"""
+            {"items": [{"id": "tt0137523", "type": "movie", "name": "Fight Club", "poster": null,
+                        "poster_shape": "poster", "year": "1999", "rating": 8.4, "genres": ["Thriller"]}]}
+            """#.utf8))
+        XCTAssertTrue(search.items.map(\.id) == ["tt0137523"])
     }
 
     func testAFilmsMoneyIsInDollars() {

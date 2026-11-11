@@ -562,6 +562,174 @@ def test_series_to_come_are_the_ones_whose_first_episode_is_ahead(fake: FakeTmdb
     )
 
 
+TV_GENRES = {
+    "genres": [
+        {"id": 80, "name": "Crime"},
+        {"id": 99, "name": "Documentary"},
+        {"id": 10759, "name": "Action & Adventure"},
+    ]
+}
+MOVIE_GENRES = {
+    "genres": [
+        {"id": 27, "name": "Horror"},
+        {"id": 35, "name": "Comedy"},
+        {"id": 53, "name": "Thriller"},
+    ]
+}
+
+
+def test_the_standard_plugins_lists_by_genre_two_in_one_question(fake: FakeTmdb) -> None:
+    """2026-11-11, TMDB the standard plugin: its lists by its own genres, every one of them in
+    one question (TMDB's discover, whose comma is "and"), and in the original language
+    chosen; Trending takes neither. A genre TMDB hasn't has nothing."""
+    set_up()
+    today = tmdb.date.today().isoformat()
+    fake.answers["/genre/tv/list"] = TV_GENRES
+    fake.answers["/genre/movie/list"] = MOVIE_GENRES
+    fake.answers["/discover/tv"] = {
+        "page": 1,
+        "total_pages": 4,
+        "results": [{"id": 21, "name": "The Jinx", "genre_ids": [99, 80], "poster_path": "/j.jpg"}],
+    }
+    fake.answers["/tv/21/external_ids"] = {"imdb_id": "tt4299972"}
+    page = tmdb.catalog("series", "popular", genres=["crime", "Documentary"])
+    assert [(i["id"], i["genres"]) for i in page["items"]] == [
+        ("tt4299972", ["Documentary", "Crime"])
+    ]
+    assert (page["more"], page["next_skip"]) == (True, 20)
+    asked = [(path, params) for path, params, _ in fake.asked if path.startswith("/discover")]
+    assert asked == [
+        (
+            "/discover/tv",
+            {"page": 1, "language": "en-US", "sort_by": "popularity.desc", "with_genres": "80,99"},
+        )
+    ]
+    fake.asked.clear()
+
+    fake.answers["/discover/movie"] = {"page": 2, "total_pages": 2, "results": []}
+    assert tmdb.catalog("movie", "top_rated", skip=20, genres=["Horror"], language="en") == {
+        "items": [],
+        "more": False,
+        "next_skip": 40,
+    }
+    tmdb.catalog("movie", "upcoming", genres=["Comedy"])
+    tmdb.catalog("series", "top_rated", language="ko")
+    tmdb.catalog("series", "upcoming", genres=["Crime"])
+    asked = [(path, params) for path, params, _ in fake.asked if path.startswith("/discover")]
+    assert asked == [
+        (
+            "/discover/movie",
+            {
+                "page": 2, "language": "en-US", "sort_by": "vote_average.desc",
+                "vote_count.gte": 300, "with_genres": "27", "with_original_language": "en",
+            },
+        ),
+        (
+            "/discover/movie",
+            {
+                "page": 1, "language": "en-US", "primary_release_date.gte": today, "region": "AU",
+                "with_release_type": "2|3", "sort_by": "popularity.desc", "with_genres": "35",
+            },
+        ),
+        (
+            "/discover/tv",
+            {
+                "page": 1, "language": "en-US", "sort_by": "vote_average.desc",
+                "vote_count.gte": 200, "with_original_language": "ko",
+            },
+        ),
+        (
+            "/discover/tv",
+            {
+                "page": 1, "language": "en-US", "first_air_date.gte": today,
+                "sort_by": "popularity.desc", "with_genres": "80",
+            },
+        ),
+    ]  # fmt: skip
+    fake.asked.clear()
+
+    # Trending: the week's, by no genre or language.
+    fake.answers["/trending/tv/week"] = {"page": 2, "total_pages": 9, "results": []}
+    tmdb.catalog("series", "trending", skip=20, genres=["Crime"], language="en")
+    assert fake.asked[0][:2] == ("/trending/tv/week", {"page": 2, "language": "en-US"})
+    fake.asked.clear()
+
+    # A genre TMDB hasn't (Cinemeta's "Sci-Fi"): nothing has it, and nothing is asked for it.
+    assert tmdb.catalog("series", "popular", skip=40, genres=["Crime", "Sci-Fi"]) == {
+        "items": [],
+        "more": False,
+        "next_skip": 40,
+    }
+    assert [path for path in fake.paths() if not path.startswith("/genre")] == []
+    # No genre and no language: TMDB's own list, as before.
+    fake.answers["/tv/popular"] = {"page": 1, "total_pages": 1, "results": []}
+    tmdb.catalog("series", "popular")
+    assert fake.paths()[-1] == "/tv/popular"
+    # The genres the app's menus offer, A to Z.
+    assert tmdb.genres("series") == ["Action & Adventure", "Crime", "Documentary"]
+    assert tmdb.genres("movie") == ["Comedy", "Horror", "Thriller"]
+    with pytest.raises(tmdb.TmdbError):
+        tmdb.genres("anime")
+    with pytest.raises(tmdb.TmdbError, match="two letters"):
+        tmdb.catalog("movie", "popular", language="english")
+
+
+def test_a_search_finds_titles_with_a_poster_by_their_imdb_ids(fake: FakeTmdb) -> None:
+    set_up()
+    fake.answers["/genre/movie/list"] = MOVIE_GENRES
+    fake.answers["/search/movie"] = {
+        "page": 1,
+        "results": [
+            {
+                "id": 550,
+                "title": "Fight Club",
+                "poster_path": "/f.jpg",
+                "release_date": "1999-10-15",
+                "vote_average": 8.4,
+                "genre_ids": [53],
+                "original_language": "en",
+            },
+            {"id": 551, "title": "No Poster", "poster_path": None},
+            {"id": 552, "title": "No IMDb Id", "poster_path": "/n.jpg"},
+        ],
+    }
+    fake.answers["/movie/550/external_ids"] = {"imdb_id": "tt0137523"}
+    fake.answers["/movie/552/external_ids"] = {"imdb_id": None}
+    assert tmdb.search("movie", "  fight club ") == {
+        "items": [
+            {
+                "id": "tt0137523",
+                "type": "movie",
+                "name": "Fight Club",
+                "poster": "https://image.tmdb.org/t/p/w342/f.jpg",
+                "poster_shape": "poster",
+                "year": "1999",
+                "rating": 8.4,
+                "genres": ["Thriller"],
+            }
+        ]
+    }
+    searched = next(params for path, params, _ in fake.asked if path == "/search/movie")
+    assert searched == {
+        "query": "fight club",
+        "include_adult": "false",
+        "language": "en-US",
+        "page": 1,
+    }
+    assert "/movie/551/external_ids" not in fake.paths()  # a title with no poster isn't asked about
+    # Its language came with the search: the language filter asks nothing more of it.
+    before = len(fake.asked)
+    assert tmdb.facts([{"id": "tt0137523", "type": "movie"}], ["language"])["tt0137523"] == {
+        "language": "en",
+        "rating": None,
+    }
+    assert len(fake.asked) == before
+    assert tmdb.search("series", "   ") == {"items": []}
+    assert len(fake.asked) == before
+    with pytest.raises(tmdb.TmdbError):
+        tmdb.search("channel", "anything")
+
+
 # ---- a title's page, and people ---------------------------------------------------------------
 
 
@@ -585,7 +753,8 @@ def test_a_films_cast_with_photos_and_its_money(fake: FakeTmdb) -> None:
             ]
         },
     }
-    assert tmdb.details("movie", "tt0137523") == {
+    found = tmdb.details("movie", "tt0137523")
+    assert {key: found[key] for key in ("tmdb_id", "cast", "budget", "revenue")} == {
         "tmdb_id": 550,
         "cast": [
             {
@@ -604,7 +773,178 @@ def test_a_films_cast_with_photos_and_its_money(fake: FakeTmdb) -> None:
         "cast": [],
         "budget": None,
         "revenue": None,
+        "name": None,
+        "poster": None,
+        "background": None,
+        "year": None,
+        "rating": None,
+        "genres": [],
+        "description": None,
+        "runtime_min": None,
+        "directors": [],
+        "trailer_video_id": None,
     }
+
+
+def test_a_titles_page_from_tmdb_in_the_shape_of_an_add_ons_details(fake: FakeTmdb) -> None:
+    """2026-11-11, TMDB the standard plugin: a title's page from TMDB first (the app fills in
+    from the plugins what it hasn't), from the one question that also gives its cast."""
+    set_up()
+    fake.answers["/find/tt4299972"] = {
+        "movie_results": [],
+        "tv_results": [{"id": 1, "name": "The Jinx", "original_language": "en"}],
+    }
+
+    def series(params: dict[str, Any]) -> dict[str, Any] | None:
+        if params.get("append_to_response") != "credits,videos,external_ids":
+            return None
+        return {
+            "id": 1,
+            "name": "The Jinx",
+            "first_air_date": "2015-02-08",
+            "vote_average": 8.04,
+            "overview": "Robert Durst.",
+            "poster_path": "/p.jpg",
+            "backdrop_path": "/b.jpg",
+            "episode_run_time": [45],
+            "genres": [{"id": 99, "name": "Documentary"}, {"id": 80, "name": "Crime"}],
+            "created_by": [{"name": "Andrew Jarecki"}],
+            "credits": {"cast": [{"id": 5, "name": "Robert Durst"}], "crew": []},
+            "videos": {
+                "results": [
+                    {"site": "YouTube", "type": "Teaser", "key": "t1"},
+                    {"site": "YouTube", "type": "Trailer", "key": "x1", "official": False},
+                    {"site": "Vimeo", "type": "Trailer", "key": "v1", "official": True},
+                    {"site": "YouTube", "type": "Trailer", "key": "x2", "official": True},
+                ]
+            },
+            "external_ids": {"imdb_id": "tt4299972"},
+        }
+
+    fake.answers["/tv/1"] = series
+    found = tmdb.details("series", "tt4299972")
+    assert {key: value for key, value in found.items() if key not in ("cast",)} == {
+        "tmdb_id": 1,
+        "budget": None,
+        "revenue": None,
+        "name": "The Jinx",
+        "poster": "https://image.tmdb.org/t/p/w500/p.jpg",
+        "background": "https://image.tmdb.org/t/p/w1280/b.jpg",
+        "year": "2015",
+        "rating": 8.0,
+        "genres": ["Documentary", "Crime"],
+        "description": "Robert Durst.",
+        "runtime_min": 45,
+        "directors": ["Andrew Jarecki"],  # a series' creators, with no director
+        "trailer_video_id": "x2",  # the official trailer on the video service
+    }
+    assert [person["name"] for person in found["cast"]] == ["Robert Durst"]
+    assert fake.paths() == ["/find/tt4299972", "/tv/1"]  # one question for the page
+
+    # A film: its directors (each once, four at most), and what TMDB says 0 of, unknown.
+    crew = [{"job": "Director", "name": name} for name in ("A", "B", "A", "C", "D", "E")]
+    fake.answers["/movie/7"] = {
+        "id": 7,
+        "title": "A Film",
+        "release_date": "",
+        "vote_average": 0,
+        "runtime": 0,
+        "overview": "",
+        "credits": {"cast": [], "crew": [{"job": "Producer", "name": "P"}, *crew]},
+        "created_by": [{"name": "Not For A Film"}],
+    }
+    film = tmdb.details("movie", "tmdb:7")
+    assert (film["name"], film["directors"], film["year"], film["rating"]) == (
+        "A Film",
+        ["A", "B", "C", "D"],
+        None,
+        None,
+    )
+    assert (film["runtime_min"], film["description"], film["trailer_video_id"]) == (
+        None,
+        None,
+        None,
+    )
+    assert (film["poster"], film["background"], film["genres"]) == (None, None, [])
+
+
+def test_a_series_no_plugin_has_episodes_of_gets_tmdbs_by_imdb_id(fake: FakeTmdb) -> None:
+    """Its seasons from its details, then twenty seasons to a question, each episode by the
+    series' IMDb id, season and number, as the plugins give theirs."""
+    set_up()
+    fake.answers["/find/tt4299972"] = {
+        "movie_results": [],
+        "tv_results": [{"id": 1, "name": "The Jinx", "original_language": "en"}],
+    }
+
+    def series(params: dict[str, Any]) -> dict[str, Any]:
+        if "append_to_response" not in params:
+            return {"id": 1, "seasons": [{"season_number": n} for n in (2, 0, 1)]}
+        assert params["append_to_response"] == "season/0,season/1,season/2"
+        return {
+            "id": 1,
+            "season/1": {
+                "episodes": [
+                    {"season_number": 1, "episode_number": 2, "name": ""},
+                    {
+                        "season_number": 1,
+                        "episode_number": 1,
+                        "name": "Chapter 1",
+                        "air_date": "2015-02-08",
+                        "still_path": "/s.jpg",
+                        "overview": "First.",
+                    },
+                ]
+            },
+            "season/2": {
+                "episodes": [{"season_number": 2, "episode_number": 1, "name": "Chapter 7"}]
+            },
+            "season/0": {
+                "episodes": [{"season_number": 0, "episode_number": 1, "name": "Special"}]
+            },
+        }
+
+    fake.answers["/tv/1"] = series
+    videos = tmdb.episodes("series", "tt4299972")["videos"]
+    assert [v["id"] for v in videos] == [
+        "tt4299972:0:1",
+        "tt4299972:1:1",
+        "tt4299972:1:2",
+        "tt4299972:2:1",
+    ]
+    assert videos[1] == {
+        "id": "tt4299972:1:1",
+        "title": "Chapter 1",
+        "thumbnail": "https://image.tmdb.org/t/p/w300/s.jpg",
+        "released": "2015-02-08",
+        "video_id": None,
+        "season": 1,
+        "episode": 1,
+        "overview": "First.",
+    }
+    assert videos[2]["title"] == "Episode 2" and videos[2]["released"] is None
+
+    # A long series: twenty seasons to a question.
+    fake.answers["/find/tt0000025"] = {"movie_results": [], "tv_results": [{"id": 25}]}
+    asked: list[str] = []
+
+    def long_series(params: dict[str, Any]) -> dict[str, Any]:
+        if "append_to_response" not in params:
+            return {"id": 25, "seasons": [{"season_number": n} for n in range(1, 26)]}
+        asked.append(params["append_to_response"])
+        return {"id": 25}
+
+    fake.answers["/tv/25"] = long_series
+    assert tmdb.episodes("series", "tt0000025") == {"videos": []}
+    assert asked == [
+        ",".join(f"season/{n}" for n in range(1, 21)),
+        ",".join(f"season/{n}" for n in range(21, 26)),
+    ]
+    # Nothing for a film, or a series by an id its episodes can't be named by.
+    fake.asked.clear()
+    assert tmdb.episodes("movie", "tt4299972") == {"videos": []}
+    assert tmdb.episodes("series", "tmdb:1") == {"videos": []}
+    assert fake.paths() == []
 
 
 def test_a_persons_films_and_series_the_most_talked_about_first(fake: FakeTmdb) -> None:
@@ -715,3 +1055,41 @@ def test_tmdb_over_rpc_never_gives_out_the_key(server: rpc.Server, fake: FakeTmd
     assert result(server, "tmdb.imdb", type="movie", id="tmdb:5") == {"id": "tt5"}
     assert code(server, "tmdb.catalog", type="movie", list="popular", skip=-1) == rpc.INVALID_PARAMS
     assert result(server, "tmdb.forget") == {"has_key": False}
+
+
+def test_the_standard_plugins_lists_genres_episodes_and_search_over_rpc(
+    server: rpc.Server,  # noqa: F811
+    fake: FakeTmdb,
+) -> None:
+    result(server, "engine.hello", client="pytest", client_version="1")
+    assert code(server, "tmdb.genres") == rpc.USER_ERROR  # no key yet
+    assert result(server, "tmdb.connect", key=API_KEY) == {"has_key": True}
+    fake.answers["/genre/tv/list"] = TV_GENRES
+    fake.answers["/genre/movie/list"] = MOVIE_GENRES
+    assert result(server, "tmdb.genres") == {
+        "genres": {
+            "movie": ["Comedy", "Horror", "Thriller"],
+            "series": ["Action & Adventure", "Crime", "Documentary"],
+        }
+    }
+    list_page = {"type": "series", "list": "popular"}
+    for bad in (
+        {"genres": ["Crime", "Documentary", "Action & Adventure"]},  # two at most
+        {"genres": [80]},
+        {"genres": [" "]},
+        {"genres": "Crime"},
+        {"language": "eng"},
+        {"language": "EN"},
+    ):
+        assert code(server, "tmdb.catalog", **list_page, **bad) == rpc.INVALID_PARAMS, bad
+    fake.answers["/discover/tv"] = {"page": 1, "total_pages": 1, "results": []}
+    assert result(
+        server, "tmdb.catalog", **list_page, genres=["Crime", "Documentary"], language="en"
+    ) == {"items": [], "more": False, "next_skip": 20}
+    discover = next(params for path, params, _ in fake.asked if path == "/discover/tv")
+    assert (discover["with_genres"], discover["with_original_language"]) == ("80,99", "en")
+    fake.answers["/search/tv"] = {"page": 1, "results": []}
+    assert result(server, "tmdb.search", type="series", query="the jinx") == {"items": []}
+    assert code(server, "tmdb.search", type="series", query="x" * 201) == rpc.INVALID_PARAMS
+    assert result(server, "tmdb.episodes", type="movie", id="tt1") == {"videos": []}
+    assert {"tmdb.genres", "tmdb.episodes", "tmdb.search"} <= rpc.SLOW_METHODS

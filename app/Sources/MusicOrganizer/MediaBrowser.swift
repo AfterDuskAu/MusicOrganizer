@@ -57,12 +57,16 @@ final class MediaList {
         return true
     }
 
-    /// Ask for the first page, or with `adding` for the next one.
+    /// Ask for the first page, or with `adding` for the next one. `language`: the original
+    /// language chosen for Movie Finder and Series Finder ("" for all), which TMDB's lists are
+    /// asked in (2026-11-11); a plugin's are sifted by it as they show.
     func load(
         _ model: AppModel, addon: Addon, catalog: Addon.Catalog, genre: String? = nil,
-        search: String = "", also: String = "", adding: Bool = false
+        search: String = "", also: String = "", language: String = "", adding: Bool = false
     ) async {
-        let wanted = "\(addon.id)|\(catalog.type)|\(catalog.id)|\(genre ?? "")|\(search)|\(also)"
+        let tmdb = TMDB.isTMDB(addon)
+        let wanted =
+            "\(addon.id)|\(catalog.type)|\(catalog.id)|\(genre ?? "")|\(search)|\(also)|\(tmdb ? language : "")"
         guard let ticket = begin(wanted, adding: adding) else { return }
         if !adding { (items, cursor, more, reading) = ([], 0, false, nil) }
         let skip = cursor
@@ -73,13 +77,21 @@ final class MediaList {
         // A second genre: only what's tagged with both (the engine does the sifting), and on
         // from the genre's list it's reading.
         let both = genre != nil && !also.isEmpty
+        // A plugin's list by two genres is sifted by the engine, a stretch at a time; TMDB's is
+        // one list, asked in one question.
+        let sifted = both && !tmdb
         if both { asked["also"] = [also] }
         if both, adding, let reading { asked["reading"] = reading.asked }
         let answer: Result<CatalogAnswer, Error>
         do {
-            if TMDB.isTMDB(addon) {
-                // One of TMDB's lists (2026-11-05): a page at a time, no genre.
-                let page: [String: Any] = ["type": catalog.type, "list": catalog.id, "skip": adding ? cursor : 0]
+            if tmdb {
+                // One of TMDB's lists (2026-11-05), a page at a time: by TMDB's own genres, both
+                // of two in one question, and in the original language chosen (2026-11-11, TMDB
+                // the standard plugin).
+                var page: [String: Any] = ["type": catalog.type, "list": catalog.id, "skip": adding ? cursor : 0]
+                let genres = [genre, both ? also : nil].compactMap { $0 }
+                if !genres.isEmpty { page["genres"] = genres }
+                if !language.isEmpty { page["language"] = language }
                 answer = .success(try await model.ask("tmdb.catalog", page, as: CatalogAnswer.self))
             } else {
                 answer = .success(try await model.ask("addon.catalog", asked, as: CatalogAnswer.self))
@@ -96,8 +108,8 @@ final class MediaList {
             cursor = found.nextSkip ?? items.count
             reading = found.reading
             // A page with nothing new on it means the list has run out, whatever it says.
-            // (Not with two genres: a stretch of the list can have nothing with both.)
-            more = found.more && (both || !fresh.isEmpty) && catalog.takes("skip")
+            // (Not with two genres sifted: a stretch of the list can have nothing with both.)
+            more = found.more && (sifted || !fresh.isEmpty) && catalog.takes("skip")
             if both, let genre, found.items.isEmpty {
                 // Nothing with both in this stretch (the engine read up to 8 pages of each
                 // genre's list): said, and the list waits for Look Further, instead of reading
@@ -140,11 +152,17 @@ final class MediaList {
     }
 
     /// Every plugin asked for some words (the owner, 2026-10-13: a search "searches the
-    /// whole database", whichever list is chosen), and what they found put together.
+    /// whole database", whichever list is chosen), and what they found put together. With a
+    /// key, TMDB too, the standard plugin (2026-11-11): asked at once, its finds first, then the
+    /// plugins', each title once.
     func search(_ model: AppModel, type: String, words: String) async {
         let wanted = "search|\(type)|\(words)"
         guard let ticket = begin(wanted) else { return }
         (items, cursor, more, reading) = ([], 0, false, nil)
+        let asksTMDB = model.tmdbHasKey && ["movie", "series"].contains(type)
+        async let fromTMDB: [MediaItem] = asksTMDB
+            ? ((try? await model.ask("tmdb.search", ["type": type, "query": words], as: TMDBFound.self))?.items ?? [])
+            : []
         let answer: Result<MediaSearchAnswer, Error>
         do {
             answer = .success(
@@ -152,16 +170,20 @@ final class MediaList {
         } catch {
             answer = .failure(error)
         }
+        let first = await fromTMDB
         guard end(ticket, showing: wanted) else { return }
+        let known = Set(first.map(\.id))
         switch answer {
         case .success(let found):
-            items = found.items
+            items = first + found.items.filter { !known.contains($0.id) }
             if items.isEmpty {
                 problem = found.problems.first.map { "\($0.addon): \($0.message)" }
                     ?? "Nothing was found for “\(words)”."
             }
         case .failure(let error):
-            problem = error.localizedDescription
+            // The plugins couldn't be asked: what TMDB found, if anything.
+            items = first
+            if items.isEmpty { problem = error.localizedDescription }
         }
     }
 }
@@ -180,8 +202,13 @@ final class MediaBrowser {
     let anime = MediaList()
     /// The lists of add-ons for adults only: one Finder's, and nothing else's.
     let adult = MediaList()
-    /// The computer has a TMDB key: its lists are offered with the plugins' (2026-11-05).
+    /// The computer has a TMDB key: its lists are offered with the plugins' (2026-11-05), first
+    /// (2026-11-11, TMDB the standard plugin).
     var tmdb = false
+    /// TMDB's genres for its lists' menus, by "movie" and "series" (`tmdb.genres`), once they've
+    /// come; asked again until they have.
+    private(set) var tmdbGenres: [String: [String]] = [:]
+    @ObservationIgnored private var askingGenres = false
 
     /// Another profile is in use now: its add-ons are read afresh (a child's profile
     /// isn't given the ones for adults only), and nothing the last one had open stays.
@@ -191,13 +218,26 @@ final class MediaBrowser {
     }
 
     func load(_ model: AppModel) async {
-        guard !loaded else { return }
-        do {
-            addons = try await model.ask("addon.list", [:], as: AddonsAnswer.self).addons
-            problem = addons.isEmpty ? "The lists couldn't be reached. Check the internet connection." : nil
-            loaded = !addons.isEmpty
-        } catch {
-            problem = error.localizedDescription
+        if !loaded {
+            do {
+                addons = try await model.ask("addon.list", [:], as: AddonsAnswer.self).addons
+                problem = addons.isEmpty ? "The lists couldn't be reached. Check the internet connection." : nil
+                loaded = !addons.isEmpty
+            } catch {
+                problem = error.localizedDescription
+            }
+        }
+        await readTMDBGenres(model)
+    }
+
+    /// TMDB's genres, for its lists' genre menus (2026-11-11), asked of the engine (which asks
+    /// TMDB once while it runs) whenever there's a key and they haven't come yet.
+    func readTMDBGenres(_ model: AppModel) async {
+        guard tmdb, tmdbGenres.isEmpty, !askingGenres else { return }
+        askingGenres = true
+        defer { askingGenres = false }
+        if let found = try? await model.ask("tmdb.genres", [:], as: TMDBGenres.self) {
+            tmdbGenres = found.genres
         }
     }
 
@@ -222,9 +262,12 @@ final class MediaBrowser {
         let plugins = addons.filter { !$0.isAdult }.flatMap { addon in
             addon.catalogs.filter { $0.type == type && $0.canBeBrowsed }.map { (addon, $0) }
         }
-        // TMDB's Popular, Top Rated and Upcoming, after the plugins' lists.
-        guard tmdb, !plugins.isEmpty else { return plugins }
-        return plugins + TMDB.addon.catalogs.filter { $0.type == type }.map { (TMDB.addon, $0) }
+        // The standard plugin TMDB's Popular, Top Rated, Upcoming and Trending, first (the
+        // owner, 2026-11-11: "it will be number 1 on list"), once the plugins' list is read, and
+        // only with a key.
+        guard tmdb, loaded else { return plugins }
+        let lists = TMDB.addon(genres: tmdbGenres)
+        return lists.catalogs.filter { $0.type == type }.map { (lists, $0) } + plugins
     }
 
     /// Every list, of whatever kind, from the add-ons for adults only.

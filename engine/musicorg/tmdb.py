@@ -7,9 +7,21 @@ asks questions:
   in `content_ratings`; where Australia has none, the UK's, then the US's, counted as the
   Australian class each is closest to: 2026-11-10), for Movie Finder's and Series Finder's
   language filter and for a child's profile's ratings;
-- **lists**: TMDB's Popular, Top Rated and Upcoming films and series, for the Finders'
-  list menus (`catalog`, in the shape of `addon.catalog`);
-- **details**: a title's cast with their photos, and a film's budget and revenue;
+- **lists**: TMDB's Popular, Top Rated, Upcoming and Trending films and series, for the
+  Finders' list menus (`catalog`, in the shape of `addon.catalog`), by TMDB's own genres
+  (`genres`) and the original language chosen;
+- **details**: a title's page (its name, pictures, summary, genres, length, who made it and
+  its trailer), its cast with their photos, and a film's budget and revenue;
+- **episodes**: a series' seasons and episodes, for one no plugin has episodes of;
+- **search**: films or series by name;
+
+TMDB is **the standard plugin, first in the list** (the owner, 2026-11-11: "lets add standard
+plugin, TMDB. It wont work if not Connected to API, it will be number 1 on list. Anything it
+cant get will come from other plugins"): the app shows TMDB's lists first, a title's page from
+TMDB first with the plugins' for whatever it hasn't, and TMDB's finds first in a search. A
+series' episodes stay the plugins' whenever they have any: the ways to play, what's watched
+and the next episode go by their numbering ("tt0944947:1:2"), which TMDB's differs from for
+some series. It's never a plugin of the add-on protocol, and never asked for a way to play.
 - **people**: an actor's photo, biography and every film and series they're in;
 - **the calendar**: the month's films released in Australia and new series, by popularity.
 
@@ -97,6 +109,9 @@ PAGE_SIZE = 20  # TMDB's pages
 MOST_PAGES = 25  # of one list: 500 titles
 MOST_FACTS = 200  # titles in one `facts` question
 CAST = 20  # people shown on a title's page
+DIRECTORS = 4  # who made a title, on its page
+SEASONS_AT_ONCE = 20  # a series' seasons asked in one question (TMDB's own limit)
+MOST_GENRES = 2  # a list asked by every one of these genres at once
 CREDITS = 80  # a person's films and series shown
 CALENDAR_FILM_PAGES = 3
 CALENDAR_SERIES_PAGES = 2
@@ -104,13 +119,16 @@ CALENDAR_SERIES_PAGES = 2
 # theatrical, theatrical, digital.
 RELEASE_KINDS = (2, 3, 4)
 
-# The Finders' TMDB lists (docs/ENGINE_API.md → "TMDB list").
-LISTS = ("popular", "top_rated", "upcoming")
+# The Finders' TMDB lists (docs/ENGINE_API.md → "TMDB list"). Trending (2026-11-11) is the
+# week's, and can't be asked by genre or language: TMDB's trending takes neither.
+LISTS = ("popular", "top_rated", "upcoming", "trending")
 LIST_NAMES = {
     "popular": "TMDB – Popular",
     "top_rated": "TMDB – Top Rated",
     "upcoming": "TMDB – Upcoming",
+    "trending": "TMDB – Trending",
 }
+LANGUAGE_CODE = re.compile(r"[a-z]{2}")  # an original language, as TMDB has it ("en", "cn")
 
 # Australian ratings as the app offers them to tick (docs/ENGINE_API.md → "Australian
 # rating"): G, PG, M, MA15+, R18+. A series' P and C (for children) count as G, and its
@@ -731,38 +749,123 @@ def _keep_releases(tmdb_id: int, body: dict[str, Any]) -> list[tuple[str, int]]:
 # ---- the Finders' lists ---------------------------------------------------------------------
 
 
-def catalog(kind: str, list_id: str, skip: int = 0) -> dict[str, Any]:
-    """One page of TMDB's Popular, Top Rated or Upcoming films ("movie") or series
-    ("series"), in the shape of `addon.catalog`: `{items, more, next_skip}`. Each title is
-    given by its IMDb id, so it opens on its page as any other does; one TMDB has no IMDb
-    id for is left out."""
+def catalog(
+    kind: str,
+    list_id: str,
+    skip: int = 0,
+    genres: list[str] | None = None,
+    language: str | None = None,
+) -> dict[str, Any]:
+    """One page of TMDB's Popular, Top Rated, Upcoming or Trending films ("movie") or
+    series ("series"), in the shape of `addon.catalog`: `{items, more, next_skip}`. Each
+    title is given by its IMDb id, so it opens on its page as any other does; one TMDB has
+    no IMDb id for is left out.
+
+    By `genres` (TMDB's genre names, `genres()`: every one of them, so two genres are one
+    question, 2026-11-11) or an original `language` ("en"), TMDB's discover is asked, sorted
+    as the list is. A genre TMDB hasn't (one chosen in another plugin's list) has nothing:
+    an empty page. Trending takes neither."""
     if kind not in ("movie", "series"):
         raise TmdbError("TMDB's lists are of films or series.")
     if list_id not in LISTS:
         raise TmdbError(f"A TMDB list is one of: {', '.join(LISTS)}.")
+    if language is not None and not LANGUAGE_CODE.fullmatch(language):
+        raise TmdbError("An original language is two letters, such as “en”.")
     page = max(1, skip // PAGE_SIZE + 1)
     media = _media(kind)
+    wanted = [name for name in genres or [] if name.strip()]
     params: dict[str, Any] = {"page": page, "language": "en-US"}
-    if media == "movie":
+    if list_id == "trending":
+        path = f"/trending/{media}/week"
+    elif wanted or language:
+        numbers = _genre_ids(wanted, media)
+        if numbers is None:
+            return {"items": [], "more": False, "next_skip": skip}
+        path = f"/discover/{media}"
+        params.update(_discover_order(list_id, media))
+        if numbers:
+            params["with_genres"] = ",".join(str(n) for n in numbers)  # TMDB's comma is "and"
+        if language:
+            params["with_original_language"] = language
+    elif media == "movie":
         path = f"/movie/{list_id}"
         params["region"] = REGION
     elif list_id == "upcoming":
         # TMDB has no list of series to come: the ones whose first episode is still ahead,
         # the most talked about first.
         path = "/discover/tv"
-        params.update(
-            {"first_air_date.gte": date.today().isoformat(), "sort_by": "popularity.desc"}
-        )
+        params.update(_discover_order(list_id, media))
     else:
         path = f"/tv/{list_id}"
     body = _ask(path, **params)
-    results = [
-        r for r in body.get("results") or [] if isinstance(r, dict) and isinstance(r.get("id"), int)
-    ]
+    items = _items(body.get("results"), kind)
+    pages = body.get("total_pages") if isinstance(body.get("total_pages"), int) else page
+    return {"items": items, "more": page < min(pages, MOST_PAGES), "next_skip": page * PAGE_SIZE}
+
+
+def _discover_order(list_id: str, media: str) -> dict[str, Any]:
+    """What TMDB's discover is asked with to give a list's titles in the list's own order:
+    the most talked about first, the best scored (by enough people, as TMDB's own Top Rated
+    is), or those still to come out (a film in Australia, in cinemas)."""
+    if list_id == "top_rated":
+        return {"sort_by": "vote_average.desc", "vote_count.gte": 200 if media == "tv" else 300}
+    if list_id == "upcoming":
+        today = date.today().isoformat()
+        if media == "tv":
+            return {"first_air_date.gte": today, "sort_by": "popularity.desc"}
+        return {
+            "primary_release_date.gte": today, "region": REGION,
+            "with_release_type": "2|3", "sort_by": "popularity.desc",
+        }  # fmt: skip
+    return {"sort_by": "popularity.desc"}
+
+
+def _genre_ids(names: list[str], media: str) -> list[int] | None:
+    """TMDB's numbers for some of its genre names (any case), or None when it hasn't one of
+    them."""
+    if not names:
+        return []
+    by_name = {name.casefold(): number for number, name in _genre_names(media).items()}
+    numbers = [by_name.get(name.strip().casefold()) for name in names]
+    return None if None in numbers else [n for n in numbers if n is not None]
+
+
+def genres(kind: str) -> list[str]:
+    """TMDB's genres for films ("movie") or series ("series"), by name, A to Z: what its
+    lists can be asked by (the app's genre menus, 2026-11-11)."""
+    if kind not in ("movie", "series"):
+        raise TmdbError("TMDB's genres are of films or series.")
+    return sorted(_genre_names(_media(kind)).values(), key=str.casefold)
+
+
+def search(kind: str, query: str) -> dict[str, Any]:
+    """Films or series TMDB finds for some words (its first page: its best twenty), as
+    `{items}` in the shape of `addon.search`'s: by their IMDb ids, as `catalog`'s are. Only
+    those with a poster: the rest are TMDB's obscure ones, blank cards in a search."""
+    if kind not in ("movie", "series"):
+        raise TmdbError("TMDB searches films or series.")
+    words = query.strip()
+    if not words:
+        return {"items": []}
+    body = _ask(
+        f"/search/{_media(kind)}", query=words, include_adult="false", language="en-US", page=1
+    )
+    results = [r for r in body.get("results") or [] if isinstance(r, dict)]
+    with_poster = [r for r in results if _picture(r.get("poster_path"), "w342")]
+    return {"items": _items(with_poster, kind)}
+
+
+def _items(results: Any, kind: str) -> list[dict[str, Any]]:
+    """Titles from one of TMDB's answers (a list's, a search's) as an add-on's `Item`s, by
+    their IMDb ids; one TMDB has no IMDb id for is left out. Their languages are noted."""
+    listed = [r for r in results or [] if isinstance(r, dict) and isinstance(r.get("id"), int)]
+    if not listed:
+        return []
+    media = _media(kind)
     names = _genre_names(media)
-    ids = _each(lambda r: imdb_id(kind, f"tmdb:{r['id']}"), results)
+    ids = _each(lambda r: imdb_id(kind, f"tmdb:{r['id']}"), listed)
     items = []
-    for result, found in zip(results, ids, strict=True):
+    for result, found in zip(listed, ids, strict=True):
         if not found:
             continue
         language = _language(result.get("original_language"))
@@ -771,8 +874,7 @@ def catalog(kind: str, list_id: str, skip: int = 0) -> dict[str, Any]:
             _languages[(result["id"], media)] = language
             _found[found] = (result["id"], media, language)
         items.append(_item(result, kind, found, names))
-    pages = body.get("total_pages") if isinstance(body.get("total_pages"), int) else page
-    return {"items": items, "more": page < min(pages, MOST_PAGES), "next_skip": page * PAGE_SIZE}
+    return items
 
 
 def _item(
@@ -835,19 +937,38 @@ def imdb_id(kind: str, title_id: str) -> str | None:
     return found
 
 
-# ---- a title's page: its cast, and a film's money --------------------------------------------
+# ---- a title's page, its cast, and a film's money ---------------------------------------------
+
+# What a title's page has from TMDB, when TMDB can't be asked about it.
+NO_DETAILS: dict[str, Any] = {
+    "tmdb_id": None, "cast": [], "budget": None, "revenue": None,
+    "name": None, "poster": None, "background": None, "year": None, "rating": None,
+    "genres": [], "description": None, "runtime_min": None, "directors": [],
+    "trailer_video_id": None,
+}  # fmt: skip
 
 
 def details(kind: str, title_id: str) -> dict[str, Any]:
-    """A title's cast with their photos (`CAST` at most, in TMDB's order), and for a film
-    its budget and revenue in US dollars (None when TMDB doesn't know: it says 0)."""
+    """A title's page as TMDB has it (the standard plugin, 2026-11-11), from one question:
+    its name, poster, background, year, score, genres, summary (`description`), length
+    (`runtime_min`), who made it (`directors`: a film's directors, else a series' creators)
+    and its trailer (`trailer_video_id`, TMDB's own on the video service, the official
+    first), named as an add-on's `Details` names them, for the app to put first and fill in
+    from the plugins; and its cast with their photos (`CAST` at most, in TMDB's order), and
+    for a film its budget and revenue in US dollars (None when TMDB doesn't know: it says
+    0). No episodes: a series' are the plugins' (`episodes` for one they haven't)."""
     found = _tmdb_of(title_id, kind)
     if not found:
-        return {"tmdb_id": None, "cast": [], "budget": None, "revenue": None}
+        return dict(NO_DETAILS)
     tmdb_id, media = found
-    body = _ask(f"/{media}/{tmdb_id}", append_to_response="credits")
+    body = _ask(
+        f"/{media}/{tmdb_id}", append_to_response="credits,videos,external_ids", language="en-US"
+    )
+    imdb = _external_imdb(body)
     with _lock:
         _languages[found] = _language(body.get("original_language"))
+        if imdb:
+            _imdb[found] = imdb
     credits = body.get("credits") if isinstance(body.get("credits"), dict) else {}
     cast = []
     for person in credits.get("cast") or []:
@@ -865,11 +986,138 @@ def details(kind: str, title_id: str) -> dict[str, Any]:
     def money(value: Any) -> int | None:
         return value if isinstance(value, int) and value > 0 else None
 
+    def text(value: Any) -> str | None:
+        return value.strip() if isinstance(value, str) and value.strip() else None
+
+    day = text(body.get("release_date")) or text(body.get("first_air_date"))
+    score = body.get("vote_average")
+    runtime = body.get("runtime")
+    if not isinstance(runtime, int):
+        each = body.get("episode_run_time")
+        runtime = each[0] if isinstance(each, list) and each and isinstance(each[0], int) else None
     return {
         "tmdb_id": tmdb_id,
         "cast": cast,
         "budget": money(body.get("budget")) if media == "movie" else None,
         "revenue": money(body.get("revenue")) if media == "movie" else None,
+        "name": text(body.get("title")) or text(body.get("name")),
+        "poster": _picture(body.get("poster_path"), "w500"),
+        "background": _picture(body.get("backdrop_path"), "w1280"),
+        "year": day[:4] if day and len(day) >= 4 else None,
+        "rating": round(float(score), 1) if isinstance(score, int | float) and score > 0 else None,
+        "genres": [
+            g["name"]
+            for g in body.get("genres") or []
+            if isinstance(g, dict) and text(g.get("name"))
+        ],
+        "description": text(body.get("overview")),
+        "runtime_min": runtime if isinstance(runtime, int) and runtime > 0 else None,
+        "directors": _makers(body, credits, media),
+        "trailer_video_id": _trailer(body),
+    }
+
+
+def _external_imdb(body: dict[str, Any]) -> str | None:
+    """The IMDb id in a title's appended `external_ids`, if it has one."""
+    external = body.get("external_ids")
+    found = external.get("imdb_id") if isinstance(external, dict) else None
+    return found if isinstance(found, str) and IMDB_ID.fullmatch(found) else None
+
+
+def _makers(body: dict[str, Any], credits: dict[str, Any], media: str) -> list[str]:
+    """Who made a title, for its page: a film's directors (its crew's "Director"), else a
+    series' creators; each once, `DIRECTORS` at most."""
+    named = [
+        person.get("name")
+        for person in credits.get("crew") or []
+        if isinstance(person, dict) and person.get("job") == "Director"
+    ]
+    if not named and media == "tv":
+        named = [p.get("name") for p in body.get("created_by") or [] if isinstance(p, dict)]
+    makers: list[str] = []
+    for name in named:
+        if isinstance(name, str) and name.strip() and name.strip() not in makers:
+            makers.append(name.strip())
+    return makers[:DIRECTORS]
+
+
+def _trailer(body: dict[str, Any]) -> str | None:
+    """A title's trailer on the video service, by its id there: TMDB's official one first."""
+    videos = body.get("videos")
+    results = videos.get("results") if isinstance(videos, dict) else None
+    trailers = [
+        v
+        for v in results or []
+        if isinstance(v, dict)
+        and v.get("site") == "YouTube"
+        and v.get("type") == "Trailer"
+        and isinstance(v.get("key"), str)
+        and v["key"]
+    ]
+    official = [v for v in trailers if v.get("official") is True]
+    chosen = (official or trailers)[:1]
+    return chosen[0]["key"] if chosen else None
+
+
+def episodes(kind: str, title_id: str) -> dict[str, Any]:
+    """A series' seasons and episodes as TMDB has them (2026-11-11), for a series no plugin
+    has episodes of: `{videos}`, each by the series' IMDb id with its season and number
+    ("tt0944947:1:2"), as the plugins give theirs, so its ways to play are asked of them as
+    any episode's are. Specials (season 0) too. A series' seasons are asked `SEASONS_AT_ONCE`
+    to a question. Nothing for a film, or a title by any other id: its episodes' ids have
+    to be the IMDb id's."""
+    if kind != "series" or not IMDB_ID.fullmatch(title_id):
+        return {"videos": []}
+    found = _tmdb_of(title_id, kind)
+    if not found or found[1] != "tv":
+        return {"videos": []}
+    tmdb_id = found[0]
+    body = _ask(f"/tv/{tmdb_id}", language="en-US")
+    seasons = sorted({
+        s["season_number"]
+        for s in body.get("seasons") or []
+        if isinstance(s, dict) and isinstance(s.get("season_number"), int)
+        and s["season_number"] >= 0
+    })  # fmt: skip
+    videos: list[dict[str, Any]] = []
+    for start in range(0, len(seasons), SEASONS_AT_ONCE):
+        batch = seasons[start : start + SEASONS_AT_ONCE]
+        answer = _ask(
+            f"/tv/{tmdb_id}",
+            append_to_response=",".join(f"season/{n}" for n in batch),
+            language="en-US",
+        )
+        for number in batch:
+            season = answer.get(f"season/{number}")
+            if not isinstance(season, dict):
+                continue
+            for raw in season.get("episodes") or []:
+                video = _episode(raw, title_id)
+                if video:
+                    videos.append(video)
+    videos.sort(key=lambda v: (v["season"], v["episode"]))
+    return {"videos": videos}
+
+
+def _episode(raw: Any, imdb: str) -> dict[str, Any] | None:
+    """One of TMDB's episodes in the shape of an add-on's `Video`."""
+    if not isinstance(raw, dict):
+        return None
+    season, number = raw.get("season_number"), raw.get("episode_number")
+    if not isinstance(season, int) or not isinstance(number, int):
+        return None
+    name = raw.get("name")
+    aired = raw.get("air_date")
+    overview = raw.get("overview")
+    return {
+        "id": f"{imdb}:{season}:{number}",
+        "title": name.strip() if isinstance(name, str) and name.strip() else f"Episode {number}",
+        "thumbnail": _picture(raw.get("still_path"), "w300"),
+        "released": aired if isinstance(aired, str) and aired else None,
+        "video_id": None,
+        "season": season,
+        "episode": number,
+        "overview": overview.strip() if isinstance(overview, str) and overview.strip() else None,
     }
 
 

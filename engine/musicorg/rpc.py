@@ -141,7 +141,9 @@ SLOW_METHODS = frozenset(
      "profile.contents", "profile.import",  # walk the library; a dry run reads every tag
      # TMDB (2026-11-05): a question for each title asked about, four at a time.
      "tmdb.connect", "tmdb.facts", "tmdb.catalog", "tmdb.details", "tmdb.person", "tmdb.imdb",
-     "tmdb.calendar"}
+     "tmdb.calendar",
+     # TMDB, the standard plugin (2026-11-11): its genres, a series' seasons, a search.
+     "tmdb.genres", "tmdb.episodes", "tmdb.search"}
 )  # fmt: skip
 MAX_EXCLUDE = 5000  # songs already on screen that Show More leaves out
 RPC_DECISIONS = ("accept", "candidate", "url", "only_copy", "skip", "reject")
@@ -466,6 +468,9 @@ class Server:
             "tmdb.facts": self.tmdb_facts,
             "tmdb.catalog": self.tmdb_catalog,
             "tmdb.details": self.tmdb_details,
+            "tmdb.genres": self.tmdb_genres,
+            "tmdb.episodes": self.tmdb_episodes,
+            "tmdb.search": self.tmdb_search,
             "tmdb.person": self.tmdb_person,
             "tmdb.imdb": self.tmdb_imdb,
             "tmdb.calendar": self.tmdb_calendar,
@@ -1609,13 +1614,40 @@ class Server:
         return {"facts": [{"id": title_id, **said} for title_id, said in found.items()]}
 
     def tmdb_catalog(self, params: dict[str, Any]) -> dict[str, Any]:
+        """A page of one of TMDB's lists; by up to two of TMDB's genres at once, and in an
+        original language (2026-11-11, TMDB the standard plugin)."""
         skip = want(params, "skip", int, 0) or 0
         if skip < 0:
             raise RpcError(INVALID_PARAMS, "skip can't be less than 0.")
-        return tmdb.catalog(need(params, "type", str), need(params, "list", str), skip)
+        genres = want(params, "genres", list, []) or []
+        if len(genres) > tmdb.MOST_GENRES or not all(
+            isinstance(g, str) and g.strip() for g in genres
+        ):
+            raise RpcError(
+                INVALID_PARAMS, f"genres is at most {tmdb.MOST_GENRES} of TMDB's genre names."
+            )
+        language = want(params, "language", str)
+        if language is not None and not tmdb.LANGUAGE_CODE.fullmatch(language):
+            raise RpcError(INVALID_PARAMS, 'language is a two-letter code, such as "en".')
+        return tmdb.catalog(
+            need(params, "type", str), need(params, "list", str), skip, genres, language
+        )
 
     def tmdb_details(self, params: dict[str, Any]) -> dict[str, Any]:
         return tmdb.details(need(params, "type", str), need(params, "id", str))
+
+    def tmdb_genres(self, params: dict[str, Any]) -> dict[str, Any]:
+        """TMDB's genres for its lists' menus, films' and series', A to Z."""
+        return {"genres": {kind: tmdb.genres(kind) for kind in ("movie", "series")}}
+
+    def tmdb_episodes(self, params: dict[str, Any]) -> dict[str, Any]:
+        return tmdb.episodes(need(params, "type", str), need(params, "id", str))
+
+    def tmdb_search(self, params: dict[str, Any]) -> dict[str, Any]:
+        query = need(params, "query", str)
+        if len(query) > 200:
+            raise RpcError(INVALID_PARAMS, "query is 200 characters at most.")
+        return tmdb.search(need(params, "type", str), query)
 
     def tmdb_person(self, params: dict[str, Any]) -> dict[str, Any]:
         return tmdb.person(need(params, "person_id", int))

@@ -7,24 +7,58 @@ public enum TMDB {
     /// What TMDB asks every app that uses it to say, where the key is entered.
     public static let attribution = "This product uses the TMDB API but is not endorsed or certified by TMDB."
 
-    /// The Finders' TMDB lists (the engine's **TMDB list**), with the names the owner asked for.
+    /// The Finders' TMDB lists (the engine's **TMDB list**), with the names the owner asked for;
+    /// Trending since 2026-11-11.
     public static let lists: [(id: String, name: String)] = [
         ("popular", "TMDB – Popular"), ("top_rated", "TMDB – Top Rated"), ("upcoming", "TMDB – Upcoming"),
+        ("trending", "TMDB – Trending"),
     ]
+
+    /// Whether one of TMDB's lists can be asked by genre: TMDB's trending can't.
+    public static func byGenre(_ list: String) -> Bool { list != "trending" }
 
     /// The id the app's own stand-in for TMDB goes by among the plugins' lists.
     public static let addonId = "tmdb"
 
-    /// TMDB's lists as a plugin's, so the Finders' list menus offer them beside the others:
-    /// films and series, each list taking `skip` for its next page and no genre.
-    public static let addon = Addon(
-        id: addonId, name: "TMDB", address: "https://www.themoviedb.org", types: ["movie", "series"],
-        catalogs: ["movie", "series"].flatMap { type in
-            lists.map { Addon.Catalog(type: type, id: $0.id, name: $0.name, extra: [Addon.Extra(name: "skip", required: false, options: [])]) }
-        },
-        version: nil, description: nil, adult: false)
+    /// The standard plugin TMDB (the owner, 2026-11-11: "lets add standard plugin, TMDB. It wont
+    /// work if not Connected to API, it will be number 1 on list. Anything it cant get will come
+    /// from other plugins"): made up here, and its lists are offered as a plugin's are, first in
+    /// the Finders' list menus. Films and series, each list taking `skip` for its next page and,
+    /// but for Trending, a genre: TMDB's own, as the engine gives them (`tmdb.genres`, A to Z, by
+    /// "movie" and "series"), two at once asked in one question. Asked through `tmdb.catalog`,
+    /// never as a plugin, and only with a key.
+    public static func addon(genres: [String: [String]] = [:]) -> Addon {
+        Addon(
+            id: addonId, name: "TMDB", address: "https://www.themoviedb.org", types: ["movie", "series"],
+            catalogs: ["movie", "series"].flatMap { type in
+                lists.map { list in
+                    var extra = [Addon.Extra(name: "skip", required: false, options: [])]
+                    if byGenre(list.id), let names = genres[type], !names.isEmpty {
+                        extra.insert(Addon.Extra(name: "genre", required: false, options: names), at: 0)
+                    }
+                    return Addon.Catalog(type: type, id: list.id, name: list.name, extra: extra)
+                }
+            },
+            version: nil, description: nil, adult: false)
+    }
 
     public static func isTMDB(_ addon: Addon) -> Bool { addon.id == addonId }
+}
+
+/// `tmdb.genres`' answer (2026-11-11): TMDB's genres by "movie" and "series", A to Z.
+public struct TMDBGenres: Decodable, Sendable {
+    public let genres: [String: [String]]
+}
+
+/// `tmdb.search`'s answer (2026-11-11): what TMDB found, by IMDb id, those with a poster.
+public struct TMDBFound: Decodable, Sendable {
+    public let items: [MediaItem]
+}
+
+/// `tmdb.episodes`' answer (2026-11-11): a series' episodes as TMDB has them, for a series no
+/// plugin has episodes of, each by its IMDb id, season and number as the plugins give theirs.
+public struct TMDBEpisodes: Decodable, Sendable {
+    public let videos: [MediaDetails.Video]
 }
 
 /// Settings' "Original language" (the owner, 2026-11-05): Movie Finder's and Series Finder's
@@ -136,12 +170,34 @@ public struct TMDBCast: Decodable, Identifiable, Hashable, Sendable {
     public var id: Int { personId }
 }
 
-/// A title's page's extras from TMDB: its cast, and a film's budget and revenue (US dollars).
+/// A title's page from TMDB: its cast, and a film's budget and revenue (US dollars); and since
+/// 2026-11-11 (TMDB the standard plugin) the page itself, as `page(id:type:)` makes it. The
+/// page's fields are nil from an engine before then.
 public struct TMDBDetails: Decodable, Sendable {
     public let tmdbId: Int?
     public let cast: [TMDBCast]
     public let budget: Int?
     public let revenue: Int?
+    public let name: String?
+    public let poster: String?
+    public let background: String?
+    public let year: String?
+    public let rating: Double?
+    public let genres: [String]?
+    public let description: String?
+    public let runtimeMin: Int?
+    public let directors: [String]?
+    public let trailerVideoId: String?
+
+    /// The title's page as TMDB has it, by the app's id for it, or nil when TMDB doesn't know
+    /// it. No episodes: a series' are the plugins' (`MediaDetails.tmdbFirst`).
+    public func page(id: String, type: String) -> MediaDetails? {
+        guard let name, !name.isEmpty else { return nil }
+        return MediaDetails(
+            id: id, type: type, name: name, poster: poster, year: year, rating: rating, genres: genres ?? [],
+            description: description, background: background, logo: nil, runtimeMin: runtimeMin,
+            cast: cast.map(\.name), directors: directors ?? [], trailerVideoId: trailerVideoId, videos: [])
+    }
 }
 
 /// A film or series someone is in, by TMDB's own id ("tmdb:550"): opened by its IMDb id,

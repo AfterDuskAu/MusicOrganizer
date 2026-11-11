@@ -808,6 +808,36 @@ extension MediaDetails {
             description: description, background: nil, logo: nil, runtimeMin: nil, cast: cast,
             directors: [], trailerVideoId: nil, videos: videos)
     }
+
+    /// A title's page with TMDB first (the standard plugin, the owner, 2026-11-11: "Anything it
+    /// cant get will come from other plugins"): each of TMDB's details where it has one, the
+    /// plugin's where it hasn't (a logo, always). A series' episodes are the plugin's whenever it
+    /// has any, because its ways to play go by the plugin's numbering ("tt0944947:1:2"), and so
+    /// do what's watched and the next episode; TMDB's numbering differs for some series. Nil
+    /// when neither has the title.
+    public static func tmdbFirst(_ tmdb: MediaDetails?, _ plugin: MediaDetails?) -> MediaDetails? {
+        guard let tmdb else { return plugin }
+        guard let plugin else { return tmdb }
+        return MediaDetails(
+            id: plugin.id, type: plugin.type, name: tmdb.name.isEmpty ? plugin.name : tmdb.name,
+            poster: tmdb.poster ?? plugin.poster, year: tmdb.year ?? plugin.year, rating: tmdb.rating ?? plugin.rating,
+            genres: tmdb.genres.isEmpty ? plugin.genres : tmdb.genres, description: tmdb.description ?? plugin.description,
+            background: tmdb.background ?? plugin.background, logo: tmdb.logo ?? plugin.logo,
+            runtimeMin: tmdb.runtimeMin ?? plugin.runtimeMin, cast: tmdb.cast.isEmpty ? plugin.cast : tmdb.cast,
+            directors: tmdb.directors.isEmpty ? plugin.directors : tmdb.directors,
+            trailerVideoId: tmdb.trailerVideoId ?? plugin.trailerVideoId,
+            videos: plugin.videos.isEmpty ? tmdb.videos : plugin.videos)
+    }
+
+    /// The same page with these episodes, where it has none of its own: a series no plugin has
+    /// episodes of, given TMDB's (`tmdb.episodes`).
+    public func withEpisodes(_ episodes: [Video]) -> MediaDetails {
+        guard videos.isEmpty else { return self }
+        return MediaDetails(
+            id: id, type: type, name: name, poster: poster, year: year, rating: rating, genres: genres,
+            description: description, background: background, logo: logo, runtimeMin: runtimeMin, cast: cast,
+            directors: directors, trailerVideoId: trailerVideoId, videos: episodes)
+    }
 }
 
 extension MediaStream {

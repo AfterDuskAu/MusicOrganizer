@@ -297,12 +297,15 @@ struct TMDBSettings: View {
                     Text(problem).foregroundStyle(.orange).frame(maxWidth: .infinity, alignment: .leading)
                 }
                 SideNote(
-                    "With your own key from themoviedb.org (Settings → API), Movie Finder and Series Finder offer "
-                        + "TMDB's Popular, Top Rated and Upcoming, a film's page shows its cast with their photos "
-                        + "and its budget and revenue, the calendar has a General view of what's coming out, and "
-                        + "a child's profile can be kept to some Australian ratings. The key is kept on this Mac "
-                        + "for every profile, and only a title's or a person's id is sent with it. "
-                        + TMDB.attribution)
+                    "With your own key from themoviedb.org (Settings → API), TMDB is the first plugin: Movie Finder "
+                        + "and Series Finder offer its Popular, Top Rated, Upcoming and Trending first, by its genres "
+                        + "(two at once in one question), a title's page is TMDB's (the plugins fill in what it "
+                        + "hasn't, and a series' episodes and every way to play are theirs), a search shows what TMDB "
+                        + "finds first, a film's page shows its cast with their photos and its budget and revenue, "
+                        + "the calendar has a General view of what's coming out, and a child's profile can be kept "
+                        + "to some Australian ratings. The key is kept on this Mac for every profile, and only a "
+                        + "title's or a person's id, a list's genres and language, or a search's words are sent "
+                        + "with it. " + TMDB.attribution)
             }
             Section("Original Language") {
                 Picker("Show", selection: $originalLanguage) {

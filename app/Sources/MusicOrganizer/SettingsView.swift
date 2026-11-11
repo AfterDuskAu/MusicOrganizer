@@ -1530,6 +1530,7 @@ private struct AddonSettings: View {
         let addons = model.media.addons
         Form {
             Section("Your Plugins") {
+                tmdbRow
                 if addons.isEmpty {
                     Text(model.media.problem ?? "Looking…").foregroundStyle(.secondary)
                 }
@@ -1537,8 +1538,9 @@ private struct AddonSettings: View {
                     row(addon, at: index, of: addons)
                 }
                 SideNote(
-                    "The order matters when two plugins know the same film: its details "
-                        + "come from the one nearer the top.")
+                    "With a key, a film's details come from TMDB first, and what TMDB hasn't from the "
+                        + "plugin nearest the top that has it; its ways to play only ever come from the "
+                        + "plugins, in this order.")
             }
             Section("Add a Plugin") {
                 HStack {
@@ -1582,6 +1584,26 @@ private struct AddonSettings: View {
 
     private var removingShown: Binding<Bool> {
         Binding(get: { removing != nil }, set: { if !$0 { removing = nil } })
+    }
+
+    /// The standard plugin TMDB (the owner, 2026-11-11: "It wont work if not Connected to API,
+    /// it will be number 1 on list"): always first, never moved or removed; its key, typed in
+    /// Settings → Plugins → TMDB, is what switches it on.
+    private var tmdbRow: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text("TMDB").fontWeight(.medium)
+                Text("Movies, Series: lists by genre, each title's page and search, first")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                if !model.tmdbHasKey {
+                    Text("Needs a TMDB key: Settings → Plugins → TMDB, below.")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.orange)
+                }
+            }
+            Spacer()
+        }
     }
 
     private func row(_ addon: Addon, at index: Int, of addons: [Addon]) -> some View {
