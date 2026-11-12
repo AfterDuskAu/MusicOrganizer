@@ -1988,6 +1988,15 @@ final class AppModel {
         return swarmCounts[hash]?.swarm
     }
 
+    /// How many of those really answered (`Sharers`), from the same place `swarm(of:)` reads,
+    /// or nil when nobody has counted (or the engine doesn't say).
+    func answered(of stream: MediaStream) -> Int? {
+        guard stream.kind == "torrent", let hash = stream.infoHash?.lowercased() else { return nil }
+        if let keeping = filmKeeps[hash], keeping.isKeeping, keeping.swarm != nil { return keeping.answered }
+        if filmTorrent == hash, film.isOpen, let status = filmStatus, status.swarm != nil { return status.answered }
+        return swarmCounts[hash]?.answered
+    }
+
     /// Join a torrent through the engine and play its film as it arrives. The engine is
     /// asked how it's going every two seconds, which also keeps the film open there.
     private func playTorrent(

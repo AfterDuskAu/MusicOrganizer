@@ -1926,19 +1926,28 @@ struct MovieView: View {
     }
 
     /// Who has a way to play: for a torrent, its seeders and leechers ("25/5") once
-    /// they've been counted, else a Count button (the app joins a torrent only from a
-    /// click, so nobody is counted for a film that was only looked at). Anything that
-    /// isn't a torrent has none: a dash.
+    /// they've been counted, and under them how many really answered ("none answered" in
+    /// orange: those listed have gone, or can't be reached; 2026-11-12), else a Count button
+    /// (the app joins a torrent only from a click, so nobody is counted for a film that was
+    /// only looked at). Anything that isn't a torrent has none: a dash.
     @ViewBuilder
     private func swarm(of stream: MediaStream) -> some View {
         if stream.kind != "torrent" {
             Text("–").foregroundStyle(.secondary)
         } else if let said = model.swarm(of: stream) {
-            Text(said).monospacedDigit()
-                .help(
-                    "Seeders have the whole film; leechers are the others sharing it. The "
-                        + "film's trackers' own count where they give one; otherwise those "
-                        + "this Mac has met so far, which grows while the film plays.")
+            VStack(alignment: .leading, spacing: 1) {
+                Text(said).monospacedDigit()
+                if let answered = model.answered(of: stream) {
+                    Text(Sharers.answered(answered)).font(.caption).monospacedDigit().lineLimit(1)
+                        .foregroundStyle(answered == 0 ? AnyShapeStyle(.orange) : AnyShapeStyle(.secondary))
+                }
+            }
+            .help(
+                "Seeders have the whole film; leechers are the others sharing it. The "
+                    + "film's trackers' own count where they give one; otherwise those "
+                    + "this Mac has met so far, which grows while the film plays. "
+                    + "Answered: how many of them really answered this Mac with some of the film. "
+                    + "Many listed have gone, or can't be reached.")
         } else if stream.infoHash.map({ model.swarmCounting.contains($0.lowercased()) }) == true {
             ProgressView().controlSize(.small)
         } else {

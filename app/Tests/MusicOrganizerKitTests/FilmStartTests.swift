@@ -21,6 +21,53 @@ final class FilmStartTests: XCTestCase {
         XCTAssertEqual(FilmStart.verdict(torrent: nobody, waited: 45), .stuck(FilmStart.nobody))
     }
 
+    /// Listed by a tracker (`seeds`/`others`), with `connected` connected and `answered` of them
+    /// having any of the film.
+    private func listed(_ seeds: Int, _ others: Int, connected: Int = 0, answered: Int = 0) -> TorrentStatus {
+        TorrentStatus(
+            state: "finding", peers: connected, bytesPerSecond: 0, progress: 0, seeds: 0, swarmSeeds: seeds,
+            swarmPeers: seeds + others, answered: answered)
+    }
+
+    func testSharersListedButNoneAnsweringIsSaidSoAndLetGoAfterFortyFiveSeconds() {
+        // The owner, 2026-11-12, on a video app: Count said 12/7, and Play found nobody.
+        let silent = listed(12, 7)
+        XCTAssertEqual(FilmStart.verdict(torrent: silent, waited: 44), .waiting)
+        XCTAssertEqual(
+            FilmStart.verdict(torrent: silent, waited: 45),
+            .stuck("12 seeders and 7 leechers are listed for this one, but none of them answered, so it can't start."))
+        XCTAssertEqual(
+            FilmStart.nobody(listed(1, 0)), "1 seeder is listed for this one, but none of them answered, so it can't start.")
+        XCTAssertEqual(FilmStart.nobody(listed(0, 0)), FilmStart.nobody)
+    }
+
+    func testThoseConnectedWithNothingOfTheFilmDontCountAsAnswering() {
+        let junk = listed(0, 8, connected: 8, answered: 0)
+        XCTAssertEqual(FilmStart.verdict(torrent: junk, waited: 45), .stuck(FilmStart.nobody(junk)))
+        XCTAssertEqual(FilmStart.line(junk, waited: 12), "Finding the film… 0:12 · 0/8 listed, none answered yet")
+        XCTAssertEqual(FilmStart.verdict(torrent: listed(0, 8, connected: 8, answered: 1), waited: 60), .waiting)
+        // An engine that doesn't say who answered: everyone connected, as before.
+        XCTAssertEqual(
+            FilmStart.verdict(torrent: TorrentStatus(state: "finding", peers: 3, bytesPerSecond: 0, progress: 0), waited: 60),
+            .waiting)
+    }
+
+    func testCountSaysWhoIsListedAndWhoAnswered() throws {
+        let said = Data(#"{"info_hash": "ab", "seeds": 12, "peers": 19, "answered": 0}"#.utf8)
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let count = try decoder.decode(TorrentCount.self, from: said)
+        XCTAssertEqual(count.swarm, "12/7")
+        XCTAssertEqual(count.answered, 0)
+        XCTAssertEqual(Sharers.answered(0), "none answered")
+        XCTAssertEqual(Sharers.answered(3), "3 answered")
+        XCTAssertEqual(Sharers.listed(seeds: 12, others: 7), "12 seeders and 7 leechers")
+        XCTAssertNil(Sharers.listed(seeds: 0, others: 0))
+        // An older engine's count says nothing of who answered.
+        let older = try decoder.decode(TorrentCount.self, from: Data(#"{"info_hash": "ab", "seeds": 1, "peers": 2}"#.utf8))
+        XCTAssertNil(older.answered)
+    }
+
     func testWithSomeoneFoundItsDetailsAreGivenLonger() {
         let found = status("finding", peers: 3)
         XCTAssertEqual(FilmStart.verdict(torrent: found, waited: 60), .waiting)
@@ -65,8 +112,8 @@ final class FilmStartTests: XCTestCase {
     func testThePlayersLineSaysHowLongAndWhoIsFound() {
         XCTAssertEqual(FilmStart.line(nil, waited: 3), "Finding the film… 0:03")
         XCTAssertEqual(FilmStart.line(status("finding"), waited: 32), "Finding the film… 0:32 · nobody sharing it found yet")
-        XCTAssertEqual(FilmStart.line(status("finding", peers: 1), waited: 65), "Finding the film… 1:05 · 1 sharing it found")
-        XCTAssertEqual(FilmStart.line(status("finding", peers: 3), waited: 5), "Finding the film… 0:05 · 3 sharing it found")
+        XCTAssertEqual(FilmStart.line(status("finding", peers: 1), waited: 65), "Finding the film… 1:05 · 1 sharing it answered")
+        XCTAssertEqual(FilmStart.line(status("finding", peers: 3), waited: 5), "Finding the film… 0:05 · 3 sharing it answered")
         // Its details here: the torrent's own line.
         let arriving = TorrentStatus(
             state: "fetching", peers: 6, bytesPerSecond: 4_600_000, progress: 0.09, seeds: 2, swarmSeeds: 2,

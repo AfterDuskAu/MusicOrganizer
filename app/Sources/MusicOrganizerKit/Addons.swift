@@ -439,6 +439,10 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
     /// a film is opened and while it plays are the same measure.
     public let swarmSeeds: Int?
     public let swarmPeers: Int?
+    /// Of those connected, the ones that have the film or some of it: who really answered
+    /// (2026-11-12, `Sharers`; an older engine doesn't say). Some answer for any torrent at
+    /// all, with nothing of it to send.
+    public let answered: Int?
     public let bytesPerSecond: Int
     public let progress: Double
     /// The film is being kept and hasn't all arrived yet.
@@ -459,8 +463,9 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
         state: String, peers: Int, bytesPerSecond: Int, progress: Double, keeping: Bool? = nil,
         keptPath: String? = nil, keepError: String? = nil, keepNote: String? = nil,
         converting: Double? = nil, seeds: Int? = nil, swarmSeeds: Int? = nil,
-        swarmPeers: Int? = nil
+        swarmPeers: Int? = nil, answered: Int? = nil
     ) {
+        self.answered = answered
         self.seeds = seeds
         self.swarmSeeds = swarmSeeds
         self.swarmPeers = swarmPeers
@@ -541,6 +546,9 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
         return seeds.map { "\($0)/\(max(peers - $0, 0))" }
     }
 
+    /// Who really answered (`answered`), or, from an engine that doesn't say, everyone connected.
+    public var heard: Int { answered ?? peers }
+
     /// One line for the player: "Finding the film…", "2 seeds · 4 peers · 4.6 MB/s · 9% here".
     /// While the engine looks through what's already here of a film played before, it
     /// says so, not "5% here" climbing to 100% (the owner saw that, 2026-10-17), and how
@@ -564,20 +572,47 @@ public struct TorrentPlaying: Decodable, Sendable {
 }
 
 /// Who has a torrent, counted by the engine from the owner's click (`torrent.count`):
-/// `seeds` have all of it, and `peers` is everyone found, the seeds among them.
+/// `seeds` have all of it, and `peers` is everyone listed, the seeds among them; `answered`,
+/// how many of them really answered this Mac (2026-11-12, `Sharers`; an older engine doesn't
+/// say).
 public struct TorrentCount: Decodable, Equatable, Sendable {
     public let infoHash: String
     public let seeds: Int
     public let peers: Int
+    public let answered: Int?
 
-    public init(infoHash: String, seeds: Int, peers: Int) {
+    public init(infoHash: String, seeds: Int, peers: Int, answered: Int? = nil) {
         self.infoHash = infoHash
         self.seeds = seeds
         self.peers = peers
+        self.answered = answered
     }
 
     /// Seeders and leechers as the film's page writes them: "25/5".
     public var swarm: String { "\(seeds)/\(max(peers - seeds, 0))" }
+}
+
+/// Who's listed as sharing a torrent, against who really answered (the owner, 2026-11-12, on
+/// a video app: Count said 12/7, and Play found nobody). A tracker lists everyone who told it
+/// lately that they have the film or are fetching it, but many of them have gone, or sit
+/// behind a router that lets no one in (as this Mac does: no port is opened on the router),
+/// and some answer for any torrent at all with nothing of it to send. Measured that day with
+/// open-licence films: of the addresses a tracker gives, a third or fewer answer. So Count
+/// says both, and the player says which it is when a film won't start.
+public enum Sharers {
+    /// Under a count: "3 answered", "none answered".
+    public static func answered(_ count: Int) -> String {
+        count <= 0 ? "none answered" : "\(count) answered"
+    }
+
+    /// Who's listed, as a sentence says it: "12 seeders and 7 leechers", "1 seeder", "7 leechers";
+    /// nil when nobody is.
+    public static func listed(seeds: Int, others: Int) -> String? {
+        let seeders = seeds > 0 ? (seeds == 1 ? "1 seeder" : "\(seeds) seeders") : nil
+        let leechers = others > 0 ? (others == 1 ? "1 leecher" : "\(others) leechers") : nil
+        let both = [seeders, leechers].compactMap { $0 }
+        return both.isEmpty ? nil : both.joined(separator: " and ")
+    }
 }
 
 /// The widths of a way to play's line on a film's page, as the owner drew it

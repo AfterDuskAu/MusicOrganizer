@@ -36,21 +36,32 @@ public enum FilmStart {
     public static let noDetails = "This one didn't start: those sharing it didn't send it."
     public static let noAnswer = "This one didn't start: its address didn't answer."
 
+    /// Nobody answered: who's listed, if anyone is, so it squares with Count's figures (the
+    /// owner, 2026-11-12, on a video app: Count said 12/7, and Play found nobody). `Sharers`.
+    public static func nobody(_ status: TorrentStatus) -> String {
+        let seeds = status.swarmSeeds ?? 0
+        let everyone = status.swarmPeers ?? 0
+        guard let listed = Sharers.listed(seeds: seeds, others: everyone - seeds) else { return nobody }
+        let are = everyone == 1 ? "is" : "are"
+        return "\(listed) \(are) listed for this one, but none of them answered, so it can't start."
+    }
+
     /// A torrent's film that hasn't started, `waited` seconds after it was opened. `status` is
     /// nil until the engine has first said how the torrent is doing.
     public static func verdict(torrent status: TorrentStatus?, waited: TimeInterval) -> Verdict {
         guard let status else { return waited >= detailsFor ? .stuck(noDetails) : .waiting }
         switch status.state {
         case "finding":
-            if status.peers == 0, waited >= nobodyFor { return .stuck(nobody) }
-            return waited >= detailsFor ? .stuck(status.peers == 0 ? nobody : noDetails) : .waiting
+            // Only those that really answered count (`Sharers`): some answer for any torrent.
+            if status.heard == 0, waited >= nobodyFor { return .stuck(nobody(status)) }
+            return waited >= detailsFor ? .stuck(status.heard == 0 ? nobody(status) : noDetails) : .waiting
         case "checking", "complete":
             // Looking through what's here of a film played before: it says how far, and opens
             // when it's done. All here: it opens.
             return .waiting
         default:
             // Nothing coming now, and nobody to send it or nothing of it come at all.
-            let stalled = status.bytesPerSecond == 0 && (status.peers == 0 || status.progress == 0)
+            let stalled = status.bytesPerSecond == 0 && (status.heard == 0 || status.progress == 0)
             return stalled && waited >= nothingFor ? .stuck(nobody) : .waiting
         }
     }
@@ -61,14 +72,21 @@ public enum FilmStart {
     }
 
     /// The player's line under its spinner while a torrent's film hasn't started: "Finding the
-    /// film… 0:32 · nobody sharing it found yet", "Finding the film… 0:05 · 3 sharing it found";
-    /// once its details are here, the torrent's own line ("2 seeds · 4 peers · …").
+    /// film… 0:32 · nobody sharing it found yet", "Finding the film… 0:32 · 12/7 listed, none
+    /// answered yet", "Finding the film… 0:05 · 3 sharing it answered"; once its details are
+    /// here, the torrent's own line ("2 seeds · 4 peers · …").
     public static func line(_ status: TorrentStatus?, waited: TimeInterval) -> String {
         let clock = Self.clock(waited)
         guard let status else { return "Finding the film… \(clock)" }
         guard status.state == "finding" else { return status.line }
-        let found = status.peers == 0
-            ? "nobody sharing it found yet" : status.peers == 1 ? "1 sharing it found" : "\(status.peers) sharing it found"
+        let found: String
+        if status.heard > 0 {
+            found = "\(status.heard) sharing it answered"
+        } else if (status.swarmPeers ?? 0) > 0, let swarm = status.swarm {
+            found = "\(swarm) listed, none answered yet"
+        } else {
+            found = "nobody sharing it found yet"
+        }
         return "Finding the film… \(clock) · \(found)"
     }
 
