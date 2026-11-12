@@ -581,6 +581,81 @@ def test_a_torrent_is_counted_without_fetching_any_of_it(
         player.stop()
 
 
+class Starving:
+    """A joined torrent's handle for the transport's rule: how much has come this session."""
+
+    def __init__(self, payload: int = 0, finished: bool = False, flags: int = 0) -> None:
+        self.payload, self.finished, self.flags = payload, finished, flags
+
+    def is_valid(self) -> bool:
+        return True
+
+    def status(self) -> Any:
+        from types import SimpleNamespace
+
+        return SimpleNamespace(
+            total_payload_download=self.payload, is_finished=self.finished, is_seeding=False,
+            flags=self.flags, progress_ppm=0,
+        )  # fmt: skip
+
+
+class Telling(Session):
+    """A session that keeps what it's told."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.told: list[dict[str, Any]] = []
+
+    def apply_settings(self, settings: dict[str, Any]) -> None:
+        self.told.append(settings)
+
+
+def test_sharers_are_reached_over_tcp_and_utp_is_let_on_for_a_film_that_has_had_nothing(
+    places: dict[str, Path],
+) -> None:
+    # 2026-11-12: TCP only made open-licence films 3 to 4 times faster; a few sharers take
+    # only uTP, so a film that has had nothing in its first 15 seconds has it let on.
+    import libtorrent as lt
+
+    player = torrents.Player(places["cache"].parent, movies=places["movies"])
+    player._session = session = Telling()
+    old = time.monotonic() - torrents.UTP_AFTER_S - 1
+
+    def joined(hash: str, handle: Starving, since: float) -> torrents._Joined:
+        one = torrents._Joined(handle, hash, None, places["cache"], since=since)
+        player._joined[hash] = one
+        return one
+
+    # Coming in over TCP, or not 15 seconds old, or all here, or the disk full: TCP only.
+    joined("a" * 40, Starving(payload=5_000_000), old)
+    joined("b" * 40, Starving(), time.monotonic())
+    joined("c" * 40, Starving(finished=True), old)
+    joined("d" * 40, Starving(flags=int(lt.torrent_flags.upload_mode)), old)
+    player._tell_transport()
+    assert session.told == [torrents.transport_settings(utp=False)]
+    assert session.told[0]["enable_outgoing_utp"] is False
+    assert not any(one.wants_utp for one in player._joined.values())
+
+    # Nothing at all in 15 seconds: uTP is let on, and the unreachable are tried again soon.
+    starving = joined("e" * 40, Starving(), old)
+    player._tell_transport()
+    player._tell_transport()  # told once, not again
+    assert session.told[1:] == [torrents.transport_settings(utp=True)]
+    assert session.told[1]["min_reconnect_time"] == torrents.RETRY_AFTER_S
+    # It stays on while that film is joined, though things now come.
+    starving.handle.payload = 1_000
+    player._tell_transport()
+    assert len(session.told) == 2 and starving.wants_utp
+    # Left: TCP only again.
+    del player._joined["e" * 40]
+    player._tell_transport()
+    assert session.told[2:] == [torrents.transport_settings(utp=False)]
+    # A count has uTP on while it runs, so it counts who a film would reach in the end.
+    player._answered["f" * 40] = set()
+    player._tell_transport()
+    assert session.told[3:] == [torrents.transport_settings(utp=True)]
+
+
 def test_a_film_thats_open_is_counted_as_it_stands(
     places: dict[str, Path], monkeypatch: pytest.MonkeyPatch
 ) -> None:

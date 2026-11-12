@@ -105,6 +105,16 @@ PRIORITY_WAIT_S = 5.0  # how long a film's new file priorities are given to take
 IDLE_S = 600  # a film nobody has asked about for this long is closed
 COUNT_S = 8.0  # how long a torrent is joined to count who has it
 COUNT_CHECK_S = 0.25  # how often it's looked at meanwhile
+# Sharers are reached over TCP only (2026-11-12, the owner: "think of a way to improve
+# download speed from torrents"). Measured that day on open-licence films with libtorrent
+# 2.1: with uTP, which libtorrent tries first for every sharer, nearly everything came over
+# it, and uTP gives way whenever the home line is busy, so the last fifth of a film crawled;
+# TCP only, they finished 3 to 4 times sooner (Sintel 28 s to 9 s, Big Buck Bunny 42-50 s to
+# 11.5 s). But a few sharers take only uTP: a film that has had nothing at all this long has
+# uTP let on again (`Player._tell_transport`), and while it's on, a sharer that couldn't be
+# reached is tried again this soon (libtorrent's own wait is a minute, then two).
+UTP_AFTER_S = 15.0
+RETRY_AFTER_S = 2
 COUNTING = "counting"  # the empty folder in the films' cache a counted torrent is given
 KEEP_S = 24 * 3600  # what arrived of a film stays in the cache this long after it was played
 SWEEP_EVERY_S = 600
@@ -277,8 +287,25 @@ def _new_session() -> Any:
             "max_queued_disk_bytes": DISK_QUEUE_BYTES,
             # What it must say back (`alert_mask`).
             "alert_mask": alert_mask(counting=False),
+            # TCP only, until a film needs uTP (`UTP_AFTER_S`). And sharers are tried sooner
+            # and faster than libtorrent's own pace, since most listed never answer.
+            **transport_settings(utp=False),
+            "connection_speed": 150,
+            "smooth_connects": False,
+            "peer_connect_timeout": 7,
+            "torrent_connect_boost": 100,
         }
     )
+
+
+def transport_settings(*, utp: bool) -> dict[str, Any]:
+    """libtorrent's settings for how sharers are reached: TCP only, or uTP too (`UTP_AFTER_S`),
+    and then a sharer that couldn't be reached is tried again within seconds."""
+    return {
+        "enable_outgoing_utp": utp,
+        "enable_incoming_utp": utp,
+        "min_reconnect_time": RETRY_AFTER_S if utp else 60,
+    }
 
 
 def upload_settings(limit: int | None) -> dict[str, int]:
@@ -438,6 +465,9 @@ class _Joined:
     resume_data: bytes | None = field(default=None, repr=False)
     resumed: threading.Event = field(default_factory=threading.Event, repr=False)
     left: threading.Event = field(default_factory=threading.Event, repr=False)
+    since: float = field(default_factory=time.monotonic)  # when it was joined
+    # Nothing came over TCP in its first seconds (`UTP_AFTER_S`): uTP is let on while it's joined.
+    wants_utp: bool = False
 
     def asked_now(self) -> None:
         self.last_asked = time.monotonic()
@@ -730,6 +760,22 @@ class _Joined:
         """Being kept, and not there yet: it isn't closed for being left alone."""
         return self.keep_name is not None and self.kept_path is None and self.keep_error is None
 
+    def starving(self) -> bool:
+        """Nothing at all has come in its first seconds (`UTP_AFTER_S`), though it wants some
+        (and isn't stopped for want of room): its sharers may take only uTP."""
+        if self.closed or not self.handle.is_valid():
+            return False
+        if time.monotonic() - self.since < UTP_AFTER_S:
+            return False
+        told = self.handle.status()
+        if getattr(told, "is_finished", False) or getattr(told, "is_seeding", False):
+            return False
+        import libtorrent as lt
+
+        if int(getattr(told, "flags", 0)) & int(lt.torrent_flags.upload_mode):
+            return False
+        return getattr(told, "total_payload_download", 1) == 0
+
     def arriving(self) -> bool:
         """Not all of the film is here yet (its details may not even be)."""
         if self.closed or not self.handle.is_valid():
@@ -814,6 +860,8 @@ class Player:
         self._counting: set[str] = set()  # the torrents being counted just now
         self._hurry: set[str] = set()  # ...of which these are wanted to play: count no longer
         self._answered: dict[str, set[str]] = {}  # ...and who answered each, so far (`answered_by`)
+        self._utp_told: bool | None = None  # whether uTP was last let on (`_tell_transport`)
+        self._transport_lock = threading.Lock()
         self._parting: dict[str, _Joined] = {}  # being left just now (what's here is saved)
         self._hearing: threading.Thread | None = None  # what libtorrent says back, heard
         self._lock = threading.Lock()
@@ -905,6 +953,7 @@ class Player:
             self._counting.add(info_hash)
             self._answered[info_hash] = set()
             self._tell_alerts()
+            self._tell_transport()  # uTP is on while it counts, so it counts who a film would reach
             # Its trackers, if it has any, are asked for their own count: the surest
             # figures there are, and the quickest.
             ask = getattr(handle, "scrape_tracker", None)
@@ -936,11 +985,32 @@ class Player:
                 self._hurry.discard(info_hash)
                 answered = len(self._answered.pop(info_hash, set()))
             self._tell_alerts()
+            self._tell_transport()
         everyone = max(everyone, answered)  # who answered is listed too
         log.info("torrents: counted who has a torrent (%d with all of it, %d others, %d answered)",
                  seeds, everyone - seeds, answered)  # fmt: skip
         return {"info_hash": info_hash, "seeds": seeds, "peers": max(everyone, seeds),
                 "answered": answered}  # fmt: skip
+
+    def _tell_transport(self) -> None:
+        """Tell libtorrent whether to use uTP (`transport_settings`): only while a film that
+        had nothing over TCP is joined (`UTP_AFTER_S`, `_Joined.starving`), or a count is
+        running (so it counts who a film would reach in the end). Told only when the answer
+        changes; looked at again every couple of seconds (`_close_idle`)."""
+        apply = getattr(self._session, "apply_settings", None)  # a test's stand-in has none
+        if apply is None:
+            return
+        joined = list(self._joined.values())
+        for one in joined:
+            if not one.wants_utp and one.starving():
+                one.wants_utp = True
+                log.info("torrents: nothing came over TCP in %.0f s: uTP is let on", UTP_AFTER_S)
+        utp = bool(self._answered) or any(one.wants_utp and not one.closed for one in joined)
+        with self._transport_lock:
+            if utp == self._utp_told:
+                return
+            self._utp_told = utp
+            apply(transport_settings(utp=utp))
 
     def _tell_alerts(self) -> None:
         """Tell libtorrent what to say back (`alert_mask`): who it lets go of too, while a
@@ -1432,6 +1502,7 @@ class Player:
         while not self._stopping.wait(2):
             now = time.monotonic()
             self._apply_upload()  # a film that has all arrived comes under the owner's limit
+            self._tell_transport()  # a film that has had nothing over TCP has uTP let on
             if now - swept > SWEEP_EVERY_S:
                 swept = now
                 self.sweep()
