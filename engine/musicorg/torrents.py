@@ -34,17 +34,20 @@ What the owner should know, and what this module holds to:
 - **A torrent is joined only while its film is open** (or being kept): closing the film,
   ten minutes unused, or the engine stopping leaves the torrent. Nothing is fetched or
   shared for a film that's merely remembered.
-- **Or for a few seconds, to count who has it** (`count`, the owner's choice of
-  2026-10-11: a Count button beside each way to play, so a torrent nobody has can be
-  told from one many have before it's opened). Then the torrent is told to fetch
-  nothing: no piece of the film is asked for, nothing of it is written, and it's left
-  when the count is in. Like everyone in a torrent, this computer can be seen by the
-  others in it for those seconds.
-- Nothing starts by itself: only `torrent.play`, `torrent.keep` and `torrent.count`,
-  each from the owner's click.
+- **Who has a torrent is asked of its trackers, never by joining it** (`scrape`, the
+  owner, 2026-11-12: "Replace a manual count, to an automatic person detector"). When a
+  film's ways to play are shown, the app asks how many have each of its torrents, and the
+  trackers (the way's own and a few public ones) are asked, by a scrape: one small
+  question each, every torrent of the page in it. They see the torrents' ids and this
+  computer's address; nobody connects to this computer for it, and nothing is fetched.
+  (From 2026-10-11 it was the owner's click on Count, which joined the torrent for a few
+  seconds; a count heard from one tracker at most, the first the way listed, and a way
+  whose first tracker didn't answer read 6/7 for a film its trackers said 251/67 of.)
+- Nothing is joined by itself: only `torrent.play` and `torrent.keep`, each from the
+  owner's click (and the next episode, by the owner's switch: the app's).
 
 In replay mode (`MUSICORG_REPLAY_DIR`, every test) no torrent is ever joined:
-`_new_session` refuses.
+`_new_session` refuses; and no tracker is asked but one on this computer (a test's).
 """
 
 from __future__ import annotations
@@ -53,6 +56,8 @@ import logging
 import os
 import re
 import secrets
+import socket
+import struct
 import threading
 import time
 from collections import OrderedDict
@@ -103,8 +108,6 @@ DEADLINE_MS = 250  # each piece asked for first is wanted this much after the on
 NUDGE_S = 2.0  # a range still waiting for its piece asks for it again this often
 PRIORITY_WAIT_S = 5.0  # how long a film's new file priorities are given to take hold
 IDLE_S = 600  # a film nobody has asked about for this long is closed
-COUNT_S = 8.0  # how long a torrent is joined to count who has it
-COUNT_CHECK_S = 0.25  # how often it's looked at meanwhile
 # Sharers are reached over TCP first (2026-11-12, the owner: "think of a way to improve
 # download speed from torrents"). Measured that day on open-licence films with libtorrent
 # 2.1: with uTP, which libtorrent tries first for every sharer, nearly everything came over
@@ -124,7 +127,6 @@ COUNT_CHECK_S = 0.25  # how often it's looked at meanwhile
 TCP_HEAD_START_S = 5.0
 RETRY_AFTER_S = 2
 RETRY_FOR_S = 15.0
-COUNTING = "counting"  # the empty folder in the films' cache a counted torrent is given
 KEEP_S = 24 * 3600  # what arrived of a film stays in the cache this long after it was played
 SWEEP_EVERY_S = 600
 CHUNK = 256 * 1024
@@ -269,6 +271,183 @@ def sweep(cache: Path, skip: list[str] | tuple[str, ...] = ()) -> int:
         return 0
 
 
+# ---- who has a torrent, asked of its trackers (no torrent is joined) ---------------------
+
+# Public trackers every way is asked of too, besides its own (the same six the video apps
+# give every torrent). Most of a film's sharers are known to the first of them.
+PUBLIC_TRACKERS = (
+    "udp://tracker.opentrackr.org:1337/announce",
+    "udp://open.stealth.si:80/announce",
+    "udp://tracker.torrent.eu.org:451/announce",
+    "udp://explodie.org:6969/announce",
+    "udp://exodus.desync.com:6969/announce",
+    "udp://open.demonii.com:1337/announce",
+)
+SCRAPE_S = 3.0  # a tracker is given this long in all, and the asking is over by then
+# ...or this long after the first tracker answered, whichever is sooner (2026-11-12: one that
+# never answers held the figure for the whole 3 s; measured, those that answer do within
+# about 0.7 s). Those still out then are left, and what they say later doesn't count.
+SCRAPE_AFTER_FIRST_S = 1.0
+SCRAPE_AGAIN_S = 1.0  # a question nothing came back for in this long is sent again, once
+SCRAPE_MOST = 70  # torrents in one question (a packet holds about 74)
+SCRAPE_WAYS_MOST = 500  # torrents asked about at once, at most
+UDP_TRACKER_ID = 0x41727101980  # what a UDP tracker's first question begins with (BEP 15)
+_ON_THIS_COMPUTER = frozenset({"127.0.0.1", "::1", "localhost"})
+
+
+def scrape(
+    ways: list[tuple[str, list[str]]], *, public: tuple[str, ...] | list[str] = PUBLIC_TRACKERS
+) -> dict[str, tuple[int, int]]:
+    """Who has each torrent, as its trackers know it (the owner, 2026-11-12: "Replace a
+    manual count, to an automatic person detector"): `{info_hash: (seeds, everyone)}`, for
+    the torrents some tracker answered about (0 and 0 is an answer). `ways` are each a
+    torrent's id and its own trackers; each is asked of those that are UDP trackers (a
+    web address's are left out) and of `public`, every tracker once, about all the torrents
+    it's asked about in one question (BEP 15's scrape), all the trackers at once. Over when
+    each has answered or failed, `SCRAPE_AFTER_FIRST_S` after the first answered, or after
+    `SCRAPE_S`, whichever is first.
+
+    Seeds are the most any tracker said have all of it; everyone is that and the most any
+    tracker said are still fetching it (each figure's largest, as libtorrent takes them:
+    trackers know of many of the same people, so they aren't added up). It's who told a
+    tracker lately that they have the film, not who answers: some have gone, and some
+    can't be reached (`answered_by` says who did, once a film is open).
+
+    Nothing is joined, nobody is connected to and nothing is written: each tracker is told
+    the ids and sees this computer's address, as when a film is played."""
+    asked: dict[tuple[str, int], list[str]] = {}
+    for info_hash, trackers in ways[:SCRAPE_WAYS_MOST]:
+        info_hash = info_hash.lower()
+        if not INFO_HASH.fullmatch(info_hash):
+            continue
+        for url in [*trackers, *public]:
+            where = _udp_tracker(url)
+            if where is None:
+                continue
+            hashes = asked.setdefault(where, [])
+            if info_hash not in hashes:
+                hashes.append(info_hash)
+    until = time.monotonic() + SCRAPE_S
+    heard: list[dict[str, tuple[int, int]]] = []
+    first: list[float] = []  # when the first tracker answered
+    told = threading.Condition()
+
+    def ask(where: tuple[str, int], hashes: list[str]) -> None:
+        found = _ask_tracker(where, hashes, until)
+        with told:
+            heard.append(found)
+            if found and not first:
+                first.append(time.monotonic())
+            told.notify_all()
+
+    for where, hashes in asked.items():
+        threading.Thread(target=ask, args=(where, hashes), daemon=True).start()
+    with told:
+        while len(heard) < len(asked):
+            over = min(until, first[0] + SCRAPE_AFTER_FIRST_S) if first else until
+            left = over - time.monotonic()
+            if left <= 0:
+                break
+            told.wait(left)
+        answers = list(heard)  # a tracker still out now is left: what it says doesn't count
+    seeds: dict[str, int] = {}
+    others: dict[str, int] = {}
+    for found in answers:
+        for info_hash, (has_all, fetching) in found.items():
+            seeds[info_hash] = max(seeds.get(info_hash, 0), has_all)
+            others[info_hash] = max(others.get(info_hash, 0), fetching)
+    log.info(
+        "torrents: asked %d trackers who has %d torrents: %d answered, about %d of them",
+        len(asked), len({h for hashes in asked.values() for h in hashes}),
+        sum(1 for found in answers if found), len(seeds),
+    )  # fmt: skip
+    return {one: (has_all, has_all + others[one]) for one, has_all in seeds.items()}
+
+
+def _udp_tracker(url: str) -> tuple[str, int] | None:
+    """A UDP tracker's host and port, or None for anything else (a web address's tracker,
+    one with no port, one off this computer in replay mode)."""
+    from urllib.parse import urlsplit
+
+    try:
+        parts = urlsplit(url.strip())
+        host, port = parts.hostname, parts.port
+    except ValueError:
+        return None
+    if parts.scheme.lower() != "udp" or not host or not port:
+        return None
+    if os.environ.get(REPLAY_ENV) and host.lower() not in _ON_THIS_COMPUTER:
+        return None  # a test never reaches out
+    return host.lower(), port
+
+
+def _ask_tracker(
+    where: tuple[str, int], hashes: list[str], until: float
+) -> dict[str, tuple[int, int]]:
+    """One UDP tracker's answer (BEP 15): `{info_hash: (seeders, leechers)}`, or nothing if
+    it didn't answer, said it couldn't, or couldn't be found. First a question for a
+    connection id, then the scrape: up to `SCRAPE_MOST` torrents in each."""
+    host, port = where
+    try:
+        found = socket.getaddrinfo(host, port, type=socket.SOCK_DGRAM)
+    except (OSError, UnicodeError):
+        return {}
+    v4 = [one for one in found if one[0] == socket.AF_INET]
+    v6 = [one for one in found if one[0] == socket.AF_INET6]
+    if not (v4 or v6):
+        return {}
+    family, _, _, _, address = (v4 or v6)[0]
+    said: dict[str, tuple[int, int]] = {}
+    try:
+        with socket.socket(family, socket.SOCK_DGRAM) as sock:
+            connected = _exchange(sock, address, UDP_TRACKER_ID, 0, b"", until)
+            if connected is None or len(connected) < 16:
+                return {}
+            (connection,) = struct.unpack_from(">Q", connected, 8)
+            for start in range(0, len(hashes), SCRAPE_MOST):
+                part = hashes[start : start + SCRAPE_MOST]
+                asked = b"".join(bytes.fromhex(one) for one in part)
+                answer = _exchange(sock, address, connection, 2, asked, until)
+                if answer is None:
+                    break
+                for i, info_hash in enumerate(part):
+                    if len(answer) < 8 + 12 * (i + 1):
+                        break
+                    seeders, _completed, leechers = struct.unpack_from(">iii", answer, 8 + 12 * i)
+                    said[info_hash] = (max(seeders, 0), max(leechers, 0))
+    except OSError:
+        pass
+    return said
+
+
+def _exchange(
+    sock: socket.socket, address: Any, connection: int, action: int, body: bytes, until: float
+) -> bytes | None:
+    """Ask a UDP tracker one thing (`action`: 0 for a connection id, 2 a scrape) and wait for
+    its answer to it: the answer, or None if none came (sent again once after
+    `SCRAPE_AGAIN_S`) or it was an error (action 3)."""
+    tid = secrets.randbits(32)
+    packet = struct.pack(">QII", connection, action, tid) + body
+    for _ in range(2):
+        if time.monotonic() >= until:
+            return None
+        sock.sendto(packet, address)
+        wait_until = min(time.monotonic() + SCRAPE_AGAIN_S, until)
+        while (left := wait_until - time.monotonic()) > 0:
+            sock.settimeout(left)
+            try:
+                data = sock.recv(4096)
+            except TimeoutError:
+                break
+            if len(data) < 8:
+                continue
+            said_action, said_tid = struct.unpack_from(">II", data)
+            if said_tid != tid:
+                continue  # an answer to something else
+            return data if said_action == action else None
+    return None
+
+
 # ---- libtorrent: the only place a torrent is joined --------------------------------------
 
 
@@ -295,7 +474,7 @@ def _new_session() -> Any:
             # it has all arrived, or when it's left: see `DISK_QUEUE_BYTES`.
             "max_queued_disk_bytes": DISK_QUEUE_BYTES,
             # What it must say back (`alert_mask`).
-            "alert_mask": alert_mask(counting=False),
+            "alert_mask": alert_mask(),
             # uTP always taken from sharers who reach us, and ours over TCP first
             # (`TCP_HEAD_START_S`). And sharers are tried sooner and faster than libtorrent's
             # own pace, since most listed never answer.
@@ -333,18 +512,14 @@ def upload_settings(limit: int | None) -> dict[str, int]:
     return {"upload_rate_limit": int(limit), "unchoke_slots_limit": 8}
 
 
-def alert_mask(*, counting: bool) -> int:
+def alert_mask() -> int:
     """What libtorrent must say back: a piece that was asked for (`read_piece`), that a
     film's last parts are on the disk (`flush_cache`), and what's here of a film that's
-    being left (`save_resume_data`). While a count is running, also who it lets go of
-    (`Player._hear`), so the count knows who really answered. Nothing else."""
+    being left (`save_resume_data`). Nothing else."""
     import libtorrent as lt
 
     told = lt.alert.category_t
-    mask = int(told.storage_notification) | int(told.error_notification)
-    if counting:
-        mask |= int(lt.alert.category_t.connect_notification)
-    return mask
+    return int(told.storage_notification) | int(told.error_notification)
 
 
 def answered_by(handle: Any) -> set[str]:
@@ -809,8 +984,8 @@ class _Joined:
             # and how many of them have the whole film (2026-10-11). No add-on says this.
             "peers": int(told.num_peers),
             "seeds": min(int(told.num_seeds), int(told.num_peers)),
-            # Who has the torrent, as a count from the owner's click reckons it
-            # (`who_has`): the same measure for a film that's open as for one that isn't.
+            # Who has the torrent, as libtorrent knows it (`who_has`): a tracker's own
+            # figures where one has answered, else those met so far.
             "swarm_seeds": who_has(told)[0],
             "swarm_peers": who_has(told)[1],
             # Of those connected, the ones that have really answered (`answered_by`): with
@@ -852,9 +1027,6 @@ class Player:
         self._server: ThreadingHTTPServer | None = None
         self._joined: dict[str, _Joined] = {}
         self._sending: dict[str, int] | None = None  # what libtorrent was last told
-        self._counting: set[str] = set()  # the torrents being counted just now
-        self._hurry: set[str] = set()  # ...of which these are wanted to play: count no longer
-        self._answered: dict[str, set[str]] = {}  # ...and who answered each, so far (`answered_by`)
         # What `_tell_transport` last told libtorrent: in a head start, retrying soon.
         self._transport_told: tuple[bool, bool] | None = None
         self._transport_lock = threading.Lock()
@@ -870,13 +1042,6 @@ class Player:
         its film plays at. Returns at once: the address waits for the film."""
         info_hash = info_hash.lower()
         link = magnet(info_hash, trackers)
-        if info_hash in self._counting:
-            # It's being counted, which fetches nothing: that ends now, and the film is
-            # joined in its own right (one torrent can't be both in one session).
-            self._hurry.add(info_hash)
-            until = time.monotonic() + 5
-            while info_hash in self._counting and time.monotonic() < until:
-                time.sleep(0.05)
         parting = self._parting.get(info_hash)
         if parting is not None:
             # Closed a moment ago, and what's here is being noted: joined again after.
@@ -910,84 +1075,6 @@ class Player:
             raise TorrentError("That film isn't being played any more.")
         return joined.status()
 
-    def count(self, info_hash: str, trackers: list[str]) -> dict[str, Any]:
-        """Count who has a torrent, from the owner's click on Count (2026-10-11):
-        `{info_hash, seeds, peers, answered}`, seeds among the peers (`who_has`: a tracker's
-        own count where there is one, else those met in the time it had), and how many
-        really answered this computer (`answered_by`, 2026-11-12). A seeder that answers is
-        let go of the moment the torrent's details are here (a count fetches nothing, and
-        neither side wants anything of the other), too soon to be seen connected: `_hear`
-        hears it leave.
-
-        A film that's open or being kept is counted as it stands. Any other torrent is
-        joined for `COUNT_S` seconds **to count and nothing more**: it's told to fetch
-        nothing (`upload_mode`: no piece is ever asked for), given an empty folder so
-        there's nothing of an earlier playing to read through, and left when the time
-        is up (or at once, if the owner presses Play or Keep on it meanwhile). No
-        piece of the film is fetched, written or kept. This takes those seconds: the
-        app asks from a thread of its own."""
-        info_hash = info_hash.lower()
-        if not INFO_HASH.fullmatch(info_hash):
-            raise TorrentError("That isn't a torrent's id.")
-        parting = self._parting.get(info_hash)
-        if parting is not None:
-            parting.left.wait(LEAVE_WAIT_S)  # closed a moment ago: counted once it's left
-        with self._lock:
-            joined = self._joined.get(info_hash)
-            if joined is not None and joined.handle.is_valid():
-                seeds, everyone = who_has(joined.handle.status())
-                answered = len(answered_by(joined.handle))
-                return {"info_hash": info_hash, "seeds": seeds, "peers": everyone,
-                        "answered": answered}  # fmt: skip
-            if info_hash in self._counting:
-                raise TorrentError("That one is being counted already.")
-            self._start()
-            import libtorrent as lt
-
-            params = lt.parse_magnet_uri(magnet(info_hash, trackers))
-            params.save_path = str(self.folder / COUNTING)
-            params.flags |= lt.torrent_flags.upload_mode  # it asks for no piece, ever
-            handle = self._session.add_torrent(params)
-            self._counting.add(info_hash)
-            self._answered[info_hash] = set()
-            self._tell_alerts()
-            # Its trackers, if it has any, are asked for their own count: the surest
-            # figures there are, and the quickest.
-            ask = getattr(handle, "scrape_tracker", None)
-            if ask is not None:
-                try:
-                    ask()
-                except RuntimeError:
-                    pass
-        seeds = everyone = 0
-        try:
-            until = time.monotonic() + COUNT_S
-            while time.monotonic() < until and not self._stopping.is_set():
-                time.sleep(COUNT_CHECK_S)
-                if not handle.is_valid():
-                    break
-                found = who_has(handle.status())
-                seeds, everyone = max(seeds, found[0]), max(everyone, found[1])
-                heard = answered_by(handle)
-                with self._lock:
-                    self._answered.setdefault(info_hash, set()).update(heard)
-                if info_hash in self._hurry:
-                    break  # the owner pressed Play or Keep on it: what was found will do
-        finally:
-            with self._lock:
-                # Left, always: a count never turns into the film's own joining.
-                if self._session is not None and handle.is_valid():
-                    self._session.remove_torrent(handle)
-                self._counting.discard(info_hash)
-                self._hurry.discard(info_hash)
-                answered = len(self._answered.pop(info_hash, set()))
-            self._tell_alerts()
-        everyone = max(everyone, answered)  # who answered is listed too
-        log.info("torrents: counted who has a torrent (%d with all of it, %d others, %d answered)",
-                 seeds, everyone - seeds, answered)  # fmt: skip
-        return {"info_hash": info_hash, "seeds": seeds, "peers": max(everyone, seeds),
-                "answered": answered}  # fmt: skip
-
     def _tell_transport(self, *, joining: bool = False) -> None:
         """Tell libtorrent how to reach sharers (`transport_settings`): over TCP alone while a
         film is being joined (`joining`) or is in its first seconds (`TCP_HEAD_START_S`), so
@@ -1007,13 +1094,6 @@ class Player:
                 return
             self._transport_told = (head_start, retrying)
             apply(transport_settings(head_start=head_start, retrying=retrying))
-
-    def _tell_alerts(self) -> None:
-        """Tell libtorrent what to say back (`alert_mask`): who it lets go of too, while a
-        count is running."""
-        apply = getattr(self._session, "apply_settings", None)  # a test's stand-in has none
-        if apply is not None:
-            apply({"alert_mask": alert_mask(counting=bool(self._answered))})
 
     def keep(
         self,
@@ -1240,7 +1320,7 @@ class Player:
             known = list(params.trackers)
             params.trackers = known + [t for t in fresh.trackers if t not in known]
         params.save_path = str(self.folder)
-        # Never in upload mode (a count's), never paused. And not libtorrent's own "in
+        # Never in upload mode, never paused. And not libtorrent's own "in
         # order" either: with it, a piece asked for first is passed over whenever a rarer
         # one is waiting (measured with an open film: its last 2 MB took 22 s to come, and
         # the player waited 10 s half a megabyte in). `_ahead` leans towards the order
@@ -1370,7 +1450,7 @@ class Player:
         import libtorrent as lt
 
         heard = ("read_piece_alert", "cache_flushed_alert", "save_resume_data_alert",
-                 "save_resume_data_failed_alert", "peer_disconnected_alert")  # fmt: skip
+                 "save_resume_data_failed_alert")  # fmt: skip
         while self._session is session:
             try:
                 session.wait_for_alert(200)  # (and it looks for being let go this often)
@@ -1385,13 +1465,6 @@ class Player:
                     info_hash = _v1(alert.handle)
                 except RuntimeError:
                     continue  # its torrent has been left meanwhile
-                if kind == "peer_disconnected_alert":
-                    # A seeder that answered a count, let go of at once (`count`).
-                    # (Without the lock: one held elsewhere may be waiting on what's heard here.)
-                    answered = self._answered.get(info_hash)
-                    if answered is not None and alert.reason == lt.close_reason_t.upload_to_upload:
-                        answered.add(str(alert.ip[0]))
-                    continue
                 joined = self._joined.get(info_hash) or self._parting.get(info_hash)
                 if joined is None:
                     continue

@@ -2503,9 +2503,8 @@ final class TorrentStatusTests: XCTestCase {
             TorrentStatus(state: "fetching", peers: 30, bytesPerSecond: 0, progress: 0, seeds: 25).swarm,
             "25/5")
         XCTAssertNil(TorrentStatus(state: "fetching", peers: 30, bytesPerSecond: 0, progress: 0).swarm)
-        // A film that's open says who has it the way a count does (a tracker's own
-        // figures, here), so the page shows one measure before and during playing; the
-        // player's own line still says who it's fetching from.
+        // A film that's open says who has it as libtorrent knows it (a tracker's own
+        // figures, here); the player's own line still says who it's fetching from.
         let open = TorrentStatus(
             state: "fetching", peers: 45, bytesPerSecond: 0, progress: 0, seeds: 40,
             swarmSeeds: 1500, swarmPeers: 1700)
@@ -2515,10 +2514,10 @@ final class TorrentStatusTests: XCTestCase {
             #"{"state": "fetching", "peers": 9, "seeds": 7, "swarm_seeds": 7, "swarm_peers": 9, "bytes_per_second": 0, "progress": 0.1}"#
                 .utf8)
         XCTAssertEqual(try? decoder.decode(TorrentStatus.self, from: told).swarm, "7/2")
-        let counted = Data(#"{"info_hash": "abab", "seeds": 25, "peers": 30}"#.utf8)
-        XCTAssertEqual(try? decoder.decode(TorrentCount.self, from: counted).swarm, "25/5")
-        XCTAssertEqual(TorrentCount(infoHash: "abab", seeds: 3, peers: 1).swarm, "3/0")
-        XCTAssertEqual(TorrentCount(infoHash: "abab", seeds: 0, peers: 0).swarm, "0/0")
+        let scraped = Data(#"{"counts": [{"info_hash": "abab", "seeds": 25, "peers": 30}]}"#.utf8)
+        XCTAssertEqual(
+            try? decoder.decode(TrackerCounts.self, from: scraped).counts,
+            [TrackerCount(infoHash: "abab", seeds: 25, peers: 30)])
         XCTAssertEqual(WayToPlayColumns.swarmStart, 170 + 64 + 90 + 48)
         let silent = Data(#"{"kind": "youtube", "video_id": "O5WXokyub-4", "trackers": []}"#.utf8)
         XCTAssertNil((try? decoder.decode(MediaStream.self, from: silent))?.sizeLabel)

@@ -433,10 +433,10 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
     public let peers: Int
     /// How many of them have the whole film (2026-10-11; an older engine doesn't say).
     public let seeds: Int?
-    /// Who has the torrent, reckoned as a count from the Count button is: a tracker's
-    /// own figures where there are any, else those met so far. Seeds, and everyone
-    /// (the seeds among them). The film's page shows these, so that the numbers before
-    /// a film is opened and while it plays are the same measure.
+    /// Who has the torrent, as libtorrent knows it: a tracker's own figures where one has
+    /// answered, else those met so far. Seeds, and everyone (the seeds among them). While
+    /// the film plays, its page shows the larger of these seeds and its trackers' own
+    /// (`Sharers.seeds`).
     public let swarmSeeds: Int?
     public let swarmPeers: Int?
     /// Of those connected, the ones that have the film or some of it: who really answered
@@ -571,25 +571,88 @@ public struct TorrentPlaying: Decodable, Sendable {
     public let url: String
 }
 
-/// Who has a torrent, counted by the engine from the owner's click (`torrent.count`):
-/// `seeds` have all of it, and `peers` is everyone listed, the seeds among them; `answered`,
-/// how many of them really answered this Mac (2026-11-12, `Sharers`; an older engine doesn't
-/// say).
-public struct TorrentCount: Decodable, Equatable, Sendable {
+/// Who has a torrent, as its trackers say (`torrent.scrape`; the owner, 2026-11-12: "Replace
+/// a manual count, to an automatic person detector"): `seeds` have all of it, and `peers` is
+/// everyone, the seeds among them. It's who told a tracker lately that they have the film, not
+/// who answers: `TorrentStatus.answered` says that, once the film is open.
+public struct TrackerCount: Decodable, Equatable, Sendable {
     public let infoHash: String
     public let seeds: Int
     public let peers: Int
-    public let answered: Int?
 
-    public init(infoHash: String, seeds: Int, peers: Int, answered: Int? = nil) {
+    public init(infoHash: String, seeds: Int, peers: Int) {
         self.infoHash = infoHash
         self.seeds = seeds
         self.peers = peers
-        self.answered = answered
+    }
+}
+
+/// The engine's answer to `torrent.scrape`: only the torrents some tracker answered about.
+public struct TrackerCounts: Decodable, Sendable {
+    public let counts: [TrackerCount]
+
+    public init(counts: [TrackerCount]) { self.counts = counts }
+}
+
+/// Who has each torrent, as its trackers said, by its id (lower case), kept in memory while
+/// the app is open, for ten minutes each: asked whenever a film's ways to play are shown
+/// (the owner, 2026-11-12: "the new Person(number) should be automatic when opening
+/// anything. not manual like the previous count we had"), and not asked again meanwhile.
+/// Nothing is joined to ask.
+public struct SwarmBook: Sendable {
+    /// How long an answer is believed: a page shown after that asks again.
+    public static let keptFor: TimeInterval = 600
+
+    private struct Said: Sendable {
+        let seeds: Int?  // nil: no tracker answered about it
+        let at: Date
     }
 
-    /// Seeders and leechers as the film's page writes them: "25/5".
-    public var swarm: String { "\(seeds)/\(max(peers - seeds, 0))" }
+    private var said: [String: Said] = [:]
+    /// The torrents being asked about just now.
+    public private(set) var asking = Set<String>()
+
+    public init() {}
+
+    /// Of these torrents, the ones to ask about now: not asked about in the last ten minutes,
+    /// and not being asked about. They're marked as being asked about.
+    public mutating func toAsk(_ hashes: [String], now: Date = Date()) -> [String] {
+        var wanted: [String] = []
+        for hash in hashes.map({ $0.lowercased() }) where !wanted.contains(hash) {
+            guard !asking.contains(hash) else { continue }
+            if let known = said[hash], now.timeIntervalSince(known.at) < Self.keptFor { continue }
+            wanted.append(hash)
+        }
+        asking.formUnion(wanted)
+        return wanted
+    }
+
+    /// The engine's answer about `asked`: each answered one's seeds; for the rest, that no
+    /// tracker answered.
+    public mutating func heard(_ counts: [TrackerCount], asked: [String], now: Date = Date()) {
+        let seeds = Dictionary(counts.map { ($0.infoHash.lowercased(), $0.seeds) }, uniquingKeysWith: max)
+        for hash in asked.map({ $0.lowercased() }) {
+            said[hash] = Said(seeds: seeds[hash], at: now)
+            asking.remove(hash)
+        }
+    }
+
+    /// The engine couldn't be asked: nothing is known of them, and they're asked again the
+    /// next time they're shown.
+    public mutating func failed(_ asked: [String]) {
+        asking.subtract(asked.map { $0.lowercased() })
+    }
+
+    public func isAsking(_ hash: String) -> Bool { asking.contains(hash.lowercased()) }
+
+    /// How many have all of it, as its trackers said; nil when none answered, or it hasn't
+    /// been asked about lately.
+    public func seeds(of hash: String, now: Date = Date()) -> Int? {
+        guard let known = said[hash.lowercased()], now.timeIntervalSince(known.at) < Self.keptFor else {
+            return nil
+        }
+        return known.seeds
+    }
 }
 
 /// Who's listed as sharing a torrent, against who really answered (the owner, 2026-11-12, on
@@ -597,10 +660,23 @@ public struct TorrentCount: Decodable, Equatable, Sendable {
 /// lately that they have the film or are fetching it, but many of them have gone, or sit
 /// behind a router that lets no one in (as this Mac does: no port is opened on the router),
 /// and some answer for any torrent at all with nothing of it to send. Measured that day with
-/// open-licence films: of the addresses a tracker gives, a third or fewer answer. So Count
-/// says both, and the player says which it is when a film won't start.
+/// open-licence films: of the addresses a tracker gives, a third or fewer answer. So a film's
+/// page says both while it plays, and the player says which it is when a film won't start.
 public enum Sharers {
-    /// Under a count: "3 answered", "none answered".
+    /// The seeders a way to play shows beside its person (2026-11-12): the larger of what its
+    /// trackers said (`asked`) and, while its film plays or is being downloaded, who the
+    /// engine knows of (`live`); nil when neither says.
+    public static func seeds(asked: Int?, live: TorrentStatus?) -> Int? {
+        let now = live.flatMap { $0.swarmSeeds ?? $0.seeds }
+        switch (asked, now) {
+        case let (asked?, now?): return max(asked, now)
+        case let (asked?, nil): return asked
+        case let (nil, now?): return now
+        case (nil, nil): return nil
+        }
+    }
+
+    /// Under the seeders while a film plays: "3 answered", "none answered".
     public static func answered(_ count: Int) -> String {
         count <= 0 ? "none answered" : "\(count) answered"
     }
@@ -623,7 +699,7 @@ public enum WayToPlayColumns {
     public static let size = 90.0
     public static let swarm = 130.0
     public static let gap = 16.0
-    /// How far in the "Seeders/Leechers" heading starts, to sit over its column.
+    /// How far in the "Seeders" heading starts, to sit over its column.
     public static var swarmStart: Double { source + quality + size + 3 * gap }
 }
 

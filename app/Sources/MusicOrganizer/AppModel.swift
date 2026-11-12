@@ -247,10 +247,9 @@ final class AppModel {
     /// The ways tried for the film or episode in the player (`MediaStream.key`): another way
     /// is never one of these.
     @ObservationIgnored private var tried: (what: String, keys: Set<String>) = ("", [])
-    /// Who has a torrent, by its id, from the owner's click on Count (kept while the app
-    /// is open), and the ones being counted just now.
-    private(set) var swarmCounts: [String: TorrentCount] = [:]
-    private(set) var swarmCounting = Set<String>()
+    /// Who has each torrent, as its trackers said (`torrent.scrape`), asked when a film's ways
+    /// to play are shown and kept in memory for ten minutes (2026-11-12).
+    private(set) var swarmBook = SwarmBook()
     /// Videos played as themselves (a channel's video, a trailer): the picture shown is
     /// that very video, not the official video of a song with its name.
     @ObservationIgnored private var exactVideos = Set<String>()
@@ -1958,43 +1957,58 @@ final class AppModel {
         }
     }
 
-    /// Count who has a torrent (the Count button on a film's page): the engine joins it
-    /// for a few seconds, fetches nothing of the film, and says how many it found.
-    /// Only ever from the owner's click.
-    func countSwarm(_ stream: MediaStream) {
-        guard stream.kind == "torrent", let hash = stream.infoHash?.lowercased(),
-            !swarmCounting.contains(hash)
-        else { return }
-        swarmCounting.insert(hash)
+    /// Ask who has a film's torrents, as their trackers say, when its ways to play are shown
+    /// (the owner, 2026-11-12: "the new Person(number) should be automatic when opening
+    /// anything. not manual like the previous count we had"). Each torrent once in ten
+    /// minutes (`SwarmBook`). Nothing is joined: the engine asks the trackers.
+    func askWhoHas(_ ways: [MediaStream]) {
+        var trackers: [String: [String]] = [:]  // each torrent's own, the same one once
+        for way in ways where way.kind == "torrent" {
+            guard let hash = way.infoHash?.lowercased() else { continue }
+            var its = trackers[hash] ?? []
+            for tracker in way.trackers where !its.contains(tracker) { its.append(tracker) }
+            trackers[hash] = its
+        }
+        let asked = swarmBook.toAsk(Array(trackers.keys))
+        guard !asked.isEmpty else { return }
         Task {
-            defer { swarmCounting.remove(hash) }
             do {
-                swarmCounts[hash] = try await ask(
-                    "torrent.count", ["info_hash": hash, "trackers": stream.trackers],
-                    as: TorrentCount.self)
+                let said = try await ask(
+                    "torrent.scrape",
+                    ["ways": asked.map { ["info_hash": $0, "trackers": trackers[$0] ?? []] as [String: Any] }],
+                    as: TrackerCounts.self)
+                swarmBook.heard(said.counts, asked: asked)
             } catch {
-                notice = error.localizedDescription
+                swarmBook.failed(asked)  // asked again the next time they're shown
             }
         }
     }
 
-    /// Seeders and leechers for a way to play, "25/5", or nil when nobody has counted:
-    /// the engine's own running count while the film plays or is being kept, else what
-    /// the last click on Count found.
-    func swarm(of stream: MediaStream) -> String? {
+    /// Seeders for a way to play, beside its person: what its trackers said, or while its
+    /// film plays or is being downloaded, the larger of that and who the engine knows of
+    /// (`Sharers.seeds`). Nil when neither says.
+    func seeds(of stream: MediaStream) -> Int? {
         guard stream.kind == "torrent", let hash = stream.infoHash?.lowercased() else { return nil }
-        if let keeping = filmKeeps[hash], keeping.isKeeping, let said = keeping.swarm { return said }
-        if filmTorrent == hash, film.isOpen, let said = filmStatus?.swarm { return said }
-        return swarmCounts[hash]?.swarm
+        return Sharers.seeds(asked: swarmBook.seeds(of: hash), live: liveStatus(of: hash))
     }
 
-    /// How many of those really answered (`Sharers`), from the same place `swarm(of:)` reads,
-    /// or nil when nobody has counted (or the engine doesn't say).
+    /// Whether its trackers are being asked about a way to play just now.
+    func isAskingWhoHas(_ stream: MediaStream) -> Bool {
+        stream.infoHash.map { swarmBook.isAsking($0) } ?? false
+    }
+
+    /// How many of those connected really answered (`Sharers`), while the way's film plays or
+    /// is being downloaded; nil otherwise (or when the engine doesn't say).
     func answered(of stream: MediaStream) -> Int? {
         guard stream.kind == "torrent", let hash = stream.infoHash?.lowercased() else { return nil }
-        if let keeping = filmKeeps[hash], keeping.isKeeping, keeping.swarm != nil { return keeping.answered }
-        if filmTorrent == hash, film.isOpen, let status = filmStatus, status.swarm != nil { return status.answered }
-        return swarmCounts[hash]?.answered
+        return liveStatus(of: hash)?.answered
+    }
+
+    /// The engine's own word on a torrent while its film plays or is being downloaded.
+    private func liveStatus(of hash: String) -> TorrentStatus? {
+        if let keeping = filmKeeps[hash], keeping.isKeeping, keeping.swarm != nil { return keeping }
+        if filmTorrent == hash, film.isOpen, let status = filmStatus, status.swarm != nil { return status }
+        return nil
     }
 
     /// Join a torrent through the engine and play its film as it arrives. The engine is

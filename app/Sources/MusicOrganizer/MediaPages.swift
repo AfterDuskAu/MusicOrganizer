@@ -1799,7 +1799,7 @@ struct MovieView: View {
                 }
                 // One bar a way to play, as the owner drew it (2026-10-11): where it's from,
                 // its quality, its size, who has it, then Play and Keep. Only a torrent has
-                // seeders and leechers, so the heading is there only when one is listed.
+                // seeders, so the heading is there only when one is listed.
                 // At most three of a quality, by the owner's order of add-ons, until Show
                 // All is pressed (the owner, 2026-10-11: the same film in 1080p from
                 // twenty-five add-ons shouldn't be twenty-five lines).
@@ -1807,7 +1807,7 @@ struct MovieView: View {
                 let few = streams.shortlist()
                 let ways = showsAllWays ? all : few
                 if ways.contains(where: { $0.stream.kind == "torrent" }) {
-                    Text("Seeders/Leechers")
+                    Text("Seeders")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .padding(.leading, WayToPlayColumns.swarmStart)
@@ -1906,6 +1906,11 @@ struct MovieView: View {
                 }
             }
             .frame(maxWidth: 760, alignment: .leading)
+            // Who has each torrent, asked of its trackers as soon as the ways are shown (the
+            // owner, 2026-11-12: "automatic when opening anything"): nothing is joined.
+            .task(id: streams.ways.compactMap { $0.stream.kind == "torrent" ? $0.stream.infoHash : nil }) {
+                model.askWhoHas(streams.ways.map(\.stream))
+            }
         }
     }
 
@@ -1925,37 +1930,40 @@ struct MovieView: View {
         }
     }
 
-    /// Who has a way to play: for a torrent, its seeders and leechers ("25/5") once
-    /// they've been counted, and under them how many really answered ("none answered" in
-    /// orange: those listed have gone, or can't be reached; 2026-11-12), else a Count button
-    /// (the app joins a torrent only from a click, so nobody is counted for a film that was
-    /// only looked at). Anything that isn't a torrent has none: a dash.
+    /// Who has a way to play: for a torrent, a person and its seeders, as its trackers said
+    /// when the page was shown (the owner, 2026-11-12, after Stremio's: "Replace a manual
+    /// count, to an automatic person detector"); while its film plays or is being
+    /// downloaded, the larger of that and who the engine knows of, and under it how many
+    /// really answered ("none answered" in orange: those listed have gone, or can't be
+    /// reached). A spinner while the trackers are asked; a dash when none answered, and for
+    /// anything that isn't a torrent.
     @ViewBuilder
     private func swarm(of stream: MediaStream) -> some View {
         if stream.kind != "torrent" {
             Text("–").foregroundStyle(.secondary)
-        } else if let said = model.swarm(of: stream) {
+        } else if let seeds = model.seeds(of: stream) {
             VStack(alignment: .leading, spacing: 1) {
-                Text(said).monospacedDigit()
+                Label {
+                    Text("\(seeds)").monospacedDigit()
+                } icon: {
+                    Image(systemName: "person.fill")
+                }
+                .labelStyle(.titleAndIcon)
                 if let answered = model.answered(of: stream) {
                     Text(Sharers.answered(answered)).font(.caption).monospacedDigit().lineLimit(1)
                         .foregroundStyle(answered == 0 ? AnyShapeStyle(.orange) : AnyShapeStyle(.secondary))
                 }
             }
             .help(
-                "Seeders have the whole film; leechers are the others sharing it. The "
-                    + "film's trackers' own count where they give one; otherwise those "
-                    + "this Mac has met so far, which grows while the film plays. "
-                    + "Answered: how many of them really answered this Mac with some of the film. "
-                    + "Many listed have gone, or can't be reached.")
-        } else if stream.infoHash.map({ model.swarmCounting.contains($0.lowercased()) }) == true {
+                "Seeders: people who have the whole film, as its trackers say (the servers "
+                    + "that keep lists of who has a torrent), asked when this page was shown. "
+                    + "Nothing is fetched to ask. Many listed have gone, or can't be reached: "
+                    + "while it plays, Answered says how many really answered this Mac.")
+        } else if model.isAskingWhoHas(stream) {
             ProgressView().controlSize(.small)
         } else {
-            Button("Count") { model.countSwarm(stream) }
-                .controlSize(.small)
-                .help(
-                    "Count who has this torrent. The app joins it for a few seconds and "
-                        + "fetches nothing of the film; others sharing it can see this Mac meanwhile.")
+            Text("–").foregroundStyle(.secondary)
+                .help("None of its trackers said who has it")
         }
     }
 

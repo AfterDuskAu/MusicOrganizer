@@ -36,7 +36,7 @@ public enum FilmStart {
     public static let noDetails = "This one didn't start: those sharing it didn't send it."
     public static let noAnswer = "This one didn't start: its address didn't answer."
 
-    /// Nobody answered: who's listed, if anyone is, so it squares with Count's figures (the
+    /// Nobody answered: who's listed, if anyone is, so it squares with the page's figures (the
     /// owner, 2026-11-12, on a video app: Count said 12/7, and Play found nobody). `Sharers`.
     public static func nobody(_ status: TorrentStatus) -> String {
         let seeds = status.swarmSeeds ?? 0

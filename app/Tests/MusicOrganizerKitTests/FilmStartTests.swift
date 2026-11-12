@@ -52,20 +52,56 @@ final class FilmStartTests: XCTestCase {
             .waiting)
     }
 
-    func testCountSaysWhoIsListedAndWhoAnswered() throws {
-        let said = Data(#"{"info_hash": "ab", "seeds": 12, "peers": 19, "answered": 0}"#.utf8)
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        let count = try decoder.decode(TorrentCount.self, from: said)
-        XCTAssertEqual(count.swarm, "12/7")
-        XCTAssertEqual(count.answered, 0)
+    func testSharersSaysWhoIsListedAndWhoAnswered() {
         XCTAssertEqual(Sharers.answered(0), "none answered")
         XCTAssertEqual(Sharers.answered(3), "3 answered")
         XCTAssertEqual(Sharers.listed(seeds: 12, others: 7), "12 seeders and 7 leechers")
         XCTAssertNil(Sharers.listed(seeds: 0, others: 0))
-        // An older engine's count says nothing of who answered.
-        let older = try decoder.decode(TorrentCount.self, from: Data(#"{"info_hash": "ab", "seeds": 1, "peers": 2}"#.utf8))
-        XCTAssertNil(older.answered)
+    }
+
+    /// The person and its number beside a way to play (2026-11-12): its trackers' seeders, or
+    /// while its film plays, the larger of those and who the engine knows of.
+    func testTheSeedersShownAreTheTrackersOrTheEnginesWhicheverIsMore() {
+        XCTAssertNil(Sharers.seeds(asked: nil, live: nil))
+        XCTAssertEqual(Sharers.seeds(asked: 151, live: nil), 151)
+        XCTAssertEqual(Sharers.seeds(asked: 0, live: nil), 0)
+        let playing = TorrentStatus(
+            state: "fetching", peers: 120, bytesPerSecond: 0, progress: 0.1, seeds: 91,
+            swarmSeeds: 91, swarmPeers: 122)
+        XCTAssertEqual(Sharers.seeds(asked: 6, live: playing), 91)
+        XCTAssertEqual(Sharers.seeds(asked: 251, live: playing), 251)
+        XCTAssertEqual(Sharers.seeds(asked: nil, live: playing), 91)
+        // An engine that doesn't say who has the torrent: those connected with all of it.
+        let older = TorrentStatus(state: "fetching", peers: 9, bytesPerSecond: 0, progress: 0, seeds: 7)
+        XCTAssertEqual(Sharers.seeds(asked: 3, live: older), 7)
+    }
+
+    /// Asked of the trackers once in ten minutes, each torrent once however many ways have it.
+    func testTheTrackersAreAskedAboutEachTorrentOnceInTenMinutes() {
+        var book = SwarmBook()
+        let start = Date(timeIntervalSince1970: 1_000_000)
+        let film = String(repeating: "ab", count: 20)
+        let other = String(repeating: "cd", count: 20)
+        XCTAssertEqual(book.toAsk([film.uppercased(), film, other], now: start), [film, other])
+        XCTAssertTrue(book.isAsking(film.uppercased()))
+        XCTAssertNil(book.seeds(of: film, now: start))
+        XCTAssertEqual(book.toAsk([film], now: start), [])  // being asked already
+        // Only the film was answered about: the other's trackers said nothing.
+        book.heard([TrackerCount(infoHash: film.uppercased(), seeds: 151, peers: 160)], asked: [film, other], now: start)
+        XCTAssertFalse(book.isAsking(film))
+        XCTAssertEqual(book.seeds(of: film, now: start), 151)
+        XCTAssertNil(book.seeds(of: other, now: start))
+        // Shown again within ten minutes: not asked again, for either.
+        XCTAssertEqual(book.toAsk([film, other], now: start.addingTimeInterval(599)), [])
+        XCTAssertEqual(book.seeds(of: film, now: start.addingTimeInterval(599)), 151)
+        // After that: asked afresh, and the old answer isn't believed meanwhile.
+        let later = start.addingTimeInterval(SwarmBook.keptFor)
+        XCTAssertNil(book.seeds(of: film, now: later))
+        XCTAssertEqual(Set(book.toAsk([film, other], now: later)), [film, other])
+        // The engine couldn't be asked: asked again the next time they're shown.
+        book.failed([film, other])
+        XCTAssertFalse(book.isAsking(film))
+        XCTAssertEqual(Set(book.toAsk([film, other], now: later)), [film, other])
     }
 
     func testWithSomeoneFoundItsDetailsAreGivenLonger() {

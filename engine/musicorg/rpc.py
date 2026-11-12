@@ -134,7 +134,7 @@ SLOW_METHODS = frozenset(
      "addon.list", "addon.add", "addon.restore", "addon.catalog", "addon.details", "addon.streams",
      "addon.search",
      "video.search", "channel.videos", "channel.search", "torrent.stop",
-     "torrent.count",  # joins a torrent for a few seconds to count who has it
+     "torrent.scrape",  # asks trackers, for up to three seconds (2026-11-12)
      "media.convert", "torrent.stop_keeping",  # reads the film with ffprobe first
      "page.videos",  # reads a web page (2026-10-17)
      "media.move",  # to another drive, a film is copied
@@ -429,7 +429,7 @@ class Server:
             "channel.followed": self.channel_followed,
             "torrent.play": self.torrent_play,
             "torrent.status": self.torrent_status,
-            "torrent.count": self.torrent_count,
+            "torrent.scrape": self.torrent_scrape,
             "torrent.keep": self.torrent_keep,
             "torrent.stop_keeping": self.torrent_stop_keeping,
             "stream.keep": self.stream_keep,
@@ -1415,13 +1415,26 @@ class Server:
             raise RpcError(USER_ERROR, "No film is being played from a torrent.")
         return self._films.status(need(params, "info_hash", str))
 
-    def torrent_count(self, params: dict[str, Any]) -> dict[str, Any]:
-        """Who has a torrent, counted from the owner's click: nothing of it is fetched."""
-        info_hash = need(params, "info_hash", str)
-        trackers = want(params, "trackers", list, []) or []
-        if not all(isinstance(t, str) for t in trackers):
-            raise RpcError(INVALID_PARAMS, "trackers should be a list of addresses.")
-        return self._film_player().count(info_hash, trackers)
+    def torrent_scrape(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Who has each of a film's torrents, as their trackers say (2026-11-12, the owner:
+        "an automatic person detector"): asked when its ways to play are shown. Nothing is
+        joined, nobody connects to this computer and nothing is fetched."""
+        ways = need(params, "ways", list)
+        asked: list[tuple[str, list[str]]] = []
+        for way in ways:
+            if not isinstance(way, dict) or not isinstance(way.get("info_hash"), str):
+                raise RpcError(INVALID_PARAMS, "Each way should have an info_hash.")
+            trackers = way.get("trackers") or []
+            if not isinstance(trackers, list) or not all(isinstance(t, str) for t in trackers):
+                raise RpcError(INVALID_PARAMS, "trackers should be a list of addresses.")
+            asked.append((way["info_hash"], trackers))
+        found = torrents.scrape(asked)
+        return {
+            "counts": [
+                {"info_hash": info_hash, "seeds": seeds, "peers": everyone}
+                for info_hash, (seeds, everyone) in found.items()
+            ]
+        }
 
     def torrent_stop_keeping(self, params: dict[str, Any]) -> dict[str, Any]:
         """A film that was being kept isn't any more. Nothing in the Movies folder is

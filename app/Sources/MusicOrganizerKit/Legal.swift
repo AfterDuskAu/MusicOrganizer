@@ -13,7 +13,7 @@ public enum Legal {
     }
 
     /// The day these words were last changed.
-    public static let dated = "10 November 2026"
+    public static let dated = "12 November 2026"
 
     public static let terms: [Part] = [
         Part(
@@ -66,7 +66,11 @@ public enum Legal {
                 + "asked for and your internet address, as it would in a web browser. A film "
                 + "played or downloaded from a torrent is fetched from, and sent on to, other "
                 + "people who have it, who can see your internet address, as with any torrent "
-                + "program. A web page whose address you paste on the URL page is read to find "
+                + "program. When a film's ways to play are shown, the ids of its torrents are "
+                + "sent to public trackers (servers that keep lists of who has a torrent), "
+                + "which see them and your internet address, to ask how many people have each "
+                + "one; nobody connects to this computer for it, and nothing is downloaded. "
+                + "A web page whose address you paste on the URL page is read to find "
                 + "the videos on it, and a video you download from it is fetched from that "
                 + "site, which sees your internet address, as it would in a web browser. "
                 + "A page you open in Bear Media's browser window is shown as in any web "

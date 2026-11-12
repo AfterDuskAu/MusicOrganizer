@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Bear Media. Last changed 10 November 2026.
+Bear Media. Last changed 12 November 2026.
 
 ## What the developer collects
 
@@ -12,7 +12,7 @@ Your library, playlists, favourites, play counts, listening time, what you've wa
 
 ## What leaves this computer
 
-Only what it takes to do what you ask. A search, a song or video played or downloaded, lyrics and covers looked up, and a plugin's lists and films are each asked of the service or plugin that has them, which sees what was asked for and your internet address, as it would in a web browser. A film played or downloaded from a torrent is fetched from, and sent on to, other people who have it, who can see your internet address, as with any torrent program. A web page whose address you paste on the URL page is read to find the videos on it, and a video you download from it is fetched from that site, which sees your internet address, as it would in a web browser. A page you open in Bear Media's browser window is shown as in any web browser, and a video you save from it is fetched from that site by the window; the window keeps no history, cookies or sign-ins once it's shut. If you connect Spotify or Last.fm, the app reads your playlists and lists from them, and changes nothing there. If you import from Stremio, the app reads what Stremio on this Mac remembers of what you've watched (on this Mac only; Stremio isn't changed, and its sign-in isn't read), and asks your plugins for each title's details.
+Only what it takes to do what you ask. A search, a song or video played or downloaded, lyrics and covers looked up, and a plugin's lists and films are each asked of the service or plugin that has them, which sees what was asked for and your internet address, as it would in a web browser. A film played or downloaded from a torrent is fetched from, and sent on to, other people who have it, who can see your internet address, as with any torrent program. When a film's ways to play are shown, the ids of its torrents are sent to public trackers (servers that keep lists of who has a torrent), which see them and your internet address, to ask how many people have each one; nobody connects to this computer for it, and nothing is downloaded. A web page whose address you paste on the URL page is read to find the videos on it, and a video you download from it is fetched from that site, which sees your internet address, as it would in a web browser. A page you open in Bear Media's browser window is shown as in any web browser, and a video you save from it is fetched from that site by the window; the window keeps no history, cookies or sign-ins once it's shut. If you connect Spotify or Last.fm, the app reads your playlists and lists from them, and changes nothing there. If you import from Stremio, the app reads what Stremio on this Mac remembers of what you've watched (on this Mac only; Stremio isn't changed, and its sign-in isn't read), and asks your plugins for each title's details.
 
 ## Sync with your devices
 
