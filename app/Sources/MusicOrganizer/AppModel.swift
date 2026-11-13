@@ -418,6 +418,14 @@ final class AppModel {
     /// app knows as a series' is a series.
     func isWatched(_ id: String) -> Bool { watchedIds.contains(id) }
 
+    /// The Watched switch in the Finders' bar (`WatchedShown`, 2026-11-13): on as standard, so
+    /// the lists show everything; off, they leave out what's been watched. A profile's own, as
+    /// everything kept for one is (`ProfileSettings` puts it away with the rest), and remembered
+    /// until it's clicked again.
+    var showsWatched = WatchedShown.saved() {
+        didSet { WatchedShown.save(showsWatched) }
+    }
+
     /// How far each film and episode begun got, on this Mac (`PartWatched`, a profile's).
     private(set) var begun = PartWatched.saved()
 

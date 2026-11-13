@@ -581,3 +581,38 @@ public struct PartWatched: Equatable, Sendable {
         if let data = try? JSONEncoder().encode(parts) { defaults.set(data, forKey: Self.key) }
     }
 }
+
+/// The Watched switch in a Finder's bar (the owner, 2026-11-13, of the iPad: "Next to Popular,
+/// Genre 1, Genre 2, Add to home, There should be 1 more option, always on, unless ticked off
+/// simply by tapping on it. This option is a Watched green check label... When ticked off. It
+/// would not display fully watched green tick shows or movies. This tick would be remembered
+/// across sessions"; asked whether the Mac should have it too, they said yes).
+///
+/// On as standard, so nothing looks different until it's clicked. Off, a Finder's lists, its
+/// genre lists and its searches leave out everything watched — what has the green check, by the
+/// owner's own rule (`AppModel.isWatched`). It's a profile's own, as everything the app keeps for
+/// one is (`ProfileSettings`), and is remembered until it's clicked again.
+public enum WatchedShown {
+    public static let key = "showsWatched"
+    /// On: everything shows, as it always did.
+    public static let standard = true
+    /// What the switch says.
+    public static let title = "Watched"
+
+    public static func saved(in defaults: UserDefaults = .standard) -> Bool {
+        defaults.object(forKey: key) == nil ? standard : defaults.bool(forKey: key)
+    }
+
+    public static func save(_ shown: Bool, in defaults: UserDefaults = .standard) {
+        defaults.set(shown, forKey: key)
+    }
+
+    /// Whether a title is shown in a Finder's list: everything while it's on, and only what
+    /// isn't watched while it's off. Whether it's watched is asked for only when it's off, so a
+    /// list of hundreds costs nothing while it's on.
+    public static func shows(while showing: Bool, watched: () -> Bool) -> Bool { showing || !watched() }
+
+    /// What a list says when everything it found is watched and the switch is off.
+    public static let allWatched =
+        "Everything found here has been watched. Click Watched in the bar to show watched titles again."
+}

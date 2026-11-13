@@ -931,6 +931,39 @@ struct MovieFinderView: View {
         }
     }
 
+    /// The genres, and the Watched switch beside them.
+    @ViewBuilder
+    private func choices(_ chosen: (addon: Addon, catalog: Addon.Catalog)?) -> some View {
+        genreChoices(chosen)
+        watchedSwitch
+    }
+
+    /// The Watched switch (the owner, 2026-11-13): on, everything shows; one click and what's
+    /// been watched is left out of every list, genre list and search, until it's clicked again.
+    /// Not in the Finder kept apart, where nothing is remembered as watched, and not on the
+    /// owner's own lists (Watchlist, Watched), where it would have nothing to do.
+    @ViewBuilder
+    private var watchedSwitch: some View {
+        if !isAdult, ownList == nil {
+            Button {
+                model.showsWatched.toggle()
+            } label: {
+                Label {
+                    Text(WatchedShown.title).strikethrough(!model.showsWatched)
+                } icon: {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(model.showsWatched ? AnyShapeStyle(Color.green) : AnyShapeStyle(HierarchicalShapeStyle.tertiary))
+                }
+            }
+            .fixedSize()
+            .foregroundStyle(model.showsWatched ? AnyShapeStyle(HierarchicalShapeStyle.primary) : AnyShapeStyle(HierarchicalShapeStyle.secondary))
+            .help(
+                model.showsWatched
+                    ? "Everything shows, watched or not. Click to leave out what you've watched."
+                    : "What you've watched is left out of the lists and searches. Click to show it again.")
+        }
+    }
+
     /// The search box, where the list chosen (or every plugin) can be searched.
     @ViewBuilder
     private func searchBox(_ chosen: (addon: Addon, catalog: Addon.Catalog)?) -> some View {
@@ -964,25 +997,25 @@ struct MovieFinderView: View {
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 12) {
                     titleAndList(lists, chosen)
-                    genreChoices(chosen)
+                    choices(chosen)
                     Spacer()
                     searchBox(chosen)
                 }
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 12) {
                         titleAndList(lists, chosen)
-                        genreChoices(chosen)
+                        choices(chosen)
                     }
                     searchBox(chosen)
                 }
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 12) { titleAndList(lists, chosen) }
-                    HStack(spacing: 12) { genreChoices(chosen) }
+                    HStack(spacing: 12) { choices(chosen) }
                     searchBox(chosen)
                 }
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 12) { titleAndList(lists, chosen) }
-                    genreChoices(chosen)
+                    choices(chosen)
                     searchBox(chosen)
                 }
             }
@@ -1076,11 +1109,21 @@ struct MovieFinderView: View {
         let languageToo = !apart
         let filtering = !isAdult && !rules.wanted(languageToo: languageToo).isEmpty
         let titles = model.titles
-        let keep: ((MediaItem) -> Bool)? = filtering ? { titles.shows($0, rules, languageToo: languageToo) } : nil
+        // The Watched switch off: what's been watched is left out of this list, its genre lists
+        // and its searches (2026-11-13). Never in the Finder kept apart, which remembers none.
+        let showingWatched = isAdult || model.showsWatched
+        let keep: ((MediaItem) -> Bool)? =
+            filtering || !showingWatched
+            ? { item in
+                WatchedShown.shows(while: showingWatched) { model.isWatched(item.id) }
+                    && (!filtering || titles.shows(item, rules, languageToo: languageToo))
+            } : nil
         let waiting = filtering && titles.isWaiting(list.items, rules, languageToo: languageToo)
         let ahead = !filtering || titles.waitingCount(list.items, rules, languageToo: languageToo) < TitleFilter.lookingAhead
         let none =
-            titles.trouble.map { "\($0) What TMDB hasn't said is left out." }
+            !showingWatched
+            ? WatchedShown.allWatched
+            : titles.trouble.map { "\($0) What TMDB hasn't said is left out." }
             ?? (rules.ratings != nil
                 ? "Nothing here is rated for this profile."
                 : "Nothing here was first made in \(OriginalLanguage.name(rules.language)), as TMDB has it. "

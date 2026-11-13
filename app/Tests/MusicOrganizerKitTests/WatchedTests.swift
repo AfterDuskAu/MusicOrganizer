@@ -478,3 +478,41 @@ final class FinishedKeepsEnoughTests: XCTestCase {
         XCTAssertTrue(done.contains("tt\(Finished.most + 4)"))
     }
 }
+
+/// The Finders' Watched switch (2026-11-13, the owner's iPad request, brought to the Mac).
+final class WatchedShownTests: XCTestCase {
+    func testOnAsStandardAndEverythingShows() {
+        XCTAssertTrue(WatchedShown.standard)
+        XCTAssertTrue(WatchedShown.shows(while: true) { true })
+        XCTAssertTrue(WatchedShown.shows(while: true) { false })
+    }
+
+    func testOffLeavesOutWhatIsWatched() {
+        XCTAssertFalse(WatchedShown.shows(while: false) { true })
+        XCTAssertTrue(WatchedShown.shows(while: false) { false })
+    }
+
+    /// While it's on, nothing is even asked whether it's watched.
+    func testWhatIsWatchedIsAskedOnlyWhileItIsOff() {
+        var asked = 0
+        _ = WatchedShown.shows(while: true) {
+            asked += 1
+            return true
+        }
+        XCTAssertEqual(asked, 0)
+        _ = WatchedShown.shows(while: false) {
+            asked += 1
+            return true
+        }
+        XCTAssertEqual(asked, 1)
+    }
+
+    /// It's a profile's own: put away with the rest when the profile is switched.
+    func testItIsRememberedAndBelongsToTheProfile() {
+        let defaults = UserDefaults(suiteName: "WatchedShownTests-\(UUID().uuidString)")!
+        XCTAssertTrue(WatchedShown.saved(in: defaults))
+        WatchedShown.save(false, in: defaults)
+        XCTAssertFalse(WatchedShown.saved(in: defaults))
+        XCTAssertTrue(ProfileSettings.belongsToProfile(WatchedShown.key))
+    }
+}
