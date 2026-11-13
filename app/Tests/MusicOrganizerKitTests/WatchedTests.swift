@@ -445,3 +445,36 @@ final class WatchedTests: XCTestCase {
         XCTAssertEqual(PartWatched.saved(in: defaults), begun)
     }
 }
+
+/// What's watched is held to as many as a sync carries, and marking whole series keeps every
+/// earlier mark (2026-11-13: it was 5,000, and the owner's checks went as they marked their
+/// library series by series on the iPad).
+final class FinishedKeepsEnoughTests: XCTestCase {
+    func testMarkingALibraryOfSeriesForgetsNothing() {
+        var done = Finished()
+        let start = Date(timeIntervalSince1970: 0)
+        let films = (0..<400).map { "film\($0)" }
+        for (place, film) in films.enumerated() {
+            done.mark(film, watched: true, now: start.addingTimeInterval(Double(place)))
+        }
+        var progress = SeriesProgress()
+        for series in 0..<12 {
+            let episodes = (1...500).map { "show\(series):1:\($0)" }
+            progress.marked(episodes, watched: true, of: "show\(series)", in: &done, now: Date())
+            for id in episodes { XCTAssertTrue(done.contains(id), id) }
+        }
+        XCTAssertEqual(done.days.count, 400 + 12 * 500)
+        for film in films { XCTAssertTrue(done.contains(film), "\(film) was forgotten") }
+    }
+
+    func testTheOldestAreStillForgottenAtTheCeiling() {
+        var done = Finished()
+        let start = Date(timeIntervalSince1970: 0)
+        for number in 0..<(Finished.most + 5) {
+            done.mark("tt\(number)", watched: true, now: start.addingTimeInterval(Double(number)))
+        }
+        XCTAssertEqual(done.days.count, Finished.most)
+        XCTAssertFalse(done.contains("tt0"))
+        XCTAssertTrue(done.contains("tt\(Finished.most + 4)"))
+    }
+}

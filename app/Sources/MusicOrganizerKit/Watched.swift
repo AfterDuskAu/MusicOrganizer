@@ -8,8 +8,13 @@ import Foundation
 public struct Finished: Equatable, Sendable {
     /// How much of a film or an episode is all of it: the rest is its credits.
     public static let mark = 0.9
-    /// Ids kept at most: the one finished longest ago is forgotten first.
-    public static let most = 5000
+    /// Ids kept at most. **As many as the sync carries** (the engine's `sharing.MOST_WATCHED`,
+    /// 2026-11-13):
+    /// it was 5,000, and marking whole series as watched is every episode of them (Law & Order:
+    /// SVU alone is 524), so a few series filled it and each new mark quietly forgot the one
+    /// marked longest ago — the owner found their checks gone on the iPad. Never let this be
+    /// smaller than what a sync carries, or what's kept here can't reach the other apps either.
+    public static let most = 50_000
 
     public private(set) var days: [String: Date]
     /// Films and episodes the owner marked Not Watched here, by id: a sync never marks one
@@ -33,8 +38,9 @@ public struct Finished: Equatable, Sendable {
         return true
     }
 
-    /// The owner's own word, from a menu: watched, or not.
-    public mutating func mark(_ id: String, watched: Bool, now: Date = Date()) {
+    /// The owner's own word, from a menu: watched, or not. `trimming` false leaves the oldest
+    /// to be forgotten afterwards, for a whole series marked at once (`trim`).
+    public mutating func mark(_ id: String, watched: Bool, now: Date = Date(), trimming: Bool = true) {
         guard watched else {
             days[id] = nil
             unmarked.insert(id)
@@ -42,9 +48,16 @@ public struct Finished: Equatable, Sendable {
         }
         unmarked.remove(id)
         if days[id] == nil { days[id] = now }
-        while days.count > Self.most, let oldest = days.min(by: { $0.value < $1.value }) {
-            days[oldest.key] = nil
-        }
+        if trimming { trim() }
+    }
+
+    /// Only `most` are kept: the ones finished longest ago are forgotten, in one go (2026-11-13).
+    /// One at a time, each new mark looked through every id for the oldest, so marking a series
+    /// of five hundred episodes did that five hundred times.
+    public mutating func trim() {
+        guard days.count > Self.most else { return }
+        let oldest = days.sorted { $0.value < $1.value }.prefix(days.count - Self.most)
+        for one in oldest { days[one.key] = nil }
     }
 
     /// From what was remembered before this was kept (2026-10-15): a movie, or the
@@ -191,9 +204,10 @@ public struct SeriesProgress: Equatable, Sendable {
         _ ids: [String], watched: Bool, of series: String?, in done: inout Finished, now: Date = Date()
     ) {
         for id in ids {
-            done.mark(id, watched: watched, now: now)
+            done.mark(id, watched: watched, now: now, trimming: false)
             if watched, let series { finished(id, of: series) }
         }
+        done.trim()
     }
 
     /// Every episode of a series that's out, by season and number, specials left out: what a
