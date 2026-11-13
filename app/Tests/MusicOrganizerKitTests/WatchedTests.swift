@@ -516,3 +516,51 @@ final class WatchedShownTests: XCTestCase {
         XCTAssertTrue(ProfileSettings.belongsToProfile(WatchedShown.key))
     }
 }
+
+
+/// The plugins' timestamps read by hand (2026-11-13): the same moments the formatters gave, and
+/// anything else left to them.
+final class ReleasedQuickTests: XCTestCase {
+    private func formatters(_ text: String) -> Date? {
+        let withFraction = ISO8601DateFormatter()
+        withFraction.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let whole = ISO8601DateFormatter()
+        let dayOnly = DateFormatter()
+        dayOnly.locale = Locale(identifier: "en_US_POSIX")
+        dayOnly.timeZone = TimeZone(identifier: "UTC")
+        dayOnly.dateFormat = "yyyy-MM-dd"
+        return withFraction.date(from: text) ?? whole.date(from: text) ?? dayOnly.date(from: String(text.prefix(10)))
+    }
+
+    func testTheSameMomentsAsTheFormatters() {
+        let cases = [
+            "2023-10-25", "1999-01-01", "2026-02-28", "2024-02-29", "1970-01-01", "2026-12-31",
+            "2023-10-25T01:00:00.000Z", "2023-10-25T01:00:00Z", "2001-07-04T23:59:59Z",
+            "2026-11-13T12:34:56.789Z", "1969-12-31T23:59:59Z",
+        ]
+        for text in cases {
+            XCTAssertEqual(Released.quick(text), formatters(text), text)
+            XCTAssertEqual(Released.date(text), formatters(text), text)
+        }
+    }
+
+    func testAnythingElseIsLeftToTheFormatters() {
+        // A zone of its own, or a form the plugins don't send: read by hand it's nil, and
+        // `date` still answers through the formatters where they can.
+        XCTAssertNil(Released.quick("2023-10-25T01:00:00+10:00"))
+        XCTAssertEqual(Released.date("2023-10-25T01:00:00+10:00"), formatters("2023-10-25T01:00:00+10:00"))
+        XCTAssertNil(Released.quick(""))
+        XCTAssertNil(Released.quick("not a date"))
+        XCTAssertNil(Released.quick("2023-13-01"))
+        XCTAssertNil(Released.quick("2023-10-99"))
+        XCTAssertNil(Released.date("rubbish"))
+    }
+
+    /// Reading a long series' episodes is quick enough to do while a page scrolls.
+    func testReadingAThousandIsQuick() {
+        let days = (0..<1000).map { "2020-01-01T0\($0 % 9)：00:00.000Z".replacingOccurrences(of: "：", with: ":") }
+        let began = Date()
+        for text in days { _ = Released.date(text) }
+        XCTAssertLessThan(Date().timeIntervalSince(began), 0.05)
+    }
+}

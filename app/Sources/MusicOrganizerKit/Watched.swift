@@ -341,8 +341,65 @@ enum Released {
 
     static func date(_ text: String) -> Date? {
         guard !text.isEmpty else { return nil }
+        if let quick = quick(text) { return quick }
         // Only a day: its start, in UTC.
         return withFraction.date(from: text) ?? whole.date(from: text) ?? dayOnly.date(from: String(text.prefix(10)))
+    }
+
+    /// The two forms the plugins really send — "2023-10-25" and "2023-10-25T01:00:00.000Z" — read
+    /// by hand (2026-11-13). A formatter takes about ten microseconds a time, and every episode of
+    /// every series is read through this whenever a series' episodes are looked at: with the
+    /// owner's 150 series it was most of the work that made Home stutter as it opened. Anything
+    /// else (a zone other than Z, a form of its own) is nil, and the formatters have it as before.
+    static func quick(_ text: String) -> Date? {
+        let letters = Array(text.utf8)
+        func number(_ from: Int, _ count: Int) -> Int? {
+            var made = 0
+            for at in from..<(from + count) {
+                let digit = Int(letters[at]) - 48
+                guard (0...9).contains(digit) else { return nil }
+                made = made * 10 + digit
+            }
+            return made
+        }
+        let dash = UInt8(ascii: "-")
+        guard letters.count >= 10, letters[4] == dash, letters[7] == dash,
+            let year = number(0, 4), let month = number(5, 2), let day = number(8, 2),
+            (1...12).contains(month), (1...31).contains(day)
+        else { return nil }
+        var seconds = days(year, month, day) * 86_400
+        if letters.count == 10 { return Date(timeIntervalSince1970: TimeInterval(seconds)) }
+        let colon = UInt8(ascii: ":")
+        guard letters.count >= 20, letters[10] == UInt8(ascii: "T"), letters[13] == colon, letters[16] == colon,
+            letters.last == UInt8(ascii: "Z"), let hour = number(11, 2), let minute = number(14, 2),
+            let second = number(17, 2), hour < 24, minute < 60, second < 61
+        else { return nil }
+        seconds += hour * 3600 + minute * 60 + second
+        // Between the seconds and the Z, a fraction of a second, kept as the formatter keeps it.
+        var fraction = 0.0
+        if letters.count > 20 {
+            let digits = letters[20...].dropLast()
+            guard letters[19] == UInt8(ascii: "."), !digits.isEmpty, digits.allSatisfy({ (48...57).contains($0) })
+            else { return nil }
+            var made = 0.0
+            var place = 1.0
+            for digit in digits {
+                place /= 10
+                made += Double(Int(digit) - 48) * place
+            }
+            fraction = made
+        }
+        return Date(timeIntervalSince1970: TimeInterval(seconds) + fraction)
+    }
+
+    /// Days from 1970-01-01 to this day (Howard Hinnant's reckoning), for dates in any year.
+    private static func days(_ year: Int, _ month: Int, _ day: Int) -> Int {
+        let y = year - (month <= 2 ? 1 : 0)
+        let era = (y >= 0 ? y : y - 399) / 400
+        let yearOfEra = y - era * 400
+        let dayOfYear = (153 * (month + (month > 2 ? -3 : 9)) + 2) / 5 + day - 1
+        let dayOfEra = yearOfEra * 365 + yearOfEra / 4 - yearOfEra / 100 + dayOfYear
+        return era * 146_097 + dayOfEra - 719_468
     }
 }
 
