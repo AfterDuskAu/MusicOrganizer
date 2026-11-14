@@ -2711,8 +2711,12 @@ you can select several or just 1, 1 tap and it deselects or selects."
   tests, 26 of them the iPad's pasted-list ones ported with the Mac's own names and one for its
   "click"). The Mac's speed work was being done in the same checkout at the same time, so this was
   built and tested in a worktree of its own holding only these changes.
-- **Not tried yet:** the two cards in the running app (the owner had it open; it needs the engine
-  restarted and the app rebuilt), and so a real paste end to end.
+- **Not tried yet:** the two cards in the running app, and so a real paste end to end. The owner's
+  app was rebuilt from 2ee6a2e at 17:03 and does hold this (its own binary has the cards' words in
+  it) and started clean with the records intact, but nobody has opened Settings → Profile → Paste a
+  List and looked. The unseen copy (`MUSICORG_SNAPSHOT` with `MUSICORG_BENCH=settings,settings=paste`)
+  can draw that page without taking anyone's screen, but it starts a second engine on the library
+  the owner's app has open and changes their own `settingsTab`, so it waits on their word.
 
 2026-11-14, afternoon. **Quick with a big account** (the owner, 2026-11-13, of the iPad: "On any
 page, when looking at shows its slow to scroll up and down. and its specially slow when hovering
