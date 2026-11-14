@@ -826,6 +826,13 @@ final class AppModel {
     /// episode of each that's out is marked, each series' latest and its new ones are worked
     /// out, and all of it is put back in one go — so the records are written once and the
     /// pages are drawn again once, not once a series (2026-11-14).
+    ///
+    /// **Why a helping comes out the same as one at a time:** each series is marked before it's
+    /// worked out, so `learned` is handed what's finished as it stands with that series' own
+    /// marks in it; and `learned` asks what's finished only about the episodes of the series
+    /// it's working out, so the other marks in the helping can't reach it. Keep both and a
+    /// helping of any size is safe; swap the two lines and a series would be worked out as
+    /// though nothing of it had been watched.
     private func markWatched(_ read: [(series: MediaItem, episodes: [MediaDetails.Video])]) {
         guard !read.isEmpty else { return }
         Bench.time("markWatched") {
