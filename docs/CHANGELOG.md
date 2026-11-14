@@ -2797,3 +2797,13 @@ mouse.
   speed work rewrote to be built when it opens — Open Its Page, Remove From Watchlist, Mark as
   Watched, the words right for the title, opening at once. Nothing was chosen, nothing was marked,
   and the app was left on the page it was found on.
+
+2026-11-14, evening, later. **A pasted list marks its series in helpings** (the Android session
+found the same fault in their own, and passed the Mac's on). `markWatched(pasted:)` marked each
+series as its episodes came, and noted them one at a time: for fifty pasted titles that was fifty
+marks, fifty notes of a series' episodes, fifty roundings-up of what's watched and fifty redraws
+of every page — beside the batching written this afternoon for exactly that. Now the series are
+put back forty at a time (`AppModel.markWatched(_ read:)`), which does the same work in the same
+order on copies and puts it back in one go. Nothing it marks or shows changed: `learned` only ever
+consults what's finished for its own series' episodes, and what's watched is rounded up once at
+the end of a helping instead of once a series. `swift build`, `swift test` (380).

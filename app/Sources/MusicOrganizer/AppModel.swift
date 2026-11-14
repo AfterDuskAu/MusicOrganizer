@@ -796,10 +796,17 @@ final class AppModel {
                 }
             }
             for _ in 0..<3 { next() }
+            // Marked in helpings, not one series at a time (2026-11-14, as the Android app
+            // does it): each series on its own was a mark, a note of its episodes and every
+            // page drawn again, fifty times over for fifty pasted titles.
+            var read: [(series: MediaItem, episodes: [MediaDetails.Video])] = []
             for await (one, episodes) in group {
                 if let episodes, !episodes.isEmpty {
-                    markWatched(SeriesProgress.everyOut(in: episodes), true, of: one)
-                    learn(one, episodes: episodes)
+                    read.append((one, episodes))
+                    if read.count >= Self.learnTogether {
+                        markWatched(read)
+                        read = []
+                    }
                 } else {
                     missed.append(one.name)
                 }
@@ -807,11 +814,36 @@ final class AppModel {
                 told(done)
                 next()
             }
+            markWatched(read)
         }
         noteMarked(items)
         // Given to the paired devices now, rather than at the ten-second round.
         await giveWatching(all: false)
         return missed
+    }
+
+    /// Several series marked watched at once, their episodes read (a pasted list): every
+    /// episode of each that's out is marked, each series' latest and its new ones are worked
+    /// out, and all of it is put back in one go — so the records are written once and the
+    /// pages are drawn again once, not once a series (2026-11-14).
+    private func markWatched(_ read: [(series: MediaItem, episodes: [MediaDetails.Video])]) {
+        guard !read.isEmpty else { return }
+        Bench.time("markWatched") {
+            var (done, progress) = (finished, seriesProgress)
+            var episodes = seriesEpisodes
+            for (series, videos) in read {
+                progress.marked(
+                    SeriesProgress.everyOut(in: videos), watched: true, of: series.id, in: &done)
+                episodes[series.id] = videos
+                // On the Watchlist: every unwatched episode after the last one watched is new.
+                progress.learned(series.id, episodes: videos, finished: done, listed: watchlist.contains(series))
+            }
+            (finished, seriesProgress, seriesEpisodes) = (done, progress, episodes)
+            keepFinished()
+            keepProgress()
+            seriesRead += 1
+            recountWatched()
+        }
     }
 
     /// Titles the owner pasted into Settings and ticked, put on the Watchlist: those not on it go
