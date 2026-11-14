@@ -1002,6 +1002,13 @@ struct MainView: View {
                 } else {
                     Bench.say("BENCH \(step.name): no such track, of \(tracks.map(\.label))")
                 }
+            } else if step.name.hasPrefix("go=") {
+                // A page of the sidebar shown, as a click on its row does: `go=watchlist`,
+                // `go=home`. Its own work then runs (the Watchlist and Home read the series'
+                // episodes, so what's watched and the "+2" are worked out again).
+                let wanted = SidebarItem(key: String(step.name.dropFirst(3)))
+                model.clickedInSidebar(wanted)
+                item = wanted
             } else if step.name.hasPrefix("profile=") {
                 // Another profile switched to, as Settings → Profile does.
                 model.switchProfile(to: String(step.name.dropFirst("profile=".count)))

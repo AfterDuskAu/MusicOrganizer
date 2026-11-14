@@ -85,6 +85,9 @@ import AppKit
 /// - `moveto=<file name>@<place>`: that video file, anywhere in the Movies folder, moved
 ///   into `movie`, `series`, `anime`, `video` or `adult`, as Move To does (only ever with a
 ///   scratch Movies folder)
+/// - `go=<page>`: a page of the sidebar shown, as a click on its row does (`go=watchlist`,
+///   `go=home`, `go=calendar`): its own work then runs, so the Watchlist and Home read the
+///   series' episodes again and what's watched and the "+2" are worked out
 /// - `profile=<id>`: another profile switched to, as Settings → Profile does (only with a
 ///   scratch copy's own profiles)
 /// - `records`: the profile in use, and how much of what's watched and liked it has

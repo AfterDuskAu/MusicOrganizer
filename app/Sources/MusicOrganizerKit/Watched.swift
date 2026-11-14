@@ -14,7 +14,9 @@ public struct Finished: Equatable, Sendable {
     /// SVU alone is 524), so a few series filled it and each new mark quietly forgot the one
     /// marked longest ago — the owner found their checks gone on the iPad. Never let this be
     /// smaller than what a sync carries, or what's kept here can't reach the other apps either.
-    public static let most = 50_000
+    /// 50,000 at first; 75,000 at the owner's word the next day, after Account C's marks were
+    /// recovered from Stremio and they asked for the room.
+    public static let most = 75_000
 
     public private(set) var days: [String: Date]
     /// Films and episodes the owner marked Not Watched here, by id: a sync never marks one
