@@ -399,6 +399,11 @@ final class AppModel {
     /// checks and an episode's check go by.
     private(set) var finished = AppModel.keptFinished()
     private(set) var seriesProgress = SeriesProgress.saved()
+    /// Titles marked watched by the owner's word that nothing else here knows (a list pasted
+    /// into Settings, 2026-11-14): so the Watchlist's Watched shows them, a series among them
+    /// keeps up with its new episodes, and its name and poster are known though it was never
+    /// played, listed or hearted. A profile's own, and it travels with an export's records.
+    private(set) var markedTitles = MarkedTitles.saved()
     /// Series' episodes read while the app is open, by the series' id: the calendar's.
     private(set) var seriesEpisodes: [String: [MediaDetails.Video]] = [:]
     private(set) var readingSeries = false
@@ -554,6 +559,79 @@ final class AppModel {
         seriesProgress.save()
         seriesRead += 1
         recountWatched()
+    }
+
+    // MARK: a pasted list (2026-11-14, as the iPad has it since 2026-11-13)
+
+    /// Titles the owner pasted into Settings and ticked, marked watched: a film by their word, a
+    /// series every episode of it that's out (`SeriesProgress.everyOut`), its episodes read from
+    /// its plugin when they haven't been — a few at a time, so the app stays its own while fifty
+    /// are done, with `told` saying how many are through. It only adds. A paired device is given
+    /// it with the rest of the profile's watching, like any other mark. Returns the names of any
+    /// whose episodes couldn't be read.
+    func markWatched(pasted items: [MediaItem], told: @escaping (Int) -> Void) async -> [String] {
+        var missed: [String] = []
+        var done = 0
+        let films = items.filter { $0.type != "series" }
+        if !films.isEmpty {
+            markWatched(films.map(\.id), true)
+            done = films.count
+        }
+        told(done)
+        // Three series' episodes asked for at once, as the Watchlist's reading does.
+        var waiting = items.filter { $0.type == "series" }[...]
+        await withTaskGroup(of: (MediaItem, [MediaDetails.Video]?).self) { group in
+            func next() {
+                guard let one = waiting.popFirst() else { return }
+                group.addTask { @MainActor in
+                    if let read = self.seriesEpisodes[one.id] { return (one, read) }
+                    let found = try? await self.ask(
+                        "addon.details", ["type": "series", "id": one.id, "adult": false], as: MediaDetails.self)
+                    return (one, found?.videos)
+                }
+            }
+            for _ in 0..<3 { next() }
+            for await (one, episodes) in group {
+                if let episodes, !episodes.isEmpty {
+                    markWatched(SeriesProgress.everyOut(in: episodes), true, of: one)
+                    learn(one, episodes: episodes)
+                } else {
+                    missed.append(one.name)
+                }
+                done += 1
+                told(done)
+                next()
+            }
+        }
+        noteMarked(items)
+        // Given to the paired devices now, rather than at the ten-second round.
+        await giveWatching(all: false)
+        return missed
+    }
+
+    /// Titles the owner pasted into Settings and ticked, put on the Watchlist: those not on it go
+    /// on first, in the order they were pasted; one on it already stays where it is, and nothing
+    /// is taken off. Returns how many went on.
+    @discardableResult
+    func addToWatchlist(pasted items: [MediaItem]) -> Int {
+        let added = watchlist.put(items)
+        watchlist.save()
+        // Whether each is in New Episodes goes by its being on the list: worked out again from
+        // the episodes already read, and the rest are read as the Watchlist shows them.
+        for item in items where item.type == "series" {
+            if let episodes = seriesEpisodes[item.id] { learn(item, episodes: episodes) }
+        }
+        Task { await giveWatching(all: false) }
+        return added
+    }
+
+    /// Titles the app would otherwise know nothing of (never played, listed or hearted), kept so
+    /// the Watchlist's Watched and New Episodes can show them by name.
+    private func noteMarked(_ items: [MediaItem]) {
+        var marked = markedTitles
+        marked.note(items)
+        markedTitles = marked
+        markedTitles.save()
     }
 
     /// Open an episode on its series' page, with its ways to play showing (the calendar).
@@ -733,14 +811,15 @@ final class AppModel {
     /// and the calendar keep up with.
     var ownSeries: [MediaItem] {
         var seen = Set<String>()
-        return (watchlist.of(type: "series") + mediaFavourites.of(type: "series") + history.watched(.series))
+        return (watchlist.of(type: "series") + mediaFavourites.of(type: "series") + history.watched(.series)
+            + markedTitles.items.filter { $0.type == "series" })
             .filter { seen.insert($0.id).inserted }
     }
 
     /// A film or series the app has a record of, by its id.
     func knownItem(_ id: String) -> MediaItem? {
         watchlist.items.first { $0.id == id } ?? mediaFavourites.items.first { $0.id == id }
-            ?? history.entries.first { $0.id == id }?.item
+            ?? history.entries.first { $0.id == id }?.item ?? markedTitles.items.first { $0.id == id }
     }
 
     /// The Watchlist's To Watch (the owner, 2026-10-15): what's on it and not watched yet,
@@ -755,7 +834,8 @@ final class AppModel {
     /// latest episode has been watched, the latest watched first.
     func watchedItems(_ type: String) -> [MediaItem] {
         var seen = Set<String>()
-        let all = (history.entries.compactMap(\.item) + watchlist.items + mediaFavourites.items)
+        let all = (history.entries.compactMap(\.item) + watchlist.items + mediaFavourites.items
+            + markedTitles.items)
             .filter { $0.type == type && isWatched($0.id) && seen.insert($0.id).inserted }
         func when(_ item: MediaItem) -> Date {
             finished.day(of: seriesProgress.latest(of: item.id) ?? item.id) ?? .distantPast
@@ -3148,6 +3228,8 @@ final class AppModel {
         watchlist = Watchlist.saved()
         finished = Self.keptFinished()
         seriesProgress = SeriesProgress.saved()
+        markedTitles = MarkedTitles.saved()
+        showsWatched = WatchedShown.saved()
         begun = PartWatched.saved()
         channelPictures = ChannelPictures.saved()
         (seriesEpisodes, calendarUploads, uploadsRead) = ([:], [], nil)
@@ -3421,6 +3503,7 @@ final class AppModel {
         watchlist = Watchlist.saved()
         finished = Self.keptFinished()
         seriesProgress = SeriesProgress.saved()
+        markedTitles = MarkedTitles.saved()
         begun = PartWatched.saved()
     }
 

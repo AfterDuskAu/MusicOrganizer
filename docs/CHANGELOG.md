@@ -2652,3 +2652,64 @@ What's still slow, and why, is in `docs/KNOWN-ISSUES.md` ("The speed audit"): th
   sync still carries everything an app keeps. The iPad and Android apps hold 75,000 too.
 - `Bench`'s new `go=<page>` step shows a page of the sidebar, as a click on its row does, so a
   check can let a page do its own work (the Watchlist and Home read the series' episodes again).
+
+### Paste a List in Settings (the Mac, as the iPad has it since 2026-11-13)
+
+The owner, 2026-11-13, of the iPad, for every app: "copy/paste titles directly into a 'card'. On
+this card it would read the movies/series listed on it, and mark them as already watched. And
+another Card under it, for watchlisted shows. paste 50 shows you have in notes, and it detects and
+adds them to the correct list"; and "Sometimes someone could say Law & order... The card will then
+show, law and order, and the options under it, picture of the series/show and the correct title,
+you can select several or just 1, 1 tap and it deselects or selects."
+
+**Settings → Profile → Paste a List**, after Deleted Items: two cards, **Mark as Watched** and
+**Add to Watchlist**. A box to paste into, Find These, what was found shown with its posters
+**before** anything is added, then one button to add it. The summary reads as the owner put it:
+"32 of 51 found exactly · 18 may be more than one — click the right ones · 1 found nothing".
+
+- **Reading the lines** (`PastedList` in the Kit, copied from the iPad's, which is pure Swift):
+  each line is tidied into a name to look for — a list's bullet, tick box or number before it
+  ("1.", "(4)", "- [x]"), a tick, a star, a score or "watched" after it, quotes around it, a
+  season or an episode ("S2", "Season 1-3", "S01E05", "2x05"), "(TV series)", "(movie)", and a
+  year, "(2021)", "(2008–2013)" or one at the end. A number that's part of the name stays ("1917",
+  "(500) Days of Summer", "Blade Runner 2049"), and a year at the end is kept both ways, since it
+  may be the name's ("Wonder Woman 1984"). A heading ("TV Shows:") says what kind is under it until
+  the next heading; blank lines, headings and the same title twice are skipped; 300 lines at most.
+- **Looking them up:** four lines at a time, with "Looking… 12 of 51" and a Stop, so fifty never
+  hold the app up. Each is asked of TMDB first where the computer has a key, then of every plugin,
+  as a Finder's search is (`tmdb.search`, `addon.search`), for the kind the line says or for both.
+- **What's shown:** the best title for each line, with the others under it as posters to click.
+  A line is ticked at the start when it's sure (its name, and its year when it has one, with
+  nothing else of that name to speak of) or likely (another has the name too, or the year is off:
+  it says so and asks to be checked); nothing is ticked when only something close turned up ("Breking
+  Bad"), and a line that found nothing says so. A click ticks or unticks each option, and several
+  may be ticked for one line — "Law & Order" can add the series, Special Victims Unit and Criminal
+  Intent at once. The lines wanting a look are shown first.
+- **The adding, only what's ticked, and it only ever adds:** a film goes into `Finished`; a series
+  has every episode of it that's out marked, as its card's Mark as Watched does, its episodes read
+  from its plugin three at a time when they haven't been; the Watchlist card puts them on the list
+  (those not on it first, in the order pasted) and never takes anything off. What's added is given
+  to the paired devices at once, with the rest of the profile's watching.
+- **`MarkedTitles`** (new, a profile's own, 2,000 at most, and it travels with an export's
+  records): the titles marked this way that nothing else here knows, so the Watchlist's Watched
+  shows them, a series among them keeps up with its new episodes, and its name and poster are known
+  though it was never played, listed or hearted.
+- **A child's profile** is shown only what its Australian ratings allow, asked of TMDB as a page's
+  list does (`TitleFilter`), and nothing from a plugin for adults only is ever searched.
+- **Engine:** `tmdb.search` now also answers `popularity`, how talked about each find is, by the
+  same ids. It settles a pasted name with no year that several titles share — "Friends" is the
+  series, not the film of that name — which the iPad gets from TMDB itself. Nothing else reads it,
+  and a caller that ignores it is no worse off, since a search's own order is by popularity.
+- Two small things found on the way: `markedTitles` and the Watched switch (`showsWatched`, added
+  2026-11-13) are now read afresh when the profile is switched, as the other records are; without
+  that the switch carried from one profile into the next.
+- Deviations: the cards are a file of their own (`PasteListSettings.swift`) rather than inside
+  `SettingsView.swift`, which is a dispatcher and already keeps its bigger parts apart
+  (`SharingSettings`, `StremioImport`). `PastedList.said` takes the word for picking one, so the
+  Mac says "click" where the owner's tablet says "tap"; the Kit's own default is still "tap".
+- **Checked:** `pytest` on the engine's TMDB tests, `ruff`, `swift build` and `swift test` (376
+  tests, 26 of them the iPad's pasted-list ones ported with the Mac's own names and one for its
+  "click"). The Mac's speed work was being done in the same checkout at the same time, so this was
+  built and tested in a worktree of its own holding only these changes.
+- **Not tried yet:** the two cards in the running app (the owner had it open; it needs the engine
+  restarted and the app rebuilt), and so a real paste end to end.

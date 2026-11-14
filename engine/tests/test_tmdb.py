@@ -688,6 +688,7 @@ def test_a_search_finds_titles_with_a_poster_by_their_imdb_ids(fake: FakeTmdb) -
                 "vote_average": 8.4,
                 "genre_ids": [53],
                 "original_language": "en",
+                "popularity": 61.2345,
             },
             {"id": 551, "title": "No Poster", "poster_path": None},
             {"id": 552, "title": "No IMDb Id", "poster_path": "/n.jpg"},
@@ -695,6 +696,8 @@ def test_a_search_finds_titles_with_a_poster_by_their_imdb_ids(fake: FakeTmdb) -
     }
     fake.answers["/movie/550/external_ids"] = {"imdb_id": "tt0137523"}
     fake.answers["/movie/552/external_ids"] = {"imdb_id": None}
+    # `popularity` is by the ids the items were given: for a pasted name with no year that
+    # several titles share, the app takes one far ahead of the rest as the one meant.
     assert tmdb.search("movie", "  fight club ") == {
         "items": [
             {
@@ -707,7 +710,8 @@ def test_a_search_finds_titles_with_a_poster_by_their_imdb_ids(fake: FakeTmdb) -
                 "rating": 8.4,
                 "genres": ["Thriller"],
             }
-        ]
+        ],
+        "popularity": {"tt0137523": 61.234},
     }
     searched = next(params for path, params, _ in fake.asked if path == "/search/movie")
     assert searched == {
@@ -724,7 +728,7 @@ def test_a_search_finds_titles_with_a_poster_by_their_imdb_ids(fake: FakeTmdb) -
         "rating": None,
     }
     assert len(fake.asked) == before
-    assert tmdb.search("series", "   ") == {"items": []}
+    assert tmdb.search("series", "   ") == {"items": [], "popularity": {}}
     assert len(fake.asked) == before
     with pytest.raises(tmdb.TmdbError):
         tmdb.search("channel", "anything")
@@ -1089,7 +1093,10 @@ def test_the_standard_plugins_lists_genres_episodes_and_search_over_rpc(
     discover = next(params for path, params, _ in fake.asked if path == "/discover/tv")
     assert (discover["with_genres"], discover["with_original_language"]) == ("80,99", "en")
     fake.answers["/search/tv"] = {"page": 1, "results": []}
-    assert result(server, "tmdb.search", type="series", query="the jinx") == {"items": []}
+    assert result(server, "tmdb.search", type="series", query="the jinx") == {
+        "items": [],
+        "popularity": {},
+    }
     assert code(server, "tmdb.search", type="series", query="x" * 201) == rpc.INVALID_PARAMS
     assert result(server, "tmdb.episodes", type="movie", id="tt1") == {"videos": []}
     assert {"tmdb.genres", "tmdb.episodes", "tmdb.search"} <= rpc.SLOW_METHODS

@@ -841,18 +841,39 @@ def genres(kind: str) -> list[str]:
 def search(kind: str, query: str) -> dict[str, Any]:
     """Films or series TMDB finds for some words (its first page: its best twenty), as
     `{items}` in the shape of `addon.search`'s: by their IMDb ids, as `catalog`'s are. Only
-    those with a poster: the rest are TMDB's obscure ones, blank cards in a search."""
+    those with a poster: the rest are TMDB's obscure ones, blank cards in a search.
+
+    `popularity` says how talked about each find is, by the same ids (TMDB's own figure, left
+    out for a title it gives none for). It's for a name with no year that several titles share
+    ("Friends"), where the app takes the one far ahead of the rest as meant (a pasted list:
+    2026-11-14). A search's own order is by popularity too, so a caller that ignores this
+    is no worse off than before."""
     if kind not in ("movie", "series"):
         raise TmdbError("TMDB searches films or series.")
     words = query.strip()
     if not words:
-        return {"items": []}
+        return {"items": [], "popularity": {}}
     body = _ask(
         f"/search/{_media(kind)}", query=words, include_adult="false", language="en-US", page=1
     )
     results = [r for r in body.get("results") or [] if isinstance(r, dict)]
     with_poster = [r for r in results if _picture(r.get("poster_path"), "w342")]
-    return {"items": _items(with_poster, kind)}
+    items = _items(with_poster, kind)
+    # Each find's own popularity, by the id the item was given: `_items` noted which of
+    # TMDB's own ids each came from (`_found`), and a title with no IMDb id was left out.
+    talked: dict[str, float] = {}
+    said = {
+        r["id"]: float(r["popularity"])
+        for r in with_poster
+        if isinstance(r.get("id"), int) and isinstance(r.get("popularity"), int | float)
+    }
+    for item in items:
+        with _lock:
+            known = _found.get(item["id"])
+        own = known[0] if known else None
+        if own in said:
+            talked[item["id"]] = round(said[own], 3)
+    return {"items": items, "popularity": talked}
 
 
 def _items(results: Any, kind: str) -> list[dict[str, Any]]:

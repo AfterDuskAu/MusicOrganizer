@@ -51,8 +51,12 @@ public struct TMDBGenres: Decodable, Sendable {
 }
 
 /// `tmdb.search`'s answer (2026-11-11): what TMDB found, by IMDb id, those with a poster.
+/// `popularity` (2026-11-14) says how talked about each find is, by the same ids: Paste a List
+/// takes a name with no year that several titles share as settled when one is far ahead of the
+/// rest ("Friends" the series, not a film of that name). Nil from an engine from before it.
 public struct TMDBFound: Decodable, Sendable {
     public let items: [MediaItem]
+    public let popularity: [String: Double]?
 }
 
 /// `tmdb.episodes`' answer (2026-11-11): a series' episodes as TMDB has them, for a series no

@@ -39,6 +39,7 @@ struct SettingsView: View {
     static let groups: [Group] = [
         Group(id: "profile", title: "Profile", parts: [
             Part(id: "profiles"), Part(id: "deleted", title: "Deleted Items"),
+            Part(id: "paste", title: "Paste a List"),
             Part(id: "moving", title: "Export and Import"),
         ]),
         Group(id: "player", title: "Player", parts: [Part(id: "play")]),
@@ -248,6 +249,7 @@ private struct SettingsPart: View {
         case "addons": AddonSettings()
         case "tmdb": TMDBSettings()
         case "deleted": DeletedItemsSettings()
+        case "paste": PasteListSettings()
         case "moving": MovingSettings()
         case "look":
             Form { LayoutSettings() }
