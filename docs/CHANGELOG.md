@@ -2778,3 +2778,22 @@ Watchlist's own lists were worked out afresh for every row at every redraw.
   the round of builds, and it started cleanly with its records whole (C's 6,885 marks, D's 1,895);
   but nobody has looked at the change in it, and the one path no check here covers is a card's
   right-click menu by hand, which the unseen copy can't open.
+
+2026-11-14, evening. **Paste a List: an arrow at each end of a line's options** (the owner, looking
+at the card in their own app: "cant move the option further to the right to see more than the
+options available"). A line's options were a row that only scrolls sideways, with no scroll bar;
+in the middle of the Settings page a mouse can't move it, because the wheel scrolls the page under
+it, so everything past the right edge could be reached only with a trackpad. The row now has an
+arrow at each end, as Home's rows of cards have had since 2026-10-08: beside the posters, never
+over one, a whole page at a time with the first brought to the left edge, the room for them kept
+whether they're there or not, and hidden where everything fits. How many fit is measured from the
+row's own width. **Checked in the owner's own app** (b443524, with their leave): forward moved the
+row to options that couldn't be reached before, back came home, and what was ticked stayed ticked.
+**The lesson for any row of cards here:** a sideways scroll view on its own can't be reached with a
+mouse.
+
+- **Also looked at in their app, after the speed work** (the same visit): a card's right-click menu
+  on the Watchlist, which no check here can open (the unseen copy can't open a menu) and which the
+  speed work rewrote to be built when it opens — Open Its Page, Remove From Watchlist, Mark as
+  Watched, the words right for the title, opening at once. Nothing was chosen, nothing was marked,
+  and the app was left on the page it was found on.
