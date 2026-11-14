@@ -2769,5 +2769,8 @@ Watchlist's own lists were worked out afresh for every row at every redraw.
   writing what's watched out as JSON 9.8 ms, a hundred and fifty series learned one at a time 10 ms
   (6 ms in helpings of forty), building the watching a sync sends 14.6 ms — all of which a tap used
   to wait for, and a tablet's own processor is several times slower than this Mac's.
-- **Not seen:** the owner's own copy of the Mac app (they were using it), and the owner's tablet
-  and TV (they haven't been asked).
+- **Not seen:** the owner's own copy of the Mac app, and the owner's tablet and TV (they haven't
+  been asked). Their copy was rebuilt onto this commit and reopened at 17:04 by the session doing
+  the round of builds, and it started cleanly with its records whole (C's 6,885 marks, D's 1,895);
+  but nobody has looked at the change in it, and the one path no check here covers is a card's
+  right-click menu by hand, which the unseen copy can't open.
