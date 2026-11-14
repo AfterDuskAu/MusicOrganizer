@@ -154,7 +154,10 @@ private struct PastedLineRow: View {
                 // it, and the row has no scroll bar to take hold of. The arrows stand beside
                 // the posters, never over one, as Home's rows have them, and the room for them
                 // is kept whether they're there or not, so every line's posters start together.
-                let fits = max(Int((room + Self.gap) / (PastedOption.whole + Self.gap)), 1)
+                // How many fit is Home's own reckoning (`HomePaging.fitting`, tested in the Kit),
+                // not a second copy of it: it guards a width that isn't a real number, and
+                // `Int()` of one of those stops the app rather than giving a wrong answer.
+                let fits = HomePaging.fitting(room, card: PastedOption.whole, gap: Self.gap)
                 let more = reading.options.count > fits
                 ScrollViewReader { rowView in
                     HStack(spacing: 6) {
