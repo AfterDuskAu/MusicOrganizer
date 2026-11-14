@@ -2807,3 +2807,25 @@ put back forty at a time (`AppModel.markWatched(_ read:)`), which does the same 
 order on copies and puts it back in one go. Nothing it marks or shows changed: `learned` only ever
 consults what's finished for its own series' episodes, and what's watched is rounded up once at
 the end of a helping instead of once a series. `swift build`, `swift test` (380).
+
+2026-11-14, evening, later still. **Two small things in Paste a List, both found by reading rather
+than by use.**
+
+- **The options row counts what fits Home's way** (751d310). The arrows added that evening worked
+  out how many options fit with their own copy of the formula, and the Kit has it already, tested,
+  as `HomePaging.fitting`. The copy left out one of its guards: `Int()` of a width that isn't a
+  real number stops the app rather than giving a wrong answer, and a `GeometryReader` can hand out
+  such a width while a view is being taken down — so the copy could have stopped the app where the
+  Kit's own version would have said "one". Nothing anyone sees changed. The lesson, and the reason
+  it's written here: **a reckoning that already exists in the Kit, tested, is the one to call, even
+  where it's three lines.**
+- **The Watchlist card learns its series in one pass too** (6395b9e). The batching written for
+  Mark as Watched left `addToWatchlist(pasted:)` as it was, and it had the same shape: for fifty
+  pasted series whose episodes were already read, fifty saves of the records and fifty redraws of
+  every page. Now one pass. The ordering it quietly depended on is unchanged and now said out
+  loud in the code: the titles go on the list **before** their episodes are worked out, because
+  `learned` asks the list whether each series is listed, and that is what decides whether its
+  episodes count as new.
+
+`swift build`, `swift test` (380) for both. Neither has been in front of the owner: their app is on
+b443524, so these wait for the next device round with the rest.
