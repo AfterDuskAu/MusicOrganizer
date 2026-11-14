@@ -147,17 +147,76 @@ private struct PastedLineRow: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(alignment: .top, spacing: 10) {
-                        ForEach(reading.options, id: \.id) { item in
-                            PastedOption(item: item, ticked: reading.chosen.contains(item.id)) { tap(item.id) }
+                // The options, with an arrow at each end for the ones off the edge (the owner,
+                // 2026-11-14: "cant move the option further to the right to see more than the
+                // options available"). A row that only scrolls sideways can't be moved by a
+                // mouse in the middle of the Settings page: the wheel scrolls the page under
+                // it, and the row has no scroll bar to take hold of. The arrows stand beside
+                // the posters, never over one, as Home's rows have them, and the room for them
+                // is kept whether they're there or not, so every line's posters start together.
+                let fits = max(Int((room + Self.gap) / (PastedOption.whole + Self.gap)), 1)
+                let more = reading.options.count > fits
+                ScrollViewReader { rowView in
+                    HStack(spacing: 6) {
+                        arrow("chevron.left", "Back", shown: more) { step(-fits, rowView) }
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(alignment: .top, spacing: Self.gap) {
+                                ForEach(reading.options, id: \.id) { item in
+                                    PastedOption(item: item, ticked: reading.chosen.contains(item.id)) {
+                                        tap(item.id)
+                                    }
+                                    .id(item.id)
+                                }
+                            }
+                            .padding(.vertical, 2)
                         }
+                        .background {
+                            GeometryReader { room in
+                                Color.clear
+                                    .onAppear { self.room = room.size.width }
+                                    .onChange(of: room.size.width) { self.room = room.size.width }
+                            }
+                        }
+                        arrow("chevron.right", "More", shown: more) { step(fits, rowView) }
                     }
-                    .padding(.vertical, 2)
                 }
             }
         }
         .padding(.vertical, 4)
+    }
+
+    /// How wide the row is, so it knows how many options fit in it and how far an arrow goes.
+    @State private var room: CGFloat = 0
+    /// The first option showing, moved by the arrows.
+    @State private var at = 0
+    private static let gap: CGFloat = 10
+
+    /// A page of options further on (or back), with the first of them brought to the left edge.
+    private func step(_ by: Int, _ rowView: ScrollViewProxy) {
+        let wanted = min(max(at + by, 0), max(reading.options.count - 1, 0))
+        at = wanted
+        guard reading.options.indices.contains(wanted) else { return }
+        withAnimation { rowView.scrollTo(reading.options[wanted].id, anchor: .leading) }
+    }
+
+    /// One end's arrow: the same as Home's rows have, smaller for these posters. Hidden where
+    /// everything fits, but its room is kept.
+    private func arrow(_ symbol: String, _ title: String, shown: Bool, action: @escaping () -> Void)
+        -> some View
+    {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(.white)
+                .frame(width: 22, height: 48)
+                .background(.black.opacity(0.75), in: RoundedRectangle(cornerRadius: 6))
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(title)
+        .opacity(shown ? 1 : 0)
+        .disabled(!shown)
+        .accessibilityHidden(!shown)
     }
 
     private var mark: (symbol: String, colour: Color) {
@@ -175,6 +234,8 @@ private struct PastedOption: View {
     let tap: () -> Void
 
     private static let wide: CGFloat = 78
+    /// The whole option's width, poster and name: what a row of them is measured in.
+    fileprivate static let whole: CGFloat = 92
 
     var body: some View {
         Button(action: tap) {
@@ -209,7 +270,7 @@ private struct PastedOption: View {
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
-            .frame(width: 92)
+            .frame(width: Self.whole)
         }
         .buttonStyle(.plain)
         .help(ticked ? "Click to leave “\(item.name)” out" : "Click to include “\(item.name)”")
