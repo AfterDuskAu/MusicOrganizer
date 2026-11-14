@@ -853,11 +853,16 @@ final class AppModel {
     func addToWatchlist(pasted items: [MediaItem]) -> Int {
         let added = watchlist.put(items)
         keepWatchlist()
-        // Whether each is in New Episodes goes by its being on the list: worked out again from
-        // the episodes already read, and the rest are read as the Watchlist shows them.
-        for item in items where item.type == "series" {
-            if let episodes = seriesEpisodes[item.id] { learn(item, episodes: episodes) }
-        }
+        // Whether each is in New Episodes goes by its being on the list, so this follows the
+        // titles going on and not the other way about: `learned` asks the list whether each
+        // series is listed. Worked out from the episodes already read, in one pass and not one
+        // series at a time (2026-11-14): each on its own was a save of the records and every
+        // page drawn again, fifty times over for fifty pasted titles. The rest are read as the
+        // Watchlist shows them.
+        learn(items.compactMap { item in
+            guard item.type == "series", let episodes = seriesEpisodes[item.id] else { return nil }
+            return (series: item, episodes: episodes)
+        })
         Task { await giveWatching(all: false) }
         return added
     }
