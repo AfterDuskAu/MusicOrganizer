@@ -18,6 +18,44 @@ A personal music app that replaces Spotify, Apple Music and YouTube Music for a 
 
 **Song lists (2026-10-09):** every list of songs is drawn by `SongTable`, a table of AppKit's own (`NSTableView`) made to look as SwiftUI's `Table` did, because that one did work for every song in the list and made a small SwiftUI view of every cell. `SongList` owns the list (the songs, their order, the selection, the sort) and the table only shows it; the right-click menu is still described in SwiftUI (`SongActions`). SwiftUI's table and the helper that held its row height (`FixedRows`) were taken out the same day at the owner's word: held that way it could stop the app. A change to the table is checked against a picture of the list before it, dot for dot (the unseen copy, `MUSICORG_SNAPSHOT`), since it must not change how the lists look. A row dragged out of the app is the song's own file, for the Finder or another app to copy, and a copy is all the table allows: only the engine moves a file of the library's (2026-10-10; Show in Finder, in the same menu, only points at the file). In a playlist shown in its own order (not sorted by a column, not searched), rows dragged to another place in the list change the playlist's order (2026-10-11; `SongTable.reorder`, the reckoning is `Playlist.moving` in the Kit): that's the playlist's record changing through `playlist.set_tracks`, and no file moves.
 
+
+**Quick with a big account (2026-11-14, the iPad's speed work of 2026-11-13 brought here):** with
+the owner's records — three hundred on the Watchlist, five and a half thousand watched, a hundred
+and fifty series read every six hours — every click on a card's menu made the whole page do its
+work again. What was wrong, and the rules that keep it right:
+- **A card waits on nothing** (`CardMarks`): the green check, the "+2" and NEW EPISODE are worked
+  out by the list the card is in, once for all its cards (`AppModel.marks`), and handed over as
+  plain values. A card that reads the model itself is drawn again whenever anything in it changes,
+  so one Mark as Watched redrew every card on the page.
+- **A card's menu is built when it opens** (`TitleMenuItems`, `WatchlistMenuItems`), never with the
+  card: read in the card itself, every card on the Watchlist waited on the Watchlist, what's
+  watched and which series are being marked.
+- **The records are written off the main thread**, a quarter of a second after they change, each
+  kind once however many times it changed (`Records`, `AppModel.keepFinished` and the rest).
+  Writing what's been watched out as JSON is about ten milliseconds, and it was done inside every
+  click. **Nothing is lost by the wait**: what's waiting is written at once before the app quits,
+  before a profile is left (so it goes into its own settings and never into the next profile's),
+  before the settings themselves are read (a profile's export, an import) and before a paired
+  video app is given this profile's watching (`Records.flush`, which writes where it stands rather
+  than handing the work to another thread).
+- **A sync's work is off the main thread too**: what a paired video app sent is added up away from
+  the window (`takeWatching`) and put in place here, where nothing else can have changed meanwhile;
+  what's given to it was already built and encoded away from the window (2026-11-09).
+- **Series read together are taken in together** (`AppModel.learnAway`, forty at a time), worked
+  out off the main thread, and **a series that says what it said before changes nothing on the
+  screen** (`SeriesProgress.sameToShow`, `noteProgressQuietly`): only its reading time differs, and
+  the pages aren't drawn again for it. `seriesProgress` is kept by hand for this.
+- **What's worked out from the records is kept until they change** (`AppModel.worked`,
+  `recordsChanged`): the taste behind Recommended, what's being carried on, the Watchlist's To
+  Watch and Watched, which series have new episodes, and the table a title is looked up in
+  (`knownItem`). What's watched and which series have a new episode were already worked out once
+  (`watchedIds`, `newEpisodeIds`, 2026-10-16).
+- **How to measure it again**: `MUSICORG_BENCH`'s `seed=<series>x<episodes>+<films>` fills the
+  profile in use with records the size of the owner's (only ever a scratch copy's own profile),
+  `mark=<n>` marks the nth of the Watchlist's To Watch as its card's menu does, and every step now
+  says how many cards, menus and rows were drawn again and what the named pieces of work cost on
+  the main thread.
+
 **Listening time (2026-10-10):** how long a song has been listened to, one figure a song, kept by the engine (`listening.listened`, in `state.json`): what the app's player played and what a paired phone player played, added together. It's time, not a count of plays, and a play is still a song heard to its end. The player counts only time a song was really playing (`PlayedTime` in the Kit: a jump along the bar isn't listening), and reports it when the song ends, is paused or gives way to another. The app holds what's reported for a few seconds before telling the engine (each telling is a save of the library's records, a tenth of a second, and the next song's lyrics mustn't wait behind it), and tells whatever it holds at once before the engine stops or opens another library. It's shown in the song lists' **Listened** column ("255 min 24 sec", the owner's own form), which is hidden until it's switched on in View → Columns, so no list looks different until the owner asks; and in **Most Listened** (2026-10-11, the owner's choice), a list under Music after Most Played: the songs listened to longest first, which always shows the column it's ordered by. The Artists page's "Time listening" is this figure too (2026-10-11; before, it was each song's plays times its length). When a phone's changes are taken the engine says `listening.changed`, and the app reads its playlists and times again.
 
 **First clicks (2026-10-09):** the click that brings the app forward from behind another app also counts on the harmless things (a sidebar row, a line that's picked or played by a click), and never on a button that undoes something at once with no question asked (the ✕ on a waiting download): the owner's choice. A view says which with `takesFirstClick()`; macOS decides for everything not told (its buttons take that click, a SwiftUI list's rows and a click gesture don't). A new row or ✕ is given its answer when it's made, and checked with the unseen copy (`MUSICORG_BENCH`'s `first=` and `click=`), which is never the app in front.

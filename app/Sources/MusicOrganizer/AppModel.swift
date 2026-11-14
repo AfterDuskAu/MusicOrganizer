@@ -373,9 +373,91 @@ final class AppModel {
     /// The film or episode in the film player, as the history knows it.
     @ObservationIgnored private var watchingFilm: String?
 
+    // MARK: the records kept, and what's worked out from them (2026-11-14)
+
+    /// The records written off the main thread, a moment after they change (`Records`): what's
+    /// waiting goes at once before the app quits, before a profile is left, before the
+    /// settings themselves are read, and before a paired video app is given this profile's
+    /// watching. Nothing is lost by the wait.
+    @ObservationIgnored let saver = Records()
+
+    /// Counts up whenever this profile's records change. What's worked out from them (the
+    /// Recommended rows' taste, what's being carried on, which series have new episodes) is
+    /// kept until it does, and a page waits on this count as it would on the records
+    /// themselves, so it's drawn again when they change and not otherwise.
+    private(set) var recordsChanged = 0
+    @ObservationIgnored private var workedOut: [String: Any] = [:]
+
+    /// Something worked out from the records, kept until they change. Reading it makes the
+    /// page wait on `recordsChanged`, as it would on the records themselves.
+    private func worked<T>(_ key: String, _ make: () -> T) -> T {
+        _ = recordsChanged
+        if let kept = workedOut[key] as? T { return kept }
+        let made = make()
+        workedOut[key] = made
+        return made
+    }
+
+    /// The records changed: what was worked out from them is no longer good, and the pages
+    /// that go by it are drawn again.
+    private func changedRecords() {
+        workedOut = [:]
+        recordsChanged += 1
+    }
+
+    /// A series' episodes were read: what was worked out from them is no longer good, but the
+    /// records themselves haven't changed, so nothing is drawn again for it by itself.
+    private func clearWorked() { workedOut = [:] }
+
+    /// Each of these writes that record out as JSON, which for what's been watched (thousands
+    /// of ids) and the progress of every series is most of the work of a click: `Records` does
+    /// it off the main thread a quarter of a second later, once however many times the record
+    /// changed meanwhile.
+    private func keepFinished() {
+        changedRecords()
+        let done = finished
+        saver.save(Finished.key) { done.save() }
+    }
+
+    private func keepProgress() {
+        changedRecords()
+        let progress = seriesProgress
+        saver.save(SeriesProgress.key) { progress.save() }
+    }
+
+    /// Progress that stands the same as far as a page shows (only when each series was read):
+    /// kept for next time, with nothing drawn again for it (`SeriesProgress.sameToShow`).
+    private func noteProgressQuietly(_ progress: SeriesProgress) {
+        progressStore = progress
+        saver.save(SeriesProgress.key) { progress.save() }
+    }
+
+    private func keepHistory() {
+        changedRecords()
+        let places = history
+        saver.save(WatchHistory.key) { places.save() }
+    }
+
+    private func keepWatchlist() {
+        changedRecords()
+        let list = watchlist
+        saver.save(Watchlist.key) { list.save() }
+    }
+
+    private func keepFavourites() {
+        changedRecords()
+        let hearts = mediaFavourites
+        saver.save(MediaFavourites.key) { hearts.save() }
+    }
+
+    private func keepBegun() {
+        let part = begun
+        saver.save(PartWatched.key) { part.save() }
+    }
+
     func toggleFavourite(_ item: MediaItem) {
         mediaFavourites.toggle(item)
-        mediaFavourites.save()
+        keepFavourites()
     }
 
     /// Settings → Profile → From Stremio: an import of what Stremio on this Mac remembers.
@@ -386,7 +468,7 @@ final class AppModel {
 
     func toggleWatchlist(_ item: MediaItem) {
         watchlist.toggle(item)
-        watchlist.save()
+        keepWatchlist()
         // Its new episodes go by whether it's on the Watchlist (2026-11-10): worked out again
         // from its episodes, when they've been read.
         if let episodes = seriesEpisodes[item.id] { learn(item, episodes: episodes) }
@@ -398,7 +480,17 @@ final class AppModel {
     /// stands (`SeriesProgress`): what the Watchlist's To Watch and Watched, the green
     /// checks and an episode's check go by.
     private(set) var finished = AppModel.keptFinished()
-    private(set) var seriesProgress = SeriesProgress.saved()
+    /// Where each series stands. Kept by hand (2026-11-14) so that reading a series again,
+    /// which almost always changes only when it was read, can be kept without drawing every
+    /// page again (`noteProgressQuietly`).
+    var seriesProgress: SeriesProgress {
+        get {
+            access(keyPath: \.seriesProgress)
+            return progressStore
+        }
+        set { withMutation(keyPath: \.seriesProgress) { progressStore = newValue } }
+    }
+    @ObservationIgnored private var progressStore = SeriesProgress.saved()
     /// Titles marked watched by the owner's word that nothing else here knows (a list pasted
     /// into Settings, 2026-11-14): so the Watchlist's Watched shows them, a series among them
     /// keeps up with its new episodes, and its name and poster are known though it was never
@@ -471,16 +563,90 @@ final class AppModel {
         if fresh != newEpisodeIds { newEpisodeIds = fresh }
     }
 
+    // MARK: a developer's check: records the size of the owner's (2026-11-14)
+
+    /// Made-up records put in the profile in use, for a timing run (`Bench`'s `seed=` step):
+    /// as many series and films as asked for, on the Watchlist, with most of their episodes
+    /// watched and the newest in the history. **Only ever with a scratch copy's own profile**
+    /// — it writes over what that profile has watched — and nothing of it runs without
+    /// `MUSICORG_BENCH`. The ids are the ones a made-up plugin on this computer answers for.
+    func seedRecords(series: Int, episodesEach: Int, movies: Int) {
+        guard Bench.isOn else { return }
+        func made(_ id: String, _ type: String, _ name: String) -> MediaItem {
+            MediaItem(
+                id: id, type: type, name: name, poster: nil, posterShape: "poster", year: "2020",
+                rating: 7, genres: ["Drama", "Comedy", "Action"][(abs(id.hashValue) % 3)...].prefix(1).map { $0 })
+        }
+        let now = Date()
+        var listed: [MediaItem] = []
+        var days: [String: Date] = [:]
+        var progress: [String: SeriesProgress.Known] = [:]
+        var entries: [WatchHistory.Entry] = []
+        for number in 0..<series {
+            let id = String(format: "tt90%04d", number)
+            let item = made(id, "series", "Made-up Series \(number + 1)")
+            listed.append(item)
+            // Every episode but the last two watched, so some are caught up and some aren't.
+            let watchedTo = max(1, episodesEach - (number % 3))
+            for one in 1...episodesEach where one <= watchedTo {
+                days["\(id):\(one / 11 + 1):\(one % 10 + 1)"] = now.addingTimeInterval(-Double(one) * 3600)
+            }
+            let last = "\(id):\(episodesEach / 11 + 1):\(episodesEach % 10 + 1)"
+            progress[id] = SeriesProgress.Known(
+                latest: last, caughtUp: watchedTo >= episodesEach ? last : nil,
+                read: now.addingTimeInterval(-7 * 3600), seen: "")
+            if number < 100 {
+                var entry = WatchHistory.Entry.watching(item)
+                entry.seconds = 600
+                entry.length = 1_500
+                entry.at = now.addingTimeInterval(-Double(number) * 600)
+                entry.episodeId = "\(id):1:\(number % 10 + 1)"
+                entries.append(entry)
+            }
+        }
+        for number in 0..<movies {
+            let id = String(format: "tt80%04d", number)
+            let item = made(id, "movie", "Made-up Film \(number + 1)")
+            listed.append(item)
+            if number % 3 != 0 { days[id] = now.addingTimeInterval(-Double(number) * 7200) }
+            if number < 100 {
+                var entry = WatchHistory.Entry.watching(item)
+                entry.seconds = number % 3 == 0 ? 500 : 5_000
+                entry.length = 5_400
+                entry.at = now.addingTimeInterval(-Double(number) * 900)
+                entries.append(entry)
+            }
+        }
+        watchlist = Watchlist(listed)
+        finished = Finished(days)
+        seriesProgress = SeriesProgress(progress)
+        history = WatchHistory(entries.sorted { $0.at > $1.at })
+        mediaFavourites = MediaFavourites(Array(listed.prefix(60)))
+        watchlist.save()
+        finished.save()
+        seriesProgress.save()
+        history.save()
+        mediaFavourites.save()
+        changedRecords()
+        recountWatched()
+        Bench.say(
+            "BENCH seed: watchlist \(watchlist.items.count), watched \(finished.days.count), "
+                + "history \(history.entries.count), series \(seriesProgress.series.count), "
+                + "favourites \(mediaFavourites.items.count)")
+    }
+
     /// A film or episodes marked watched, or not, by the owner (an episode's menu, a
     /// card's). Episodes say their series, which may be caught up by it.
     func markWatched(_ ids: [String], _ watched: Bool, of series: MediaItem? = nil) {
-        // Changed on copies and put back whole (`@Observable`'s properties aren't changed in place).
-        var (done, progress) = (finished, seriesProgress)
-        progress.marked(ids, watched: watched, of: series?.id, in: &done)
-        (finished, seriesProgress) = (done, progress)
-        finished.save()
-        seriesProgress.save()
-        recountWatched()
+        Bench.time("markWatched") {
+            // Changed on copies and put back whole (`@Observable`'s properties aren't changed in place).
+            var (done, progress) = (finished, seriesProgress)
+            progress.marked(ids, watched: watched, of: series?.id, in: &done)
+            (finished, seriesProgress) = (done, progress)
+            keepFinished()
+            keepProgress()
+            recountWatched()
+        }
     }
 
     /// The series whose episodes are being found for Mark as Watched on its card.
@@ -521,17 +687,17 @@ final class AppModel {
     /// import) give its latest. Returns how many went on the Watchlist.
     func takeStremio(_ plan: StremioLibrary.Plan, details: [String: MediaDetails]) -> Int {
         let added = watchlist.add(plan.watchlist)
-        watchlist.save()
+        keepWatchlist()
         for (id, when) in plan.finished where !finished.contains(id) { finished.mark(id, watched: true, now: when) }
-        finished.save()
+        keepFinished()
         history.merge(plan.history)
-        history.save()
+        keepHistory()
         for (id, found) in details where found.type == "series" && !found.videos.isEmpty {
             seriesEpisodes[id] = found.videos
             seriesProgress.learned(
                 id, episodes: found.videos, finished: finished, listed: watchlist.items.contains { $0.id == id })
         }
-        seriesProgress.save()
+        keepProgress()
         seriesRead += 1
         recountWatched()
         return added
@@ -547,18 +713,57 @@ final class AppModel {
     private func learn(_ read: [(series: MediaItem, episodes: [MediaDetails.Video])]) {
         let read = read.filter { $0.series.type == "series" && !$0.episodes.isEmpty }
         guard !read.isEmpty else { return }
-        var episodes = seriesEpisodes
-        var progress = seriesProgress
-        for (series, videos) in read {
-            episodes[series.id] = videos
-            // On the Watchlist: every unwatched episode after the last one watched is new
-            // (the owner, 2026-11-10, for every app).
-            progress.learned(series.id, episodes: videos, finished: finished, listed: watchlist.contains(series))
+        Bench.time("learn") {
+            var episodes = seriesEpisodes
+            var progress = seriesProgress
+            for (series, videos) in read {
+                episodes[series.id] = videos
+                // On the Watchlist: every unwatched episode after the last one watched is new
+                // (the owner, 2026-11-10, for every app).
+                progress.learned(series.id, episodes: videos, finished: finished, listed: watchlist.contains(series))
+            }
+            (seriesEpisodes, seriesProgress) = (episodes, progress)
+            keepProgress()
+            seriesRead += 1
+            recountWatched()
         }
-        (seriesEpisodes, seriesProgress) = (episodes, progress)
-        seriesProgress.save()
-        seriesRead += 1
-        recountWatched()
+    }
+
+    /// How many series read are taken in together (`readSeries`): every page showing cards is
+    /// drawn again when they are, so they go in few, large helpings rather than many small ones.
+    static let learnTogether = 40
+
+    /// Several series read together, worked out off the main thread and put back in one go
+    /// (2026-11-14, as the iPad does it since 2026-11-13): what each series' episodes say is
+    /// seconds of work for the owner's hundred and fifty, and a page is being scrolled while
+    /// they're read. **A series that says what it said before changes nothing on the screen**
+    /// (`SeriesProgress.sameToShow`): only its reading time differs, and the pages aren't drawn
+    /// again for it.
+    private func learnAway(_ read: [(series: MediaItem, episodes: [MediaDetails.Video])]) async {
+        let wanted = read.filter { $0.series.type == "series" && !$0.episodes.isEmpty }
+        guard !wanted.isEmpty else { return }
+        let (progress, done, listed) = (seriesProgress, finished, watchlist)
+        let asked = wanted.map {
+            (id: $0.series.id, episodes: $0.episodes, listed: listed.contains($0.series))
+        }
+        let learned = await Task.detached(priority: .userInitiated) {
+            progress.learning(asked, finished: done)
+        }.value
+        Bench.time("learn") {
+            // Put back here, where nothing else can have changed meanwhile, in one go.
+            var episodes = seriesEpisodes
+            for one in wanted { episodes[one.series.id] = one.episodes }
+            seriesEpisodes = episodes
+            clearWorked()
+            seriesRead += 1
+            if learned.sameToShow(as: seriesProgress) {
+                noteProgressQuietly(learned)
+            } else {
+                seriesProgress = learned
+                keepProgress()
+                recountWatched()
+            }
+        }
     }
 
     // MARK: a pasted list (2026-11-14, as the iPad has it since 2026-11-13)
@@ -615,7 +820,7 @@ final class AppModel {
     @discardableResult
     func addToWatchlist(pasted items: [MediaItem]) -> Int {
         let added = watchlist.put(items)
-        watchlist.save()
+        keepWatchlist()
         // Whether each is in New Episodes goes by its being on the list: worked out again from
         // the episodes already read, and the rest are read as the Watchlist shows them.
         for item in items where item.type == "series" {
@@ -631,7 +836,9 @@ final class AppModel {
         var marked = markedTitles
         marked.note(items)
         markedTitles = marked
-        markedTitles.save()
+        changedRecords()
+        let kept = marked
+        saver.save(MarkedTitles.key) { kept.save() }
     }
 
     /// Open an episode on its series' page, with its ways to play showing (the calendar).
@@ -693,6 +900,9 @@ final class AppModel {
         guard phase == .ready, sharing?.on == true, engine?.connection != nil else { return }
         let look = recordsLook
         if !all, look == watchingLook { return }
+        // What's waiting to be written is this profile's own (`Records`): it goes into its
+        // settings before the engine, and a paired device, hears of it.
+        saver.flush()
         // The records as they are now; written out and encoded off the main thread (2026-11-09:
         // for a profile with two thousand titles watched, a few seconds at each of a paired
         // device's syncs, the window unable to answer meanwhile).
@@ -739,12 +949,26 @@ final class AppModel {
         else { return }
         for one in answer.sent {
             if one.profile == profiles.currentId {
-                if WatchSync.merge(one.watching, into: &watchlist, finished: &finished, history: &history) {
-                    watchlist.save()
-                    finished.save()
-                    history.save()
+                // Added up off the main thread (2026-11-14: about 30 ms of work with the
+                // owner's records, and a paired video app's sync brings one whenever another
+                // device changes anything), then put in place here, where nothing else can
+                // have changed meanwhile (one thing at a time on the main thread).
+                let (was, wasDone, wasPlaces) = (watchlist, finished, history)
+                let merged = await Task.detached(priority: .utility) {
+                    () -> (Watchlist, Finished, WatchHistory)? in
+                    var (list, done, places) = (was, wasDone, wasPlaces)
+                    guard WatchSync.merge(one.watching, into: &list, finished: &done, history: &places)
+                    else { return nil }
+                    return (list, done, places)
+                }.value
+                // The profile may have been switched while it was being added up.
+                if one.profile == profiles.currentId, let (list, done, places) = merged {
+                    (watchlist, finished, history) = (list, done, places)
+                    keepWatchlist()
+                    keepFinished()
+                    keepHistory()
                     seriesProgress.notice(finished)
-                    seriesProgress.save()
+                    keepProgress()
                     seriesRead += 1
                     recountWatched()
                 }
@@ -803,44 +1027,99 @@ final class AppModel {
 
     /// Home's Continue Watching Series: part way through an episode, or between episodes
     /// and not caught up; the one watched last first (`WatchHistory.continuing`).
+    /// Worked out from all of what's been watched, so it's kept until the records change
+    /// rather than worked out again for each of Home's rows (2026-11-14).
     var continuingSeries: [WatchHistory.Entry] {
-        history.continuing(finished: finished, progress: seriesProgress)
+        worked("continuing") { history.continuing(finished: finished, progress: seriesProgress) }
     }
 
     /// The owner's series: on the Watchlist, hearted, or watched. The ones the Watchlist
     /// and the calendar keep up with.
     var ownSeries: [MediaItem] {
-        var seen = Set<String>()
-        return (watchlist.of(type: "series") + mediaFavourites.of(type: "series") + history.watched(.series)
-            + markedTitles.items.filter { $0.type == "series" })
-            .filter { seen.insert($0.id).inserted }
+        worked("ownSeries") {
+            var seen = Set<String>()
+            return (watchlist.of(type: "series") + mediaFavourites.of(type: "series") + history.watched(.series)
+                + markedTitles.items.filter { $0.type == "series" })
+                .filter { seen.insert($0.id).inserted }
+        }
     }
 
-    /// A film or series the app has a record of, by its id.
+    /// A film or series the app has a record of, by its id: the Watchlist's, then a favourite,
+    /// then one in the history, then one only marked, as before. Looked up in a table made once
+    /// when the records change (2026-11-14: it was asked for every series with a new episode
+    /// each time a row of cards was drawn, and each ask went through all four lists).
     func knownItem(_ id: String) -> MediaItem? {
-        watchlist.items.first { $0.id == id } ?? mediaFavourites.items.first { $0.id == id }
-            ?? history.entries.first { $0.id == id }?.item ?? markedTitles.items.first { $0.id == id }
+        worked("known") { () -> [String: MediaItem] in
+            var found: [String: MediaItem] = [:]
+            for item in watchlist.items + mediaFavourites.items + history.entries.compactMap(\.item)
+                + markedTitles.items
+            {
+                if found[item.id] == nil { found[item.id] = item }
+            }
+            return found
+        }[id]
+    }
+
+    /// What Home's Recommended rows go by (the owner, 2026-10-15: "takes your watchlisted
+    /// watched"): what's on the Watchlist, what's been watched and what's hearted, of a kind.
+    /// Worked out once and kept (2026-11-14): it is every record the profile has, put
+    /// together, and each Recommended row asked for it twice whenever anything changed.
+    func taste(of kind: String, anime: Bool) -> [MediaItem] {
+        worked("taste|\(anime ? "anime" : kind)") {
+            var seen = Set<String>()
+            return (watchlist.items + history.entries.compactMap(\.item) + mediaFavourites.items)
+                .filter { item in
+                    (anime ? item.anime == true : item.anime != true && item.type == kind)
+                        && seen.insert(item.id).inserted
+                }
+        }
+    }
+
+    /// The genres that taste is most made of, most met first (`Recommending.genres`).
+    func tasteGenres(of kind: String, anime: Bool) -> [String] {
+        worked("tasteGenres|\(anime ? "anime" : kind)") {
+            Recommending.genres(of: taste(of: kind, anime: anime), most: 30)
+        }
+    }
+
+    /// What a card shows over its poster (`CardMarks`): whether it's been watched, how many
+    /// episodes are out to watch, and whether a new one is out since the owner caught up. A
+    /// list works these out for its cards and hands them over as plain values, so a card
+    /// itself waits on nothing and isn't drawn again when something else changes (2026-11-14,
+    /// as the iPad has it since 2026-11-13).
+    func marks(of item: MediaItem) -> CardMarks {
+        guard item.type != "channel" else { return CardMarks() }
+        return CardMarks(
+            watched: isWatched(item.id), fresh: newEpisodeCount(item.id),
+            newEpisode: hasNewEpisode(item.id))
     }
 
     /// The Watchlist's To Watch (the owner, 2026-10-15): what's on it and not watched yet,
     /// and a series they'd caught up with that has a new episode, on the list or not.
     func toWatch(_ type: String) -> [MediaItem] {
-        var seen = Set<String>()
-        let fresh = type == "series" ? seriesProgress.withNewEpisodes(finished: finished).compactMap(knownItem) : []
-        return (fresh + watchlist.of(type: type).filter { !isWatched($0.id) }).filter { seen.insert($0.id).inserted }
+        worked("toWatch|\(type)") {
+            var seen = Set<String>()
+            let fresh =
+                type == "series"
+                ? seriesProgress.withNewEpisodes(finished: finished).compactMap(knownItem) : []
+            return (fresh + watchlist.of(type: type).filter { !isWatched($0.id) })
+                .filter { seen.insert($0.id).inserted }
+        }
     }
 
     /// The Watchlist's Watched: every movie played to nine tenths, and every series whose
     /// latest episode has been watched, the latest watched first.
     func watchedItems(_ type: String) -> [MediaItem] {
-        var seen = Set<String>()
-        let all = (history.entries.compactMap(\.item) + watchlist.items + mediaFavourites.items
-            + markedTitles.items)
-            .filter { $0.type == type && isWatched($0.id) && seen.insert($0.id).inserted }
-        func when(_ item: MediaItem) -> Date {
-            finished.day(of: seriesProgress.latest(of: item.id) ?? item.id) ?? .distantPast
+        worked("watchedItems|\(type)") {
+            var seen = Set<String>()
+            let all = (history.entries.compactMap(\.item) + watchlist.items + mediaFavourites.items
+                + markedTitles.items)
+                .filter { $0.type == type && isWatched($0.id) && seen.insert($0.id).inserted }
+            let when = { (item: MediaItem) -> Date in
+                self.finished.day(of: self.seriesProgress.latest(of: item.id) ?? item.id) ?? .distantPast
+            }
+            return all.sorted { when($0) > when($1) }
         }
-        return all.sorted { when($0) > when($1) }
     }
 
     /// Read these series' episodes where they're due (every six hours; for the calendar,
@@ -869,29 +1148,31 @@ final class AppModel {
                 }
             }
             for _ in 0..<3 { next() }
+            // What they answer is taken in in helpings of forty, not every two seconds
+            // (2026-11-14): each noting is every page's to draw again, and reading the owner's
+            // hundred and fifty redrew the Watchlist eight times while they scrolled it.
             var read: [(series: MediaItem, episodes: [MediaDetails.Video])] = []
-            var noted = Date()
             for await (series, details) in group {
-                if let details { read.append((series, details.videos)) }
-                if Date().timeIntervalSince(noted) > 2 {
-                    learn(read)
-                    (read, noted) = ([], Date())
+                if let details, !details.videos.isEmpty { read.append((series, details.videos)) }
+                if read.count >= Self.learnTogether {
+                    await learnAway(read)
+                    read = []
                 }
                 next()
             }
-            learn(read)
+            await learnAway(read)
         }
     }
 
     /// Something has started playing: it goes to the front of what's been watched.
     func watching(_ entry: WatchHistory.Entry) {
         history.watched(entry)
-        history.save()
+        keepHistory()
     }
 
     func forgetWatched(_ entry: WatchHistory.Entry) {
         history.forget(entry.id)
-        history.save()
+        keepHistory()
     }
 
     /// Open a channel's page over the page that's showing (Home's channels).
@@ -961,7 +1242,7 @@ final class AppModel {
     /// Home's New Episodes: the series with episodes out that the owner hasn't watched
     /// ("+1, +2"), the one whose latest came out last first (the owner, 2026-10-18).
     var newEpisodeSeries: [MediaItem] {
-        seriesProgress.withFreshEpisodes(finished: finished).compactMap(knownItem)
+        worked("newEpisodes") { seriesProgress.withFreshEpisodes(finished: finished).compactMap(knownItem) }
     }
 
     /// How many episodes of a series are out that the owner hasn't watched: its "+N".
@@ -1052,7 +1333,7 @@ final class AppModel {
             !passing.contains(id), player.isPlaying, player.clock.duration > 0
         else { return }
         history.place(id, seconds: player.clock.time, length: player.clock.duration)
-        history.save()
+        keepHistory()
     }
     /// Play Options switched on a page, for now (by their settings' keys). The settings
     /// themselves are the owner's standing choice and aren't touched: a page goes back
@@ -1215,14 +1496,14 @@ final class AppModel {
             noted.noted(part, at: seconds, of: length)
             if noted != self.begun {
                 self.begun = noted
-                self.begun.save()
+                self.keepBegun()
             }
             // Not onto the next episode: the one ending says where it got to as it shuts,
             // when the next is already what's remembered of the series (`play`).
             guard self.history.entries.first(where: { $0.id == id })?.episodeId == self.episodeNow?.episodeId
             else { return }
             self.history.place(id, seconds: seconds, length: length)
-            self.history.save()
+            self.keepHistory()
         }
         film.onEnded = { [weak self] in self?.filmEnded() }
         Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
@@ -1306,7 +1587,12 @@ final class AppModel {
         NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification, object: nil, queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.stopEngine() }
+            MainActor.assumeIsolated {
+                // Whatever the records are waiting to write goes now, before macOS stops
+                // the app (`Records`): nothing is lost by the wait.
+                self?.saver.flush()
+                self?.stopEngine()
+            }
         }
         // Leaving macOS's full screen by its own means (the green button, the menu)
         // puts the video or the visualizer back in the page as well.
@@ -1628,9 +1914,9 @@ final class AppModel {
             guard !now.apart, now.series.id == id,
                 finished.played(now.episodeId, to: seconds, of: length)
             else { return }
-            finished.save()
+            keepFinished()
             seriesProgress.finished(now.episodeId, of: id)
-            seriesProgress.save()
+            keepProgress()
             recountWatched()
             // Whether the series is watched now goes by its latest episode: read it if
             // it never has been.
@@ -1639,7 +1925,7 @@ final class AppModel {
                 Task { await readSeries([series], force: true) }
             }
         } else if finished.played(id, to: seconds, of: length) {
-            finished.save()
+            keepFinished()
             recountWatched()
         }
     }
@@ -3162,6 +3448,10 @@ final class AppModel {
     func switchProfile(to id: String) {
         guard id != profiles.currentId, profiles.profile(id) != nil else { return }
         player.stop()
+        // Anything waiting to be written belongs to the profile being left: it goes into the
+        // settings before they're put away, so nothing of it is lost and nothing of it can
+        // land in the next profile's (`Records`).
+        saver.flush()
         putAwaySettings(of: profiles.currentId)
         profiles.switchTo(id)
         saveProfiles()
@@ -3234,6 +3524,7 @@ final class AppModel {
         channelPictures = ChannelPictures.saved()
         (seriesEpisodes, calendarUploads, uploadsRead) = ([:], [], nil)
         seriesRead += 1
+        changedRecords()  // the next profile's: nothing worked out from the last one's holds
         recountWatched()
     }
 
@@ -3404,6 +3695,9 @@ final class AppModel {
         panel.prompt = "Export Here"
         guard panel.runModal() == .OK, let url = panel.url else { return }
         transferProblem = nil
+        // An export is packed from the settings themselves, not from the records in memory
+        // (`SettingsCarrier.pack`): whatever is waiting goes into them first (`Records`).
+        saver.flush()
         Task {
             do {
                 _ = try await ask(
@@ -3497,6 +3791,10 @@ final class AppModel {
             let last = said["last"] as? [String: Any], let summary = last["summary"] as? [String: Any],
             let app = summary["app"] as? [String: Any]
         else { return }
+        // An import writes the settings themselves and the records are read back from them:
+        // whatever was waiting goes in first, so a late write can't land on top of what was
+        // brought back (`Records`).
+        saver.flush()
         SettingsCarrier.unpack(app)
         history = WatchHistory.saved()
         mediaFavourites = MediaFavourites.saved()
@@ -3505,6 +3803,7 @@ final class AppModel {
         seriesProgress = SeriesProgress.saved()
         markedTitles = MarkedTitles.saved()
         begun = PartWatched.saved()
+        changedRecords()
     }
 
     private func engineSaid(_ method: String) async {

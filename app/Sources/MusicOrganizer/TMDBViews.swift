@@ -221,7 +221,7 @@ struct PersonView: View {
                         ForEach(shown) { credit in
                             Button { open(credit) } label: {
                                 VStack(spacing: 2) {
-                                    MediaCard(item: credit.item)
+                                    MediaCard(item: credit.item, marks: model.marks(of: credit.item))
                                         .overlay { if opening == credit.id { ProgressView() } }
                                     Text([credit.year, credit.character].compactMap { $0 }.joined(separator: " · "))
                                         .font(.caption)

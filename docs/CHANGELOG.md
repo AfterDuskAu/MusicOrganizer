@@ -2713,3 +2713,61 @@ you can select several or just 1, 1 tap and it deselects or selects."
   built and tested in a worktree of its own holding only these changes.
 - **Not tried yet:** the two cards in the running app (the owner had it open; it needs the engine
   restarted and the app rebuilt), and so a real paste end to end.
+
+2026-11-14, afternoon. **Quick with a big account** (the owner, 2026-11-13, of the iPad: "On any
+page, when looking at shows its slow to scroll up and down. and its specially slow when hovering
+over a title... After doing 2-3 in a row, it feels like the app is going to crash"; then "all
+recent changes to the ipad, add them to all apps"). The iPad's speed work of that night
+(`00d080b` there) is now in the Mac app and the Android app too. Nothing of what either app does
+or shows changed.
+
+Measured first, on records the size of the owner's, made up by a new Bench step: 300 on the
+Watchlist (150 series of 40 episodes, 150 films), 5,650 watched, 200 in the history, 150 series
+read afresh from a made-up plugin on this computer that answers after a quarter of a second, as
+one on the internet does. In the unseen copy, the same steps before and after:
+
+| | before | after |
+|---|---|---|
+| The Watchlist opened | 428 ms busy, 84 cards and 168 menus drawn again | 270 ms, 42 cards, **no menus** |
+| A swipe while its series are read | 227–354 ms, 98–201 cards, 118–217 menus | 149–188 ms, 45–54 cards, **no menus** |
+| Mark as Watched, the second and third | 46–52 ms, 50 cards and 100 menus drawn again | 21–24 ms, **no card and no menu** |
+| The mark itself | 10–12 ms on the main thread | 1–2 ms |
+| Noting a helping of series read | 23–59 ms on the main thread | 1–3 ms |
+| Home opened | 571 ms, 103 cards | 433 ms, 48 cards |
+
+What was wrong is in `CLAUDE.md` under "Quick with a big account", with the rules that keep it
+right. In short: every card read the model, so one mark redrew every card on the page; the
+Watchlist's card menus were built with the cards; the records were written out as JSON inside
+every click; what a paired video app sent was added up on the main thread; the hundred and fifty
+series were noted one helping every two seconds, each noting redrawing every page and writing
+every series out again; and the taste behind Recommended, what's being carried on and the
+Watchlist's own lists were worked out afresh for every row at every redraw.
+
+- **`Records`** (new): the profile's records written off the main thread a quarter of a second
+  after they change, each kind once. **Nothing is lost by the wait** — it's written at once before
+  the app quits, before a profile is left, before the settings themselves are read (an export, an
+  import) and before a paired video app is given this profile's watching.
+- **Kit:** `SeriesProgress.sameToShow` (whether two stand the same as far as a page shows) and
+  `learning` (several series worked out on a copy, so it can be done off the main thread).
+- **`MUSICORG_BENCH`:** `seed=<series>x<episodes>+<films>` (records the size of the owner's, only
+  ever a scratch copy's own profile) and `mark=<n>`; every step's line now says how many cards,
+  menus and rows were drawn again, and what `markWatched` and `learn` cost on the main thread.
+- **The Android app** got the same: `CardMarks` and `AppModel.marks`, `RecordWriter` (the same
+  rule, flushed when the app leaves the screen, when the account changes and before a sync sends),
+  `learnAway` forty at a time with `sameToShow`, the sync's merge off the main thread, and the
+  `worked`/`recordsChanged` cache, which there also covers `follows` (asked for every card, it went
+  through the three hundred on the Watchlist each time).
+- **Checked:** `swift build`, `swift test` (380: three new for the series read together),
+  `./gradlew :kit:test` and `:app:compileDebugKotlin` with three new Kotlin tests of the same
+  three things. In the unseen copy with that account: Home's "+1" badges, its green checks and its
+  progress bars, and the Watchlist's cards, all as before. The Android app was looked at on the
+  Pixel Tablet emulator with the same records (pushed into its own settings): Home and the
+  Watchlist draw exactly as the build before it.
+- **Not measured:** the Android app's frames before and after. The emulator on this Mac was at 650
+  ms a frame on both builds, its own graphics being the whole of it, so it could see nothing; what
+  the change takes off the main thread was timed on this Mac's JVM instead, with the same records —
+  writing what's watched out as JSON 9.8 ms, a hundred and fifty series learned one at a time 10 ms
+  (6 ms in helpings of forty), building the watching a sync sends 14.6 ms — all of which a tap used
+  to wait for, and a tablet's own processor is several times slower than this Mac's.
+- **Not seen:** the owner's own copy of the Mac app (they were using it), and the owner's tablet
+  and TV (they haven't been asked).

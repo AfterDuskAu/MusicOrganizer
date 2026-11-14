@@ -91,6 +91,14 @@ import AppKit
 /// - `profile=<id>`: another profile switched to, as Settings → Profile does (only with a
 ///   scratch copy's own profiles)
 /// - `records`: the profile in use, and how much of what's watched and liked it has
+/// - `seed=<series>x<episodes>+<movies>`: records the size of the owner's made up and put in
+///   the profile in use (`seed=150x40+150`: 150 series of 40 episodes, 150 movies, so 300 on
+///   the Watchlist, about 5,000 watched and 200 in the history), so a change to the pages can
+///   be timed on a big account. Only ever with a scratch copy's own profile: it writes over
+///   what that profile has watched
+/// - `mark=<number>`: the nth title of the Watchlist's To Watch (from 1) marked watched, or
+///   not if it is, as a click in its card's right-click menu does (a series: every episode
+///   of it that's out)
 /// - `stremio=read`, `stremio=import`: what Stremio on this Mac remembers read (only read)
 ///   and written out; then put in the profile in use, and what that profile then has written
 ///   out (only ever with a scratch profile)
@@ -147,11 +155,47 @@ enum Bench {
     /// Forget what's been measured: the next step starts from nothing.
     static func begin() {
         _ = meter.take()
+        (bodies, work) = ([:], [:])
+    }
+
+    // MARK: what was drawn again, and what it cost (2026-11-14)
+
+    /// Views whose body was worked out again since the last step, by name ("card", "menu",
+    /// "row"): the cost a change to the pages is measured by, as the iPad's `--perf` counts
+    /// them. A card that reads the whole model is drawn again whenever anything in it
+    /// changes, which a timing alone doesn't show.
+    private static var bodies: [String: Int] = [:]
+    /// Work timed on the main thread since the last step, by name: how many times, and how long.
+    private static var work: [String: (times: Int, ms: Double)] = [:]
+
+    /// A view's body was worked out again. Nothing is counted without the switch.
+    static func body(_ name: String) {
+        if isOn { bodies[name, default: 0] += 1 }
+    }
+
+    /// Time a piece of work on the main thread, by name (`markWatched`, `learn`).
+    @discardableResult
+    static func time<T>(_ name: String, _ run: () -> T) -> T {
+        guard isOn else { return run() }
+        let began = ProcessInfo.processInfo.systemUptime
+        let made = run()
+        let ms = (ProcessInfo.processInfo.systemUptime - began) * 1000
+        let was = work[name] ?? (0, 0)
+        work[name] = (was.times + 1, was.ms + ms)
+        return made
     }
 
     static func report(_ name: String) {
         let (total, longest) = meter.take()
-        say(String(format: "BENCH %@ %.0f ms, longest %.0f", name, total, longest))
+        let drawn = bodies.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", ")
+        let cost = work.sorted { $0.key < $1.key }
+            .map { String(format: "%@ ×%d %.0f ms", $0.key, $0.value.times, $0.value.ms) }
+            .joined(separator: ", ")
+        (bodies, work) = ([:], [:])
+        say(
+            String(format: "BENCH %@ %.0f ms, longest %.0f", name, total, longest)
+                + (drawn.isEmpty ? "" : "; drawn again: \(drawn)")
+                + (cost.isEmpty ? "" : "; work: \(cost)"))
     }
 
     static func say(_ line: String) {

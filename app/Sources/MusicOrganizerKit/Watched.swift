@@ -197,6 +197,37 @@ public struct SeriesProgress: Equatable, Sendable {
         series[id] = known
     }
 
+    /// Whether these two stand the same as far as a page shows: everything but when each
+    /// series was last read (2026-11-14, as the iPad has it since 2026-11-13). Reading a
+    /// series again almost always finds what was there before, and only its reading time
+    /// changes; told apart this way, the pages aren't drawn again for it while the owner is
+    /// scrolling.
+    public func sameToShow(as other: SeriesProgress) -> Bool {
+        guard series.count == other.series.count else { return false }
+        for (id, mine) in series {
+            guard let theirs = other.series[id], mine.latest == theirs.latest,
+                mine.caughtUp == theirs.caughtUp, mine.seen == theirs.seen, mine.fresh == theirs.fresh,
+                mine.freshAt == theirs.freshAt
+            else { return false }
+        }
+        return true
+    }
+
+    /// Several series read together, worked out away from the screen (2026-11-14): the same as
+    /// `learned` for each, on a copy, so it can be done on another thread and put back in one
+    /// go. Reading the owner's hundred and fifty series is seconds of work, and on the main
+    /// thread it was what made the Watchlist and Home stutter while they read them.
+    public func learning(
+        _ read: [(id: String, episodes: [MediaDetails.Video], listed: Bool)], finished: Finished,
+        now: Date = Date()
+    ) -> SeriesProgress {
+        var made = self
+        for one in read {
+            made.learned(one.id, episodes: one.episodes, finished: finished, now: now, listed: one.listed)
+        }
+        return made
+    }
+
     /// Films or episodes marked watched, or not, by the owner, from a menu: one, every episode
     /// before one, or every episode of a series that's out (a series' card, 2026-11-11: "Add a
     /// new option as mark as watched, this would include every episode in it"). Episodes say

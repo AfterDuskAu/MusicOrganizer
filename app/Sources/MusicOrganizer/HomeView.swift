@@ -123,6 +123,7 @@ private struct HomeRow: View {
     @Environment(CardKeys.self) private var keys: CardKeys?
 
     var body: some View {
+        let _ = Bench.body("row")
         VStack(alignment: .leading, spacing: 10) {
             // View More sits on the row's own line, clear of the cards: at the end of
             // the row a click on it went to the card underneath (the owner, 2026-10-08).
@@ -324,21 +325,18 @@ private struct HomeRow: View {
 
     /// What Recommended goes by (the owner, 2026-10-15: "takes your watchlisted watched"):
     /// what's on their Watchlist, what they've watched and what they've hearted, of the
-    /// row's kind. Anime is apart from the rest: its genres are its own plugin's.
+    /// row's kind. Anime is apart from the rest: its genres are its own plugin's. Worked out
+    /// once and kept until the records change (`AppModel.taste`, 2026-11-14): it is every
+    /// record the profile has put together, and each row asked for it twice at every redraw.
     private var taste: [MediaItem] {
-        let kind = section.group == .movies ? "movie" : "series"
-        var seen = Set<String>()
-        return (model.watchlist.items + model.history.entries.compactMap(\.item) + model.mediaFavourites.items)
-            .filter { item in
-                (isAnime ? item.anime == true : item.anime != true && item.type == kind)
-                    && seen.insert(item.id).inserted
-            }
+        model.taste(of: section.group == .movies ? "movie" : "series", anime: isAnime)
     }
 
     /// The list Recommended asks, and the owner's leading genres that it offers.
     private var recommending: (source: (addon: Addon, catalog: Addon.Catalog), genres: [String])? {
         guard let source = listSource(for: isAnime ? "popular" : "top") else { return nil }
-        let offered = Recommending.genres(of: taste, most: 30).filter(source.catalog.genres.contains)
+        let ranked = model.tasteGenres(of: section.group == .movies ? "movie" : "series", anime: isAnime)
+        let offered = ranked.filter(source.catalog.genres.contains)
         return offered.isEmpty ? nil : (source, Array(offered.prefix(3)))
     }
 
@@ -371,6 +369,11 @@ private struct HomeRow: View {
                         ? "One you stop part way through shows up here, to carry on with."
                         : "What you watch shows up here.")
             } else {
+                // What the cards show over their pictures, worked out once for the row
+                // (2026-11-14).
+                let marks = Dictionary(
+                    entries.compactMap { $0.item.map { ($0.id, model.marks(of: $0)) } },
+                    uniquingKeysWith: { was, _ in was })
                 PagedCards(
                     items: entries, width: 122, height: 250,
                     open: { entry in
@@ -384,7 +387,7 @@ private struct HomeRow: View {
                         Button {
                             if section.kind == "continue" { model.resume(entry) } else { model.open(item) }
                         } label: {
-                            MediaCard(item: item)
+                            MediaCard(item: item, marks: marks[item.id] ?? CardMarks())
                                 .overlay(alignment: .top) {
                                     if entry.isUnfinished {
                                         ProgressView(value: entry.progress)
@@ -414,12 +417,15 @@ private struct HomeRow: View {
             if items.isEmpty {
                 note("A series you watch shows up here when an episode of it comes out that you haven't watched.")
             } else {
+                let marks = Dictionary(
+                    items.map { ($0.id, model.marks(of: $0)) }, uniquingKeysWith: { was, _ in was })
                 PagedCards(items: items, width: 122, height: 250, open: { model.carryOn($0) }) { item in
-                    let count = model.newEpisodeCount(item.id)
+                    let mark = marks[item.id] ?? CardMarks()
+                    let count = mark.fresh
                     Button {
                         model.carryOn(item)
                     } label: {
-                        MediaCard(item: item)
+                        MediaCard(item: item, marks: mark)
                             .overlay(alignment: .topTrailing) { NewEpisodesBadge(count: count) }
                             .overlay(alignment: .top) {
                                 if model.startingEpisode == item.id { FindingEpisode() }
@@ -437,7 +443,10 @@ private struct HomeRow: View {
             if items.isEmpty {
                 note("Click the heart on one's page and it shows up here.")
             } else {
-                PagedCards(items: items, width: 122, height: 250, open: { model.open($0) }) { filmCard($0) }
+                let marks = marks(of: items)
+                PagedCards(items: items, width: 122, height: 250, open: { model.open($0) }) {
+                    filmCard($0, marks: marks[$0.id] ?? CardMarks())
+                }
             }
         case "unwatched":
             // Hearted, and not watched past a quarter (the owner, 2026-10-12).
@@ -447,7 +456,10 @@ private struct HomeRow: View {
                     "One you've given a heart but not watched a quarter of yet shows up "
                         + "here. Click the heart on one's page.")
             } else {
-                PagedCards(items: items, width: 122, height: 250, open: { model.open($0) }) { filmCard($0) }
+                let marks = marks(of: items)
+                PagedCards(items: items, width: 122, height: 250, open: { model.open($0) }) {
+                    filmCard($0, marks: marks[$0.id] ?? CardMarks())
+                }
             }
         default:
             // One of the film add-on's lists: Popular, New, Best Rated, a genre, a search
@@ -480,11 +492,12 @@ private struct HomeRow: View {
                 // A row by two genres stops where nothing more with both turned up for a while,
                 // or a set couldn't be had (2026-11-11), rather than reading on and on.
                 let stopped = !(section.also ?? "").isEmpty && list.problem != nil
+                let marks = marks(of: items)
                 PagedCards(
                     items: items, width: 122, height: 250, canLoadMore: list.more && !stopped,
                     loadingMore: list.working, loadMore: { Task { await load(adding: true) } },
                     open: { model.open(isAnime ? $0.asAnime : $0) }
-                ) { filmCard($0) }
+                ) { filmCard($0, marks: marks[$0.id] ?? CardMarks()) }
                 .task(id: "\(list.items.count)|\(rated)") {
                     if rated { model.titles.look(list.items, rules, languageToo: false, model: model) }
                 }
@@ -492,11 +505,20 @@ private struct HomeRow: View {
         }
     }
 
-    private func filmCard(_ item: MediaItem) -> some View {
+    private func filmCard(_ item: MediaItem, marks: CardMarks) -> some View {
         // What's opened from a list of anime is marked as anime, as in Anime Finder.
-        Button { model.open(isAnime ? item.asAnime : item) } label: { MediaCard(item: item) }
+        Button { model.open(isAnime ? item.asAnime : item) } label: {
+            MediaCard(item: item, marks: marks)
+        }
             .buttonStyle(.plain)
             .titleMenu(item, model: model)
+    }
+
+    /// What each card of a row shows over its picture, worked out once for the whole row
+    /// (2026-11-14): a card that asked for its own was drawn again whenever anything the
+    /// model holds changed, so one Mark as Watched redrew every card on Home.
+    private func marks(of items: [MediaItem]) -> [String: CardMarks] {
+        Dictionary(items.map { ($0.id, model.marks(of: $0)) }, uniquingKeysWith: { was, _ in was })
     }
 
     private func note(_ text: String) -> some View {

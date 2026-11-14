@@ -1020,6 +1020,31 @@ struct MainView: View {
                         + "favourites \(model.mediaFavourites.items.count), home rows \(model.homeLayout.shown.count), "
                         + "continue series \(model.continuingSeries.prefix(5).map(\.id)), "
                         + "new episodes \(model.newEpisodeSeries.prefix(5).map { "\($0.id) +\(model.newEpisodeCount($0.id))" })")
+            } else if step.name.hasPrefix("seed=") {
+                // Records the size of the owner's, made up and put in the profile in use
+                // (never one that matters: a scratch copy's own). `seed=150x40+150`.
+                let spec = String(step.name.dropFirst(5))
+                let halves = spec.split(separator: "+").map(String.init)
+                let each = halves.first?.split(separator: "x").compactMap { Int($0) } ?? []
+                model.seedRecords(
+                    series: each.first ?? 150, episodesEach: each.count > 1 ? each[1] : 40,
+                    movies: halves.count > 1 ? Int(halves[1]) ?? 150 : 150)
+            } else if step.name.hasPrefix("mark=") {
+                // The nth title of the Watchlist's To Watch marked watched, or not if it is,
+                // as a click in its card's right-click menu does.
+                let which = Int(step.name.dropFirst(5)) ?? 1
+                let items = model.toWatch("series") + model.toWatch("movie")
+                if let item = items.indices.contains(which - 1) ? items[which - 1] : nil {
+                    let seen = model.isWatched(item.id)
+                    Bench.say("BENCH mark: \(item.name) (\(item.id)), watched \(seen) → \(!seen)")
+                    if item.type == "series" {
+                        model.markSeriesWatched(item, !seen)
+                    } else {
+                        model.markWatched([item.id], !seen)
+                    }
+                } else {
+                    Bench.say("BENCH mark: there is no title \(which) to watch, of \(items.count)")
+                }
             } else if step.name == "stremio=read" {
                 // What Stremio on this Mac remembers, read (only read) and written out.
                 model.stremio.read()

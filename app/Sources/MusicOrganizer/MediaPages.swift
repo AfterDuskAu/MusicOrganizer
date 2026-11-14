@@ -81,6 +81,7 @@ struct TitleMenuItems: View {
     let model: AppModel
 
     var body: some View {
+        let _ = Bench.body("menu")
         if model.watchlist.contains(item) {
             Button("Remove From Watchlist") { model.toggleWatchlist(item) }
         } else {
@@ -114,7 +115,25 @@ extension View {
     }
 }
 
+/// What a card shows over its poster: the green check on what's been watched, and (where the
+/// list puts one there) the "+2" of a series with episodes to watch, or the Watchlist's NEW
+/// EPISODE. Worked out by the list the card is in, once for all its cards (`AppModel.marks`),
+/// and handed to the card as plain values (2026-11-14, as the iPad has it since 2026-11-13): a
+/// card that reads the model itself is drawn again whenever anything in it changes, so one
+/// Mark as Watched redrew every card on the page.
+struct CardMarks: Equatable {
+    var watched = false
+    /// Episodes out that haven't been watched ("+2"); 0 for none, and for a film.
+    var fresh = 0
+    /// A series the owner had caught up with that has a new episode since.
+    var newEpisode = false
+}
+
 /// One film or channel in a grid: its picture, and its name under it.
+///
+/// A film's or a series' card reads nothing of the app's state itself (`marks`): with every
+/// value it's drawn from equal to last time, SwiftUI leaves it as it is. A channel's still
+/// asks for its picture afresh, which is its own feature.
 struct MediaCard: View {
     let name: String
     let poster: String?
@@ -122,21 +141,21 @@ struct MediaCard: View {
     /// A channel's id: its picture is found afresh when the address given has gone
     /// (`ChannelPictures` in the Kit).
     let channelId: String?
-    /// A film's or a series' id, for the green check on one that's been watched.
-    let filmId: String?
+    /// What's shown over the picture, worked out by the list the card is in (`CardMarks`).
+    let marks: CardMarks
     @Environment(AppModel.self) private var model: AppModel?
     @State private var hovering = false
 
-    init(item: MediaItem) {
+    init(item: MediaItem, marks: CardMarks = CardMarks()) {
         (name, poster, square) = (item.name, item.poster, item.posterShape == "square")
         channelId = item.type == "channel" ? ChannelRef(item: item)?.channelId : nil
-        filmId = item.type == "channel" ? nil : item.id
+        self.marks = marks
     }
 
     init(channel: ChannelRef) {
         (name, poster, square) = (channel.name, channel.thumbnail, true)
         channelId = channel.channelId
-        filmId = nil
+        marks = CardMarks()
     }
 
     /// The picture found afresh for a channel, when there is one; the one given otherwise.
@@ -145,6 +164,7 @@ struct MediaCard: View {
     }
 
     var body: some View {
+        let _ = Bench.body("card")
         VStack(spacing: 8) {
             Color.clear
                 .aspectRatio(square ? 1 : 2.0 / 3.0, contentMode: .fit)
@@ -163,10 +183,11 @@ struct MediaCard: View {
                 )
                 // Watched: a green check in the picture's top left corner (the owner,
                 // 2026-10-13). A movie played to nine tenths, a series whose latest
-                // episode has been (2026-10-15: `AppModel.isWatched`). Nothing from the
-                // Finder kept apart is ever remembered as watched, so nothing there has one.
+                // episode has been (2026-10-15: `AppModel.isWatched`, by way of the list's
+                // `marks` since 2026-11-14). Nothing from the Finder kept apart is ever
+                // remembered as watched, so nothing there has one.
                 .overlay(alignment: .topLeading) {
-                    if let filmId, model?.isWatched(filmId) == true {
+                    if marks.watched {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.title2)
                             .symbolRenderingMode(.palette)
@@ -265,10 +286,16 @@ struct MediaGrid: View {
             }
         } else {
             let nearEnd = items.suffix(Self.ahead).contains { inSight.contains($0.id) }
+            // What the cards show over their pictures, worked out here once for all of them
+            // (2026-11-14): a card that asked for its own was drawn again whenever anything
+            // the model holds changed.
+            let marks = Dictionary(items.map { ($0.id, model.marks(of: $0)) }, uniquingKeysWith: { was, _ in was })
             ScrollView {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: width), spacing: 22)], spacing: 22) {
                     ForEach(items) { item in
-                        Button { open(item) } label: { MediaCard(item: item) }
+                        Button { open(item) } label: {
+                            MediaCard(item: item, marks: marks[item.id] ?? CardMarks())
+                        }
                             .buttonStyle(.plain)
                             .titleMenu(item, model: model, shown: menu)
                             .onAppear { inSight.insert(item.id) }
@@ -1218,10 +1245,14 @@ struct MovieFinderView: View {
                 .padding(40)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
+            // What the cards show, worked out once for all of them (2026-11-14).
+            let marks = Dictionary(items.map { ($0.id, model.marks(of: $0)) }, uniquingKeysWith: { was, _ in was })
             ScrollView {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 22)], spacing: 22) {
                     ForEach(items) { item in
-                        Button { open(item) } label: { MediaCard(item: item) }
+                        Button { open(item) } label: {
+                            MediaCard(item: item, marks: marks[item.id] ?? CardMarks())
+                        }
                             .buttonStyle(.plain)
                     }
                 }
@@ -2383,11 +2414,12 @@ struct KeptCard: View {
 
     var body: some View {
         VStack(spacing: 2) {
-            MediaCard(
-                item: card.item
-                    ?? MediaItem(
-                        id: "", type: card.type, name: card.name, poster: nil, posterShape: "poster",
-                        year: card.year, rating: nil, genres: []))
+            let item =
+                card.item
+                ?? MediaItem(
+                    id: "", type: card.type, name: card.name, poster: nil, posterShape: "poster",
+                    year: card.year, rating: nil, genres: [])
+            MediaCard(item: item, marks: model.marks(of: item))
             let note = card.files.first.flatMap { model.conversionNotes[$0.file.url.path] }
             Text(note ?? card.line)
                 .font(.caption)
@@ -2408,7 +2440,7 @@ struct DeviceFilmCard: View {
     var body: some View {
         let film = waiting.film
         VStack(spacing: 4) {
-            MediaCard(item: film.card)
+            MediaCard(item: film.card, marks: model.marks(of: film.card))
             Text(ByteCountFormatter.string(fromByteCount: film.size, countStyle: .file))
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -2484,6 +2516,7 @@ struct WatchlistView: View {
     @AppStorage("watchlistShows") private var shows = "towatch"
 
     var body: some View {
+        let _ = Bench.body("row")
         let watched = shows == "watched"
         // To Watch: what's on the Watchlist and not watched yet, and a series caught up
         // with that has a new episode. Watched: a movie played to nine tenths, a series
@@ -2544,12 +2577,17 @@ struct WatchlistView: View {
     private func cards(_ title: String, _ items: [MediaItem]) -> some View {
         if !items.isEmpty {
             Text(title).font(.title3.weight(.semibold)).heading().padding(.horizontal, 20)
+            // What the cards show over their pictures, worked out here once for all of them
+            // (2026-11-14): the green check and NEW EPISODE asked for by each card made every
+            // card on the page wait on everything the model holds.
+            let marks = Dictionary(items.map { ($0.id, model.marks(of: $0)) }, uniquingKeysWith: { was, _ in was })
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 22)], spacing: 22) {
                 ForEach(items) { item in
+                    let mark = marks[item.id] ?? CardMarks()
                     Button { model.open(item) } label: {
-                        MediaCard(item: item)
+                        MediaCard(item: item, marks: mark)
                             .overlay(alignment: .top) {
-                                if model.hasNewEpisode(item.id) {
+                                if mark.newEpisode {
                                     Text("NEW EPISODE")
                                         .font(.caption2.weight(.bold))
                                         .foregroundStyle(.white)
@@ -2562,30 +2600,42 @@ struct WatchlistView: View {
                             }
                     }
                     .buttonStyle(.plain)
-                    .contextMenu {
-                        Button("Open Its Page") { model.open(item) }
-                        if model.watchlist.contains(item) {
-                            Button("Remove From Watchlist") { model.toggleWatchlist(item) }
-                        } else {
-                            Button("Add to Watchlist") { model.toggleWatchlist(item) }
-                        }
-                        // A movie by the owner's word; a series, every episode of it that's
-                        // out (2026-11-11; each one can still be marked on its page).
-                        let seen = model.isWatched(item.id)
-                        Button(seen ? "Mark as Not Watched" : "Mark as Watched") {
-                            if item.type == "series" {
-                                model.markSeriesWatched(item, !seen)
-                            } else {
-                                model.markWatched([item.id], !seen)
-                            }
-                        }
-                        .disabled(model.markingSeries.contains(item.id))
-                    }
+                    .contextMenu { WatchlistMenuItems(item: item, model: model) }
                 }
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 14)
         }
+    }
+}
+
+/// The Watchlist's own right-click menu for a title, as it opens: a view of its own, so its
+/// words are worked out when the menu is opened and not with every card on the page
+/// (2026-11-14, as the iPad's `CardMenuItems` since 2026-11-13). The model is handed over: a
+/// menu doesn't always have the window's environment.
+private struct WatchlistMenuItems: View {
+    let item: MediaItem
+    let model: AppModel
+
+    var body: some View {
+        let _ = Bench.body("menu")
+        Button("Open Its Page") { model.open(item) }
+        if model.watchlist.contains(item) {
+            Button("Remove From Watchlist") { model.toggleWatchlist(item) }
+        } else {
+            Button("Add to Watchlist") { model.toggleWatchlist(item) }
+        }
+        // A movie by the owner's word; a series, every episode of it that's out (2026-11-11;
+        // each one can still be marked on its page).
+        let seen = model.isWatched(item.id)
+        Button(seen ? "Mark as Not Watched" : "Mark as Watched") {
+            if item.type == "series" {
+                model.markSeriesWatched(item, !seen)
+            } else {
+                model.markWatched([item.id], !seen)
+            }
+        }
+        .disabled(model.markingSeries.contains(item.id))
     }
 }
 
