@@ -3556,6 +3556,19 @@ final class AppModel {
         // only in memory, the last profile's showed in the next one (the owner, 2026-10-16:
         // a Stremio import into D showed in C), and anything C saved would have written
         // D's records over C's own.
+        readRecords()
+        (seriesEpisodes, calendarUploads, uploadsRead) = ([:], [], nil)
+        seriesRead += 1
+        changedRecords()  // the next profile's: nothing worked out from the last one's holds
+        recountWatched()
+    }
+
+    /// The profile's own records, read afresh from its settings: what's watched and liked, how
+    /// far each film got, Home's layout and the channels' pictures. When another profile is
+    /// opened, and after an import has written them. One list for both: until 2026-11-16 the
+    /// import kept a copy of its own, which had left out Home's layout and the channels'
+    /// pictures, so those showed what was there before the import until the app was reopened.
+    private func readRecords() {
         homeLayout = Self.keptHomeLayout()
         history = WatchHistory.saved()
         mediaFavourites = MediaFavourites.saved()
@@ -3566,10 +3579,6 @@ final class AppModel {
         showsWatched = WatchedShown.saved()
         begun = PartWatched.saved()
         channelPictures = ChannelPictures.saved()
-        (seriesEpisodes, calendarUploads, uploadsRead) = ([:], [], nil)
-        seriesRead += 1
-        changedRecords()  // the next profile's: nothing worked out from the last one's holds
-        recountWatched()
     }
 
     private func open(_ folder: URL) async {
@@ -3840,13 +3849,7 @@ final class AppModel {
         // brought back (`Records`).
         saver.flush()
         SettingsCarrier.unpack(app)
-        history = WatchHistory.saved()
-        mediaFavourites = MediaFavourites.saved()
-        watchlist = Watchlist.saved()
-        finished = Self.keptFinished()
-        seriesProgress = SeriesProgress.saved()
-        markedTitles = MarkedTitles.saved()
-        begun = PartWatched.saved()
+        readRecords()
         changedRecords()
     }
 
