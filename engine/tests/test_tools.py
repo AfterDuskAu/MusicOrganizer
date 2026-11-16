@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import os
+import threading
+import time
 from collections.abc import Callable
 from pathlib import Path
 
@@ -380,3 +382,86 @@ def test_a_tool_too_slow_to_start_isnt_said_to_be_missing(tmp_path: Path) -> Non
         name="deno", path=tmp_path / "deno", problem="it stopped with error code 1"
     )
     assert "brew install deno" in tools.missing_message(broken, "darwin")
+
+
+# ---- a busy Mac makes a song slower, not a failure (2026-11-17) -------------------------
+
+
+def test_a_slow_first_start_is_waited_for_not_failed() -> None:
+    # On the owner's Mac the first start of deno, read from a busy spinning disk, took
+    # 20 to 36 seconds; twenty were allowed, and the song failed. Two minutes now.
+    assert tools.VERSION_TIMEOUT_S >= 120
+    slow = tools.ToolInfo(
+        name="deno", path=Path("deno"),
+        problem=f"{tools._TOO_SLOW} {tools._how_long(tools.VERSION_TIMEOUT_S)}",
+    )  # fmt: skip
+    assert "took more than 2 minutes to start" in tools.missing_message(slow, "darwin")
+    assert tools._how_long(45) == "45 seconds"
+
+
+def test_two_asking_at_once_share_one_look(
+    fake_tool: FakeTool, isolated_path: Isolate, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A song's sound, its video and its lyrics are asked for within moments: on a busy
+    # disk, two starts of deno at once are each slower than one.
+    exe = fake_tool(tmp_path / "bin", "deno", "deno 2.9.7 (stable)")
+    isolated_path([tmp_path / "bin"])
+    monkeypatch.setattr(tools, "_good", {})
+    looked: list[str] = []
+    inspect = tools._inspect
+
+    def slow(tool: str, path: Path, found_in: str) -> tools.ToolInfo:
+        looked.append(tool)
+        time.sleep(0.3)  # a slow start: the others arrive while it's under way
+        return inspect(tool, path, found_in)
+
+    monkeypatch.setattr(tools, "_inspect", slow)
+    found: list[Path] = []
+    askers = [threading.Thread(target=lambda: found.append(tools.require("deno"))) for _ in "abc"]
+    for asker in askers:
+        asker.start()
+    for asker in askers:
+        asker.join(10)
+    assert found == [exe, exe, exe]
+    assert looked == ["deno"]
+
+
+def test_the_engine_looks_ahead_so_the_first_song_doesnt_wait(
+    fake_tool: FakeTool, isolated_path: Isolate, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    exe = fake_tool(tmp_path / "bin", "deno", "deno 2.9.7 (stable)")
+    isolated_path([tmp_path / "bin"])
+    monkeypatch.setattr(tools, "_good", {})
+    looked: list[str] = []
+    inspect = tools._inspect
+
+    def counting(tool: str, path: Path, found_in: str) -> tools.ToolInfo:
+        looked.append(tool)
+        return inspect(tool, path, found_in)
+
+    monkeypatch.setattr(tools, "_inspect", counting)
+    tools.warm_up(after_s=0)
+    _wait_for_warm_up()
+    assert looked == ["deno"]
+    assert tools.require("deno") == exe  # the song's own look: nothing run again
+    assert looked == ["deno"]
+
+
+def test_a_look_ahead_never_fails_the_engine(
+    isolated_path: Isolate, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # No deno at all: the look-ahead says so in the log and stops; the song says it when
+    # it's wanted, as before.
+    isolated_path([tmp_path / "empty"])
+    monkeypatch.setattr(tools, "_good", {})
+    tools.warm_up(after_s=0)
+    _wait_for_warm_up()
+    with pytest.raises(ToolMissingError):
+        tools.require("deno")
+
+
+def _wait_for_warm_up() -> None:
+    for thread in threading.enumerate():
+        if thread.name == "tools-warm-up":
+            thread.join(10)
+            assert not thread.is_alive()

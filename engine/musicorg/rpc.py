@@ -76,6 +76,7 @@ from musicorg import (
     status,
     tags,
     tmdb,
+    tools,
     torrents,
     transfer,
     videolyrics,
@@ -2189,6 +2190,11 @@ def serve() -> int:
         signal.signal(signal.SIGTERM, on_term)
     server.on_stopping = lambda: _leave_after(SHUTDOWN_LIMIT_S)
     log.info("serve: started (engine %s)", __version__)
+    # deno, which every song from the music service needs, is looked for now, in the
+    # background, rather than when the first song is clicked: on a busy Mac its first
+    # start takes half a minute (2026-11-17). Not when answers are only replayed.
+    if not os.environ.get(youtube.REPLAY_ENV):
+        tools.warm_up()
     return server.run()
 
 

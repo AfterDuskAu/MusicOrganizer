@@ -35,7 +35,12 @@ final class Player {
     private(set) var playsAsked = 0
     private(set) var isPlaying = false
     /// Waiting for YouTube to say where the song can be played from.
-    private(set) var isFetching = false
+    private(set) var isFetching = false {
+        didSet { if !isFetching { stillLooking = nil } }
+    }
+    /// Said under the player once a song has been looked for a while (`StillLooking`):
+    /// on a busy Mac it can take half a minute, and is slow, not failed.
+    private(set) var stillLooking: String?
     /// The song has stopped to wait for more of itself to arrive.
     private(set) var isBuffering = false
     var problem: String?
@@ -459,6 +464,12 @@ final class Player {
         let mine = nextTicket()
         let again = retries > 0
         wait(for: track, at: position)
+        stillLooking = nil
+        Task {
+            try? await Task.sleep(for: StillLooking.after)
+            guard ticket == mine, isFetching else { return }  // found, failed or changed
+            stillLooking = StillLooking.note(for: track.title)
+        }
         Task {
             do {
                 let (url, headers, length, likes) = try await findStream(videoId, again)

@@ -20,6 +20,12 @@ struct PlayerBar: View {
                     .font(.callout)
                     .foregroundStyle(.red)
                     .padding(.top, 6)
+            } else if let note = player.stillLooking {
+                // Slow, not failed: in the colour of the bar's own quieter words.
+                Text(note)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 6)
             }
             HStack(spacing: 16) {
                 nowPlaying(player)

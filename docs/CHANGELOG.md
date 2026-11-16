@@ -2865,3 +2865,43 @@ settings, on the screen: the upright film playing and holding in the owner's win
 resized short and wide and narrow by its corner and edge; the wide film in a wide window, narrowed
 to near square (the sky above and below, no seam). **Not yet:** the owner's own app, which needs
 rebuilding and reopening.
+
+2026-11-17, night. **A busy Mac makes a song slower, not a failure** (the owner: "even if the mac
+is busy. It shouldn't limit bear media on the mac from opening songs on music finder"). A song
+from Music Finder failed with "This computer is very busy just now: deno … took more than 20
+seconds to start" while other sessions' builds kept the Mac at a load of about 15.
+
+- **What was wrong.** Before its first look-up at YouTube in each run, the engine checks that deno
+  (the helper yt-dlp needs) starts, and allowed it twenty seconds (`tools.VERSION_TIMEOUT_S`). The
+  Mac's start-up disk is a spinning one, already at its limit of about 150 reads and writes a
+  second from other work, and deno is a 98 MB program: its first start after a while, read from
+  that disk, took **35.7 s** (the real one, at a load of 3) and **20.0 s** (a copy not yet in
+  memory). The fix of 2026-10-13 remembers a good deno for the rest of the engine's run, but every
+  start of the app is a new run, so the first song after each one still paid for it, and failed.
+  Nothing else on the way has a limit: yt-dlp starts deno itself with none, and the app waits for
+  the engine as long as it takes.
+- **The check may take two minutes** (`VERSION_TIMEOUT_S = 120`), over three times the slowest
+  start measured. A deno that hasn't answered by then is taken as stuck and said to be, in the same
+  words ("took more than 2 minutes to start"), so the app never waits for good.
+- **It's done before anyone asks.** Ten seconds after `musicorg serve` starts (the app's own start
+  has the disk first), deno is looked for in the background (`tools.warm_up`), and how long it took
+  goes in the log ("tools: deno is ready … (14.2 s)"). A song asked for meanwhile waits for that
+  same look, not a second one: one look for each tool at a time (`require`'s lock), since a song's
+  sound, video and lyrics are asked for within moments and two starts at once on a busy disk are
+  each slower. Not when answers are only replayed (`MUSICORG_REPLAY_DIR`).
+- **The app says it's coming.** Eight seconds into looking for a song, a grey line under the
+  player says "Still finding “…”: it's taking longer than usual, which happens when the Mac is busy.
+  It'll play as soon as it's found." (`StillLooking` in the Kit), in the place a problem is said in
+  red. It goes as soon as the song plays, fails or another is chosen. A real failure (the service
+  refusing, no network, a missing deno) is said as before. The layout is mine, made of the bar's own
+  pieces, until the owner draws it.
+
+**Checked:** the failure reproduced, then gone, under the same load. A fresh engine process given
+only a copy of deno not yet in memory (written past the file cache, as after hours of other work),
+with six low-priority CPU burners running (load 7 to 12), asked for a song as Music Finder's play
+does (`youtube.stream`): before, **failed after 20.3 s** with the owner's message; after, **played
+after 33.0 s**. As the engine now starts (the look-ahead first, then a click), at a load of 17: deno
+ready in the background after 14.2 s, then the song **played 12.6 s after the click**. The real
+`musicorg serve` (scratch settings, cold deno) logged "deno is ready … (13.3 s)" 23 s after it
+started, with nothing asked. `pytest` (2448 passed, 4 new), `ruff check`, `swift build`,
+`swift test` (391, 3 new). **Not yet:** the owner's own app, which needs rebuilding and reopening.

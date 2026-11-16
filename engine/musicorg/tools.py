@@ -19,6 +19,8 @@ import re
 import shutil
 import subprocess
 import sys
+import threading
+import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
@@ -31,7 +33,16 @@ log = logging.getLogger(__name__)
 
 TOOL_NAMES = ("ffmpeg", "ffprobe", "fpcalc", "deno")
 MIN_DENO_VERSION = (2, 3)
-VERSION_TIMEOUT_S = 20
+# How long a tool may take to say its version before it's taken as stuck. Twenty seconds
+# until 2026-11-17, when a song from Music Finder failed on the owner's busy Mac: the
+# first start of deno (a 98 MB program) after a while is read from the Mac's spinning
+# disk, which other work keeps at its limit, and that took 20 to 36 seconds even on a
+# quiet evening (load 3), more under builds. Slow isn't stuck: yt-dlp itself starts deno
+# with no limit at all. Two minutes is over three times the slowest start measured, and
+# a tool that hasn't answered by then is said to be stuck rather than waited on for good.
+VERSION_TIMEOUT_S = 120
+# Started this long after the engine (`warm_up`), so the app's own start has the disk first.
+WARM_UP_AFTER_S = 10.0
 _TOO_SLOW = "it didn't answer within"
 
 _VERSION_ARGS = {
@@ -124,6 +135,10 @@ def find(tool: str, config: Config | None = None) -> ToolInfo:
 # (what `find` goes by), with the file's size and time, so a copy that's replaced is
 # looked at afresh.
 _good: dict[tuple[str, str, str], tuple[Path, tuple[int, int]]] = {}
+# One look for each tool at a time: a song's sound, its video and its lyrics are asked for
+# within moments of each other, and on a busy disk two starts of deno at once are each
+# slower than one. Whoever comes second waits for the first look and takes its answer.
+_looking = {name: threading.Lock() for name in TOOL_NAMES}
 
 
 def require(tool: str, config: Config | None = None) -> Path:
@@ -134,20 +149,52 @@ def require(tool: str, config: Config | None = None) -> Path:
     and every download `ffmpeg -version` too: a fifth of a second each on a quiet Mac,
     and on a very busy one more than the twenty seconds allowed, which failed the song
     (the owner's picture that day, with the Mac's load at 96). A copy that can't be
-    used isn't remembered: it's tried again the next time it's wanted."""
+    used isn't remembered: it's tried again the next time it's wanted.
+
+    Since 2026-11-17 the first look of an engine's run is made in the background soon
+    after it starts (`warm_up`), and may take two minutes (`VERSION_TIMEOUT_S`): it was
+    still the first song after each start of the app that waited for it, and failed."""
     _check_name(tool)
     override = config.tool_path(tool) if config is not None else None
     key = (tool, str(override or ""), os.environ.get("PATH", ""))
-    known = _good.get(key)
-    if known is not None and _stamp(known[0]) == known[1]:
-        return known[0]
-    info = find(tool, config)
-    if info.ok and info.path is not None:
-        stamp = _stamp(info.path)
-        if stamp is not None:
-            _good[key] = (info.path, stamp)
-        return info.path
+    with _looking[tool]:
+        known = _good.get(key)
+        if known is not None and _stamp(known[0]) == known[1]:
+            return known[0]
+        info = find(tool, config)
+        if info.ok and info.path is not None:
+            stamp = _stamp(info.path)
+            if stamp is not None:
+                _good[key] = (info.path, stamp)
+            return info.path
     raise ToolMissingError(tool, missing_message(info))
+
+
+def warm_up(names: tuple[str, ...] = ("deno",), *, after_s: float = WARM_UP_AFTER_S) -> None:
+    """Look for the tools that playing a song needs, in the background, soon after the
+    engine starts, so the first song the owner clicks doesn't wait for it (2026-11-17).
+
+    On the owner's Mac the first start of deno is read from a busy spinning disk and took
+    20 to 36 seconds; done here, it's done before anyone asks, and its file is in memory
+    by then. A song asked for while this is under way waits for this same look
+    (`require`), not a second one. Never raises: a tool that's missing or stuck is said
+    when it's wanted, as before."""
+
+    def look() -> None:
+        time.sleep(after_s)
+        for name in names:
+            started = time.monotonic()
+            try:
+                path = require(name)
+            except ToolMissingError as exc:
+                log.warning("tools: %s isn't ready: %s", name, exc.message)
+                continue
+            except Exception as exc:  # never let a look-ahead stop the engine
+                log.warning("tools: looking for %s went wrong: %s", name, exc)
+                continue
+            log.info("tools: %s is ready at %s (%.1f s)", name, path, time.monotonic() - started)
+
+    threading.Thread(target=look, daemon=True, name="tools-warm-up").start()
 
 
 def _stamp(path: Path) -> tuple[int, int] | None:
@@ -166,12 +213,19 @@ def missing_message(info: ToolInfo, platform: str | None = None) -> str:
         # It's installed: the computer was too busy to start it. Nothing to install.
         return (
             f"This computer is very busy just now: {info.name}, a helper the app needs for "
-            f"this, took more than {VERSION_TIMEOUT_S} seconds to start. Try again in a "
+            f"this, took more than {_how_long(VERSION_TIMEOUT_S)} to start. Try again in a "
             "moment, or once whatever is keeping the computer busy has finished."
         )
     else:
         first = f"The {info.name} at {info.path} can't be used: {info.problem}."
     return f"{first} {install_hint(info.name, platform)}"
+
+
+def _how_long(seconds: int) -> str:
+    """As a person would say it: "2 minutes" for 120, "45 seconds" for 45."""
+    if seconds >= 120 and seconds % 60 == 0:
+        return f"{seconds // 60} minutes"
+    return f"{seconds} seconds"
 
 
 def install_hint(tool: str, platform: str | None = None) -> str:
@@ -243,7 +297,7 @@ def _inspect(tool: str, path: Path, found_in: str) -> ToolInfo:
             creationflags=_NO_WINDOW,
         )
     except subprocess.TimeoutExpired:
-        return replace(base, problem=f"{_TOO_SLOW} {VERSION_TIMEOUT_S} seconds")
+        return replace(base, problem=f"{_TOO_SLOW} {_how_long(VERSION_TIMEOUT_S)}")
     except OSError as exc:
         return replace(base, problem=f"it couldn't be started ({exc.strerror or exc})")
     if result.returncode != 0:

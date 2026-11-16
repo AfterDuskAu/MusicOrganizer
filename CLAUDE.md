@@ -146,7 +146,7 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
   - `report`
   - `review` and `review_web`: the review spreadsheet, and the local review page
   - `rpc`: the JSON-RPC server
-- External binaries, located by `tools` (a copy found usable is remembered while the engine runs: since 2026-10-13 a look-up doesn't run `deno --version` each time, which on a very busy Mac took longer than the twenty seconds allowed and failed the song; and SoundCloud never asks for deno):
+- External binaries, located by `tools` (a copy found usable is remembered while the engine runs: since 2026-10-13 a look-up doesn't run `deno --version` each time, which on a very busy Mac took longer than the twenty seconds allowed and failed the song; and SoundCloud never asks for deno. Since 2026-11-17 a tool has two minutes to answer, and deno is looked for in the background ten seconds after `serve` starts (`tools.warm_up`): the Mac's start-up disk is a spinning one, and deno's first start after a while took 20 to 36 seconds on it even when the Mac was quiet, so the first song after each start of the app still failed):
   - `ffmpeg` and `ffprobe`
   - `fpcalc` (Chromaprint)
   - `deno` ≥ 2.3, which yt-dlp needs for YouTube
