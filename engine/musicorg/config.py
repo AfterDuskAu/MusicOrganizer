@@ -22,6 +22,8 @@ from typing import Any
 import platformdirs
 
 from musicorg.errors import ConfigError
+from musicorg.state import _sync as _sync_file
+from musicorg.state import _sync_folder
 
 APP_NAME = "MusicOrganizer"
 CONFIG_FILE_NAME = "config.json"
@@ -653,28 +655,14 @@ def _write_atomic(path: Path, text: str) -> None:
         with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
             f.write(text)
             f.flush()
-            os.fsync(f.fileno())
+            # state.json's own flush (F_FULLFSYNC on macOS): a plain fsync only reaches the
+            # drive's cache there, so a power cut could still lose the change.
+            _sync_file(f.fileno())
         os.replace(tmp, path)
     except BaseException:
         tmp.unlink(missing_ok=True)
         raise
-    _fsync_dir(path.parent)
-
-
-def _fsync_dir(folder: Path) -> None:
-    """Make a rename durable on macOS and Linux. Windows has no directory fsync."""
-    if os.name == "nt":
-        return
-    try:
-        fd = os.open(folder, os.O_RDONLY)
-    except OSError:
-        return
-    try:
-        os.fsync(fd)
-    except OSError:
-        pass
-    finally:
-        os.close(fd)
+    _sync_folder(path.parent)
 
 
 def save_media_folder(kind: str, folder: Path | None) -> Config:

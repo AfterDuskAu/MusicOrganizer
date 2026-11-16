@@ -84,6 +84,16 @@ def test_save_leaves_no_temp_files() -> None:
     assert sorted(p.name for p in config.config_path().parent.iterdir()) == ["config.json"]
 
 
+def test_save_flushes_to_the_disk_itself(monkeypatch: pytest.MonkeyPatch) -> None:
+    # config.json, accounts.json and the rest are flushed as state.json is (F_FULLFSYNC on
+    # macOS), not with a plain fsync that only reaches the drive's cache.
+    flushed: list[int] = []
+    monkeypatch.setattr(config, "_sync_file", flushed.append)
+    Config.load().save()
+    config.save_devices([])
+    assert len(flushed) == 2
+
+
 def test_failed_write_keeps_old_file(monkeypatch: pytest.MonkeyPatch) -> None:
     cfg = Config.load()
     cfg.last_library = Path("/old")
