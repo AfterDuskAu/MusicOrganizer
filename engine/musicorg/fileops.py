@@ -2467,10 +2467,7 @@ def keep_media(
 
 # What `trash_media` takes: the kinds of video file the app lists in the Movies folder and
 # the videos folder (`VideoFiles` in the app), and nothing else kept there.
-MEDIA_TRASH_ENDINGS = frozenset(
-    {".mkv", ".mp4", ".m4v", ".mov", ".avi", ".webm", ".wmv", ".flv", ".mpg", ".mpeg", ".ts",
-     ".m2ts", ".3gp", ".ogv"}
-)  # fmt: skip
+MEDIA_TRASH_ENDINGS = naming.KEPT_VIDEO_ENDINGS
 
 
 def trash_media(

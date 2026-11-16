@@ -51,10 +51,7 @@ FORMAT = 1
 PARTS = ("music", "videos", "movies", "records", "settings")
 # What's left out of every export, said in its own words in `export.json`.
 LEFT_OUT = ("sign-ins", "paired devices")
-VIDEO_ENDINGS = frozenset(
-    {".mkv", ".mp4", ".m4v", ".mov", ".avi", ".webm", ".wmv", ".flv", ".mpg", ".mpeg", ".ts",
-     ".m2ts"}
-)  # fmt: skip
+VIDEO_ENDINGS = naming.KEPT_VIDEO_ENDINGS  # the same kinds the Movies folder lists
 AUDIO_ENDINGS = frozenset({".m4a", ".mp3", ".flac", ".ogg", ".opus"})
 
 # (how many are done, of how many, the one in hand)

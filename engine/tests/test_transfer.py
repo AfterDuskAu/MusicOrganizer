@@ -97,6 +97,13 @@ def test_an_export_holds_what_was_ticked_and_says_so(
     assert files_in(Path(again["folder"])) == ["export.json", "records/state.json"]
 
 
+def test_an_export_takes_every_kind_of_film_the_movies_folder_keeps() -> None:
+    # One list for both: a .3gp or .ogv film could be moved and put in the Trash, but was
+    # left out of an export while each kept its own list.
+    assert transfer.VIDEO_ENDINGS == fileops.MEDIA_TRASH_ENDINGS == naming.KEPT_VIDEO_ENDINGS
+    assert {".3gp", ".ogv", ".mkv", ".mp4"} <= transfer.VIDEO_ENDINGS
+
+
 def test_no_sign_in_is_ever_in_an_export(
     lib: Library, filled: dict[str, Any], tmp_path: Path
 ) -> None:

@@ -309,6 +309,14 @@ KEPT_ADULT = "adult"
 ADULT_DIR = "18+"
 KEPT_FOLDERS = {"series": "Series", "anime": "Anime", KEPT_ADULT: ADULT_DIR}
 KEPT_KINDS = (KEPT_MOVIE, *KEPT_FOLDERS)
+# The kinds of video file kept in the Movies folder and the videos folder: what the app
+# lists there (`VideoFiles` in the app), and so what can be moved, put in the Trash and
+# exported. One list, so those agree (a .3gp or .ogv film was movable but left out of an
+# export when each kept its own).
+KEPT_VIDEO_ENDINGS = frozenset(
+    {".mkv", ".mp4", ".m4v", ".mov", ".avi", ".webm", ".wmv", ".flv", ".mpg", ".mpeg", ".ts",
+     ".m2ts", ".3gp", ".ogv"}
+)  # fmt: skip
 _FLAT_KINDS = frozenset({KEPT_ADULT})  # an episode stays in the kind's own folder
 SPECIALS_DIR = "Specials"  # season 0
 _EPISODE_TITLE_GAP = " - "
