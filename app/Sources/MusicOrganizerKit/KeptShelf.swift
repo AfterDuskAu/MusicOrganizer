@@ -224,8 +224,6 @@ public struct KeptShelf: Equatable, Sendable {
     public var isEmpty: Bool { movies.isEmpty && series.isEmpty && anime.isEmpty }
     /// Every card, movies then series then anime.
     public var all: [Card] { movies + series + anime }
-    /// How many files are on it.
-    public var fileCount: Int { all.reduce(0) { $0 + $1.files.count } }
 
     public init() { (movies, series, anime) = ([], [], []) }
 

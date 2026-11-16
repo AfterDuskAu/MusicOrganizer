@@ -2,23 +2,6 @@ import MusicOrganizerKit
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// A page whose row is in the sidebar as the owner drew it, but which isn't built yet.
-struct ComingPage: View {
-    let title: String
-    let text: String
-
-    var body: some View {
-        VStack(spacing: 8) {
-            Text(title).font(.title2.weight(.semibold)).heading()
-            Text(text)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: 460)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-}
-
 /// A picture from the web, cut to fill its frame, with a plain tile until it arrives.
 ///
 /// Kept ready to show (2026-11-07, the owner: smoother, as on the iPad): each picture is decoded
@@ -2086,18 +2069,16 @@ struct PartTick: View {
     }
 }
 
-/// A list of video files in the Movies folder: double-click plays one in the film player.
-/// Nothing here is changed. Videos → Movies was this page until 2026-11-05, when it became
-/// Videos → Movies/Series (`MoviesSeriesView`).
-///
-/// With `adult`, Videos → 18+ (2026-10-17): the Movies folder's 18+ folder alone, what's
-/// downloaded from the Finder for adults, which Videos → Movies/Series leaves out; with
-/// those downloads still under way at its top (they're not listed in Downloads), and
-/// nothing remembered of what's played there.
+/// Videos → 18+ (2026-10-17): the video files in the Movies folder's 18+ folder, what's
+/// downloaded from the Finder for adults and the URL page, which Videos → Movies/Series
+/// leaves out; with those downloads still under way at its top (they're not listed in
+/// Downloads). Double-click plays one in the film player, with nothing remembered of what's
+/// played there. Nothing here is changed. Until 2026-11-05 this page was Videos → Movies
+/// too, every video file in the Movies folder; that's Videos → Movies/Series
+/// (`MoviesSeriesView`) since, and its half of this page went on 2026-11-16.
 struct MoviesView: View {
     /// False while another page is showing (`PageHost`): the folder isn't looked at then.
     var isActive = true
-    var adult = false
     @Environment(AppModel.self) private var model
     @State private var files: [VideoFiles.File] = []
     @State private var looked = false
@@ -2110,38 +2091,28 @@ struct MoviesView: View {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(adult ? "18+" : "Movies").font(.title2.weight(.semibold)).heading()
+                        Text("18+").font(.title2.weight(.semibold)).heading()
                         Text(count == 1 ? "1 file" : "\(count.formatted()) files")
                             .foregroundStyle(.secondary)
                     }
                     Text(
-                        adult
-                            ? "What's in the 18+ folder in your Movies folder: downloads from the Porn Finder "
-                                + "and the URL page. Double-click one to play it: nothing of it is remembered."
-                            : "The video files in your Movies folder. Double-click one to play it.")
+                        "What's in the 18+ folder in your Movies folder: downloads from the Porn Finder "
+                            + "and the URL page. Double-click one to play it: nothing of it is remembered.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                if !adult {
-                    Button("Open File…", systemImage: "folder") { openFile() }
-                        .help("Play a video file from anywhere on this Mac")
-                }
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
             Divider()
-            if adult { FilmKeeps(adult: true) }
+            FilmKeeps(adult: true)
             if count == 0 {
-                Text(
-                    !looked ? "Looking…"
-                        : adult ? "Nothing has been downloaded to the 18+ folder yet."
-                        : "There are no video files in your Movies folder yet."
-                )
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                Text(!looked ? "Looking…" : "Nothing has been downloaded to the 18+ folder yet.")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                List(files) { VideoFileRow(file: $0, remembering: !adult) }
+                List(files) { VideoFileRow(file: $0, remembering: false) }
                     .scrollContentBackground(Theme.current.listBackground)
             }
         }
@@ -2158,29 +2129,12 @@ struct MoviesView: View {
 
     /// Off the main thread: a big folder takes a moment to walk.
     private func look() async {
-        // Videos has a page of its own (Videos → Channel), and so does the 18+ folder
-        // (Videos → 18+), so what's in them isn't listed here.
         let movies = model.moviesFolder
-        let videos = model.videosFolder
-        let adult = adult
         files = await Task.detached {
             guard let movies else { return [] }
-            let theirs = VideoFiles.adultFolder(in: movies)
-            if adult { return VideoFiles.inside(theirs) }
-            return VideoFiles.inside(movies, leavingOut: [videos, theirs].compactMap { $0 })
+            return VideoFiles.inside(VideoFiles.adultFolder(in: movies))
         }.value
         looked = true
-    }
-
-    private func openFile() {
-        let panel = NSOpenPanel()
-        panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = false
-        panel.allowedContentTypes = [.movie, .video, .audiovisualContent]
-        panel.allowsOtherFileTypes = true
-        if panel.runModal() == .OK, let url = panel.url {
-            model.playFilm(url, title: url.deletingPathExtension().lastPathComponent)
-        }
     }
 }
 

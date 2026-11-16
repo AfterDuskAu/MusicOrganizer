@@ -3887,10 +3887,6 @@ final class AppModel {
         track.trackId.map(favourites.contains) ?? false
     }
 
-    func playCount(_ track: Track) -> Int {
-        track.trackId.flatMap { listening.plays[$0]?.count } ?? 0
-    }
-
     func setFavourite(_ tracks: [Track], _ on: Bool) {
         let ids = tracks.compactMap(\.trackId)
         for id in ids {  // shown at once; the engine's answer then settles it
@@ -3923,11 +3919,6 @@ final class AppModel {
             self.listening.plays[id] = count
             self.playsVersion += 1
         }
-    }
-
-    /// How long a song has been listened to, in seconds: here and on a paired phone.
-    func listenedSeconds(_ track: Track) -> Double {
-        track.trackId.flatMap { listening.listened?[$0] } ?? 0
     }
 
     /// The player spent this much more time playing a song. A song played from the
@@ -3996,8 +3987,6 @@ final class AppModel {
     func playlist(_ id: String) -> Playlist? { listening.playlists.first { $0.id == id } }
 
     func tracks(in playlist: Playlist) -> [Track] { everything.tracks(withIDs: playlist.trackIds) }
-
-    var favouriteSongs: [Track] { everything.tracks(withIDs: listening.favourites) }
 
     /// Ask for a name, then make the playlist (with `tracks` in it, if any).
     func newPlaylist(with tracks: [Track] = []) {

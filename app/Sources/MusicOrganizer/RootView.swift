@@ -145,9 +145,9 @@ enum SidebarItem: Hashable {
     case favourites, recentlyAdded, mostPlayed, unconfirmed
     /// The songs listened to longest, by time (the owner's choice, 2026-10-11).
     case mostListened
-    case visualizer, musicExplore, importPlaylists, youtube, youtubeQueue, downloads
+    case visualizer, importPlaylists, youtube, youtubeQueue, downloads
     /// The owner's drawing of 2026-10-07: videos and movies beside the music.
-    case channels, movies, videoFinder, videoExplore, movieFinder
+    case channels, movies, videoFinder, movieFinder
     /// The owner's drawing of 2026-10-08: Home at the top of Media Discovery, and series
     /// in a Finder of their own.
     case home, seriesFinder
@@ -174,14 +174,12 @@ enum SidebarItem: Hashable {
         switch self {
         case .playlist(let id): "playlist:\(id)"
         case .visualizer: "visualizer"
-        case .musicExplore: "musicExplore"
         case .settings: "settings"
         case .channels: "channels"
         case .movies: "movies"
         case .watchlist: "watchlist"
         case .calendar: "calendar"
         case .videoFinder: "videoFinder"
-        case .videoExplore: "videoExplore"
         case .movieFinder: "movieFinder"
         case .home: "home"
         case .seriesFinder: "seriesFinder"
@@ -263,7 +261,6 @@ enum SidebarItem: Hashable {
         case .mostPlayed: "Most Played"
         case .mostListened: "Most Listened"
         case .unconfirmed: "Not Identified Yet"
-        case .musicExplore, .videoExplore: "Explore"
         case .settings: "Settings"
         case .channels: "Channel"
         case .movies: "Movies/Series"
@@ -297,7 +294,6 @@ enum SidebarItem: Hashable {
         case .mostPlayed: "chart.bar"
         case .mostListened: "hourglass"
         case .unconfirmed: "questionmark.circle"
-        case .musicExplore, .videoExplore: "sparkles"
         case .settings: "gearshape"
         case .channels: "play.tv"
         case .movies: "popcorn"
@@ -1260,10 +1256,6 @@ struct PageView: View {
             }
         case .settings:
             SettingsView(isActive: active)
-        case .musicExplore:
-            MusicFinderView()  // no row leads here any more: the same page as Music Finder
-        case .videoExplore:
-            VideoFinderView()
         case .animeFinder:
             MovieFinderView(kind: "anime")
         case .adultFinder:
@@ -1276,7 +1268,7 @@ struct PageView: View {
             if model.profiles.current.isChild {
                 Text("This page isn't part of this profile.").foregroundStyle(.secondary)
             } else {
-                MoviesView(isActive: active, adult: true)
+                MoviesView(isActive: active)
             }
         case .pageVideos:
             if model.profiles.current.isChild {

@@ -9,28 +9,6 @@ final class BrowserFindingTests: XCTestCase {
 
     // MARK: finding addresses
 
-    func testAddressesAreFoundHoweverThePageWritesThem() {
-        let text = #"""
-            <video src="/clip.mp4"></video>
-            {"hls":"https:\/\/cdn.example.test\/v\/master.m3u8?token=a&b=c","x":1}
-            var s = "https://cdn.example.test/d/manifest.mpd";
-            <a href="https://files.example.test/film.webm">get</a>
-            encoded=https%3A%2F%2Fcdn.example.test%2Fe%2Fwhole.mp4&next=1
-            <img src="https://cdn.example.test/poster.jpg">
-            https://cdn.example.test/v/seg-00012.ts https://cdn.example.test/v/chunk_3.m4s
-            https://cdn.example.test/fake.mp4a
-            """#
-        let found = MediaLinks.find(in: text, base: page).map(\.absoluteString)
-        XCTAssertEqual(
-            found,
-            [
-                "https://cdn.example.test/v/master.m3u8?token=a&b=c",
-                "https://cdn.example.test/d/manifest.mpd",
-                "https://files.example.test/film.webm",
-                "https://cdn.example.test/e/whole.mp4",
-            ])
-    }
-
     func testWhatAnAddressIs() {
         func kind(_ text: String, _ type: String? = nil) -> MediaKind? {
             MediaLinks.kind(of: URL(string: text)!, contentType: type)

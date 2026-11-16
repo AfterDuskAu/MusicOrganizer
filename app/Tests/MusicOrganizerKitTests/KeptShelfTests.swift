@@ -84,7 +84,6 @@ final class KeptShelfTests: XCTestCase {
         XCTAssertEqual(shelf.series.map(\.name), ["Fargo", "Silo"])
         XCTAssertEqual(shelf.anime.map(\.name), ["Frieren"])
         XCTAssertEqual(shelf.all.count, 5)
-        XCTAssertEqual(shelf.fileCount, 6)
         let silo = shelf.series[1]
         XCTAssertTrue(silo.isShow)
         XCTAssertEqual(silo.line, "2 episodes")

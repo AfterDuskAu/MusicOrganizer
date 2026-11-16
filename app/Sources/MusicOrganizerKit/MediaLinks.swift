@@ -94,52 +94,6 @@ public enum MediaLinks {
         return false
     }
 
-    /// Addresses of videos written anywhere in a page's text: its HTML, its scripts, a
-    /// player's settings, the answer of one of its requests. Players often write them
-    /// escaped (`https:\/\/…`, `https://…`), and those are found too.
-    public static func find(in text: String, base: URL? = nil, most: Int = 200) -> [URL] {
-        guard !text.isEmpty else { return [] }
-        var found: [URL] = []
-        var seen = Set<String>()
-        let whole = NSRange(text.startIndex..., in: text)
-        for match in linkPattern.matches(in: text, range: whole) {
-            guard found.count < most, let range = Range(match.range, in: text) else { break }
-            let cleaned = unescape(String(text[range]))
-            guard let url = URL(string: cleaned, relativeTo: base)?.absoluteURL,
-                kind(of: url) != nil, !isPart(url), seen.insert(url.absoluteString).inserted
-            else { continue }
-            found.append(url)
-        }
-        return found
-    }
-
-    /// An escaped address put back as it's written: `\/` and `\u002F` are "/", `\u0026`
-    /// and `&amp;` are "&", and one written wholly encoded ("https%3A%2F%2F…") is decoded.
-    static func unescape(_ text: String) -> String {
-        var out = text
-        let lower = out.lowercased()
-        if lower.hasPrefix("https%3a%2f%2f") || lower.hasPrefix("http%3a%2f%2f") {
-            out = out.removingPercentEncoding ?? out
-        }
-        for (from, to) in [("\\/", "/"), ("\\u002F", "/"), ("\\u002f", "/"), ("\\u0026", "&"), ("&amp;", "&")] {
-            out = out.replacingOccurrences(of: from, with: to)
-        }
-        return out
-    }
-
-    private static let linkPattern: NSRegularExpression = {
-        // http(s), then "://" written plainly or escaped, then the address's own letters
-        // (an escaped "/" among them), ending in a video's or a playlist's ending, with
-        // its query kept.
-        let slash = #"(?:/|\\/|\\u002[fF]|%2[fF])"#
-        let colon = #"(?::|%3[aA])"#
-        let letter = #"(?:[^\s"'<>()\\]|\\/|\\u002[fF])"#
-        let ending = #"\.(?:m3u8|mpd|mp4|m4v|mov|webm|mkv|flv|ogv)(?![A-Za-z0-9])"#
-        let tail = #"(?:\?(?:[^\s"'<>()\\]|\\/|\\u0026)*)?"#
-        let pattern = "https?\(colon)\(slash)\(slash)\(letter)*?\(ending)\(tail)"
-        return try! NSRegularExpression(pattern: pattern, options: [.caseInsensitive])
-    }()
-
     /// Many addresses that differ only in their numbers, in one folder, are a stream's
     /// parts however they're named: they're left out once there are more than `most`.
     public static func withoutRunsOfParts(_ urls: [URL], most: Int = 6) -> [URL] {

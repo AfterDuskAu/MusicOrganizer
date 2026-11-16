@@ -262,17 +262,13 @@ public enum CustomVisualizer {
     /// What a menu calls a quality: "Medium".
     public static func qualityTitle(_ name: String) -> String { name.capitalized }
 
-    /// The longest a sound output may hold sound before it's heard, in seconds, for the
-    /// visualizer to listen to the player. The Mac's speakers, headphones and wired
-    /// outputs hold a fraction of a second; an AirPlay device holds two.
+    /// Whether the visualizer may listen to the player, for the delay of the output the
+    /// sound is going to: not on one with a long delay (`LongDelayOutput`). With no delay
+    /// known, it listens as it always has.
     ///
     /// Measured on 2026-10-05: on a two-second output the system tops the player's
     /// sound queue up with a tenth of a second to spare, and listening takes that
     /// tenth away, so the queue runs dry every six seconds and the song skips.
-    public static let longestOutputDelay = LongDelayOutput.threshold
-
-    /// Whether the visualizer may listen to the player, for the delay of the output the
-    /// sound is going to. With no delay known, it listens as it always has.
     public static func mayListen(outputDelay: Double?) -> Bool {
         !LongDelayOutput.isOne(delay: outputDelay)
     }

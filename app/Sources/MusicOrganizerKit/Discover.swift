@@ -328,50 +328,6 @@ public enum DownloadGroups {
     }
 }
 
-public enum Genres {
-    /// What makes two genre tags the same group: the first genre named ("Hip-Hop/Rap"
-    /// is filed under hip hop), whatever its capitals, hyphens and spacing.
-    public static func key(_ tag: String?) -> String {
-        let first = firstNamed(tag)
-        let spaced = first.lowercased().map { "-_".contains($0) ? " " : $0 }
-        return String(spaced).split(separator: " ").joined(separator: " ")
-            .replacingOccurrences(of: " & ", with: "&")
-    }
-
-    /// The first genre a tag names, as it's written: "Hip-Hop/Rap" → "Hip-Hop".
-    public static func firstNamed(_ tag: String?) -> String {
-        let first = (tag ?? "").split(whereSeparator: { "/,;|".contains($0) }).first ?? ""
-        return first.trimmingCharacters(in: .whitespaces)
-    }
-
-    /// Songs grouped by genre, in the order given within each group (newest first, for
-    /// downloads). The group with the newest song comes first; songs with no genre come
-    /// last. A group is named the way most of its songs spell it.
-    public static func groups(_ tracks: [Track]) -> [GenreGroup] {
-        var order: [String] = []
-        var members: [String: [Track]] = [:]
-        var spellings: [String: [String: Int]] = [:]
-        for track in tracks {
-            let key = key(track.genre)
-            if members[key] == nil { order.append(key) }
-            members[key, default: []].append(track)
-            if !key.isEmpty { spellings[key, default: [:]][firstNamed(track.genre), default: 0] += 1 }
-        }
-        func newest(_ key: String) -> String { members[key]?.compactMap(\.acquired).max() ?? "" }
-        let sorted = order.enumerated().sorted { a, b in
-            if a.element.isEmpty != b.element.isEmpty { return b.element.isEmpty }
-            let (left, right) = (newest(a.element), newest(b.element))
-            return left != right ? left > right : a.offset < b.offset
-        }
-        return sorted.map { _, key in
-            let name = spellings[key]?.max { a, b in
-                a.value != b.value ? a.value < b.value : a.key > b.key
-            }?.key
-            return GenreGroup(name: name ?? "", tracks: members[key] ?? [])
-        }
-    }
-}
-
 /// What Music Finder shows while nothing is being searched for (the owner's drawing,
 /// 2026-10-08): the four ways of finding music without typing a name.
 public enum MusicFinderTab: String, CaseIterable, Identifiable, Sendable {

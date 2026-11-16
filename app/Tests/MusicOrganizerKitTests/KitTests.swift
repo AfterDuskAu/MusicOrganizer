@@ -820,32 +820,6 @@ final class SongVideoTests: XCTestCase {
         XCTAssertEqual(DownloadGroups.byKind([song], videosFirst: true).map(\.name), ["Songs"])
     }
 
-    func testDownloadsAreGroupedByGenre() {
-        func song(_ title: String, _ genre: String?, _ added: String) -> Track {
-            Track(path: "Music/\(title).m4a", title: title, genre: genre, acquired: added)
-        }
-        let groups = Genres.groups([
-            song("a", "Hip-Hop/Rap", "2026-10-02T09:00:00Z"),
-            song("b", nil, "2026-10-02T08:00:00Z"),
-            song("c", "Indie", "2026-10-01T10:00:00Z"),
-            song("d", "hip hop", "2026-09-30T10:00:00Z"),
-            song("e", "Rap", "2026-10-01T12:00:00Z"),
-            song("f", "Hip Hop", "2026-09-29T10:00:00Z"),
-            song("g", "Hip Hop", "2026-09-28T10:00:00Z"),
-            song("h", " ", "2026-09-27T10:00:00Z"),
-        ])
-        // The group with the newest song first; songs with no genre last.
-        XCTAssertEqual(groups.map(\.name), ["Hip Hop", "Rap", "Indie", ""])
-        // One group for every way of writing it, named as most of its songs spell it,
-        // its songs in the order they were given.
-        XCTAssertEqual(groups[0].tracks.map(\.title), ["a", "d", "f", "g"])
-        XCTAssertEqual(groups[3].tracks.map(\.title), ["b", "h"])
-        XCTAssertEqual(Genres.key("R & B"), Genres.key("r&b"))
-        XCTAssertEqual(Genres.key("Electronica/Dance"), "electronica")
-        XCTAssertEqual(Genres.key(nil), "")
-        XCTAssertEqual(Genres.groups([]), [])
-    }
-
     func testTheGuidesWords() {
         XCTAssertEqual(DiscoverSeed.typed("Hip hop").params, ["kind": "typed", "name": "Hip hop"])
         XCTAssertEqual(Guided.count(from: " 250 "), 250)
@@ -1351,7 +1325,7 @@ final class SongVideoTests: XCTestCase {
         XCTAssertTrue(CustomVisualizer.mayListen(outputDelay: 0.026))
         XCTAssertTrue(CustomVisualizer.mayListen(outputDelay: 0.195))
         XCTAssertFalse(CustomVisualizer.mayListen(outputDelay: 2.012))
-        XCTAssertFalse(CustomVisualizer.mayListen(outputDelay: CustomVisualizer.longestOutputDelay))
+        XCTAssertFalse(CustomVisualizer.mayListen(outputDelay: LongDelayOutput.threshold))
         // Nothing known about the output: as it always was.
         XCTAssertTrue(CustomVisualizer.mayListen(outputDelay: nil))
         XCTAssertEqual(
@@ -1371,8 +1345,6 @@ final class SongVideoTests: XCTestCase {
         // After Pause the output stays muted until what was already sent has run out.
         XCTAssertEqual(LongDelayOutput.silenceAfterPause(delay: 2.012), 2.212, accuracy: 0.0001)
         XCTAssertGreaterThan(LongDelayOutput.silenceAfterPause(delay: 2.012), 2.012)
-        // The visualizer goes by the same line.
-        XCTAssertEqual(CustomVisualizer.longestOutputDelay, LongDelayOutput.threshold)
     }
 
     func testTheLocalVisualizersSwitch() {
@@ -1974,7 +1946,6 @@ final class AddonTests: XCTestCase {
         XCTAssertEqual(addon.catalogs[0].genres, ["Gaming"])
         XCTAssertTrue(addon.catalogs[0].takes("skip"))
         XCTAssertFalse(addon.catalogs[0].takes("search"))
-        XCTAssertTrue(addon.catalogs[1].needsSearch)
         // A list with genres offers "every genre" and asks with none until one is chosen.
         XCTAssertTrue(addon.catalogs[0].offersEveryGenre)
         XCTAssertNil(addon.catalogs[0].genre(chosen: ""))
@@ -2379,8 +2350,8 @@ final class VideoFilesTests: XCTestCase {
         XCTAssertEqual(found.first?.bytes, 1)
         XCTAssertEqual(VideoFiles.inside(folder.appendingPathComponent("missing")), [])
         // One folder inside can be left out (Videos, in Movies: it has a page of its own).
-        XCTAssertEqual(VideoFiles.inside(folder, leavingOut: inner).map(\.name), ["b film"])
-        XCTAssertEqual(VideoFiles.inside(inner, leavingOut: inner).map(\.name), ["a film"])
+        XCTAssertEqual(VideoFiles.inside(folder, leavingOut: [inner]).map(\.name), ["b film"])
+        XCTAssertEqual(VideoFiles.inside(inner, leavingOut: [inner]).map(\.name), ["a film"])
     }
 }
 
@@ -2895,9 +2866,6 @@ final class HomeTests: XCTestCase {
         favourites.toggle(show)
         XCTAssertTrue(favourites.contains(film))
         XCTAssertEqual(favourites.of(type: "movie").map(\.id), ["m1"])
-        XCTAssertEqual(MediaFavourites.leadingGenre(favourites.items), "Crime")
-        XCTAssertEqual(MediaFavourites.leadingGenre([film]), "Crime")  // a tie: first in the alphabet
-        XCTAssertNil(MediaFavourites.leadingGenre([]))
         let defaults = UserDefaults(suiteName: "media-favourites-test")!
         defaults.removePersistentDomain(forName: "media-favourites-test")
         favourites.save(in: defaults)

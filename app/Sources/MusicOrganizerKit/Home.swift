@@ -350,13 +350,6 @@ public struct WatchHistory: Equatable, Sendable {
 
     public func recent(_ kind: Entry.Kind) -> [Entry] { entries.filter { $0.kind == kind } }
 
-    /// Whether a film or a series has been watched at all: played from its page, however
-    /// far (the owner, 2026-10-13: "if you've watched anything", it has a green check on
-    /// its picture). A channel's video isn't what this is asked of.
-    public func hasWatched(_ id: String) -> Bool {
-        entries.contains { $0.id == id && $0.kind != .video }
-    }
-
     /// The films, or the series, that have been watched, the latest first, as their
     /// lists gave them: the Watched list of Movie Finder and Series Finder.
     public func watched(_ kind: Entry.Kind) -> [MediaItem] { recent(kind).compactMap(\.item) }
@@ -433,14 +426,6 @@ public struct MediaFavourites: Equatable, Sendable {
     }
 
     public func of(type: String) -> [MediaItem] { items.filter { $0.type == type } }
-
-    /// The genre met most often among these and what's been watched: what "Recommended"
-    /// goes by. Nil when there's nothing to go on. A tie goes to the name first in the alphabet.
-    public static func leadingGenre(_ items: [MediaItem]) -> String? {
-        var counts: [String: Int] = [:]
-        for genre in items.flatMap(\.genres) { counts[genre, default: 0] += 1 }
-        return counts.max { ($0.value, $1.key) < ($1.value, $0.key) }?.key
-    }
 
     public static let key = "mediaFavourites"
 

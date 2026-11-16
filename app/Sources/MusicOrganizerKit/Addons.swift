@@ -16,8 +16,6 @@ public struct Addon: Decodable, Identifiable, Hashable, Sendable {
         public let extra: [Extra]
 
         public func takes(_ name: String) -> Bool { extra.contains { $0.name == name } }
-        /// A list that can only be searched: it has nothing to show until something is typed.
-        public var needsSearch: Bool { extra.contains { $0.name == "search" && $0.required } }
         /// A list that can be opened as it is: it needs nothing but, at most, a genre.
         /// (An add-on's lists of "the episodes after these ones" need ids, and aren't.)
         public var canBeBrowsed: Bool {

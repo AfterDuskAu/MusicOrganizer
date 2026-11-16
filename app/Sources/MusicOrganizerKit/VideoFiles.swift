@@ -42,12 +42,6 @@ public enum VideoFiles {
     /// ones, and what's inside a package (a Final Cut library, say), are left alone.
     public static func inside(_ folder: URL) -> [File] { inside(folder, leavingOut: []) }
 
-    /// The same, without what's in one folder inside it (Videos, in Movies, which has a
-    /// page of its own).
-    public static func inside(_ folder: URL, leavingOut other: URL?) -> [File] {
-        inside(folder, leavingOut: other.map { [$0] } ?? [])
-    }
-
     /// The same, without what's in any of these folders inside it (Videos, in Movies, and
     /// its 18+ folder: each has a page of its own).
     public static func inside(_ folder: URL, leavingOut others: [URL]) -> [File] {
@@ -98,10 +92,6 @@ public struct FilmConversion: Decodable, Equatable, Sendable {
     }
     public let converting: Now?
     public let last: Ended?
-
-    /// The endings of files phones and tablets may already play. Another kind always
-    /// needs converting; one of these may still (an MP4 can hold a picture they can't show).
-    public static let deviceEndings: Set<String> = ["mp4", "m4v", "mov"]
 
     /// What a file's row says while it's being converted: "Converting… 42%".
     public static func note(progress: Double) -> String {
