@@ -35,7 +35,7 @@ BINARY="$(swift build --package-path "$REPO/app" -c release --show-bin-path)/Mus
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BINARY" "$APP/Contents/MacOS/MusicOrganizer"
-# The bear (scripts/make_icon.sh draws it from the app's own drawing).
+# The bear (scripts/make_icon.sh draws it, from scripts/BearDrawing.swift).
 cp "$ICON" "$APP/Contents/Resources/AppIcon.icns"
 # The loading film and its first picture, wide and upright (scripts/loading_video/render.swift
 # draws them; the app plays the one for the window's shape).

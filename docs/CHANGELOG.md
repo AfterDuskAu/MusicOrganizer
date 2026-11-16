@@ -2905,3 +2905,56 @@ ready in the background after 14.2 s, then the song **played 12.6 s after the cl
 `musicorg serve` (scratch settings, cold deno) logged "deno is ready … (13.3 s)" 23 s after it
 started, with nothing asked. `pytest` (2448 passed, 4 new), `ruff check`, `swift build`,
 `swift test` (391, 3 new). **Not yet:** the owner's own app, which needs rebuilding and reopening.
+
+2026-11-17. **Duplicates and leftovers, found and taken out** (the owner: "go through the code,
+and see if there is anything that is duplicate, or extra. and what needs to be deleted and what is
+needed to perform normally"). A read-only audit of the whole code came first. In it, a script
+counted where every name is used, vulture ran over the engine (outside the project, never added
+to it), and the code was read. The owner then chose the fixes and the low-risk deletions. The
+merges it found (download planning written three times, What's New and Covers & Remixes the same
+view, and others) wait for their word.
+
+Fixed: five places where two copies of one thing had drifted apart.
+- **The film player's clock** was its own copy, without the Kit's `isFinite` guard: a NaN or an
+  infinite time from mpv would have stopped the app (`Int(.nan)`). It's `clockTime` now.
+- **A profile's import** read back the records, but not Home's layout or the channels' pictures,
+  which it brings too; they showed only after a reopen. The switch and the import now share one
+  list (`AppModel.readRecords`).
+- **An episode with no title** was remembered as "S1 E3 · " (`WatchHistory.Entry.watching` joined
+  an empty title). Now it's "S1 E3". The same rule was fixed in a video app's two copies.
+- **Settings, sign-ins, paired devices and plugins** were saved with a plain `fsync`, which on
+  macOS reaches only the drive's cache. `state.json` used `F_FULLFSYNC`. `config` now uses
+  `state`'s flush, and its weaker copy is gone.
+- **A .3gp or .ogv film** could be moved or put in the Trash, but a profile's export left it out:
+  each kept its own list of video endings. Both use `naming.KEPT_VIDEO_ENDINGS` now.
+  - Deviation: `torrents` and `fetch` keep their own list of what a download may be. Those two
+    agree with each other, and a change to `torrents` needs the real-torrent check.
+
+Taken out (nothing called them; each was checked for callers by name first):
+- **The app:**
+  - the Swift copy of the browser window's video finder, which only its test used (the window
+    runs the JavaScript)
+  - downloads grouped by genre (replaced on 2026-10-03)
+  - the old half of `MoviesView`, with its Open File…, since only the 18+ page makes it now
+  - the sidebar's `musicExplore` and `videoExplore` (old saved keys still read)
+  - `playCount`, `listenedSeconds`, `favouriteSongs` and `ComingPage`
+  - in the Kit, `needsSearch`, `hasWatched`, `leadingGenre`, `fileCount`, `longestOutputDelay`,
+    `deviceEndings` and a spare `inside` (and their tests)
+- **The bear's drawing** left the app for `scripts/` (350 lines out of the app). Its moving parts
+  and `make_icon`'s loading-pictures mode went too: the loading screen has been a film since
+  2026-11-05. The icon is the same: all ten sizes rendered byte for byte, old against new, at the
+  same moment.
+- **The engine:**
+  - `scripts/move_library.py` (unused since the music folders stayed put)
+  - `tmdb.LIST_NAMES`, `tags.NOT_ADOPTED_SUFFIXES`, `addons.RESOURCES` and `deezer.KINDS`
+  - four loggers nothing logged to
+- **`CLAUDE.md`** no longer describes the torrents' `counting/` folder, gone with Count.
+
+**Checked:**
+- `swift build` and `swift test`: 391, with 0 failures.
+- `ruff check` and format: clean.
+- `pytest`: 2443 passed, with 2 new tests. One failed during a run shared with three other builds
+  (load about 15): `test_download.py::test_replay_mode_never_downloads`. It passed alone, but took
+  194 s. That's the deno check of the evening's "busy Mac" change waiting in replay mode; it has
+  been passed to that work.
+- **Not yet:** the owner's own app, which needs rebuilding and reopening.
