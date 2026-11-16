@@ -1,18 +1,20 @@
-// Draws Bear Media's icon from the bear the app itself draws (BearDrawing.swift): the
-// owner's logo of 2026-10-17, a bear holding a ticket with a play button on a night sky,
-// in a macOS icon's rounded square. scripts/make_icon.sh compiles this with that file and
-// makes app/Resources/AppIcon.icns.
+// Draws Bear Media's icon from the bear in BearDrawing.swift, beside this: the owner's logo
+// of 2026-10-17, a bear holding a ticket with a play button on a night sky, in a macOS
+// icon's rounded square. scripts/make_icon.sh compiles this with that file and makes
+// app/Resources/AppIcon.icns.
 //
 //   make_icon <folder>             the icon's pictures, every size an .iconset has
-//   make_icon <folder> <seconds>…  pictures of the loading screen at those moments
 import AppKit
 import SwiftUI
 
-/// The icon: the sky and the bear in Apple's rounded square, with room around it.
+/// The icon: the sky and the bear in Apple's rounded square, with room around it. The sky's
+/// glow and its stars are as they are at the moment it's drawn, as they always were.
 struct Icon: View {
+    let moment = Date().timeIntervalSinceReferenceDate
+
     var body: some View {
         ZStack {
-            BearScene(still: true, bearSize: 1)
+            BearScene(moment: moment, bearSize: 1)
                 .frame(width: 824, height: 824)
                 .clipShape(RoundedRectangle(cornerRadius: 185, style: .continuous))
                 .shadow(color: .black.opacity(0.35), radius: 12, y: 8)
@@ -34,14 +36,7 @@ func save(_ view: some View, to file: String, size: CGSize, scale: CGFloat = 1) 
 enum MakeIcon {
     @MainActor
     static func main() {
-        let words = Array(CommandLine.arguments.dropFirst())
-        let folder = words.first ?? "."
-        if words.count > 1 {
-            for moment in words.dropFirst().compactMap(Double.init) {
-                save(BearScene(moment: moment), to: "\(folder)/scene-\(moment).png", size: CGSize(width: 1280, height: 800))
-            }
-            return
-        }
+        let folder = CommandLine.arguments.dropFirst().first ?? "."
         // An .iconset's pictures: each size, and each at twice the size.
         for points in [16, 32, 128, 256, 512] {
             for scale in [1, 2] {
