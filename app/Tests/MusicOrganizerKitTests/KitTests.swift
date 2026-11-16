@@ -261,6 +261,14 @@ final class LibraryTests: XCTestCase {
         XCTAssertEqual(clockTime(187.9), "3:07")
         XCTAssertEqual(clockTime(3765), "1:02:45")
         XCTAssertEqual(clockTime(nil), "–:––")
+        // A time that isn't a real number is a dash, never `Int()` of it (which stops the app).
+        XCTAssertEqual(clockTime(.nan), "–:––")
+        XCTAssertEqual(clockTime(.infinity), "–:––")
+        // The film player's clock, `clockTime(max(seconds, 0))`: before the start is 0:00, and
+        // `max` hands a time that isn't a number on as it is, to be a dash.
+        XCTAssertEqual(clockTime(max(-4, 0)), "0:00")
+        XCTAssertEqual(clockTime(max(.nan, 0)), "–:––")
+        XCTAssertEqual(clockTime(max(.infinity, 0)), "–:––")
     }
 }
 

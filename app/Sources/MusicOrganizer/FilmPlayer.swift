@@ -633,13 +633,11 @@ struct FilmPlayerView: View {
         model.leaveFilm()
     }
 
-    /// Seconds as a film's clock: 1:02:03, or 2:03 under an hour.
+    /// Seconds as a film's clock: 1:02:03, or 2:03 under an hour; a time before the start is
+    /// 0:00. The Kit's own clock (`clockTime`), which shows "–:––" for a time that isn't a real
+    /// number: `Int()` of one, as this did by itself until 2026-11-16, stops the app.
     static func clock(_ seconds: Double) -> String {
-        let whole = Int(max(seconds, 0))
-        let (hours, minutes, rest) = (whole / 3600, whole % 3600 / 60, whole % 60)
-        return hours > 0
-            ? String(format: "%d:%02d:%02d", hours, minutes, rest)
-            : String(format: "%d:%02d", minutes, rest)
+        clockTime(max(seconds, 0))
     }
 }
 
