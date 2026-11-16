@@ -252,9 +252,13 @@ public struct WatchHistory: Equatable, Sendable {
         }
 
         /// What's remembered when a film, or an episode of a series, is played from its
-        /// page: the film, or the series with the episode it has got to.
+        /// page: the film, or the series with the episode it has got to ("S1 E3 · Its Title"). A
+        /// number or a title that's missing or empty is left out, so an untitled episode is
+        /// "S1 E3", not "S1 E3 · ".
         public static func watching(_ item: MediaItem, episode: MediaDetails.Video? = nil) -> Entry {
-            let about = episode.map { [$0.number, $0.title].compactMap { $0 }.joined(separator: " · ") }
+            let about = episode.map {
+                [$0.number, $0.title].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+            }
             return Entry(
                 id: item.id, kind: item.type == "series" ? .series : .movie, name: item.name, detail: about,
                 picture: item.poster, item: item)

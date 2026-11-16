@@ -123,6 +123,23 @@ final class HomeWatchingTests: XCTestCase {
 
     private func at(_ minutes: Double) -> Date { Date(timeIntervalSince1970: 1_800_000_000 + minutes * 60) }
 
+    // MARK: what's remembered of an episode
+
+    func testAnUntitledEpisodeIsRememberedByItsNumberAlone() throws {
+        func video(_ json: String) throws -> MediaDetails.Video {
+            try JSONDecoder().decode(MediaDetails.Video.self, from: Data(json.utf8))
+        }
+        let named = try video(#"{"id":"tt2:1:3","title":"The Third","season":1,"episode":3}"#)
+        let untitled = try video(#"{"id":"tt2:1:3","title":"","season":1,"episode":3}"#)
+        let unnumbered = try video(#"{"id":"tt2:extra","title":"A Special"}"#)
+        XCTAssertEqual(WatchHistory.Entry.watching(show("tt2"), episode: named).detail, "S1 E3 · The Third")
+        // Not "S1 E3 · ": an empty title is left out, as a missing number is.
+        XCTAssertEqual(WatchHistory.Entry.watching(show("tt2"), episode: untitled).detail, "S1 E3")
+        XCTAssertEqual(WatchHistory.Entry.watching(show("tt2"), episode: unnumbered).detail, "A Special")
+        // With no episode (a film's way), there's nothing to say.
+        XCTAssertNil(WatchHistory.Entry.watching(show("tt2")).detail)
+    }
+
     /// A series at one of its episodes ("tt2:1:3"), `seconds` of `length` into it, watched at minute `minute`.
     private func episode(
         _ series: String, _ season: Int, _ number: Int, seconds: Double = 0, length: Double = 0, minute: Double
