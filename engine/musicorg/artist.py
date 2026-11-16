@@ -25,7 +25,6 @@ owner's own (docs/ROADMAP.md).
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from musicorg import browse, discover, youtube
@@ -33,8 +32,6 @@ from musicorg.errors import UserError
 from musicorg.index import Index
 from musicorg.library import Library
 from musicorg.youtube import Candidate
-
-log = logging.getLogger(__name__)
 
 SONGS_MOST = 300  # of an artist's songs read at once (three requests)
 

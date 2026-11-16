@@ -27,7 +27,6 @@ the network is never reached: `_http` and `_final_address` refuse.
 
 from __future__ import annotations
 
-import logging
 import os
 import re
 import time
@@ -37,8 +36,6 @@ from urllib.parse import urlsplit, urlunsplit
 
 from musicorg.errors import ReplayMissError, UserError
 
-log = logging.getLogger(__name__)
-
 API = "https://api.deezer.com"
 PAGE_HOSTS = frozenset({"deezer.com", "www.deezer.com"})
 SHARE_HOSTS = frozenset({"link.deezer.com"})
@@ -46,7 +43,6 @@ SHARE_HOSTS = frozenset({"link.deezer.com"})
 OLD_SHARE_HOSTS = frozenset({"deezer.page.link", "dzr.page.link"})
 # "/en/playlist/123", "/playlist/123", "/fr-ca/album/456".
 PAGE_PATH = re.compile(r"/(?:[a-z]{2}(?:-[a-z]{2})?/)?(playlist|album)/(\d{1,20})/?", re.I)
-KINDS = ("playlist", "album")
 TIMEOUT_S = 20
 PAGE = 100  # songs asked for in one question
 MAX_TRACKS = 3000  # read from one playlist (thirty questions)

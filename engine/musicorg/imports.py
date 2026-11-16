@@ -41,7 +41,6 @@ there's nothing to compare, and without this every such song would be `unsure`.
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -64,8 +63,6 @@ from musicorg.library import Library
 from musicorg.normalize import parse_tags
 from musicorg.tags import TrackTags
 from musicorg.youtube import Candidate
-
-log = logging.getLogger(__name__)
 
 SOURCES = ("youtube", "spotify", "deezer", "lastfm", "file")
 STATES = ("owned", "queued", "found", "unsure", "not_found")

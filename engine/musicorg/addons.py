@@ -75,7 +75,6 @@ log = logging.getLogger(__name__)
 TIMEOUT_S = 8
 REPLAY_ENV = "MUSICORG_REPLAY_DIR"
 MANIFEST = "/manifest.json"
-RESOURCES = ("catalog", "meta", "stream")
 INFO_HASH = re.compile(r"[0-9a-fA-F]{40}")
 USER_AGENT = "musicorg"
 YOUTUBE_ID = re.compile(r"[A-Za-z0-9_-]{11}")

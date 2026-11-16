@@ -62,11 +62,9 @@ log = logging.getLogger(__name__)
 
 SCHEMA_VERSION = 1
 
-# Contract section 3: tags are read and written for these...
+# Contract section 3: tags are read and written for these (`scan` lists the rest).
 # .mp4 is a saved video (v0.2): the same tags as an M4A, beside a picture stream.
 WRITABLE_SUFFIXES = frozenset({".m4a", ".mp4", ".mp3", ".flac", ".ogg", ".opus"})
-# ...and these are indexed but not adopted in v0.1, so their tags aren't read.
-NOT_ADOPTED_SUFFIXES = frozenset({".webm", ".aac", ".wav"})
 
 # docs/ENGINE_API.md → Enums.
 SOURCES = frozenset(

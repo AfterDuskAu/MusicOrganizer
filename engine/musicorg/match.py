@@ -25,7 +25,6 @@ from __future__ import annotations
 import csv
 import hashlib
 import io
-import logging
 import random
 import re
 import time
@@ -50,8 +49,6 @@ from musicorg.normalize import (
     render_versions,
 )
 from musicorg.youtube import Candidate
-
-log = logging.getLogger(__name__)
 
 REVIEW_SCORE = 0.60
 MAX_QUERIES = 3

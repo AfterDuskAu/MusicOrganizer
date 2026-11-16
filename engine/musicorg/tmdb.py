@@ -122,12 +122,6 @@ RELEASE_KINDS = (2, 3, 4)
 # The Finders' TMDB lists (docs/ENGINE_API.md → "TMDB list"). Trending (2026-11-11) is the
 # week's, and can't be asked by genre or language: TMDB's trending takes neither.
 LISTS = ("popular", "top_rated", "upcoming", "trending")
-LIST_NAMES = {
-    "popular": "TMDB – Popular",
-    "top_rated": "TMDB – Top Rated",
-    "upcoming": "TMDB – Upcoming",
-    "trending": "TMDB – Trending",
-}
 LANGUAGE_CODE = re.compile(r"[a-z]{2}")  # an original language, as TMDB has it ("en", "cn")
 
 # Australian ratings as the app offers them to tick (docs/ENGINE_API.md → "Australian
