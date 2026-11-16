@@ -49,7 +49,8 @@ rm -rf "$FOLDER" "$ZIP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/engine" "$APP/Contents/Resources/tools"
 cp "$BINARY" "$APP/Contents/MacOS/MusicOrganizer"
 cp "$REPO/app/Resources/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
-cp "$REPO/app/Resources/Opening.mp4" "$REPO/app/Resources/Opening.jpg" "$APP/Contents/Resources/"
+cp "$REPO/app/Resources/Opening.mp4" "$REPO/app/Resources/Opening.jpg" \
+    "$REPO/app/Resources/Opening-upright.mp4" "$REPO/app/Resources/Opening-upright.jpg" "$APP/Contents/Resources/"
 
 # The same as build_app.sh's, without the engine's path on this Mac.
 cat > "$APP/Contents/Info.plist" <<PLIST

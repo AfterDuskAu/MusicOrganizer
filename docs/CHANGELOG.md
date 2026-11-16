@@ -2829,3 +2829,39 @@ than by use.**
 
 `swift build`, `swift test` (380) for both. Neither has been in front of the owner: their app is on
 b443524, so these wait for the next device round with the rest.
+
+2026-11-16, evening. **The loading film fits the window** (the owner: "The loading video. doesnt
+match a small window. it should sync to the size of the window"). The film always filled the
+window by cropping whatever didn't fit, and it's 16:9 with the name across 68% of its width, so any
+window narrower than about 3:2 lost the ends of the name. The owner's window is the left half of
+the screen (1269 × 1399, taller than wide): there it read "ear Medi".
+
+- **Two films now, one for each shape of window.** The upright one (2160×3840) was already in
+  `render.swift` for the phone and iPad apps; it's now made with the wide one and kept beside it
+  (`app/Resources/Opening-upright.mp4` and `.jpg`, 12 MB). A window the wide film can fill with the
+  whole name in it, keeping a twelfth of the window clear either side, plays the wide film (about
+  1.45 to 1 and wider: the app's smallest window, its first size, the whole screen); any other
+  plays the upright one, which fills it with the name across three quarters of it. Which is chosen
+  again if the window changes shape before anything of the film is on the screen, as when it takes
+  its saved place as the app opens.
+- **It follows the window.** At every resize the film fills the window again, never stretched,
+  never cutting the name (`OpeningFit` in the Kit, with tests). Once it has started, the same film
+  stays: resized from tall to wide, the upright film still fills it; resized from wide to narrow
+  while the wide film plays or holds, it's as big as the name allows, in the middle, with its top
+  and bottom fading into the film's own night sky (a gradient of its edge colours behind it). It
+  still plays once, holds its last picture, and the screen still waits for it to play through.
+- `scripts/make_loading_video.sh` makes both shapes into `app/Resources` (its `--upright` now only
+  adds copies named as the other apps keep them); `build_app.sh` and `package_app.sh` copy all
+  four files. The wide film wasn't made again: it's the file the owner has been seeing.
+- Found on the way: a layer's picture changed while it's on screen fades in over a quarter of a
+  second by itself, stretched to its new place. The film's whole layout is now done with that off.
+
+**Checked:** `swift build`, `swift test` (389, 9 new). The real `OpeningFilm` in a bench of
+off-screen windows (880×540, 1180×760, 2560×1415, the owner's 1269×1399, 880×1300, 1000×1000,
+2560×600, and windows resized while it plays and after): the film each gets, where it lies, that
+it plays to 3.00 s and holds, and pictures of the name in place (before: cut in the half-screen,
+tall and square windows; after: whole in all). A copy of the app under another id, with its own
+settings, on the screen: the upright film playing and holding in the owner's window shape, then
+resized short and wide and narrow by its corner and edge; the wide film in a wide window, narrowed
+to near square (the sky above and below, no seam). **Not yet:** the owner's own app, which needs
+rebuilding and reopening.

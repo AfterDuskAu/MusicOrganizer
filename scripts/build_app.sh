@@ -37,8 +37,10 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BINARY" "$APP/Contents/MacOS/MusicOrganizer"
 # The bear (scripts/make_icon.sh draws it from the app's own drawing).
 cp "$ICON" "$APP/Contents/Resources/AppIcon.icns"
-# The loading film and its first picture (scripts/loading_video/render.swift draws them).
-cp "$REPO/app/Resources/Opening.mp4" "$REPO/app/Resources/Opening.jpg" "$APP/Contents/Resources/"
+# The loading film and its first picture, wide and upright (scripts/loading_video/render.swift
+# draws them; the app plays the one for the window's shape).
+cp "$REPO/app/Resources/Opening.mp4" "$REPO/app/Resources/Opening.jpg" \
+    "$REPO/app/Resources/Opening-upright.mp4" "$REPO/app/Resources/Opening-upright.jpg" "$APP/Contents/Resources/"
 
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
