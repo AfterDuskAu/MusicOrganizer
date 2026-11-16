@@ -185,7 +185,13 @@ def test_a_download_that_left_no_file(
         youtube.download_audio(VIDEO, dest)
 
 
-def test_replay_mode_never_downloads(dest: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_replay_mode_never_downloads(
+    dest: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # Stand-ins for deno and ffmpeg, as the other download tests have: until 2026-11-17
+    # this test started the real ones before replay mode refused, and on a busy Mac the
+    # first start of deno took 40 seconds, past the twenty then allowed, and it failed.
+    monkeypatch.setattr(tools, "require", lambda name, config=None: tmp_path / "bin" / name)
     monkeypatch.setattr(youtube, "_LIMITER", RateLimiter(0, 0, sleep=lambda s: None))
     with pytest.raises(ReplayMissError):
         youtube.download_audio(VIDEO, dest)

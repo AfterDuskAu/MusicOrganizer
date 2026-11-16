@@ -2906,6 +2906,14 @@ ready in the background after 14.2 s, then the song **played 12.6 s after the cl
 started, with nothing asked. `pytest` (2448 passed, 4 new), `ruff check`, `swift build`,
 `swift test` (391, 3 new). **Not yet:** the owner's own app, which needs rebuilding and reopening.
 
+Later the same morning: the owner's app was rebuilt from a clean copy of 54680da and reopened; its
+engine said "deno is ready" ten seconds after it started, with nothing clicked. And one engine
+test had the same fault (the audit session found it): `test_replay_mode_never_downloads` started
+the real deno and ffmpeg before replay mode refused the download, and with a deno not yet in
+memory its own run took 40.6 s, which failed under the old twenty seconds and only passed slowly
+under the new two minutes. It now has stand-ins for both, as the other download tests do, and
+takes no time at all.
+
 2026-11-17. **Duplicates and leftovers, found and taken out** (the owner: "go through the code,
 and see if there is anything that is duplicate, or extra. and what needs to be deleted and what is
 needed to perform normally"). A read-only audit of the whole code came first. In it, a script
