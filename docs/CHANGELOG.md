@@ -2963,6 +2963,6 @@ Taken out (nothing called them; each was checked for callers by name first):
 - `ruff check` and format: clean.
 - `pytest`: 2443 passed, with 2 new tests. One failed during a run shared with three other builds
   (load about 15): `test_download.py::test_replay_mode_never_downloads`. It passed alone, but took
-  194 s. That's the deno check of the evening's "busy Mac" change waiting in replay mode; it has
-  been passed to that work.
+  194 s. The test started the real deno and ffmpeg before replay mode refused it: under load,
+  deno's old 20-second limit ran out. It stands in for them now (222c33b).
 - **Not yet:** the owner's own app, which needs rebuilding and reopening.
