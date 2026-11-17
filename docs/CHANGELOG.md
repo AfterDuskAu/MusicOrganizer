@@ -2966,3 +2966,43 @@ Taken out (nothing called them; each was checked for callers by name first):
   194 s. The test started the real deno and ffmpeg before replay mode refused it: under load,
   deno's old 20-second limit ran out. It stands in for them now (222c33b).
 - **Not yet:** the owner's own app, which needs rebuilding and reopening.
+
+2026-11-17, evening. **The lyrics panel stays while the next song's lyrics are found, and a page
+of cards keeps its place** (the owner: "when clicking a new song, it seems to close the lyrics,
+and because of that it tosses the lineup all over the place … not keeping in order or even
+showing the one selected"). With the lyrics showing beside Music Finder's What's New, pressing
+play on another card left the grid somewhere else entirely, with the card pressed out of sight.
+
+- **What was wrong.** The lyrics panel beside the pages showed only while the song had lyrics *right
+  now*, and while the next song's lyrics are looked for it has none yet. So at every song the panel
+  went (for seconds, for a song from the music service, whose lyrics are looked up on the web) and
+  came back. The page beside it was 320 points wider meanwhile: What's New went from three columns
+  to five, which made it shorter, the scroll view was pushed back up to fit, and when the panel
+  came back the three columns were shown from that new point. The list itself was never changed:
+  What's New isn't asked again when a song starts. (Music Finder's Playlists is, by design, once a
+  song has played to its end: it follows what's being listened to.)
+- **The fix.** The panel goes by the lyrics as last known (`LyricsModel.settled`, which the player
+  page already used for the same reason), so it stays, with a spinner, while the next song's are
+  found, and the pages beside it never change width when a song with lyrics follows another.
+- **And when the panel does go** (a song with no lyrics, as the owner chose on 2026-10-01), or the
+  window is made wider or narrower, **a page of cards keeps its place** (`KeepsItsPlace`): it's
+  scrolled to the same share of its length, which in a grid of even cards is the same card at the
+  top, and back at the width before, exactly where it was. On What's New, Find, Covers & Remixes,
+  Playlists, Albums, the Finders, channel search, Movies/Series, the Watchlist and a person's page.
+  It needs macOS 15 (being told where to scroll by a distance); on macOS 14 a page is as before.
+  The layout is unchanged.
+- **For checking it unseen,** `MUSICORG_BENCH` has `picks` (What's New, Find and Covers & Remixes
+  filled with cards made from the library's own songs, with no look-up) and `playpick=<n>` (the nth
+  card played silently), and writes out each time the lyrics panel comes or goes.
+
+**Checked** in the unseen copy, on a scratch library of 40 songs (every seventh with no lyrics),
+the same steps on the build before and after: scrolled 3,500 points down What's New, then a card
+in view played.
+- Before: the panel went ("looking for lyrics") and came back, and the grid was at 1,904, showing
+  songs from a third of the way up the list, the card pressed out of sight.
+- After: the panel stayed and the grid stayed at 3,500. A song with no lyrics (the panel goes,
+  five columns) and then one with lyrics came back to 3,485. A window made wider and narrower again
+  came back to exactly where it was (before: 404, then 534). A resize step costs the same as before
+  (45–60 ms, measured twice each).
+- `swift build` and `swift test` (391, 0 failures).
+- **Not yet:** the owner's own app, which needs rebuilding and reopening.

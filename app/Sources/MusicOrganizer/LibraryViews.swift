@@ -482,6 +482,7 @@ struct AlbumsView: View {
                 AlbumGrid(albums: albums)
                     .padding(20)
             }
+            .keepsItsPlace()
         }
     }
 }

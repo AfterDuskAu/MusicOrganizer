@@ -296,6 +296,7 @@ struct MediaGrid: View {
                     ProgressView().padding(.bottom, 20)
                 }
             }
+            .keepsItsPlace()
             // Asked again whenever a set arrives (even one whose titles are all left out) while
             // the end is still in sight.
             .task(id: "\(nearEnd)|\(list.items.count)|\(list.working)|\(mayAskMore)|\(list.problem ?? "")") {
@@ -376,6 +377,7 @@ struct ChannelSearchGrid: View {
                     }
                     .padding(20)
                 }
+                .keepsItsPlace()
             } else if let problem = problem ?? (channels == nil ? nil : "Nothing was found.") {
                 Text(problem).foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -1241,6 +1243,7 @@ struct MovieFinderView: View {
                 }
                 .padding(20)
             }
+            .keepsItsPlace()
         }
     }
 
@@ -2238,6 +2241,7 @@ struct MoviesSeriesView: View {
                     }
                     .padding(.vertical, 14)
                 }
+                .keepsItsPlace()
             }
         }
     }
@@ -2520,6 +2524,7 @@ struct WatchlistView: View {
                     }
                     .padding(.vertical, 14)
                 }
+                .keepsItsPlace()
             }
         }
         // Whether a series has a new episode, or its latest has been watched, goes by its

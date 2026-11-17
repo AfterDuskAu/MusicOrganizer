@@ -105,6 +105,7 @@ struct FoundPlaylistsView: View {
                     }
                     .padding(20)
                 }
+                .keepsItsPlace()
             }
         }
         // Asked the first time the tab is opened, and again whenever a song has been

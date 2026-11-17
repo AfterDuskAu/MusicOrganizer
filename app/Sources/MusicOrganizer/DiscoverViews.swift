@@ -374,6 +374,7 @@ struct PicksView: View {
                     .padding(20)
                     showMore
                 }
+                .keepsItsPlace()
             }
         }
     }

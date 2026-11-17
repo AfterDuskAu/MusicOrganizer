@@ -67,6 +67,10 @@ import AppKit
 ///   `left`, `right`, `return` or `esc`
 /// - `player`: what's in the music player, where it has got to and how loud, and where the
 ///   arrows' highlight is on a page of cards, written out
+/// - `picks`: What's New, Find and Covers & Remixes filled with cards made from the
+///   library's own songs, with no look-up; `playpick=<n>`: the nth of them played
+///   silently, as a click on its picture does (each time the lyrics panel beside the
+///   pages comes or goes, that's written out too)
 /// - `type=<letters>`: these letters typed into the page's search box (the widest one
 ///   showing), one every 150 ms as a hand types them; `enter`: Return pressed in it;
 ///   `erase`: everything in it deleted

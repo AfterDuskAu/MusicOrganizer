@@ -237,6 +237,7 @@ struct PersonView: View {
             .padding(32)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .keepsItsPlace()
         // Over the film's own page, which is drawn on black.
         .background { Color.black }
         .task(id: cast.personId) {

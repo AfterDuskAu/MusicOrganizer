@@ -763,9 +763,12 @@ struct MainView: View {
     private var onPlayerPage: Bool { current == .visualizer || showNowPlaying }
 
     /// The lyrics panel isn't a fixture: it's there only while a song with lyrics is on,
-    /// and never beside a page that shows the lyrics itself.
+    /// and never beside a page that shows the lyrics itself. It goes by the lyrics as last
+    /// known (`settled`), so it stays while the next song's are looked for: it went for
+    /// that moment, the page beside it grew wider for it and narrower again, and a page of
+    /// cards lost its place (the owner, 2026-11-17).
     private var lyricsPanelShown: Bool {
-        showLyrics && model.lyrics.hasLyrics && model.player.current != nil
+        showLyrics && model.lyrics.settled && model.player.current != nil
             && current != .visualizer && !showNowPlaying
     }
 
@@ -784,6 +787,12 @@ struct MainView: View {
             }
         }
         .transaction { $0.animation = nil }
+        .onChange(of: lyricsPanelShown) { _, shown in
+            guard Bench.isOn else { return }
+            let lyrics = model.lyrics
+            let why = lyrics.state == .loading ? "looking for lyrics" : lyrics.hasLyrics ? "lyrics" : "no lyrics"
+            Bench.say("BENCH lyrics panel: \(shown ? "shown" : "gone") (\(why))")
+        }
     }
 
     private var pathBinding: Binding<NavigationPath> {
@@ -828,6 +837,26 @@ struct MainView: View {
         }
         .keyboardShortcut("f")
         .help(model.searching ? "Close search" : "Search your library (⌘F)")
+    }
+
+    /// The library's songs `Bench`'s `picks` makes cards of, in the cards' order.
+    private var benchSongs: [Track] { Array(model.everything.tracks.prefix(50)) }
+
+    /// Discover's answer, made up from the library's songs (`Bench`'s `picks`).
+    private func benchPicks() -> DiscoverAnswer? {
+        let picks: [[String: Any]] = benchSongs.enumerated().map { at, song in
+            [
+                "video_id": "bench\(at + 1)", "title": song.title, "artists": [song.artistName],
+                "duration_s": song.durationS ?? 0, "why": "Made up from “\(song.title)”", "hits": 1,
+            ]
+        }
+        guard !picks.isEmpty,
+            let json = try? JSONSerialization.data(
+                withJSONObject: ["picks": picks, "wanted": picks.count, "radios": 0])
+        else { return nil }
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return try? decoder.decode(DiscoverAnswer.self, from: json)
     }
 
     /// A developer's check (`Bench`): the steps asked for, one after the other.
@@ -959,6 +988,31 @@ struct MainView: View {
                                     + film.subtitleTracks.map(\.label).joined(separator: ", ")
                                 : "no subtitles menu")
                         : "BENCH film: none open")
+            } else if step.name == "picks" {
+                // What's New, Find and Covers & Remixes filled with cards made from the
+                // library's own songs, with no look-up (the unseen copy never asks the
+                // service): pages of cards to test unseen. `playpick=` plays them.
+                if let made = benchPicks() {
+                    for page in [model.whatsNew, model.find, model.remixes] {
+                        page.ask = { _, _, _, _, _ in made }
+                        await page.run([.library], count: made.picks.count)
+                    }
+                    Bench.say("BENCH picks: \(made.picks.count) cards, from the library's songs")
+                } else {
+                    Bench.say("BENCH picks: the library has no songs to make cards of")
+                }
+            } else if step.name.hasPrefix("playpick=") {
+                // The nth card (from 1) played, silently, as a click on its picture plays
+                // the page's songs from it: the library's own song, so its lyrics are
+                // looked up as a song's are.
+                let songs = benchSongs
+                if let which = Int(step.name.dropFirst(9)), songs.indices.contains(which - 1) {
+                    model.player.volume = 0
+                    model.player.play(songs, startAt: which - 1)
+                    Bench.say("BENCH playpick: \(songs[which - 1].title)")
+                } else {
+                    Bench.say("BENCH playpick: there's no card of that number, of \(songs.count)")
+                }
             } else if step.name == "player" {
                 let player = model.player
                 Bench.say(
