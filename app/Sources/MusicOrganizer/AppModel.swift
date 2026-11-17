@@ -341,8 +341,9 @@ final class AppModel {
         didSet { homeLayout.save() }
     }
 
-    /// The owner's Home page, with the Recommended rows they asked for (2026-10-15) and
-    /// New Episodes (2026-10-18) put on it the first time it's opened since.
+    /// The owner's Home page, with the Recommended rows they asked for (2026-10-15),
+    /// New Episodes (2026-10-18) and Recommended From Your Favourites (2026-11-17) put on it the
+    /// first time it's opened since.
     private static func keptHomeLayout() -> HomeLayout {
         var layout = HomeLayout.saved()
         if !UserDefaults.standard.bool(forKey: HomeSection.recommendedAdded) {
@@ -355,12 +356,21 @@ final class AppModel {
             layout.save()
             UserDefaults.standard.set(true, forKey: HomeSection.newEpisodesAdded)
         }
+        // Recommended From Your Favourites (2026-11-17), once.
+        if !UserDefaults.standard.bool(forKey: HomeSection.likedAdded) {
+            layout.addLiked()
+            layout.save()
+            UserDefaults.standard.set(true, forKey: HomeSection.likedAdded)
+        }
         return layout
     }
     /// What's been watched: Home's Continue Watching and Recently Watched.
     private(set) var history = WatchHistory.saved()
     /// The movies and series marked with the heart.
     private(set) var mediaFavourites = MediaFavourites.saved()
+    /// The movies and series given a thumbs down (2026-11-17): never recommended, and a series
+    /// never says it has new episodes (`ThumbsDown`). A profile's own.
+    private(set) var thumbsDown = ThumbsDown.saved()
     /// An episode whose ways to play its series' page is to show: the next one, when it
     /// couldn't be played by itself the way the last one was (`playEpisode(after:)`).
     struct EpisodeAsk: Equatable {
@@ -450,14 +460,43 @@ final class AppModel {
         saver.save(MediaFavourites.key) { hearts.save() }
     }
 
+    private func keepThumbsDown() {
+        changedRecords()
+        let down = thumbsDown
+        saver.save(ThumbsDown.key) { down.save() }
+    }
+
     private func keepBegun() {
         let part = begun
         saver.save(PartWatched.key) { part.save() }
     }
 
+    /// The heart on a film's or a series' page, or in a card's menu. Given, it takes a thumbs
+    /// down off: a title is liked or it isn't (2026-11-17).
     func toggleFavourite(_ item: MediaItem) {
         mediaFavourites.toggle(item)
         keepFavourites()
+        if mediaFavourites.contains(item), thumbsDown.contains(item) {
+            thumbsDown.remove(item.id)
+            keepThumbsDown()
+            recountWatched()
+        }
+    }
+
+    /// The thumbs down beside the heart (the owner, 2026-11-17: "if thumbed down, dont recommend
+    /// them ... wont say when theres new episodes"): one click on, one off. Given, it takes the
+    /// heart off. Nothing else changes: it stays on the Watchlist and watched (`ThumbsDown`).
+    func toggleThumbsDown(_ item: MediaItem) {
+        Bench.time("thumbsDown") {
+            thumbsDown.toggle(item)
+            keepThumbsDown()
+            if thumbsDown.contains(item), mediaFavourites.contains(item) {
+                mediaFavourites.remove(item.id)
+                keepFavourites()
+            }
+            // Whether it's watched and has a new episode go by it (the quiet rule).
+            recountWatched()
+        }
     }
 
     /// Settings → Profile → From Stremio: an import of what Stremio on this Mac remembers.
@@ -554,10 +593,17 @@ final class AppModel {
 
     private func recountWatched() {
         var watched = Set(finished.days.keys)
+        let quiet = thumbsDown.ids
         for (id, known) in seriesProgress.series where known.latest != nil {
-            if seriesProgress.isWatched(id, finished: finished) { watched.insert(id) } else { watched.remove(id) }
+            // A series with a thumbs down that the owner had caught up with stays watched when a
+            // new episode comes out (2026-11-17): it never says it has one.
+            if seriesProgress.isWatched(id, finished: finished, quietly: quiet.contains(id)) {
+                watched.insert(id)
+            } else {
+                watched.remove(id)
+            }
         }
-        let fresh = Set(seriesProgress.withNewEpisodes(finished: finished))
+        let fresh = Set(seriesProgress.withNewEpisodes(finished: finished, quiet: quiet))
         // Only a real change is a change: each is every card's to draw again.
         if watched != watchedIds { watchedIds = watched }
         if fresh != newEpisodeIds { newEpisodeIds = fresh }
@@ -622,11 +668,13 @@ final class AppModel {
         seriesProgress = SeriesProgress(progress)
         history = WatchHistory(entries.sorted { $0.at > $1.at })
         mediaFavourites = MediaFavourites(Array(listed.prefix(60)))
+        thumbsDown = ThumbsDown()  // none: a title hearted here can't have one too
         watchlist.save()
         finished.save()
         seriesProgress.save()
         history.save()
         mediaFavourites.save()
+        thumbsDown.save()
         changedRecords()
         recountWatched()
         Bench.say(
@@ -1074,7 +1122,7 @@ final class AppModel {
     /// Worked out from all of what's been watched, so it's kept until the records change
     /// rather than worked out again for each of Home's rows (2026-11-14).
     var continuingSeries: [WatchHistory.Entry] {
-        worked("continuing") { history.continuing(finished: finished, progress: seriesProgress) }
+        worked("continuing") { history.continuing(finished: finished, progress: seriesProgress, quiet: thumbsDown.ids) }
     }
 
     /// The owner's series: on the Watchlist, hearted, or watched. The ones the Watchlist
@@ -1108,14 +1156,36 @@ final class AppModel {
     /// watched"): what's on the Watchlist, what's been watched and what's hearted, of a kind.
     /// Worked out once and kept (2026-11-14): it is every record the profile has, put
     /// together, and each Recommended row asked for it twice whenever anything changed.
+    /// Never a title with a thumbs down (2026-11-17).
     func taste(of kind: String, anime: Bool) -> [MediaItem] {
         worked("taste|\(anime ? "anime" : kind)") {
-            var seen = Set<String>()
-            return (watchlist.items + history.entries.compactMap(\.item) + mediaFavourites.items)
-                .filter { item in
-                    (anime ? item.anime == true : item.anime != true && item.type == kind)
-                        && seen.insert(item.id).inserted
-                }
+            Recommending.taste(
+                of: watchlist.items + history.entries.compactMap(\.item) + mediaFavourites.items, kind: kind,
+                anime: anime, without: thumbsDown)
+        }
+    }
+
+    /// Whether a title is left out of every Recommended row (2026-11-17): it's on the Watchlist,
+    /// watched (played, or marked by the owner's word, by the owner's rule), hearted, in the
+    /// history, or has a thumbs down. What's watched is asked of the set kept for the cards, not
+    /// put into a set of its own: it's thousands of ids.
+    func isLeftOutOfRecommended(_ id: String) -> Bool {
+        let records = worked("recordIds") { () -> Set<String> in
+            var ids = Set(watchlist.items.map(\.id))
+            ids.formUnion(mediaFavourites.items.map(\.id))
+            ids.formUnion(history.entries.compactMap(\.item?.id))
+            ids.formUnion(markedTitles.items.map(\.id))
+            return ids
+        }
+        return records.contains(id) || thumbsDown.contains(id) || watchedIds.contains(id)
+    }
+
+    /// The films and series hearted, without any with a thumbs down: what Recommended From Your
+    /// Favourites goes by (2026-11-17). Not anime: it has its own Recommended row.
+    var likedTaste: [MediaItem] {
+        worked("likedTaste") {
+            Recommending.taste(of: mediaFavourites.items, kind: "movie", anime: false, without: thumbsDown)
+                + Recommending.taste(of: mediaFavourites.items, kind: "series", anime: false, without: thumbsDown)
         }
     }
 
@@ -1143,9 +1213,10 @@ final class AppModel {
     func toWatch(_ type: String) -> [MediaItem] {
         worked("toWatch|\(type)") {
             var seen = Set<String>()
+            // Never a series with a thumbs down (2026-11-17): it doesn't come back for a new episode.
             let fresh =
                 type == "series"
-                ? seriesProgress.withNewEpisodes(finished: finished).compactMap(knownItem) : []
+                ? seriesProgress.withNewEpisodes(finished: finished, quiet: thumbsDown.ids).compactMap(knownItem) : []
             return (fresh + watchlist.of(type: type).filter { !isWatched($0.id) })
                 .filter { seen.insert($0.id).inserted }
         }
@@ -1159,8 +1230,10 @@ final class AppModel {
             let all = (history.entries.compactMap(\.item) + watchlist.items + mediaFavourites.items
                 + markedTitles.items)
                 .filter { $0.type == type && isWatched($0.id) && seen.insert($0.id).inserted }
+            // A series watched by the quiet rule (a thumbs down) goes by when it was caught up.
             let when = { (item: MediaItem) -> Date in
-                self.finished.day(of: self.seriesProgress.latest(of: item.id) ?? item.id) ?? .distantPast
+                self.finished.day(of: self.seriesProgress.latest(of: item.id) ?? item.id)
+                    ?? self.seriesProgress.series[item.id]?.caughtUp.flatMap(self.finished.day(of:)) ?? .distantPast
             }
             return all.sorted { when($0) > when($1) }
         }
@@ -1285,12 +1358,25 @@ final class AppModel {
 
     /// Home's New Episodes: the series with episodes out that the owner hasn't watched
     /// ("+1, +2"), the one whose latest came out last first (the owner, 2026-10-18).
+    /// Never a series with a thumbs down (2026-11-17).
     var newEpisodeSeries: [MediaItem] {
-        worked("newEpisodes") { seriesProgress.withFreshEpisodes(finished: finished).compactMap(knownItem) }
+        worked("newEpisodes") {
+            seriesProgress.withFreshEpisodes(finished: finished, quiet: thumbsDown.ids).compactMap(knownItem)
+        }
     }
 
-    /// How many episodes of a series are out that the owner hasn't watched: its "+N".
-    func newEpisodeCount(_ id: String) -> Int { seriesProgress.newEpisodes(id, finished: finished).count }
+    /// How many episodes of a series are out that the owner hasn't watched: its "+N". None for a
+    /// series with a thumbs down (2026-11-17).
+    func newEpisodeCount(_ id: String) -> Int {
+        seriesProgress.newEpisodes(id, finished: finished, quiet: thumbsDown.contains(id)).count
+    }
+
+    /// The calendar's series: the owner's (`ownSeries`), without any with a thumbs down
+    /// (2026-11-17): the calendar says when their new episodes come out. Their episodes are still
+    /// read, so whether each is watched stays right.
+    var calendarSeries: [MediaItem] {
+        worked("calendarSeries") { ownSeries.filter { !thumbsDown.contains($0.id) } }
+    }
 
     /// A click on a series in Home's New Episodes: one left part way through an episode
     /// plays on from there; otherwise the episode to carry on with is played
@@ -3572,6 +3658,7 @@ final class AppModel {
         homeLayout = Self.keptHomeLayout()
         history = WatchHistory.saved()
         mediaFavourites = MediaFavourites.saved()
+        thumbsDown = ThumbsDown.saved()
         watchlist = Watchlist.saved()
         finished = Self.keptFinished()
         seriesProgress = SeriesProgress.saved()

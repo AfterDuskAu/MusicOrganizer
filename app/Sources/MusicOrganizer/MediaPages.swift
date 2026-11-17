@@ -56,7 +56,8 @@ struct WebPicture: View {
 }
 
 /// A film's or a series' card's right-click items (2026-11-11, as the video apps' long press
-/// has them): the Watchlist, favourites, and watched or not; for a series, every episode of it
+/// has them): the Watchlist, favourites, a thumbs down (2026-11-17), and watched or not; for a
+/// series, every episode of it
 /// that's out (`AppModel.markSeriesWatched`). Never in the Finder kept apart, where nothing is
 /// remembered. The model is handed over: a menu doesn't always have the window's environment.
 struct TitleMenuItems: View {
@@ -72,6 +73,10 @@ struct TitleMenuItems: View {
         }
         Button(model.mediaFavourites.contains(item) ? "Remove From Favourites" : "Add to Favourites") {
             model.toggleFavourite(item)
+        }
+        // A thumbs down (2026-11-17): never recommended, and a series never says it has new episodes.
+        Button(model.thumbsDown.contains(item) ? "Take the Thumbs Down Off" : "Thumbs Down") {
+            model.toggleThumbsDown(item)
         }
         let seen = model.isWatched(item.id)
         Button(seen ? "Mark as Not Watched" : "Mark as Watched") {
@@ -1330,16 +1335,36 @@ struct MovieView: View {
                     HStack(alignment: .firstTextBaseline, spacing: 16) {
                         Text(film.name).font(.system(size: 40, weight: .bold)).heading()
                         let loved = model.mediaFavourites.contains(film)
-                        if !apart { Button(
-                            loved ? "Remove From Favourites" : "Add to Favourites",
-                            systemImage: loved ? "heart.fill" : "heart"
-                        ) {
-                            model.toggleFavourite(film)
-                        }
-                        .labelStyle(.iconOnly)
-                        .buttonStyle(.plain)
-                        .font(.title)
-                        .help(loved ? "Take it out of your favourites" : "A favourite: it shows on Home")
+                        if !apart {
+                            Button(
+                                loved ? "Remove From Favourites" : "Add to Favourites",
+                                systemImage: loved ? "heart.fill" : "heart"
+                            ) {
+                                model.toggleFavourite(film)
+                            }
+                            .labelStyle(.iconOnly)
+                            .buttonStyle(.plain)
+                            .font(.title)
+                            .help(loved ? "Take it out of your favourites" : "A favourite: it shows on Home")
+                            // A thumbs down beside the heart (the owner, 2026-11-17): never
+                            // recommended, and a series never says it has new episodes. The
+                            // layout is mine, made of the heart's own look, until the owner draws it.
+                            let down = model.thumbsDown.contains(film)
+                            Button(
+                                down ? "Take the Thumbs Down Off" : "Thumbs Down",
+                                systemImage: down ? "hand.thumbsdown.fill" : "hand.thumbsdown"
+                            ) {
+                                model.toggleThumbsDown(film)
+                            }
+                            .labelStyle(.iconOnly)
+                            .buttonStyle(.plain)
+                            .font(.title)
+                            .help(
+                                down
+                                    ? "You gave it a thumbs down. Click to take it off"
+                                    : isSeries
+                                        ? "Thumbs down: it's never recommended to you, and it never says it has new episodes"
+                                        : "Thumbs down: it's never recommended to you")
                         }
                     }
                     // The Watchlist (the owner, 2026-10-14): on every movie's and
@@ -2583,6 +2608,11 @@ private struct WatchlistMenuItems: View {
             Button("Remove From Watchlist") { model.toggleWatchlist(item) }
         } else {
             Button("Add to Watchlist") { model.toggleWatchlist(item) }
+        }
+        // A thumbs down (2026-11-17): it stays on the Watchlist, and a series never says it has a
+        // new episode.
+        Button(model.thumbsDown.contains(item) ? "Take the Thumbs Down Off" : "Thumbs Down") {
+            model.toggleThumbsDown(item)
         }
         // A movie by the owner's word; a series, every episode of it that's out (2026-11-11;
         // each one can still be marked on its page).

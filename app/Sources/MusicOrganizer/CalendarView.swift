@@ -42,7 +42,7 @@ struct CalendarView: View {
             header
             if general, let releasesProblem {
                 Text(releasesProblem).foregroundStyle(.secondary).padding(.bottom, 10)
-            } else if !general, model.ownSeries.isEmpty, model.followedChannels.isEmpty {
+            } else if !general, model.calendarSeries.isEmpty, model.followedChannels.isEmpty {
                 Text(
                     "Give a series a heart, put one on your Watchlist, or follow a channel, and its new "
                         + "episodes and videos show here on the day they come out.")
@@ -76,7 +76,9 @@ struct CalendarView: View {
         }
         .padding(.horizontal, 12)
         .padding(.bottom, 12)
-        .task(id: model.seriesRead) { await layOut() }
+        // Laid out again when episodes are read, and when a series is given a thumbs down or has it
+        // taken off (2026-11-17): it isn't on the calendar while it has one.
+        .task(id: "\(model.seriesRead)|\(model.thumbsDown.ids.count)") { await layOut() }
         .task(id: "\(monthKey)|\(general)") { if general { await readReleases() } }
         .task { await model.readSeries(model.ownSeries, episodes: true) }
         .task(id: model.followedChannels.map(\.channelId)) { await model.readUploads() }
@@ -125,7 +127,7 @@ struct CalendarView: View {
     /// Every episode put on its day, away from the screen's own work: with hundreds of
     /// series it was over a second the window couldn't answer (2026-10-17).
     private func layOut() async {
-        let wanted = model.ownSeries.map { ($0, model.seriesEpisodes[$0.id] ?? []) }
+        let wanted = model.calendarSeries.map { ($0, model.seriesEpisodes[$0.id] ?? []) }
         let laid = await Task.detached(priority: .userInitiated) {
             CalendarEntry.byDay(wanted.flatMap { CalendarEntry.episodes(of: $0.0, $0.1) })
         }.value

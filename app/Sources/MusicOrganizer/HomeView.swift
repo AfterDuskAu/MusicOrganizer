@@ -147,7 +147,7 @@ private struct HomeRow: View {
         switch section.group {
         case .songs: songs
         case .channels: channels
-        case .movies, .series, .anime: films
+        case .movies, .series, .moviesAndSeries, .anime: films
         }
     }
 
@@ -321,6 +321,11 @@ private struct HomeRow: View {
     private var type: String { section.group.mediaType ?? "movie" }
     private var historyKind: WatchHistory.Entry.Kind { section.group == .series ? .series : .movie }
     private var isRecommended: Bool { section.kind == "recommended" }
+    /// Recommended From Your Favourites (2026-11-17): films and series like the hearted ones.
+    private var isLiked: Bool { section.kind == "liked" }
+    /// A row of suggestions: nothing in it the owner has seen, listed, hearted or given a
+    /// thumbs down (`AppModel.isLeftOutOfRecommended`).
+    private var isSuggesting: Bool { isRecommended || isLiked }
     private var isAnime: Bool { section.group == .anime }
 
     /// What Recommended goes by (the owner, 2026-10-15: "takes your watchlisted watched"):
@@ -338,6 +343,22 @@ private struct HomeRow: View {
         let ranked = model.tasteGenres(of: section.group == .movies ? "movie" : "series", anime: isAnime)
         let offered = ranked.filter(source.catalog.genres.contains)
         return offered.isEmpty ? nil : (source, Array(offered.prefix(3)))
+    }
+
+    /// What Recommended From Your Favourites asks (the owner, 2026-11-17: "If hearted, on home add
+    /// a list of recommendations based on those likes"): the popular list of the films', and of
+    /// the series', leading genres among the hearted ones (`Recommending.liked`), each from the
+    /// plugin's own list by genre, as the Recommended rows ask. Empty with nothing hearted.
+    private var likedAsks: [MediaList.RecommendAsk] {
+        var sources: [String: (addon: Addon, catalog: Addon.Catalog)] = [:]
+        for type in ["movie", "series"] {
+            sources[type] = model.media.catalogs(of: type).first { $0.catalog.id == "top" && !TMDB.isTMDB($0.addon) }
+        }
+        let asks = Recommending.liked(
+            model.likedTaste, without: model.thumbsDown, offered: { sources[$0]?.catalog.genres ?? [] })
+        return asks.compactMap { ask in
+            sources[ask.type].map { MediaList.RecommendAsk(addon: $0.addon, catalog: $0.catalog, genre: ask.genre) }
+        }
     }
 
     /// The plugin's list a row is from: for movies and series, Cinemeta's by its id
@@ -464,14 +485,16 @@ private struct HomeRow: View {
         default:
             // One of the film add-on's lists: Popular, New, Best Rated, a genre, a search
             // by two genres, or Recommended: the popular lists of the owner's leading
-            // genres, closest to their taste first, without what they've seen or listed.
+            // genres, closest to their taste first, without what they've seen or listed;
+            // or Recommended From Your Favourites, the same from what's hearted (2026-11-17).
+            // Neither has anything with a thumbs down.
             let list = lists.list(section.id)
-            let seen = isRecommended ? Set(taste.map(\.id)) : []
+            let suggesting = isSuggesting
             // In a child's profile kept to some ratings (2026-11-05), only what's rated so.
             let rules = model.titleRules(language: OriginalLanguage.all)
             let rated = rules.ratings != nil
             let items = list.items.filter {
-                !seen.contains($0.id)
+                !(suggesting && model.isLeftOutOfRecommended($0.id))
                     && (!rated || $0.type == "channel" || model.titles.shows($0, rules, languageToo: false))
             }
             if isRecommended, recommending == nil {
@@ -479,6 +502,11 @@ private struct HomeRow: View {
                     model.media.loaded
                         ? "Put a few on your Watchlist, watch something, or give one a heart, and "
                             + "suggestions like them show up here."
+                        : "Loading…")
+            } else if isLiked, likedAsks.isEmpty {
+                note(
+                    model.media.loaded
+                        ? "Give a movie or a series a heart on its page, and ones like it show up here."
                         : "Loading…")
             } else if items.isEmpty {
                 note(
@@ -536,6 +564,8 @@ private struct HomeRow: View {
         switch (section.group, section.kind) {
         case (.songs, "recommended"): "\(model.phase)"
         case (.channels, "new"): model.followedChannels.map(\.channelId).joined(separator: ",")
+        case (.moviesAndSeries, "liked"):
+            "\(model.media.loaded)|\(likedAsks.map { "\($0.catalog.type):\($0.genre)" }.joined(separator: ","))"
         default: "\(model.media.loaded)|\(isRecommended ? recommending?.genres.joined(separator: ",") ?? "" : "")"
         }
     }
@@ -553,6 +583,16 @@ private struct HomeRow: View {
             if let source = media.catalogs(of: "channel").first {
                 await lists.list(section.id).load(
                     model, addon: source.addon, catalog: source.catalog, adding: adding)
+            }
+        case (.moviesAndSeries, "liked"):
+            let asks = likedAsks
+            guard !asks.isEmpty else { return }
+            let list = lists.list(section.id)
+            await list.recommend(model, asking: asks, taste: model.likedTaste)
+            if Bench.isOn {
+                Bench.say(
+                    "BENCH liked: asked \(asks.map { "\($0.catalog.type) \($0.genre)" }), found \(list.items.count): "
+                        + "\(list.items.prefix(8).map(\.id))")
             }
         case (_, "recommended"):
             guard let (source, genres) = recommending else { return }
@@ -601,6 +641,11 @@ private struct HomeRow: View {
             model.clickedInSidebar(.animeFinder)
             model.show(.animeFinder)
         case (.series, "newEpisodes"): model.show(.watchlist)
+        case (.moviesAndSeries, _):
+            // The Finder of what's hearted most: films' unless only series are.
+            let finder: SidebarItem = likedAsks.first?.catalog.type == "series" ? .seriesFinder : .movieFinder
+            model.clickedInSidebar(finder)
+            model.show(finder)
         case (.movies, _), (.series, _):
             // A list's row opens that list in its Finder, at the row's genre.
             let name = section.group == .series ? "seriesFinder" : "movieFinder"

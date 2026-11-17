@@ -94,7 +94,8 @@ import AppKit
 ///   series' episodes again and what's watched and the "+2" are worked out
 /// - `profile=<id>`: another profile switched to, as Settings → Profile does (only with a
 ///   scratch copy's own profiles)
-/// - `records`: the profile in use, and how much of what's watched and liked it has
+/// - `records`: the profile in use, and how much of what's watched and liked it has (and what has
+///   a thumbs down, what's hearted, and what the Watchlist and New Episodes come to)
 /// - `seed=<series>x<episodes>+<movies>`: records the size of the owner's made up and put in
 ///   the profile in use (`seed=150x40+150`: 150 series of 40 episodes, 150 movies, so 300 on
 ///   the Watchlist, about 5,000 watched and 200 in the history), so a change to the pages can
@@ -103,6 +104,11 @@ import AppKit
 /// - `mark=<number>`: the nth title of the Watchlist's To Watch (from 1) marked watched, or
 ///   not if it is, as a click in its card's right-click menu does (a series: every episode
 ///   of it that's out)
+/// - `thumbsdown=<id>`, `favourite=<id>`: that title (one of the profile's records, or another
+///   named with its kind, `tt7100003:series`) given a thumbs down or a heart, or that taken off,
+///   as its page's buttons do; then whether it's watched, its "+N", NEW EPISODE, New Episodes,
+///   To Watch, Recommended and the calendar, written out
+/// - `open=<id>`: that title's page (one of the profile's records) opened over the page showing
 /// - `stremio=read`, `stremio=import`: what Stremio on this Mac remembers read (only read)
 ///   and written out; then put in the profile in use, and what that profile then has written
 ///   out (only ever with a scratch profile)

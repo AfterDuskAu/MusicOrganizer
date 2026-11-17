@@ -126,6 +126,13 @@ final class MediaList {
         }
     }
 
+    /// One list a Recommended row asks: a plugin's list by a genre.
+    struct RecommendAsk {
+        let addon: Addon
+        let catalog: Addon.Catalog
+        let genre: String
+    }
+
     /// Home's Recommended (the owner, 2026-10-15): the popular list of each of the owner's
     /// leading genres, put together closest to their taste first, without what they've
     /// seen or listed (`Recommending`). What's in a list of anime is marked as anime.
@@ -133,17 +140,30 @@ final class MediaList {
         _ model: AppModel, addon: Addon, catalog: Addon.Catalog, genres: [String], taste: [MediaItem],
         anime: Bool = false
     ) async {
-        let wanted = "recommend|\(addon.id)|\(catalog.type)|\(catalog.id)|\(genres.joined(separator: ","))"
+        await recommend(
+            model, asking: genres.map { RecommendAsk(addon: addon, catalog: catalog, genre: $0) }, taste: taste,
+            anime: anime)
+    }
+
+    /// The lists asked, one after another, put together closest to the taste first (`Recommending.rank`),
+    /// without anything the owner has seen, listed or hearted, or given a thumbs down
+    /// (`AppModel.isLeftOutOfRecommended`, 2026-11-17). Recommended From Your Favourites asks the
+    /// films' list and the series' list both.
+    func recommend(_ model: AppModel, asking: [RecommendAsk], taste: [MediaItem], anime: Bool = false) async {
+        let wanted = "recommend|" + asking.map { "\($0.addon.id)|\($0.catalog.type)|\($0.catalog.id)|\($0.genre)" }
+            .joined(separator: ";")
         guard let ticket = begin(wanted) else { return }
         var found: [[MediaItem]] = []
-        for genre in genres {
-            let asked: [String: Any] = ["addon_id": addon.id, "type": catalog.type, "id": catalog.id, "genre": genre]
+        for ask in asking {
+            let asked: [String: Any] = [
+                "addon_id": ask.addon.id, "type": ask.catalog.type, "id": ask.catalog.id, "genre": ask.genre,
+            ]
             if let answer = try? await model.ask("addon.catalog", asked, as: CatalogAnswer.self) {
                 found.append(answer.items)
             }
         }
         guard end(ticket, showing: wanted) else { return }
-        let ranked = Recommending.rank(found, taste: taste, seen: Set(taste.map(\.id)))
+        let ranked = Recommending.rank(found, taste: taste, leavingOut: model.isLeftOutOfRecommended)
         items = anime ? ranked.map(\.asAnime) : ranked
         (more, cursor, reading) = (false, items.count, nil)
         if items.isEmpty {

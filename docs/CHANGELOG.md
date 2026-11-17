@@ -3058,3 +3058,65 @@ and 2 MB read after each of 12 jumps, as the film player asks:
 Seen in passing, not changed: twice today a film was left "without its state saved: the disk was
 slow" (what libtorrent knows of a film is noted only once its last parts are on the disk, and three
 seconds weren't enough), so played again it would be checked through from 0% first.
+
+2026-11-17, late. **A thumbs down, and Home's Recommended From Your Favourites** (the owner: "add a
+thumbs down on series page, and movie page, if thumbed down, dont recommend them. for example, if
+marked as watched, But thumbed down, it wont show as recommended and wont say when theres new
+episodes. If hearted, on home add a list of recommendations based on those likes"). The Mac app only.
+
+- **The thumbs down** sits beside the heart on a film's and a series' page, and in a card's
+  right-click menu (the Finders', Home's and the Watchlist's): one click on, one off. Never in the
+  Finder kept apart. Kept per profile on this Mac (`ThumbsDown` in the Kit, `mediaThumbsDown`), put
+  away with the rest when the profile is switched, and in an export's records. Not sent to paired
+  devices: the owner is being asked.
+- **A heart and a thumbs down take each other off** (my choice: a title is liked or it isn't, and a
+  title hearted and disliked would feed both the taste and the leaving out).
+- **What it does:** the title is never in a Recommended row, and doesn't count towards the taste
+  they're made from (`Recommending.taste`). A series never says it has new episodes: no "+N", no
+  NEW EPISODE, not in Home's New Episodes, not back in the Watchlist's To Watch, not on the calendar
+  (its episodes are still read every six hours, so whether it's watched stays right).
+- **A series the owner had finished stays watched when a new episode comes out**
+  (`SeriesProgress.isWatched`'s `quietly`: the episode they had caught up with is still marked
+  watched). Without this it would have lost its green check and come back to To Watch, which is
+  saying there's a new one. Marked Not Watched, it isn't watched. It isn't carried on with in
+  Continue Watching for a new episode either (`WatchHistory.continuing`'s `quiet`).
+- Everything else stays: on the Watchlist, watched, in searches and the Finders' lists.
+- **Recommended From Your Favourites**, a new Home row (`HomeSection.liked`, under "Movies and
+  Series" in Customise Home, to show, hide and move), put once on existing Home pages after their
+  Recommended rows (`HomeLayout.addLiked`, `homeLikedAdded`). It asks the films' and the series'
+  popular lists by the three leading genres of each among the hearted ones (`Recommending.liked`),
+  puts them together closest to what's hearted first, and leaves out anything watched, listed,
+  hearted, in the history or thumbed down. Anime has its own Recommended row and isn't asked. A
+  child's profile sees only what its Australian ratings allow, as on Home's other plugin rows.
+- **Every Recommended row now leaves out what's watched by the owner's word too**
+  (`AppModel.isLeftOutOfRecommended`): before, only what was in the taste was left out, so a title
+  marked watched from a pasted list or a sync, and never played here, could still be suggested.
+- Speed, by "Quick with a big account": a card neither shows nor reads a thumbs down; the menus
+  read it as they open; it's written off the main thread (`Records`); the taste, the ids left out
+  and the calendar's series are worked out once and kept until the records change. A thumbs down
+  is 1 ms of work on a seeded account.
+- **Layout is mine**, made of the app's pieces: the thumbs down is the heart's own look beside the
+  heart; the row is Home's own cards. Until the owner draws them.
+- `MUSICORG_BENCH`: `thumbsdown=<id>` and `favourite=<id>` (a title's thumbs down or heart, as its
+  page's buttons do, then where it stands written out), `open=<id>` (its page), and `records` says
+  what has a thumbs down and what the Watchlist and New Episodes come to. `seed=` starts with no
+  thumbs downs.
+
+**Checked:** `swift build` and `swift test` (397, six new in `ThumbsDownTests`: kept and toggled,
+the quiet rule, Continue Watching, the taste and ranking, what the new row asks, the row put on
+Home once). In the unseen copy, against a made-up plugin on this computer with films and series by
+genre and every seeded series given a new episode yesterday, on a seeded account (`seed=40x40+30`:
+70 on the Watchlist, 1,500 watched, 60 hearted):
+- A series watched to its end, then given a new episode: with a thumbs down, watched, "+0", no NEW
+  EPISODE, not in New Episodes, not in To Watch, not on the calendar; taken off, "+1", NEW EPISODE,
+  in New Episodes and To Watch and on the calendar again.
+- A series part way through: with a thumbs down, still in To Watch (it's on the Watchlist), with no
+  "+N"; and it was gone from Home's New Episodes in the picture.
+- The new row asked films Action, Drama, Comedy and series Comedy, Action, Drama and showed 72
+  titles, none of them listed or thumbed down; a title in it given a thumbs down was left out.
+- The page's buttons: the thumbs down filled and the heart emptied, then the heart given and the
+  thumbs down gone.
+- The engine is unchanged, so `pytest` wasn't run again.
+
+**Not yet:** the owner's own app (it needs rebuilding); the iPad and Android apps, and whether a
+thumbs down should go with the sync to paired devices (the owner is being asked).

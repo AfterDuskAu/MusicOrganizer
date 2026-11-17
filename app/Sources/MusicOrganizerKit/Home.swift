@@ -4,7 +4,8 @@ import Foundation
 /// (songs, channels, movies, series) and which of them.
 public struct HomeSection: Identifiable, Hashable, Sendable {
     public enum Group: String, CaseIterable, Sendable {
-        case songs, channels, movies, series, anime
+        /// `moviesAndSeries`: a row of both (Recommended From Your Favourites, 2026-11-17).
+        case songs, channels, movies, series, moviesAndSeries, anime
 
         public var title: String {
             switch self {
@@ -12,6 +13,7 @@ public struct HomeSection: Identifiable, Hashable, Sendable {
             case .channels: "Channels"
             case .movies: "Movies"
             case .series: "Series"
+            case .moviesAndSeries: "Movies and Series"
             case .anime: "Anime"
             }
         }
@@ -108,6 +110,9 @@ public struct HomeSection: Identifiable, Hashable, Sendable {
                 .init(id: "\(key).genre.\($0)", group: group, title: "\($0) \(things)", genre: $0)
             }
         }
+        // Films and series like the ones hearted (the owner, 2026-11-17: "If hearted, on home add
+        // a list of recommendations based on those likes"): `Recommending.liked`.
+        found.append(.init(id: liked, group: .moviesAndSeries, title: "Recommended From Your Favourites"))
         // Anime (2026-10-15, with the owner's Recommended row for it): from the lists of
         // anime the plugins give.
         found += [
@@ -126,6 +131,11 @@ public struct HomeSection: Identifiable, Hashable, Sendable {
     /// New Episodes (2026-10-18), and its row put once on a Home page made before it.
     public static let newEpisodes = "series.newEpisodes"
     public static let newEpisodesAdded = "homeNewEpisodesAdded"
+
+    /// Recommended From Your Favourites (2026-11-17), and its row put once on a Home page made
+    /// before it.
+    public static let liked = "moviesAndSeries.liked"
+    public static let likedAdded = "homeLikedAdded"
 
     /// The page as it starts, before the owner has changed it: their drawing's rows, and
     /// New Episodes before the films' Continue Watching.
@@ -175,6 +185,16 @@ public struct HomeLayout: Equatable, Sendable {
         let continuing = ["movies.continue", "series.continue", "anime.continue"]
         let at = shown.firstIndex(where: continuing.contains) ?? shown.endIndex
         shown.insert(HomeSection.newEpisodes, at: at)
+    }
+
+    /// Recommended From Your Favourites put on the page once (2026-11-17): after the films' and
+    /// series' Recommended rows, else after the last row of films or series, or at the end.
+    public mutating func addLiked() {
+        guard !shown.contains(HomeSection.liked) else { return }
+        let rows = shown
+        let after = rows.lastIndex { $0 == "movies.recommended" || $0 == "series.recommended" }
+            ?? rows.lastIndex { $0.hasPrefix("movies.") || $0.hasPrefix("series.") }
+        shown.insert(HomeSection.liked, at: after.map { $0 + 1 } ?? shown.endIndex)
     }
 
     /// Move a row one place up (-1) or down (1).
@@ -368,7 +388,11 @@ public struct WatchHistory: Equatable, Sendable {
     /// (2026-11-11: a series on the Watchlist has every episode after the last one watched as
     /// new, so the one being watched left this row, and the owner found "continue watching
     /// didnt show that show first").
-    public func continuing(finished: Finished, progress: SeriesProgress) -> [Entry] {
+    ///
+    /// A series with a thumbs down (`quiet`, 2026-11-17) is watched by the quiet rule
+    /// (`SeriesProgress.isWatched`'s `quietly`): one the owner had caught up with isn't carried
+    /// on with for an episode out since, which would say there's a new one.
+    public func continuing(finished: Finished, progress: SeriesProgress, quiet: Set<String> = []) -> [Entry] {
         // The series with an episode played to its end. An episode's id is its series'
         // and then its season and number ("tt0944947:1:2"; Kitsu's "kitsu:7442:2"), so
         // its series' id is the start of it, up to one of its colons.
@@ -389,7 +413,7 @@ public struct WatchHistory: Equatable, Sendable {
             // Watched to its latest episode, and played again since: being rewatched (2026-11-11).
             return entry.isPartWay(finished: finished)
                 || (begun.contains(entry.id)
-                    && (!progress.isWatched(entry.id, finished: finished)
+                    && (!progress.isWatched(entry.id, finished: finished, quietly: quiet.contains(entry.id))
                         || progress.isRewatching(entry, finished: finished)))
         }
     }
@@ -425,6 +449,9 @@ public struct MediaFavourites: Equatable, Sendable {
         }
     }
 
+    /// Take its heart off, if it has one (a thumbs down given: they take each other off).
+    public mutating func remove(_ id: String) { items.removeAll { $0.id == id } }
+
     public func of(type: String) -> [MediaItem] { items.filter { $0.type == type } }
 
     public static let key = "mediaFavourites"
@@ -434,6 +461,63 @@ public struct MediaFavourites: Equatable, Sendable {
             let items = try? JSONDecoder().decode([MediaItem].self, from: data)
         else { return MediaFavourites() }
         return MediaFavourites(items)
+    }
+
+    public func save(in defaults: UserDefaults = .standard) {
+        if let data = try? JSONEncoder().encode(items) { defaults.set(data, forKey: Self.key) }
+    }
+}
+
+/// The movies and series the owner has given a thumbs down (the owner, 2026-11-17: "add a
+/// thumbs down on series page, and movie page, if thumbed down, dont recommend them ... if
+/// marked as watched, But thumbed down, it wont show as recommended and wont say when theres
+/// new episodes"). Beside the heart on a film's or a series' page, and in a card's right-click
+/// menu. Kept by the app on this Mac, a profile's own, the newest first; nothing of it is in the
+/// library or given to a paired device.
+///
+/// What it does: the title is never recommended, and doesn't count towards the taste the
+/// Recommended rows are made from (`Recommending`); a series never says it has new episodes
+/// (`SeriesProgress`'s `quiet`), and one the owner had watched to its end stays watched when a
+/// new episode comes out. Everything else stays as it was: on the Watchlist, watched, found
+/// by a search. **A thumbs down and a heart take each other off** (`AppModel`): a title is liked
+/// or it isn't.
+public struct ThumbsDown: Equatable, Sendable {
+    public private(set) var items: [MediaItem]
+    /// The same, by id: asked for every series and every title a Recommended row shows.
+    public private(set) var ids: Set<String>
+
+    public init(_ items: [MediaItem] = []) {
+        var seen = Set<String>()
+        self.items = items.filter { seen.insert($0.id).inserted }
+        ids = seen
+    }
+
+    public func contains(_ id: String) -> Bool { ids.contains(id) }
+    public func contains(_ item: MediaItem) -> Bool { ids.contains(item.id) }
+
+    /// Give it a thumbs down, at the front; or, if it has one, take it off.
+    public mutating func toggle(_ item: MediaItem) {
+        if contains(item) {
+            remove(item.id)
+        } else {
+            items.insert(item, at: 0)
+            ids.insert(item.id)
+        }
+    }
+
+    /// Take its thumbs down off, if it has one (a heart given: they take each other off).
+    public mutating func remove(_ id: String) {
+        guard ids.remove(id) != nil else { return }
+        items.removeAll { $0.id == id }
+    }
+
+    public static let key = "mediaThumbsDown"
+
+    public static func saved(in defaults: UserDefaults = .standard) -> ThumbsDown {
+        guard let data = defaults.data(forKey: key),
+            let items = try? JSONDecoder().decode([MediaItem].self, from: data)
+        else { return ThumbsDown() }
+        return ThumbsDown(items)
     }
 
     public func save(in defaults: UserDefaults = .standard) {

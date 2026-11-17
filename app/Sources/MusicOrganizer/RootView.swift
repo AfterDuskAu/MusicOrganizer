@@ -1070,6 +1070,40 @@ struct MainView: View {
                         + "favourites \(model.mediaFavourites.items.count), home rows \(model.homeLayout.shown.count), "
                         + "continue series \(model.continuingSeries.prefix(5).map(\.id)), "
                         + "new episodes \(model.newEpisodeSeries.prefix(5).map { "\($0.id) +\(model.newEpisodeCount($0.id))" })")
+                Bench.say(
+                    "BENCH records: thumbs down \(model.thumbsDown.items.map(\.id)), hearted "
+                        + "\(model.mediaFavourites.items.prefix(5).map(\.id)), liked taste \(model.likedTaste.count), "
+                        + "new episode series \(model.newEpisodeSeries.count), to watch \(model.toWatch("series").count) "
+                        + "series \(model.toWatch("movie").count) movies, watched \(model.watchedItems("series").count) "
+                        + "series, NEW EPISODE \(model.toWatch("series").filter { model.marks(of: $0).newEpisode }.count)")
+            } else if step.name.hasPrefix("open=") {
+                // A title's page opened over the page showing, as a click on its card does.
+                let id = String(step.name.dropFirst(5))
+                if let title = model.knownItem(id) { model.open(title) } else { Bench.say("BENCH open: no \(id)") }
+            } else if step.name.hasPrefix("thumbsdown=") || step.name.hasPrefix("favourite=") {
+                // A title's thumbs down, or heart, given or taken off, as its page's button does; then
+                // where it stands written out. One the records don't have is named with its kind
+                // ("tt7100003:series"), as a page opened from a list knows it.
+                let down = step.name.hasPrefix("thumbsdown=")
+                let named = String(step.name.drop { $0 != "=" }.dropFirst()).split(separator: ":").map(String.init)
+                let id = named.first ?? ""
+                let title = model.knownItem(id) ?? named.dropFirst().first.map {
+                    MediaItem(id: id, type: $0, name: id, poster: nil, posterShape: "poster", year: nil, rating: nil, genres: [])
+                }
+                if let title {
+                    if down { model.toggleThumbsDown(title) } else { model.toggleFavourite(title) }
+                    let marks = model.marks(of: title)
+                    Bench.say(
+                        "BENCH \(down ? "thumbsdown" : "favourite"): \(title.name) (\(id)): thumbs down "
+                            + "\(model.thumbsDown.contains(id)), hearted \(model.mediaFavourites.contains(title)), "
+                            + "watched \(marks.watched), +\(marks.fresh), NEW EPISODE \(marks.newEpisode), "
+                            + "in New Episodes \(model.newEpisodeSeries.contains { $0.id == id }), "
+                            + "to watch \(model.toWatch(title.type).contains { $0.id == id }), "
+                            + "left out of Recommended \(model.isLeftOutOfRecommended(id)), "
+                            + "on the calendar \(model.calendarSeries.contains { $0.id == id })")
+                } else {
+                    Bench.say("BENCH \(step.name): no title with that id in this profile's records")
+                }
             } else if step.name.hasPrefix("seed=") {
                 // Records the size of the owner's, made up and put in the profile in use
                 // (never one that matters: a scratch copy's own). `seed=150x40+150`.

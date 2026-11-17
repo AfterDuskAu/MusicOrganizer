@@ -265,8 +265,17 @@ public struct SeriesProgress: Equatable, Sendable {
 
     /// Watched: its latest episode out has been. One whose episodes have never been read
     /// isn't, yet.
-    public func isWatched(_ id: String, finished: Finished) -> Bool {
-        series[id]?.latest.map(finished.contains) ?? false
+    ///
+    /// `quietly`: the series has a thumbs down (`ThumbsDown`, 2026-11-17: "if marked as watched,
+    /// But thumbed down ... wont say when theres new episodes"). It's watched too when the owner
+    /// had caught up with it and that episode is still marked watched: a new episode out doesn't
+    /// take its green check away or bring it back to the Watchlist's To Watch, which would say
+    /// there's a new one. Marked Not Watched, it isn't.
+    public func isWatched(_ id: String, finished: Finished, quietly: Bool = false) -> Bool {
+        guard let known = series[id] else { return false }
+        if let latest = known.latest, finished.contains(latest) { return true }
+        guard quietly, let caughtUp = known.caughtUp else { return false }
+        return finished.contains(caughtUp)
     }
 
     /// Being watched again (2026-11-11: every episode of a series marked watched, then played
@@ -282,22 +291,25 @@ public struct SeriesProgress: Equatable, Sendable {
     }
 
     /// The episodes out since the owner last had none new to watch, that they haven't
-    /// watched, in order: a card's "+1, +2" and Home's New Episodes (2026-10-18).
-    public func newEpisodes(_ id: String, finished: Finished) -> [String] {
-        (series[id]?.fresh ?? []).filter { !finished.contains($0) }
+    /// watched, in order: a card's "+1, +2" and Home's New Episodes (2026-10-18). None for a
+    /// series with a thumbs down (`quiet`, 2026-11-17): it never says it has new episodes.
+    public func newEpisodes(_ id: String, finished: Finished, quiet: Bool = false) -> [String] {
+        guard !quiet else { return [] }
+        return (series[id]?.fresh ?? []).filter { !finished.contains($0) }
     }
 
     /// The series with new episodes (`newEpisodes`), the one whose latest came out last
-    /// first (a tie: by id): Home's New Episodes.
-    public func withFreshEpisodes(finished: Finished) -> [String] {
-        series.keys.filter { !newEpisodes($0, finished: finished).isEmpty }
+    /// first (a tie: by id): Home's New Episodes. Never one in `quiet` (a thumbs down).
+    public func withFreshEpisodes(finished: Finished, quiet: Set<String> = []) -> [String] {
+        series.keys.filter { !quiet.contains($0) && !newEpisodes($0, finished: finished).isEmpty }
             .sorted { (series[$0]?.freshAt ?? .distantPast, $1) > (series[$1]?.freshAt ?? .distantPast, $0) }
     }
 
     /// The owner had caught up, and an episode has come out since that they haven't
-    /// watched: the Watchlist's NEW EPISODE (its own rule, kept as it was: 2026-10-18).
-    public func hasNewEpisode(_ id: String, finished: Finished) -> Bool {
-        guard let known = series[id], let latest = known.latest, let caughtUp = known.caughtUp else {
+    /// watched: the Watchlist's NEW EPISODE (its own rule, kept as it was: 2026-10-18). Never
+    /// for a series with a thumbs down (`quiet`, 2026-11-17).
+    public func hasNewEpisode(_ id: String, finished: Finished, quiet: Bool = false) -> Bool {
+        guard !quiet, let known = series[id], let latest = known.latest, let caughtUp = known.caughtUp else {
             return false
         }
         return caughtUp != latest && !finished.contains(latest)
@@ -306,9 +318,10 @@ public struct SeriesProgress: Equatable, Sendable {
     /// When the latest new episode of a series came out.
     public func newSince(_ id: String) -> Date? { series[id]?.freshAt }
 
-    /// The series the owner had caught up with that have a new episode now.
-    public func withNewEpisodes(finished: Finished) -> [String] {
-        series.keys.filter { hasNewEpisode($0, finished: finished) }.sorted()
+    /// The series the owner had caught up with that have a new episode now: the Watchlist's
+    /// NEW EPISODE, and what comes back to its To Watch. Never one in `quiet` (a thumbs down).
+    public func withNewEpisodes(finished: Finished, quiet: Set<String> = []) -> [String] {
+        series.keys.filter { !quiet.contains($0) && hasNewEpisode($0, finished: finished) }.sorted()
     }
 
     /// Whether a series' episodes are due to be read again: never read, not for a while,
@@ -442,6 +455,20 @@ enum Released {
 /// popular lists of its leading genres; and what comes back is put in order of how close
 /// it is to the taste, without anything already seen or listed.
 public enum Recommending {
+    /// The taste of a kind (`kind`: "movie" or "series"; or anime, which is apart from both:
+    /// its genres are its own plugin's), from the owner's records in the order given (the
+    /// Watchlist, what's been watched, what's hearted), each title once. **Never a title with a
+    /// thumbs down** (2026-11-17): what the owner didn't like isn't what they'd like more of.
+    public static func taste(
+        of records: [MediaItem], kind: String, anime: Bool, without thumbsDown: ThumbsDown = ThumbsDown()
+    ) -> [MediaItem] {
+        var seen = Set<String>()
+        return records.filter { item in
+            (anime ? item.anime == true : item.anime != true && item.type == kind)
+                && !thumbsDown.contains(item.id) && seen.insert(item.id).inserted
+        }
+    }
+
     /// The genres the taste is made of, the most met first (a tie: the first in the
     /// alphabet first). Nil-free; empty when there's nothing to go on.
     public static func genres(of taste: [MediaItem], most: Int = 3) -> [String] {
@@ -450,19 +477,54 @@ public enum Recommending {
         return counts.sorted { ($0.value, $1.key) > ($1.value, $0.key) }.prefix(most).map(\.key)
     }
 
+    /// One list a Recommended row asks: a kind's popular list ("movie" or "series") by a genre.
+    public struct Ask: Equatable, Sendable {
+        public let type: String
+        public let genre: String
+
+        public init(type: String, genre: String) { (self.type, self.genre) = (type, genre) }
+    }
+
+    /// What Recommended From Your Favourites asks (the owner, 2026-11-17: "If hearted, on home add
+    /// a list of recommendations based on those likes"): for the films hearted, the popular list
+    /// of each of their three leading genres that the films' list can be asked by (`offered`);
+    /// the same for the series hearted; the films' first. Anime, whose genres are its own
+    /// plugin's, has its own Recommended row and isn't asked here. Nothing with a thumbs down
+    /// counts (a heart and a thumbs down take each other off, but this holds whatever the records
+    /// say). Empty when nothing films or series is hearted.
+    public static func liked(
+        _ hearted: [MediaItem], without thumbsDown: ThumbsDown = ThumbsDown(),
+        offered: (String) -> [String], most: Int = 3
+    ) -> [Ask] {
+        ["movie", "series"].flatMap { type in
+            let taste = taste(of: hearted, kind: type, anime: false, without: thumbsDown)
+            let can = Set(offered(type))
+            return genres(of: taste, most: .max).filter(can.contains).prefix(most).map { Ask(type: type, genre: $0) }
+        }
+    }
+
     /// The lists found (one for each genre asked) made into one: taken a place at a time
     /// from each in turn, each title once, without what's in `seen`; then the ones whose
     /// genres are worth most to the taste first (a genre is worth how often it was met in
     /// it), a tie keeping that order, so the most popular of the lists lead.
     public static func rank(_ lists: [[MediaItem]], taste: [MediaItem], seen: Set<String>) -> [MediaItem] {
+        rank(lists, taste: taste, leavingOut: seen.contains)
+    }
+
+    /// The same, leaving out whatever `leavingOut` says (2026-11-17): what's been seen, listed or
+    /// hearted, and anything with a thumbs down, asked of the records as they stand rather than
+    /// put together into one big set (what's watched is thousands of ids).
+    public static func rank(
+        _ lists: [[MediaItem]], taste: [MediaItem], leavingOut: (String) -> Bool
+    ) -> [MediaItem] {
         var worth: [String: Int] = [:]
         for genre in taste.flatMap(\.genres) { worth[genre, default: 0] += 1 }
-        var met = seen
+        var met = Set<String>()
         var merged: [MediaItem] = []
         for place in 0..<(lists.map(\.count).max() ?? 0) {
             for list in lists where list.indices.contains(place) {
                 let item = list[place]
-                if met.insert(item.id).inserted { merged.append(item) }
+                if !leavingOut(item.id), met.insert(item.id).inserted { merged.append(item) }
             }
         }
         let scored = merged.enumerated().map { place, item in
