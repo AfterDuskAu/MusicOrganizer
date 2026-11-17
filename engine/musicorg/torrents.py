@@ -5,7 +5,9 @@ and some trackers. To play one, the engine joins the torrent, asks for the film'
 pieces in the order a player needs them, and hands the app an address on this
 computer (`http://127.0.0.1:<port>/…`) that the film player opens like any web video.
 The player asks for ranges of bytes, as players do; each range is answered as soon as
-its pieces are here, which is what makes seeking work.
+its pieces are here, which is what makes seeking work. While a film arrives its pieces are
+handed over by libtorrent; once all of it is here, they're read from its file, each checked
+against the torrent's own fingerprint for it (2026-11-17: `_Joined.read_file`).
 
 What the owner should know, and what this module holds to:
 
@@ -52,6 +54,7 @@ In replay mode (`MUSICORG_REPLAY_DIR`, every test) no torrent is ever joined:
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
 import re
@@ -132,6 +135,10 @@ SWEEP_EVERY_S = 600
 CHUNK = 256 * 1024
 READ_WAIT_S = 30  # how long libtorrent is given to hand over a piece it has
 PIECES_KEPT = 48 * 1024 * 1024  # of pieces just read, this much is kept in memory a torrent
+# Whether all of a film has arrived is asked of libtorrent this often at most, until it has
+# (from then on its pieces are read from its file: `_Joined.read_file`, 2026-11-17).
+ARRIVED_LOOK_S = 1.0
+SLOW_DISK_S = 2.0  # a piece read from a film's file taking longer than this is logged
 FLUSH_WAIT_S = 60  # how long a film that's all here is given to be all on the disk
 # What libtorrent knows of a film that was left (2026-10-17), kept beside it in the cache
 # (`.<hash>.resume`), so it's all there at once when it's played again within its day.
@@ -648,6 +655,14 @@ class _Joined:
     # comes after it was last asked for sooner than the rest (`_ahead`).
     _banded: dict[int, int] = field(default_factory=dict, repr=False)
     _choosing: threading.Lock = field(default_factory=threading.Lock, repr=False)
+    # The torrent's details (libtorrent's `torrent_info`), once they've arrived: each piece's
+    # size and fingerprint, for reading a film that's all here from its file (`_from_file`).
+    _info: Any = field(default=None, repr=False)
+    # Of each file played (by where it starts in the torrent): its number in the torrent;
+    # those that have all arrived; and when libtorrent was last asked (`_arrived_all`).
+    _file_at: dict[int, int] = field(default_factory=dict, repr=False)
+    _arrived: set[int] = field(default_factory=set, repr=False)
+    _looked: dict[int, float] = field(default_factory=dict, repr=False)
     # What libtorrent said is here, when the film was being left (`Player._save_resume`):
     # its resume data, ready to be saved; and that it has said (or couldn't).
     resume_data: bytes | None = field(default=None, repr=False)
@@ -708,6 +723,8 @@ class _Joined:
         self.name, self.size = Path(listed[chosen][0]).name, listed[chosen][1]
         self.file_offset = files.file_offset(chosen)
         self.piece_length = info.piece_length()
+        self._info = info
+        self._file_at[self.file_offset] = chosen
         self._settled(wanted)
         self._banded.clear()  # every piece has its file's priority again
         self._first(self.file_offset, self.size)
@@ -820,7 +837,18 @@ class _Joined:
         121 served wasn't what the finished file holds. The owner saw it as a picture
         that broke into pink and purple while an episode was arriving, and played
         cleanly once it had all arrived. `read_piece` gives the piece as libtorrent
-        itself holds it, written or not."""
+        itself holds it, written or not.
+
+        **Once all of the file has arrived, it's read from the file** (2026-11-17), a piece
+        at a time, each piece only if it's the torrent's own (`_from_file`), and nothing
+        more is asked for first. Asked of libtorrent, a film that was all here still waited
+        on everything else libtorrent was doing with the disk: each piece was a job in its
+        queue, behind what it had still to write and to check, and on this computer's
+        spinning disk, with the songs downloading beside it, a jump waited 20 to 30 seconds
+        and a film stood still for minutes (the owner: "all the film is there. but its
+        stuck ... even now its been stuck on the same spot for over 2 minutes"). Measured
+        that day with an open film all here and not in memory: two megabytes after a jump
+        took 0.8 s through libtorrent, 0.07 s from its file."""
         self.asked_now()
         if self.closed or self.piece_length <= 0 or not 0 <= offset < size:
             return None
@@ -830,21 +858,24 @@ class _Joined:
         # the piece.
         length = min(length, size - offset, (piece + 1) * self.piece_length - place)
         last_piece = (file_offset + size - 1) // self.piece_length
-        # What's just ahead of the player is asked for before anything else (only of a
-        # file this torrent fetches now: never more of the episode it has turned from).
-        if self._wants(file_offset):
-            self._ahead(file_offset, piece, last_piece)
-        until = time.monotonic() + PIECE_WAIT_S
-        nudge = time.monotonic() + NUDGE_S
-        while not self.handle.have_piece(piece):
-            if self.closed or time.monotonic() > until:
-                return None
-            if not self._wants(file_offset):
-                return None  # the torrent has turned to another file: this isn't coming
-            if time.monotonic() > nudge:
-                self._again(piece, last_piece)
-                nudge = time.monotonic() + NUDGE_S
-            time.sleep(0.1)
+        arrived = self.through_libtorrent and self._arrived_all(file_offset, size)
+        if not arrived:
+            # What's just ahead of the player is asked for before anything else (only of
+            # a file this torrent fetches now: never more of the episode it has turned
+            # from).
+            if self._wants(file_offset):
+                self._ahead(file_offset, piece, last_piece)
+            until = time.monotonic() + PIECE_WAIT_S
+            nudge = time.monotonic() + NUDGE_S
+            while not self.handle.have_piece(piece):
+                if self.closed or time.monotonic() > until:
+                    return None
+                if not self._wants(file_offset):
+                    return None  # the torrent has turned to another file: this isn't coming
+                if time.monotonic() > nudge:
+                    self._again(piece, last_piece)
+                    nudge = time.monotonic() + NUDGE_S
+                time.sleep(0.1)
         if not self.through_libtorrent:
             try:
                 with path.open("rb") as file:
@@ -852,16 +883,74 @@ class _Joined:
                     return file.read(length) or None
             except OSError:
                 return None
-        whole = self._piece(piece)
+        whole = self._piece(piece, (path, file_offset, size) if arrived else None)
         if whole is None:
             return None
         inside = place - piece * self.piece_length
         return whole[inside : inside + length] or None
 
-    def _piece(self, piece: int) -> bytes | None:
-        """One piece libtorrent has, as it holds it. The pieces just read are kept (a
-        player reads a piece in several goes, and goes back a little), so each is asked
-        for once."""
+    def _arrived_all(self, file_offset: int, size: int) -> bool:
+        """Whether every byte of the torrent's file that starts at `file_offset` (and is
+        `size` long) has arrived. Asked of libtorrent no more than once a second until it
+        has; from then on it's known."""
+        if file_offset in self._arrived:
+            return True
+        index = self._file_at.get(file_offset)
+        looked = self._looked.get(file_offset)
+        now = time.monotonic()
+        if index is None or (looked is not None and now - looked < ARRIVED_LOOK_S):
+            return False
+        self._looked[file_offset] = now
+        try:
+            done = size > 0 and self.handle.file_progress()[index] >= size
+        except (RuntimeError, AttributeError, IndexError, TypeError):
+            return False  # (a test's stand-in may say nothing of it)
+        if done:
+            self._arrived.add(file_offset)
+            log.info("torrents: all of a film has arrived; it's read from its file from now on")
+        return done
+
+    def _from_file(self, piece: int, path: Path, file_offset: int, size: int) -> bytes | None:
+        """A piece of a file that has all arrived, read from the file, if it's the torrent's
+        own: what was read must have the fingerprint the torrent gives that piece (its
+        SHA-1, as libtorrent checks every piece that arrives), so nothing that isn't on the
+        disk yet is ever given as film. libtorrent writes what has arrived a moment later
+        (`DISK_QUEUE_BYTES` of it at most, on this computer sometimes many seconds later),
+        and those last pieces are asked of it instead, as while the film arrives. So is a
+        piece the file shares with the one beside it in the torrent (or with a torrent's
+        padding), whose other part was never fetched or isn't in this file. None: ask
+        libtorrent."""
+        info = self._info
+        if info is None:
+            return None
+        start = piece * self.piece_length
+        try:
+            length = int(info.piece_size(piece))
+            wanted = bytes(info.hash_for_piece(piece))
+        except (RuntimeError, AttributeError, IndexError, TypeError, ValueError):
+            return None  # (a torrent made only the newer way, v2, has no SHA-1 for its pieces)
+        if start < file_offset or start + length > file_offset + size:
+            return None
+        began = time.monotonic()
+        try:
+            with path.open("rb") as file:
+                file.seek(start - file_offset)
+                data = file.read(length)
+        except OSError:
+            return None
+        took = time.monotonic() - began
+        if took > SLOW_DISK_S:
+            log.info("torrents: the disk took %.1f s to give a piece of a film", took)
+        if len(data) != length or hashlib.sha1(data, usedforsecurity=False).digest() != wanted:
+            return None
+        return data
+
+    def _piece(self, piece: int, arrived: tuple[Path, int, int] | None = None) -> bytes | None:
+        """One piece libtorrent has, as it holds it; or, of a file that has all arrived
+        (`arrived`: its path, where it starts in the torrent, and its size), as its file
+        holds it, when that's the torrent's own (`_from_file`). The pieces just read are
+        kept (a player reads a piece in several goes, and goes back a little), so each is
+        asked for once."""
         with self._pieces_lock:
             held = self._pieces.get(piece)
             if held is not None:
@@ -872,12 +961,19 @@ class _Joined:
             if waiting is None:
                 waiting = self._asked[piece] = threading.Event()
         if first:
+            found = self._from_file(piece, *arrived) if arrived is not None else None
+            if found is not None:
+                self.piece_arrived(piece, found)
+                return found
             self.handle.read_piece(piece)  # answered by `piece_arrived`, from the alerts
         until = time.monotonic() + READ_WAIT_S
         while not waiting.wait(0.25):
             if self.closed or time.monotonic() > until:
                 with self._pieces_lock:
                     self._asked.pop(piece, None)
+                if not self.closed:
+                    log.info("torrents: libtorrent didn't hand over a piece of a film in %d s",
+                             READ_WAIT_S)  # fmt: skip
                 return None
         with self._pieces_lock:
             return self._pieces.get(piece)
@@ -917,6 +1013,7 @@ class _Joined:
             self._settled([FILM_PRIORITY if i in both else 0 for i in range(files.num_files())])
             self._banded.clear()  # every piece has its file's priority again
             self._first(files.file_offset(index), files.file_size(index))
+        self._file_at[files.file_offset(index)] = index
         inside = files.file_path(index)
         return _View(
             self, self.folder / inside, Path(inside).name, files.file_size(index),

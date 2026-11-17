@@ -3,6 +3,7 @@ player opens, served from a stand-in film. No torrent is ever joined in tests.""
 
 from __future__ import annotations
 
+import hashlib
 import http.client
 import socket
 import threading
@@ -336,6 +337,109 @@ def test_only_the_pieces_just_read_are_kept_in_memory(
     joined, handle = joined_for(tmp_path, 1)
     all_of(joined)
     assert len(joined._pieces) == 3 and list(joined._pieces) == [4, 5, 6]
+
+
+# ---- a film that has all arrived is read from its file (2026-11-17) ----------------------
+#
+# The owner: "all the film is there. but its stuck". Asked of libtorrent a piece at a time, a
+# film that had all arrived still waited on everything else libtorrent did with the disk.
+
+
+class StandInHashes(StandInInfo):
+    """The torrent's details, with each piece's size and fingerprint as libtorrent gives them."""
+
+    def piece_size(self, piece: int) -> int:
+        return len(WHOLE[piece * PIECE : (piece + 1) * PIECE])
+
+    def hash_for_piece(self, piece: int) -> bytes:
+        if not 0 <= piece * PIECE < len(WHOLE):
+            raise IndexError("piece index out of range")
+        return hashlib.sha1(WHOLE[piece * PIECE : (piece + 1) * PIECE]).digest()
+
+
+class StandInArrived(StandInHandle):
+    """libtorrent's handle for a torrent of which the files `arrived` (by number) are all here."""
+
+    def __init__(self, arrived: set[int]) -> None:
+        super().__init__()
+        self.arrived = arrived
+        self.looked = 0  # how often it was asked how much of each file is here
+
+    def torrent_file(self) -> StandInHashes:
+        return StandInHashes()
+
+    def file_progress(self) -> list[int]:
+        self.looked += 1
+        return [size if i in self.arrived else size // 2 for i, (_, size) in enumerate(FILES)]
+
+
+def arrived_for(
+    tmp_path: Path, index: int, arrived: set[int], on_disk: bytes = WHOLE
+) -> tuple[torrents._Joined, StandInArrived]:
+    """The torrent joined for its file `index`, its files holding `on_disk` on the disk."""
+    for i, (name, size) in enumerate(FILES):
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        start = sum(each for _, each in FILES[:i])
+        path.write_bytes(on_disk[start : start + size])
+    handle = StandInArrived(arrived)
+    joined = torrents._Joined(handle, HASH, index, tmp_path)
+    joined.through_libtorrent, handle.joined = True, joined
+    assert joined.ready(1)
+    return joined, handle
+
+
+def test_a_film_that_has_all_arrived_is_read_from_its_file(tmp_path: Path) -> None:
+    joined, handle = arrived_for(tmp_path, 1, {1})
+    handle.told.clear()
+    assert all_of(joined) == WHOLE[300:800]
+    # The second episode is pieces 2 to 6. Its first and last share bytes with the files
+    # beside it, which may never have been fetched: those two are libtorrent's to give. The
+    # three wholly inside it are read from its file.
+    assert sorted(handle.asked) == [2, 6]
+    # And nothing is asked for first any more: it's all here.
+    assert not [told for told in handle.told if told[0] == "deadline"]
+
+
+def test_a_piece_on_the_disk_that_isnt_the_torrents_own_is_asked_of_libtorrent(
+    tmp_path: Path,
+) -> None:
+    # The last of what arrived may not be written yet: libtorrent writes it a moment later.
+    stale = bytearray(WHOLE)
+    stale[4 * PIECE + 10] ^= 0xFF  # one byte of piece 4 isn't what the film holds there
+    joined, handle = arrived_for(tmp_path, 1, {1}, bytes(stale))
+    assert all_of(joined) == WHOLE[300:800]
+    assert sorted(handle.asked) == [2, 4, 6]
+
+
+def test_a_film_still_arriving_is_never_read_from_its_file(tmp_path: Path) -> None:
+    # Not even where its file holds the right bytes already (2026-10-14: a piece libtorrent
+    # has may not be written yet, and the film broke into pink and purple).
+    joined, handle = arrived_for(tmp_path, 1, {0, 2})
+    assert all_of(joined) == WHOLE[300:800]
+    assert sorted(handle.asked) == [2, 3, 4, 5, 6]
+    assert handle.looked == 1  # how much is here is asked once a second at most
+
+
+def test_a_film_is_read_from_its_file_from_when_it_has_all_arrived(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(torrents, "ARRIVED_LOOK_S", 0.0)
+    joined, handle = arrived_for(tmp_path, 1, set())
+    assert joined.read(3 * PIECE - 300, 1000) == WHOLE[3 * PIECE : 4 * PIECE]  # arriving
+    handle.arrived.add(1)
+    assert joined.read(4 * PIECE - 300, 1000) == WHOLE[4 * PIECE : 5 * PIECE]  # all here
+    assert handle.asked == [3]
+
+
+def test_another_file_of_the_torrent_is_read_from_its_file_once_its_all_here(
+    tmp_path: Path,
+) -> None:
+    joined, handle = arrived_for(tmp_path, 1, {0})
+    joined.keep_name = "Show S01E02"  # the second episode is being kept, still arriving
+    first = joined.film(0)  # and the first is played beside it: it's all here
+    assert first is not None and all_of(first) == WHOLE[0:300]
+    assert handle.asked == [2]  # its last piece is the second episode's too
 
 
 def test_the_next_episode_of_a_season_in_one_torrent_is_the_next_episode(tmp_path: Path) -> None:

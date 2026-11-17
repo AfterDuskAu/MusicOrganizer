@@ -3006,3 +3006,55 @@ in view played.
   (45–60 ms, measured twice each).
 - `swift build` and `swift test` (391, 0 failures).
 - **Not yet:** the owner's own app, which needs rebuilding and reopening.
+
+2026-11-17, night. **A film that has all arrived plays and jumps at once** (the owner, with a
+picture of a film stopped at 7:36 under "All of the film is here": "all the film is there. but
+its stuck, for over 30 seconds ... its slow to play even if all the film is there and you skip
+ahead, 20-30 seconds ... even now its been stuck on the same spot for over 2 minutes").
+
+- **What was wrong.** Since 2026-10-14 every piece of a film from a torrent has been asked of
+  libtorrent (`read_piece`), never read from its file, because a piece libtorrent "has" may not be
+  written yet. That stayed so once all of the film was here. Each piece was then a job in
+  libtorrent's disk queue, read 16 KB at a time, behind whatever else libtorrent was doing with the
+  disk: writing out the last of what had arrived (which it does before anything else of a film is
+  read, the moment the film is complete), and reading pieces back to check them. On this Mac's
+  spinning disk, already at its limit with the songs downloading beside it, that is slow: while the
+  owner's film stood still, the engine's two disk workers were each held in a single read and a
+  single write for over ten seconds at a time, and a plain read of 8 MB of the same film's file took
+  anything from 1 ms to 18 s. A piece libtorrent hadn't handed over in 30 seconds ended the film
+  player's answer early; the player asked again a few times, then took the film for ended, and the
+  picture stood still.
+- **The fix.** Once all of a film's file has arrived, its pieces are read from the file, as any
+  film on the disk is (`_Joined.read_file`), and nothing more is asked for first. A piece is used
+  only if it has the torrent's own fingerprint for it (the SHA-1 every torrent carries for each of
+  its pieces, which libtorrent checks as they arrive), so nothing that isn't on the disk yet is ever
+  given as film: those last few, and a piece the film shares with a file beside it in the torrent,
+  are still asked of libtorrent. While a film arrives nothing changes: libtorrent hands over every
+  piece. The engine's log now says when a film starts being read from its file, when the disk took
+  over two seconds for a piece, and when libtorrent didn't hand one over in 30.
+
+**Checked** with Blender's Sintel from the real swarm, through the engine's own player in a scratch
+cache, its file dropped from the Mac's memory before each jump (as a 6.5 GB film isn't in memory),
+and 2 MB read after each of 12 jumps, as the film player asks:
+- Before: **0.80 s** a jump (median; the slowest 1.64 s), against 0.07 s for the same 2 MB read
+  straight from the file. The whole finished film read back: **48.8 s** (2.6 MB/s).
+- After: **0.03 s** (the slowest 0.14 s), against 0.01 s from the file. The whole film read back:
+  **1.1 s**, every part the same as the file.
+- At the moment a film is complete, one jump still waited for libtorrent (2.2 s before, 1.6 s
+  after): the piece it wanted wasn't written yet.
+- A film in big pieces, as the owner's is (a 6.5 GB film has pieces of 4 to 16 MB): a 1 GB test
+  film in 8 MB pieces, shared by a second libtorrent on this computer only, old and new engine in
+  turn. The first jump the moment it was all here: **7.7 s** before (libtorrent writing out the
+  last of it first), **0.12 s** after. Reading on in order after a jump: 36 MB/s before, 111 MB/s
+  after. Jumps once things were quiet were about the same (0.07 s and 0.10 s: a whole 8 MB piece
+  is read either way, and now checked too); what's gone is the wait on libtorrent's queue, which
+  on the owner's busy disk was the 20 to 30 seconds.
+- The check of 2026-10-14, after: Sintel arriving no faster than it's read (1.5 MB/s), read in
+  256 KB parts each on its own connection: 494 parts served, **none** different from the finished
+  file; then read straight from its file once it was all here.
+- `pytest` and `ruff check`. The app is unchanged.
+
+**Not yet:** the owner's own app, which needs rebuilding and reopening (and the film opened again).
+Seen in passing, not changed: twice today a film was left "without its state saved: the disk was
+slow" (what libtorrent knows of a film is noted only once its last parts are on the disk, and three
+seconds weren't enough), so played again it would be checked through from 0% first.
