@@ -3120,3 +3120,78 @@ genre and every seeded series given a new episode yesterday, on a seeded account
 
 **Not yet:** the owner's own app (it needs rebuilding); the iPad and Android apps, and whether a
 thumbs down should go with the sync to paired devices (the owner is being asked).
+
+2026-11-18. **A film's state is saved when it's left, however slow the disk** (from the "Not yet" of
+the night before: twice that evening a 6.5 GB film was "left without their state saved: the disk
+was slow", so played again it would be checked through from 0% first, for minutes).
+
+- **What was wrong.** What libtorrent knows of a film (`.<hash>.resume`) is noted only once
+  everything it holds of the film is written to the disk, and that was given 3 seconds, whether the
+  film was closed or the engine was stopping. libtorrent does its disk work at macOS's lowest
+  priority (its own `low_prio_disk`), behind everything else on a start-up disk that's often busy.
+  The engine's log has it nine times since 18 Oct, every one while the app was open, none at
+  quitting. Found on the way: when the 3 seconds ran out, the film was taken out of libtorrent with
+  part of it still to be written; with the disk made slow, a film closed at 55% was found at 41%
+  the next time.
+- **Closing a film.** The film is paused (nothing more of it fetched or sent), libtorrent is asked
+  to write it all out, and that's waited for as long as it takes, up to two minutes
+  (`LEAVE_FLUSH_S`), on the thread it was already left on: the app is answered at once, as before.
+  Only what was here when the write-out was asked for is noted (`_trimmed`). The log says how long
+  the write-out took, or that two minutes weren't enough.
+- **Played again while it's still being left** (closed by mistake, opened again from Continue
+  Watching): it carries on as it was, with nothing noted and nothing taken out
+  (`Player._take_back`). Until now it waited up to 8 seconds, then was joined afresh; with a longer
+  wait it would have met itself, still in libtorrent.
+- **Quitting.** What's here is asked of libtorrent before it ends, and written only after it has:
+  libtorrent writes out everything it holds before it ends (measured with a made-up 512 MB film on
+  this Mac: ending it took as long as a write-out asked for, 6.7 s with 256 MB waiting, 50 s with
+  the disk kept out of the file cache, and every piece it had said was here was in the file after).
+  So the engine no longer waits up to 3 seconds for a write-out before it stops, and notes every
+  film whatever the disk. Only if nothing else still holds libtorrent at that moment (otherwise it
+  ends later, who knows when, and nothing is noted). A film being left a moment before is taken
+  over from its thread and noted with the rest.
+- **Telling libtorrent's answers apart.** libtorrent says a film is written out in the same words
+  when it was asked and when it did so by itself, which it does each time a torrent finishes
+  arriving: a word that came just after a film finished could have been taken for the answer to a
+  question asked a moment later. Now every write-out it owes is counted (a finish says so first:
+  `torrent_finished_alert`, so libtorrent's status alerts are heard too), answers come in the order
+  the write-outs began, and an answer about the same film's torrent from before (still being let go
+  of) isn't taken for this one's. Measured on libtorrent 2.1 with a made-up season shared on this
+  Mac: through files wanted and unwanted, pieces read, pausing, finishing twice and upload mode,
+  every answer was one asked for or one after a finish (4 asked, 2 finishes, 6 answers). If one
+  ever isn't, nothing more is noted of that film, and the log says so. Keeping a film waits the
+  same way (`_save_kept`).
+- A film joined again from its note is put in libtorrent's own queue, as one joined afresh is (it's
+  noted paused and out of it); and when libtorrent doesn't take a note, the log says so.
+
+**Checked** with Blender's Sintel from the real swarm, through the engine's own player in a scratch
+cache, the disk made slow for the test (libtorrent keeping nothing in the Mac's file cache, and 64
+MB allowed to wait to be written), the engine as committed and then this:
+- Closed part way. Before: "left without their state saved"; played again, **70.7 s** checking,
+  and 41% found of the 55% that had arrived. After: the app answered at once, the write-out took
+  **7.6 s** (more than the old 3), the state was saved; played again, 68% there **at once**, with no
+  check.
+- The engine stopping part way. Before: **9.3 s** to stop (3.1 s of it waiting), nothing saved;
+  played again, 14.8 s checking. After: **4.8 s** to stop, saved, there at once.
+- With the engine's own disk settings: closed, written out in 0.7 s; stopping, 1.3 s; both noted
+  all that had arrived (59% and 60%), and played again at once. (With the disk out of the file
+  cache, stopping noted 30% of 61%: libtorrent then counts a piece as here only once it's read it
+  back. The rest is fetched again.)
+- Closed and played again 0.3 s later, part way (before the write-out was done): carried on,
+  its first megabyte in 0.01 to 0.46 s, fetching on, ramping up as a film joined afresh does (it's
+  given the same head start over TCP). On the slowed disk, in 3 of 32 tries (all in one busier
+  stretch), the first megabyte waited 30 s or more instead: libtorrent's reads of a film wait
+  behind its writes, at its lowest disk priority (measured alone, with the same disk: a read after
+  a pause and a write-out took up to 9.8 s, and none was lost). The engine as committed, in the
+  same case, joined the film afresh: 3.5 s when its 3 s write-out had finished in time, else a
+  full check (70.7 s above).
+- Every time, each piece libtorrent said was here when the film was played again was checked
+  against the torrent's own fingerprint in the file: **none** different (292 to 985 pieces a run).
+- The check of 2026-10-14: Sintel arriving no faster than it's read, 494 parts served, none
+  different from the finished file.
+- `pytest` and `ruff check`. The app is unchanged.
+
+**Not yet:** the owner's own app (the engine changes when the app is rebuilt and reopened).
+**Not changed, and the owner's to decide:** libtorrent's lowest disk priority, which is why its
+write-outs (and, on 17 Nov, its reads) are so slow on the busy disk. At normal priority films would
+arrive and be written out sooner, but compete with everything else on the disk.
