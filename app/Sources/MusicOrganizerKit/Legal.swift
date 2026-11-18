@@ -13,7 +13,7 @@ public enum Legal {
     }
 
     /// The day these words were last changed.
-    public static let dated = "12 November 2026"
+    public static let dated = "18 November 2026"
 
     public static let terms: [Part] = [
         Part(
@@ -86,8 +86,9 @@ public enum Legal {
             text: "Off until you switch it on. Then a device you've paired with a code can "
                 + "copy your library over your home network, and nothing is sent to the "
                 + "internet for it. A video app you've paired also sends what you've watched "
-                + "on it (your Watchlist, what you've watched and where you got to), which is "
-                + "added to your profile here, and can copy its downloaded films into your "
+                + "on it (your Watchlist, what you've watched, where you got to and what you've "
+                + "given a thumbs down), which is added to your profile here, and is given the "
+                + "same of your profile's; and it can copy its downloaded films into your "
                 + "Movies folder. It tells this Mac which films are downloaded on it (their names, "
                 + "sizes and posters), so that you can ask for one here; all of it over your home "
                 + "network only. If you've given "

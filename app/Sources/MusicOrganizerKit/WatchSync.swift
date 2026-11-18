@@ -5,7 +5,9 @@ import Foundation
 /// of the shows ... It adds information, doesn't remove it"): the Watchlist, every film and
 /// episode watched, and where each title was got to. The shape is the home sync's
 /// (docs/ENGINE_API.md, section 3: Title, Watched, Progress). Each side adds what the
-/// other sent to its own: nothing is ever taken away.
+/// other sent to its own: nothing is ever taken away. Since 2026-11-17 (the owner, asked
+/// "Should thumbs downs travel with the sync to paired devices, the way the Watchlist and
+/// what's watched do?": "yes") the titles given a thumbs down travel too (`thumbsDown`).
 public enum WatchSync {
     /// A film or series, as a list has it.
     public struct Title: Codable, Equatable, Sendable {
@@ -57,14 +59,21 @@ public enum WatchSync {
         public var watchlist: [Title]
         public var watched: [Watched]
         public var progress: [Progress]
+        /// The titles given a thumbs down (2026-11-17). Nil from an engine or a device from
+        /// before: then there's nothing to add.
+        public var thumbsDown: [Title]?
 
-        public init(watchlist: [Title] = [], watched: [Watched] = [], progress: [Progress] = []) {
-            (self.watchlist, self.watched, self.progress) = (watchlist, watched, progress)
+        public init(
+            watchlist: [Title] = [], watched: [Watched] = [], progress: [Progress] = [], thumbsDown: [Title]? = nil
+        ) {
+            (self.watchlist, self.watched, self.progress, self.thumbsDown) = (watchlist, watched, progress, thumbsDown)
         }
     }
 
     /// A profile's (or an account's) watching, to send.
-    public static func state(watchlist: Watchlist, finished: Finished, history: WatchHistory) -> State {
+    public static func state(
+        watchlist: Watchlist, finished: Finished, history: WatchHistory, thumbsDown: ThumbsDown = ThumbsDown()
+    ) -> State {
         let watched = finished.days.sorted { $0.key < $1.key }.map { Watched(id: $0.key, at: stamp($0.value)) }
         let progress = history.entries.compactMap { entry -> Progress? in
             guard entry.kind != .video, let item = entry.item else { return nil }
@@ -73,7 +82,9 @@ public enum WatchSync {
                 poster: entry.picture, episode: entry.episodeId, detail: entry.detail,
                 seconds: entry.seconds, length: entry.length, at: stamp(entry.at), title: Title(item))
         }
-        return State(watchlist: watchlist.items.map(Title.init), watched: watched, progress: progress)
+        return State(
+            watchlist: watchlist.items.map(Title.init), watched: watched, progress: progress,
+            thumbsDown: thumbsDown.items.map(Title.init))
     }
 
     /// What the other side sent, added to these records: a title not on the Watchlist goes
@@ -114,6 +125,21 @@ public enum WatchSync {
         }
         history.merge(entries)
         return before != (watchlist.items.count, finished.days.count, history.entries)
+    }
+
+    /// The thumbs downs the other side sent, added to these (2026-11-17), by the same rule as
+    /// the Watchlist: one not here goes after the ones that are; one the owner took off here
+    /// isn't put back (`ThumbsDown.takenOff`); and nothing is taken off. **One for a title
+    /// hearted here isn't taken** (`hearted`): a heart and a thumbs down take each other off,
+    /// and a sync never takes anything away, so the heart, this side's own word, stays. Returns
+    /// whether anything changed.
+    @discardableResult
+    public static func mergeThumbsDown(
+        _ sent: State, into thumbsDown: inout ThumbsDown, hearted: MediaFavourites
+    ) -> Bool {
+        guard let titles = sent.thumbsDown, !titles.isEmpty else { return false }
+        let loved = Set(hearted.items.map(\.id))
+        return thumbsDown.add(titles.map(\.item), hearted: loved.contains) > 0
     }
 
     /// A moment as the sync writes it: "2026-10-16T05:30:00Z".

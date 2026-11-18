@@ -145,7 +145,7 @@ public enum SettingsCarrier {
     public static let records = [
         WatchHistory.key, MediaFavourites.key, Watchlist.key, FilmPositions.key, ChannelPictures.key,
         Finished.key, SeriesProgress.key, Watchlist.takenOffKey, Finished.unmarkedKey,
-        MarkedTitles.key, ThumbsDown.key,
+        MarkedTitles.key, ThumbsDown.key, ThumbsDown.takenOffKey,
     ]
 
     public static var carried: Set<String> { Set(settings + records) }

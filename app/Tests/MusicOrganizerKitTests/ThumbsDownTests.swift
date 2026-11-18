@@ -207,4 +207,111 @@ final class ThumbsDownTests: XCTestCase {
         bare.addLiked()
         XCTAssertEqual(bare.shown, ["songs.favourites", HomeSection.liked])
     }
+
+    // MARK: the Watchlist page (the owner, 2026-11-17: "Anything that is thumbed down, but
+    // Watchlisted doesnt appear on the watchlist")
+
+    func testTheWatchlistPageLeavesOutWhatHasAThumbsDownButTheListKeepsIt() {
+        var list = Watchlist()
+        for id in ["a", "b", "c"] { list.toggle(item(id)) }
+        var down = ThumbsDown()
+        XCTAssertEqual(down.without(list.items).map(\.id), ["c", "b", "a"])  // none: as it was
+        down.toggle(item("b"))
+        XCTAssertEqual(down.without(list.items).map(\.id), ["c", "a"])  // in its order, without it
+        XCTAssertTrue(list.contains(item("b")))  // still on the list itself
+        down.toggle(item("b"))  // taken off: back on the page
+        XCTAssertEqual(down.without(list.items).map(\.id), ["c", "b", "a"])
+    }
+
+    // MARK: thumbs downs in the sync (the owner, 2026-11-17: "yes")
+
+    func testATakenOffThumbsDownIsRememberedAndKept() throws {
+        var down = ThumbsDown()
+        down.toggle(item("a"))
+        down.toggle(item("b"))
+        XCTAssertEqual(down.takenOff, [])
+        down.toggle(item("a"))  // its button
+        down.remove("b")  // a heart given
+        XCTAssertEqual(down.takenOff, ["a", "b"])
+        down.remove("z")  // one that never had one isn't "taken off"
+        XCTAssertEqual(down.takenOff, ["a", "b"])
+        down.toggle(item("a"))  // given again here: no longer taken off
+        XCTAssertEqual(down.takenOff, ["b"])
+
+        let name = "thumbs-down-off-test-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: name))
+        defer { defaults.removePersistentDomain(forName: name) }
+        down.save(in: defaults)
+        XCTAssertEqual(ThumbsDown.saved(in: defaults), down)
+        XCTAssertEqual(ThumbsDown.saved(in: defaults).takenOff, ["b"])
+        // A profile's own record, in an export's records and put away with the profile.
+        XCTAssertTrue(SettingsCarrier.records.contains(ThumbsDown.takenOffKey))
+        XCTAssertTrue(ProfileSettings.belongsToProfile(ThumbsDown.takenOffKey))
+    }
+
+    func testThumbsDownsAreSentWithTheWatching() throws {
+        var down = ThumbsDown()
+        down.toggle(item("tt1", "movie", ["Drama"]))
+        down.toggle(item("kitsu:2", anime: true))
+        let state = WatchSync.state(watchlist: Watchlist(), finished: Finished(), history: WatchHistory(), thumbsDown: down)
+        XCTAssertEqual(state.thumbsDown?.map(\.id), ["kitsu:2", "tt1"])
+        let json = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(state)) as? [String: Any])
+        let sent = try XCTUnwrap(json["thumbsDown"] as? [[String: Any]])  // the agreement's name
+        XCTAssertEqual(sent.first?["anime"] as? Bool, true)
+        XCTAssertEqual(sent.last?["genres"] as? [String], ["Drama"])
+        // As it comes back, the titles are as they went.
+        let back = try JSONDecoder().decode(WatchSync.State.self, from: JSONEncoder().encode(state))
+        XCTAssertEqual(back.thumbsDown?.map(\.item), down.items)
+        // From an engine or a device from before: no list, and nothing to add.
+        let old = try JSONDecoder().decode(
+            WatchSync.State.self, from: Data(#"{"watchlist":[],"watched":[],"progress":[]}"#.utf8))
+        XCTAssertNil(old.thumbsDown)
+        var mine = ThumbsDown([item("x")])
+        XCTAssertFalse(WatchSync.mergeThumbsDown(old, into: &mine, hearted: MediaFavourites()))
+        XCTAssertEqual(mine.items.map(\.id), ["x"])
+    }
+
+    func testThumbsDownsFromADeviceAreAddedAndNeverTakeAnythingAway() {
+        let sent = WatchSync.State(thumbsDown: ["a", "b", "c", "d", "e"].map { WatchSync.Title(item($0)) })
+        var down = ThumbsDown([item("x"), item("a")])
+        down.toggle(item("b"))  // given here...
+        down.toggle(item("b"))  // ...and taken off here: a sync doesn't put it back
+        let hearts = MediaFavourites([item("c")])  // hearted here: the heart stays
+        XCTAssertTrue(WatchSync.mergeThumbsDown(sent, into: &down, hearted: hearts))
+        // The new ones after the ones here, in the order sent; nothing here taken off.
+        XCTAssertEqual(down.items.map(\.id), ["x", "a", "d", "e"])
+        XCTAssertEqual(down.takenOff, ["b"])
+        // The same again changes nothing.
+        XCTAssertFalse(WatchSync.mergeThumbsDown(sent, into: &down, hearted: hearts))
+        // A device that has taken one off sends none for it: it stays here (nothing is removed).
+        let fewer = WatchSync.State(thumbsDown: [WatchSync.Title(item("a"))])
+        XCTAssertFalse(WatchSync.mergeThumbsDown(fewer, into: &down, hearted: hearts))
+        XCTAssertEqual(down.items.map(\.id), ["x", "a", "d", "e"])
+        // The heart wasn't the owner taking the thumbs down off: once it's gone, the next sync
+        // brings the thumbs down.
+        XCTAssertTrue(WatchSync.mergeThumbsDown(sent, into: &down, hearted: MediaFavourites()))
+        XCTAssertEqual(down.items.map(\.id), ["x", "a", "d", "e", "c"])
+        // Given here again, one taken off is taken from a sync too, as any other.
+        down.toggle(item("b"))
+        down.remove("b")
+        XCTAssertFalse(WatchSync.mergeThumbsDown(sent, into: &down, hearted: MediaFavourites()))
+    }
+
+    func testAThumbsDownThatArrivesActsAsOneGivenHere() throws {
+        // A series caught up with, and a new episode out: with a thumbs down from a device, it
+        // stays watched and says nothing new, exactly as one given here.
+        var done = Finished()
+        var progress = SeriesProgress()
+        done.mark("s:1:1", watched: true, now: at(0))
+        progress.learned("s", episodes: try episodes("s", out: [-100]), finished: done, now: at(1), listed: true)
+        progress.learned("s", episodes: try episodes("s", out: [-100, 10]), finished: done, now: at(20), listed: true)
+        XCTAssertFalse(progress.isWatched("s", finished: done))
+        var down = ThumbsDown()
+        WatchSync.mergeThumbsDown(
+            WatchSync.State(thumbsDown: [WatchSync.Title(item("s"))]), into: &down, hearted: MediaFavourites())
+        XCTAssertTrue(progress.isWatched("s", finished: done, quietly: down.contains("s")))
+        XCTAssertEqual(progress.withNewEpisodes(finished: done, quiet: down.ids), [])
+        XCTAssertEqual(progress.withFreshEpisodes(finished: done, quiet: down.ids), [])
+    }
 }

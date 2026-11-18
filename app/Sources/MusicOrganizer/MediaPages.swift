@@ -1055,7 +1055,7 @@ struct MovieFinderView: View {
                     grid(
                         of: ownList == Self.watchedKey
                             ? model.watchedItems(isSeries ? "series" : "movie")
-                            : model.watchlist.of(type: isSeries ? "series" : "movie"),
+                            : model.listed(isSeries ? "series" : "movie"),
                         empty: ownList == Self.watchedKey
                             ? (isSeries
                                 ? "Nothing watched yet. A series whose latest episode you've watched shows "
@@ -2503,9 +2503,10 @@ struct WatchlistView: View {
         let watched = shows == "watched"
         // To Watch: what's on the Watchlist and not watched yet, and a series caught up
         // with that has a new episode. Watched: a movie played to nine tenths, a series
-        // whose latest episode has been (the owner, 2026-10-15).
-        let movies = watched ? model.watchedItems("movie") : model.toWatch("movie")
-        let allSeries = watched ? model.watchedItems("series") : model.toWatch("series")
+        // whose latest episode has been (the owner, 2026-10-15). Never a title with a thumbs
+        // down (2026-11-17): it's still on the list, but not shown here.
+        let movies = model.watchlistPage("movie", watched: watched)
+        let allSeries = model.watchlistPage("series", watched: watched)
         let (anime, series) = (allSeries.filter { $0.anime == true }, allSeries.filter { $0.anime != true })
         VStack(spacing: 0) {
             HStack(spacing: 12) {

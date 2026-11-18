@@ -981,7 +981,9 @@ final class AppModel {
     private var recordsLook: [Int] {
         [watchlist.items.count, watchlist.takenOff.count, finished.days.count, finished.unmarked.count,
          history.entries.count, Int(history.entries.lazy.map(\.at.timeIntervalSince1970).max() ?? 0),
-         history.entries.first?.id.hashValue ?? 0]
+         history.entries.first?.id.hashValue ?? 0,
+         // Which titles have a thumbs down (2026-11-17): a few hundred ids at most.
+         thumbsDown.ids.hashValue]
     }
 
     /// Give the engine a profile's watching, for a paired video app to have (docs/ENGINE_API.md,
@@ -998,17 +1000,19 @@ final class AppModel {
         // The records as they are now; written out and encoded off the main thread (2026-11-09:
         // for a profile with two thousand titles watched, a few seconds at each of a paired
         // device's syncs, the window unable to answer meanwhile).
-        var records = [profiles.currentId: (watchlist, finished, history)]
+        var records = [profiles.currentId: (watchlist, finished, history, thumbsDown)]
         if all {
             for profile in profiles.profiles where profile.id != profiles.currentId {
                 let away = putAwayWatching(of: profile.id)
-                records[profile.id] = (away.watchlist, away.finished, away.history)
+                records[profile.id] = (away.watchlist, away.finished, away.history, away.thumbsDown)
             }
         }
         let given = records
         let encoded = await Task.detached(priority: .utility) {
             given.compactMapValues { record -> Data? in
-                try? JSONEncoder().encode(WatchSync.state(watchlist: record.0, finished: record.1, history: record.2))
+                try? JSONEncoder().encode(
+                    WatchSync.state(
+                        watchlist: record.0, finished: record.1, history: record.2, thumbsDown: record.3))
             }
         }.value
         for (id, data) in encoded {
@@ -1054,21 +1058,34 @@ final class AppModel {
                     return (list, done, places)
                 }.value
                 // The profile may have been switched while it was being added up.
-                if one.profile == profiles.currentId, let (list, done, places) = merged {
-                    (watchlist, finished, history) = (list, done, places)
-                    keepWatchlist()
-                    keepFinished()
-                    keepHistory()
-                    seriesProgress.notice(finished)
-                    keepProgress()
-                    seriesRead += 1
-                    recountWatched()
+                if one.profile == profiles.currentId {
+                    if let (list, done, places) = merged {
+                        (watchlist, finished, history) = (list, done, places)
+                        keepWatchlist()
+                        keepFinished()
+                        keepHistory()
+                        seriesProgress.notice(finished)
+                        keepProgress()
+                        seriesRead += 1
+                    }
+                    // The thumbs downs it sent (2026-11-17), added here and now (a few hundred
+                    // titles at most), so a heart or a thumbs down given meanwhile counts: never
+                    // one hearted here, or taken off here. Put back only when one was added.
+                    var down = thumbsDown
+                    let downs = WatchSync.mergeThumbsDown(one.watching, into: &down, hearted: mediaFavourites)
+                    if downs {
+                        thumbsDown = down
+                        keepThumbsDown()
+                    }
+                    if merged != nil || downs { recountWatched() }
                 }
             } else if profiles.profile(one.profile) != nil {
                 var records = putAwayWatching(of: one.profile)
-                if WatchSync.merge(
+                let watching = WatchSync.merge(
                     one.watching, into: &records.watchlist, finished: &records.finished, history: &records.history)
-                {
+                let downs = WatchSync.mergeThumbsDown(
+                    one.watching, into: &records.thumbsDown, hearted: records.favourites)
+                if watching || downs {
                     records.progress.notice(records.finished)
                     putAway(records, of: one.profile)
                 }
@@ -1084,7 +1101,9 @@ final class AppModel {
         var finished: Finished
         var history: WatchHistory
         var progress: SeriesProgress
-        var state: WatchSync.State { WatchSync.state(watchlist: watchlist, finished: finished, history: history) }
+        /// Its thumbs downs (2026-11-17), and its hearts, which a thumbs down sent never takes off.
+        var thumbsDown: ThumbsDown
+        var favourites: MediaFavourites
     }
 
     private func putAwayWatching(of id: String) -> PutAwayWatching {
@@ -1102,7 +1121,11 @@ final class AppModel {
             finished: read(Finished.key, as: [String: Date].self).map { Finished($0, unmarked: unmarked) }
                 ?? Finished.seeded(from: history),
             history: history,
-            progress: SeriesProgress(read(SeriesProgress.key, as: [String: SeriesProgress.Known].self) ?? [:]))
+            progress: SeriesProgress(read(SeriesProgress.key, as: [String: SeriesProgress.Known].self) ?? [:]),
+            thumbsDown: ThumbsDown(
+                read(ThumbsDown.key, as: [MediaItem].self) ?? [],
+                takenOff: Set(stash[ThumbsDown.takenOffKey] as? [String] ?? [])),
+            favourites: MediaFavourites(read(MediaFavourites.key, as: [MediaItem].self) ?? []))
     }
 
     private func putAway(_ records: PutAwayWatching, of id: String) {
@@ -1114,6 +1137,8 @@ final class AppModel {
         stash[Finished.unmarkedKey] = records.finished.unmarked.sorted()
         stash[WatchHistory.key] = try? encoder.encode(records.history.entries)
         stash[SeriesProgress.key] = try? encoder.encode(records.progress.series)
+        stash[ThumbsDown.key] = try? encoder.encode(records.thumbsDown.items)
+        stash[ThumbsDown.takenOffKey] = records.thumbsDown.takenOff.sorted()
         UserDefaults.standard.set(stash, forKey: Self.settingsKey(id))
     }
 
@@ -1237,6 +1262,23 @@ final class AppModel {
             }
             return all.sorted { when($0) > when($1) }
         }
+    }
+
+    /// What the Watchlist page shows (the owner, 2026-11-17: "Anything that is thumbed down, but
+    /// Watchlisted doesnt appear on the watchlist"): its To Watch (`toWatch`) or its Watched
+    /// (`watchedItems`), without any title with a thumbs down. They're still on the list itself
+    /// (a sync carries them, and taking the thumbs down off brings them back); the Finders' own
+    /// Watched list still shows them. Worked out once, kept until the records change.
+    func watchlistPage(_ type: String, watched: Bool) -> [MediaItem] {
+        worked("watchlistPage|\(type)|\(watched)") {
+            thumbsDown.without(watched ? watchedItems(type) : toWatch(type))
+        }
+    }
+
+    /// The Finders' list menu's Watchlist: the films or series on the list, without any with a
+    /// thumbs down, as on the Watchlist page (2026-11-17).
+    func listed(_ type: String) -> [MediaItem] {
+        worked("listed|\(type)") { thumbsDown.without(watchlist.of(type: type)) }
     }
 
     /// Read these series' episodes where they're due (every six hours; for the calendar,
@@ -4759,7 +4801,9 @@ final class AppModel {
             giveProfiles()
         }
         if status.on, let port = status.port {
-            if !announcer.start(type: status.service, port: port) {
+            // The unseen copy (a developer's check, `Snapshot`) never announces a share on the
+            // home network: the owner's devices would find a second Mac (2026-11-18).
+            if !Snapshot.isOn, !announcer.start(type: status.service, port: port) {
                 sharingNote =
                     "Sync is on, but this Mac couldn't announce itself on the network, so a "
                     + "device won't find it by itself. Type the address above into the device."

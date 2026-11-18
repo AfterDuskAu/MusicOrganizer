@@ -1076,6 +1076,15 @@ struct MainView: View {
                         + "new episode series \(model.newEpisodeSeries.count), to watch \(model.toWatch("series").count) "
                         + "series \(model.toWatch("movie").count) movies, watched \(model.watchedItems("series").count) "
                         + "series, NEW EPISODE \(model.toWatch("series").filter { model.marks(of: $0).newEpisode }.count)")
+                // The Watchlist page as it shows (never a title with a thumbs down, 2026-11-17).
+                Bench.say(
+                    "BENCH records: Watchlist page to watch "
+                        + "\(model.watchlistPage("series", watched: false).map(\.id).prefix(8)) series "
+                        + "\(model.watchlistPage("movie", watched: false).count) movies, watched "
+                        + "\(model.watchlistPage("series", watched: true).map(\.id).prefix(8)) series "
+                        + "\(model.watchlistPage("movie", watched: true).count) movies, Finder's Watchlist "
+                        + "\(model.listed("series").count) series, thumbs down taken off "
+                        + "\(model.thumbsDown.takenOff.sorted())")
             } else if step.name.hasPrefix("open=") {
                 // A title's page opened over the page showing, as a click on its card does.
                 let id = String(step.name.dropFirst(5))
@@ -1099,6 +1108,7 @@ struct MainView: View {
                             + "watched \(marks.watched), +\(marks.fresh), NEW EPISODE \(marks.newEpisode), "
                             + "in New Episodes \(model.newEpisodeSeries.contains { $0.id == id }), "
                             + "to watch \(model.toWatch(title.type).contains { $0.id == id }), "
+                            + "on the Watchlist page \([false, true].contains { seen in model.watchlistPage(title.type, watched: seen).contains { $0.id == id } }), "
                             + "left out of Recommended \(model.isLeftOutOfRecommended(id)), "
                             + "on the calendar \(model.calendarSeries.contains { $0.id == id })")
                 } else {
@@ -1117,7 +1127,7 @@ struct MainView: View {
                 // The nth title of the Watchlist's To Watch marked watched, or not if it is,
                 // as a click in its card's right-click menu does.
                 let which = Int(step.name.dropFirst(5)) ?? 1
-                let items = model.toWatch("series") + model.toWatch("movie")
+                let items = model.watchlistPage("series", watched: false) + model.watchlistPage("movie", watched: false)
                 if let item = items.indices.contains(which - 1) ? items[which - 1] : nil {
                     let seen = model.isWatched(item.id)
                     Bench.say("BENCH mark: \(item.name) (\(item.id)), watched \(seen) → \(!seen)")

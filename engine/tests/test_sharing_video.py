@@ -244,7 +244,7 @@ def test_only_the_agreements_fields_are_kept_checked_and_cut() -> None:
         "somethingElse": ["never kept"],
     }  # fmt: skip
     checked = sharing.check_watching(sent, now=now)
-    assert set(checked) == {"watchlist", "watched", "progress"}
+    assert set(checked) == {"watchlist", "watched", "progress", "thumbsDown"}
 
     first, second, anime, cut = checked["watchlist"]
     genres = [(f"Genre {n}" * 10)[:50].rstrip() for n in range(20)]  # 20, of 50 characters
@@ -307,7 +307,8 @@ def test_a_devices_watching_is_checked_before_any_is_kept(
         assert (status, answer["error"]) == (400, "bad_request"), data[:20]
     for too_many in ({"watchlist": [title(1)] * (sharing.MOST_TITLES + 1)},
                      {"progress": [{}] * (sharing.MOST_PROGRESS + 1)},
-                     {"watched": [{}] * (sharing.MOST_WATCHED + 1)}):  # fmt: skip
+                     {"watched": [{}] * (sharing.MOST_WATCHED + 1)},
+                     {"thumbsDown": [title(1)] * (sharing.MOST_TITLES + 1)}):  # fmt: skip
         status, answer = send_watching(share, theirs, too_many)
         assert (status, answer["error"]) == (413, "bad_request")
         assert "at most" in answer["message"]
@@ -321,7 +322,7 @@ def test_a_devices_watching_is_checked_before_any_is_kept(
     assert (status, answer["error"]) == (401, "not_paired")
     assert raw(share, "POST", "/sync/v1/watching", b"", sent)[0] == 200
     (empty,) = sharing.sent_watching()
-    assert empty["watching"] == {"watchlist": [], "watched": [], "progress": []}
+    assert empty["watching"] == {"watchlist": [], "watched": [], "progress": [], "thumbsDown": []}
 
 
 def test_a_profiles_watching_is_given_as_the_app_last_gave_it(
@@ -364,6 +365,56 @@ def test_what_was_sent_waits_across_a_restart(
     assert theirs not in text and hashlib.sha256(theirs.encode()).hexdigest() not in text
 
 
+def test_thumbs_downs_travel_with_the_watching(
+    share: sharing.Share, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The titles given a thumbs down (2026-11-17, the owner's yes) are a fourth list, checked
+    as the Watchlist's titles are, given and taken both ways; a device or a computer from
+    before them sends none, and a watching kept before them reads as having none."""
+    theirs = paired_with(share, monkeypatch, KID)
+    down = [title(7, poster="https://pictures.example/7.jpg"),
+            {"id": "kitsu:12", "type": "anime", "name": "A Made-up Anime"},
+            title(7),  # a title once: the first
+            {"id": "tt0000008", "type": "channel", "name": "Not a title"},  # left out
+            {"id": " tt0000009", "type": "movie", "name": "Spaces"},  # left out
+            {"type": "movie", "name": "No id"},  # left out
+            "not even a title"]  # fmt: skip
+    checked = sharing.check_watching({**WATCHING, "thumbsDown": down})
+    assert checked["thumbsDown"] == [
+        title(7, poster="https://pictures.example/7.jpg"),
+        {"id": "kitsu:12", "type": "series", "name": "A Made-up Anime", "anime": True},
+    ]
+    # The rest is as it was without them.
+    assert {k: v for k, v in checked.items() if k != "thumbsDown"} == {
+        k: v for k, v in sharing.check_watching(WATCHING).items() if k != "thumbsDown"
+    }
+    # A watching with none (a device from before) has an empty list; a list that isn't one is
+    # refused, as any other list is.
+    assert sharing.check_watching(WATCHING)["thumbsDown"] == []
+    with pytest.raises(sharing.WatchingError):
+        sharing.check_watching({"thumbsDown": {"id": "tt0000007"}})
+
+    # Given by the app, a device has them; changed, the revision changes.
+    revision = sharing.set_watching(KID, WATCHING)
+    with_down = sharing.set_watching(KID, {**WATCHING, "thumbsDown": [title(7)]})
+    assert with_down != revision
+    status, given = ask(share, "/sync/v1/watching", key=theirs)
+    assert status == 200 and given["revision"] == with_down
+    assert given["thumbsDown"] == [title(7)]
+    # Sent by a device, the app is handed them.
+    assert send_watching(share, theirs, {"thumbsDown": [title(8)]})[0] == 200
+    (sent,) = sharing.sent_watching()
+    assert sent["watching"]["thumbsDown"] == [title(8)]
+
+    # A watching kept before thumbs downs travelled (no list) is given with an empty one.
+    kept = config.load_watching()
+    for one in [kept["given"][KID], *(sending["watching"] for sending in kept["sent"])]:
+        one.pop("thumbsDown", None)
+    config.save_watching(kept)
+    assert ask(share, "/sync/v1/watching", key=theirs)[1]["thumbsDown"] == []
+    assert sharing.sent_watching()[0]["watching"]["thumbsDown"] == []
+
+
 def test_the_app_gives_and_takes_watching(
     opened: rpc.Server,  # noqa: F811
     out: Capture,  # noqa: F811
@@ -393,7 +444,12 @@ def test_the_app_gives_and_takes_watching(
     (sent,) = result(opened, "watching.sent")["sent"]
     assert set(sent) == {"id", "profile", "device", "kind", "at", "watching"}
     assert (sent["profile"], sent["device"], sent["kind"]) == (KID, device["id"], "iPad")
-    assert sent["watching"] == {"watchlist": [title(5)], "watched": [], "progress": []}
+    assert sent["watching"] == {
+        "watchlist": [title(5)],
+        "watched": [],
+        "progress": [],
+        "thumbsDown": [],
+    }
     assert code(opened, "watching.done", ids=[1]) == rpc.INVALID_PARAMS
     assert result(opened, "watching.done", ids=[sent["id"], "w_not_there"]) == {"left": 0}
     assert result(opened, "watching.sent") == {"sent": []}

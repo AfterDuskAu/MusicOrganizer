@@ -473,7 +473,9 @@ public struct MediaFavourites: Equatable, Sendable {
 /// marked as watched, But thumbed down, it wont show as recommended and wont say when theres
 /// new episodes"). Beside the heart on a film's or a series' page, and in a card's right-click
 /// menu. Kept by the app on this Mac, a profile's own, the newest first; nothing of it is in the
-/// library or given to a paired device.
+/// library. **Given to a paired video app with the profile's watching, and taken from one**
+/// (2026-11-17, the owner's yes: `WatchSync`): what one sends is added, never taken away, and a
+/// thumbs down the owner took off here (`takenOff`) isn't put back by a sync.
 ///
 /// What it does: the title is never recommended, and doesn't count towards the taste the
 /// Recommended rows are made from (`Recommending`); a series never says it has new episodes
@@ -485,11 +487,16 @@ public struct ThumbsDown: Equatable, Sendable {
     public private(set) var items: [MediaItem]
     /// The same, by id: asked for every series and every title a Recommended row shows.
     public private(set) var ids: Set<String>
+    /// Titles whose thumbs down the owner took off here (by its button, or by giving a heart), by
+    /// id: a sync with a video app never puts one back (the device keeps its own; nothing is
+    /// removed across a sync), until the owner gives it a thumbs down here again (2026-11-17).
+    public private(set) var takenOff: Set<String>
 
-    public init(_ items: [MediaItem] = []) {
+    public init(_ items: [MediaItem] = [], takenOff: Set<String> = []) {
         var seen = Set<String>()
         self.items = items.filter { seen.insert($0.id).inserted }
         ids = seen
+        self.takenOff = takenOff
     }
 
     public func contains(_ id: String) -> Bool { ids.contains(id) }
@@ -502,26 +509,53 @@ public struct ThumbsDown: Equatable, Sendable {
         } else {
             items.insert(item, at: 0)
             ids.insert(item.id)
+            takenOff.remove(item.id)
         }
     }
 
-    /// Take its thumbs down off, if it has one (a heart given: they take each other off).
+    /// Take its thumbs down off, if it has one (a heart given: they take each other off). It's
+    /// remembered as taken off, so a sync doesn't put it back.
     public mutating func remove(_ id: String) {
         guard ids.remove(id) != nil else { return }
         items.removeAll { $0.id == id }
+        takenOff.insert(id)
+    }
+
+    /// Thumbs downs from a paired video app (`WatchSync.mergeThumbsDown`): those not here go after
+    /// the ones that are, in the order given, unless the owner took that one off here, or
+    /// `hearted` says it has a heart here (the heart is this side's own word, and a sync never
+    /// takes anything away; it isn't remembered as taken off, so the thumbs down comes with the
+    /// next sync once the heart is gone). Nothing is taken off. Returns how many were added.
+    @discardableResult
+    public mutating func add(_ others: [MediaItem], hearted: (String) -> Bool = { _ in false }) -> Int {
+        var added = 0
+        for item in others where !ids.contains(item.id) && !takenOff.contains(item.id) && !hearted(item.id) {
+            items.append(item)
+            ids.insert(item.id)
+            added += 1
+        }
+        return added
+    }
+
+    /// These titles without the ones with a thumbs down, in their order: what the Watchlist page
+    /// shows (the owner, 2026-11-17: "Anything that is thumbed down, but Watchlisted doesnt
+    /// appear on the watchlist"). They're still on the list itself.
+    public func without(_ titles: [MediaItem]) -> [MediaItem] {
+        ids.isEmpty ? titles : titles.filter { !ids.contains($0.id) }
     }
 
     public static let key = "mediaThumbsDown"
+    public static let takenOffKey = "mediaThumbsDownTakenOff"
 
     public static func saved(in defaults: UserDefaults = .standard) -> ThumbsDown {
-        guard let data = defaults.data(forKey: key),
-            let items = try? JSONDecoder().decode([MediaItem].self, from: data)
-        else { return ThumbsDown() }
-        return ThumbsDown(items)
+        let items = defaults.data(forKey: key).flatMap { try? JSONDecoder().decode([MediaItem].self, from: $0) }
+        let off = defaults.stringArray(forKey: takenOffKey) ?? []
+        return ThumbsDown(items ?? [], takenOff: Set(off))
     }
 
     public func save(in defaults: UserDefaults = .standard) {
         if let data = try? JSONEncoder().encode(items) { defaults.set(data, forKey: Self.key) }
+        defaults.set(takenOff.sorted(), forKey: Self.takenOffKey)
     }
 }
 

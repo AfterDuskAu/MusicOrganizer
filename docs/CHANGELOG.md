@@ -3269,3 +3269,56 @@ MB allowed to wait to be written), the engine as committed and then this:
 **Not changed, and the owner's to decide:** libtorrent's lowest disk priority, which is why its
 write-outs (and, on 17 Nov, its reads) are so slow on the busy disk. At normal priority films would
 arrive and be written out sooner, but compete with everything else on the disk.
+
+2026-11-18. **A thumbs down hides a title from the Watchlist, and thumbs downs travel with the
+sync** (the owner, the day after the thumbs down came: "Anything that is thumbed down, but
+Watchlisted doesnt appear on the watchlist"; asked "Should thumbs downs travel with the sync to
+paired devices, the way the Watchlist and what's watched do?": "yes"; and yes to the thumbs down
+on the video apps too, which are a separate project).
+
+- **The Watchlist page leaves out what has a thumbs down**: not in To Watch, not in Watched, and
+  not in the Finders' list-menu Watchlist (`AppModel.watchlistPage`, `listed`;
+  `ThumbsDown.without` in the Kit). My reading of "doesn't appear on the watchlist": the page
+  doesn't show it, but it **stays on the list itself**, so the sync still carries it and taking
+  the thumbs down off brings it straight back. Worked out once with the records, as the page's
+  lists already were (`worked`), never in a card. The Finders' own Watched list still shows it.
+- **Thumbs downs in the sync** (`docs/ENGINE_API.md`, section 3): a fourth list in a profile's
+  watching, `thumbsDown`, the same titles as the Watchlist's, given by the app (`watching.set`),
+  to a paired video app (`GET /sync/v1/watching`) and taken from one (`POST`), checked as the
+  Watchlist's titles are, 5,000 at most (`sharing.check_watching`). An engine or a device from
+  before simply hasn't the list: nothing else changes for them. The Kit: `WatchSync.State`'s
+  `thumbsDown`, `WatchSync.mergeThumbsDown`, given and taken for the open profile and for the
+  others where they're put away.
+- **Adding up, as the Watchlist does**: a title with a thumbs down on the device gets one here,
+  after the ones here; nothing is ever taken off. **One the owner took off here isn't put back**
+  (`ThumbsDown.takenOff`, a profile's own record, in an export's records; taking it off by giving
+  a heart counts too). **One that arrives for a title hearted here isn't taken** (my choice): a
+  heart and a thumbs down take each other off, a sync never takes anything away, and the heart is
+  this side's own word; it isn't remembered as taken off, so the thumbs down comes with the next
+  sync once the heart is gone. Hearts still don't travel. One that arrives acts exactly as one
+  given here (no new episodes, never recommended, off the Watchlist page).
+- The privacy policy says so ("and what you've given a thumbs down", and that the device is given
+  the same of the profile's; `Legal`, `docs/PRIVACY.md`, dated 18 November), and CLAUDE.md's
+  sharing promise records the owner's yes.
+- The unseen copy (`MUSICORG_SNAPSHOT`) never announces a share on the home network: the owner's
+  devices would find a second Mac. Its checks of the sync can't be seen from outside this Mac now.
+- Deviation, docs only: `docs/ENGINE_API.md` said a device may send 50,000 watched; it's 75,000
+  since 2026-11-14 (`MOST_WATCHED`).
+
+**Checked:** Kit tests (`ThumbsDownTests`: the page's filter, what's taken off, the list sent and
+read back, a state from before, the merge's rules, one that arrives acting as one given here);
+`pytest` (the new list checked, given, taken, a watching kept before it) and `ruff check`. **End to
+end on loopback**, in a scratch home: the unseen copy with the made-up plugin and records the size
+of the owner's (`seed=40x40+30`), its engine's share on 127.0.0.1 and a port of its own (never the
+owner's share), and a stand-in iPad paired by a key made for the run, syncing as a video app does:
+- a thumbs down on Made-up Series 1 (caught up, a new episode out): off the Watchlist page, still
+  watched, no +1, no NEW EPISODE, its heart off; the device was given it within seconds;
+- the device sent four: a film (taken, and gone from the page's Watched: 20 films to 19), a series
+  the Mac had never seen (taken), one hearted on the Mac (**not** taken, still hearted), and one the
+  Mac had given and taken off (**not** put back);
+- the thumbs down taken off Made-up Series 1: back on the page with its +1 and NEW EPISODE; the
+  device, which still had it, sent it again, and it **wasn't** put back. The device's last copy of
+  the Mac's: the film and the series it sent, nothing else.
+
+**Not yet:** the owner's own app (the engine's part is live at the app's next start; the app's
+part at its next build). The video apps' side is the video apps' project.

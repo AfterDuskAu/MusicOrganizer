@@ -48,14 +48,15 @@ What the owner was promised, and where each promise is kept:
   downloads). Nobody without a key can, and switching sharing off ends it at once.
 - **What's watched, and films, for a video app** (2026-10-16, the owner's words in
   docs/ENGINE_API.md section 3). A paired device of **any** profile on this computer
-  may hand over its own watching (its Watchlist, what it watched, where it got to)
-  and ask for its profile's (`watching.json`, through `config`: never the library or
-  `state.json`; the app adds what came to its own records, and nothing is ever taken
-  away); list the films in the Movies folder and fetch one; and send a film of its own,
-  which arrives a part at a time in the app's cache (`fileops.write_upload_part`) and
-  is then copied into the Movies folder by `fileops.keep_media`, never over a file
-  that's there. Films go either way only while the app's films switch is on. The music
-  requests still answer only the devices of the profile whose library is shared.
+  may hand over its own watching (its Watchlist, what it watched, where it got to, and
+  since 2026-11-17 the titles it gave a thumbs down) and ask for its profile's
+  (`watching.json`, through `config`: never the library or `state.json`; the app adds
+  what came to its own records, and nothing is ever taken away); list the films in the
+  Movies folder and fetch one; and send a film of its own, which arrives a part at a
+  time in the app's cache (`fileops.write_upload_part`) and is then copied into the
+  Movies folder by `fileops.keep_media`, never over a file that's there. Films go either
+  way only while the app's films switch is on. The music requests still answer only the
+  devices of the profile whose library is shared.
 - **Films for adults, for a phone player that asks** (2026-10-17, the owner: "can be
   synced to [the phone player] ... it requires clicking download on the phone for it to
   download, just like how movies work"). The Movies folder's `18+` folder is listed, as
@@ -860,14 +861,16 @@ def _mark(kind: str, key: str) -> str:
 
 # ---- what's watched, for a video app (2026-10-16) -------------------------------------------
 #
-# A profile's watching is three lists (docs/ENGINE_API.md section 3): the titles on its
-# Watchlist, what has been watched, and where each title was got to. The app gives the
-# engine each profile's (`watching.set`) for a paired device to have; a device sends its
-# own, which waits here until the app takes it (`watching.sent`, `watching.done`) and adds
-# it to the profile's records. Both are kept in watching.json, by `config`. The engine
-# never merges them itself, and never touches the library or state.json for them.
+# A profile's watching is four lists (docs/ENGINE_API.md section 3): the titles on its
+# Watchlist, what has been watched, where each title was got to, and (2026-11-17, the
+# owner's yes: "Should thumbs downs travel with the sync ... ?" "yes") the titles given a
+# thumbs down. The app gives the engine each profile's (`watching.set`) for a paired
+# device to have; a device sends its own, which waits here until the app takes it
+# (`watching.sent`, `watching.done`) and adds it to the profile's records. Both are kept in
+# watching.json, by `config`. The engine never merges them itself, and never touches the
+# library or state.json for them.
 
-WATCHING_LISTS = ("watchlist", "watched", "progress")
+WATCHING_LISTS = ("watchlist", "watched", "progress", "thumbsDown")
 _watching_lock = threading.Lock()
 # Told whenever a profile's watching is given afresh, or sharing is switched off: a
 # request waiting for a change (`wait_for_watching`) looks again.
@@ -887,9 +890,10 @@ def check_watching(sent: object, *, now: datetime | None = None) -> dict[str, li
     """A watching, as the computer keeps it: only the fields the agreement names, each
     checked and cut to its length. An entry that can't be read is left out (a title with
     no id or name, a time that isn't one); a field that can't be is left off its entry
-    (a poster that isn't an `https` address). A title is on the Watchlist, and an id
-    watched, once (the first); of two places for one title the later is kept. A time
-    later than `now` counts as now, so a device whose clock is wrong can't win forever.
+    (a poster that isn't an `https` address). A title is on the Watchlist (or has a thumbs
+    down), and an id watched, once (the first); of two places for one title the later is
+    kept. A time later than `now` counts as now, so a device whose clock is wrong can't win
+    forever.
 
     WatchingError when it isn't a watching at all (400), or has more in a list than is
     taken at once (413): then nothing of it is kept."""
@@ -897,7 +901,8 @@ def check_watching(sent: object, *, now: datetime | None = None) -> dict[str, li
         raise WatchingError(400, "That isn't a list of what's been watched.")
     most = {"watchlist": (MOST_TITLES, "titles on a Watchlist"),
             "watched": (MOST_WATCHED, "films and episodes watched"),
-            "progress": (MOST_PROGRESS, "places got to")}  # fmt: skip
+            "progress": (MOST_PROGRESS, "places got to"),
+            "thumbsDown": (MOST_TITLES, "titles given a thumbs down")}  # fmt: skip
     lists: dict[str, list[Any]] = {}
     for field in WATCHING_LISTS:
         given = sent.get(field)
@@ -918,6 +923,11 @@ def check_watching(sent: object, *, now: datetime | None = None) -> dict[str, li
         title = _title(one)
         if title is not None and title["id"] not in watchlist:
             watchlist[title["id"]] = title
+    thumbs_down: dict[str, dict[str, Any]] = {}
+    for one in lists["thumbsDown"]:
+        title = _title(one)
+        if title is not None and title["id"] not in thumbs_down:
+            thumbs_down[title["id"]] = title
     watched: dict[str, dict[str, Any]] = {}
     for one in lists["watched"]:
         if isinstance(one, dict):
@@ -932,7 +942,8 @@ def check_watching(sent: object, *, now: datetime | None = None) -> dict[str, li
         ):
             progress[line["id"]] = line
     return {"watchlist": list(watchlist.values()), "watched": list(watched.values()),
-            "progress": list(progress.values())}  # fmt: skip
+            "progress": list(progress.values()),
+            "thumbsDown": list(thumbs_down.values())}  # fmt: skip
 
 
 def _title(one: object) -> dict[str, Any] | None:
@@ -1175,7 +1186,8 @@ def done_watching(ids: Iterable[str]) -> int:
 
 
 def _lists(found: object) -> dict[str, list[dict[str, Any]]]:
-    """The three lists of a kept watching, each always a list."""
+    """The four lists of a kept watching, each always a list (one kept before the thumbs
+    downs travelled has none: an empty list)."""
     found = found if isinstance(found, dict) else {}
     return {
         field: [one for one in found.get(field) or [] if isinstance(one, dict)]
