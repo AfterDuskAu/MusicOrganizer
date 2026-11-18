@@ -2564,7 +2564,12 @@ final class AppModel {
                 guard isStarting(mine) else { break }
                 startingWaited += 1
                 if let problem = film.problem {
-                    giveUp(problem)
+                    // A torrent the engine refused, its film not being one (2026-11-18): the
+                    // player is told no a moment before the engine's why is next asked, so it's
+                    // asked now, and the owner reads that, not the player's "couldn't be opened".
+                    let refused = torrent ? await refusal(of: filmTorrent) : nil
+                    guard isStarting(mine) else { break }
+                    giveUp(refused ?? problem)
                     return
                 }
                 let verdict = torrent
@@ -2577,6 +2582,14 @@ final class AppModel {
             }
             if filmsOpened == mine { startingSince = nil }
         }
+    }
+
+    /// Why the engine refused a film's torrent (`TorrentStatus.refused`), if it did: from what
+    /// it last said, or else asked of it now.
+    private func refusal(of hash: String?) async -> String? {
+        if let refused = filmStatus?.refused { return refused }
+        guard let hash else { return nil }
+        return (try? await ask("torrent.status", ["info_hash": hash], as: TorrentStatus.self))?.refused
     }
 
     /// The film opened `mine`th is still in the player and hasn't started: it has no length

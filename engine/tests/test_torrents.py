@@ -6,6 +6,7 @@ from __future__ import annotations
 import hashlib
 import http.client
 import socket
+import sys
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -42,9 +43,47 @@ def test_the_film_is_the_file_named_or_else_the_biggest_video() -> None:
     assert torrents.choose_file(files, 0) == 0  # the add-on said which
     assert torrents.choose_file(files, None) == 1
     assert torrents.choose_file(files, 99) == 1  # a number that isn't a file: as if none
-    assert torrents.choose_file([("a.bin", 1), ("b.bin", 2)], None) == 1  # no video: the biggest
+    # A film in an older or rarer kind of file is still a film (2026-11-18).
+    for ending in ("rmvb", "vob", "ogv", "3gp", "divx", "MTS"):
+        assert torrents.choose_file([("a.nfo", 9), (f"Film/film.{ending}", 5)], None) == 1
     with pytest.raises(torrents.TorrentError):
         torrents.choose_file([], None)
+
+
+def test_a_torrent_whose_film_isnt_a_video_is_refused() -> None:
+    """2026-11-18: two torrents with a film's name held only a program (a 1.3 and a 1.9 GB
+    `.exe`). With no video in them, the biggest file was taken for the film, and fetched."""
+
+    def refused(files: list[tuple[str, int]], wanted: int | None = None) -> str:
+        with pytest.raises(torrents.TorrentError) as caught:
+            torrents.choose_file(files, wanted)
+        return caught.value.message
+
+    assert refused([("A Film 2026 1080p/A Film 2026 1080p.exe", 1_900_000_000)]) == (
+        "That isn't a film: it's a program (.exe), so it wasn't downloaded."
+    )
+    # No video in it at all: the biggest file isn't taken for one any more.
+    assert refused([("a.bin", 1), ("b.zip", 2)]) == (
+        "That isn't a film: it's a compressed folder (.zip), so it wasn't downloaded."
+    )
+    assert refused([("Film/film.en.srt", 90), ("Film/film.fr.srt", 80)]).startswith(
+        "That isn't a film: it's subtitles (.srt)"
+    )
+    assert "a disc image (.iso)" in refused([("Film.iso", 7_000_000_000)])
+    # The file a way names is taken at its word only if it's a video too.
+    assert "a document (.nfo)" in refused([("Film/film.mkv", 900), ("Film/film.nfo", 1)], 1)
+    # A name made to look like a film's is still what its last ending says.
+    assert "a program (.exe)" in refused([("Film.mkv.exe", 5), ("readme.txt", 1)])
+    # Only the file's own name is read, never a folder it's in.
+    assert torrents.not_a_film("Film.2026/README") == (
+        "That isn't a film: it's a file that doesn't say what it is, so it wasn't downloaded."
+    )
+    assert torrents.not_a_film("Film/film.xyz") == (
+        "That isn't a film: it's a .xyz file, so it wasn't downloaded."
+    )
+    # An ending is the torrent's own words: only a few plain letters and digits are repeated.
+    for odd in ("Film.фильм", "Film.a\r\nb", "Film.averyveryverylongending"):
+        assert "doesn't say what it is" in torrents.not_a_film(odd)
 
 
 @pytest.mark.parametrize(
@@ -208,7 +247,7 @@ def test_a_torrent_is_known_by_the_v1_id_it_was_joined_by() -> None:
 # while an episode was arriving, and "play next" played the same episode again.
 
 PIECE = 128
-FILES = [("Show/E1.mkv", 300), ("Show/E2.mkv", 500), ("Show/notes.txt", 40)]
+FILES = [("Show/E1.mkv", 300), ("Show/E2.mkv", 500), ("Show/E3.mkv", 40)]
 WHOLE = bytes(i % 251 for i in range(sum(size for _, size in FILES)))
 
 
@@ -659,3 +698,176 @@ def test_each_file_of_a_torrent_has_its_own_address(
             assert connection.getresponse().status == 404
     finally:
         player.stop()
+
+
+# ---- a torrent whose film isn't one is refused (2026-11-18) ------------------------------
+
+PROGRAM = [("A Film 2026 1080p/A Film 2026 1080p.exe", 3 * PIECE + 17)]
+
+
+class ProgramFiles(StandInFiles):
+    def num_files(self) -> int:
+        return len(PROGRAM)
+
+    def file_path(self, index: int) -> str:
+        return PROGRAM[index][0]
+
+    def file_size(self, index: int) -> int:
+        return PROGRAM[index][1]
+
+    def file_offset(self, index: int) -> int:
+        return 0
+
+
+class ProgramInfo(StandInInfo):
+    def files(self) -> ProgramFiles:
+        return ProgramFiles()
+
+
+class ProgramHandle(StandInHandle):
+    """A torrent with a film's name whose one file is a program. Its details come once
+    `details` is set, as a magnet link's do a moment after it's joined."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.details = threading.Event()
+        self.read_from: list[int] = []
+
+    def torrent_file(self) -> ProgramInfo | None:  # type: ignore[override]
+        return ProgramInfo() if self.details.is_set() else None
+
+    def have_piece(self, piece: int) -> bool:
+        self.read_from.append(piece)
+        return True
+
+    def status(self) -> SimpleNamespace:
+        return SimpleNamespace(
+            state="downloading_metadata", progress_ppm=0, is_seeding=False, num_peers=0,
+            num_seeds=0, download_rate=0,
+        )  # fmt: skip
+
+    def get_peer_info(self) -> list[object]:
+        return []
+
+
+def test_a_programs_torrent_fetches_nothing_and_isnt_played(tmp_path: Path) -> None:
+    handle = ProgramHandle()
+    joined = torrents._Joined(handle, HASH, None, tmp_path)
+    assert not joined.ready(0)  # no details yet: still being found
+    assert joined.refused is None
+    handle.details.set()
+    assert not joined.ready(1)
+    assert joined.refused == "That isn't a film: it's a program (.exe), so it wasn't downloaded."
+    # Nothing of it is fetched from the moment its details are here (libtorrent fetches every
+    # file of a torrent until it's told otherwise), nothing is asked for first, and nothing
+    # is read or handed to a player.
+    assert handle.told == [("files", [0])]
+    assert joined.path is None and joined.read(0, 100) is None and handle.read_from == []
+    assert not joined.ready(5)  # asked again: refused at once, not waited on
+
+
+class ProgramSession(StandInSession):
+    def __init__(self) -> None:
+        self.handle = ProgramHandle()
+        self.added: list[object] = []
+        self.removed: list[tuple[object, ...]] = []
+
+    def add_torrent(self, params: object) -> ProgramHandle:  # type: ignore[override]
+        self.added.append(params)
+        return self.handle
+
+    def remove_torrent(self, handle: object, *how: object) -> None:
+        self.removed.append((handle, *how))
+
+
+def ask_address(url: str) -> tuple[int, float]:
+    began = time.monotonic()
+    connection = http.client.HTTPConnection(url.split("/")[2], timeout=20)
+    connection.request("GET", "/" + url.split("/", 3)[3])
+    status = connection.getresponse().status
+    return status, time.monotonic() - began
+
+
+def test_a_programs_torrent_is_left_and_the_app_is_told_why(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import libtorrent as lt
+
+    session = ProgramSession()
+    monkeypatch.setattr(torrents, "_new_session", lambda: session)
+    cache = tmp_path / "cache"
+    (cache / "torrents").mkdir(parents=True)
+    # What libtorrent knew of it from a play the day before goes; the rest of the cache, and
+    # anything outside it, stays.
+    resume = cache / "torrents" / f".{HASH}.resume"
+    resume.write_bytes(b"d4:infoe")
+    other = cache / "torrents" / "Another Film" / "film.mkv"
+    other.parent.mkdir()
+    other.write_bytes(b"film")
+    player = torrents.Player(cache, movies=tmp_path / "Movies")
+    why = "That isn't a film: it's a program (.exe), so it wasn't downloaded."
+    try:
+        url = player.play(HASH, None, [])["url"]
+        assert player.status(HASH)["state"] == "finding"
+        # The film player asks its address, and waits for the torrent's details...
+        threading.Timer(0.3, session.handle.details.set).start()
+        status, took = ask_address(url)
+        # ...which show it's a program: the player is told no at once.
+        assert status == 415 and took < 3
+        assert session.handle.read_from == []
+        # The torrent is left, and libtorrent deletes what it fetched of it in the cache.
+        assert session.removed == [(session.handle, lt.session.delete_files)]
+        assert not resume.exists() and other.exists()
+        # The app is told why, in the owner's words, for as long as it asks.
+        said = player.status(HASH)
+        assert (said["state"], said["refused"], said["keep_error"]) == ("refused", why, None)
+        assert said["progress"] == 0 and said["bytes_per_second"] == 0
+        # Asked to play it again, it's refused at once: it isn't joined again.
+        with pytest.raises(torrents.TorrentError) as caught:
+            player.play(HASH, None, [])
+        assert caught.value.message == why and len(session.added) == 1
+        # Asked to download it, it says why it couldn't be.
+        kept = player.keep(HASH, None, [], "A Film (2026)")
+        assert (kept["state"], kept["keep_error"], kept["keeping"]) == ("refused", why, False)
+        assert len(session.added) == 1
+        # Closing it (the app leaving the player) is nothing more to do.
+        player.close(HASH)
+        assert len(session.removed) == 1
+    finally:
+        player.stop()
+
+
+def test_a_programs_torrent_being_downloaded_is_left_with_why(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A download with no player asking: its details are looked for every two seconds
+    (`_close_idle`), and the refusal is why it couldn't be downloaded."""
+    import libtorrent as lt
+
+    session = ProgramSession()
+    session.handle.details.set()
+    monkeypatch.setattr(torrents, "_new_session", lambda: session)
+    player = torrents.Player(tmp_path / "cache", movies=tmp_path / "Movies")
+    try:
+        assert player.keep(HASH, None, [], "A Film (2026)")["keeping"]
+        until = time.monotonic() + 10
+        while player.status(HASH)["state"] != "refused" and time.monotonic() < until:
+            time.sleep(0.1)
+        said = player.status(HASH)
+        assert said["state"] == "refused" and not said["keeping"]
+        assert said["keep_error"] == said["refused"] == torrents.not_a_film("x.exe")
+        assert session.removed == [(session.handle, lt.session.delete_files)]
+        assert not (tmp_path / "Movies").exists()
+    finally:
+        player.stop()
+
+
+def test_another_file_of_a_kept_torrent_that_isnt_a_video_isnt_fetched(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(sys.modules[__name__], "FILES", [*FILES[:2], ("Show/notes.txt", 40)])
+    joined, handle = joined_for(tmp_path, 0)
+    joined.keep_name = "Show S01E01"
+    assert joined.film(2) is None
+    assert handle.raised == [] and joined.beside is None
+    assert joined.film(1) is not None  # E2.mkv, beside it
