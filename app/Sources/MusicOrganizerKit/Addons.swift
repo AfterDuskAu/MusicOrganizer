@@ -453,6 +453,10 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
     public let keepNote: String?
     /// While a kept film is being made into one phones and tablets play: how far, 0 to 1.
     public let converting: Double?
+    /// Why the engine refused the torrent, its film not being one (2026-11-18: "That isn't a
+    /// film: it's a program (.exe), so it wasn't downloaded."); state `refused`. Nil otherwise,
+    /// and from an older engine.
+    public let refused: String?
 
     /// Settings → Downloads: a kept film is converted for phones and tablets (on as standard).
     public static let convertKey = "convertKeptFilms"
@@ -461,8 +465,9 @@ public struct TorrentStatus: Decodable, Equatable, Sendable {
         state: String, peers: Int, bytesPerSecond: Int, progress: Double, keeping: Bool? = nil,
         keptPath: String? = nil, keepError: String? = nil, keepNote: String? = nil,
         converting: Double? = nil, seeds: Int? = nil, swarmSeeds: Int? = nil,
-        swarmPeers: Int? = nil, answered: Int? = nil
+        swarmPeers: Int? = nil, answered: Int? = nil, refused: String? = nil
     ) {
+        self.refused = refused
         self.answered = answered
         self.seeds = seeds
         self.swarmSeeds = swarmSeeds

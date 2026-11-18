@@ -50,6 +50,13 @@ What the owner should know, and what this module holds to:
   whose first tracker didn't answer read 6/7 for a film its trackers said 251/67 of.)
 - Nothing is joined by itself: only `torrent.play` and `torrent.keep`, each from the
   owner's click (and the next episode, by the owner's switch: the app's).
+- **A torrent whose film isn't a video is refused the moment its details arrive**
+  (2026-11-18): the file a way names, or else the biggest video in it, must have a video
+  file's ending (`VIDEO_ENDINGS`). Until then a torrent with no video in it was played
+  from its biggest file whatever that was, and two with a film's name held only a program
+  (a 1.3 and a 1.9 GB `.exe`), which was fetched in full and shared on, though never run.
+  Now nothing of it is fetched, it's left at once, what little arrived is deleted from the
+  cache, and the app is told why in plain words (`not_a_film`).
 
 In replay mode (`MUSICORG_REPLAY_DIR`, every test) no torrent is ever joined:
 `_new_session` refuses; and no tracker is asked but one on this computer (a test's).
@@ -79,9 +86,24 @@ log = logging.getLogger(__name__)
 
 REPLAY_ENV = "MUSICORG_REPLAY_DIR"
 INFO_HASH = re.compile(r"[0-9a-f]{40}")
+# The endings of a video file: a torrent's film must have one (2026-11-18). The film player
+# (mpv's FFmpeg) plays all of these; those after the first line were added that day, so a film
+# in one of the older or rarer kinds, played from a torrent before, still is.
 VIDEO_ENDINGS = frozenset(
-    {"mkv", "mp4", "m4v", "mov", "avi", "webm", "wmv", "flv", "mpg", "mpeg", "ts", "m2ts"}
-)
+    {"mkv", "mp4", "m4v", "mov", "avi", "webm", "wmv", "flv", "mpg", "mpeg", "ts", "m2ts",
+     "3gp", "3g2", "ogv", "ogm", "divx", "vob", "rm", "rmvb", "asf", "mts", "m2v", "f4v"}
+)  # fmt: skip
+# What a torrent's file is when it isn't a film, in the owner's words (`not_a_film`).
+NOT_FILMS = (
+    ("a program", {"exe", "msi", "com", "bat", "cmd", "scr", "pif", "dmg", "pkg", "app", "apk",
+                   "jar", "sh", "command", "ps1", "vbs", "js", "lnk"}),
+    ("a compressed folder", {"zip", "rar", "7z", "tar", "gz", "bz2", "xz", "tgz", "cab"}),
+    ("a disc image", {"iso", "img", "bin", "nrg", "mdf", "mds", "cue", "toast"}),
+    ("sound only", {"mp3", "m4a", "aac", "flac", "wav", "ogg", "opus", "wma", "ac3", "dts"}),
+    ("subtitles", {"srt", "ass", "ssa", "sub", "idx", "vtt", "sup"}),
+    ("a picture", {"jpg", "jpeg", "png", "gif", "webp", "bmp"}),
+    ("a document", {"txt", "nfo", "pdf", "doc", "docx", "rtf", "htm", "html", "url"}),
+)  # fmt: skip
 CONTENT_TYPES = {
     "mp4": "video/mp4", "m4v": "video/mp4", "mov": "video/quicktime", "webm": "video/webm",
     "mkv": "video/x-matroska", "avi": "video/x-msvideo",
@@ -187,17 +209,44 @@ def magnet(info_hash: str, trackers: list[str] | tuple[str, ...] = ()) -> str:
 
 def choose_file(files: list[tuple[str, int]], wanted: int | None) -> int:
     """Which file in a torrent is the film: the one the add-on named, or else the
-    biggest video file (or the biggest file, if none looks like a video)."""
+    biggest video file. A TorrentError, in the owner's words, when that isn't a video.
+
+    Until 2026-11-18 a torrent with no video in it was played from its biggest file,
+    whatever that was (as first built, with no reason given). Nothing the film player
+    plays was found that way: what it found was a program with a film's name, fetched
+    in full. A file the add-on names is taken at its word only if it's a video too."""
     if not files:
         raise TorrentError("That torrent has no files in it.")
     if wanted is not None and 0 <= wanted < len(files):
-        return wanted
-    videos = [i for i, (name, _) in enumerate(files) if _ending(name) in VIDEO_ENDINGS]
-    return max(videos or range(len(files)), key=lambda i: files[i][1])
+        chosen = wanted
+    else:
+        videos = [i for i, (name, _) in enumerate(files) if _ending(name) in VIDEO_ENDINGS]
+        chosen = max(videos or range(len(files)), key=lambda i: files[i][1])
+    if _ending(files[chosen][0]) not in VIDEO_ENDINGS:
+        raise TorrentError(not_a_film(files[chosen][0]))
+    return chosen
+
+
+def not_a_film(name: str) -> str:
+    """What the owner is told of a torrent whose file isn't a film: "That isn't a film:
+    it's a program (.exe), so it wasn't downloaded." Only its kind and ending are said,
+    never its name (a program's name may say anything), and an ending only if it's a few
+    plain letters and digits (it's the torrent's own words)."""
+    ending = _ending(name)
+    kind = next((what for what, endings in NOT_FILMS if ending in endings), None)
+    if kind is not None:
+        what = f"{kind} (.{ending})"
+    elif ending.isascii() and ending.isalnum() and len(ending) <= 10:
+        what = f"a .{ending} file"
+    else:
+        what = "a file that doesn't say what it is"
+    return f"That isn't a film: it's {what}, so it wasn't downloaded."
 
 
 def _ending(name: str) -> str:
-    return name.rsplit(".", 1)[-1].lower() if "." in name else ""
+    """A file's ending, without its dot: of its name, never of a folder it's in."""
+    last = name.replace("\\", "/").rsplit("/", 1)[-1]
+    return last.rsplit(".", 1)[-1].lower() if "." in last else ""
 
 
 def content_type(name: str) -> str:
@@ -691,6 +740,9 @@ class _Joined:
     converting: float | None = None
     saving: bool = False  # it has all arrived and is being converted or copied now
     keep_note: str | None = None  # something the owner should know about how it was kept
+    # Why the torrent was refused, once its details showed its film isn't one (`choose_file`):
+    # nothing of it is fetched, and the player leaves it (`Player._refuse`).
+    refused: str | None = None
     # Filled in once the torrent's details have arrived:
     index: int = 0
     name: str = ""
@@ -800,9 +852,12 @@ class _Joined:
             self._flush_said.wait(min(left, 0.2))
 
     def ready(self, wait_s: float) -> bool:
-        """Wait for the torrent's details (its files), and choose the film in it."""
+        """Wait for the torrent's details (its files), and choose the film in it. False
+        when they didn't come in time, or when they showed it has no film (`refused`)."""
         until = time.monotonic() + wait_s
         while self.path is None:
+            if self.refused is not None:
+                return False
             # Looked for before the clock is: with no time to wait (a film that's only
             # being kept, looked in on every two seconds) details that have arrived
             # must still be read. (They weren't: found by a real run, 2026-10-07.)
@@ -813,7 +868,7 @@ class _Joined:
                 time.sleep(0.25)
                 continue
             with self._choosing:  # the player's first two questions may come together
-                if self.path is None:
+                if self.path is None and self.refused is None:
                     self._choose(info)
         return True
 
@@ -837,7 +892,14 @@ class _Joined:
         still waiting asks again every `NUDGE_S`."""
         files = info.files()
         listed = [(files.file_path(i), files.file_size(i)) for i in range(files.num_files())]
-        chosen = choose_file(listed, self.file_index)
+        try:
+            chosen = choose_file(listed, self.file_index)
+        except TorrentError as exc:
+            # Not a film (2026-11-18): nothing of it is fetched from now (libtorrent fetches
+            # every file of a torrent until it's told otherwise), and it's left.
+            self.handle.prioritize_files([0] * len(listed))
+            self.refused = exc.message
+            return
         # Nothing asked for the file played before is wanted first any more.
         clear = getattr(self.handle, "clear_piece_deadlines", None)  # (a test's stand-in has none)
         if clear is not None:
@@ -1128,6 +1190,8 @@ class _Joined:
         files = info.files() if info is not None else None
         if files is None or not 0 <= index < files.num_files():
             return None
+        if _ending(files.file_path(index)) not in VIDEO_ENDINGS:
+            return None  # not a film (2026-11-18): nothing of it is fetched
         if index != self.beside:
             # The one played beside it before isn't fetched any more; this one is, its
             # start and end first (once the priorities have taken hold: see `_choose`).
@@ -1195,6 +1259,7 @@ class _Joined:
             state = "fetching"
         return {
             "info_hash": self.info_hash,
+            "refused": None,  # (why, for one refused: `refused_status`)
             "keeping": self.keep_name is not None and self.kept_path is None,
             "kept_path": self.kept_path,
             "keep_error": self.keep_error,
@@ -1217,6 +1282,19 @@ class _Joined:
             "bytes_per_second": int(told.download_rate),
             "progress": round(told.progress_ppm / 1_000_000, 4),
         }
+
+
+def refused_status(info_hash: str, why: str, *, kept: bool) -> dict[str, Any]:
+    """`torrent.status` for a torrent refused because its film isn't one (2026-11-18): state
+    `refused`, and why in the owner's words; for a film that was being kept, that's also
+    why it couldn't be (`keep_error`), so its line in Downloads says so."""
+    return {
+        "info_hash": info_hash, "refused": why, "keeping": False, "kept_path": None,
+        "keep_error": why if kept else None, "keep_note": None, "converting": None,
+        "state": "refused", "name": None, "bytes": None, "peers": 0, "seeds": 0,
+        "swarm_seeds": 0, "swarm_peers": 0, "answered": 0, "bytes_per_second": 0,
+        "progress": 0.0,
+    }  # fmt: skip
 
 
 @dataclass(frozen=True)
@@ -1249,6 +1327,9 @@ class Player:
         self._session: Any = None
         self._server: ThreadingHTTPServer | None = None
         self._joined: dict[str, _Joined] = {}
+        # Torrents refused since the engine started, their film not being one (2026-11-18):
+        # by id, the file asked for and their status (`refused_status`).
+        self._refused: dict[str, tuple[int | None, dict[str, Any]]] = {}
         self._sending: dict[str, int] | None = None  # what libtorrent was last told
         # What `_tell_transport` last told libtorrent: in a head start, retrying soon.
         self._transport_told: tuple[bool, bool] | None = None
@@ -1265,6 +1346,9 @@ class Player:
         its film plays at. Returns at once: the address waits for the film."""
         info_hash = info_hash.lower()
         link = magnet(info_hash, trackers)
+        refused = self._refused.get(info_hash)
+        if refused is not None and refused[0] == file_index:
+            raise TorrentError(refused[1]["refused"])  # known already: not joined again
         with self._lock:
             # Closed a moment ago, and still being left: it carries on, as it is.
             parting = None if self._take_back(info_hash) else self._parting.get(info_hash)
@@ -1297,7 +1381,13 @@ class Player:
 
     def status(self, info_hash: str) -> dict[str, Any]:
         joined = self._joined.get(info_hash.lower())
+        if joined is not None and joined.refused is not None:
+            self._refuse(joined)  # found out a moment ago: left now
+            joined = None
         if joined is None:
+            refused = self._refused.get(info_hash.lower())
+            if refused is not None:
+                return refused[1]
             raise TorrentError("That film isn't being played any more.")
         return joined.status()
 
@@ -1342,6 +1432,10 @@ class Player:
             raise TorrentError("There's nowhere set to download films to on this computer.")
         if not name.strip():
             raise TorrentError("A film needs a name to be saved under.")
+        refused = self._refused.get(info_hash.lower())
+        if refused is not None and refused[0] == file_index:
+            # Known already not to be a film: said as why it couldn't be kept.
+            return {**refused[1], "keep_error": refused[1]["refused"]}
         self.play(info_hash, file_index, trackers)
         joined = self._joined[info_hash.lower()]
         joined.keep_name, joined.keep_error, joined.convert = name.strip(), None, convert
@@ -1496,6 +1590,27 @@ class Player:
         return sweep(self.folder.parent, skip=skip)
 
     # -- the workings --
+
+    def _refuse(self, joined: _Joined) -> None:
+        """A torrent whose film isn't one (`_Joined.refused`, 2026-11-18): left at once, and
+        what arrived of it deleted from the cache (libtorrent deletes its own files there,
+        and what it knew of them goes too: `_leave`). Nothing of the owner's is touched.
+        The app hears why from `torrent.status`; asked to play it again, it's refused at
+        once, with no joining (for as long as the engine runs)."""
+        why = joined.refused
+        if why is None:
+            return
+        with self._lock:
+            if self._joined.get(joined.info_hash) is not joined:
+                return  # left already
+            kept = joined.keep_name is not None
+            self._refused[joined.info_hash] = (
+                joined.file_index, refused_status(joined.info_hash, why, kept=kept),
+            )  # fmt: skip
+            turn = self._parted(joined, delete=True)  # (its files go: never taken back)
+            del self._joined[joined.info_hash]
+        log.warning("torrents: a torrent was refused and left: %s", why)
+        self._let_go(joined, turn, delete=True)
 
     def _parted(self, joined: _Joined, *, delete: bool) -> int:
         """(Under `_lock`.) A film the app has let go of is being left from now: it's
@@ -1845,6 +1960,12 @@ class Player:
             return
         joined.asked_now()
         if not joined.ready(METADATA_WAIT_S):
+            if joined.refused is not None:
+                # Not a film (2026-11-18): left, and the player told no. (The app shows the
+                # owner why, from `torrent.status`, not the player's own "couldn't be opened".)
+                self._refuse(joined)
+                handler.send_error(415, "That torrent's file isn't a film.")
+                return
             handler.send_error(504, "The torrent's details didn't arrive.")
             return
         film = joined.film(int(parts[2]) if len(parts) == 3 else None)
@@ -1925,17 +2046,18 @@ class Player:
                 swept = now
                 self.sweep()
             for joined in list(self._joined.values()):
-                if joined.wanted:
-                    # Being kept: its details are waited for here if nothing is playing
-                    # it, and it's saved once it has all arrived.
+                # Being kept: its details are waited for here if nothing is playing it,
+                # and it's saved once it has all arrived.
+                save_now = (
+                    joined.wanted and not joined.saving and joined.ready(0) and joined.all_here()
+                )
+                if joined.refused is not None:
+                    self._refuse(joined)  # not a film (2026-11-18): left at once
+                elif save_now:
                     # (On its own thread: converting a film can take a long while, and the
                     # other films mustn't wait for it.)
-                    if not joined.saving and joined.ready(0) and joined.all_here():
-                        joined.saving = True
-                        threading.Thread(
-                            target=self._save_kept, args=(joined,), daemon=True
-                        ).start()
-                    continue
-                if now - joined.last_asked > IDLE_S:
+                    joined.saving = True
+                    threading.Thread(target=self._save_kept, args=(joined,), daemon=True).start()
+                elif not joined.wanted and now - joined.last_asked > IDLE_S:
                     log.info("A film nobody asked about for ten minutes was closed.")
                     self.close(joined.info_hash)

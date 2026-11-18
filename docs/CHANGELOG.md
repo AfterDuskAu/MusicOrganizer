@@ -3121,6 +3121,65 @@ genre and every seeded series given a new episode yesterday, on a seeded account
 **Not yet:** the owner's own app (it needs rebuilding); the iPad and Android apps, and whether a
 thumbs down should go with the sync to paired devices (the owner is being asked).
 
+2026-11-18. **A torrent whose film isn't a video is refused** (found on 2026-11-17 in the
+films' cache: two torrents with a film's name, each holding only a program, a 1.3 GB and a
+1.9 GB `.exe`, fetched in full and shared on, though never run).
+
+- **What was wrong.** A torrent's film is the file its way names, or else its biggest video
+  file. When nothing in it was a video, the biggest file was taken instead, whatever it was
+  (`choose_file`, so since the first version, with no reason given). So a program with a film's
+  name was joined, fetched to the last byte and shared with others, and the film player was
+  handed it to open. Nothing the film player can play was found that way: a torrent of
+  subtitles, sound, a compressed folder or a program can't be played.
+- **The fix.** The file chosen must have a video file's ending (`VIDEO_ENDINGS`, which now also
+  has the older and rarer kinds the film player plays: `.3gp`, `.3g2`, `.ogv`, `.ogm`, `.divx`,
+  `.vob`, `.rm`, `.rmvb`, `.asf`, `.mts`, `.m2v`, `.f4v`, so a film in one of those, played
+  before by the old rule, still plays). If it hasn't, the moment the torrent's details arrive:
+  nothing more of it is fetched, it's left, and what arrived is deleted from the films' cache
+  (by libtorrent, its own files there; nothing of the owner's is touched). The owner is told
+  why in plain words, by its kind and never its name: "That isn't a film: it's a program
+  (.exe), so it wasn't downloaded." (or subtitles, sound only, a compressed folder, a disc
+  image, a picture, a document). A file a way names is taken at its word only if it's a video
+  too. Asked to play it again while the engine runs, it's refused at once, without joining it.
+- **What the owner sees.** The film player lets go at once and shows those words where it
+  shows a film that won't start, with Try Another Way and Back as before (`FilmStart`). The
+  film's address answers the player with a refusal a moment before the app next asks the
+  engine how the film is doing, so on a refused film the app asks the engine for its reason
+  then, and shows that rather than the player's own "This film couldn't be opened." A film
+  being downloaded says "Couldn't download it: That isn't a film: …" in Downloads.
+- **API:** `torrent.status` has `refused` (why, or null) and a new Torrent state, `refused`;
+  `keep_error` says the same for a film being kept (`docs/ENGINE_API.md`). The app reads
+  `refused` (`TorrentStatus.refused`); an older app, not knowing the state, would have let it
+  go after 90 seconds as if nobody shared it.
+- **A disc image (`.iso`) is refused too,** as the task asked, though it was the one kind the
+  old rule might have played in part: FFmpeg reads a simple made-up DVD image as one MPEG
+  stream (all of the disc in order, menus and all, with none of the disc's own choices), and
+  a kept one would be saved in Movies as an `.iso` the app doesn't list. Whether disc images
+  should play is the owner's to say.
+
+**Checked:**
+- `pytest` (5 new tests: what's refused and the words for it, a lone program's torrent fetching
+  nothing, the address answering 415 and the status saying why, played again and downloaded
+  after, a download with no player refused within two seconds, another file of a kept torrent
+  that isn't a video not fetched) and `ruff check`; `swift build` and `swift test` (398; one
+  new, for `FilmStart` and `refused`).
+- With real libtorrent on this computer only (made-up torrents shared over loopback, DHT off,
+  nothing of anyone's): a 64 MB made-up program named as a film, shared at 4 MB/s, was refused
+  0.85 s after its details arrived, with 2 MB of it here by then, and the cache then held
+  nothing of it; played again, refused at once; downloaded with no player, refused in 2.1 s
+  with `keep_error`, and the Movies folder untouched. A made-up film torrent (an `.nfo`, an
+  `.srt` and an `.mkv`): the `.srt` named, refused; nothing named, the `.mkv` chosen and served
+  byte for byte; the `.mkv` named, served right.
+- Blender's Sintel from its swarm, through the engine's player in a scratch cache: a way naming
+  its first subtitles was refused in 1.9 s with nothing left in the cache; with no file named
+  the film (`Sintel.mp4`) was chosen and its start and end served; named, the same.
+
+**Not yet:** the owner's own app, which needs rebuilding and reopening. Only libtorrent's first
+moment of a refused torrent is fetched (all of its files, until it's told otherwise, a fraction
+of a second); starting every torrent with nothing wanted would save even that, but changes how
+every film is joined. The video apps' own torrent engines (on the iPad and Android) are separate
+and unchanged.
+
 2026-11-18. **A film's state is saved when it's left, however slow the disk** (from the "Not yet" of
 the night before: twice that evening a 6.5 GB film was "left without their state saved: the disk
 was slow", so played again it would be checked through from 0% first, for minutes).

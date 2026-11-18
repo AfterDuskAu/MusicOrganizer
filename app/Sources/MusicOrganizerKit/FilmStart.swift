@@ -50,6 +50,9 @@ public enum FilmStart {
     /// nil until the engine has first said how the torrent is doing.
     public static func verdict(torrent status: TorrentStatus?, waited: TimeInterval) -> Verdict {
         guard let status else { return waited >= detailsFor ? .stuck(noDetails) : .waiting }
+        // The engine refused it, its film not being one (2026-11-18: a program with a film's
+        // name): let go at once, with the engine's words.
+        if let refused = status.refused { return .stuck(refused) }
         switch status.state {
         case "finding":
             // Only those that really answered count (`Sharers`): some answer for any torrent.

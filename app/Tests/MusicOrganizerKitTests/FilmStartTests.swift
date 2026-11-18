@@ -132,6 +132,30 @@ final class FilmStartTests: XCTestCase {
         XCTAssertEqual(FilmStart.verdict(torrent: status("complete", progress: 1), waited: 600), .waiting)
     }
 
+    func testATorrentTheEngineRefusedIsLetGoAtOnceWithItsWords() throws {
+        // 2026-11-18: a torrent with a film's name whose one file was a program.
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase  // as the engine's answers are read
+        let said = try decoder.decode(
+            TorrentStatus.self,
+            from: Data(#"{"info_hash":"ab","refused":"That isn't a film: it's a program (.exe), so it wasn't downloaded.","keeping":false,"kept_path":null,"keep_error":null,"keep_note":null,"converting":null,"state":"refused","name":null,"bytes":null,"peers":0,"seeds":0,"swarm_seeds":0,"swarm_peers":0,"answered":0,"bytes_per_second":0,"progress":0.0}"#.utf8))
+        XCTAssertEqual(
+            FilmStart.verdict(torrent: said, waited: 1),
+            .stuck("That isn't a film: it's a program (.exe), so it wasn't downloaded."))
+        XCTAssertNil(said.keepLine)  // only played, not being downloaded
+        // One being downloaded says why it couldn't be, where its download is listed.
+        let kept = TorrentStatus(
+            state: "refused", peers: 0, bytesPerSecond: 0, progress: 0, keeping: false,
+            keepError: "That isn't a film: it's a program (.exe), so it wasn't downloaded.",
+            refused: "That isn't a film: it's a program (.exe), so it wasn't downloaded.")
+        XCTAssertFalse(kept.isKeeping)
+        XCTAssertEqual(
+            kept.keepLine, "Couldn't download it: That isn't a film: it's a program (.exe), so it wasn't downloaded.")
+        // An engine from before says nothing of it: as before.
+        XCTAssertNil(status("finding").refused)
+        XCTAssertEqual(FilmStart.verdict(torrent: status("finding"), waited: 1), .waiting)
+    }
+
     func testLookingThroughWhatsHereIsWaitedFor() {
         // The engine looking through what's here of a film played before: it says how far, and
         // the film opens when it's done, however long that takes.
