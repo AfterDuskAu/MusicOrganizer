@@ -32,7 +32,10 @@ What the owner should know, and what this module holds to:
   the one folder it is given; this module opens them only to read. Beside them goes
   what libtorrent knows of the film when it's left (2026-10-17: `.<hash>.resume`,
   written by `fileops.write_cached`), so the film played again is there at once, not
-  checked through from 0%; it goes with the film after its day.
+  checked through from 0%; it goes with the film after its day. **It's written only once
+  libtorrent has written out everything it holds of the film**, so it never says a part
+  is here that isn't on the disk; on a slow disk that's waited for as long as it takes,
+  away from the app (2026-11-18: `Player._leave`, `Player.stop`).
 - **A torrent is joined only while its film is open** (or being kept): closing the film,
   ten minutes unused, or the engine stopping leaves the torrent. Nothing is fetched or
   shared for a film that's merely remembered.
@@ -68,6 +71,7 @@ import re
 import secrets
 import socket
 import struct
+import sys
 import threading
 import time
 from collections import OrderedDict
@@ -166,8 +170,15 @@ FLUSH_WAIT_S = 60  # how long a film that's all here is given to be all on the d
 # (`.<hash>.resume`), so it's all there at once when it's played again within its day.
 RESUME = ".resume"
 PARTS = ".parts"  # libtorrent's own file of the pieces a film shares with files not fetched
-RESUME_FLUSH_S = 3.0  # how long a film being left is given to be all on the disk...
-RESUME_WAIT_S = 2.0  # ...and then for libtorrent to say what's here
+# How long a film the app has closed is given to be all on the disk before what's here of it
+# is noted (2026-11-18). It was 3 s, for the app and the engine's stopping alike, and on the
+# owner's Mac a film was left with nothing noted ("the disk was slow", twice on 17 Nov for a
+# 6.5 GB film), so the next play checked all of it again, for minutes. libtorrent does its disk
+# work at macOS's lowest priority (its `low_prio_disk`), behind everything else on a start-up
+# disk that's often busy. Waited for on a thread of its own, with the film paused: the app isn't
+# kept waiting, and played again meanwhile the film just carries on (`Player._take_back`).
+LEAVE_FLUSH_S = 120.0
+RESUME_WAIT_S = 2.0  # how long libtorrent is given to say what's here of a film
 LEAVE_WAIT_S = 8.0  # how long a film played again waits for its leaving to be over
 STOP_TRACKER_S = 1  # how long a tracker is given to hear that this computer has gone
 # How much of what has arrived may wait in memory to be written (2026-10-17). libtorrent
@@ -570,12 +581,17 @@ def upload_settings(limit: int | None) -> dict[str, int]:
 
 def alert_mask() -> int:
     """What libtorrent must say back: a piece that was asked for (`read_piece`), that a
-    film's last parts are on the disk (`flush_cache`), and what's here of a film that's
-    being left (`save_resume_data`). Nothing else."""
+    film's last parts are on the disk (`flush_cache`), what's here of a film that's being
+    left (`save_resume_data`), and (2026-11-18) a film's state: that it has all arrived,
+    since libtorrent then writes out all it holds of it unasked and says so as if asked
+    (`_Joined.finish_heard`), and that a film's saved state wasn't taken."""
     import libtorrent as lt
 
     told = lt.alert.category_t
-    return int(told.storage_notification) | int(told.error_notification)
+    return (
+        int(told.storage_notification) | int(told.error_notification)
+        | int(told.status_notification)
+    )  # fmt: skip
 
 
 def answered_by(handle: Any) -> set[str]:
@@ -657,6 +673,49 @@ def checking(told: Any) -> bool:
     return str(getattr(told, "state", "")).rsplit(".", 1)[-1] in CHECKING
 
 
+def _hold(handle: Any) -> None:
+    """Pause a torrent that's being left: nothing more of it is fetched or sent, so what's
+    here doesn't change while it's written out. Taken out of libtorrent's own queue first,
+    which would otherwise start it again."""
+    import libtorrent as lt
+
+    if not hasattr(handle, "pause"):
+        return  # (a test's stand-in)
+    handle.unset_flags(lt.torrent_flags.auto_managed)
+    handle.pause()
+
+
+def _carry_on(handle: Any) -> None:
+    """A torrent paused by `_hold` goes on as it did (a film played again)."""
+    import libtorrent as lt
+
+    if not hasattr(handle, "resume"):
+        return  # (a test's stand-in)
+    handle.set_flags(lt.torrent_flags.auto_managed)
+    handle.resume()
+
+
+def _pieces_here(handle: Any) -> list[bool]:
+    """Which pieces of a torrent libtorrent has now (each checked; not each written yet)."""
+    import libtorrent as lt
+
+    return [bool(here) for here in handle.status(lt.torrent_handle.query_pieces).pieces]
+
+
+def _trimmed(data: bytes, here: list[bool]) -> bytes:
+    """What libtorrent said of a torrent (its resume data), saying a piece is here only if it
+    was in `here`: what was here before libtorrent was asked to write it all out. A piece
+    that came after may not be on the disk yet (2026-11-18). With the film paused first
+    (`_hold`) none should come; it's fetched again if one did."""
+    import libtorrent as lt
+
+    params = lt.read_resume_data(data)
+    params.have_pieces = [
+        bool(have) and i < len(here) and here[i] for i, have in enumerate(params.have_pieces)
+    ]
+    return bytes(lt.write_resume_data_buf(params))
+
+
 @dataclass
 class _Joined:
     """One torrent that's been joined: libtorrent's handle, and the film in it."""
@@ -698,7 +757,12 @@ class _Joined:
     _pieces: OrderedDict[int, bytes] = field(default_factory=OrderedDict, repr=False)
     _asked: dict[int, threading.Event] = field(default_factory=dict, repr=False)
     _pieces_lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
-    flushed: threading.Event = field(default_factory=threading.Event, repr=False)
+    # Writing out what libtorrent holds of the film (`ask_flush`, `all_written`): how many
+    # of its write-outs it hasn't said are done yet, and a word each time it says so.
+    _flushes_owed: int = field(default=0, repr=False)
+    _miscounted: bool = field(default=False, repr=False)
+    _flush_lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
+    _flush_said: threading.Event = field(default_factory=threading.Event, repr=False)
     # Another file of the same torrent being played while this one is kept (an episode
     # watched while another downloads): its number. See `turn_to`.
     beside: int | None = None
@@ -715,15 +779,77 @@ class _Joined:
     _file_at: dict[int, int] = field(default_factory=dict, repr=False)
     _arrived: set[int] = field(default_factory=set, repr=False)
     _looked: dict[int, float] = field(default_factory=dict, repr=False)
-    # What libtorrent said is here, when the film was being left (`Player._save_resume`):
+    # What libtorrent said is here, when the film was being left (`Player._resume_data`):
     # its resume data, ready to be saved; and that it has said (or couldn't).
     resume_data: bytes | None = field(default=None, repr=False)
     resumed: threading.Event = field(default_factory=threading.Event, repr=False)
     left: threading.Event = field(default_factory=threading.Event, repr=False)
+    # Being left (`Player._let_go`): each leaving has its turn; a film played again while it's
+    # being left, or taken over by the engine stopping, starts another, and the leaving whose
+    # turn is over does nothing more (`Player._take_back`). `removing`: past taking back, it's
+    # being taken out of libtorrent.
+    leaves: int = 0
+    removing: bool = False
     since: float = field(default_factory=time.monotonic)  # when it was joined (`TCP_HEAD_START_S`)
 
     def asked_now(self) -> None:
         self.last_asked = time.monotonic()
+
+    # -- that what libtorrent holds of the film is on the disk (2026-11-18) --
+    #
+    # libtorrent says a piece is here once it has checked it, which may be before it's
+    # written. Asked to write out all it holds of a torrent (`flush_cache`), it says when
+    # that's done (`cache_flushed_alert`). But it also writes it all out by itself each time
+    # the torrent has all arrived, and says so in the same words, unasked: a word that came
+    # just after a film finished arriving could be taken for the answer to a question asked
+    # a moment later, before what came since was written. So every write-out libtorrent owes
+    # is counted, asked for or not: each torrent finishing says so first
+    # (`torrent_finished_alert`), and the answers come in the order the write-outs began.
+    # Measured with libtorrent 2.1 that day: through files wanted and unwanted, pieces read,
+    # pausing, finishing twice and upload mode, every answer was one asked for or one
+    # following a finish (4 asked, 2 finishes, 6 answers).
+
+    def ask_flush(self) -> None:
+        """Ask libtorrent to write out everything it holds of this torrent. `all_written`
+        says when it has, with every write-out before it."""
+        with self._flush_lock:
+            self._flushes_owed += 1
+        self.handle.flush_cache()
+
+    def finish_heard(self) -> None:
+        """libtorrent says the torrent has all arrived: it writes out what it holds of it
+        now, unasked, and will say so as if asked (`flush_heard`)."""
+        with self._flush_lock:
+            self._flushes_owed += 1
+
+    def flush_heard(self) -> None:
+        """libtorrent says one of the torrent's write-outs is done (they end in the order
+        they began)."""
+        with self._flush_lock:
+            self._flushes_owed -= 1
+            if self._flushes_owed < 0 and not self._miscounted:
+                # One more than was owed: libtorrent wrote out by itself for a reason not
+                # known here, and this torrent's answers can't be told apart any more.
+                self._miscounted = True
+                log.warning("torrents: libtorrent said a film was written out unasked; "
+                            "what's here of it won't be noted")  # fmt: skip
+            self._flush_said.set()
+
+    def all_written(self, until: float, *, still: Any = None) -> bool:
+        """Wait until every write-out of this torrent asked for so far (`ask_flush`), and
+        every one libtorrent began by itself, is done: then everything it held when the last
+        was asked for is on the disk. False if that hasn't come by `until` (a
+        `time.monotonic()`), or once `still()` says it isn't wanted any more; and never true
+        once libtorrent's answers have been miscounted (`flush_heard`)."""
+        while True:
+            with self._flush_lock:
+                if self._flushes_owed <= 0 and not self._miscounted:
+                    return True
+                self._flush_said.clear()
+            left = until - time.monotonic()
+            if left <= 0 or (still is not None and not still()):
+                return False
+            self._flush_said.wait(min(left, 0.2))
 
     def ready(self, wait_s: float) -> bool:
         """Wait for the torrent's details (its files), and choose the film in it. False
@@ -1223,9 +1349,12 @@ class Player:
         refused = self._refused.get(info_hash)
         if refused is not None and refused[0] == file_index:
             raise TorrentError(refused[1]["refused"])  # known already: not joined again
-        parting = self._parting.get(info_hash)
+        with self._lock:
+            # Closed a moment ago, and still being left: it carries on, as it is.
+            parting = None if self._take_back(info_hash) else self._parting.get(info_hash)
         if parting is not None:
-            # Closed a moment ago, and what's here is being noted: joined again after.
+            # Past taking back: it's being taken out of libtorrent, which is a moment.
+            # Joined again after, from what was noted of it.
             parting.left.wait(LEAVE_WAIT_S)
         with self._lock:
             self._start()
@@ -1359,8 +1488,9 @@ class Player:
             joined.keep_name = None
             if playing:
                 return
-            self._joined.pop(info_hash.lower(), None)
-        self._let_go(joined, delete=False)
+            turn = self._parted(joined, delete=False)
+            del self._joined[info_hash.lower()]
+        self._let_go(joined, turn, delete=False)
 
     def close(self, info_hash: str) -> None:
         """Leave a torrent. What arrived of it stays in the cache for a day, unless the
@@ -1372,63 +1502,94 @@ class Player:
             if joined is not None and joined.wanted:
                 joined.playing = False
                 return
-            joined = self._joined.pop(info_hash.lower(), None)
-        if joined is not None:
-            self._let_go(joined, delete=joined.kept_path is not None)
+            if joined is None:
+                return
+            delete = joined.kept_path is not None
+            turn = self._parted(joined, delete=delete)
+            del self._joined[info_hash.lower()]
+        self._let_go(joined, turn, delete=delete)
 
     def stop(self) -> None:
         """Leave every torrent and stop listening. What arrived stays its day, and what
         libtorrent knows of it is saved beside it, so it's all there at once next time.
 
         Quickly (2026-10-17: the owner's app took about twenty seconds to quit, and was
-        once reopened while the engine before was still stopping): what's here is saved
-        for a few seconds at most, trackers are given a second to hear this computer has
+        once reopened while the engine before was still stopping): libtorrent is given two
+        seconds at most to say what's here, trackers a second to hear this computer has
         gone (libtorrent's own was five), and libtorrent is ended here, where the time
-        it takes is known, not later on a thread of its own."""
+        it takes is known, not later on a thread of its own.
+
+        **What's here is asked before libtorrent ends, and written only once it has**
+        (2026-11-18). libtorrent writes out everything it holds before it ends: measured that
+        day, ending it took as long as a write-out asked for (6.7 s with 256 MB waiting to be
+        written, 50 s on a disk kept out of the Mac's file cache), and every piece it had said
+        was here was in the file after. So nothing is waited for beforehand: until then it
+        waited 3 s for the write-out, and on a slow disk left the film with nothing noted
+        (with libtorrent's ending still to wait for). Films being left a moment ago are taken
+        over from their own threads, and noted with the rest."""
         began = time.monotonic()
         self._stopping.set()
-        # A film closed a moment ago is still being left: that's finished first, while
-        # libtorrent is there to finish it.
-        for parting in list(self._parting.values()):
-            parting.left.wait(RESUME_FLUSH_S + RESUME_WAIT_S)
         with self._lock:
-            leaving, self._joined = list(self._joined.values()), {}
+            leaving = list(self._joined.values())
+            going = []
+            for parting in list(self._parting.values()):
+                if parting.removing:
+                    going.append(parting)  # only being taken out of libtorrent: a moment
+                else:
+                    parting.leaves += 1  # its own thread lets go of it: it's noted here
+                    leaving.append(parting)
+            for joined in leaving:
+                joined.closed = True  # and nothing still waiting for a piece waits on
+                self._parting[joined.info_hash] = joined
+            self._joined = {}
             server, self._server = self._server, None
             session = self._session
+        for parting in going:
+            parting.left.wait(RESUME_WAIT_S)
         # Everyone else is let go of at once: saying goodbye to them (some ways of being
-        # connected take a second or two to close) goes on while what's here is noted.
+        # connected take a second or two to close) goes on while what's here is asked.
         if hasattr(session, "pause"):  # (a test's stand-in has none)
             session.pause()
         if server is not None:
             server.shutdown()  # no film player is answered any more
             server.server_close()
-        for joined in leaving:
-            joined.closed = True  # and nothing still waiting for a piece waits on
-            self._parting[joined.info_hash] = joined
+        noted: dict[str, bytes] = {}
         try:
-            self._save_resume(leaving)
+            noted = self._resume_data(leaving)  # kept in memory until libtorrent has ended
         finally:
-            saved = time.monotonic()
+            asked = time.monotonic()
             for joined in leaving:
                 if session is not None and joined.handle.is_valid():
                     session.remove_torrent(joined.handle)
-                self._touch(joined)
-                self._parting.pop(joined.info_hash, None)
-                joined.left.set()
             self._session = None
             self._sending = None
         hearing, self._hearing = self._hearing, None
         if hearing is not None and hearing is not threading.current_thread():
             hearing.join(2)  # it lets go of the session within a fifth of a second
         heard, ended = time.monotonic(), session is not None
-        # The last of the session: libtorrent ends now, here (saying goodbye to the
-        # others, and closing its files), not later on a thread of its own.
+        # The last of the session: libtorrent ends now, here (writing out all it holds,
+        # saying goodbye to the others, and closing its files), not later on a thread of its
+        # own. Only if nothing else holds on to it does it end on this line, and only then is
+        # what it said written: held elsewhere, it would end later, who knows when.
+        alone = ended and sys.getrefcount(session) <= 2  # (this name, and the call's own)
         session = None
+        gone, saved = time.monotonic(), 0
+        try:
+            if alone:
+                saved = sum(self._write_note(info_hash, data) for info_hash, data in noted.items())
+            elif noted:
+                log.info("torrents: %d film(s) left without their state saved: libtorrent "
+                         "was still in use", len(noted))  # fmt: skip
+        finally:
+            for joined in leaving:
+                self._touch(joined)
+                self._parting.pop(joined.info_hash, None)
+                joined.left.set()
         if ended:
             log.info(
-                "torrents: stopped in %.1f s (%d film(s) noted in %.1f s, libtorrent ended "
-                "in %.1f s)", time.monotonic() - began, len(leaving), saved - began,
-                time.monotonic() - heard,
+                "torrents: stopped in %.1f s (%d of %d film(s) noted, in %.1f s; libtorrent "
+                "ended in %.1f s)", time.monotonic() - began, saved, len(leaving),
+                asked - began, gone - heard,
             )  # fmt: skip
 
     def sweep(self) -> int:
@@ -1455,54 +1616,100 @@ class Player:
         with self._lock:
             if self._joined.get(joined.info_hash) is not joined:
                 return  # left already
-            self._joined.pop(joined.info_hash)
             kept = joined.keep_name is not None
             self._refused[joined.info_hash] = (
                 joined.file_index, refused_status(joined.info_hash, why, kept=kept),
             )  # fmt: skip
+            turn = self._parted(joined, delete=True)  # (its files go: never taken back)
+            del self._joined[joined.info_hash]
         log.warning("torrents: a torrent was refused and left: %s", why)
-        self._let_go(joined, delete=True)
+        self._let_go(joined, turn, delete=True)
 
-    def _let_go(self, joined: _Joined, *, delete: bool) -> None:
-        """Leave a film the app has closed. When what's here is noted first, which waits
-        on libtorrent (a second or two while a film arrives quickly), that's done on a
-        thread of its own: the app waits for the episode before to be left before the
-        next one, from another torrent, is joined. Played again meanwhile, the film is
-        joined once this is over (`play`)."""
-        if self._hearing is None or delete:
-            self._leave(joined, delete=delete)  # nothing to wait for
-            return
+    def _parted(self, joined: _Joined, *, delete: bool) -> int:
+        """(Under `_lock`.) A film the app has let go of is being left from now: it's
+        closed, it's among those being left until it has gone, and its leaving has a turn
+        of its own (`_Joined.leaves`), which it returns. One whose files go with it is past
+        taking back from the start."""
+        joined.closed = True  # nothing still waiting for a piece waits on
+        joined.leaves += 1
+        joined.removing = delete
         self._parting[joined.info_hash] = joined
+        return joined.leaves
+
+    def _let_go(self, joined: _Joined, turn: int, *, delete: bool) -> None:
+        """Leave a film the app has closed. What's here is noted first, which waits on
+        libtorrent writing it all out (a second or two while a film arrives quickly; on a
+        busy disk, much longer): that's done on a thread of its own, so the app is answered
+        at once. Played again meanwhile, the film carries on (`_take_back`)."""
+        if self._hearing is None or delete:
+            self._leave(joined, turn, delete=delete)  # nothing to wait for
+            return
         threading.Thread(
-            target=self._leave, args=(joined,), kwargs={"delete": False}, daemon=True,
+            target=self._leave, args=(joined, turn), kwargs={"delete": False}, daemon=True,
             name="film-leaving",
         ).start()  # fmt: skip
 
-    def _leave(self, joined: _Joined, *, delete: bool) -> None:
-        joined.closed = True
+    def _leave(self, joined: _Joined, turn: int, *, delete: bool) -> None:
         try:
-            session = self._session
-            if session is not None and joined.handle.is_valid():
-                import libtorrent as lt
+            if delete:
+                session = self._session
+                if session is not None and joined.handle.is_valid():
+                    import libtorrent as lt
 
-                if delete:
                     # libtorrent deletes its own files; what it knew of them goes too.
                     session.remove_torrent(joined.handle, lt.session.delete_files)
                     self._forget_resume(joined.info_hash)
-                    return
-                self._parting[joined.info_hash] = joined
-                try:
-                    self._save_resume([joined])
-                finally:
-                    if joined.handle.is_valid():
-                        session.remove_torrent(joined.handle)
+                return
+            self._note_leaving(joined, turn)
+            with self._lock:
+                if joined.leaves != turn:
+                    return  # played again meanwhile, or taken over by the engine stopping
+                joined.removing = True  # past taking back
+                session = self._session
+            if session is not None and joined.handle.is_valid():
+                session.remove_torrent(joined.handle)
+            session = None  # (the engine's stopping ends libtorrent only once nobody holds it)
             self._touch(joined)
         except RuntimeError as exc:  # libtorrent's own trouble, on a thread of its own
             log.warning("torrents: a film couldn't be left cleanly: %s", exc)
         finally:
-            if self._parting.get(joined.info_hash) is joined:
-                self._parting.pop(joined.info_hash, None)
-            joined.left.set()
+            with self._lock:
+                mine = joined.leaves == turn
+                if mine and self._parting.get(joined.info_hash) is joined:
+                    self._parting.pop(joined.info_hash, None)
+            if mine:
+                joined.left.set()
+
+    def _take_back(self, info_hash: str) -> bool:
+        """(Under `_lock`.) A film played again while it's still being left carries on as
+        it was (2026-11-18): its leaving is over before it was done, nothing of it is noted
+        or taken out of libtorrent, and it's started again if it was paused for that. So a
+        film closed by mistake and opened again, while a slow disk is still writing it out,
+        is all there with nothing checked again (though what's read of it first waits for
+        that writing, as libtorrent's reads do). Not once it's past taking back
+        (`removing`: then it's joined again a moment later, from what was noted), nor
+        while the engine stops."""
+        parting = self._parting.get(info_hash)
+        if parting is None or parting.removing or self._stopping.is_set():
+            return False
+        try:
+            _carry_on(parting.handle)
+        except RuntimeError as exc:  # libtorrent's own trouble: it's left, and joined again
+            log.warning("torrents: a film being left couldn't carry on: %s", exc)
+            return False
+        parting.leaves += 1  # its leaving's turn is over
+        parting.closed = False
+        parting.playing = True
+        # Everyone it was connected to was let go of when it was paused: they're reached
+        # again as a film just joined reaches them (`TCP_HEAD_START_S`, `RETRY_FOR_S`).
+        parting.since = time.monotonic()
+        self._tell_transport(joining=True)
+        # (Among those joined before it's out of those being left: what libtorrent says of
+        # it is always heard, `_hear`.)
+        self._joined[info_hash] = parting
+        del self._parting[info_hash]
+        log.info("torrents: a film played again while it was being left carries on")
+        return True
 
     def _touch(self, joined: _Joined) -> None:
         """A film's day in the cache is counted from now, when it was last played: its
@@ -1553,6 +1760,9 @@ class Player:
             lt.torrent_flags.upload_mode | lt.torrent_flags.paused
             | lt.torrent_flags.sequential_download
         )  # fmt: skip
+        # Left to libtorrent's own queue, as a film joined afresh is, though it was noted as
+        # paused and out of it (`_hold`, 2026-11-18).
+        params.flags |= lt.torrent_flags.auto_managed
         return params
 
     def _resumed(self, info_hash: str) -> Any:
@@ -1586,53 +1796,86 @@ class Player:
             return None
         return params
 
-    def _save_resume(self, leaving: list[_Joined]) -> None:
-        """Note what libtorrent has of films being left, beside them in the cache
-        (`fileops.write_cached`). For a few seconds at most, all of them together: first
-        their last parts are written to the disk, then libtorrent says what's here."""
+    def _note_leaving(self, joined: _Joined, turn: int) -> None:
+        """Note what's here of a film the app has closed, beside it in the cache, once
+        libtorrent has written it all out (2026-11-18). The film is paused first (nothing
+        more of it is fetched or sent), what's here is looked at, and libtorrent is asked to
+        write out all it holds of it; that's waited for as long as it takes, up to
+        `LEAVE_FLUSH_S`, on this thread of its own. Only what was here before the write-out
+        was asked for is noted (`_trimmed`). Played again meanwhile, or taken over by the
+        engine stopping, it's left to that (`turn`)."""
         if self._hearing is None:
             return  # (a test's stand-in session says nothing back)
+        if not joined.through_libtorrent or not joined.handle.is_valid():
+            return
+        if joined.handle.torrent_file() is None:
+            return  # its details never came: there's nothing to note
+        began = time.monotonic()
+
+        def still() -> bool:
+            return joined.leaves == turn
+
         try:
-            self._note(leaving)
-        except RuntimeError as exc:  # libtorrent's own trouble: the films are left anyway
+            with self._lock:  # (a film played again is started after it's paused, not before)
+                if not still():
+                    return
+                _hold(joined.handle)
+            here = _pieces_here(joined.handle)
+            joined.ask_flush()
+            if not joined.all_written(began + LEAVE_FLUSH_S, still=still):
+                if still():
+                    log.info("torrents: 1 film(s) left without their state saved: the disk "
+                             "hadn't written it out in %d s", LEAVE_FLUSH_S)  # fmt: skip
+                return
+            written = time.monotonic()
+            data = self._resume_data([joined]).get(joined.info_hash)
+            if data is None or not still():
+                return
+            if self._write_note(joined.info_hash, _trimmed(data, here)):
+                log.info("torrents: a film's state was saved as it was left (written out in "
+                         "%.1f s)", written - began)  # fmt: skip
+        except RuntimeError as exc:  # libtorrent's own trouble: the film is left anyway
             log.warning("torrents: what's here of a film couldn't be noted: %s", exc)
 
-    def _note(self, leaving: list[_Joined]) -> None:
+    def _resume_data(self, films: list[_Joined]) -> dict[str, bytes]:
+        """What libtorrent says is here of each film (its resume data), asked of all of them
+        together and waited for `RESUME_WAIT_S` at most; by the torrent's id. It's written
+        only once all of it is on the disk (`_note_leaving`, `stop`)."""
+        if self._hearing is None:
+            return {}  # (a test's stand-in session says nothing back)
         import libtorrent as lt
 
+        asked = []
+        for joined in films:
+            try:
+                if not joined.through_libtorrent or not joined.handle.is_valid():
+                    continue
+                if joined.handle.torrent_file() is None:
+                    continue  # its details never came: there's nothing to note
+                joined.resumed.clear()
+                joined.resume_data = None
+                joined.handle.save_resume_data(lt.torrent_handle.save_info_dict)
+                asked.append(joined)
+            except RuntimeError as exc:  # libtorrent's own trouble: the others are asked
+                log.warning("torrents: what's here of a film couldn't be asked: %s", exc)
+        until = time.monotonic() + RESUME_WAIT_S
+        said = {}
+        for joined in asked:
+            if joined.resumed.wait(max(0.0, until - time.monotonic())) and joined.resume_data:
+                said[joined.info_hash] = joined.resume_data
+        return said
+
+    def _write_note(self, info_hash: str, data: bytes) -> bool:
+        """Save what libtorrent said is here of a film, beside it in the cache."""
         from musicorg import fileops
         from musicorg.errors import MusicOrgError
 
-        asked = []
-        for joined in leaving:
-            if not joined.through_libtorrent or not joined.handle.is_valid():
-                continue
-            if joined.handle.torrent_file() is None:
-                continue  # its details never came: there's nothing to note
-            joined.flushed.clear()
-            joined.resumed.clear()
-            joined.resume_data = None
-            joined.handle.flush_cache()
-            asked.append(joined)
-        until = time.monotonic() + RESUME_FLUSH_S
-        written = [j for j in asked if j.flushed.wait(max(0.0, until - time.monotonic()))]
-        for joined in written:
-            joined.handle.save_resume_data(lt.torrent_handle.save_info_dict)
-        until = time.monotonic() + RESUME_WAIT_S
-        for joined in written:
-            if not joined.resumed.wait(max(0.0, until - time.monotonic())):
-                continue
-            if joined.resume_data:
-                try:
-                    fileops.write_cached(
-                        self._resume_file(joined.info_hash), joined.resume_data,
-                        cache=self.folder.parent,
-                    )  # fmt: skip
-                except (MusicOrgError, ValueError) as exc:
-                    log.warning("torrents: a film's state couldn't be saved: %s", exc)
-        if len(written) < len(asked):
-            log.info("torrents: %d film(s) left without their state saved: the disk was slow",
-                     len(asked) - len(written))  # fmt: skip
+        try:
+            fileops.write_cached(self._resume_file(info_hash), data, cache=self.folder.parent)
+        except (MusicOrgError, ValueError) as exc:
+            log.warning("torrents: a film's state couldn't be saved: %s", exc)
+            return False
+        return True
 
     def _start(self) -> None:
         if self._session is not None:
@@ -1668,13 +1911,17 @@ class Player:
 
     def _hear(self, session: Any) -> None:
         """What libtorrent says back, for as long as the engine plays films: a piece
-        that was asked for, that a film's last parts are on the disk, and what's here of
-        a film that's being left. (Until the session is let go, so that what's here is
-        heard even while the engine is stopping.)"""
+        that was asked for, that a film's last parts are on the disk, that a film has all
+        arrived (libtorrent writes it out then, unasked), what's here of a film that's
+        being left, and that what was noted of one wasn't taken. Only of the torrent as
+        it's joined now: one of the same film left a moment before may still be speaking.
+        (Until the session is let go, so that what's here is heard even while the engine
+        is stopping.)"""
         import libtorrent as lt
 
         heard = ("read_piece_alert", "cache_flushed_alert", "save_resume_data_alert",
-                 "save_resume_data_failed_alert")  # fmt: skip
+                 "save_resume_data_failed_alert", "torrent_finished_alert",
+                 "fastresume_rejected_alert")  # fmt: skip
         while self._session is session:
             try:
                 session.wait_for_alert(200)  # (and it looks for being let go this often)
@@ -1690,10 +1937,17 @@ class Player:
                 except RuntimeError:
                     continue  # its torrent has been left meanwhile
                 joined = self._joined.get(info_hash) or self._parting.get(info_hash)
-                if joined is None:
-                    continue
+                if joined is None or not alert.handle == joined.handle:
+                    continue  # (or of the same film joined before, still being let go of)
                 if kind == "cache_flushed_alert":
-                    joined.flushed.set()
+                    joined.flush_heard()
+                    continue
+                if kind == "torrent_finished_alert":
+                    joined.finish_heard()
+                    continue
+                if kind == "fastresume_rejected_alert":
+                    log.info("torrents: what was noted of a film wasn't taken, so what's here "
+                             "is checked: %s", alert.message())  # fmt: skip
                     continue
                 if kind.startswith("save_resume_data"):
                     said = None
@@ -1746,9 +2000,8 @@ class Player:
         # copied once libtorrent says it's all on the disk (the same fault as `read_file`
         # mends: a film kept in that moment had holes in it).
         if joined.through_libtorrent:
-            joined.flushed.clear()
-            joined.handle.flush_cache()
-            if not joined.flushed.wait(FLUSH_WAIT_S):
+            joined.ask_flush()
+            if not joined.all_written(time.monotonic() + FLUSH_WAIT_S):
                 log.warning("A kept film's last parts weren't confirmed written; kept anyway.")
         source, made = joined.path, None
         if joined.convert:
