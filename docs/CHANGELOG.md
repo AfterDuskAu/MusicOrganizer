@@ -3177,5 +3177,20 @@ films' cache: two torrents with a film's name, each holding only a program, a 1.
 **Not yet:** the owner's own app, which needs rebuilding and reopening. Only libtorrent's first
 moment of a refused torrent is fetched (all of its files, until it's told otherwise, a fraction
 of a second); starting every torrent with nothing wanted would save even that, but changes how
-every film is joined. The video apps' own torrent engines (on the iPad and Android) are separate
-and unchanged.
+every film is joined. The video apps' own torrent engines (on the iPad and Android) are separate;
+they were given the same refusal later the same day, in their own project.
+
+**Later the same day** (the owner: what isn't a film "gets deleted from the cache as soon as
+possible"): **a film being downloaded with no player is chosen the moment its details arrive**,
+as a film that's playing is, not at the next look two seconds on (`Player._choose_soon`, a
+thread `torrent.keep` starts while the torrent's details are awaited). Until a torrent's film
+is chosen, libtorrent fetches every file in it; so a program with a film's name, downloaded,
+was fetched for up to two seconds before it was refused and deleted. Checked: one new test (the
+two-second look kept from running, so only the quick one can leave it; it fails without the
+change), `pytest` and `ruff check`; and on loopback as above, a made-up program downloaded with
+no player was refused 0.52 s after it was asked for, its details' arrival included (2.1 s
+before), with nothing of it left in the cache, and a made-up film downloaded the same way was
+kept in Movies byte for byte. Nothing else of a torrent is ever kept: a film's other files
+(an `.nfo`, subtitles, a sample, a program) are never fetched; only their share of the pieces
+at the film's two ends is held, inside libtorrent's own piece file (`.<hash>.parts`), never as
+a file of theirs, and goes with the film after its day.

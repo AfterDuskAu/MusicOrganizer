@@ -1311,7 +1311,20 @@ class Player:
         joined = self._joined[info_hash.lower()]
         joined.keep_name, joined.keep_error, joined.convert = name.strip(), None, convert
         joined.keep_folder = tuple(folder)
+        if joined.path is None and joined.refused is None:
+            # Its film is chosen the moment its details arrive, as for a film that's
+            # playing, not at the next look two seconds on (2026-11-18, the owner: what
+            # isn't a film "gets deleted from the cache as soon as possible"): until it's
+            # chosen libtorrent fetches every file of the torrent.
+            threading.Thread(target=self._choose_soon, args=(joined,), daemon=True).start()
         return joined.status()
+
+    def _choose_soon(self, joined: _Joined) -> None:
+        """Wait for a torrent's details and choose its film (`_Joined.ready`); one that
+        isn't a film is left at once, with what arrived of it deleted (`_refuse`)."""
+        joined.ready(METADATA_WAIT_S)
+        if joined.refused is not None:
+            self._refuse(joined)
 
     def set_upload(self, limit: int | None) -> None:
         """Settings changed: how fast films are sent on to others, from now."""

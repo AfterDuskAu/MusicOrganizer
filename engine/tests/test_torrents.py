@@ -862,6 +862,34 @@ def test_a_programs_torrent_being_downloaded_is_left_with_why(
         player.stop()
 
 
+def test_a_programs_torrent_being_downloaded_is_left_the_moment_its_details_come(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Not at the next look two seconds on: until its film is chosen, libtorrent fetches
+    every file of it. (The two-second look is kept from running here, so only the quick
+    one can leave it.)"""
+    import libtorrent as lt
+
+    session = ProgramSession()
+    monkeypatch.setattr(torrents, "_new_session", lambda: session)
+    monkeypatch.setattr(torrents.Player, "_close_idle", lambda self: None)
+    player = torrents.Player(tmp_path / "cache", movies=tmp_path / "Movies")
+    try:
+        assert player.keep(HASH, None, [], "A Film (2026)")["keeping"]
+        time.sleep(0.3)
+        assert session.removed == []  # its details haven't come: nothing to choose yet
+        session.handle.details.set()
+        until = time.monotonic() + 5
+        while not session.removed and time.monotonic() < until:
+            time.sleep(0.05)
+        assert session.removed == [(session.handle, lt.session.delete_files)]
+        said = player.status(HASH)
+        assert said["state"] == "refused"
+        assert said["keep_error"] == torrents.not_a_film("x.exe")
+    finally:
+        player.stop()
+
+
 def test_another_file_of_a_kept_torrent_that_isnt_a_video_isnt_fetched(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
